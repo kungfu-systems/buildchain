@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 516,
+  "generation": 517,
   "fencingCounter": 127,
   "policy": {
     "agingSeconds": 900,
@@ -4445,8 +4445,38 @@
         "tests/build-surface-promotion.test.mjs",
         "tests/fixtures/self-release-route/external-consumer.yml"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2691,
+      "assignmentRoot": "sha256:599e7e07e2e07bd8f9f6971fa32bc1a58071b64dede4e6fbd3fce488275218e4",
+      "initiativeRoot": "sha256:f15dc05f5657faa1f89d4a69b228b2b2c734b0f1d550e617e3f0e7adf12b35e5",
+      "sourceIdentityRoot": "sha256:913b4dd60a9afd4ca1aee02ad33563767118522167c459b6b67e70c18bd5ba43",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:dc04ae2a3d72e1c2d2cb10496cb5c6cf818fce3ec377396235f2f00b8fb325c6",
+      "sourceHead": "f6b264f6853364aae1ef99473bfbf44d5647537d",
+      "sourcePatchRoot": "sha256:08a22f1888d7c04395a8e62d7336bf5d52284d57c156e46cbeb32bea2845263c",
+      "sourceProofRoot": "sha256:3f221e8b9d0cf048df538f5e2a4a3e96c5c16631a10797408f81fceb7d781bc8",
+      "planRoot": "sha256:8b395b08478a25600834efbcf237b395caccc64777208c9327e83d4400b0c124",
+      "closureRoot": "sha256:a1281bd9fe1110a5470fcb89cc9c87e4edf92abddd3ee3193cfbeab3a183df4a",
+      "dependencyRoot": "sha256:3a9fba3927c3781b516aa915f17bb6d275ee237f972f8536aa8b0a0e37740f41",
+      "toolchainRoot": "sha256:731bdc51be27f33086844804824ac80c5cc16aaf86068aa7fbaa0d403d776b54",
+      "environmentRoot": "sha256:676c802c46ee167ed002b7350d35262b5cbfc5645c2267ebb902d97722432a21",
+      "sourceWorkflowRunId": 0,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-13T01:47:21.964Z",
+      "updatedAt": "2026-08-13T01:47:21.964Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "scripts/dev-delivery-warrant.mjs",
+        "tests/dev-delivery-warrant-command.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-13T01:47:18.963Z",
-  "stateRoot": "sha256:91c936e73e6ba906f8fd3f73a24a1305cd248c4d5f515c16b1c446d14a415ff4"
+  "updatedAt": "2026-08-13T01:47:21.964Z",
+  "stateRoot": "sha256:0379500fb9a40e51338e54b6876c7883f4fb2b4224da16a3668de8181733f758"
 }
