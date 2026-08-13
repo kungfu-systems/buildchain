@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 690,
+  "generation": 691,
   "fencingCounter": 155,
   "policy": {
     "agingSeconds": 900,
@@ -5696,8 +5696,40 @@
         "dist/site/buildchain-contract.json",
         "tests/build-surface.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2785,
+      "assignmentRoot": "sha256:c3852e3d8b00f0f6aa792f967ad768cec3eda6cc3ab6f26aa1878388ff78514f",
+      "initiativeRoot": "sha256:f00b30385eda973ec7717b01cff2259960a985a795d0e130657cd73ed32e89b6",
+      "sourceIdentityRoot": "sha256:a03693e655234035bb06b7735a04c939a77dba42b3c51acd4af5b0c82ce4ca44",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:565477306d346ce65a0a43c5ac7f0135080500022c244b6e9dd9c18095c554c7",
+      "sourceHead": "b8076e062c20ac3ada878029605550907a6d324d",
+      "sourcePatchRoot": "sha256:d5f82ddb6e612737682f306fe9e5285c603e832882afac1b61e8f2a00cd57982",
+      "sourceProofRoot": "sha256:9bac5ad22fe15241b129171fabd8c30d1580b6d8b717a922aa2205da4bb32a61",
+      "planRoot": "sha256:39192b8a06d4c05491d4ff0a58b91dd0d769aa3e74f221e817a366765fceeafd",
+      "closureRoot": "sha256:70fb77a8f863bf47f60c872c3000f732a15545b89e8bb407c01ab1c65751668b",
+      "dependencyRoot": "sha256:c7d47558a4b1a2e9307a9829281200818fd5769ec6b4824b09bd9c61376f7857",
+      "toolchainRoot": "sha256:d18769fdf9c78f95ab8ba64125a6476aa33528c29effe80de82a2d9a052cdb84",
+      "environmentRoot": "sha256:25821b109f59ec3ee69cc0e4cda4490a9d0730efb41f37faefa9877c9c2c21ce",
+      "sourceWorkflowRunId": 31747612616,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-13T21:53:28.778Z",
+      "updatedAt": "2026-08-13T21:53:28.778Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/.release-candidate-promote.yml",
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-contract.json",
+        "tests/build-surface.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-13T21:37:06.952Z",
-  "stateRoot": "sha256:b18bb7c63532efd7ea4ec87eaa4a854f144ac3925a8e5fbf493674fd08cb9f06"
+  "updatedAt": "2026-08-13T21:53:28.778Z",
+  "stateRoot": "sha256:09260af987822cd15a74187317b172efa19d084dcc4410cb7fdee96f4b8692bc"
 }
