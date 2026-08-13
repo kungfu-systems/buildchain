@@ -18562,7 +18562,7 @@
       ],
       "source": {
         "path": "packages/core/published-delivery-authority.js",
-        "line": 153
+        "line": 178
       },
       "example": "import { loadPublishedBuildchainDeliveryAuthority } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
       "maturity": "stable",
@@ -18619,7 +18619,7 @@
       ],
       "source": {
         "path": "packages/core/published-delivery-authority.js",
-        "line": 206
+        "line": 233
       },
       "example": "import { withPublishedBuildchainDeliveryAuthority } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
       "maturity": "stable",
@@ -26245,7 +26245,7 @@
       "specifier": "@kungfu-tech/buildchain/published-delivery-authority",
       "export": "./published-delivery-authority",
       "target": "./packages/core/published-delivery-authority.js",
-      "digest": "sha256:eeb858b9675be1361e4d4330a674a81eb5ccf7d01d4f08736ed8b346a72a13fc",
+      "digest": "sha256:38e425db6e6aa2674bc230a716feb7659c400a2423291d1268dd6c6730e7087f",
       "summary": "Exact npm archive-byte loading and constrained N-1 delivery authority imports with guaranteed cleanup.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -27681,7 +27681,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:c003af9e36e401553e29bbc7757c66cf0e5e619136721898ee78d849e9f70d63"
+      "digest": "sha256:ebce78a32aaeb21b92a951541d2f8dc8e00cf52a5211f2825bb53f4ffc891208"
     },
     {
       "id": "build-facts",

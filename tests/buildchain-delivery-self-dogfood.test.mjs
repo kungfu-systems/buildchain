@@ -241,7 +241,7 @@ test("missing candidate evidence cannot produce a self-dogfood result", () => {
 
 async function authorityArchive(
   rootDirectory,
-  { name, version, modules = {} },
+  { name, version, modules = {}, semanticArtifactRoot = "" },
 ) {
   const source = path.join(rootDirectory, name.replaceAll("/", "-"));
   const packageRoot = path.join(source, "package");
@@ -253,6 +253,25 @@ async function authorityArchive(
   for (const [file, body] of Object.entries(modules)) {
     await writeFile(path.join(packageRoot, "packages/core", file), body);
   }
+  if (name === "@kungfu-tech/kfd") {
+    const manifestRoot = path.join(
+      packageRoot,
+      "profiles/adopter-conformance/adopters/kfd",
+    );
+    await mkdir(manifestRoot, { recursive: true });
+    await writeFile(
+      path.join(manifestRoot, "manifest.json"),
+      `${JSON.stringify({
+        kfdCut: {
+          package: {
+            name,
+            version,
+            artifactRoot: semanticArtifactRoot,
+          },
+        },
+      }, null, 2)}\n`,
+    );
+  }
   const archivePath = path.join(
     rootDirectory,
     `${name.replaceAll("/", "-")}.tgz`,
@@ -261,7 +280,13 @@ async function authorityArchive(
   const artifactRoot = `sha256:${createHash("sha256")
     .update(await readFile(archivePath))
     .digest("hex")}`;
-  return { name, version, archivePath, artifactRoot };
+  return {
+    name,
+    version,
+    archivePath,
+    archiveRoot: artifactRoot,
+    artifactRoot: semanticArtifactRoot || artifactRoot,
+  };
 }
 
 test("published archive bytes supply every self-dogfood semantic ability", async (t) => {
@@ -299,12 +324,12 @@ test("published archive bytes supply every self-dogfood semantic ability", async
     kfd: await authorityArchive(rootDirectory, {
       name: "@kungfu-tech/kfd",
       version: "1.0.0-alpha.62",
+      semanticArtifactRoot: kfdPackageRoot,
     }),
   };
   const selfDogfood = fixture();
   selfDogfood.authority.packageRoot = authorityPackages.buildchain.artifactRoot;
-  selfDogfood.adopterManifest.kfdCut.package.artifactRoot =
-    authorityPackages.kfd.artifactRoot;
+  selfDogfood.adopterManifest.kfdCut.package.artifactRoot = kfdPackageRoot;
 
   const result =
     await createPublishedBuildchainDeliveryInfrastructureSelfDogfood({
