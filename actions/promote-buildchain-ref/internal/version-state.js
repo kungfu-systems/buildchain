@@ -248,6 +248,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     ".buildchain/kfd/",
     ".buildchain/publication-result.json",
     ".buildchain/reconciliation/",
+    ".buildchain/recovered-publication/",
     ".buildchain/release-candidate/",
     ".buildchain/release-evidence/",
     ".buildchain/release-passport/",
