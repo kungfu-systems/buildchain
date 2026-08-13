@@ -10,9 +10,15 @@ import {
 } from "./dev-delivery-common.js";
 
 export const NATIVE_QUALIFICATION_PROOF_SCHEMA =
+  "kungfu.buildchain.native-qualification-proof/v3";
+const LEGACY_NATIVE_QUALIFICATION_PROOF_V2_SCHEMA =
   "kungfu.buildchain.native-qualification-proof/v2";
 const LEGACY_NATIVE_QUALIFICATION_PROOF_SCHEMA =
   "kungfu.buildchain.native-qualification-proof/v1";
+export const NATIVE_EXECUTION_BINDING_SCHEMA =
+  "kungfu.buildchain.native-execution-binding/v1";
+export const NATIVE_EXECUTION_RECEIPT_SCHEMA =
+  "kungfu.buildchain.native-heartbeat-run-receipt/v2";
 export const NATIVE_PROOF_REUSE_DECISION_SCHEMA =
   "kungfu.buildchain.native-proof-reuse-decision/v1";
 export const DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA =
@@ -85,7 +91,94 @@ function rooted(body) {
   return { ...body, decisionRoot: devDeliveryContentRoot(body) };
 }
 
+export function createNativeExecutionBinding(input = {}) {
+  return {
+    schema: NATIVE_EXECUTION_BINDING_SCHEMA,
+    repository: repository(input.repository),
+    protectedBase: protectedBase(input.protectedBase),
+    sourceHead: exactSha(input.sourceHead, "sourceHead"),
+    qualifiedBase: exactSha(input.qualifiedBase, "qualifiedBase"),
+    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    environmentRoot: exactRoot(input.environmentRoot, "environmentRoot"),
+  };
+}
+
+export function createNativeExecutionReceipt(input = {}) {
+  const executionBinding = createNativeExecutionBinding(input.executionBinding);
+  const receipt = {
+    schema: NATIVE_EXECUTION_RECEIPT_SCHEMA,
+    outcome: input.outcome === "succeeded" ? "succeeded" : text(input.outcome),
+    commandRoot: exactRoot(input.commandRoot, "commandRoot"),
+    executionBinding,
+    executionBindingRoot: devDeliveryContentRoot(executionBinding),
+    startedAt: timestamp(input.startedAt, "startedAt"),
+    completedAt: timestamp(input.completedAt, "completedAt"),
+    heartbeatCount: Number(input.heartbeatCount),
+  };
+  if (receipt.outcome !== "succeeded") {
+    throw new Error("native execution receipt must record succeeded outcome");
+  }
+  if (!Number.isInteger(receipt.heartbeatCount) || receipt.heartbeatCount < 1) {
+    throw new Error("heartbeatCount must be a positive integer");
+  }
+  return { ...receipt, receiptRoot: devDeliveryContentRoot(receipt) };
+}
+
+export function verifyNativeExecutionReceipt(receiptInput, expected = {}) {
+  try {
+    const receipt = clone(receiptInput || {});
+    if (receipt.schema !== NATIVE_EXECUTION_RECEIPT_SCHEMA) {
+      return { ok: false, reason: "unsupported-schema" };
+    }
+    const receiptRoot = receipt.receiptRoot;
+    delete receipt.receiptRoot;
+    if (devDeliveryContentRoot(receipt) !== receiptRoot) {
+      return { ok: false, reason: "receipt-root-drift" };
+    }
+    const normalized = createNativeExecutionReceipt({
+      ...receipt,
+      executionBinding: receipt.executionBinding,
+    });
+    if (normalized.receiptRoot !== receiptRoot) {
+      return { ok: false, reason: "receipt-input-drift" };
+    }
+    for (const [field, value] of Object.entries(expected)) {
+      if (value !== undefined && receipt.executionBinding?.[field] !== value) {
+        return { ok: false, reason: `${field}-mismatch` };
+      }
+    }
+    return {
+      ok: true,
+      reason: "exact-native-execution-receipt",
+      receiptRoot,
+      executionBindingRoot: receipt.executionBindingRoot,
+    };
+  } catch (error) {
+    return { ok: false, reason: "invalid-receipt", error: error.message };
+  }
+}
+
 export function createNativeQualificationProof(input = {}) {
+  const sourceHead = exactSha(input.sourceHead, "sourceHead");
+  const qualifiedBase = exactSha(input.qualifiedBase, "qualifiedBase");
+  const toolchainRoot = exactRoot(input.toolchainRoot, "toolchainRoot");
+  const environmentRoot = exactRoot(input.environmentRoot, "environmentRoot");
+  const executionReceipt = verifyNativeExecutionReceipt(
+    input.nativeExecutionReceipt,
+    {
+      repository: repository(input.repository),
+      protectedBase: protectedBase(input.protectedBase),
+      sourceHead,
+      qualifiedBase,
+      toolchainRoot,
+      environmentRoot,
+    },
+  );
+  if (!executionReceipt.ok) {
+    throw new Error(
+      `native execution receipt rejected: ${executionReceipt.reason}`,
+    );
+  }
   const body = {
     schema: NATIVE_QUALIFICATION_PROOF_SCHEMA,
     rootSemantics: NATIVE_QUALIFICATION_ROOT_SEMANTICS,
@@ -99,12 +192,15 @@ export function createNativeQualificationProof(input = {}) {
     planRoot: exactRoot(input.planRoot, "planRoot"),
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
-    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
-    environmentRoot: exactRoot(input.environmentRoot, "environmentRoot"),
-    qualifiedBase: exactSha(input.qualifiedBase, "qualifiedBase"),
+    toolchainRoot,
+    environmentRoot,
+    sourceHead,
+    qualifiedBase,
+    nativeExecutionBindingRoot: executionReceipt.executionBindingRoot,
+    nativeExecutionReceiptRoot: executionReceipt.receiptRoot,
     affectedPaths: normalizedPaths(input.affectedPaths || []),
     shardEvidenceRoots: exactRoots(
-      input.shardEvidenceRoots,
+      [...(input.shardEvidenceRoots || []), executionReceipt.receiptRoot],
       "shardEvidenceRoots",
     ),
     qualifiedAt: timestamp(input.qualifiedAt, "qualifiedAt"),
@@ -122,6 +218,7 @@ export function verifyNativeQualificationProof(proofInput, expected = {}) {
     if (
       ![
         NATIVE_QUALIFICATION_PROOF_SCHEMA,
+        LEGACY_NATIVE_QUALIFICATION_PROOF_V2_SCHEMA,
         LEGACY_NATIVE_QUALIFICATION_PROOF_SCHEMA,
       ].includes(proof.schema)
     ) {
@@ -146,7 +243,38 @@ export function verifyNativeQualificationProof(proofInput, expected = {}) {
       }
     }
     if (proof.schema === NATIVE_QUALIFICATION_PROOF_SCHEMA) {
-      createNativeQualificationProof(proof);
+      repository(proof.repository);
+      protectedBase(proof.protectedBase);
+      exactSha(proof.sourceHead, "sourceHead");
+      exactSha(proof.qualifiedBase, "qualifiedBase");
+      for (const field of [
+        "sourceIdentityRoot",
+        "sourcePatchRoot",
+        "planRoot",
+        "closureRoot",
+        "dependencyRoot",
+        "toolchainRoot",
+        "environmentRoot",
+        "nativeExecutionBindingRoot",
+        "nativeExecutionReceiptRoot",
+      ]) {
+        exactRoot(proof[field], field);
+      }
+      const expectedBindingRoot = devDeliveryContentRoot(
+        createNativeExecutionBinding(proof),
+      );
+      if (proof.nativeExecutionBindingRoot !== expectedBindingRoot) {
+        return { ok: false, reason: "native-execution-binding-root-drift" };
+      }
+      const shardEvidenceRoots = exactRoots(
+        proof.shardEvidenceRoots,
+        "shardEvidenceRoots",
+      );
+      if (!shardEvidenceRoots.includes(proof.nativeExecutionReceiptRoot)) {
+        return { ok: false, reason: "native-execution-receipt-unbound" };
+      }
+      normalizedPaths(proof.affectedPaths || []);
+      timestamp(proof.qualifiedAt, "qualifiedAt");
     } else {
       repository(proof.repository);
       protectedBase(proof.protectedBase);
@@ -205,8 +333,15 @@ function nativeReuseBody(proof, current) {
     requiredValidation: "full-native",
   };
   if (!verification.ok) return base;
+  if (proof.schema !== NATIVE_QUALIFICATION_PROOF_SCHEMA) {
+    return {
+      ...base,
+      reason: "native-execution-evidence-unbound",
+    };
+  }
 
   const semanticFields = [
+    "sourceHead",
     "sourceIdentityRoot",
     "sourcePatchRoot",
     "planRoot",
@@ -346,6 +481,7 @@ export function createDevDeliveryWarrantQualifier({
         const proofVerification = verifyNativeQualificationProof(nativeProof, {
           repository: before.repository,
           protectedBase: before.protectedBase,
+          sourceHead: active.sourceHead,
           sourceIdentityRoot: active.sourceIdentityRoot,
           sourcePatchRoot: active.sourcePatchRoot,
           planRoot: active.planRoot,
@@ -363,6 +499,7 @@ export function createDevDeliveryWarrantQualifier({
             proof: nativeProof,
             current: {
               ...current,
+              sourceHead: active.sourceHead,
               sourceIdentityRoot: active.sourceIdentityRoot,
               sourcePatchRoot: active.sourcePatchRoot,
               planRoot: active.planRoot,

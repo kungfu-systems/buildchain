@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { devDeliveryContentRoot } from "../packages/core/dev-delivery-warrant.js";
+import { createNativeExecutionBinding, createNativeExecutionReceipt, devDeliveryContentRoot } from "../packages/core/dev-delivery-warrant.js";
 import { runDevDeliveryCommand } from "./dev-delivery-warrant.mjs";
 
 function flag(args, name, fallback = "") {
@@ -46,6 +46,7 @@ export async function runNativeWithHeartbeat({
   if (typeof heartbeat !== "function") {
     throw new Error("heartbeat callback is required");
   }
+  const boundExecution = createNativeExecutionBinding(executionBinding);
   const startedAt = now();
   try {
     await heartbeat();
@@ -138,16 +139,14 @@ export async function runNativeWithHeartbeat({
   }
   await beat();
   const completedAt = now();
-  const receipt = {
-    schema: "kungfu.buildchain.native-heartbeat-run-receipt/v1",
+  return createNativeExecutionReceipt({
     outcome: "succeeded",
     commandRoot: devDeliveryContentRoot({ command }),
-    executionBindingRoot: devDeliveryContentRoot(executionBinding),
+    executionBinding: boundExecution,
     startedAt,
     completedAt,
     heartbeatCount,
-  };
-  return { ...receipt, receiptRoot: devDeliveryContentRoot(receipt) };
+  });
 }
 
 async function main() {
@@ -162,6 +161,26 @@ async function main() {
     args,
     "command",
     process.env.BUILDCHAIN_DEV_DELIVERY_NATIVE_COMMAND,
+  );
+  const sourceHead = flag(
+    args,
+    "source-head",
+    process.env.BUILDCHAIN_DEV_DELIVERY_SOURCE_HEAD,
+  );
+  const qualifiedBase = flag(
+    args,
+    "qualified-base",
+    process.env.BUILDCHAIN_DEV_DELIVERY_QUALIFIED_BASE,
+  );
+  const toolchainRoot = flag(
+    args,
+    "toolchain-root",
+    process.env.BUILDCHAIN_DEV_DELIVERY_TOOLCHAIN_ROOT,
+  );
+  const environmentRoot = flag(
+    args,
+    "environment-root",
+    process.env.BUILDCHAIN_DEV_DELIVERY_ENVIRONMENT_ROOT,
   );
   const cwd = path.resolve(
     flag(args, "working-directory", process.env.GITHUB_WORKSPACE),
@@ -210,6 +229,14 @@ async function main() {
     command,
     cwd,
     intervalMs: heartbeatSeconds * 1000,
+    executionBinding: {
+      repository,
+      protectedBase: branch,
+      sourceHead,
+      qualifiedBase,
+      toolchainRoot,
+      environmentRoot,
+    },
     heartbeat: async () => {
       await runDevDeliveryCommand({
         command: "heartbeat",

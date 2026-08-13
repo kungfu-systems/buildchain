@@ -40,7 +40,7 @@ on:
         description: "Native toolchain root"
         required: true
       environment-root:
-        description: "Native execution environment contract root"
+        description: "Exact native execution environment contract root bound before native spawn"
         required: true
       affected-paths-json:
         description: "JSON array representing the affected closure"

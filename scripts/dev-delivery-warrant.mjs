@@ -295,6 +295,9 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     now: new Date(optionsInput.now || Date.now()).toISOString(),
     execute: bool(optionsInput.execute, false),
   };
+  if (options.command === "submit" && options.execute && options.deliveryClass !== "non-native-fast") {
+    exactRoot(options.environmentRoot, "environmentRoot");
+  }
   const store =
     clientInput ||
     new GitHubDevDeliveryStore({
