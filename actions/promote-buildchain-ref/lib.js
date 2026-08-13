@@ -1638,7 +1638,12 @@ async function runPublishTransaction(options) {
     if (recovery.blocked) {
       throw new Error(`release transaction cannot recover: ${recovery.reason}`);
     }
-    if (existing && validation?.valid && publishRematerializeOnResume) {
+    if (
+      existing &&
+      existing.state !== "complete" &&
+      validation?.valid &&
+      publishRematerializeOnResume
+    ) {
       publishSource = runResumeRematerializedPublish({
         existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version,
       });
