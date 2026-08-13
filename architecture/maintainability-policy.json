@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132693,
+    "maxHandMaintainedSourceLines": 132915,
     "maxWorkflowFiles": 71,
-    "maxWorkflowLines": 23636,
-    "latestTransition": "Stable recovery now converges a protected next-alpha merge through exact configured version material and protected reconciliation PRs.",
-    "rationale": "The bounded recovery and regression growth prevents repeated next-alpha regeneration after a protected PR merge, preserves stable publication identity, and routes any generated reconciliation merge back through branch protection. This measured ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23646,
+    "latestTransition": "Dev queue admission now consumes one exact Warrant and both exact-head status readbacks before enqueue.",
+    "rationale": "The bounded controller growth retains the frozen base, source head, Warrant fence and generation, Project Cut proof, queue status and active lease in one fail-closed transaction before GitHub queue admission. The workflow growth wires only those two required contexts. These measured ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -339,6 +339,7 @@
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
         "inputs": [
+          "active-lease-context",
           "affected-paths-json",
           "allowed-head-prefixes",
           "assignment-root",
@@ -389,7 +390,7 @@
           "warrant-state-root"
         ]
       },
-      "rationale": "Extend targeted exact-head admission with an optional rooted Project Cut replay proof for the exact current base and immutable Warrant state-commit readback while independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
+      "rationale": "Extend targeted exact-head admission with an optional rooted Project Cut replay proof and the exact active-lease status context needed to read back the same fenced Warrant before enqueue, while independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
