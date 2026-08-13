@@ -546,7 +546,7 @@ on:
         value: ${{ jobs.trust-gate.outputs.publish-source-line }}
       publish-source-consumer-version:
         description: "Consumer version parsed from the publish-gate source ref"
-        value: ${{ jobs.trust-gate.outputs.publish-source-consumer-version }}
+        value: ${{ jobs.resolve-source.outputs.publish-source-consumer-version }}
       release-manifest-json:
         description: "Resolved release manifest JSON"
         value: ${{ jobs.resolve-source.outputs.release-manifest-json }}
