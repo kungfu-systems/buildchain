@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-check-report",
+  "checkedAt": "2026-08-13T09:26:28.170Z",
+  "ok": true,
+  "trust": "pass",
+  "surfaceImpactRequirement": {
+    "required": true,
+    "type": "production-release",
+    "reason": "production release passports require surfaceImpacts[] so agents can audit the final version impact",
+    "channel": "release",
+    "targetRef": "release/v4/v4.0"
+  },
+  "completeness": {
+    "artifactCount": 1,
+    "evidenceArtifactCount": 1,
+    "packageSetPresent": false,
+    "trustedPublishingPresent": true,
+    "transactionPresent": true,
+    "anchorManifestPresent": false,
+    "buildSummaryPresent": true,
+    "platformArtifactManifestCount": 3,
+    "distTagPromotionEvidencePresent": false,
+    "impactPresent": true,
+    "agentIndexPresent": true,
+    "productMechanismPresent": true,
+    "surfaceImpactsRequired": true,
+    "surfaceImpactCount": 65,
+    "versionImpact": "major",
+    "releaseEvidenceCount": 0
+  },
+  "issues": []
+}
