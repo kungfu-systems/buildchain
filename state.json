@@ -4,9 +4,9 @@
   "repository": "kungfu-systems/buildchain",
   "target_ref": "release/v4/v4.0",
   "source_sha": "45a49dcaa0fcef59bc66481a85c39514d08972cc",
-  "release_sha": "5af5dc829099d7ad2331b585142e41e860bc7c10",
-  "release_material_sha": "5af5dc829099d7ad2331b585142e41e860bc7c10",
-  "publish_tooling_sha": "5af5dc829099d7ad2331b585142e41e860bc7c10",
+  "release_sha": "e5615a7a114417df817c0f5625f9a486ef57469b",
+  "release_material_sha": "e5615a7a114417df817c0f5625f9a486ef57469b",
+  "publish_tooling_sha": "e5615a7a114417df817c0f5625f9a486ef57469b",
   "version": "4.0.0",
   "exact_tag": "v4.0.0",
   "channel": "release",
@@ -16,12 +16,12 @@
   "state_ref": "buildchain/release-state/4-0-0",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v4.0.0.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v4.0.0/evidence.json",
-  "state": "publish_failed",
-  "previous_state": "publishing",
+  "state": "sealed",
+  "previous_state": "prepared",
   "actor": "dongkeren",
-  "run_id": "31675012608",
+  "run_id": "31676752574",
   "superseded_by": "",
-  "failure": "Command failed: node scripts/npm-publish-transaction.mjs",
+  "failure": "",
   "artifacts": [],
   "evidence": [],
   "sealed_bundle": {
@@ -86,6 +86,6 @@
   "publication_state": "sealed",
   "milestones": {},
   "resume_command": "buildchain paper resume --version \"4.0.0-alpha.1\" --state-ref \"refs/heads/buildchain/release-state/4-0-0-alpha-1\"",
-  "created_at": "2026-08-13T06:51:48.186Z",
-  "updated_at": "2026-08-13T06:52:03.401Z"
+  "created_at": "2026-08-13T07:17:08.716Z",
+  "updated_at": "2026-08-13T07:17:08.716Z"
 }
