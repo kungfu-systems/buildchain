@@ -15,6 +15,7 @@ test("development and prerelease events select the generic major alpha", () => {
     channel: "alpha",
     major: 2,
     buildchainRef: "v2-alpha",
+    runtimeOverride: false,
     selectionSource: "development-default",
     reason: "non-release pull_request event",
   });
@@ -54,29 +55,30 @@ test("explicit channel and runtime overrides take precedence with conflict check
   assert.equal(resolveBuildchainChannel({ ...base, requestedRef: "v2.12-alpha" }).channel, "alpha");
   assert.equal(
     resolveBuildchainChannel({ ...base, requestedRef: "train/v2/v2.3/channel-router" }).channel,
-    "override",
+    "alpha",
   );
   assert.deepEqual(
     resolveBuildchainChannel({ ...base, requestedRef: "authority/v2/v2.3/artifact-signing" }),
     {
-      channel: "override",
+      channel: "alpha",
       major: 2,
       buildchainRef: "authority/v2/v2.3/artifact-signing",
-      selectionSource: "explicit-buildchain-ref",
-      reason: "explicit Buildchain runtime ref authority/v2/v2.3/artifact-signing",
+      runtimeOverride: true,
+      selectionSource: "explicit-buildchain-ref+channel-evidence",
+      reason: "trusted runtime override authority/v2/v2.3/artifact-signing bound to alpha",
     },
   );
   assert.throws(
     () => resolveBuildchainChannel({ ...base, requestedChannel: "stable", requestedRef: "v2-alpha" }),
     /conflicts/,
   );
-  assert.throws(
-    () => resolveBuildchainChannel({ ...base, requestedChannel: "alpha", requestedRef: "a".repeat(40) }),
-    /require buildchain-channel=auto/,
+  assert.equal(
+    resolveBuildchainChannel({ ...base, requestedChannel: "alpha", requestedRef: "a".repeat(40) }).channel,
+    "alpha",
   );
-  assert.throws(
-    () => resolveBuildchainChannel({ ...base, requestedChannel: "stable", requestedRef: "authority/v2/v2.3/artifact-signing" }),
-    /require buildchain-channel=auto/,
+  assert.equal(
+    resolveBuildchainChannel({ ...base, requestedChannel: "stable", requestedRef: "authority/v2/v2.3/artifact-signing" }).channel,
+    "stable",
   );
 });
 
@@ -106,8 +108,20 @@ test("generated channel workflow mirrors the advanced build surface", () => {
   const expected = generateChannelBuildWorkflow(source);
   const current = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
   assert.equal(current, expected);
-  assert.match(current, /uses: \.\/\.github\/workflows\/\.build\.yml/);
+  assert.equal(
+    (current.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length,
+    3,
+    "every lane must reuse the exact caller workflow shell so channel binding can validate that shell",
+  );
+  assert.doesNotMatch(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@/);
+  assert.match(current, /if: \$\{\{ needs\.resolve-channel\.outputs\.runtime-override == 'true' \}\}/);
+  assert.match(
+    current,
+    /if: \$\{\{ needs\.resolve-channel\.outputs\.runtime-override != 'true' && needs\.resolve-channel\.outputs\.channel == 'alpha' \}\}/,
+  );
   assert.match(current, /buildchain-ref: \$\{\{ needs\.resolve-channel\.outputs\.buildchain-ref \}\}/);
+  assert.match(current, /buildchain-expected-channel: \$\{\{ needs\.resolve-channel\.outputs\.channel \}\}/);
+  assert.match(current, /buildchain-expected-major: \$\{\{ needs\.resolve-channel\.outputs\.major \}\}/);
   assert.match(current, /buildchain-contract-lock-path: \$\{\{ needs\.resolve-channel\.outputs\.contract-lock-path \}\}/);
   assert.match(current, /BUILDCHAIN_ROUTER_WORKFLOW_REPOSITORY: \$\{\{ job\.workflow_repository \}\}/);
   assert.match(current, /BUILDCHAIN_ROUTER_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/);

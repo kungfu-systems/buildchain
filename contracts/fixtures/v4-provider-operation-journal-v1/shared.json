@@ -1,0 +1,457 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain-v4-provider-operation-journal-fixtures/v1",
+  "validCases": [
+    {
+      "id": "unknown-readback-retry-confirmed",
+      "entries": [
+        {
+          "kind": "intent",
+          "schema": "buildchain-v4-provider-operation-intent/v1",
+          "sequence": 0,
+          "priorEntryRoot": null,
+          "operation": {
+            "schema": "buildchain-v4-provider-operation-identity/v1",
+            "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "declaredAt": "2026-08-09T04:00:00.000Z",
+          "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "entryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 1,
+          "priorEntryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptOrdinal": 1,
+          "attemptedAt": "2026-08-09T04:00:01.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497"
+        },
+        {
+          "kind": "observation",
+          "schema": "buildchain-v4-provider-operation-observation/v1",
+          "sequence": 2,
+          "priorEntryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "observedAt": "2026-08-09T04:00:02.000Z",
+          "status": "unknown",
+          "evidenceRoots": [
+            "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+          ],
+          "entryRoot": "sha256:88d0fedb53ac92a86c34ac2557a1b80c822543f0ab3edbbd91fc1f7ecffc3d63"
+        },
+        {
+          "kind": "reconciliation",
+          "schema": "buildchain-v4-provider-operation-reconciliation/v1",
+          "sequence": 3,
+          "priorEntryRoot": "sha256:88d0fedb53ac92a86c34ac2557a1b80c822543f0ab3edbbd91fc1f7ecffc3d63",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "observationRoot": "sha256:88d0fedb53ac92a86c34ac2557a1b80c822543f0ab3edbbd91fc1f7ecffc3d63",
+          "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "reconciledAt": "2026-08-09T04:00:03.000Z",
+          "disposition": "retry",
+          "entryRoot": "sha256:7b6f9e1a815bf9965124ec81dd48f07e8c15a7d5b0d88418bf3cce68756b82d0"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 4,
+          "priorEntryRoot": "sha256:7b6f9e1a815bf9965124ec81dd48f07e8c15a7d5b0d88418bf3cce68756b82d0",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptOrdinal": 2,
+          "attemptedAt": "2026-08-09T04:00:04.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:6fff8eb26a244ce5e5dcd3043271bd8b6904c9175649c22ebe4fd8799ee85e6c"
+        },
+        {
+          "kind": "observation",
+          "schema": "buildchain-v4-provider-operation-observation/v1",
+          "sequence": 5,
+          "priorEntryRoot": "sha256:6fff8eb26a244ce5e5dcd3043271bd8b6904c9175649c22ebe4fd8799ee85e6c",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:6fff8eb26a244ce5e5dcd3043271bd8b6904c9175649c22ebe4fd8799ee85e6c",
+          "observedAt": "2026-08-09T04:00:05.000Z",
+          "status": "succeeded",
+          "evidenceRoots": [
+            "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ],
+          "entryRoot": "sha256:f26df0076a741f91121842945b9c614c8e484c41c3cab04562be59f722fbbfb8"
+        },
+        {
+          "kind": "confirmation",
+          "schema": "buildchain-v4-provider-operation-confirmation/v1",
+          "sequence": 6,
+          "priorEntryRoot": "sha256:f26df0076a741f91121842945b9c614c8e484c41c3cab04562be59f722fbbfb8",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "observationRoot": "sha256:f26df0076a741f91121842945b9c614c8e484c41c3cab04562be59f722fbbfb8",
+          "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "confirmedAt": "2026-08-09T04:00:06.000Z",
+          "outcome": "confirmed",
+          "entryRoot": "sha256:346646666a06ddd1df7438a66a47815419aea9c40a2d43ebd7e4d6cb98d12f21"
+        }
+      ]
+    }
+  ],
+  "invalidCases": [
+    {
+      "id": "attempt-before-reconciliation",
+      "entries": [
+        {
+          "kind": "intent",
+          "schema": "buildchain-v4-provider-operation-intent/v1",
+          "sequence": 0,
+          "priorEntryRoot": null,
+          "operation": {
+            "schema": "buildchain-v4-provider-operation-identity/v1",
+            "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "declaredAt": "2026-08-09T04:00:00.000Z",
+          "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "entryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 1,
+          "priorEntryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptOrdinal": 1,
+          "attemptedAt": "2026-08-09T04:00:01.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 2,
+          "priorEntryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptOrdinal": 2,
+          "attemptedAt": "2026-08-09T04:00:02.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:5c97ea915e028f371d71b16c76e45c23574eff75838456c9a648a391dabac764"
+        }
+      ]
+    },
+    {
+      "id": "confirmation-without-rooted-observation",
+      "entries": [
+        {
+          "kind": "intent",
+          "schema": "buildchain-v4-provider-operation-intent/v1",
+          "sequence": 0,
+          "priorEntryRoot": null,
+          "operation": {
+            "schema": "buildchain-v4-provider-operation-identity/v1",
+            "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "declaredAt": "2026-08-09T04:00:00.000Z",
+          "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "entryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 1,
+          "priorEntryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptOrdinal": 1,
+          "attemptedAt": "2026-08-09T04:00:01.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497"
+        },
+        {
+          "kind": "confirmation",
+          "schema": "buildchain-v4-provider-operation-confirmation/v1",
+          "sequence": 2,
+          "priorEntryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "observationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "confirmedAt": "2026-08-09T04:00:02.000Z",
+          "outcome": "confirmed",
+          "entryRoot": "sha256:0f6cf5fd157f47beab423431e3db61ad680de6de8d752777e97e6cd46b00eb5a"
+        }
+      ]
+    },
+    {
+      "id": "conflicting-confirmations",
+      "entries": [
+        {
+          "kind": "intent",
+          "schema": "buildchain-v4-provider-operation-intent/v1",
+          "sequence": 0,
+          "priorEntryRoot": null,
+          "operation": {
+            "schema": "buildchain-v4-provider-operation-identity/v1",
+            "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "declaredAt": "2026-08-09T04:00:00.000Z",
+          "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "entryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 1,
+          "priorEntryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptOrdinal": 1,
+          "attemptedAt": "2026-08-09T04:00:01.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497"
+        },
+        {
+          "kind": "observation",
+          "schema": "buildchain-v4-provider-operation-observation/v1",
+          "sequence": 2,
+          "priorEntryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "observedAt": "2026-08-09T04:00:02.000Z",
+          "status": "succeeded",
+          "evidenceRoots": [
+            "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ],
+          "entryRoot": "sha256:bc7a42e9ea59c863ed077bc07ecfa2c27aca261190790f4e76ac36ba7a15e456"
+        },
+        {
+          "kind": "confirmation",
+          "schema": "buildchain-v4-provider-operation-confirmation/v1",
+          "sequence": 3,
+          "priorEntryRoot": "sha256:bc7a42e9ea59c863ed077bc07ecfa2c27aca261190790f4e76ac36ba7a15e456",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "observationRoot": "sha256:bc7a42e9ea59c863ed077bc07ecfa2c27aca261190790f4e76ac36ba7a15e456",
+          "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "confirmedAt": "2026-08-09T04:00:03.000Z",
+          "outcome": "confirmed",
+          "entryRoot": "sha256:c96d003472a7b222e360f091b80b2d7669e557c6741d0190f70a12f20e8a376d"
+        },
+        {
+          "kind": "confirmation",
+          "schema": "buildchain-v4-provider-operation-confirmation/v1",
+          "sequence": 4,
+          "priorEntryRoot": "sha256:c96d003472a7b222e360f091b80b2d7669e557c6741d0190f70a12f20e8a376d",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "observationRoot": "sha256:bc7a42e9ea59c863ed077bc07ecfa2c27aca261190790f4e76ac36ba7a15e456",
+          "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "confirmedAt": "2026-08-09T04:00:04.000Z",
+          "outcome": "rejected",
+          "entryRoot": "sha256:9ccffc975e29124b0c7ac3cdee3e8d026992367024ff241663e9544026856b7b"
+        }
+      ]
+    },
+    {
+      "id": "authority-escalation",
+      "entries": [
+        {
+          "kind": "intent",
+          "schema": "buildchain-v4-provider-operation-intent/v1",
+          "sequence": 0,
+          "priorEntryRoot": null,
+          "operation": {
+            "schema": "buildchain-v4-provider-operation-identity/v1",
+            "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "declaredAt": "2026-08-09T04:00:00.000Z",
+          "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "entryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 1,
+          "priorEntryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptOrdinal": 1,
+          "attemptedAt": "2026-08-09T04:00:01.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497"
+        },
+        {
+          "kind": "observation",
+          "schema": "buildchain-v4-provider-operation-observation/v1",
+          "sequence": 2,
+          "priorEntryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "observedAt": "2026-08-09T04:00:02.000Z",
+          "status": "succeeded",
+          "evidenceRoots": [
+            "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ],
+          "entryRoot": "sha256:bc7a42e9ea59c863ed077bc07ecfa2c27aca261190790f4e76ac36ba7a15e456"
+        },
+        {
+          "kind": "confirmation",
+          "schema": "buildchain-v4-provider-operation-confirmation/v1",
+          "sequence": 3,
+          "priorEntryRoot": "sha256:bc7a42e9ea59c863ed077bc07ecfa2c27aca261190790f4e76ac36ba7a15e456",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "observationRoot": "sha256:bc7a42e9ea59c863ed077bc07ecfa2c27aca261190790f4e76ac36ba7a15e456",
+          "authorityRoot": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "confirmedAt": "2026-08-09T04:00:03.000Z",
+          "outcome": "confirmed",
+          "entryRoot": "sha256:e0d4fdc7e2630447b6716185e32b72848c90f71f5a4b5387d5076e238af87333"
+        }
+      ]
+    },
+    {
+      "id": "retry-operation-identity-drift",
+      "entries": [
+        {
+          "kind": "intent",
+          "schema": "buildchain-v4-provider-operation-intent/v1",
+          "sequence": 0,
+          "priorEntryRoot": null,
+          "operation": {
+            "schema": "buildchain-v4-provider-operation-identity/v1",
+            "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "declaredAt": "2026-08-09T04:00:00.000Z",
+          "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "entryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 1,
+          "priorEntryRoot": "sha256:a78abebea3f8a6e2ff1ff19ba4d81a8d2f81b44ae902cb2a5c06cdec1a66570d",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptOrdinal": 1,
+          "attemptedAt": "2026-08-09T04:00:01.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497"
+        },
+        {
+          "kind": "observation",
+          "schema": "buildchain-v4-provider-operation-observation/v1",
+          "sequence": 2,
+          "priorEntryRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "attemptRoot": "sha256:d18336f1647795f8efd0751b5a2c933b59c47dbbcd0ffc1a7e8be97cb4ee0497",
+          "observedAt": "2026-08-09T04:00:02.000Z",
+          "status": "unknown",
+          "evidenceRoots": [
+            "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+          ],
+          "entryRoot": "sha256:88d0fedb53ac92a86c34ac2557a1b80c822543f0ab3edbbd91fc1f7ecffc3d63"
+        },
+        {
+          "kind": "reconciliation",
+          "schema": "buildchain-v4-provider-operation-reconciliation/v1",
+          "sequence": 3,
+          "priorEntryRoot": "sha256:88d0fedb53ac92a86c34ac2557a1b80c822543f0ab3edbbd91fc1f7ecffc3d63",
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "observationRoot": "sha256:88d0fedb53ac92a86c34ac2557a1b80c822543f0ab3edbbd91fc1f7ecffc3d63",
+          "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "reconciledAt": "2026-08-09T04:00:03.000Z",
+          "disposition": "retry",
+          "entryRoot": "sha256:7b6f9e1a815bf9965124ec81dd48f07e8c15a7d5b0d88418bf3cce68756b82d0"
+        },
+        {
+          "kind": "attempt",
+          "schema": "buildchain-v4-provider-operation-attempt/v1",
+          "sequence": 4,
+          "priorEntryRoot": "sha256:7b6f9e1a815bf9965124ec81dd48f07e8c15a7d5b0d88418bf3cce68756b82d0",
+          "operationRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "attemptOrdinal": 2,
+          "attemptedAt": "2026-08-09T04:00:04.000Z",
+          "effectRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          "entryRoot": "sha256:5b0a0e467b7af519d6ef213928a1be30c81b7b489f64e8c70a60e397a4ac4f1f"
+        }
+      ]
+    },
+    {
+      "id": "provider-run-id-is-not-identity",
+      "entries": [
+        {
+          "kind": "intent",
+          "schema": "buildchain-v4-provider-operation-intent/v1",
+          "sequence": 0,
+          "priorEntryRoot": null,
+          "operation": {
+            "schema": "buildchain-v4-provider-operation-identity/v1",
+            "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "providerRunId": "mutable-run-42"
+          },
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "declaredAt": "2026-08-09T04:00:00.000Z",
+          "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "entryRoot": "sha256:51e50861f72b2e4f8b8f5a74f8e6237ce6281d04936917cb70569e505675d616"
+        }
+      ]
+    },
+    {
+      "id": "unsafe-sequence-is-rejected",
+      "entries": [
+        {
+          "kind": "intent",
+          "schema": "buildchain-v4-provider-operation-intent/v1",
+          "sequence": 9007199254740992,
+          "priorEntryRoot": null,
+          "operation": {
+            "schema": "buildchain-v4-provider-operation-identity/v1",
+            "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "targetRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "operationRoot": "sha256:da9d7ae530da8b1294af799429a57fbff55b47132e6c4c8530c4d638618dd613",
+          "declaredAt": "2026-08-09T04:00:00.000Z",
+          "inputRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "entryRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      ]
+    }
+  ]
+}

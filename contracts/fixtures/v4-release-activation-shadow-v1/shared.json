@@ -1,0 +1,53 @@
+{
+  "schema": "buildchain-v4-release-activation-request/v1",
+  "declaredAt": "2026-08-09T06:00:00.000Z",
+  "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "qualificationRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+  "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+  "steps": [
+    {
+      "id": "github-release",
+      "dependencies": [],
+      "operation": {
+        "schema": "buildchain-v4-provider-operation-identity/v1",
+        "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "capabilityId": "release.github",
+        "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "targetRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "compensationBoundaryRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+    },
+    {
+      "id": "npm-package",
+      "dependencies": ["github-release"],
+      "operation": {
+        "schema": "buildchain-v4-provider-operation-identity/v1",
+        "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "capabilityId": "package.npm",
+        "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "targetRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "compensationBoundaryRoot": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    {
+      "id": "oci-image",
+      "dependencies": ["github-release"],
+      "operation": {
+        "schema": "buildchain-v4-provider-operation-identity/v1",
+        "transactionRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "capabilityId": "image.oci",
+        "subjectRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "targetRoot": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "authorityRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "policyRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "compensationBoundaryRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+    }
+  ],
+  "events": []
+}

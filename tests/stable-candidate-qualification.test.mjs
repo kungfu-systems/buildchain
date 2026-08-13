@@ -16,7 +16,7 @@ test("binds automatic qualification to the exact alpha proved by self-dogfood", 
     selfDogfoodEvidence: {
       contract: "kungfu-buildchain-alpha-self-dogfood",
       status: "passed",
-      observed: { alpha: { ref: "v3-alpha", sha: SHA, expectedSha: SHA } },
+      observed: { alpha: { ref: "v4-alpha", sha: SHA, expectedSha: SHA } },
     },
   }), SHA);
   assert.throws(() => resolveStableCandidateQualificationCandidate({
@@ -24,7 +24,7 @@ test("binds automatic qualification to the exact alpha proved by self-dogfood", 
     selfDogfoodEvidence: {
       contract: "kungfu-buildchain-alpha-self-dogfood",
       status: "passed",
-      observed: { alpha: { ref: "v3-alpha", sha: SHA, expectedSha: "b".repeat(40) } },
+      observed: { alpha: { ref: "v4-alpha", sha: SHA, expectedSha: "b".repeat(40) } },
     },
   }), /does not bind observed and expected/);
 });

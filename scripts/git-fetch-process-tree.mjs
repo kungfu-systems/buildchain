@@ -1,11 +1,42 @@
 #!/usr/bin/env node
 import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const INTERNAL_COMMAND = "--buildchain-internal-git-fetch";
+const CMD_META_CHARACTERS = /([()\][%!^`"<>&|;, *?])/g;
 const TIMEOUT_EXIT_CODE = 124;
 const scriptPath = fileURLToPath(import.meta.url);
+
+function cmdEscapeCommand(value) {
+  return String(value).replace(CMD_META_CHARACTERS, "^$1");
+}
+
+function cmdEscapeArgument(value) {
+  let text = String(value);
+  text = text.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
+  text = text.replace(/(?=(\\+?)?)\1$/g, "$1$1");
+  return `"${text}"`.replace(CMD_META_CHARACTERS, "^$1");
+}
+
+function resolveGitInvocation(args, env = process.env) {
+  if (process.platform !== "win32") return { command: "git", args };
+  const gitShim = String(env.PATH || "")
+    .split(path.delimiter)
+    .map((directory) => path.join(directory, "git.cmd"))
+    .find((candidate) => fs.existsSync(candidate));
+  if (!gitShim) return { command: "git", args };
+  const shellCommand = [
+    cmdEscapeCommand(gitShim),
+    ...args.map(cmdEscapeArgument),
+  ].join(" ");
+  return {
+    command: env.ComSpec || env.comspec || process.env.ComSpec || process.env.comspec || "cmd.exe",
+    args: ["/d", "/s", "/c", `"${shellCommand}"`],
+    windowsVerbatimArguments: true,
+  };
+}
 
 async function terminateProcessTree(child, graceMs) {
   if (!child?.pid) return;
@@ -63,12 +94,14 @@ async function runInternalGitFetch() {
     50,
     Number(process.env.BUILDCHAIN_GIT_TIMEOUT_GRACE_MS || 2000),
   );
-  const child = spawn("git", payload.args, {
+  const invocation = resolveGitInvocation(payload.args);
+  const child = spawn(invocation.command, invocation.args, {
     cwd: payload.cwd,
     env: process.env,
     detached: process.platform !== "win32",
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
+    windowsVerbatimArguments: invocation.windowsVerbatimArguments,
   });
   const stdout = [];
   const stderr = [];

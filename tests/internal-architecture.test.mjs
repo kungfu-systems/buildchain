@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import test from "node:test";
 import {
   checkInternalArchitecture,
-  repositoryJavaScriptFiles,
+  repositorySourceFiles,
 } from "../scripts/check-internal-architecture.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -20,12 +20,12 @@ const index = JSON.parse(
 test("internal architecture index covers implementations, tests, and dependency direction", () => {
   assert.deepEqual(checkInternalArchitecture({ root, index }), {
     schemaVersion: 1,
-    capabilities: 16,
-    implementations: 49,
-    repositorySources: 277,
-    ownedSources: 277,
+    capabilities: 18,
+    implementations: 87,
+    repositorySources: 344,
+    ownedSources: 344,
     excludedSources: 0,
-    dependencyEdges: 225,
+    dependencyEdges: 270,
     dependencyRules: 4,
     dependencyCycles: 0,
   });
@@ -41,10 +41,25 @@ test("repository source inventory includes untracked files before commit", (t) =
   execFileSync("git", ["add", "tracked.mjs"], { cwd: temporaryRoot });
   fs.writeFileSync(path.join(temporaryRoot, "new.mjs"), "export {};\n");
 
-  assert.deepEqual(repositoryJavaScriptFiles(temporaryRoot), [
+  assert.deepEqual(repositorySourceFiles(temporaryRoot), [
     "new.mjs",
     "tracked.mjs",
   ]);
+});
+
+test("repository source inventory excludes transient root test sandboxes", (t) => {
+  const temporaryRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-architecture-transient-"),
+  );
+  t.after(() => fs.rmSync(temporaryRoot, { recursive: true, force: true }));
+  execFileSync("git", ["init", "-q"], { cwd: temporaryRoot });
+  fs.mkdirSync(path.join(temporaryRoot, ".tmp-fixture"));
+  fs.writeFileSync(
+    path.join(temporaryRoot, ".tmp-fixture", "fixture.cjs"),
+    "module.exports = {};\n",
+  );
+
+  assert.deepEqual(repositorySourceFiles(temporaryRoot), []);
 });
 
 test("internal architecture check rejects an unowned repository source", () => {

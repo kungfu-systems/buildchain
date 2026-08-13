@@ -269,7 +269,7 @@ test("init publication-artifact creates a paper artifact scaffold", () => {
   assert.match(toml, /image = "ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder"/);
   assert.match(toml, /digest = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8"/);
   const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
-  assert.match(workflow, /publication-artifact\.yml@v3/);
+  assert.match(workflow, /publication-artifact\.yml@v4/);
   assert.match(workflow, /toolchain-type: config/);
   assert.match(workflow, /verify-command: make check/);
 });
@@ -723,6 +723,10 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
     "out",
     "--artifact-name",
     "fixture",
+    "--platform-id",
+    "linux-x64",
+    "--platform-name",
+    "Linux x64",
     "--log-path",
     ".buildchain/logs/events.jsonl",
     "--process-summary",
@@ -731,6 +735,12 @@ command = "node -e \\"require('node:fs').mkdirSync('out',{recursive:true});requi
   const manifest = JSON.parse(output.slice(output.indexOf("{")));
 
   assert.equal(manifest.artifactName, "fixture");
+  assert.deepEqual(manifest.platform, {
+    id: "linux-x64",
+    name: "Linux x64",
+    os: process.env.RUNNER_OS || process.platform,
+    arch: process.env.RUNNER_ARCH || process.arch,
+  });
   assert.equal(manifest.lifecycle.stage, "build");
   assert.equal(manifest.files[0].path, "out/result.txt");
   assert.equal(manifest.observability.log.contract, "kungfu-buildchain-log-event");

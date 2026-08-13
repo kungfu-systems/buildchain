@@ -398,13 +398,14 @@ product-owned `release-passport-kfd-3-artifact-verify-command` such as
 `kungfu agent verify --json`. Buildchain compares declared shipped public
 surfaces with artifact-exposed public surfaces and writes the result under the
 KFD-provided `kfd-3` passport section.
-Set `release-passport-kfd-support-matrix-json` to the product-owned KFD-1..13
-support matrix and `release-passport-kfd-product-gate-jsons` to the
-newline-separated KFD-4, KFD-5, and KFD-7 gate results. Buildchain verifies
-their exact source, freshness, KFD package revision, matrix barriers, and
-gate/matrix agreement, then writes the immutable `kfd-support.json` sibling and
-embeds the same projection in `buildchain.release.json`. This projection cannot
-self-qualify or widen candidate, unsupported, draft, or non-shipped states.
+Set `release-passport-kfd-adopter-manifest-json` to the standard full-cut
+adopter manifest and `release-passport-kfd-product-gate-jsons` to the
+newline-separated KFD-4, KFD-5, and KFD-7 gate results. Buildchain binds the
+exact published KFD package, registry, verifier set, source, decision witness,
+and product-gate roots into both Passport and artifact evidence. The optional
+`release-passport-kfd-support-matrix-json` is comparison-only; it must exactly
+match the derived `kfd-support.json` compatibility projection and cannot widen
+candidate, unsupported, draft, or non-shipped states.
 Set `release-passport-invariant-passport-jsons` to one or more product-owned
 invariant Passport paths, or set `release-passport-invariant-passport-command`
 to a command that emits one canonical Passport JSON document. Buildchain does

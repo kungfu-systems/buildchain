@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe",
-    "majorLine": "v3"
+    "compatibilityDigest": "sha256:7234ed200c568b1fea0e469de61ec7a67da48ede0af6290fb49b93a9e62e0b65",
+    "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e65f7d4b8c55850866fea7fd1b9351cfef222b4bb2c51a8ed110c07fbc95e93e",
+    "sha256": "f55998a00a32a4dc6dde0b1d7df94bd5bf5b5f0897e3516243835107f56d3069",
     "summary": {
-      "cliCommandCount": 113,
-      "workflowCount": 64,
-      "actionCount": 6,
-      "sitePageCount": 65,
-      "docCommandRefCount": 896,
+      "cliCommandCount": 114,
+      "workflowCount": 71,
+      "actionCount": 7,
+      "sitePageCount": 75,
+      "docCommandRefCount": 919,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e65f7d4b8c55850866fea7fd1b9351cfef222b4bb2c51a8ed110c07fbc95e93e",
+      "sha256": "f55998a00a32a4dc6dde0b1d7df94bd5bf5b5f0897e3516243835107f56d3069",
       "summary": {
-        "cliCommandCount": 113,
-        "workflowCount": 64,
-        "actionCount": 6,
-        "sitePageCount": 65,
-        "docCommandRefCount": 896,
+        "cliCommandCount": 114,
+        "workflowCount": 71,
+        "actionCount": 7,
+        "sitePageCount": 75,
+        "docCommandRefCount": 919,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -326,6 +326,18 @@
           "kind": "documentation",
           "sourcePath": "actions/promote-buildchain-ref/README.md",
           "evidencePath": "actions/promote-buildchain-ref/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
+        },
+        {
+          "id": "doc:actions/release-tail/README.md",
+          "name": "actions/release-tail/README.md",
+          "kind": "documentation",
+          "sourcePath": "actions/release-tail/README.md",
+          "evidencePath": "actions/release-tail/README.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -715,6 +727,42 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/release-tail-contract.md",
+          "name": "Declarative release-tail contract",
+          "kind": "documentation",
+          "sourcePath": "docs/release-tail-contract.md",
+          "evidencePath": "docs/release-tail-contract.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
+          "id": "doc:docs/release-tail-provider-plane.md",
+          "name": "Declarative release-tail provider plane",
+          "kind": "documentation",
+          "sourcePath": "docs/release-tail-provider-plane.md",
+          "evidencePath": "docs/release-tail-provider-plane.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "use"
+        },
+        {
+          "id": "doc:docs/release-train.md",
+          "name": "Release Train and Release Cut",
+          "kind": "documentation",
+          "sourcePath": "docs/release-train.md",
+          "evidencePath": "docs/release-train.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/reusable-build-surface.md",
@@ -1413,6 +1461,30 @@
           "packageExport": "./kfd-product-gates"
         },
         {
+          "id": "export:./kfd-adopter-manifest",
+          "name": "@kungfu-tech/buildchain/kfd-adopter-manifest",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-adopter-manifest.js",
+          "evidencePath": "packages/core/kfd-adopter-manifest.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-adopter-manifest"
+        },
+        {
+          "id": "export:./kfd-adopter-release-binding",
+          "name": "@kungfu-tech/buildchain/kfd-adopter-release-binding",
+          "kind": "package-export",
+          "sourcePath": "packages/core/artifact-verification-envelope.js",
+          "evidencePath": "packages/core/artifact-verification-envelope.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-adopter-release-binding"
+        },
+        {
           "id": "export:./kfd-agent-hub",
           "name": "@kungfu-tech/buildchain/kfd-agent-hub",
           "kind": "package-export",
@@ -1605,6 +1677,30 @@
           "packageExport": "./github-governance-authority"
         },
         {
+          "id": "export:./engineering-housekeeper",
+          "name": "@kungfu-tech/buildchain/engineering-housekeeper",
+          "kind": "package-export",
+          "sourcePath": "packages/core/engineering-housekeeper.js",
+          "evidencePath": "packages/core/engineering-housekeeper.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./engineering-housekeeper"
+        },
+        {
+          "id": "export:./engineering-housekeeper-github",
+          "name": "@kungfu-tech/buildchain/engineering-housekeeper-github",
+          "kind": "package-export",
+          "sourcePath": "packages/core/engineering-housekeeper-github.js",
+          "evidencePath": "packages/core/engineering-housekeeper-github.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./engineering-housekeeper-github"
+        },
+        {
           "id": "export:./kfd-gate",
           "name": "@kungfu-tech/buildchain/kfd-gate",
           "kind": "package-export",
@@ -1639,6 +1735,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-candidate-recovery"
+        },
+        {
+          "id": "export:./release-train",
+          "name": "@kungfu-tech/buildchain/release-train",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-train.js",
+          "evidencePath": "packages/core/release-train.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-train"
         },
         {
           "id": "export:./stable-candidate-ledger",
@@ -1699,6 +1807,42 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-activation-transaction"
+        },
+        {
+          "id": "export:./release-tail-provider-plane",
+          "name": "@kungfu-tech/buildchain/release-tail-provider-plane",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-tail-provider-plane.js",
+          "evidencePath": "packages/core/release-tail-provider-plane.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-tail-provider-plane"
+        },
+        {
+          "id": "export:./release-tail-provider-adapters",
+          "name": "@kungfu-tech/buildchain/release-tail-provider-adapters",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-tail-provider-adapters.js",
+          "evidencePath": "packages/core/release-tail-provider-adapters.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-tail-provider-adapters"
+        },
+        {
+          "id": "export:./release-tail-compatibility",
+          "name": "@kungfu-tech/buildchain/release-tail-compatibility",
+          "kind": "package-export",
+          "sourcePath": "packages/core/release-tail-compatibility.js",
+          "evidencePath": "packages/core/release-tail-compatibility.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./release-tail-compatibility"
         },
         {
           "id": "export:./surface-manifest",
@@ -2682,7 +2826,7 @@
         },
         {
           "id": "cli:kfd-support",
-          "name": "buildchain kfd support project --matrix-json <file-or-json> --gate-json <file-or-json>...",
+          "name": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -3113,6 +3257,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:release-tail",
+          "name": "buildchain release-tail plan --declaration <json-or-path> [--output <path>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:release-transaction",
           "name": "buildchain release <inspect|recover|finalize|abort> ...",
           "kind": "cli-command",
@@ -3370,9 +3526,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 86,
+          "inputCount": 90,
           "inputs": [
             "artifact-compression-level",
+            "artifact-finalization-command",
+            "artifact-finalization-on-platform",
             "artifact-name",
             "artifact-name-template",
             "artifact-paths",
@@ -3393,6 +3551,8 @@
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
+            "buildchain-expected-channel",
+            "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
             "cache-dependency-lock-root",
@@ -3609,7 +3769,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 109,
+          "inputCount": 113,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3620,9 +3780,12 @@
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
+            "buildchain-expected-channel",
+            "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
             "channel",
+            "declarative-release-tail",
             "dry-run",
             "github-artifact-attestation-environment",
             "github-artifact-attestation-policy-json",
@@ -3698,6 +3861,7 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-adopter-manifest-json",
             "release-passport-kfd-product-gate-jsons",
             "release-passport-kfd-support-matrix-json",
             "release-passport-output-dir",
@@ -4128,9 +4292,11 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 89,
+          "inputCount": 93,
           "inputs": [
             "artifact-compression-level",
+            "artifact-finalization-command",
+            "artifact-finalization-on-platform",
             "artifact-name",
             "artifact-name-template",
             "artifact-paths",
@@ -4153,6 +4319,8 @@
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
+            "buildchain-expected-channel",
+            "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
@@ -4587,6 +4755,77 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:engineering-housekeeper-daily",
+          "name": "workflow:engineering-housekeeper-daily",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-daily.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-daily.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper-monthly",
+          "name": "workflow:engineering-housekeeper-monthly",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-monthly.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-monthly.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper-weekly",
+          "name": "workflow:engineering-housekeeper-weekly",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper-weekly.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper-weekly.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:engineering-housekeeper",
+          "name": "workflow:engineering-housekeeper",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/engineering-housekeeper.yml",
+          "evidencePath": ".github/workflows/engineering-housekeeper.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 14,
+          "inputs": [
+            "apply-enabled",
+            "artifact-prefix",
+            "artifact-retention-days",
+            "buildchain-ref",
+            "buildchain-repository",
+            "max-actions",
+            "mode",
+            "protected-patterns",
+            "repository",
+            "retained-patterns",
+            "stale-days",
+            "stale-pull-request-label",
+            "target-branch",
+            "temporary-branch-patterns"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:github-artifact-attestation",
           "name": "workflow:github-artifact-attestation",
           "kind": "workflow",
@@ -4875,7 +5114,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 100,
+          "inputCount": 102,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4892,6 +5131,7 @@
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
             "channel",
+            "declarative-release-tail",
             "dry-run",
             "github-artifact-attestation-environment",
             "github-artifact-attestation-policy-json",
@@ -4955,6 +5195,7 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-adopter-manifest-json",
             "release-passport-kfd-product-gate-jsons",
             "release-passport-kfd-support-matrix-json",
             "release-passport-output-dir",
@@ -5062,6 +5303,26 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:release-tail",
+          "name": "workflow:release-tail",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/release-tail.yml",
+          "evidencePath": ".github/workflows/release-tail.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 5,
+          "inputs": [
+            "buildchain-ref",
+            "declaration-path",
+            "execute",
+            "provider-bindings-path",
+            "state-path"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:release-verify",
           "name": "workflow:release-verify",
           "kind": "workflow",
@@ -5131,6 +5392,41 @@
             "revoke-reason",
             "revoked-versions",
             "target-branch"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:v4-public-consumer-dogfood",
+          "name": "workflow:v4-public-consumer-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-public-consumer-dogfood.yml",
+          "evidencePath": ".github/workflows/v4-public-consumer-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:v4-stage-capsule-canary",
+          "name": "workflow:v4-stage-capsule-canary",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-stage-capsule-canary.yml",
+          "evidencePath": ".github/workflows/v4-stage-capsule-canary.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 6,
+          "inputs": [
+            "build-artifact-path",
+            "consumer",
+            "go-version",
+            "install-artifact-path",
+            "node-version",
+            "verify-artifact-path"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5222,12 +5518,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 76,
+          "inputCount": 80,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
             "branch-protection-bypass-teams",
             "branch-protection-bypass-users",
+            "declarative-release-tail",
             "dry-run",
             "expected-publication-version",
             "generated-pull-request-token",
@@ -5251,6 +5548,7 @@
             "publish-package-set-order",
             "publish-rematerialize-on-resume",
             "publish-required-artifacts-json",
+            "publish-required-artifacts-path",
             "publish-sealed-bundle-manifest",
             "publish-sealed-bundle-root",
             "publish-source-locked",
@@ -5283,12 +5581,14 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-adopter-manifest-json",
             "release-passport-kfd-product-gate-jsons",
             "release-passport-kfd-support-matrix-json",
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
             "release-passport-promotion-routing-json",
+            "release-tail-state-path",
             "require-governance",
             "require-publication-qualification",
             "require-publish-source-lock",
@@ -5300,6 +5600,27 @@
             "token",
             "transaction-state-path",
             "verification-command"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:release-tail",
+          "name": "action:release-tail",
+          "kind": "action",
+          "sourcePath": "actions/release-tail/action.yml",
+          "evidencePath": "actions/release-tail/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 6,
+          "inputs": [
+            "declaration",
+            "execute",
+            "github-token",
+            "http-token",
+            "provider-bindings",
+            "state-path"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -5443,6 +5764,18 @@
         {
           "id": "site-page:action:promote-buildchain-ref",
           "name": "site-page:action:promote-buildchain-ref",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:action:release-tail",
+          "name": "site-page:action:release-tail",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -5789,6 +6122,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:engineering-housekeeper",
+          "name": "site-page:manual:engineering-housekeeper",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:getting-started",
           "name": "site-page:manual:getting-started",
           "kind": "site-page",
@@ -6089,6 +6434,42 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:release-tail-contract",
+          "name": "site-page:manual:release-tail-contract",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:release-tail-provider-plane",
+          "name": "site-page:manual:release-tail-provider-plane",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:release-train",
+          "name": "site-page:manual:release-train",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:reusable-build-surface",
           "name": "site-page:manual:reusable-build-surface",
           "kind": "site-page",
@@ -6151,6 +6532,66 @@
         {
           "id": "site-page:manual:toolkit-observability",
           "name": "site-page:manual:toolkit-observability",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:v4-canonical-contracts",
+          "name": "site-page:manual:v4-canonical-contracts",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:v4-delivery-warrant-read-candidate",
+          "name": "site-page:manual:v4-delivery-warrant-read-candidate",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:v4-delivery-warrant-semantic-diff",
+          "name": "site-page:manual:v4-delivery-warrant-semantic-diff",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:v4-production-release",
+          "name": "site-page:manual:v4-production-release",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:v4-stage-capsule",
+          "name": "site-page:manual:v4-stage-capsule",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -6367,6 +6808,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 402
+    "publicSurfaceCount": 433
   }
 }

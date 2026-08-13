@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-provider-operation-journal-architecture",
+  "schemaAuthority": "contracts/v4-provider-operation-journal-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-provider-operation-journal-v1/shared.json",
+  "mode": "production-journal",
+  "authority": {
+    "productionWriter": "v4-domain",
+    "productionWriterCount": 1,
+    "stateFoldAuthority": "rust-v4-core",
+    "stateFoldWriterCount": 1,
+    "typescript": "provider-adapter-and-conformance-plane",
+    "productionWriteChange": true
+  },
+  "implementations": {
+    "rustContract": "crates/buildchain-v4-contracts/src/provider_operation_journal.rs",
+    "rustFold": "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs",
+    "rustReadback": "crates/buildchain-v4-contracts/src/provider_readback_idempotency.rs",
+    "typescript": "packages/core/v4-provider-operation-journal.js",
+    "typescriptReadback": "packages/core/v4-provider-readback-idempotency.js"
+  },
+  "activationDomain": {
+    "architecture": "architecture/v4-release-activation-shadow-domain.json",
+    "qualifiedInput": "buildchain-v4-release-activation-request/v1",
+    "journalConsumption": "sole-existing-provider-operation-journal-fold",
+    "confirmedResumeRule": "never-replay",
+    "uncertainResumeRule": "readback-before-any-retry",
+    "productionAuthority": "v4-domain",
+    "liveMutation": true
+  },
+  "roots": [
+    "provider-operation-identity",
+    "provider-operation-intent",
+    "provider-operation-attempt",
+    "provider-operation-observation",
+    "provider-operation-confirmation",
+    "provider-operation-reconciliation",
+    "provider-operation-journal",
+    "provider-operation-journal-state",
+    "provider-readback-sample",
+    "provider-readback-fold"
+  ],
+  "identityIncludes": [
+    "transactionRoot",
+    "capabilityId",
+    "subjectRoot",
+    "targetRoot",
+    "authorityRoot",
+    "policyRoot"
+  ],
+  "identityExcludes": [
+    "attemptOrdinal",
+    "providerRunId",
+    "providerRequestId",
+    "providerResourceId",
+    "credential",
+    "signedUrl",
+    "ambientClock",
+    "networkResponseBody",
+    "runnerPath",
+    "transportLocalId"
+  ],
+  "appendOnly": {
+    "sequence": "zero-based-contiguous",
+    "causalLink": "priorEntryRoot",
+    "retryIdentity": "operationRoot",
+    "attemptIdentity": "entryRoot",
+    "observationEvidence": "non-empty-sorted-root-set"
+  },
+  "readbackAdapters": {
+    "providers": ["github-release", "npm-publication", "oci-manifest"],
+    "inputAuthority": "provider-shaped-responses-with-fixture-conformance",
+    "outputAuthority": "provider-neutral-rooted-observation-samples",
+    "duplicateHandling": "deduplicate-by-sample-root",
+    "ordering": "byte-sorted-sample-roots",
+    "typedStates": ["not-found", "eventually-visible", "already-applied"],
+    "typedFaults": [
+      "conflicting-provider-readback",
+      "malformed-provider-readback",
+      "provider-readback-root-mismatch",
+      "provider-readback-coordinate-mismatch"
+    ],
+    "emits": "provider-operation-observation-only",
+    "confirmationAuthority": "independent-journal-qualification",
+    "releaseStateAuthority": false
+  },
+  "foldRejects": [
+    "impossible-transition",
+    "non-contiguous-sequence",
+    "causal-link-mismatch",
+    "logical-operation-identity-drift",
+    "confirmation-without-rooted-success-observation",
+    "conflicting-terminal-confirmation",
+    "authority-root-escalation",
+    "observation-disposition-conflict"
+  ],
+  "budgets": {
+    "schemaAuthorities": 1,
+    "stateFoldWriters": 1,
+    "secondStateFoldWriters": 0,
+    "providerSdkImportsInContracts": 0,
+    "providerSdkImportsInRustDomain": 0,
+    "liveProviderMutations": 0,
+    "productionWriteAuthorityChanges": 1,
+    "v3ConsumerBehaviorChanges": 0
+  },
+  "successors": [
+    "provider-readback-idempotency-adapters",
+    "release-activation-shadow-domain",
+    "stable-candidate-publication-fencing-shadow",
+    "partial-mutation-recovery-qualification"
+  ]
+}

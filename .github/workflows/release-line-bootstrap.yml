@@ -179,6 +179,7 @@ jobs:
             exit 1
           fi
           for branch in "${{ steps.plan.outputs.dev_ref }}" "${{ steps.plan.outputs.alpha_ref }}" "${{ steps.plan.outputs.release_ref }}"; do
+            encoded_branch="$(jq -rn --arg value "$branch" '$value | @uri')"
             jq -n \
               --arg context "$BUILDCHAIN_REQUIRED_STATUS_CHECK" \
               --arg branch "$branch" \
@@ -212,7 +213,7 @@ jobs:
                 restrictions: null,
                 required_conversation_resolution: true
               }' |
-              gh api --method PUT "repos/${GITHUB_REPOSITORY}/branches/${branch}/protection" --input -
+              gh api --method PUT "repos/${GITHUB_REPOSITORY}/branches/${encoded_branch}/protection" --input -
           done
 
       - name: Reconcile dev merge queue governance

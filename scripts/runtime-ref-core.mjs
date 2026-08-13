@@ -1,3 +1,5 @@
+import { parseBuildchainRefIdentity } from "../packages/core/buildchain-channel-identity.js";
+
 const EXACT_SHA_RE = /^[0-9a-f]{40}$/i;
 const TRAIN_REF_RE = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
 const AUTHORITY_REF_RE = /^authority\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
@@ -14,23 +16,8 @@ export function parseWorkflowShellRef(workflowRef = "", fallback = "v3", buildch
 }
 
 export function classifyBuildchainRuntimeRef(ref = "") {
-  const value = String(ref || "").trim().replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
-  if (EXACT_SHA_RE.test(value)) {
-    return "exact-sha";
-  }
-  if (TRAIN_REF_RE.test(value)) {
-    return "train";
-  }
-  if (AUTHORITY_REF_RE.test(value)) {
-    return "authority";
-  }
-  if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) {
-    return "stable";
-  }
-  if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) {
-    return "alpha";
-  }
-  return "development";
+  const identity = parseBuildchainRefIdentity(ref);
+  return identity.channel || (identity.kind === "missing" ? "development" : identity.kind);
 }
 
 export function isOfficialBuildchainChannelRef(ref = "") {

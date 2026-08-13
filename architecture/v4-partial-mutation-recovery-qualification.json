@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-partial-mutation-recovery-qualification-architecture",
+  "schemaAuthority": "contracts/v4-partial-mutation-recovery-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-partial-mutation-recovery-v1/shared.json",
+  "stageCapsulePredecessor": "architecture/v4-stage-capsule-resume-planner.json",
+  "activationPredecessor": "architecture/v4-release-activation-shadow-domain.json",
+  "journalPredecessor": "architecture/v4-provider-operation-journal-contract.json",
+  "mode": "production",
+  "productionAuthority": "v4-domain",
+  "classificationPriority": [
+    "escalate",
+    "compensate",
+    "reconcile",
+    "wait",
+    "retry",
+    "terminal-noop"
+  ],
+  "bindings": [
+    "source-root",
+    "policy-root",
+    "platform-root",
+    "stage-qualification-roots",
+    "activation-qualification-root",
+    "stage-resume-plan-root",
+    "activation-plan-root",
+    "activation-state-root",
+    "provider-operation-root",
+    "journal-state-root",
+    "compensation-boundary-root"
+  ],
+  "invariants": [
+    "confirmed operations are terminal noops and never enter next operations",
+    "every nonterminal operation maps to one bounded action and exact checkpoint",
+    "repeated evaluation of identical rooted evidence is byte-identical",
+    "missing corrupt conflicting expired or cross-boundary evidence fails closed",
+    "Stage Capsule rejection precedes all provider recovery planning",
+    "the planner emits zero external mutations and authorizes only bounded provider-adapter recovery"
+  ],
+  "implementations": {
+    "rustDomain": "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs",
+    "typescript": "packages/core/v4-partial-mutation-recovery-qualification.js"
+  },
+  "roots": [
+    "partial-mutation-recovery-checkpoint",
+    "partial-mutation-recovery-plan"
+  ],
+  "budgets": {
+    "schemaAuthorities": 1,
+    "recoveryPlanners": 1,
+    "typescriptProjections": 1,
+    "secondProductionWriters": 0,
+    "providerSdkImportsInContracts": 0,
+    "providerSdkImportsInRustDomain": 0,
+    "liveProviderMutations": 0,
+    "networkWrites": 0,
+    "credentialReads": 0,
+    "filesystemWrites": 0,
+    "ambientClockReads": 0,
+    "unboundedRetries": 0,
+    "productionWriteAuthorityChanges": 1,
+    "v3ConsumerBehaviorChanges": 0
+  },
+  "successor": "wave-3-reconciliation"
+}

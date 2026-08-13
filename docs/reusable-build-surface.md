@@ -66,10 +66,25 @@ release events, and non-semver release-like tags fail before the build matrix;
 they never guess alpha for a stable release.
 
 The router automatically selects `.buildchain/alpha-contract-lock.json` for
-alpha and `.buildchain/contract-lock.json` for stable. A repository can override
-the common path with `buildchain-contract-lock-path`, or override one channel
-with `buildchain-alpha-contract-lock-path` /
-`buildchain-stable-contract-lock-path`.
+alpha and `.buildchain/contract-lock.json` for stable. The generated workflow
+uses two static advanced-workflow calls: `@vN-alpha` for alpha and `@vN` for
+stable. A repository can override the common path with
+`buildchain-contract-lock-path`, or override one channel with
+`buildchain-alpha-contract-lock-path` / `buildchain-stable-contract-lock-path`,
+but the path is never channel authority. The selected file's
+`buildchain.ref` must prove the same channel and major as the workflow shell and
+runtime.
+
+Channel binding is independent of the current Buildchain major. Every
+channel-bound run validates the complete triad before compatibility drift:
+
+- stable = shell `vN` + runtime `vN` + a lock whose ref is stable `vN`;
+- alpha = shell `vN-alpha` + runtime `vN-alpha` + a lock whose ref is alpha
+  `vN-alpha`.
+
+Exact release refs are classified the same way. A missing lock, an ambiguous
+identity, a major mismatch, or any stable/alpha mixture fails even when the
+contract digest is unchanged or the drift would otherwise be additive.
 
 Only repositories changing the default policy need extra routing input:
 
@@ -279,7 +294,8 @@ shell. The full train validation protocol is documented in
 [`runtime-train-validation.md`](runtime-train-validation.md).
 
 For one-off manual validation, a trusted maintainer can run the caller workflow
-with a temporary runtime override:
+with a temporary runtime override. The override inherits the caller's declared
+alpha or stable lane; trust authorizes the opaque ref, not cross-channel use:
 
 ```yaml
 on:
@@ -1071,10 +1087,11 @@ jobs:
 ```
 
 Existing callers may keep `buildchain-contract-lock-path`; a non-empty explicit
-path overrides channel-specific selection for compatibility. Migration only
-requires adding the two channel lock inputs and may retain the remaining common
-promotion declaration unchanged. Consumers must not call the dot-prefixed
-advanced workflow directly.
+path overrides channel-specific path selection only. Its lock content must
+still prove the selected channel and major. Migration only requires adding the
+two channel lock inputs and may retain the remaining common promotion
+declaration unchanged. Consumers must not call the dot-prefixed advanced
+workflow directly.
 
 `buildchain-issue-app-id` and `buildchain-issue-app-private-key` are optional
 but recommended for cross-repository consumers. They should identify a GitHub
@@ -1369,6 +1386,14 @@ with:
 `require-trusted-event: true` whenever either runner input selects
 `self-hosted`; a self-hosted control plane must not be exposed to untrusted fork
 events or arbitrary caller-controlled workflow code.
+
+Consumers that must verify platform-native properties of the final bytes can
+set `artifact-finalization-command` and `artifact-finalization-on-platform:
+true`. Buildchain then imports any signed result (or preserves the declared
+unsigned artifact), runs the command on the matching GitHub-hosted platform,
+and reseals the manifest before publishing the final deterministic artifact.
+Platform-native finalization fails closed for self-hosted runners so signing
+authority credentials and final bytes stay inside the trusted hosted boundary.
 
 `require-trusted-event` controls access to build runners. It does not override
 the publish gate: pull requests remain non-publishing events.

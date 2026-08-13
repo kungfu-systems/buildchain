@@ -37,6 +37,10 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/dev-delivery-warrant-cancel.yml", "governance-write"],
   [".github/workflows/dev-merge-queue-governance.yml", "governance-write"],
   [".github/workflows/dev-pr-auto-merge.yml", "governance-write"],
+  [".github/workflows/engineering-housekeeper-daily.yml", "governance-write"],
+  [".github/workflows/engineering-housekeeper-monthly.yml", "governance-write"],
+  [".github/workflows/engineering-housekeeper-weekly.yml", "governance-write"],
+  [".github/workflows/engineering-housekeeper.yml", "governance-write"],
   [".github/workflows/github-governance-audit.yml", "governance-write"],
   [".github/workflows/github-artifact-attestation.yml", "evidence-publication", true, ["github-artifact-attestation"], "oidc", "consumer-defined", "caller-bound", "caller-bound"],
   [".github/workflows/npm-publish.yml", "dry-run-only"],
@@ -50,6 +54,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/release-candidate-promote.yml", "product-publication", true, ["npm-publish", "github-release", "channel-ref"], "trusted-publishing", "none", "fixed", "caller-bound"],
   [".github/workflows/release-line-bootstrap.yml", "governance-write"],
   [".github/workflows/release-propagation.yml", "governance-write"],
+  [".github/workflows/release-tail.yml", "product-publication", true, ["artifact.publish", "signed-channel.commit", "release.activate", "released-evidence.synthesize"], "caller-secrets", "caller-bound", "caller-bound", "fixed"],
   [".github/workflows/release-verify.yml", "governance-write"],
   [".github/workflows/stable-candidate-patrol.yml", "governance-write"],
 ]);

@@ -122,7 +122,7 @@ test("authority descriptor freezes the TCB, baseline, plan boundary, and non-cla
   assert.deepEqual(descriptor.repositoryAdmission.managedVisibilities, ["public"]);
   assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 16);
   assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 0);
-  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 46);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 49);
   assert.deepEqual(descriptor.planCapability.privateRepositories, []);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
@@ -394,8 +394,11 @@ test("authoritative target registry detects default drift and constrains private
     },
   });
   assert.ok(publicTargets.includes("dev/v3/v3.0"));
+  assert.ok(publicTargets.includes("dev/v4/v4.0"));
   assert.ok(publicTargets.includes("alpha/v3/v3.0"));
   assert.ok(publicTargets.includes("release/v3/v3.0"));
+  assert.ok(publicTargets.includes("alpha/v4/v4.0"));
+  assert.ok(publicTargets.includes("release/v4/v4.0"));
   assert.ok(publicTargets.includes("authority/v3/v3.0/artifact-signing"));
   assert.ok(publicTargets.includes("publish-gate/major"));
   assert.ok(publicTargets.includes("dev/v2/v2.15"));
@@ -492,6 +495,27 @@ test("formal artifact-signing authority is admitted with exact checks and no byp
   assert.equal(policy.strictRequiredChecks, true);
   assert.deepEqual(policy.allowedBypassActors, []);
   assert.equal(policy.requiredApprovals, 1);
+});
+
+test("Buildchain v4 publication channels are admitted with exact checks", () => {
+  const alpha = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "alpha/v4/v4.0",
+  });
+  const stable = resolveGithubGovernanceTargetPolicy({
+    repository: "kungfu-systems/buildchain",
+    targetRef: "release/v4/v4.0",
+  });
+  assert.deepEqual(alpha.requiredCheckBindings, [
+    { context: "check", appId: 15368 },
+    { context: "verify", appId: 15368 },
+  ]);
+  assert.equal(alpha.strictRequiredChecks, false);
+  assert.deepEqual(stable.requiredCheckBindings, [
+    { context: "check", appId: 15368 },
+    { context: "verify", appId: 15368 },
+  ]);
+  assert.equal(stable.strictRequiredChecks, true);
 });
 
 test("unadmitted targets, required-check removal, producer substitution, and strict drift deny", () => {
@@ -1094,6 +1118,22 @@ test("publication authority recollects live App-authenticated governance instead
   assert.match(authorityWorkflow, /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY/);
   assert.match(
     authorityWorkflow,
+    /name: Mint bounded governance auditor token[\s\S]+KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''[\s\S]+continue-on-error: true/,
+  );
+  assert.match(
+    authorityWorkflow,
+    /GH_TOKEN: \$\{\{ steps\.governance-auditor\.outputs\.token \|\| secrets\.BUILDCHAIN_GOVERNANCE_READ_TOKEN \|\| github\.token \}\}/,
+  );
+  const releaseWorkflow = fs.readFileSync(
+    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    releaseWorkflow,
+    /BUILDCHAIN_GOVERNANCE_READ_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
+  assert.match(
+    authorityWorkflow,
     /audit-github-governance\.mjs[\s\S]+--repository "\$repository"[\s\S]+--target-ref "\$target_ref"[\s\S]+--require-qualifying/,
   );
   assert.match(authorityWorkflow, /audit\.inventory\?\.targetCount !== 1/);
@@ -1123,7 +1163,6 @@ test("publication authority recollects live App-authenticated governance instead
     );
   }
   for (const workflow of [
-    ".release-candidate-promote.yml",
     "paper-release.yml",
     "paper-release-sealed.yml",
   ]) {

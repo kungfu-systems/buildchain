@@ -49,7 +49,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_run' }}
         uses: actions/download-artifact@v7.0.0
         with:
-          name: buildchain-v3-alpha-self-dogfood-evidence
+          name: buildchain-v4-dual-channel-self-dogfood-evidence
           path: .buildchain/qualification/self-dogfood
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}

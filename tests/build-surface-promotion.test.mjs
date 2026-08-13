@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   DEFAULT_ARTIFACT_NAME_TEMPLATE,
   LINUX_CONTAINER_PRESETS,
@@ -70,6 +71,7 @@ import { evaluateBuildchainContractLock } from "../packages/core/buildchain-cont
 import {
   canAdmitSelfDogfoodLockEvaluation,
   contractForSelfDogfoodEvaluation,
+  hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
 import {
@@ -93,7 +95,7 @@ import {
 } from "../packages/core/diagnostics.js";
 
 const root = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
+  path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
 
@@ -120,6 +122,20 @@ test("promote action exposes generic publish source-lock gate", () => {
   assert.match(implementation, /kungfu-buildchain-publish-source-lock-validation/);
   assert.match(implementation, /publish-gate\/\{alpha,release,major\}/);
   assert.match(implementation, /does not match promotion sha/);
+});
+
+test("promote action path-backed artifact input imports its runtime dependencies", () => {
+  const implementation = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    "utf8",
+  );
+
+  assert.match(implementation, /import fs from "node:fs";/);
+  assert.match(implementation, /import path from "node:path";/);
+  assert.match(
+    implementation,
+    /fs\.readFileSync\(path\.resolve\(publishRequiredArtifactsPath\), "utf8"\)/,
+  );
 });
 
 test("promote wrapper exposes controlled branch-protection review bypass", () => {
@@ -160,6 +176,12 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.equal(publicWrapper.match(/artifact-metadata: write/g)?.length, 3);
   assert.equal(publicWrapper.match(/attestations: write/g)?.length, 3);
   assert.equal(publicWrapper.match(/pull-requests: write/g)?.length, 3);
+  assert.equal(
+    publicWrapper.match(/buildchain-expected-channel: \$\{\{ needs\.resolve-promotion\.outputs\.channel \}\}/g)?.length,
+    2,
+  );
+  assert.equal(publicWrapper.match(/buildchain-expected-major: "4"/g)?.length, 2);
+  assert.doesNotMatch(publicWrapper, /inputs\.buildchain-expected-(?:channel|major)/);
   assert.match(wrapper, /token: \$\{\{ github\.token \}\}/);
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(
@@ -552,6 +574,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(action, /release-passport-kfd-adopter-manifest-json:/);
   assert.match(action, /release-passport-kfd-support-matrix-json:/);
   assert.match(action, /release-passport-kfd-product-gate-jsons:/);
   assert.match(action, /release-passport-invariant-passport-jsons:/);
@@ -573,6 +596,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
+  assert.match(implementation, /releasePassportKfdAdopterManifestJson/);
   assert.match(implementation, /releasePassportKfdSupportMatrixJson/);
   assert.match(implementation, /releasePassportKfdProductGateJsons/);
   assert.match(implementation, /releasePassportInvariantPassportJsons/);
@@ -587,6 +611,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
+  assert.match(docs, /release-passport-kfd-adopter-manifest-json/);
   assert.match(docs, /release-passport-kfd-support-matrix-json/);
   assert.match(docs, /release-passport-kfd-product-gate-jsons/);
   assert.match(docs, /release-passport-invariant-passport-command/);
@@ -619,6 +644,15 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| \(\(inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != ''\) && github\.sha\) \|\| inputs\.sha \|\| github\.sha \}\}/,
   );
+  assert.match(
+    workflow,
+    /buildchain-expected-channel: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && 'alpha' \|\| 'stable' \}\}/,
+  );
+  assert.match(workflow, /buildchain-expected-major: "4"/);
+  assert.match(
+    workflow,
+    /buildchain-contract-lock-path: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && '\.buildchain\/alpha-contract-lock\.json' \|\| '\.buildchain\/contract-lock\.json' \}\}/,
+  );
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /target-sha: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.sha \|\| github\.sha \}\}/);
   assert.match(workflow, /package-manager: pnpm/);
@@ -638,6 +672,9 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(bootstrap, /apps: \["github-actions"\],\s*users: \[\],\s*teams: \[\]/);
   assert.match(bootstrap, /strict: \$release_channel/);
   assert.match(bootstrap, /map\(\{context: \., app_id: \$github_actions_app_id\}\)/);
+  assert.match(bootstrap, /encoded_branch=.*@uri/);
+  assert.match(bootstrap, /branches\/\$\{encoded_branch\}\/protection/);
+  assert.doesNotMatch(bootstrap, /branches\/\$\{branch\}\/protection/);
   assert.match(bootstrap, /dismiss_stale_reviews: true/);
   assert.match(bootstrap, /require_code_owner_reviews: true/);
   assert.match(bootstrap, /require_last_push_approval: true/);
@@ -681,6 +718,11 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
     path.join(root, "actions/promote-buildchain-ref/index.js"),
     "utf8",
   );
+  const githubReleaseSource = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/github-release.js"),
+    "utf8",
+  );
+  const implementation = `${source}\n${githubReleaseSource}`;
 
   assert.match(action, /github-release:/);
   assert.match(action, /github-release-artifact-paths:/);
@@ -689,12 +731,13 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(action, /public-release-tag:/);
   assert.match(action, /github-release-url:/);
   assert.match(action, /github-release-action:/);
-  assert.match(source, /ensureGitHubRelease/);
-  assert.match(source, /publishGitHubReleaseEvidence/);
-  assert.match(source, /collectGitHubReleaseEvidenceAssets/);
-  assert.match(source, /duplicate asset basename/);
-  assert.match(source, /uploadReleaseAsset/);
-  assert.match(source, /transaction-state.*complete/s);
+  assert.match(implementation, /ensureGitHubRelease/);
+  assert.match(implementation, /publishGitHubReleaseEvidence/);
+  assert.match(implementation, /collectGitHubReleaseEvidenceAssets/);
+  assert.match(implementation, /duplicate asset basename/);
+  assert.match(implementation, /uploadReleaseAsset/);
+  assert.match(source, /publishTransaction\?\.state === "complete"/);
+  assert.match(source, /transaction-state=/);
   assert.match(source, /finalizationNeeded !== true/);
 });
 
@@ -1620,7 +1663,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   );
   assert.match(workflow, /group: buildchain-release-promotion-\$\{\{ github\.repository \}\}/);
   assert.match(workflow, /cancel-in-progress: false/);
-  assert.match(workflow, /build\.yml@v3-alpha/);
+  assert.match(workflow, /build\.yml@v4-alpha/);
   assert.match(workflow, /buildchain-channel: auto/);
   assert.match(workflow, /buildchain-channel: stable/);
   assert.match(workflow, /ALPHA_RUNTIME_SHA: \$\{\{ needs\.alpha-consumer\.outputs\.buildchain-runtime-sha \}\}/);
@@ -1629,7 +1672,8 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.match(workflow, /kungfu-buildchain-alpha-self-dogfood/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.doesNotMatch(workflow, /buildchain-ref:/);
-  assert.doesNotMatch(workflow, /\.build\.yml@v3\n/);
+  assert.match(workflow, /build\.yml@v4\n/);
+  assert.doesNotMatch(workflow, /build\.yml@v3(?:-alpha)?/);
   assert.doesNotMatch(workflow, /buildchain-contract-lock-path:/);
 
   const alphaLock = JSON.parse(
@@ -1641,12 +1685,12 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   const currentContract = JSON.parse(
     fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
   );
-  assert.equal(alphaLock.buildchain.ref, "v3-alpha");
-  assert.equal(alphaLock.buildchain.resolvedSha, "85b4b69c3a76f3e64e8e96d8357d87cac62c9f16");
+  assert.equal(alphaLock.buildchain.ref, "v4-alpha");
+  assert.match(alphaLock.buildchain.resolvedSha, /^[0-9a-f]{40}$/u);
   assert.equal(alphaLock.buildchain.compatibilityPolicy, "major-compatible");
-  assert.equal(stableLock.buildchain.ref, "v3");
-  assert.equal(stableLock.buildchain.resolvedSha, "9e904de2c85dbea7c799780ee166510b3336d812");
-  assert.equal(stableLock.buildchain.majorLine, "v3");
+  assert.equal(stableLock.buildchain.ref, "v4");
+  assert.match(stableLock.buildchain.resolvedSha, /^[0-9a-f]{40}$/u);
+  assert.equal(stableLock.buildchain.majorLine, "v4");
   assert.equal(stableLock.buildchain.compatibilityPolicy, "major-compatible");
   assert.match(alphaLock.buildchain.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
   assert.match(currentContract.compatibilityDigest, /^sha256:[0-9a-f]{64}$/u);
@@ -1656,7 +1700,6 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   const majorResolution = resolveSelfDogfoodMajor({
     packageVersion,
     alphaRef: alphaLock.buildchain.ref,
-    majorBootstrap: process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP === "true",
   });
   const alphaEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
@@ -1664,9 +1707,10 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
       currentContract,
       majorResolution,
     }),
-    runtimeRef: "v3-alpha",
+    runtimeRef: "v4-alpha",
     runtimeSha: "current-development-contract",
     runtimeClass: "alpha",
+    workflowShellRef: "v4-alpha",
   });
   assert.equal(
     canAdmitSelfDogfoodLockEvaluation({
@@ -1675,9 +1719,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
     }),
     true,
   );
-  if (!majorResolution.bootstrap) {
-    assert.equal(alphaEvaluation.compatible, true);
-  }
+  assert.equal(alphaEvaluation.compatible, true);
 
   const reusableBuild = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
@@ -1704,7 +1746,7 @@ test("Buildchain self-dogfoods the current major alpha without replacing exact-S
   assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
 });
 
-test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transition", () => {
+test("self-dogfood never bridges an adjacent major or bypasses contract compatibility", () => {
   assert.deepEqual(
     resolveSelfDogfoodMajor({
       packageVersion: "2.14.18-alpha.5",
@@ -1712,105 +1754,67 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
     }),
     { packageMajor: 2, workflowMajor: 2, bootstrap: false },
   );
-  assert.deepEqual(
-    resolveSelfDogfoodMajor({
-      packageVersion: "3.0.0",
-      alphaRef: "v2-alpha",
-      majorBootstrap: true,
-    }),
-    { packageMajor: 3, workflowMajor: 2, bootstrap: true },
-  );
-  assert.deepEqual(
-    resolveSelfDogfoodMajor({
-      packageVersion: "3.0.1-alpha.0",
-      alphaRef: "v2-alpha",
-      majorBootstrap: true,
-    }),
-    { packageMajor: 3, workflowMajor: 2, bootstrap: true },
-  );
   for (const input of [
     { packageVersion: "3.0.0", alphaRef: "v2-alpha" },
-    {
-      packageVersion: "3.0.1",
-      alphaRef: "v2-alpha",
-      majorBootstrap: true,
-    },
-    {
-      packageVersion: "3.0.2-alpha.0",
-      alphaRef: "v2-alpha",
-      majorBootstrap: true,
-    },
-    {
-      packageVersion: "4.0.0",
-      alphaRef: "v2-alpha",
-      majorBootstrap: true,
-    },
+    { packageVersion: "3.0.0-alpha.0", alphaRef: "v2-alpha", majorBootstrap: true },
+    { packageVersion: "3.0.1-alpha.0", alphaRef: "v2-alpha", majorBootstrap: true },
+    { packageVersion: "4.0.0", alphaRef: "v3-alpha", majorBootstrap: true },
   ]) {
     assert.throws(
       () => resolveSelfDogfoodMajor(input),
       /must target the current major alpha ref/,
     );
   }
-
-  const alphaLock = JSON.parse(
-    fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
-  );
-  const currentContract = JSON.parse(
-    fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
-  );
-  const majorResolution = resolveSelfDogfoodMajor({
-    packageVersion: "4.0.0",
-    alphaRef: "v3-alpha",
-    majorBootstrap: true,
-  });
-  const nextMajorContract = { ...currentContract, majorLine: "v4" };
-  const bootstrapContract = contractForSelfDogfoodEvaluation({
-    currentContract: nextMajorContract,
-    majorResolution,
-  });
-  assert.equal(bootstrapContract.majorLine, "v3");
-  assert.equal(nextMajorContract.majorLine, "v4");
-  const bootstrapEvaluation = evaluateBuildchainContractLock({
-    lock: alphaLock,
-    current: bootstrapContract,
-    runtimeRef: "v3-alpha",
-    runtimeSha: "current-development-contract",
-    runtimeClass: "alpha",
-  });
+  const currentContract = { majorLine: "v4" };
   assert.equal(
-    canAdmitSelfDogfoodLockEvaluation({
-      evaluation: bootstrapEvaluation,
-      majorResolution,
+    contractForSelfDogfoodEvaluation({
+      currentContract,
+      majorResolution: { packageMajor: 4, workflowMajor: 4, bootstrap: false },
     }),
-    true,
-  );
-  if (process.env.BUILDCHAIN_MAJOR_VERSION_BOOTSTRAP !== "true") {
-    assert.equal(bootstrapEvaluation.compatible, true);
-  }
-  const breakingContract = structuredClone(bootstrapContract);
-  breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
-  const breakingEvaluation = evaluateBuildchainContractLock({
-    lock: alphaLock,
-    current: breakingContract,
-    runtimeRef: "v3-alpha",
-    runtimeSha: "current-development-contract",
-    runtimeClass: "alpha",
-  });
-  assert.equal(breakingEvaluation.compatible, false);
-  assert.equal(
-    canAdmitSelfDogfoodLockEvaluation({
-      evaluation: breakingEvaluation,
-      majorResolution,
-    }),
-    true,
+    currentContract,
   );
   assert.equal(
     canAdmitSelfDogfoodLockEvaluation({
-      evaluation: breakingEvaluation,
-      majorResolution: { ...majorResolution, bootstrap: false },
+      evaluation: { compatible: false },
+      majorResolution: { packageMajor: 4, workflowMajor: 3, bootstrap: true },
     }),
     false,
   );
+  assert.equal(
+    canAdmitSelfDogfoodLockEvaluation({
+      evaluation: { compatible: true },
+      majorResolution: { packageMajor: 4, workflowMajor: 4, bootstrap: false },
+    }),
+    true,
+  );
+});
+
+test("major self-dogfood bootstrap authority is exact and qualification-bound", () => {
+  const authority = JSON.parse(
+    fs.readFileSync(path.join(root, "architecture/v4-bootstrap-authority.json"), "utf8"),
+  );
+  assert.equal(
+    hasQualifiedSelfDogfoodBootstrapAuthority({
+      packageVersion: "4.0.0-alpha.0",
+      alphaRef: "v3-alpha",
+      authority,
+    }),
+    true,
+  );
+  for (const drift of [
+    { qualification: { ...authority.qualification, candidateSelfQualified: true } },
+    { qualification: { ...authority.qualification, activeExceptions: 1 } },
+    { releaseLine: { ...authority.releaseLine, bootstrapCommit: "f".repeat(40) } },
+  ]) {
+    assert.equal(
+      hasQualifiedSelfDogfoodBootstrapAuthority({
+        packageVersion: "4.0.0-alpha.0",
+        alphaRef: "v3-alpha",
+        authority: { ...authority, ...drift },
+      }),
+      false,
+    );
+  }
 });
 
 test("libnode-shaped fixture declares the build lifecycle contract", () => {
@@ -2169,7 +2173,7 @@ test("runLifecycle command override inherits declared stage shell and lifecycle 
   fs.cpSync(path.join(root, "fixtures/libnode-shaped"), fixture, { recursive: true });
   const configPath = path.join(fixture, "buildchain.toml");
   fs.writeFileSync(configPath, fs.readFileSync(configPath, "utf8")
-    .replace('[lifecycle.verify]\ncommand = "node scripts/verify.mjs"', '[lifecycle.verify]\ncommand = "node scripts/verify.mjs"\nshell = "/bin/bash"\n\n[lifecycle.verify.env]\nBUILDCHAIN_STAGE_ENV = "stage-value"')
+    .replace('[lifecycle.verify]\ncommand = "node scripts/verify.mjs"', '[lifecycle.verify]\ncommand = "node scripts/verify.mjs"\nshell = "bash"\n\n[lifecycle.verify.env]\nBUILDCHAIN_STAGE_ENV = "stage-value"')
     .replace("[lifecycle.install]", '[lifecycle.env]\nBUILDCHAIN_SHARED_ENV = "shared-value"\n\n[lifecycle.install]'));
   try {
     runLifecycle({
@@ -2179,7 +2183,9 @@ test("runLifecycle command override inherits declared stage shell and lifecycle 
       required: true,
       workspace,
     });
-    assert.deepEqual(fs.readFileSync(path.join(fixture, "command-override.txt"), "utf8").trim().split("\n"), ["/bin/bash", "shared-value", "stage-value"]);
+    const output = fs.readFileSync(path.join(fixture, "command-override.txt"), "utf8").trim().split(/\r?\n/u);
+    output[0] = output[0].split(/[\\/]/u).at(-1);
+    assert.deepEqual(output, ["bash", "shared-value", "stage-value"]);
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
@@ -2338,7 +2344,7 @@ test("runLifecycle records sampled command failure evidence", () => {
       () => runLifecycle({
         cwd: fixture,
         command: [
-          JSON.stringify(process.execPath),
+          "node",
           "-e",
           JSON.stringify("console.log('wrapped stdout marker'); console.error('wrapped stderr marker'); process.exit(7);"),
         ].join(" "),

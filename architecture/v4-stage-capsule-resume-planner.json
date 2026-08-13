@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-stage-capsule-resume-planner",
+  "schemaAuthority": "contracts/v4-stage-capsule-resume-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-stage-capsule-resume-v1/late-platform-failure.json",
+  "capsuleAuthority": "architecture/v4-stage-capsule-contract.json",
+  "checkpointAuthority": "architecture/v4-platform-stage-checkpoints.json",
+  "mode": "shadow-only",
+  "productionAuthority": "v3",
+  "planner": {
+    "rust": "pure-domain-authority",
+    "typescript": "byte-identical-projection",
+    "ambientClock": false,
+    "filesystem": false,
+    "network": false,
+    "environment": false
+  },
+  "decisions": ["reuse", "rebuild", "reject"],
+  "rebuildCauses": [
+    "source-changed",
+    "platform-changed",
+    "toolchain-changed",
+    "runtime-changed",
+    "policy-changed",
+    "input-changed",
+    "transformation-changed",
+    "output-manifest-changed",
+    "retention-changed"
+  ],
+  "failClosedCauses": [
+    "cross-platform",
+    "stage-mismatch",
+    "partial",
+    "corrupt",
+    "quarantined",
+    "root-mismatch",
+    "evidence-insufficient"
+  ],
+  "effects": {
+    "separateFromCapsuleReuse": true,
+    "providerReadbackRequired": true,
+    "plannerMutation": false
+  },
+  "budgets": {
+    "plannerImplementations": 2,
+    "canonicalPlanRoots": 1,
+    "providerSdkImportsInPlanner": 0,
+    "plannerSideEffects": 0,
+    "productionStageSkippingChanges": 0,
+    "v3AuthorityChanges": 0
+  }
+}

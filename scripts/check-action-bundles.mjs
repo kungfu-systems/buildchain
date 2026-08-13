@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const actionsRoot = path.join(root, "actions");
@@ -21,9 +21,8 @@ const bundlePaths = readdirSync(actionsRoot, { withFileTypes: true })
 const before = new Map(
   bundlePaths.map((bundlePath) => [bundlePath, readFileSync(bundlePath)]),
 );
-const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-const build = spawnSync(
-  pnpm,
+const build = spawnSyncCommand(
+  "pnpm",
   ["-r", "--filter", "./actions/**", "build"],
   { cwd: root, stdio: "inherit" },
 );

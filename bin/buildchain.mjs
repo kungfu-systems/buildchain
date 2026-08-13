@@ -2,6 +2,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { initBuildchainRepo } from "../scripts/init-repo.mjs";
@@ -9,6 +10,7 @@ import { npmPublishDryRun } from "../scripts/npm-publish-dry-run.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
 import { runReleaseGovernanceCli } from "../scripts/reconcile-release-governance.mjs";
+import { runReleaseTailCli } from "../scripts/release-tail.mjs";
 import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
 import { runPublicationReproducibilityCli } from "../scripts/publication-reproducibility.mjs";
@@ -79,11 +81,14 @@ import {
   registerKfd3Surfaces,
 } from "../packages/core/kfd3-surface-register.js";
 import {
-  createKfdSupportProjection,
   evaluateKfdProductGate,
   validateKfdProductGateResult,
-  validateKfdSupportProjection,
 } from "../packages/core/kfd-product-gates.js";
+import {
+  createKfdLegacySupportMatrixProjection,
+  validateKfdAdopterManifestGate,
+  validateKfdLegacySupportMatrixProjection,
+} from "../packages/core/kfd-adopter-manifest.js";
 import { createBuildchainLayoutDiscovery } from "../packages/core/buildchain-layout.js";
 import { createPortableDevCachePlan, createPortableDevCacheReceipt } from "../packages/core/portable-dev-cache.js";
 import {
@@ -726,56 +731,54 @@ function runKfdSupportCli(args = []) {
   const [action = "", ...rest] = args;
   const cwd = path.resolve(readFlag(rest, "cwd", process.cwd()));
   const json = readBooleanFlag(rest, "json");
-  const checkedAt = readFlag(rest, "checked-at", "") || new Date().toISOString();
+  const requestedCheckedAt = readFlag(rest, "checked-at", "");
   const expectedSourceSha = readFlag(rest, "expected-source-sha", "");
   if (action === "project") {
-    const matrixInput = readFlag(rest, "matrix-json", "");
-    if (!matrixInput) {
-      throw new Error("buildchain kfd support project requires --matrix-json <file-or-json>");
+    const manifestInput = readFlag(rest, "manifest-json", "");
+    const gateInput = readFlag(rest, "manifest-gate-json", "");
+    if (!manifestInput || !gateInput) {
+      throw new Error("buildchain kfd support project requires --manifest-json and --manifest-gate-json");
     }
-    const matrix = readJsonInput(matrixInput, { cwd, label: "KFD support matrix" });
-    const matrixPath = path.resolve(cwd, matrixInput);
-    const matrixRoot = fs.existsSync(matrixPath)
-      ? `sha256:${crypto.createHash("sha256").update(fs.readFileSync(matrixPath)).digest("hex")}`
-      : "";
-    const gateResults = readRepeatedJsonInputs(rest, "gate-json", {
-      cwd,
-      label: "KFD product gate result",
-    });
-    const result = createKfdSupportProjection({
-      matrix,
-      matrixRoot,
-      gateResults,
+    const manifest = readJsonInput(manifestInput, { cwd, label: "KFD adopter manifest" });
+    const manifestGate = readJsonInput(gateInput, { cwd, label: "KFD adopter manifest gate" });
+    const gateValidation = validateKfdAdopterManifestGate(manifestGate, {
       expectedSourceSha,
-      checkedAt,
+      checkedAt: requestedCheckedAt || manifestGate.checkedAt,
     });
+    if (!gateValidation.valid) throw new Error(`KFD adopter manifest gate is invalid: ${JSON.stringify(gateValidation.issues)}`);
+    const result = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
     const output = readFlag(rest, "output", "");
     if (output) writeJsonFile(path.resolve(cwd, output), result);
     if (json || !output) {
       printJson(result);
     } else {
-      process.stdout.write(`KFD support projection: ${result.status} -> ${output}\n`);
-      for (const entry of result.issues) {
-        process.stdout.write(`- ${entry.code}: ${entry.path}: ${entry.message}\n`);
-      }
+      process.stdout.write(`KFD support projection: passed -> ${output}\n`);
     }
-    if (result.status !== "passed") process.exitCode = 1;
     return;
   }
   if (action === "verify") {
     const projectionInput = readFlag(rest, "projection-json", "");
-    if (!projectionInput) {
-      throw new Error("buildchain kfd support verify requires --projection-json <file-or-json>");
+    const manifestInput = readFlag(rest, "manifest-json", "");
+    const gateInput = readFlag(rest, "manifest-gate-json", "");
+    if (!projectionInput || !manifestInput || !gateInput) {
+      throw new Error("buildchain kfd support verify requires --projection-json, --manifest-json, and --manifest-gate-json");
     }
-    const result = validateKfdSupportProjection(
+    const manifest = readJsonInput(manifestInput, { cwd, label: "KFD adopter manifest" });
+    const manifestGate = readJsonInput(gateInput, { cwd, label: "KFD adopter manifest gate" });
+    const gateValidation = validateKfdAdopterManifestGate(manifestGate, {
+      expectedSourceSha,
+      checkedAt: requestedCheckedAt || manifestGate.checkedAt,
+    });
+    const result = validateKfdLegacySupportMatrixProjection(
       readJsonInput(projectionInput, { cwd, label: "KFD support projection" }),
-      { expectedSourceSha, checkedAt },
+      { manifest, manifestGate },
     );
+    const issues = [...gateValidation.issues, ...result.issues];
     const report = {
       schemaVersion: 1,
       contract: "kungfu-buildchain-kfd-support-projection-verification",
-      ok: result.valid,
-      issues: result.issues,
+      ok: issues.length === 0,
+      issues,
     };
     if (json) printJson(report);
     else process.stdout.write(`KFD support projection verify: ${report.ok ? "passed" : "failed"}\n`);
@@ -1150,6 +1153,12 @@ async function runProcessTreeSample(sampleArgs = []) {
     cwd: process.cwd(),
     env: process.env,
     stdio: ["ignore", "pipe", "pipe"],
+    windowsVerbatimArguments:
+      process.platform === "win32" &&
+      path.basename(command).toLowerCase() === "cmd.exe" &&
+      args[0] === "/d" &&
+      args[1] === "/s" &&
+      args[2] === "/c",
   });
   child.stdout?.on("data", (chunk) => {
     stdoutTail.append(chunk);
@@ -1556,6 +1565,12 @@ async function handleLifecycleCommand(args) {
       required: readBooleanFlag(lifecycleArgs, "required"),
       artifactName: readFlag(lifecycleArgs, "artifact-name", "buildchain-artifact"),
       artifactPaths,
+      platformId: readFlag(lifecycleArgs, "platform-id", os.platform()),
+      platformName: readFlag(
+        lifecycleArgs,
+        "platform-name",
+        readFlag(lifecycleArgs, "platform-id", os.platform()),
+      ),
       manifestPath: readFlag(lifecycleArgs, "manifest-path", ".buildchain/artifacts/manifest.json"),
       summaryPath: readFlag(lifecycleArgs, "summary-path", ".buildchain/artifacts/summary.json"),
       expectedArtifactsJson: readFlag(lifecycleArgs, "expected-artifacts-json", ""),
@@ -1644,6 +1659,10 @@ async function handleReleaseGovernanceCommand(args) {
     await runReleaseGovernanceCli(args);
     return;
 
+}
+
+async function handleReleaseTailCommand(args) {
+  runReleaseTailCli(args);
 }
 
 async function handleGitHubGovernanceCommand(args) {
@@ -1741,6 +1760,7 @@ const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "paper": handlePaperCommand,
   "release-propagation": handleReleasePropagationCommand,
   "release-governance": handleReleaseGovernanceCommand,
+  "release-tail": handleReleaseTailCommand,
   "github-governance": handleGitHubGovernanceCommand,
   "badges": handleBadgesCommand,
   "homebrew": handleHomebrewCommand,

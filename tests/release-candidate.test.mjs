@@ -137,7 +137,10 @@ function createNpmTarball(root, packageJson, filename) {
   fs.mkdirSync(packageDir, { recursive: true });
   fs.writeFileSync(path.join(packageDir, "package.json"), `${JSON.stringify(packageJson, null, 2)}\n`);
   const tarballPath = path.join(root, filename);
-  execFileSync("tar", ["-czf", tarballPath, "-C", source, "package"], { stdio: "ignore" });
+  execFileSync("tar", ["-czf", filename, "-C", source, "package"], {
+    cwd: root,
+    stdio: "ignore",
+  });
   return tarballPath;
 }
 

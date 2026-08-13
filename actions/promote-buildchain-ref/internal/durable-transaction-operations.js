@@ -1,3 +1,5 @@
+function finalizationRequirements(material, rematerialize = false) { return (material?.artifacts || []).map((artifact) => rematerialize && artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
+
 function createDurableTransactionOperations(context) {
   const {
     octokit,
@@ -36,7 +38,7 @@ function createDurableTransactionOperations(context) {
     publishDistTag,
     publishPackageSetOrder,
     publishPackageMain,
-    publishRematerializeOnResume,
+    publishRematerializeOnResume: rematerialize,
     expectedPublicationVersion,
     requirePublicationQualification,
     publicationCapabilityJson,
@@ -56,6 +58,7 @@ function createDurableTransactionOperations(context) {
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -124,7 +127,7 @@ function createDurableTransactionOperations(context) {
     releaseMaterialShaOverride = releaseMaterialSha,
     publishToolingShaOverride = publishToolingSha,
     publishDistTagOverride = publishDistTag,
-    durablePublicationMaterial,
+    durablePublicationMaterial: material,
     allowVersionStateFinalization = false,
   }) => {
     const transactionVersion = version;
@@ -168,11 +171,9 @@ function createDurableTransactionOperations(context) {
       transactionStatePath,
       expectedTransactionId,
       publishSealedBundleRoot,
-      publishSealedBundleManifest: durablePublicationMaterial
-        ? ""
-        : publishSealedBundleManifest,
-      publishRequiredArtifactsJson: durablePublicationMaterial
-        ? JSON.stringify(durablePublicationMaterial.artifacts || [])
+      publishSealedBundleManifest: material ? "" : publishSealedBundleManifest,
+      publishRequiredArtifactsJson: material
+        ? JSON.stringify(finalizationRequirements(material, rematerialize))
         : publishRequiredArtifactsJson,
       releaseMaterialSha: releaseMaterialShaOverride,
       publishToolingSha: publishToolingShaOverride,
@@ -181,7 +182,7 @@ function createDurableTransactionOperations(context) {
       publishDistTag: publishDistTagOverride,
       publishPackageSetOrder,
       publishPackageMain,
-      publishRematerializeOnResume,
+      publishRematerializeOnResume: rematerialize,
       actor,
       runId,
       explicitOverride: publishTransactionOverride,
@@ -211,11 +212,7 @@ function createDurableTransactionOperations(context) {
     return latestPublishTransaction;
   };
   const markFinalizing = async () => {
-    latestPublishTransaction = await beginTransactionFinalization(
-      latestPublishTransaction,
-      actor,
-      runId,
-    );
+    latestPublishTransaction = await beginTransactionFinalization(latestPublishTransaction, actor, runId);
   };
   const markComplete = async ({
     channel,
@@ -234,6 +231,7 @@ function createDurableTransactionOperations(context) {
     passportKfd3ArtifactWitnessJsons = splitPathList(
       releasePassportKfd3ArtifactWitnessJsons,
     ),
+    passportKfdAdopterManifestJson = releasePassportKfdAdopterManifestJson,
     passportKfdSupportMatrixJson = releasePassportKfdSupportMatrixJson,
     passportKfdProductGateJsons = splitPathList(
       releasePassportKfdProductGateJsons,
@@ -273,6 +271,7 @@ function createDurableTransactionOperations(context) {
       kfd3PrebuildWitnessJsons: passportKfd3PrebuildWitnessJsons,
       kfd3ArtifactWitnessJsons: passportKfd3ArtifactWitnessJsons,
       kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
+      kfdAdopterManifestJson: passportKfdAdopterManifestJson,
       kfdSupportMatrixJson: passportKfdSupportMatrixJson,
       kfdProductGateJsons: passportKfdProductGateJsons,
       invariantPassportJsons: passportInvariantPassportJsons,

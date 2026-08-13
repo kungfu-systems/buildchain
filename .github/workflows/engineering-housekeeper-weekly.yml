@@ -1,0 +1,58 @@
+name: Engineering Housekeeper Weekly
+
+on:
+  schedule:
+    - cron: "47 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Report by default; apply also requires apply-enabled."
+        type: choice
+        options: [report, apply]
+        default: report
+      apply-enabled:
+        description: "Explicit positive mutation gate."
+        type: boolean
+        default: false
+      buildchain-ref:
+        description: "Temporary runtime ref for trusted qualification."
+        type: string
+        default: ""
+
+permissions: {}
+
+jobs:
+  invalid-apply-gate:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && !inputs.apply-enabled }}
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - run: |
+          echo "::error::apply mode requires apply-enabled=true"
+          exit 1
+
+  report:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode != 'apply' }}
+    uses: ./.github/workflows/engineering-housekeeper.yml
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      mode: report
+      stale-days: 45
+      max-actions: 20
+      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}
+
+  apply:
+    if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'apply' && inputs.apply-enabled) }}
+    uses: ./.github/workflows/engineering-housekeeper.yml
+    permissions:
+      contents: write
+      pull-requests: write
+    with:
+      mode: apply
+      apply-enabled: true
+      stale-pull-request-label: engineering-housekeeper:stale
+      stale-days: 45
+      max-actions: 20
+      buildchain-ref: ${{ inputs.buildchain-ref || github.sha }}

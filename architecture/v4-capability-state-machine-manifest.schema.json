@@ -49,7 +49,9 @@
       "required": [
         "branch",
         "bootstrapAuthority",
+        "productionAuthority",
         "productionFallback",
+        "rollbackRef",
         "qualificationMode"
       ],
       "additionalProperties": false,
@@ -58,7 +60,9 @@
         "bootstrapAuthority": {
           "const": "architecture/v4-bootstrap-authority.json"
         },
-        "productionFallback": { "const": "dev/v3/v3.0" },
+        "productionAuthority": { "const": "v4-native" },
+        "productionFallback": { "type": "null" },
+        "rollbackRef": { "const": "release/v3/v3.0" },
         "qualificationMode": { "const": "exact-n-minus-one-git-revision" }
       }
     },

@@ -54,9 +54,11 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
     target("publish-gate/major", [check("check")], true),
   ],
   buildchain: [
-    target("dev/v3/v3.0", [check("check")], false),
+    ...["v3/v3.0", "v4/v4.0"].map((line) => target(`dev/${line}`, [check("check")], false)),
     target("alpha/v3/v3.0", [check("check"), check("verify")], false),
     target("release/v3/v3.0", [check("check")], true),
+    target("alpha/v4/v4.0", [check("check"), check("verify")], false),
+    target("release/v4/v4.0", [check("check"), check("verify")], true),
     target("authority/v3/v3.0/artifact-signing", [check("check"), check("verify")], true),
     target("publish-gate/major", [check("check")], true),
   ],

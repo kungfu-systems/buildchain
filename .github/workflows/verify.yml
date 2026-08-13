@@ -17,7 +17,46 @@ permissions:
   contents: read
 
 jobs:
+  # Projection authority: architecture/v4-platform-stage-checkpoints.json
+  stage-capsule-checkpoints:
+    name: Stage Capsule checkpoint (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runner: ubuntu-24.04
+          - platform: macos-arm64
+            runner: macos-15
+          - platform: windows-x64
+            runner: windows-2025
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+      - name: Rehearse declared Stage Capsule checkpoint in clean processes
+        run: >-
+          node scripts/v4-platform-stage-checkpoint-rehearsal.mjs rehearse
+          --work-root .buildchain/v4-stage-checkpoint
+          --platform ${{ matrix.platform }}
+          --stage build
+          --recorded-at 2026-08-08T00:00:00.000Z
+      - name: Rehearse deterministic Stage Capsule resume planning
+        run: >-
+          node scripts/v4-stage-capsule-resume-rehearsal.mjs
+          --platform ${{ matrix.platform }}
+      - name: Upload exact Stage Capsule checkpoint evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-stage-checkpoint-${{ matrix.platform }}-${{ github.sha }}
+          path: .buildchain/v4-stage-checkpoint/evidence.json
+          if-no-files-found: error
   check:
+    needs: stage-capsule-checkpoints
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.0
@@ -33,6 +72,8 @@ jobs:
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+      - name: Enforce public consumer-only v4 dogfood
+        run: node scripts/check-v4-public-dogfood-contract.mjs
       - uses: actions/setup-go@v6.5.0
         with:
           go-version: "1.25.x"

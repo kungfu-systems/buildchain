@@ -1,0 +1,56 @@
+{
+  "schema": "buildchain-v4-stable-publication-request/v1",
+  "declaredAt": "2026-08-09T07:30:00.000Z",
+  "candidate": {
+    "generation": 21,
+    "commit": "95f5e5ffa5a4eeed67506ae11fe6dbd1a1d6ba2f",
+    "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "metadataRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "journalRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "protectedAncestryRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+  },
+  "qualification": {
+    "mode": "n-minus-one",
+    "authorityGeneration": 20,
+    "qualifiedCandidateRoot": "sha256:32eb0ee0e680280f148702bdc48afe64fb9df4bd8c8d301115d0a41804f3505c",
+    "qualifierAuthorityRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "sealRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+    "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "metadataRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "journalRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "protectedAncestryRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "providerConfirmationRoots": [
+      "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    ]
+  },
+  "publisherAuthorityRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+  "targets": [
+    {
+      "id": "stable-ref",
+      "kind": "stable-ref",
+      "desired": "release/v4/v4.0",
+      "providerConfirmationRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "id": "npm-tag",
+      "kind": "npm-tag",
+      "desired": "latest",
+      "providerConfirmationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "id": "oci-tag",
+      "kind": "oci-tag",
+      "desired": "v4.0.0",
+      "providerConfirmationRoot": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    {
+      "id": "github-release",
+      "kind": "github-release",
+      "desired": "v4.0.0",
+      "providerConfirmationRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    }
+  ]
+}

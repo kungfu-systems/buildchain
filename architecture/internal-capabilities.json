@@ -20,6 +20,13 @@
     "packages/core/release-propagation-push.js",
     "packages/core/release-propagation-stage-evidence.js",
     "packages/core/release-propagation-work.js",
+    "packages/core/engineering-housekeeper.js",
+    "packages/core/engineering-housekeeper-github-client.js",
+    "packages/core/engineering-housekeeper-github.js",
+    "packages/core/release-tail-provider-plane.js",
+    "packages/core/release-tail-provider-adapters.js",
+    "packages/core/release-tail-compatibility.js",
+    "actions/release-tail/index.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
     "scripts/buildchain-cli-help.mjs",
@@ -29,12 +36,43 @@
     "scripts/run-lifecycle-core.mjs",
     "scripts/resolve-artifact-transfer-mode.mjs",
     "scripts/release-propagation.mjs",
+    "scripts/engineering-housekeeper-workflow.mjs",
+    "scripts/release-tail.mjs",
     "scripts/web-surface-core.mjs",
     "scripts/web-surface-routing.mjs",
     "scripts/web-surface.mjs",
     "scripts/workflow-call-contract.mjs",
     "scripts/verify-promotion-router-binding.sh",
-    "scripts/v4-architecture.mjs"
+    "scripts/v4-architecture.mjs",
+    "scripts/v4-bridge-bootstrap.mjs",
+    "scripts/v4-bridge-evidence.mjs",
+    "scripts/v4-host-adapter.mjs",
+    "crates/buildchain-v4-bridge/src/main.rs",
+    "packages/core/v4-provider-operation-journal.js",
+    "packages/core/v4-stage-capsule.js",
+    "packages/core/v4-stage-capsule-store.js",
+    "packages/core/v4-stage-capsule-local-store.js",
+    "packages/core/v4-platform-stage-checkpoints.js",
+    "scripts/v4-platform-stage-checkpoint-rehearsal.mjs",
+    "packages/core/v4-stage-capsule-qualification.js",
+    "packages/core/v4-stage-capsule-qualification-campaign.js",
+    "scripts/v4-stage-capsule-qualification.mjs",
+    "crates/buildchain-v4-contracts/src/stage_capsule.rs",
+    "crates/buildchain-v4-contracts/src/stage_capsule_store.rs",
+    "crates/buildchain-v4-contracts/src/provider_operation_journal.rs",
+    "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs",
+    "packages/core/v4-provider-readback-idempotency.js",
+    "crates/buildchain-v4-contracts/src/provider_readback_idempotency.rs",
+    "packages/core/v4-release-activation-shadow.js",
+    "crates/buildchain-v4-contracts/src/release_activation_shadow.rs",
+    "crates/buildchain-v4-contracts/src/release_activation_shadow/model.rs",
+    "crates/buildchain-v4-contracts/src/release_activation_shadow/journal.rs",
+    "packages/core/v4-stable-publication-fence.js",
+    "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
+    "packages/core/v4-partial-mutation-recovery-qualification.js",
+    "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs",
+    "packages/core/v4-adopter-delivery-parity.js",
+    "crates/buildchain-v4-contracts/src/adopter_delivery.rs"
   ],
   "ownershipRules": [
     {
@@ -61,6 +99,11 @@
       "id": "workflow-runtime-sources",
       "owner": "Buildchain workflow maintainers",
       "paths": ["scripts"]
+    },
+    {
+      "id": "v4-rust-domain-sources",
+      "owner": "Buildchain architecture maintainers",
+      "paths": ["crates"]
     }
   ],
   "ownershipExclusions": [],
@@ -332,15 +375,127 @@
       ]
     },
     {
+      "id": "engineering-housekeeper",
+      "owner": "Buildchain engineering hygiene maintainers",
+      "implementation": [
+        "packages/core/engineering-housekeeper.js",
+        "packages/core/engineering-housekeeper-github-client.js",
+        "packages/core/engineering-housekeeper-github.js",
+        "scripts/engineering-housekeeper-workflow.mjs"
+      ],
+      "tests": [
+        "tests/engineering-housekeeper.test.mjs",
+        "tests/engineering-housekeeper-github.test.mjs",
+        "tests/engineering-housekeeper-workflow.test.mjs"
+      ],
+      "contracts": [
+        "contracts/engineering-housekeeper-v1.schema.json",
+        "contracts/fixtures/engineering-housekeeper-v1/cases.json",
+        "docs/engineering-housekeeper.md"
+      ]
+    },
+    {
+      "id": "declarative-release-provider-plane",
+      "owner": "Buildchain release provider maintainers",
+      "implementation": [
+        "packages/core/release-tail-provider-plane.js",
+        "packages/core/release-tail-provider-adapters.js",
+        "packages/core/release-tail-compatibility.js",
+        "scripts/release-tail.mjs",
+        "actions/release-tail/index.js"
+      ],
+      "tests": [
+        "tests/release-tail-provider-plane.test.mjs",
+        "tests/release-tail-contract.test.mjs"
+      ],
+      "contracts": [
+        "contracts/release-tail-capabilities-v1.schema.json",
+        "contracts/release-tail-provider-bindings-v1.schema.json",
+        ".github/workflows/release-tail.yml",
+        "actions/release-tail/action.yml",
+        "docs/release-tail-provider-plane.md"
+      ]
+    },
+    {
       "id": "v4-architecture-governance",
       "owner": "Buildchain architecture maintainers",
-      "implementation": ["scripts/v4-architecture.mjs"],
-      "tests": ["tests/v4-architecture.test.mjs"],
+      "implementation": [
+        "scripts/v4-architecture.mjs",
+        "scripts/v4-bridge-bootstrap.mjs",
+        "scripts/v4-bridge-evidence.mjs",
+        "scripts/v4-host-adapter.mjs",
+        "crates/buildchain-v4-bridge/src/main.rs",
+        "packages/core/v4-provider-operation-journal.js",
+        "packages/core/v4-provider-readback-idempotency.js",
+        "packages/core/v4-release-activation-shadow.js",
+        "packages/core/v4-stable-publication-fence.js",
+        "packages/core/v4-partial-mutation-recovery-qualification.js",
+        "packages/core/v4-adopter-delivery-parity.js",
+        "packages/core/v4-stage-capsule.js",
+        "packages/core/v4-stage-capsule-store.js",
+        "packages/core/v4-stage-capsule-local-store.js",
+        "packages/core/v4-platform-stage-checkpoints.js",
+        "scripts/v4-platform-stage-checkpoint-rehearsal.mjs",
+        "packages/core/v4-stage-capsule-qualification.js",
+        "packages/core/v4-stage-capsule-qualification-campaign.js",
+        "scripts/v4-stage-capsule-qualification.mjs",
+        "crates/buildchain-v4-contracts/src/stage_capsule.rs",
+        "crates/buildchain-v4-contracts/src/stage_capsule_store.rs",
+        "crates/buildchain-v4-contracts/src/provider_operation_journal.rs",
+        "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs",
+        "crates/buildchain-v4-contracts/src/provider_readback_idempotency.rs",
+        "crates/buildchain-v4-contracts/src/release_activation_shadow.rs",
+        "crates/buildchain-v4-contracts/src/release_activation_shadow/model.rs",
+        "crates/buildchain-v4-contracts/src/release_activation_shadow/journal.rs",
+        "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
+        "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs",
+        "crates/buildchain-v4-contracts/src/adopter_delivery.rs"
+      ],
+      "tests": [
+        "tests/v4-architecture.test.mjs",
+        "tests/v4-bridge.test.mjs",
+        "tests/v4-provider-operation-journal.test.mjs",
+        "tests/v4-provider-readback-idempotency.test.mjs",
+        "tests/v4-release-activation-shadow.test.mjs",
+        "tests/v4-stable-publication-fence.test.mjs",
+        "tests/v4-partial-mutation-recovery-qualification.test.mjs",
+        "tests/v4-stage-capsule.test.mjs",
+        "tests/v4-stage-capsule-store.test.mjs",
+        "tests/v4-platform-stage-checkpoints.test.mjs",
+        "tests/v4-stage-capsule-qualification.test.mjs",
+        "tests/v4-adopter-delivery-parity.test.mjs"
+      ],
       "contracts": [
         "architecture/v4-architecture-constitution.md",
         "architecture/v4-capability-state-machine-manifest.json",
         "architecture/v4-bootstrap-authority.json",
-        "architecture/v4-exception-ledger.json"
+        "architecture/v4-exception-ledger.json",
+        "architecture/v4-rust-libnode-bridge-evaluation.json",
+        "architecture/v4-rust-libnode-bridge-spike.md",
+        "architecture/v4-provider-operation-journal-contract.json",
+        "architecture/v4-release-activation-shadow-domain.json",
+        "architecture/v4-stable-publication-fence.json",
+        "architecture/v4-partial-mutation-recovery-qualification.json",
+        "architecture/v4-stage-capsule-contract.json",
+        "architecture/v4-stage-capsule-store-contract.json",
+        "architecture/v4-platform-stage-checkpoints.json",
+        "architecture/v4-stage-capsule-qualification.json",
+        "architecture/v4-adopter-delivery-parity.json",
+        "contracts/v4-host-contract-v1.schema.json",
+        "contracts/v4-provider-operation-journal-v1.schema.json",
+        "contracts/v4-release-activation-shadow-v1.schema.json",
+        "contracts/v4-stable-publication-fence-v1.schema.json",
+        "contracts/v4-partial-mutation-recovery-v1.schema.json",
+        "contracts/v4-stage-capsule-v1.schema.json",
+        "contracts/v4-stage-capsule-store-v1.schema.json",
+        "contracts/fixtures/v4-stage-capsule-v1/shared.json",
+        "contracts/fixtures/v4-stage-capsule-store-v1/shared.json",
+        "contracts/fixtures/v4-provider-operation-journal-v1/shared.json",
+        "contracts/fixtures/v4-provider-readback-idempotency-v1/shared.json",
+        "contracts/fixtures/v4-release-activation-shadow-v1/shared.json",
+        "contracts/fixtures/v4-stable-publication-fence-v1/shared.json",
+        "contracts/fixtures/v4-partial-mutation-recovery-v1/shared.json",
+        "docs/v4-stage-capsule.md"
       ]
     }
   ]

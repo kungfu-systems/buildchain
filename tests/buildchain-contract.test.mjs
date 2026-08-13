@@ -61,6 +61,29 @@ test("Buildchain contract lock allows compatible floating SHA drift", () => {
   assert.equal(result.issueRecommended, true);
 });
 
+test("contract compatibility cannot bypass channel binding on unchanged digests", () => {
+  const current = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "3.0.0-alpha.0" },
+  });
+  const lock = createBuildchainContractLock({
+    buildchainRef: "v3",
+    resolvedSha: "a".repeat(40),
+    contractWorld: current,
+  });
+  const result = evaluateBuildchainContractLock({
+    lock,
+    current,
+    workflowShellRef: "v3",
+    runtimeRef: "v3-alpha",
+    runtimeSha: "a".repeat(40),
+    runtimeClass: "alpha",
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.status, "channel-binding-mismatch");
+  assert.match(result.reasons.join("\n"), /runtime v3-alpha is alpha, expected stable/);
+});
+
 test("optional promote action inputs remain compatible with the accepted alpha contract", () => {
   const current = createBuildchainContractWorld({
     root: path.resolve(import.meta.dirname, ".."),

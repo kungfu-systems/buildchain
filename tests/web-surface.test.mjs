@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   applyWebSurfaceCleanup,
   applyWebSurfaceDeploy,
@@ -23,7 +24,7 @@ import {
 } from "../scripts/web-surface.mjs";
 import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function withFixture(fn) {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-web-surface-"));

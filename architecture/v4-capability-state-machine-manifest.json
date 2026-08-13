@@ -4,7 +4,9 @@
   "releaseLine": {
     "branch": "dev/v4/v4.0",
     "bootstrapAuthority": "architecture/v4-bootstrap-authority.json",
-    "productionFallback": "dev/v3/v3.0",
+    "productionAuthority": "v4-native",
+    "productionFallback": null,
+    "rollbackRef": "release/v3/v3.0",
     "qualificationMode": "exact-n-minus-one-git-revision"
   },
   "dependencyLayers": [
@@ -90,7 +92,7 @@
         "export:./dev-delivery-warrant",
         "workflow:dev-pr-auto-merge"
       ],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "release-candidate-passport",
@@ -101,7 +103,7 @@
         "export:./release-candidate",
         "workflow:release-candidate-promote"
       ],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "release-candidate-recovery",
@@ -111,7 +113,7 @@
         "export:./release-candidate-recovery",
         "workflow:buildchain-candidate-recovery-dogfood-failure"
       ],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "stable-candidate-ledger",
@@ -121,21 +123,21 @@
         "export:./stable-candidate-ledger",
         "workflow:stable-candidate-patrol"
       ],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "publish-transaction",
       "owner": "Buildchain package and release publication plane",
       "sourceInventoryId": "publish-transaction",
       "surfaces": ["action:promote-buildchain-ref", "cli:release-transaction"],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "release-activation-transaction",
       "owner": "Buildchain release activation plane",
       "sourceInventoryId": "release-activation-transaction",
       "surfaces": ["export:./release-activation-transaction"],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "publication-authority",
@@ -145,7 +147,7 @@
         "export:./publication-authority",
         "cli:verify-publication-admission"
       ],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "github-governance-authority",
@@ -155,21 +157,44 @@
         "export:./github-governance-authority",
         "cli:release-governance"
       ],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "release-passport-and-artifact-proof",
       "owner": "Buildchain release trust plane",
       "sourceInventoryId": "release-passport-and-artifact-proof",
       "surfaces": ["export:./release-passport", "cli:verify-release-passport"],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
+    },
+    {
+      "id": "engineering-housekeeper",
+      "owner": "Buildchain engineering hygiene plane",
+      "sourceInventoryId": "engineering-housekeeper",
+      "surfaces": [
+        "export:./engineering-housekeeper",
+        "export:./engineering-housekeeper-github",
+        "workflow:engineering-housekeeper"
+      ],
+      "migrationPhase": "legacy-retired"
     },
     {
       "id": "release-propagation-work-control",
       "owner": "Buildchain downstream release propagation plane",
       "sourceInventoryId": "release-propagation-work-control",
       "surfaces": ["export:./release-propagation", "cli:release-propagation"],
-      "migrationPhase": "legacy-authoritative"
+      "migrationPhase": "legacy-retired"
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "owner": "Buildchain declarative release provider plane",
+      "sourceInventoryId": "release-tail-provider-plane",
+      "surfaces": [
+        "export:./release-tail-provider-plane",
+        "cli:release-tail",
+        "action:release-tail",
+        "workflow:release-tail"
+      ],
+      "migrationPhase": "legacy-retired"
     }
   ],
   "stateMachines": [
@@ -178,7 +203,7 @@
       "capabilityId": "dev-delivery-warrant",
       "owner": "Buildchain Dev delivery control plane",
       "writer": {
-        "runtime": "typescript-v3",
+        "runtime": "typescript-v4",
         "authoritative": true,
         "secondWriterBudget": 0
       },
@@ -220,7 +245,7 @@
       "recovery": [
         "expired lease returns an eligible candidate without losing age"
       ],
-      "migrationPhase": "legacy-authoritative",
+      "migrationPhase": "legacy-retired",
       "budgets": {
         "undeclaredStates": 0,
         "undeclaredEvents": 0,
@@ -232,7 +257,7 @@
       "capabilityId": "stable-candidate-ledger",
       "owner": "Buildchain stable release selection plane",
       "writer": {
-        "runtime": "typescript-v3",
+        "runtime": "typescript-v4",
         "authoritative": true,
         "secondWriterBudget": 0
       },
@@ -251,7 +276,7 @@
         "tests/stable-candidate-qualification.test.mjs"
       ],
       "recovery": ["expected-old conflict retries from provider readback"],
-      "migrationPhase": "legacy-authoritative",
+      "migrationPhase": "legacy-retired",
       "budgets": {
         "undeclaredStates": 0,
         "undeclaredEvents": 0,
@@ -263,7 +288,7 @@
       "capabilityId": "publish-transaction",
       "owner": "Buildchain package and release publication plane",
       "writer": {
-        "runtime": "typescript-v3",
+        "runtime": "typescript-v4",
         "authoritative": true,
         "secondWriterBudget": 0
       },
@@ -307,7 +332,7 @@
       "recovery": [
         "resume the exact sealed transaction or enter repair_required"
       ],
-      "migrationPhase": "legacy-authoritative",
+      "migrationPhase": "legacy-retired",
       "budgets": {
         "undeclaredStates": 0,
         "undeclaredEvents": 0,
@@ -319,7 +344,7 @@
       "capabilityId": "release-activation-transaction",
       "owner": "Buildchain release activation plane",
       "writer": {
-        "runtime": "typescript-v3",
+        "runtime": "typescript-v4",
         "authoritative": true,
         "secondWriterBudget": 0
       },
@@ -338,7 +363,7 @@
       "adapters": ["release provider adapters", "production readback adapter"],
       "tests": ["tests/release-activation-transaction.test.mjs"],
       "recovery": ["retry from the last immutable phase receipt or roll back"],
-      "migrationPhase": "legacy-authoritative",
+      "migrationPhase": "legacy-retired",
       "budgets": {
         "undeclaredStates": 0,
         "undeclaredEvents": 0,
@@ -350,7 +375,7 @@
       "capabilityId": "release-propagation-work-control",
       "owner": "Buildchain downstream release propagation plane",
       "writer": {
-        "runtime": "typescript-v3",
+        "runtime": "typescript-v4",
         "authoritative": true,
         "secondWriterBudget": 0
       },
@@ -382,7 +407,68 @@
         "tests/release-propagation-work.test.mjs"
       ],
       "recovery": ["resume from the last retained stage receipt"],
-      "migrationPhase": "legacy-authoritative",
+      "migrationPhase": "legacy-retired",
+      "budgets": {
+        "undeclaredStates": 0,
+        "undeclaredEvents": 0,
+        "unboundedRetries": 0
+      }
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "capabilityId": "release-tail-provider-plane",
+      "owner": "Buildchain declarative release provider plane",
+      "writer": {
+        "runtime": "typescript-v4",
+        "authoritative": true,
+        "secondWriterBudget": 0
+      },
+      "schemas": [
+        "kungfu.buildchain.release-tail.transaction/v1",
+        "kungfu.buildchain.release-tail.effect/v1",
+        "kungfu.buildchain.release-tail.observation/v1",
+        "kungfu.buildchain.release-tail.receipt/v1"
+      ],
+      "store": "atomic rooted transaction checkpoint with observations and receipts",
+      "states": [
+        "preparing",
+        "prepared",
+        "publishing",
+        "committing",
+        "activating",
+        "reading-back",
+        "settling",
+        "complete",
+        "blocked",
+        "repair-required",
+        "terminal-failure"
+      ],
+      "events": ["plan", "readback", "apply", "retry", "settle"],
+      "invariants": [
+        "one transaction owns all four fixed capability effects",
+        "provider adapters cannot select state transitions or success",
+        "every mutation is bounded by pre-effect and post-effect readback"
+      ],
+      "effects": [
+        "publish sealed GitHub Release assets",
+        "commit a signed channel document",
+        "activate and read back a release",
+        "synthesize rooted released evidence"
+      ],
+      "adapters": [
+        "github-release-assets",
+        "signed-static-channel",
+        "site-release-activation",
+        "activation-receipt-projector"
+      ],
+      "tests": [
+        "tests/release-tail-provider-plane.test.mjs",
+        "tests/release-tail-provider-adapters.test.mjs"
+      ],
+      "recovery": [
+        "resume from the last atomic checkpoint and read provider state before retry"
+      ],
+      "migrationPhase": "legacy-retired",
       "budgets": {
         "undeclaredStates": 0,
         "undeclaredEvents": 0,

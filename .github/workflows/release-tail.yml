@@ -1,0 +1,83 @@
+name: Declarative Release Tail
+
+on:
+  workflow_call:
+    inputs:
+      buildchain-ref:
+        description: "Exact Buildchain SHA or qualified train ref"
+        type: string
+        required: true
+      declaration-path:
+        description: "Versioned release-tail declaration in the caller checkout"
+        type: string
+        required: true
+      provider-bindings-path:
+        description: "Data-only provider bindings in the caller checkout"
+        type: string
+        required: true
+      state-path:
+        description: "Durable release-tail transaction path"
+        type: string
+        default: ".buildchain/release-tail/state.json"
+        required: false
+      execute:
+        description: "Execute provider effects; false only seals the plan"
+        type: boolean
+        default: true
+        required: false
+    secrets:
+      http-token:
+        description: "Optional bearer token for built-in HTTPS mutation adapters"
+        required: false
+    outputs:
+      transaction-state:
+        description: "Final transaction state"
+        value: ${{ jobs.release-tail.outputs.transaction-state }}
+      transaction-root:
+        description: "Stable declared transaction root"
+        value: ${{ jobs.release-tail.outputs.transaction-root }}
+      state-root:
+        description: "Root of the final durable state"
+        value: ${{ jobs.release-tail.outputs.state-root }}
+
+permissions:
+  contents: write
+
+jobs:
+  release-tail:
+    name: Execute Buildchain release tail
+    runs-on: ubuntu-24.04
+    outputs:
+      transaction-state: ${{ steps.release-tail.outputs.transaction-state }}
+      transaction-root: ${{ steps.release-tail.outputs.transaction-root }}
+      state-root: ${{ steps.release-tail.outputs.state-root }}
+    steps:
+      - name: Check out caller source
+        uses: actions/checkout@v7.0.0
+
+      - name: Check out exact Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/release-tail-runtime
+          persist-credentials: false
+
+      - name: Execute the declarative provider plane
+        id: release-tail
+        uses: ./.buildchain/release-tail-runtime/actions/release-tail
+        with:
+          declaration: ${{ inputs.declaration-path }}
+          provider-bindings: ${{ inputs.provider-bindings-path }}
+          state-path: ${{ inputs.state-path }}
+          github-token: ${{ github.token }}
+          http-token: ${{ secrets.http-token }}
+          execute: ${{ inputs.execute }}
+
+      - name: Retain the rooted transaction and receipts
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-tail-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: ${{ inputs.state-path }}

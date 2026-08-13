@@ -23,7 +23,7 @@ on:
       base-ref:
         description: "Target branch for the protected README media pull request"
         required: true
-        default: dev/v3/v3.0
+        default: dev/v4/v4.0
         type: string
 
 permissions:
@@ -106,7 +106,7 @@ jobs:
       render-media: ${{ github.event_name != 'workflow_dispatch' || inputs.mode == 'full' }}
       media-profile: responsive-web-delivery-v1
       materialize: ${{ github.event_name != 'workflow_dispatch' || inputs.materialize }}
-      materialize-base-ref: ${{ github.event_name == 'workflow_dispatch' && inputs.base-ref || 'dev/v3/v3.0' }}
+      materialize-base-ref: ${{ github.event_name == 'workflow_dispatch' && inputs.base-ref || 'dev/v4/v4.0' }}
       artifact-retention-days: 14
     secrets:
       DEMO_UPDATE_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

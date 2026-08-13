@@ -51,9 +51,9 @@ export function paperPackageScripts(current = {}) {
 }
 
 export function managedPaperPackageJson(current, buildchainVersion) {
-  if (!/^3\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(buildchainVersion)) {
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(buildchainVersion)) {
     throw new Error(
-      "paper repositories require an exact Buildchain v3 version",
+      "paper repositories require an exact Buildchain semantic version",
     );
   }
   const packageManager = current.packageManager || "pnpm@11.7.0";

@@ -1,0 +1,830 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-delivery-warrant-shadow-bootstrap-plan",
+  "releaseLine": "dev/v4/v4.0",
+  "sourceCut": {
+    "revision": "3fd14c7a6237c3a1709ce29fc9fcb4ac150a0e5d",
+    "inventory": "architecture/v3-core-mechanism-inventory.json",
+    "manifest": "architecture/v4-capability-state-machine-manifest.json",
+    "legacyCore": "packages/core/dev-delivery-warrant.js",
+    "legacyStore": "scripts/dev-delivery-warrant.mjs",
+    "legacyWorkflows": [
+      ".github/workflows/buildchain-dev-delivery.yml",
+      ".github/workflows/dev-delivery-warrant-close.yml",
+      ".github/workflows/dev-delivery-warrant-cancel.yml"
+    ]
+  },
+  "legacyAuthority": {
+    "writer": "typescript-v3",
+    "store": "rooted queue on the configured Git ref",
+    "states": [
+      "queued",
+      "selected",
+      "proving",
+      "waiting",
+      "blocked",
+      "merged",
+      "terminal-failure",
+      "dequeued",
+      "cancelled"
+    ],
+    "events": [
+      "submit",
+      "select",
+      "lease",
+      "renew",
+      "recover-expired",
+      "settle",
+      "cancel"
+    ],
+    "productionEffects": [
+      "append an immutable queue commit and compare-and-set the configured Git ref",
+      "request GitHub merge-queue admission only after exact queue readback"
+    ]
+  },
+  "canonicalContract": {
+    "json": {
+      "id": "buildchain-canonical-json/v1",
+      "input": "JSON values only; schemas permit ASCII property names and integer numbers",
+      "objectKeys": "ascii-code-point-order",
+      "arrays": "preserve input order",
+      "numbers": "base-10 integers without leading zero",
+      "strings": "JSON escaping followed by UTF-8 encoding",
+      "terminator": "one LF byte"
+    },
+    "roots": {
+      "algorithm": "sha256",
+      "encoding": "sha256:<lowercase-hex>",
+      "domains": [
+        "queue-state",
+        "candidate-identity",
+        "fencing-token",
+        "transition-receipt",
+        "observation",
+        "semantic-diff",
+        "bootstrap-evidence"
+      ],
+      "queueStateExclusion": "stateRoot is absent from the bytes used to compute stateRoot"
+    },
+    "clock": {
+      "mode": "explicit-input-only",
+      "format": "RFC3339 UTC with millisecond precision",
+      "rule": "decide and fold reject a missing clock; adapters sample time once and pass it as data"
+    }
+  },
+  "transitionMatrix": [
+    {
+      "event": "submit",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": [
+        "exact repository and protected base",
+        "complete candidate identity and proof roots",
+        "same semantic attempt may repair only source head",
+        "terminal history is append-only through a chained attempt"
+      ],
+      "generation": "increment for every legacy transition call, including duplicate submission",
+      "fencing": "unchanged",
+      "clock": "explicit submission time",
+      "roots": [
+        "expected-old queue",
+        "candidate identity",
+        "next queue",
+        "receipt"
+      ],
+      "errors": [
+        "identity drift",
+        "proof drift",
+        "invalid chained predecessor"
+      ],
+      "recovery": "safe source-head repair retains enqueue time and increments attempts",
+      "idempotence": "legacy duplicate receipt says duplicate-noop but advances queue time, generation, and root"
+    },
+    {
+      "event": "select",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": [
+        "recover an expired active lease first",
+        "do not preempt a live active Warrant",
+        "rank queued candidates by bounded priority, aging, enqueue time, and candidate id"
+      ],
+      "generation": "increment only when a new selection transition is folded",
+      "fencing": "increment fencingCounter and mint a token over exact Warrant fields",
+      "clock": "explicit selection time and lease duration",
+      "roots": ["expected-old queue", "fencing token", "next queue", "receipt"],
+      "errors": ["invalid queue", "invalid lease duration"],
+      "recovery": "expired active Warrant is recovered before ranking",
+      "idempotence": "live active Warrant returns non-preemptive read-only result"
+    },
+    {
+      "event": "lease",
+      "from": ["queued", "selected", "proving", "waiting", "blocked"],
+      "guards": ["manifest alias for the lease minted by select"],
+      "generation": "same as select",
+      "fencing": "same as select",
+      "clock": "same explicit selection time",
+      "roots": ["same roots as select"],
+      "errors": ["same errors as select"],
+      "recovery": "same recovery as select",
+      "idempotence": "does not define a second writer operation"
+    },
+    {
+      "event": "renew",
+      "from": ["selected", "proving", "waiting", "blocked"],
+      "guards": [
+        "exact candidate id, fencing token, lease generation, and unexpired lease"
+      ],
+      "generation": "increment queue generation",
+      "fencing": "retain fencing token and lease generation",
+      "clock": "explicit heartbeat time and lease duration",
+      "roots": ["expected-old queue", "next queue", "lease receipt"],
+      "errors": [
+        "stale fencing token",
+        "stale lease generation",
+        "expired lease"
+      ],
+      "recovery": "recover-expired then reselect; never revive the old fence",
+      "idempotence": "not idempotent; retry requires expected-old/readback reconciliation"
+    },
+    {
+      "event": "recover-expired",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": ["active lease expiry is less than or equal to explicit now"],
+      "generation": "increment only for an actual recovery",
+      "fencing": "retain counter; reject the old token; next select increments it",
+      "clock": "explicit recovery observation time",
+      "roots": ["expected-old queue", "next queue", "recovery receipt"],
+      "errors": ["invalid queue"],
+      "recovery": "return candidate to queued, retain enqueue time, increment attempts and recoveries",
+      "idempotence": "no active or unexpired active Warrant is a rooted read-only no-op"
+    },
+    {
+      "event": "settle",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": [
+        "active settlement requires exact current fence and evidence root",
+        "queued settlement requires exact candidate, recorded head, observed head, and evidence",
+        "terminal duplicates must match the recorded outcome"
+      ],
+      "generation": "increment for active or queued terminal writes; unchanged for exact no-op",
+      "fencing": "active close binds current token and generation; queued cancellation mints none",
+      "clock": "explicit terminal observation time",
+      "roots": [
+        "expected-old queue",
+        "terminal evidence",
+        "next queue",
+        "settlement receipt"
+      ],
+      "errors": [
+        "stale fence",
+        "identity drift",
+        "outcome drift",
+        "evidence drift"
+      ],
+      "recovery": "response-loss retry reads current queue and accepts only the exact terminal duplicate",
+      "idempotence": "exact terminal duplicate and never-admitted terminal event are rooted no-ops"
+    },
+    {
+      "event": "cancel",
+      "from": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "guards": [
+        "only an exact queued candidate may use cancellation without a Warrant",
+        "active states require settle with the live fence",
+        "terminal duplicate must match all recorded terminal evidence"
+      ],
+      "generation": "increment only for first queued cancellation",
+      "fencing": "never mint a Warrant for queued cancellation",
+      "clock": "explicit cancellation observation time",
+      "roots": [
+        "expected-old queue",
+        "event evidence",
+        "next queue",
+        "cancellation receipt"
+      ],
+      "errors": [
+        "candidate missing",
+        "active candidate",
+        "identity drift",
+        "evidence drift"
+      ],
+      "recovery": "reread and accept only exact duplicate-cancellation-noop",
+      "idempotence": "exact duplicate is a rooted read-only no-op"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "canonical-json",
+      "input": "schema-valid JSON value",
+      "output": "deterministic UTF-8 bytes ending in LF",
+      "effects": "none"
+    },
+    {
+      "id": "content-root",
+      "input": "domain name and canonical bytes",
+      "output": "typed sha256 root",
+      "effects": "none"
+    },
+    {
+      "id": "expected-old",
+      "input": "expected state root and observed state root",
+      "output": "accept or stale-expected-old",
+      "effects": "none"
+    },
+    {
+      "id": "explicit-clock",
+      "input": "adapter-sampled RFC3339 instant",
+      "output": "validated UTC millisecond instant",
+      "effects": "none"
+    },
+    {
+      "id": "decide-fold",
+      "input": "prior state, event, explicit clock, policy",
+      "output": "decision plus successor state",
+      "effects": "none"
+    },
+    {
+      "id": "effects",
+      "input": "accepted decision",
+      "output": "ordered declarative Git/provider intents",
+      "effects": "executed only by TypeScript adapters"
+    },
+    {
+      "id": "observations",
+      "input": "adapter readback",
+      "output": "rooted provider-neutral facts",
+      "effects": "none"
+    },
+    {
+      "id": "typed-retry",
+      "input": "fault class, attempt count, latest observation",
+      "output": "stop, reread, redecide, or reselect",
+      "effects": "bounded by policy"
+    },
+    {
+      "id": "receipts",
+      "input": "decision, prior/successor roots, effect observations",
+      "output": "canonical transition receipt and receipt root",
+      "effects": "retention delegated to adapters"
+    }
+  ],
+  "boundaries": {
+    "rustDomain": {
+      "mayImport": ["canonical contracts", "hashing", "time value types"],
+      "providerSdkImports": "forbidden",
+      "filesystem": "forbidden",
+      "network": "forbidden",
+      "ambientClock": "forbidden"
+    },
+    "typescriptAdapters": {
+      "responsibilities": [
+        "Git ref compare-and-set and immutable commit",
+        "GitHub observations and merge-queue requests",
+        "single clock sample",
+        "effect execution, readback, retry budget, and receipt retention"
+      ]
+    }
+  },
+  "faultModel": [
+    {
+      "id": "stale-expected-old",
+      "class": "concurrency",
+      "decision": "reread once, redecide from the new root, then stop on a second conflict"
+    },
+    {
+      "id": "lease-expired",
+      "class": "authority",
+      "decision": "recover and reselect; the old fencing token is permanently rejected"
+    },
+    {
+      "id": "response-loss",
+      "class": "transport",
+      "decision": "read back the exact state ref and receipt binding; accept only an exact committed successor"
+    },
+    {
+      "id": "provider-conflict",
+      "class": "provider",
+      "decision": "emit a rooted observation and stop without inventing a queue transition"
+    },
+    {
+      "id": "duplicate-event",
+      "class": "idempotence",
+      "decision": "return a rooted no-op only when all identity, outcome, fence, and evidence fields match"
+    }
+  ],
+  "shadow": {
+    "fixtureContract": "architecture/v4-delivery-warrant-shadow-fixtures.json",
+    "inputs": "the same canonical fixture bytes are passed to JavaScript v3 and Rust v4",
+    "comparison": [
+      "decision kind and typed error",
+      "successor queue bytes and root",
+      "generation and fencing values",
+      "ordered effects",
+      "receipt bytes and root"
+    ],
+    "zeroDiffGate": "every required fixture and captured production replay has zero unexplained semantic differences",
+    "faults": [
+      "replay",
+      "duplicate event",
+      "stale compare-and-set",
+      "lease expiry",
+      "response loss",
+      "provider conflict"
+    ],
+    "retention": "retain input, both projections, semantic diff, source revisions, and validator version for 90 days"
+  },
+  "authority": {
+    "permanentDualAuthority": false,
+    "candidateSelfQualification": false,
+    "bootstrap": {
+      "sourceBranch": "dev/v3/v3.0",
+      "sourceCommit": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1",
+      "sourceTree": "20abc99c7fb11f1ad63eb11be7c5bef3172abec1",
+      "bootstrapCommit": "d827bb223e4b78551feed69827f3e67839821171",
+      "bootstrapTree": "6d52d21f25a65b09cb9b344c7dffea192ff5b1d9",
+      "qualificationRoot": "sha256:ea58bf84bd8ba32d0d7931328a2209f937bd3b81d3215b27f2ca67abc704a673"
+    },
+    "nMinusOne": {
+      "qualificationAuthority": "exact prior qualified protected revision",
+      "candidateRevision": "exact proposed protected v4 revision",
+      "requiredRelationship": "candidate descends from authority",
+      "candidateMayWidenCeilings": false,
+      "candidateMayCreateQualificationExceptions": false
+    },
+    "production": "TypeScript v3 remains the sole writer through shadow and v4-read stages",
+    "verification": "Rust produces non-authoritative projections until write cutover is independently approved",
+    "invocation": "TypeScript adapter invokes the replaceable Rust subprocess behind the validated host contract",
+    "retention": "v3 queue commits and receipts remain immutable and readable through legacy removal",
+    "rollback": "restore the last sole writer; never select authority independently per request"
+  },
+  "rollout": [
+    {
+      "id": "legacy-authoritative-shadow",
+      "authority": "TypeScript v3 sole writer",
+      "entry": ["schemas and fixtures validate", "N-1 authority is exact"],
+      "exit": [
+        "fixture zero-diff",
+        "captured replay zero-diff",
+        "fault injection passes"
+      ],
+      "rollback": [
+        "disable Rust invocation",
+        "leave v3 queue and receipts unchanged"
+      ],
+      "evidence": ["paired projections", "semantic diffs", "fault receipts"],
+      "stopConditions": [
+        "any unexplained diff",
+        "missing observation",
+        "unbounded retry"
+      ]
+    },
+    {
+      "id": "legacy-authoritative-v4-read",
+      "authority": "TypeScript v3 sole writer; v4 may serve verified reads only",
+      "entry": [
+        "shadow exit gate passed",
+        "read projection schema is stable",
+        "caller explicitly binds the retained qualification root and source revisions"
+      ],
+      "exit": [
+        "readback parity over one protected-release window",
+        "rollback drill passes"
+      ],
+      "rollback": [
+        "route all reads to v3 with the explicit caller switch",
+        "preserve v4 evidence for diagnosis"
+      ],
+      "evidence": [
+        "read parity receipts",
+        "latency and failure observations",
+        "retained qualification-bound read evidence"
+      ],
+      "stopConditions": [
+        "stale read",
+        "root disagreement",
+        "qualification or evidence retention drift",
+        "provider fact leakage into Rust domain"
+      ]
+    },
+    {
+      "id": "v4-authoritative-write",
+      "authority": "Rust v4 sole decision/fold authority with one TypeScript effect adapter",
+      "entry": [
+        "independent review approves exact cutover revision",
+        "v3-to-v4 state projection and rollback snapshot are exact",
+        "N-1 qualification and protected checks pass"
+      ],
+      "exit": [
+        "one protected-release window without fallback write",
+        "response-loss drill passes"
+      ],
+      "rollback": [
+        "stop v4 writes",
+        "restore v3 from the exact pre-cutover root and retained receipts"
+      ],
+      "evidence": [
+        "cutover receipt",
+        "single-writer proof",
+        "exact readback",
+        "rollback drill"
+      ],
+      "stopConditions": [
+        "two possible writers",
+        "unexplained diff",
+        "indeterminate write",
+        "receipt loss"
+      ]
+    },
+    {
+      "id": "legacy-removal",
+      "authority": "Rust v4 sole decision/fold authority",
+      "entry": [
+        "v4 write exit gate passed",
+        "legacy reader inventory is empty"
+      ],
+      "exit": [
+        "legacy writer removed",
+        "historical receipts remain readable",
+        "N-1 fallback is a protected v4 revision"
+      ],
+      "rollback": ["revert to the exact prior qualified protected v4 revision"],
+      "evidence": [
+        "caller inventory",
+        "dead-code proof",
+        "historical replay proof"
+      ],
+      "stopConditions": [
+        "legacy caller remains",
+        "historical receipt unreadable",
+        "fallback requires dual authority"
+      ]
+    }
+  ],
+  "legacyDisagreements": [
+    {
+      "id": "ambient-api-clock",
+      "source": "public v3 functions default now from new Date()",
+      "disposition": "change-in-v4",
+      "cutoverRule": "v4 decide/fold rejects missing time; compatibility adapter supplies one explicit sample"
+    },
+    {
+      "id": "duplicate-submit-mutates-root",
+      "source": "duplicate-noop still runs transition and advances updatedAt and generation",
+      "disposition": "preserve-in-compatibility",
+      "cutoverRule": "shadow compares legacy projection; v4 native contract changes only after a versioned receipt decision"
+    },
+    {
+      "id": "waiting-blocked-have-no-public-transition",
+      "source": "normalizer accepts waiting and blocked but core exports no transition into them",
+      "disposition": "block-cutover",
+      "cutoverRule": "Wave 1 must either define events for these states or remove them through a protected manifest change"
+    },
+    {
+      "id": "manifest-event-aliases",
+      "source": "manifest lease and renew correspond to select and heartbeat APIs",
+      "disposition": "preserve-in-compatibility",
+      "cutoverRule": "fixture adapters name both the manifest event and legacy operation"
+    },
+    {
+      "id": "response-loss-asymmetry",
+      "source": "settle reconciles a lost write by readback while generic mutations surface the write error",
+      "disposition": "change-in-v4",
+      "cutoverRule": "all effects use the same exact-successor readback protocol"
+    },
+    {
+      "id": "receipt-bytes-not-in-queue-store",
+      "source": "Git commit records queue JSON and receipt root; receipt bytes are workflow artifacts",
+      "disposition": "block-cutover",
+      "cutoverRule": "retention owner and exact receipt retrieval proof are required before v4 write"
+    },
+    {
+      "id": "legacy-key-sort-not-portable",
+      "source": "v3 root helper sorts object keys with runtime localeCompare",
+      "disposition": "change-in-v4",
+      "cutoverRule": "supported contract keys are ASCII and fixtures freeze code-point order before Rust qualification"
+    }
+  ],
+  "wave0Reconciliation": {
+    "sourceRevision": "dcd9a92618e21dd76ee3fee8d915c4b24f482845",
+    "productionAuthority": "typescript-v3",
+    "children": [
+      {
+        "id": "v3-core-mechanism-inventory",
+        "status": "proved",
+        "base": "dev/v3/v3.0",
+        "pullRequest": 2400,
+        "sourceRevision": "abaef5152f284ca6569d26471a5e9ab024c2ff76",
+        "mergeRevision": "7c8956e8b3eb8f5cc494762048000837f6f783b1",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "required-checks-passed; five non-required Build Surface fixture jobs failed"
+      },
+      {
+        "id": "architecture-constitution",
+        "status": "proved",
+        "base": "dev/v4/v4.0",
+        "pullRequest": 2416,
+        "sourceRevision": "7a2060075d646cf8ccf95fb85a607269e91b700a",
+        "mergeRevision": "95e7c1060cae94a38b72c5ac3d7b79cce0ad662b",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "rust-libnode-bridge-spike",
+        "status": "proved",
+        "base": "dev/v4/v4.0",
+        "pullRequest": 2421,
+        "sourceRevision": "684ac6848258724335f35409ef540b21f8a9bc58",
+        "mergeRevision": "aa58ef0576f0ec1ba7c5db7a881337a3717b3dc8",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "delivery-warrant-shadow-bootstrap-plan",
+        "status": "proved",
+        "base": "dev/v4/v4.0",
+        "pullRequest": 2422,
+        "sourceRevision": "ed47f0f3a22970c1a26f1b4ef99ef22f90539c44",
+        "mergeRevision": "dcd9a92618e21dd76ee3fee8d915c4b24f482845",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      }
+    ],
+    "initiativeMatrix": [
+      { "id": "v3-mechanism-inventory", "status": "proved" },
+      { "id": "v4-release-line-bootstrap", "status": "proved" },
+      { "id": "authority-and-dependency-constitution", "status": "proved" },
+      { "id": "semantic-and-complexity-budgets", "status": "proved" },
+      { "id": "agent-state-explain-plan-interface", "status": "partial" },
+      { "id": "rust-node-bridge-portability", "status": "partial" },
+      { "id": "delivery-warrant-shadow-design", "status": "proved" },
+      { "id": "resumable-release-v4", "status": "missing" },
+      { "id": "v4-self-dogfood", "status": "missing" },
+      { "id": "consumer-migration-and-legacy-removal", "status": "missing" },
+      { "id": "final-v4-qualification", "status": "missing" }
+    ],
+    "conflicts": [
+      {
+        "id": "wave1-entry-zero-diff-cycle",
+        "priorState": "invalidated",
+        "disposition": "implementation entry is Wave 0 reconciliation; zero-diff remains the v4-read candidate gate"
+      }
+    ],
+    "entryDecision": "wave1-implementation-open",
+    "residualResponsibility": [
+      "state explain and plan remain unimplemented",
+      "Linux and Windows bridge parity remain unproved",
+      "no v4 production writer, read cutover, consumer migration, or legacy removal is qualified"
+    ]
+  },
+  "wave1": {
+    "entryGate": "wave0-reconciliation-proved",
+    "readCandidateEntryGate": "all-shadow-zero-diff-gates-pass",
+    "nodes": [
+      {
+        "id": "canonical-contracts",
+        "dependsOn": [],
+        "deliverable": "Rust and JavaScript canonical JSON, roots, clock, events, receipts"
+      },
+      {
+        "id": "shared-fixture-runner",
+        "dependsOn": ["canonical-contracts"],
+        "deliverable": "language-neutral trace reader and semantic projection"
+      },
+      {
+        "id": "rust-pure-domain",
+        "dependsOn": ["canonical-contracts", "shared-fixture-runner"],
+        "deliverable": "provider-free decide/fold and typed faults"
+      },
+      {
+        "id": "typescript-shadow-adapter",
+        "dependsOn": ["shared-fixture-runner"],
+        "deliverable": "paired legacy/Rust invocation without Rust effects"
+      },
+      {
+        "id": "semantic-diff-gate",
+        "dependsOn": ["rust-pure-domain", "typescript-shadow-adapter"],
+        "deliverable": "zero-diff report, bounded fault injection, and retained evidence"
+      },
+      {
+        "id": "v4-read-candidate",
+        "dependsOn": ["semantic-diff-gate"],
+        "deliverable": "read-only projection behind a reversible caller switch"
+      }
+    ]
+  },
+  "wave1Reconciliation": {
+    "sourceRevision": "955639299f6b94bdcc8affd91b3361ad1bb42d06",
+    "productionAuthority": "typescript-v3",
+    "parentInitiativeState": "inert",
+    "children": [
+      {
+        "id": "canonical-contracts",
+        "assignmentId": "2026-08-07-buildchain-v4-canonical-contracts",
+        "status": "proved",
+        "pullRequest": 2428,
+        "sourceRevision": "b15011e59614c6316522507498f3f80c2fb7447b",
+        "mergeRevision": "a4e95d763a0bbe9eeda64df7b38afb86592ba97b",
+        "treeRevision": "0d6df0ae9f13372515c618aaf4449f520dbf9ae7",
+        "captureReceiptRoot": "sha256:518c8e0be60921cc05afb0b6c68f6b2bc50b91ff2f64d4e5fd8b0593c4b4ea19",
+        "sealRoot": "sha256:baef130acafa7f9db68701f456c33d1b1ff84bbe8a6c2404f5e3db98f1a48358",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "shared-fixture-runner",
+        "assignmentId": "2026-08-07-buildchain-v4-shared-fixture-runner",
+        "status": "proved",
+        "pullRequest": 2449,
+        "sourceRevision": "3bb081e9adbfa28a1d035eb9418ff227e6a3f71c",
+        "mergeRevision": "5c872d69d288440c6bc150c2926129b918fbd3cc",
+        "treeRevision": "fb1f3e7f69bdadbb6938fdb0d49b9586beae75e2",
+        "captureReceiptRoot": "sha256:0adfdf77ac3245a43ba99ef1ad9e8c7e4d133e8d313407516694e0518af043fd",
+        "sealRoot": "sha256:8008b62fd668d3590494a26c9d84f2c1082934bee41dd8f5af385014552a4195",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "rust-warrant-domain",
+        "assignmentId": "2026-08-07-buildchain-v4-rust-warrant-domain",
+        "status": "proved",
+        "pullRequest": 2451,
+        "sourceRevision": "453d2edf41d40bb3c5f74e979e03e4bb74cf2892",
+        "mergeRevision": "bd9ad2c0a40f63779898a2a3da2e04b25a183269",
+        "treeRevision": "89e6b818285117e027a8f549b7a7a6f5d4f230ef",
+        "captureReceiptRoot": "sha256:c62dc8b623a1e6b184a0f57215ac758afea440aa91c8cfe7328393b74d6032cc",
+        "sealRoot": "sha256:d404f9a41525b496abf64df9fbe67240ddb1fed8b3be009e181d2f00f33821e6",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "typescript-shadow-adapter",
+        "assignmentId": "2026-08-07-buildchain-v4-typescript-shadow-adapter",
+        "status": "proved",
+        "pullRequest": 2456,
+        "sourceRevision": "1ac316434aa7724c49c7e9850dfd12a4412f1fa0",
+        "mergeRevision": "98ffb2c14c701bc886d25c4c681afd47cc57db47",
+        "treeRevision": "f2ea26775395c5c03b159e5134f6b6f9f0c02b40",
+        "captureReceiptRoot": "sha256:7b642ccf97a3fe2c73708db5c5f491d03143a966af934effebc1c7837c95b566",
+        "sealRoot": "sha256:af21c14c4cb6e5184b6f603662456225edd703d481797f8050005cd6649b515f",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "semantic-diff-gate",
+        "assignmentId": "2026-08-07-buildchain-v4-semantic-diff-gate",
+        "status": "proved",
+        "pullRequest": 2458,
+        "sourceRevision": "c11318eb556a2e169a52816a1e83d381585bcca5",
+        "mergeRevision": "62a87bf9f24ba82434a350f2dfb174b1f6377b70",
+        "treeRevision": "84746dfb161f2cb54b2002b7a4f8c72301106af5",
+        "captureReceiptRoot": "sha256:ced3b4bdd1b140702f0c35b9ca0da486ea45dd5e7699d0cfbe4bb1d868cd7a8d",
+        "sealRoot": "sha256:881e49ab5d3814a1ff929fec229a93a439b2c4dd4191fbe8aeb69d290d436c51",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      },
+      {
+        "id": "read-candidate",
+        "assignmentId": "2026-08-07-buildchain-v4-read-candidate",
+        "status": "proved",
+        "pullRequest": 2460,
+        "sourceRevision": "5b71b403792fa6e128f5c6091b80372033921b1c",
+        "mergeRevision": "955639299f6b94bdcc8affd91b3361ad1bb42d06",
+        "treeRevision": "a35051117616c8b32ff58dc9907fe404f1228197",
+        "captureReceiptRoot": "sha256:7cdc14bb66939cc652ee935a476ae9df8e7a8f41071cdaa5a5b93dfeedcd2c46",
+        "sealRoot": "sha256:2b7408c9af2f5bc5930f05b3561fd3a4d66a6a49be2576f2246d4851f29e5582",
+        "review": "exact-head-approved-by-kungfu-origin",
+        "checks": "all non-skipped checks passed"
+      }
+    ],
+    "initiativeMatrix": [
+      { "id": "v3-safety", "status": "proved" },
+      { "id": "protected-v4-line", "status": "proved" },
+      { "id": "authority", "status": "proved" },
+      { "id": "dependency-direction", "status": "proved" },
+      { "id": "semantic-budgets", "status": "proved" },
+      { "id": "agent-maintainability", "status": "partial" },
+      { "id": "bridge-portability", "status": "partial" },
+      { "id": "warrant-pilot", "status": "proved" },
+      { "id": "resumable-release", "status": "missing" },
+      { "id": "self-dogfood", "status": "missing" },
+      { "id": "migration-and-legacy-removal", "status": "missing" },
+      { "id": "final-qualification", "status": "missing" }
+    ],
+    "conflicts": [
+      {
+        "id": "wave1-entry-zero-diff-cycle",
+        "priorState": "invalidated",
+        "status": "resolved",
+        "disposition": "the protected semantic-diff gate and reversible read candidate now prove the formerly circular exit condition"
+      }
+    ],
+    "decision": "capture-wave2-resumable-release-foundation",
+    "residualResponsibility": [
+      "state, explain, and plan remain incomplete",
+      "Linux and Windows bridge parity remain unproved",
+      "Candidate Capsule and resumable Release Transaction are not implemented",
+      "self dogfood, consumer migration, legacy removal, and final qualification remain missing"
+    ]
+  },
+  "wave2": {
+    "authority": "typescript-v3",
+    "mode": "effect-disabled-shadow-foundation",
+    "nodes": [
+      {
+        "id": "stage-capsule-contracts",
+        "dependsOn": [],
+        "deliverable": "canonical per-platform Stage Capsule identity and validation contracts without provider effects"
+      },
+      {
+        "id": "stage-capsule-store-retention",
+        "dependsOn": ["stage-capsule-contracts"],
+        "deliverable": "content-addressed Stage Capsule storage, retention, and restore contracts"
+      },
+      {
+        "id": "platform-stage-checkpoints",
+        "dependsOn": [
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention"
+        ],
+        "deliverable": "effect-disabled macOS, Linux, and Windows checkpoint emission and restore"
+      },
+      {
+        "id": "resume-planner",
+        "dependsOn": [
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention",
+          "platform-stage-checkpoints"
+        ],
+        "deliverable": "deterministic minimal cross-run resume plan over retained exact roots"
+      },
+      {
+        "id": "stage-capsule-qualification-reconciliation",
+        "dependsOn": [
+          "stage-capsule-contracts",
+          "stage-capsule-store-retention",
+          "platform-stage-checkpoints",
+          "resume-planner"
+        ],
+        "deliverable": "fail-closed three-platform recovery qualification and residual reconciliation"
+      }
+    ]
+  },
+  "protectedDelivery": {
+    "required": [
+      "plan and fixture schemas validate",
+      "legacy JavaScript fixture roots are stable",
+      "v4 architecture validation passes",
+      "documentation map resolves",
+      "independent review records no unresolved authority or recovery finding",
+      "exact N-1 qualification uses a prior protected revision"
+    ]
+  }
+}

@@ -3,19 +3,19 @@
   "contract": "kungfu-buildchain-release-line-bootstrap",
   "dryRun": true,
   "cwd": "/home/runner/work/buildchain/buildchain",
-  "line": "v2.14",
-  "major": 2,
-  "minor": 14,
-  "initialVersion": "2.14.0-alpha.0",
+  "line": "v4.0",
+  "major": 4,
+  "minor": 0,
+  "initialVersion": "4.0.0-alpha.0",
   "source": {
-    "ref": "dev/v2/v2.13",
-    "sha": "2fd842ada24a60c2308d6a9f2c15413ca0cadca1"
+    "ref": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1",
+    "sha": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1"
   },
   "refs": {
-    "dev": "dev/v2/v2.14",
-    "alpha": "alpha/v2/v2.14",
-    "release": "release/v2/v2.14",
-    "bootstrap": "buildchain/release-line/v2.14"
+    "dev": "dev/v4/v4.0",
+    "alpha": "alpha/v4/v4.0",
+    "release": "release/v4/v4.0",
+    "bootstrap": "buildchain/release-line/v4.0"
   },
   "versionState": {
     "files": [
@@ -32,65 +32,78 @@
   "protection": {
     "requiredStatusCheck": "check",
     "strictStatusChecks": true,
+    "strictStatusChecksByChannel": {
+      "dev": true,
+      "alpha": false,
+      "release": false
+    },
     "requiredApprovingReviewCount": 1,
     "requiredConversationResolution": true,
     "enforceAdmins": true,
     "protectedRefs": [
-      "dev/v2/v2.14",
-      "alpha/v2/v2.14",
-      "release/v2/v2.14"
+      "dev/v4/v4.0",
+      "alpha/v4/v4.0",
+      "release/v4/v4.0"
     ]
+  },
+  "governance": {
+    "mergeQueue": {
+      "declared": true,
+      "mode": "enabled",
+      "source": "buildchain-config",
+      "requiredWorkflows": [
+        ".github/workflows/verify.yml"
+      ],
+      "reconcileBeforeDefaultBranchSwitch": true
+    }
   },
   "repositoryActions": [
     {
       "action": "create-or-verify-source-ref",
-      "ref": "dev/v2/v2.13"
+      "ref": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1"
     },
     {
       "action": "commit-initial-version-state",
-      "ref": "buildchain/release-line/v2.14",
-      "version": "2.14.0-alpha.0"
+      "ref": "buildchain/release-line/v4.0",
+      "version": "4.0.0-alpha.0"
     },
     {
       "action": "create-dev-branch",
-      "ref": "dev/v2/v2.14",
-      "from": "buildchain/release-line/v2.14"
+      "ref": "dev/v4/v4.0",
+      "from": "buildchain/release-line/v4.0"
     },
     {
       "action": "create-alpha-branch",
-      "ref": "alpha/v2/v2.14",
-      "from": "dev/v2/v2.13"
+      "ref": "alpha/v4/v4.0",
+      "from": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1"
     },
     {
       "action": "create-release-branch",
-      "ref": "release/v2/v2.14",
-      "from": "dev/v2/v2.13"
-    },
-    {
-      "action": "set-default-branch",
-      "ref": "dev/v2/v2.14"
+      "ref": "release/v4/v4.0",
+      "from": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1"
     },
     {
       "action": "protect-branch",
-      "ref": "dev/v2/v2.14"
+      "ref": "dev/v4/v4.0"
     },
     {
       "action": "protect-branch",
-      "ref": "alpha/v2/v2.14"
+      "ref": "alpha/v4/v4.0"
     },
     {
       "action": "protect-branch",
-      "ref": "release/v2/v2.14"
+      "ref": "release/v4/v4.0"
     },
     {
-      "action": "open-alpha-pr",
-      "head": "dev/v2/v2.14",
-      "base": "alpha/v2/v2.14"
+      "action": "reconcile-dev-merge-queue",
+      "ref": "dev/v4/v4.0",
+      "mode": "enabled"
     }
   ],
   "notes": [
     "This bootstrap creates the new minor line before the first alpha promotion.",
     "The source ref stays as the baseline for alpha/release until reviewed channel PRs move them.",
-    "The dev branch receives only the initial version-state commit and becomes the active line when setDefault is true."
+    "The dev branch receives only the initial version-state commit and becomes the active line when setDefault is true.",
+    "Merge queue governance is reconciled after branch protection and before the repository default branch moves."
   ]
 }

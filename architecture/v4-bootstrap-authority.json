@@ -4,9 +4,36 @@
   "releaseLine": {
     "candidateBranch": "dev/v4/v4.0",
     "sourceBranch": "dev/v3/v3.0",
-    "sourceCommit": "7c8956e8babb521d3e743d40108f115a59a40427",
-    "sourceTree": "7e24ca6bafe98b571d94c3bcf07a9d38b31092c5",
-    "status": "pending-protected-v3-merge"
+    "sourceCommit": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1",
+    "sourceTree": "20abc99c7fb11f1ad63eb11be7c5bef3172abec1",
+    "bootstrapCommit": "d827bb223e4b78551feed69827f3e67839821171",
+    "bootstrapTree": "6d52d21f25a65b09cb9b344c7dffea192ff5b1d9",
+    "status": "qualified-protected-v4-bootstrap"
+  },
+  "qualification": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-v4-n-minus-one-qualification",
+    "authorityRevision": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1",
+    "candidateRevision": "d827bb223e4b78551feed69827f3e67839821171",
+    "qualificationRoot": "sha256:ea58bf84bd8ba32d0d7931328a2209f937bd3b81d3215b27f2ca67abc704a673",
+    "candidateSelfQualified": false,
+    "frozenManifestFields": 4,
+    "activeExceptions": 0,
+    "protectedDelivery": {
+      "pullRequest": 2408,
+      "mergeGroupHead": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1",
+      "requiredCheck": "check",
+      "requiredCheckRun": 31134446779
+    },
+    "releaseLineCreation": {
+      "dryRun": 31140240480,
+      "applyRun": 31140281203,
+      "applyRunOutcome": "refs-created-protection-completed-by-exact-reconcile",
+      "devMergeQueueRuleset": 20536161,
+      "defaultBranch": "dev/v3/v3.0",
+      "alphaPullRequestCreated": false
+    },
+    "verifiedAt": "2026-08-07T02:20:03Z"
   },
   "authorityFiles": [
     "architecture/v4-bootstrap-authority.json",

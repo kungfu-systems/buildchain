@@ -63,20 +63,25 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
     workflow.indexOf("\n  github-artifact-attestation:"),
   );
   const checkoutShell = promoteJob.indexOf(
-    "path: .buildchain/promotion-shell",
+    "path: .buildchain/runtime/promotion-shell",
   );
+  const checkoutRuntime = promoteJob.indexOf("path: .buildchain/runtime\n");
   const recordRouting = promoteJob.indexOf(
-    "node .buildchain/promotion-shell/scripts/promotion-routing-evidence.mjs",
+    "node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs",
   );
   assert.match(
     workflow,
-    /bash \.buildchain\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
+    /bash \.buildchain\/runtime\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
   );
   assert.match(
     workflow,
-    /node \.buildchain\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs/,
+    /node \.buildchain\/runtime\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs/,
   );
   assert.ok(checkoutShell >= 0, "promote job must checkout the selected shell");
+  assert.ok(
+    checkoutRuntime < checkoutShell,
+    "promote job must checkout the parent runtime before the nested selected shell",
+  );
   assert.ok(
     checkoutShell < recordRouting,
     "promote job must checkout the selected shell before using its helper",

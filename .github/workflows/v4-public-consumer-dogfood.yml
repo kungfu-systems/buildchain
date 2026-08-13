@@ -1,0 +1,19 @@
+name: V4 Public Consumer Dogfood
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dogfood:
+    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@4178776bf635d0738cb1917e449076d64883218c
+    with:
+      consumer: buildchain
+      node-version: "24"
+      go-version: "1.25.x"
+      install-artifact-path: node_modules/.modules.yaml
+      build-artifact-path: actions/run-lifecycle/dist/index.js
+      verify-artifact-path: dist/site

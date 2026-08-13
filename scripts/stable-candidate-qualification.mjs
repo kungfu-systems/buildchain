@@ -52,14 +52,14 @@ export function resolveStableCandidateQualificationCandidate({ eventName, inputC
   if (
     evidence?.contract !== "kungfu-buildchain-alpha-self-dogfood"
     || evidence?.status !== "passed"
-    || evidence?.observed?.alpha?.ref !== "v3-alpha"
+    || evidence?.observed?.alpha?.ref !== "v4-alpha"
   ) {
-    throw new Error("self-dogfood evidence is not a passing v3-alpha observation");
+    throw new Error("self-dogfood evidence is not a passing v4-alpha observation");
   }
-  const observedSha = optionalSha(evidence.observed.alpha.sha, "observed v3-alpha SHA");
-  const expectedSha = optionalSha(evidence.observed.alpha.expectedSha, "expected v3-alpha SHA");
+  const observedSha = optionalSha(evidence.observed.alpha.sha, "observed v4-alpha SHA");
+  const expectedSha = optionalSha(evidence.observed.alpha.expectedSha, "expected v4-alpha SHA");
   if (!observedSha || observedSha !== expectedSha) {
-    throw new Error("self-dogfood evidence does not bind observed and expected v3-alpha SHAs");
+    throw new Error("self-dogfood evidence does not bind observed and expected v4-alpha SHAs");
   }
   return observedSha;
 }
