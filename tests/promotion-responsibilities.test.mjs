@@ -168,6 +168,51 @@ test("ref mutation responsibility plans provider operations without mutating dur
   );
 });
 
+test("floating tag finalization reads back an exact existing target without rewriting it", async () => {
+  const targetSha = "b".repeat(40);
+  const requests = [];
+  const updates = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async (request) => {
+          requests.push({ operation: "getRef", ...request });
+          return { data: { object: { sha: targetSha } } };
+        },
+        updateRef: async (request) => {
+          requests.push({ operation: "updateRef", ...request });
+        },
+        createRef: async (request) => {
+          requests.push({ operation: "createRef", ...request });
+        },
+      },
+    },
+  };
+  const operations = createRefMutationOperations({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: "a".repeat(40),
+    dryRun: false,
+    rule: { major: 3, minor: 0, releasePrefix: "v3.0" },
+    updates,
+  });
+
+  await operations.updateTag("v3.0-alpha", targetSha);
+
+  assert.deepEqual(requests, [
+    {
+      operation: "getRef",
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      ref: "tags/v3.0-alpha",
+    },
+  ]);
+  assert.deepEqual(updates, [
+    { tag: "v3.0-alpha", action: "existing", sha: targetSha },
+  ]);
+});
+
 test("durable transaction responsibility emits an auditable dry-run plan and enforces the expected version", async () => {
   const updates = [];
   const operations = createDurableTransactionOperations({

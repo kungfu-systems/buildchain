@@ -3486,6 +3486,9 @@ function createRefMutationOperations(context) {
       return;
     }
     try {
+      const tagRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: `tags/${tag}` });
+      if (tagRef?.object?.sha === tagSha)
+        return void updates.push({ tag, action: "existing", sha: tagSha });
       await octokit.rest.git.updateRef({
         owner,
         repo,
