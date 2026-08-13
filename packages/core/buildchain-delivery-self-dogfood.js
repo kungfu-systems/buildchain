@@ -1,3 +1,5 @@
+import { initAdopterManifest } from "@kungfu-tech/kfd/adopter-conformance/toolchain";
+
 import { adopterDeliveryGateDigest } from "./adopter-delivery-gate.js";
 import { withPublishedBuildchainDeliveryAuthority } from "./published-delivery-authority.js";
 
@@ -5,8 +7,18 @@ export const BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT =
   "kungfu-buildchain-delivery-infrastructure-self-dogfood/v1";
 
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
+const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const BUILDCHAIN_PACKAGE = "@kungfu-tech/buildchain";
 const KFD_PACKAGE = "@kungfu-tech/kfd";
+const PROFILE_REQUIREMENTS = Object.freeze([
+  ["adopter-identity", ["declaration"]],
+  ["artifact-readback", ["verification"]],
+  ["claim-boundary", ["declaration"]],
+  ["delivery-policy-cut", ["declaration", "verification"]],
+  ["kfd-cut", ["verification"]],
+  ["protected-delivery", ["implementation", "review", "verification"]],
+  ["source-artifact", ["implementation"]],
+]);
 
 function exactPackage(value, { name, version = "", root = "", label }) {
   if (
@@ -50,6 +62,90 @@ function passed(value, label) {
     );
   }
   return value;
+}
+
+function candidateWarrant(candidate) {
+  const terminal = candidate?.terminal;
+  if (
+    candidate?.status !== "merged" ||
+    !SHA_PATTERN.test(candidate?.sourceHead ?? "") ||
+    !ROOT_PATTERN.test(candidate?.sourceProofRoot ?? "") ||
+    terminal?.outcome !== "merged" ||
+    !ROOT_PATTERN.test(terminal?.nativeProofRoot ?? "") ||
+    !ROOT_PATTERN.test(terminal?.evidenceRoot ?? "")
+  ) {
+    throw new TypeError("candidate Warrant settlement is incomplete");
+  }
+  return {
+    outcome: "merged",
+    sourceHead: candidate.sourceHead,
+    sourceProofRoot: candidate.sourceProofRoot,
+    nativeProofRoot: terminal.nativeProofRoot,
+    integrationProofRoot: terminal.evidenceRoot,
+  };
+}
+
+function deliveryCut() {
+  const protocol = {
+    id: "kfd.adopter-category/instance-manifest",
+    version: "1.0.0",
+  };
+  protocol.root = adopterDeliveryGateDigest(protocol);
+  const profile = {
+    id: "kfd.adopter-category/delivery-infrastructure",
+    version: "1.0.0",
+  };
+  profile.root = adopterDeliveryGateDigest({
+    ...profile,
+    requirements: PROFILE_REQUIREMENTS,
+  });
+  return {
+    gateRoot: adopterDeliveryGateDigest({
+      protocol,
+      profile,
+      artifactProfile: {
+        id: "buildchain.artifact/package",
+        version: "1.0.0",
+      },
+    }),
+    protocol,
+    profile,
+  };
+}
+
+function candidateEvidence({
+  source,
+  artifact,
+  authority,
+  warrant,
+  kfdRoot,
+  observedAt,
+}) {
+  const roots = {
+    "adopter-identity:declaration": source.root,
+    "artifact-readback:verification": artifact.root,
+    "claim-boundary:declaration": adopterDeliveryGateDigest({
+      qualifying: false,
+      selfCertified: false,
+      releaseAuthorized: false,
+    }),
+    "delivery-policy-cut:declaration": authority.gateRoot,
+    "delivery-policy-cut:verification": warrant.integrationProofRoot,
+    "kfd-cut:verification": kfdRoot,
+    "protected-delivery:implementation": artifact.root,
+    "protected-delivery:review": warrant.sourceProofRoot,
+    "protected-delivery:verification": warrant.nativeProofRoot,
+    "source-artifact:implementation": source.root,
+  };
+  return PROFILE_REQUIREMENTS.flatMap(([requirementId, kinds]) =>
+    kinds.map((kind) => ({
+      requirementId,
+      kind,
+      coordinate: `evidence://kungfu-systems/buildchain/${requirementId}/${kind}`,
+      root: roots[`${requirementId}:${kind}`],
+      observedAt,
+    })),
+  );
 }
 
 export function createBuildchainDeliveryInfrastructureSelfDogfood(
@@ -205,4 +301,95 @@ export async function createPublishedBuildchainDeliveryInfrastructureSelfDogfood
       };
     },
   );
+}
+
+export async function createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood({
+  authorityPackages,
+  authoritySourceCommit,
+  candidatePackage,
+  warrantCandidate,
+  source,
+  release,
+  verifiedAt,
+  maxAgeSeconds = 86400,
+} = {}) {
+  if (!SHA_PATTERN.test(authoritySourceCommit ?? "")) {
+    throw new TypeError("authority source commit is invalid");
+  }
+  const artifact = exactPackage(candidatePackage, {
+    name: BUILDCHAIN_PACKAGE,
+    label: "Buildchain candidate",
+  });
+  if (
+    source?.coordinate !==
+      `kungfu-systems/buildchain@${warrantCandidate?.sourceHead ?? ""}` ||
+    !ROOT_PATTERN.test(source?.root ?? "") ||
+    !ROOT_PATTERN.test(release?.root ?? "")
+  ) {
+    throw new TypeError("candidate source or release binding is incomplete");
+  }
+  const warrant = candidateWarrant(warrantCandidate);
+  const cut = deliveryCut();
+  const authority = {
+    version: authorityPackages?.buildchain?.version,
+    sourceCommit: authoritySourceCommit,
+    packageRoot: authorityPackages?.buildchain?.artifactRoot,
+    ...cut,
+    protected: true,
+    published: true,
+  };
+  const candidate = {
+    version: artifact.version,
+    sourceCommit: warrant.sourceHead,
+    packageRoot: artifact.artifactRoot,
+    ...cut,
+    authorityVersion: authority.version,
+  };
+  const adopterManifest = initAdopterManifest({
+    manifestId: `buildchain-delivery-infrastructure-${artifact.version}`,
+    adopterId: "kungfu-systems/buildchain",
+    artifactKind: "package",
+    artifactCoordinate: `${artifact.name}@${artifact.version}`,
+    artifactRoot: artifact.artifactRoot,
+    scope: "Buildchain delivery infrastructure release candidate self-dogfood",
+    packageArtifactRoot: authorityPackages?.kfd?.artifactRoot,
+    verifiedAt,
+    maxAgeSeconds,
+  });
+  adopterManifest.releaseBindings.push({
+    id: `buildchain-${artifact.version}`,
+    artifact: {
+      kind: "package",
+      coordinate: `${artifact.name}@${artifact.version}`,
+      root: artifact.artifactRoot,
+    },
+    releasePassport: structuredClone(release),
+    kfdPackageRoot: authorityPackages.kfd.artifactRoot,
+  });
+  const evidence = candidateEvidence({
+    source,
+    artifact: adopterManifest.releaseBindings[0].artifact,
+    authority,
+    warrant,
+    kfdRoot: authorityPackages.kfd.artifactRoot,
+    observedAt: verifiedAt,
+  });
+  const result =
+    await createPublishedBuildchainDeliveryInfrastructureSelfDogfood({
+      authorityPackages,
+      selfDogfood: {
+        authority,
+        candidate,
+        instanceId: `kungfu-systems/buildchain@${artifact.version}`,
+        adopterManifest,
+        source,
+        artifact: adopterManifest.releaseBindings[0].artifact,
+        release,
+        evidence,
+        warrant,
+        verifiedAt,
+        maxAgeSeconds,
+      },
+    });
+  return { ...result, adopterManifest, deliveryEvidence: evidence };
 }

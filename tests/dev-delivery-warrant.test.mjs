@@ -337,8 +337,13 @@ test("heartbeat and terminal closeout bind the current fencing generation", () =
   });
   assert.equal(heartbeat.receipt.action, "heartbeat");
   assert.equal(heartbeat.queue.candidates[0].status, "proving");
+  const proved = normalizeDevDeliveryQueue({
+    ...heartbeat.queue,
+    activeWarrant: { ...heartbeat.queue.activeWarrant, nativeProofRoot: ROOTS.proof },
+    stateRoot: undefined,
+  });
 
-  const closed = closeDevDeliveryWarrant(heartbeat.queue, selected.warrant, {
+  const closed = closeDevDeliveryWarrant(proved, selected.warrant, {
     outcome: "merged",
     evidenceRoot: ROOTS.evidence,
     now: "2026-08-04T00:02:00Z",
@@ -346,6 +351,8 @@ test("heartbeat and terminal closeout bind the current fencing generation", () =
   assert.equal(closed.queue.activeWarrant, null);
   assert.equal(closed.queue.candidates[0].status, "merged");
   assert.equal(closed.queue.candidates[0].terminal.fencingToken, selected.warrant.fencingToken);
+  assert.equal(closed.queue.candidates[0].terminal.nativeProofRoot, ROOTS.proof);
+  assert.equal(normalizeDevDeliveryQueue(closed.queue).candidates[0].terminal.nativeProofRoot, ROOTS.proof);
   assert.equal(closed.receipt.nextAction, "Select the next queued candidate, if any.");
 });
 

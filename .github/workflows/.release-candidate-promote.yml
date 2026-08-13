@@ -1594,6 +1594,39 @@ jobs:
           BUILDCHAIN_CURRENT_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
           BUILDCHAIN_RESUME_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
 
+      - name: Resolve sealed Buildchain delivery self-dogfood evidence
+        id: buildchain-delivery-self-dogfood
+        if: ${{ needs.preflight.outputs.channel == 'alpha' && github.repository == 'kungfu-systems/buildchain' && inputs.release-passport-buildchain-self-kfd }}
+        shell: bash
+        env:
+          BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
+          BUILDCHAIN_EXPECTED_VERSION: ${{ needs.publication-plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          gate_path="${BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT}/adopter-delivery.json"
+          self_dogfood_path="${BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT}/buildchain-delivery-self-dogfood.json"
+          test -f "${gate_path}"
+          test -f "${self_dogfood_path}"
+          GATE_PATH="${gate_path}" SELF_DOGFOOD_PATH="${self_dogfood_path}" node <<'NODE'
+          const fs = require("node:fs");
+          const read = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
+          const gate = read(process.env.GATE_PATH);
+          const selfDogfood = read(process.env.SELF_DOGFOOD_PATH);
+          if (
+            selfDogfood.status !== "passed" ||
+            selfDogfood.gateResult?.status !== "passed" ||
+            selfDogfood.candidate?.version !== process.env.BUILDCHAIN_EXPECTED_VERSION ||
+            selfDogfood.qualifying !== false ||
+            selfDogfood.selfCertified !== false ||
+            selfDogfood.releaseAuthorized !== false
+          ) throw new Error("sealed Buildchain delivery self-dogfood evidence is incomplete");
+          if (JSON.stringify(gate) !== JSON.stringify(selfDogfood.gateResult)) {
+            throw new Error("sealed adopter delivery result differs from self-dogfood gate result");
+          }
+          NODE
+          echo "adopter-delivery-path=${gate_path}" >> "${GITHUB_OUTPUT}"
+          echo "self-dogfood-path=${self_dogfood_path}" >> "${GITHUB_OUTPUT}"
+
       - name: Stage exact recovery receipt with Release Passport assets
         if: ${{ inputs.resume-candidate-run-id != '' }}
         shell: bash
@@ -1846,13 +1879,13 @@ jobs:
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
           release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
-          release-passport-adopter-delivery-json: ${{ inputs.release-passport-adopter-delivery-json }}
+          release-passport-adopter-delivery-json: ${{ steps.buildchain-delivery-self-dogfood.outputs.adopter-delivery-path || inputs.release-passport-adopter-delivery-json }}
           release-passport-kfd-adopter-manifest-json: ${{ inputs.release-passport-kfd-adopter-manifest-json }}
           release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}
           release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
           release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
           release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}
-          release-passport-evidence-jsons: ${{ inputs.release-passport-evidence-jsons }}
+          release-passport-evidence-jsons: ${{ steps.buildchain-delivery-self-dogfood.outputs.self-dogfood-path || inputs.release-passport-evidence-jsons }}
           release-passport-attachment-command: ${{ inputs.release-passport-attachment-command }}
           release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}
           release-passport-github-artifact-attestation-policy-jsons: ${{ steps.attestation-policy.outputs.path }}
