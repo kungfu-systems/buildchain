@@ -97,7 +97,7 @@ function needsContainedAlphaFinalization(context, plan, recovery) {
     (!context.expectedPublicationVersion ||
       context.expectedPublicationVersion ===
         plan.currentAlphaTransaction.version) &&
-    !plan.currentAlphaTagSha,
+    recovery.exactTagAcceptsTransaction,
   );
 }
 
@@ -105,6 +105,11 @@ async function evaluateAlphaRecovery(context, plan) {
   const acceptedExactShas = context.transactionAcceptedExactTagShas(
     plan.currentAlphaTransaction,
     context.sha,
+  );
+  const exactTagAcceptsTransaction = Boolean(
+    plan.currentAlpha &&
+      (!plan.currentAlphaTagSha ||
+        acceptedExactShas.includes(plan.currentAlphaTagSha)),
   );
   const settled =
     plan.currentAlpha &&
@@ -153,7 +158,11 @@ async function evaluateAlphaRecovery(context, plan) {
       containsTransaction ||
       settled ||
       canReplaceStaleTransaction);
-  const recovery = { transactionOpen, containsTransaction };
+  const recovery = {
+    transactionOpen,
+    containsTransaction,
+    exactTagAcceptsTransaction,
+  };
   const needsContainedPublishedFinalization = needsContainedAlphaFinalization(
     context,
     plan,
