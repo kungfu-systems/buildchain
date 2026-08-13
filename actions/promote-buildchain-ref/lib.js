@@ -1675,7 +1675,7 @@ async function runPublishTransaction(options) {
           artifacts: requiredArtifacts,
         });
       } else {
-        publishSource = existing && publishRematerializeOnResume
+        publishSource = publishRematerializeOnResume
           ? runResumeRematerializedPublish({
               existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version,
             })

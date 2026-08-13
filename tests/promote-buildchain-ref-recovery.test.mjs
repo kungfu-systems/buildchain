@@ -2458,8 +2458,11 @@ const countPath = path.join(process.cwd(), ".buildchain/publish-count");
 const count = Number(fs.existsSync(countPath) ? fs.readFileSync(countPath, "utf8") : "0") + 1;
 fs.mkdirSync(path.dirname(countPath), { recursive: true });
 fs.writeFileSync(countPath, String(count));
-if (count === 1) throw new Error("first publish fails");
 const packageVersion = JSON.parse(fs.readFileSync("package.json", "utf8")).version;
+if (count === 1) {
+  fs.writeFileSync("first-publish-witness.txt", packageVersion + "\\n");
+  throw new Error("first publish fails");
+}
 fs.writeFileSync("publish-witness.json", JSON.stringify({
   packageVersion,
   tarballPath: process.env.BUILDCHAIN_SEALED_NPM_TARBALL || ""
@@ -2498,6 +2501,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     channel: "release",
     line: "v1.0",
     publishTransaction: true,
+    publishRematerializeOnResume: true,
     publishRequiredArtifactsJson: JSON.stringify([{
       kind: "npm",
       name: "@kungfu-tech/publish-failed-rematerialization-fixture",
@@ -2508,6 +2512,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   };
 
   await assert.rejects(runPublishTransaction(args));
+  assert.equal(fs.readFileSync(path.join(cwd, "first-publish-witness.txt"), "utf8"), "1.0.0\n");
   assert.equal(JSON.parse(fs.readFileSync(args.transactionStatePath, "utf8")).state, "publish_failed");
 
   const resumed = await runPublishTransaction({
