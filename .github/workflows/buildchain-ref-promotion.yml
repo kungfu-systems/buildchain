@@ -145,10 +145,10 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    # Buildchain is a consumer of the same hosted public router as every other
-    # repository. The train resolves to exact router, shell, and runtime SHAs
-    # before any promotion effect is admitted.
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@15db8a9d7c39f7a649a0e3971af68490356dd9ac
+    # Buildchain must bootstrap its own reviewed workflow bytes directly. A
+    # hosted public-router call would add another reusable-workflow layer and
+    # GitHub rejects the manual recovery route before any job can start.
+    uses: ./.github/workflows/.release-candidate-promote.yml
     permissions:
       actions: write
       artifact-metadata: write
@@ -161,8 +161,8 @@ jobs:
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-channel: auto
-      buildchain-ref: 15db8a9d7c39f7a649a0e3971af68490356dd9ac
+      buildchain-ref: ${{ github.event.workflow_run.head_sha || ((inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') && github.sha) || inputs.sha || github.sha }}
+      buildchain-contract-lock-path: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && '.buildchain/alpha-contract-lock.json' || '.buildchain/contract-lock.json' }}
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       package-manager: pnpm
@@ -229,8 +229,8 @@ jobs:
         if: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && (github.event_name != 'workflow_dispatch' || inputs['dry-run'] != 'true') }}
         env:
           RELEASE_TAIL_STATE: ${{ needs.promote.outputs.release-tail-transaction-state }}
-          RUNTIME_SHA: ${{ needs.promote.outputs.promotion-runtime-sha }}
-          CONTRACT_ROOT: ${{ needs.promote.outputs.promotion-contract-lock-digest }}
+          RUNTIME_SHA: ${{ inputs['resume-buildchain-runtime-sha'] || github.event.workflow_run.head_sha || inputs.sha || github.sha }}
+          CONTRACT_ROOT: sha256:${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && hashFiles('.buildchain/alpha-contract-lock.json') || hashFiles('.buildchain/contract-lock.json') }}
           DECLARATION_ROOT: ${{ needs.promote.outputs.release-tail-declaration-root }}
           TRANSACTION_ROOT: ${{ needs.promote.outputs.release-tail-transaction-root }}
           STATE_ROOT: ${{ needs.promote.outputs.release-tail-state-root }}
@@ -249,8 +249,8 @@ jobs:
         run: >-
           node scripts/workflow-call-contract.mjs self-release-parity
           --root .
-          --runtime-sha "${{ needs.promote.outputs.promotion-runtime-sha }}"
-          --contract-root "${{ needs.promote.outputs.promotion-contract-lock-digest }}"
+          --runtime-sha "${{ inputs['resume-buildchain-runtime-sha'] || github.event.workflow_run.head_sha || inputs.sha || github.sha }}"
+          --contract-root "sha256:${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && hashFiles('.buildchain/alpha-contract-lock.json') || hashFiles('.buildchain/contract-lock.json') }}"
           --release-tail-declaration-root "${{ needs.promote.outputs.release-tail-declaration-root }}"
           --release-tail-transaction-root "${{ needs.promote.outputs.release-tail-transaction-root }}"
           --release-tail-state-root "${{ needs.promote.outputs.release-tail-state-root }}"
