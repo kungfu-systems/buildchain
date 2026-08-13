@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 567,
+  "generation": 568,
   "fencingCounter": 136,
   "policy": {
     "agingSeconds": 900,
@@ -39,7 +39,7 @@
     "phase": "provisional",
     "expectedOldStateRoot": "sha256:58d1bdb0fd0ee449202fb02e1d77da21fd4bfd78f6976d44061caeea262a3ffa",
     "issuedAt": "2026-08-13T07:56:30.399Z",
-    "expiresAt": "2026-08-13T08:56:30.399Z",
+    "expiresAt": "2026-08-13T08:56:47.262Z",
     "fencingToken": "sha256:3b5ed29de67f1008faaedc9aef3f0e74da9f05a3b99966b25aa8385fd501a67a",
     "nextAction": "Run or reuse the exact semantic native proof, then atomically qualify this fenced Warrant."
   },
@@ -4815,10 +4815,10 @@
       "sourceWorkflowRunId": 31679854942,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-13T07:56:25.281Z",
-      "updatedAt": "2026-08-13T07:56:30.399Z",
+      "updatedAt": "2026-08-13T07:56:47.262Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
+      "status": "proving",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/build-surface-fixture.yml",
@@ -4827,6 +4827,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-13T07:56:30.399Z",
-  "stateRoot": "sha256:836cd14ff4bd365cfa6dc816f1e848b557ac223121182404cba8270e7b7f4dd0"
+  "updatedAt": "2026-08-13T07:56:47.262Z",
+  "stateRoot": "sha256:ffcfe7cf234a7e3ebdcf3c1fd17ed9db7f386405d014745f8533715f279d2182"
 }
