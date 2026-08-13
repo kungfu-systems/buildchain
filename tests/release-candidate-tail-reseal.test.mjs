@@ -7,6 +7,7 @@ import test from "node:test";
 
 import {
   normalizeTailResealRequest,
+  prepareTailResealMacosManifestRecompute,
   restoreTailResealManifestRunIdentity,
   tailResealFailureMode,
   sealTailResealReceipt,
@@ -174,6 +175,7 @@ test("signed macOS manifest recomputation restores only the original build run i
   fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
   const manifestFile = writePlatform(root, "macos-arm64");
   const preSigningManifestFile = path.join(root, "manifest-pre-signing.json");
+  const archivedPreSigningManifestFile = path.join(root, "archive", "manifest-pre-signing.json");
   fs.copyFileSync(manifestFile, preSigningManifestFile);
   const recomputed = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
   recomputed.git.runId = "999";
@@ -186,6 +188,7 @@ test("signed macOS manifest recomputation restores only the original build run i
     BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
     BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
     BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: preSigningManifestFile,
+    BUILDCHAIN_TAIL_RESEAL_ARCHIVED_PRE_SIGNING_MANIFEST_PATH: archivedPreSigningManifestFile,
     GITHUB_RUN_ID: "999",
     GITHUB_RUN_ATTEMPT: "2",
   }, () => restoreTailResealManifestRunIdentity());
@@ -193,11 +196,52 @@ test("signed macOS manifest recomputation restores only the original build run i
   assert.equal(restored.git.runId, "123");
   assert.equal(restored.git.runAttempt, "1");
   assert.equal(restored.files[0].signed, true);
+  assert.equal(digest(archivedPreSigningManifestFile), digest(preSigningManifestFile));
   withEnvironment({
     BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
     BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
     BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: root,
   }, () => verifyTailResealPlatform());
+});
+
+test("macOS manifest recompute preparation removes only self-invalidating generated evidence", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-manifest-prepare-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  const manifestDirectory = path.dirname(manifestFile);
+  const summaryFile = path.join(manifestDirectory, "summary.json");
+  const diagnosticsFile = path.join(manifestDirectory, "diagnostics.json");
+  const productFile = path.join(root, "product", "macos-arm64", "payload.bin");
+  const preservedFile = path.join(root, ".buildchain", "tail-reseal", "pre-signing", "macos-arm64-manifest.json");
+  fs.writeFileSync(summaryFile, "summary\n");
+  fs.writeFileSync(diagnosticsFile, "diagnostics\n");
+
+  withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: preservedFile,
+  }, () => prepareTailResealMacosManifestRecompute());
+
+  assert.equal(fs.existsSync(manifestFile), false);
+  assert.equal(fs.existsSync(summaryFile), false);
+  assert.equal(fs.existsSync(diagnosticsFile), false);
+  assert.equal(fs.existsSync(productFile), true);
+  assert.equal(JSON.parse(fs.readFileSync(preservedFile, "utf8")).git.runId, "123");
+});
+
+test("macOS manifest recompute preparation rejects preservation inside the scanned evidence directory", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-manifest-prepare-reject-"));
+  const requestFile = path.join(root, "request.json");
+  fs.writeFileSync(requestFile, `${JSON.stringify(request())}\n`);
+  const manifestFile = writePlatform(root, "macos-arm64");
+  assert.throws(() => withEnvironment({
+    BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
+    BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: "macos-arm64",
+    BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
+    BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: path.join(path.dirname(manifestFile), "manifest-pre-signing.json"),
+  }, () => prepareTailResealMacosManifestRecompute()), /outside the recomputed artifact directory/u);
 });
 
 test("signed macOS manifest run restoration rejects unrelated recomputation identity", () => {
