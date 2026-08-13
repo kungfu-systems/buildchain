@@ -523,6 +523,99 @@ export function verifyTailResealPlatform() {
   return manifest;
 }
 
+function verifiedManifestFile({ root, manifestFiles, relative, label }) {
+  const absolute = path.resolve(root, relative);
+  if (!absolute.startsWith(`${root}${path.sep}`) || !fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
+    throw new Error(`${label} is missing: ${relative}`);
+  }
+  const entry = manifestFiles.get(relative);
+  if (!entry) throw new Error(`${label} is not bound by the retained macos-arm64 manifest: ${relative}`);
+  if (Number(entry.size ?? entry.bytes) !== fs.statSync(absolute).size) throw new Error(`${label} size mismatch: ${relative}`);
+  const expected = contentRoot(`sha256:${String(entry.sha256 || "").replace(/^sha256:/u, "")}`, `${label} digest`);
+  if (sha256File(absolute) !== expected) throw new Error(`${label} digest mismatch: ${relative}`);
+  return absolute;
+}
+
+export function verifyTailResealCredentialIslandProjection() {
+  const request = normalizeTailResealRequest(readJson(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH,
+    "BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH",
+  )));
+  const root = path.resolve(process.env.BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT || ".");
+  const manifestPath = path.resolve(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH,
+    "BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH",
+  ));
+  const credentialRoot = path.resolve(required(
+    process.env.BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT,
+    "BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT",
+  ));
+  if (!credentialRoot.startsWith(`${root}${path.sep}`) || !fs.statSync(credentialRoot).isDirectory()) {
+    throw new Error("credential-island projection root is outside the retained macos-arm64 payload");
+  }
+  const platform = request.platforms.find((entry) => entry.id === "macos-arm64");
+  if (!platform) throw new Error("tail reseal request does not bind platform macos-arm64");
+  const manifest = object(readJson(manifestPath, "retained macos-arm64 manifest"), "retained macos-arm64 manifest");
+  assertMacosTailManifest({ request, platform, manifest, label: "retained" });
+  if (
+    String(manifest.git?.runId || "") !== String(request.source.runId) ||
+    String(manifest.git?.runAttempt || "") !== String(request.source.runAttempt)
+  ) throw new Error("retained macos-arm64 manifest original run mismatch");
+  const manifestFiles = new Map((Array.isArray(manifest.files) ? manifest.files : []).map((entry) => [
+    String(entry.path || entry.name || "").replaceAll("\\", "/"),
+    entry,
+  ]));
+  const credentialRelativeRoot = path.relative(root, credentialRoot).split(path.sep).join("/");
+  const credentialManifestRelative = `${credentialRelativeRoot}/manifest.json`;
+  const credentialManifestPath = verifiedManifestFile({
+    root,
+    manifestFiles,
+    relative: credentialManifestRelative,
+    label: "credential-island manifest",
+  });
+  const credentialManifest = object(
+    readJson(credentialManifestPath, "credential-island manifest"),
+    "credential-island manifest",
+  );
+  if (
+    credentialManifest.schemaVersion !== 1 ||
+    credentialManifest.contract !== "kungfu-buildchain-artifact" ||
+    credentialManifest.platform?.id !== "macos-arm64-credential" ||
+    credentialManifest.git?.repository !== request.repository ||
+    credentialManifest.git?.sha !== request.source.sha ||
+    credentialManifest.lifecycle?.stage !== "credential-island" ||
+    credentialManifest.lifecycle?.executed !== true ||
+    credentialManifest.expectedArtifacts?.ok !== true
+  ) throw new Error("credential-island projection identity or lifecycle is not qualifying");
+  const credentialFiles = Array.isArray(credentialManifest.files) ? credentialManifest.files : [];
+  if (credentialFiles.length !== 3) {
+    throw new Error(`credential-island projection must contain exactly three files, found ${credentialFiles.length}`);
+  }
+  for (const entry of credentialFiles) {
+    const relative = required(entry.path || entry.name, "credential-island file path").replaceAll("\\", "/");
+    if (relative.startsWith("/") || relative.split("/").includes("..")) {
+      throw new Error(`credential-island file path is unsafe: ${relative}`);
+    }
+    const boundRelative = `${credentialRelativeRoot}/${relative}`;
+    const absolute = verifiedManifestFile({
+      root,
+      manifestFiles,
+      relative: boundRelative,
+      label: "credential-island file",
+    });
+    if (
+      Number(entry.size ?? entry.bytes) !== fs.statSync(absolute).size ||
+      sha256File(absolute) !== `sha256:${String(entry.sha256 || "").replace(/^sha256:/u, "")}`
+    ) throw new Error(`credential-island inner manifest mismatch: ${relative}`);
+  }
+  appendOutputs({
+    "credential-artifact-root": path.relative(process.cwd(), credentialRoot),
+    "credential-manifest-path": path.relative(process.cwd(), credentialManifestPath),
+    "credential-manifest-root": sha256File(credentialManifestPath),
+  });
+  return credentialManifest;
+}
+
 export function recoverTailResealSigning() {
   const request = normalizeTailResealRequest(readJson(required(process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH, "BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH")));
   if (tailResealFailureMode(request) !== FAILURE_MODES.signingControl) {
@@ -628,8 +721,9 @@ export async function releaseCandidateTailResealCli(argv = process.argv.slice(2)
   if (command === "prepare-manifest-recompute") return prepareTailResealMacosManifestRecompute();
   if (command === "restore-manifest-run") return restoreTailResealManifestRunIdentity();
   if (command === "verify-platform") return verifyTailResealPlatform();
+  if (command === "verify-credential-projection") return verifyTailResealCredentialIslandProjection();
   if (command === "seal") return sealTailResealReceipt();
-  throw new Error("usage: release-candidate-tail-reseal.mjs <plan|recover-signing|prepare-manifest-recompute|restore-manifest-run|verify-platform|seal>");
+  throw new Error("usage: release-candidate-tail-reseal.mjs <plan|recover-signing|prepare-manifest-recompute|restore-manifest-run|verify-platform|verify-credential-projection|seal>");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
