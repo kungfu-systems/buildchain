@@ -2031,6 +2031,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-passport-adopter-delivery-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-passport-attachment-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -2217,7 +2221,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:4d44d0f729fbc112aa309ed22e74b9f1401b0470b99c1e6061c278babe5e4b8b"
+      "digest": "sha256:127dc1d80dca63e2bb1fb268d2183d0a31ea2a67eb81bce48dae916f698c02be"
     },
     {
       "schemaVersion": 1,
@@ -2410,5 +2414,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:56d9fd27f8e05f1d5c0f5de354b2dfc1cac62155e8ddc555b16e35e9161459c9"
+  "digest": "sha256:24e8ce3458a737d74337ad80329659f2e9dea49b3edb9238b11f4fdb76e96bca"
 }

@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "83161db49fd9269a5d558eb20875a8434384746395bafef0c09aa09c5bd88a46",
+    "sha256": "f2190011d83c806ff30602f62fe70aa01097076600353b1456e800e748f23d3d",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "83161db49fd9269a5d558eb20875a8434384746395bafef0c09aa09c5bd88a46",
+      "sha256": "f2190011d83c806ff30602f62fe70aa01097076600353b1456e800e748f23d3d",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -3849,7 +3849,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 111,
+          "inputCount": 112,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3926,6 +3926,7 @@
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
+            "release-passport-adopter-delivery-json",
             "release-passport-attachment-command",
             "release-passport-buildchain-self-kfd",
             "release-passport-evidence-command",
@@ -5195,7 +5196,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 102,
+          "inputCount": 103,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -5263,6 +5264,7 @@
             "release-candidate-workflow-file",
             "release-candidate-workflow-name",
             "release-passport",
+            "release-passport-adopter-delivery-json",
             "release-passport-attachment-command",
             "release-passport-buildchain-self-kfd",
             "release-passport-evidence-command",
