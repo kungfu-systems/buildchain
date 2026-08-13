@@ -70,7 +70,7 @@ function normalizeCandidate(input, expected) {
     planRoot: exactRoot(input.planRoot, "planRoot"),
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
-    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"), ...(input.environmentRoot ? { environmentRoot: exactRoot(input.environmentRoot, "environmentRoot") } : {}), ...(Object.hasOwn(input, "sourceWorkflowRunId") ? { sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0) } : {}),
     priority: priority(input.priority),
     enqueuedAt: timestamp(input.enqueuedAt, "candidate enqueuedAt"),
     updatedAt: timestamp(input.updatedAt || input.enqueuedAt, "candidate updatedAt"),
@@ -79,7 +79,7 @@ function normalizeCandidate(input, expected) {
     status,
     terminal: input.terminal || null,
   };
-  if (Object.hasOwn(input, "releaseBlockerPriority")) candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(input.releaseBlockerPriority, candidate, expected);
+  if (Object.hasOwn(input, "affectedPaths")) { if (!Array.isArray(input.affectedPaths)) throw new Error("candidate affectedPaths must be an array"); candidate.affectedPaths = [...new Set(input.affectedPaths.map(text).filter(Boolean))].sort(); } if (Object.hasOwn(input, "releaseBlockerPriority")) candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(input.releaseBlockerPriority, candidate, expected);
   return candidate;
 }
 
