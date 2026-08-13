@@ -467,9 +467,9 @@
       "source": ".github/workflows/.release-candidate-promote.yml"
     }
   ],
-  "classification": "minor",
-  "breaking": false,
+  "classification": "major",
+  "breaking": true,
   "security": false,
-  "migrationRequired": false,
-  "summary": "Buildchain v4.0 establishes the Architecture Constitution, exact N-1 bootstrap qualification, and protected release-line governance while preserving the v3.0 production fallback and existing consumer contracts."
+  "migrationRequired": true,
+  "summary": "Buildchain v4.0 establishes the Architecture Constitution, exact N-1 bootstrap qualification, and protected v4 release-line governance as the sole production publication authority."
 }
