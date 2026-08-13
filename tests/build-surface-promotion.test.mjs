@@ -486,6 +486,10 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
     /candidate\.terminal\?\.nativeProofRoot[\s\S]*candidate\.terminal\?\.evidenceRoot/,
   );
   assert.match(workflow, /expected one proof-complete terminal Warrant candidate/);
+  assert.match(workflow, /dev-merge-commit\.json/);
+  assert.match(workflow, /devParentShas\.includes\(pull\.head\.sha\)/);
+  assert.match(workflow, /does not contain reviewed source head .* as an exact parent/);
+  assert.doesNotMatch(workflow, /sourceTree !== devTree/);
   assert.match(workflow, /"adopter-delivery\.json": result\.gateResult/);
   assert.match(workflow, /"buildchain-delivery-self-dogfood\.json": result/);
   assert.match(workflow, /manifest\.files\.push/);
