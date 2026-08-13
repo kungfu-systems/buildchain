@@ -81,19 +81,20 @@ async function selectReleaseState(context) {
 
 async function transactionContainedInRelease(context, transaction) {
   if (!transaction) return false;
+  const currentChannelSha = context.advancedChannelSha || context.sha;
   return (
     (await context.releaseCommitIncludesTransactionHead({
       octokit: context.octokit,
       owner: context.owner,
       repo: context.repo,
-      releaseSha: context.sha,
+      releaseSha: currentChannelSha,
       transactionReleaseSha: transaction.release_sha,
     })) ||
     (await context.releaseCommitIncludesTransactionHead({
       octokit: context.octokit,
       owner: context.owner,
       repo: context.repo,
-      releaseSha: context.sha,
+      releaseSha: currentChannelSha,
       transactionReleaseSha: transaction.release_material_sha,
     }))
   );
@@ -543,4 +544,4 @@ async function promoteReleaseChannel(context) {
   return prepareReleaseNextAlpha(context, finalized);
 }
 
-export { promoteReleaseChannel };
+export { promoteReleaseChannel, transactionContainedInRelease };
