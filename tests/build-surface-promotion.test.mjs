@@ -476,6 +476,14 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /publish-transaction: "true"/);
   assert.match(workflow, /name: Materialize the planned version in the candidate workspace/);
   assert.match(workflow, /node scripts\/materialize-self-release-candidate-version\.mjs/);
+  assert.match(workflow, /name: Self-dogfood exact Buildchain candidate through public N-1 authority/);
+  assert.match(workflow, /buildchain\/dev-delivery-warrant\/dev-v3-v3\.0/);
+  assert.match(workflow, /@kungfu-tech\/buildchain@\$\{BUILDCHAIN_AUTHORITY_VERSION\}/);
+  assert.match(workflow, /@kungfu-tech\/kfd@\$\{KFD_AUTHORITY_VERSION\}/);
+  assert.match(workflow, /createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood/);
+  assert.match(workflow, /"adopter-delivery\.json": result\.gateResult/);
+  assert.match(workflow, /"buildchain-delivery-self-dogfood\.json": result/);
+  assert.match(workflow, /manifest\.files\.push/);
   assert.match(workflow, /EXPECTED_VERSION: \$\{\{ steps\.publication-plan\.outputs\.planned-publication-version \}\}/);
   assert.match(workflow, /sealed package version .* differs from planned publication/);
   assert.ok(
@@ -689,6 +697,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(action, /release-passport-adopter-delivery-json:/);
   assert.match(action, /release-passport-kfd-adopter-manifest-json:/);
   assert.match(action, /release-passport-kfd-support-matrix-json:/);
   assert.match(action, /release-passport-kfd-product-gate-jsons:/);
@@ -714,6 +723,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
+  assert.match(implementation, /releasePassportAdopterDeliveryJson/);
   assert.match(implementation, /releasePassportKfdAdopterManifestJson/);
   assert.match(implementation, /releasePassportKfdSupportMatrixJson/);
   assert.match(implementation, /releasePassportKfdProductGateJsons/);
@@ -729,6 +739,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
+  assert.match(docs, /release-passport-adopter-delivery-json/);
   assert.match(docs, /release-passport-kfd-adopter-manifest-json/);
   assert.match(docs, /release-passport-kfd-support-matrix-json/);
   assert.match(docs, /release-passport-kfd-product-gate-jsons/);
@@ -750,7 +761,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@cc6c32845ab5779009aeb48cc34efe65e229fe30\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@15db8a9d7c39f7a649a0e3971af68490356dd9ac\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
@@ -760,7 +771,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: cc6c32845ab5779009aeb48cc34efe65e229fe30/,
+    /buildchain-ref: 15db8a9d7c39f7a649a0e3971af68490356dd9ac/,
   );
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(
@@ -1855,9 +1866,9 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@cc6c32845ab5779009aeb48cc34efe65e229fe30/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@15db8a9d7c39f7a649a0e3971af68490356dd9ac/,
   );
-  assert.match(promotion, /buildchain-ref: cc6c32845ab5779009aeb48cc34efe65e229fe30/);
+  assert.match(promotion, /buildchain-ref: 15db8a9d7c39f7a649a0e3971af68490356dd9ac/);
   assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
 });
 

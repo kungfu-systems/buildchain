@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { GitHubDevDeliveryStore, defaultDevDeliveryStateRef, runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
+import { GitHubDevDeliveryStore, defaultDevDeliveryStateRef, devDeliveryCliOptions, runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
 import { createDevDeliveryQueue, selectDevDeliveryWarrant, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
@@ -79,6 +79,19 @@ class ConcurrentTerminalStore extends MemoryStore {
 
 test("state refs are deterministic and remain inside the Buildchain namespace", () => {
   assert.equal(defaultDevDeliveryStateRef("dev/v4/v4.0"), "buildchain/dev-delivery-warrant/dev-v4-v4.0");
+});
+
+test("CLI preserves the exact source workflow run binding from flags or environment", () => {
+  assert.equal(
+    devDeliveryCliOptions(["submit", "--source-workflow-run-id", "31645483735"], {}).sourceWorkflowRunId,
+    "31645483735",
+  );
+  assert.equal(
+    devDeliveryCliOptions(["submit"], {
+      BUILDCHAIN_DEV_DELIVERY_SOURCE_WORKFLOW_RUN_ID: "31645483735",
+    }).sourceWorkflowRunId,
+    "31645483735",
+  );
 });
 
 test("plan mode emits rooted receipts without writing authority", async () => {

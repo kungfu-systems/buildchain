@@ -531,6 +531,7 @@
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
+        "release-passport-adopter-delivery-json",
         "release-passport-attachment-command",
         "release-passport-buildchain-self-kfd",
         "release-passport-evidence-command",
@@ -568,7 +569,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 111,
+      "inputCount": 112,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2563,6 +2564,7 @@
         "release-candidate-workflow-file",
         "release-candidate-workflow-name",
         "release-passport",
+        "release-passport-adopter-delivery-json",
         "release-passport-attachment-command",
         "release-passport-buildchain-self-kfd",
         "release-passport-evidence-command",
@@ -2600,7 +2602,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 102,
+      "inputCount": 103,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3085,6 +3087,7 @@
         "release-candidate-version",
         "release-material-sha",
         "release-passport",
+        "release-passport-adopter-delivery-json",
         "release-passport-attachment-command",
         "release-passport-build-summary-path",
         "release-passport-buildchain-self-kfd",
@@ -3119,7 +3122,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 81,
+      "inputCount": 82,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

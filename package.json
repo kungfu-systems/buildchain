@@ -39,6 +39,8 @@
     "./kfd-adopter-category-driver": "./packages/core/kfd-adopter-category-driver.js",
     "./buildchain-delivery-infrastructure": "./packages/core/buildchain-delivery-infrastructure.js",
     "./buildchain-delivery-bootstrap": "./packages/core/buildchain-delivery-bootstrap.js",
+    "./buildchain-delivery-self-dogfood": "./packages/core/buildchain-delivery-self-dogfood.js",
+    "./published-delivery-authority": "./packages/core/published-delivery-authority.js",
     "./legacy-kfd-adopter-driver": "./packages/core/legacy-kfd-adopter-driver.js",
     "./adopter-delivery-passport": "./packages/core/adopter-delivery-passport.js",
     "./adopter-delivery-vectors": "./packages/core/adopter-delivery-vectors.js",

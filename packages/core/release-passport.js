@@ -1533,7 +1533,7 @@ export function collectGitHubReleasePassport({
   kfd2ClaimJsons = [],
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
-  kfd3ArtifactVerifyCommand = "",
+  kfd3ArtifactVerifyCommand = "", adopterDeliveryJson = "",
   kfdAdopterManifestJson = "",
   kfdSupportMatrixJson = "",
   kfdProductGateJsons = [],
@@ -1594,6 +1594,11 @@ export function collectGitHubReleasePassport({
     cwd,
     label: "KFD-3 artifact verify command",
   });
+  const adopterDelivery = parseJsonInput(
+    adopterDeliveryJson,
+    undefined,
+    { cwd, label: "adopterDeliveryJson" },
+  );
   const basePassportMeta = parseJsonInputWithMeta(basePassportJson, undefined, { cwd, label: "basePassportJson" });
   const invariantPassportMetas = (invariantPassportJsons || [])
     .filter(Boolean)
@@ -1684,6 +1689,7 @@ export function collectGitHubReleasePassport({
     tag: resolvedTag,
     sourceSha,
     workflow,
+    adopterDelivery,
     kfdAdopter,
   });
   const bundledPublishEvidencePath = publishEvidenceMeta.value ? "evidence.json" : "";
@@ -1750,6 +1756,7 @@ export function collectGitHubReleasePassport({
     kfd1,
     kfd2Claims: kfd2ClaimMetas.map((meta) => meta.value),
     kfd3,
+    adopterDelivery,
     kfdAdopter,
     kfdAdopterManifestEvidencePath: kfdAdopter ? "kfd-adopter-manifest.json" : "",
     kfdAdopterGateEvidencePath: kfdAdopter ? "kfd-adopter-manifest-gate.json" : "",
