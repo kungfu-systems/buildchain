@@ -1792,7 +1792,7 @@ jobs:
           BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           sha: ${{ needs.preflight.outputs.requested-sha }}
           target-ref: ${{ needs.preflight.outputs.target-ref }}
           dry-run: ${{ inputs.dry-run }}
