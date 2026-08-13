@@ -692,7 +692,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /publish-required-artifacts-json: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'release\/'\) && '\[\{"group":"node","kind":"npm","name":"@kungfu-tech\/buildchain","ref_template":"\{version\}","role":"main","required":true\}\]' \|\| '' \}\}/,
   );
-  assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/);
+  assert.match(
+    workflow,
+    /artifact-patterns: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && 'buildchain-package-\*' \|\| '' \}\}/,
+  );
   assert.doesNotMatch(
     workflow,
     /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != ''/,

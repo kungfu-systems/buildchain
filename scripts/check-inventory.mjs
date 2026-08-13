@@ -1019,7 +1019,7 @@ for (const requiredSnippet of [
   "resume-buildchain-runtime-sha:",
   "github-release: true",
   "release-passport-buildchain-self-kfd: true",
-  'artifact-patterns: "buildchain-package-*"',
+  "artifact-patterns: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && 'buildchain-package-*' || '' }}",
   "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
