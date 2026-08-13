@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132581,
+    "maxHandMaintainedSourceLines": 132583,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 23636,
-    "latestTransition": "Stable recovery now reuses the existing immutable GitHub Release evidence after its complete transaction enters the protected release branch.",
-    "rationale": "Thirty-eight recovery and regression lines prevent a protected-merge retry from rematerializing published npm bytes or replacing immutable GitHub Release evidence while preserving exact source, release, material, and tooling identities. This exact measured ceiling cannot grow implicitly."
+    "latestTransition": "Stable recovery now reuses immutable release evidence and independently prepares the next alpha after its complete transaction enters the protected release branch.",
+    "rationale": "Forty recovery and regression lines prevent a protected-merge retry from rematerializing published npm bytes or replacing immutable GitHub Release evidence while allowing only the separate post-release next-alpha version state. Exact source, release, material, and tooling identities remain preserved. This measured ceiling cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,

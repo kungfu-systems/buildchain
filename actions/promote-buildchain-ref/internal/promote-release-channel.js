@@ -482,6 +482,7 @@ async function prepareReleaseNextAlpha(context, state) {
         baseSha: state.releaseSha,
         version: nextAlphaVersion,
         message: `chore(release): prepare ${selectedNextAlpha.tag}`,
+        recoveredCandidate: false,
       });
       nextAlphaSha = nextAlphaCommit.sha;
       nextAlphaVersionStateFiles = nextAlphaCommit.files || [];
