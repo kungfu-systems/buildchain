@@ -1729,13 +1729,17 @@ test("release promotion creates v-prefixed release tag and prepares next alpha t
     ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
     ["getRef", "tags/v1.0.0"],
     ["createRef", "refs/tags/v1.0.0", SHA],
+    ["getRef", "tags/v1.0"],
     ["updateRef", "tags/v1.0", SHA, true],
     ["getRef", "tags/v1.1"],
+    ["getRef", "tags/v1"],
     ["updateRef", "tags/v1", SHA, true],
     ["getRef", "tags/v1.0.1-alpha.0"],
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
+    ["getRef", "tags/v1.0-alpha"],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
     ["listMatchingRefs", "tags/v1."],
+    ["getRef", "tags/v1-alpha"],
     ["updateRef", "tags/v1-alpha", SHA, true],
   ]);
 });
@@ -1829,7 +1833,9 @@ test("alpha promotion creates exact prerelease tag and moves minor and major alp
     ["listMatchingRefs", "tags/v1."],
     ["getRef", "tags/v1.0.1-alpha.0"],
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
+    ["getRef", "tags/v1.0-alpha"],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
+    ["getRef", "tags/v1-alpha"],
     ["updateRef", "tags/v1-alpha", SHA, true],
   ]);
 });
