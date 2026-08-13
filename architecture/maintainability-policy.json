@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132433,
+    "maxHandMaintainedSourceLines": 132456,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 23636,
     "latestTransition": "The v4 architecture and Warrant-plan validators now fail closed unless production release authority, writers, and migration phases have completed the v3-to-v4 cutover.",

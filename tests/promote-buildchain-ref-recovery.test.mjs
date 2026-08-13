@@ -2321,8 +2321,20 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
 
 test("publish transaction can opt in to rematerialize ephemeral Passport inputs on resume", async () => {
   const cwd = makeTempWorkspace({
+    "package.json": JSON.stringify({
+      name: "@kungfu-tech/rematerialization-fixture",
+      version: "1.0.0-alpha.0",
+    }, null, 2) + "\n",
     "buildchain.toml": `
 schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
 
 [lifecycle.publish]
 command = "node scripts/publish.mjs"
@@ -2333,11 +2345,12 @@ import path from "node:path";
 
 const countPath = path.join(process.cwd(), ".buildchain/publish-count");
 const count = Number(fs.existsSync(countPath) ? fs.readFileSync(countPath, "utf8") : "0") + 1;
+const packageVersion = JSON.parse(fs.readFileSync("package.json", "utf8")).version;
 fs.mkdirSync(path.dirname(countPath), { recursive: true });
 fs.writeFileSync(countPath, String(count));
 const witnessPath = path.join(process.cwd(), ".buildchain/release-inputs/witness.json");
 fs.mkdirSync(path.dirname(witnessPath), { recursive: true });
-fs.writeFileSync(witnessPath, JSON.stringify({ count }, null, 2) + "\\n");
+fs.writeFileSync(witnessPath, JSON.stringify({ count, packageVersion }, null, 2) + "\\n");
 fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
 fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   schema: 1,
@@ -2358,20 +2371,20 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 `,
   });
   const { octokit } = createGitMock();
-  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0-alpha.0.json");
-  const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.0.0-alpha.0/evidence.json");
+  const statePath = path.join(cwd, ".buildchain/release-state/1.0.0.json");
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.0.0/evidence.json");
   const args = {
     octokit,
     owner: "kungfu-systems",
     repo: "buildchain",
     cwd,
     loadedConfig: loadBuildchainConfig(cwd),
-    targetRef: "alpha/v1/v1.0",
+    targetRef: "release/v1/v1.0",
     sourceSha: SHA,
     releaseSha: OTHER_SHA,
-    version: "1.0.0-alpha.0",
-    exactTag: "v1.0.0-alpha.0",
-    channel: "alpha",
+    version: "1.0.0",
+    exactTag: "v1.0.0",
+    channel: "release",
     line: "v1.0",
     publishTransaction: true,
     publishRequiredArtifactsJson: JSON.stringify([{ kind: "github-release", name: "rematerialization-fixture", ref_template: "{version}" }]),
@@ -2397,6 +2410,11 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain/release-inputs/witness.json"), "utf8")).count,
     2,
   );
+  assert.equal(
+    JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain/release-inputs/witness.json"), "utf8")).packageVersion,
+    "1.0.0",
+  );
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.0.0-alpha.0");
   assert.equal(
     JSON.parse(fs.readFileSync(resumed.distTagEvidencePath, "utf8")).source,
     "resume-rematerialized:buildchain.toml",

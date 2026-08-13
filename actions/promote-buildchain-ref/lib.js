@@ -183,6 +183,28 @@ function runPublishCommand({ cwd, command, loadedConfig, env }) {
   return "none";
 }
 
+function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, version }) {
+  const discovered = discoverVersionStateFiles(cwd);
+  const changedFiles = updateVersionStateContents(discovered.files, version);
+  const originals = changedFiles.map((file) => {
+    const resolved = path.resolve(cwd, file.path);
+    return {
+      resolved,
+      content: fs.readFileSync(resolved),
+    };
+  });
+  try {
+    for (const [index, file] of changedFiles.entries()) {
+      fs.writeFileSync(originals[index].resolved, file.content);
+    }
+    return runPublishCommand({ cwd, command, loadedConfig, env });
+  } finally {
+    for (const original of originals) {
+      fs.writeFileSync(original.resolved, original.content);
+    }
+  }
+}
+
 function npmPackageSpec(artifact) {
   return `${artifact.name}@${artifact.ref}`;
 }
@@ -1502,7 +1524,6 @@ async function runPublishTransaction(options) {
       cwd,
     };
   }
-
   let validation;
   let publishSource = existingEvidence ? "existing-evidence" : "";
   let distTagEvidencePath = "";
@@ -1540,11 +1561,12 @@ async function runPublishTransaction(options) {
           "publish-rematerialize-on-resume cannot replay promote-existing-version provider mutations",
         );
       }
-      publishSource = runPublishCommand({
+      publishSource = runRematerializedPublishCommand({
         cwd,
         command: publishCommand,
         loadedConfig,
         env: publishTransactionEnvironment(context, { useSealedBundle: false }),
+        version,
       });
       if (publishSource === "none") {
         throw new Error(
