@@ -2430,6 +2430,103 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   );
 });
 
+test("publish_failed transaction rematerializes the exact npm version before retry", async () => {
+  const cwd = makeTempWorkspace({
+    "package.json": JSON.stringify({
+      name: "@kungfu-tech/publish-failed-rematerialization-fixture",
+      version: "1.0.0-alpha.0",
+    }, null, 2) + "\n",
+    "buildchain.toml": `
+schema = 1
+
+[version]
+required = true
+
+[[version.files]]
+type = "json"
+path = "package.json"
+key = "version"
+
+[lifecycle.publish]
+command = "node scripts/publish.mjs"
+`,
+    "scripts/publish.mjs": `
+import fs from "node:fs";
+import path from "node:path";
+
+const countPath = path.join(process.cwd(), ".buildchain/publish-count");
+const count = Number(fs.existsSync(countPath) ? fs.readFileSync(countPath, "utf8") : "0") + 1;
+fs.mkdirSync(path.dirname(countPath), { recursive: true });
+fs.writeFileSync(countPath, String(count));
+if (count === 1) throw new Error("first publish fails");
+const packageVersion = JSON.parse(fs.readFileSync("package.json", "utf8")).version;
+fs.writeFileSync("publish-witness.json", JSON.stringify({
+  packageVersion,
+  tarballPath: process.env.BUILDCHAIN_SEALED_NPM_TARBALL || ""
+}, null, 2) + "\\n");
+fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
+  schema: 1,
+  version: process.env.BUILDCHAIN_VERSION,
+  channel: process.env.BUILDCHAIN_CHANNEL,
+  source_sha: process.env.BUILDCHAIN_SOURCE_SHA,
+  release_sha: process.env.BUILDCHAIN_RELEASE_SHA,
+  target_ref: process.env.BUILDCHAIN_TARGET_REF,
+  release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
+  publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
+  artifacts: [{
+    kind: "npm",
+    name: "@kungfu-tech/publish-failed-rematerialization-fixture",
+    ref: process.env.BUILDCHAIN_VERSION,
+    digest: "sha256:" + "7".repeat(64)
+  }]
+}, null, 2) + "\\n");
+`,
+  });
+  const { octokit } = createGitMock();
+  const args = {
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    loadedConfig: loadBuildchainConfig(cwd),
+    targetRef: "release/v1/v1.0",
+    sourceSha: SHA,
+    releaseSha: OTHER_SHA,
+    version: "1.0.0",
+    exactTag: "v1.0.0",
+    channel: "release",
+    line: "v1.0",
+    publishTransaction: true,
+    publishRequiredArtifactsJson: JSON.stringify([{
+      kind: "npm",
+      name: "@kungfu-tech/publish-failed-rematerialization-fixture",
+      ref_template: "{version}",
+    }]),
+    publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/1.0.0/evidence.json"),
+    transactionStatePath: path.join(cwd, ".buildchain/release-state/1.0.0.json"),
+  };
+
+  await assert.rejects(runPublishTransaction(args));
+  assert.equal(JSON.parse(fs.readFileSync(args.transactionStatePath, "utf8")).state, "publish_failed");
+
+  const resumed = await runPublishTransaction({
+    ...args,
+    publishRematerializeOnResume: true,
+  });
+  const witness = JSON.parse(fs.readFileSync(path.join(cwd, "publish-witness.json"), "utf8"));
+
+  assert.equal(resumed.validation.valid, true);
+  assert.equal(witness.packageVersion, "1.0.0");
+  assert.match(path.basename(witness.tarballPath), /publish-failed-rematerialization-fixture-1\.0\.0\.tgz$/);
+  assert.equal(fs.existsSync(witness.tarballPath), false);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.0.0-alpha.0");
+  assert.equal(
+    JSON.parse(fs.readFileSync(resumed.distTagEvidencePath, "utf8")).source,
+    "resume-rematerialized:buildchain.toml",
+  );
+});
+
 test("explicit recovery finalizes an ancestry-bound published transaction without replaying publication", async () => {
   const cwd = makeTempWorkspace({});
   const version = "1.0.0";
