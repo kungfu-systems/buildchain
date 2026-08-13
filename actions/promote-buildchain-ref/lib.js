@@ -3018,14 +3018,17 @@ async function resumableReleaseTransactionState({
           transactionReleaseSha: transaction?.release_material_sha,
         })
       ));
+    const exactCompletedTransaction =
+      transaction?.state === "complete" && exactTransactionSource;
     if (
       transaction &&
       (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state,
-      ) &&
-      (exactTransactionSource || transactionInSourceHistory)
+      !["abandoned", "failed_permanently"].includes(transaction.state) &&
+      (exactCompletedTransaction ||
+        (transaction.state !== "complete" &&
+          (exactTransactionSource || transactionInSourceHistory)))
     ) {
       return {
         ...candidate,
