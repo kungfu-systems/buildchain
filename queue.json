@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 709,
+  "generation": 710,
   "fencingCounter": 157,
   "policy": {
     "agingSeconds": 900,
@@ -5777,8 +5777,40 @@
         "dist/site/buildchain-contract.json",
         "tests/build-surface-promotion.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2788,
+      "assignmentRoot": "sha256:c3852e3d8b00f0f6aa792f967ad768cec3eda6cc3ab6f26aa1878388ff78514f",
+      "initiativeRoot": "sha256:f00b30385eda973ec7717b01cff2259960a985a795d0e130657cd73ed32e89b6",
+      "sourceIdentityRoot": "sha256:4198ceefa5bf1e6bb4093a88fa766216475ca0f98b3d3291c023a7a380fdc084",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:015e5e2e6781135a748a55e8660388cecc41734409519fcf1d2fc609640d301e",
+      "sourceHead": "f6ff6ba2c793766eed7d94bdec56c502a335eddd",
+      "sourcePatchRoot": "sha256:9bb098053842998f9a652ffc928a140903198411571e842ccbbabd7770c8b794",
+      "sourceProofRoot": "sha256:ba567d7a69e99c33da872d86abe6b36c5153c6ad8549b91fe58c4af7c24dc78b",
+      "planRoot": "sha256:d83b5cc8a81455164a12ace193a25a5259092ee2481e11f50c138bdde03b585e",
+      "closureRoot": "sha256:94cb08c07cef14cc6a54e75aaf558767fab969654cddf56f1b6f2a31844839a4",
+      "dependencyRoot": "sha256:f88950a9078bf2fae91690d976f609d85fa8ac17e36cac32fcec771a1c9cb556",
+      "toolchainRoot": "sha256:35a0b37a74d90e5ec11dc4fbdd15d7ff58b2fb59738ec1a1f9a85bb8d48e785b",
+      "environmentRoot": "sha256:0866a84801c7c863127e835f0b0b8b2f0e69fce2748ba65a7c2af5bc947a50b5",
+      "sourceWorkflowRunId": 31752691837,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-13T23:08:12.962Z",
+      "updatedAt": "2026-08-13T23:08:12.962Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/.release-candidate-promote.yml",
+        "dist/site/buildchain-contract.json",
+        "tests/build-surface-promotion.test.mjs",
+        "tests/build-surface.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-13T22:42:57.394Z",
-  "stateRoot": "sha256:9f8e466b42fa87f4987db6774c84389c98c30cb43d0e8549002f0cade22a975b"
+  "updatedAt": "2026-08-13T23:08:12.962Z",
+  "stateRoot": "sha256:eb5dbc1312c34bc445e68910be5c34671644b77f7a09fa128b5724d9bae2793d"
 }
