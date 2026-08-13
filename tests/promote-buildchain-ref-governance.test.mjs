@@ -2094,7 +2094,7 @@ fs.writeFileSync("publish-must-not-run", "unexpected\n");
   assert.equal(refs.get("tags/v1.0.0-alpha.41"), SHA);
 });
 
-test("strict alpha promotion opens a protected version-state PR when direct sync is rejected", async () => {
+test("strict alpha promotion opens a protected version-state PR when GitHub Apps receive a protected-ref 403", async () => {
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -2149,10 +2149,11 @@ test("strict alpha promotion opens a protected version-state PR when direct sync
         createCommit: async () => ({ data: { sha: versionSha } }),
         updateRef: async ({ ref }) => {
           if (ref === "heads/alpha/v1/v1.0") {
-            const error = new Error(
-              "At least 1 approving review is required by reviewers with write access.",
-            );
-            error.status = 422;
+            const error = new Error("Resource not accessible by integration");
+            error.response = {
+              status: 403,
+              data: { message: "Resource not accessible by integration" },
+            };
             throw error;
           }
           return {};
