@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { classifyDevDeliveryDelta, cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, devDeliveryContentRoot, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, heartbeatDevDeliveryWarrant, normalizeDevDeliveryQueue, observeDevDeliveryQueue, rankDevDeliveryCandidates, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 
-const ROOTS = Object.fromEntries(["assignment", "initiative", "source", "patch", "proof", "plan", "closure", "dependency", "toolchain", "shard", "context", "evidence"].map((name, index) => [name, `sha256:${(index + 1).toString(16).repeat(64)}`]));
+const ROOTS = Object.fromEntries(["assignment", "initiative", "source", "patch", "proof", "plan", "closure", "dependency", "toolchain", "environment", "shard", "context", "evidence"].map((name, index) => [name, `sha256:${(index + 1).toString(16).repeat(64)}`]));
 
 function queue(policy = {}) {
   return createDevDeliveryQueue({
@@ -27,12 +27,28 @@ function candidate(number, overrides = {}) {
     closureRoot: ROOTS.closure,
     dependencyRoot: ROOTS.dependency,
     toolchainRoot: ROOTS.toolchain,
+    environmentRoot: ROOTS.environment,
     deliveryClass: "native-proof-required",
     priority: "ordinary",
     sourceWorkflowRunId: 31000000000 + number,
     ...overrides,
   };
 }
+
+test("planned native candidate can omit environment root for shadow compatibility", () => {
+  const state = queue();
+  const input = candidate(99);
+  delete input.environmentRoot;
+  const planned = submitDevDeliveryCandidate(state, input, {
+    now: "2026-08-04T00:00:00Z",
+  });
+  assert.equal(
+    Object.hasOwn(planned.queue.candidates[0], "environmentRoot"),
+    false,
+  );
+  assert.equal(state.generation, 0);
+  assert.equal(state.candidates.length, 0);
+});
 
 function submit(state, number, at, overrides = {}) {
   return submitDevDeliveryCandidate(state, candidate(number, overrides), {

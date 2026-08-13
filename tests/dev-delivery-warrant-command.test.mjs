@@ -32,6 +32,7 @@ function submitOptions(overrides = {}) {
     closureRoot: ROOT("6"),
     dependencyRoot: ROOT("7"),
     toolchainRoot: ROOT("8"),
+    environmentRoot: ROOT("a"),
     deliveryClass: "native-proof-required",
     priority: "ordinary",
     now: "2026-08-04T00:01:00Z",
@@ -114,6 +115,31 @@ test("execute mode persists one expected-old transition and exact readback root"
   assert.equal(store.writes[0].expectedStateRoot, result.before.stateRoot);
   assert.equal(store.writes[0].queue.stateRoot, result.after.stateRoot);
   assert.equal(result.after.commitSha, "b".repeat(40));
+});
+
+test("native execute rejects a missing environment root before authority read or write", async () => {
+  const store = new MemoryStore();
+  let reads = 0;
+  store.read = async () => {
+    reads += 1;
+    return { exists: true, commitSha: store.commitSha, queue: store.queue };
+  };
+  await assert.rejects(
+    runDevDeliveryCommand(
+      submitOptions({ execute: true, environmentRoot: "" }),
+      store,
+    ),
+    /environmentRoot must be a sha256 content root/u,
+  );
+  assert.equal(reads, 0);
+  assert.equal(store.writes.length, 0);
+
+  const shadow = await runDevDeliveryCommand(
+    submitOptions({ environmentRoot: "" }),
+    store,
+  );
+  assert.equal(shadow.mode, "plan");
+  assert.equal(store.writes.length, 0);
 });
 
 test("stale expected-old input fails before any write", async () => {
@@ -358,6 +384,7 @@ test("GitHub state store advances a non-forced child commit and verifies its imm
       closureRoot: ROOT("6"),
       dependencyRoot: ROOT("7"),
       toolchainRoot: ROOT("8"),
+    environmentRoot: ROOT("a"),
       deliveryClass: "native-proof-required",
       priority: "ordinary",
     },

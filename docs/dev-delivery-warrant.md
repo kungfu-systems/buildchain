@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-13
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -93,10 +93,14 @@ affected closure, dependencies, toolchain, covered paths, and exact acceptance
 evidence. Ready state and approval are established before provisional
 selection.
 
-Native Qualification Proof is separate. It binds semantic source and patch,
+Native Qualification Proof is separate. Its v3 form binds semantic source and patch,
 plan, affected closure, dependency graph, toolchain, the exact execution
-environment contract, covered paths, native shard evidence, and the exact dev
-base used by the native composition. Before reuse, the consumer roots the
+environment contract, covered paths, native shard evidence, the exact dev
+base used by the native composition, and the v2 native heartbeat-run receipt.
+That receipt exposes and roots the exact repository, protected base, source
+head, qualified base, toolchain, and environment binding established before
+process spawn. The proof repeats the binding root and includes the receipt root
+in its shard evidence. Before reuse, the consumer roots the
 complete attributed Dev delta, including both sides of every rename, then
 classifies it:
 
@@ -110,6 +114,11 @@ classifies it:
 - an unknown or truncated graph, ambiguous rename, missing attribution, or
   changed source, plan, closure, dependency, toolchain, or environment root
   fails closed to full native qualification.
+
+Historical Native Qualification Proof v1 and v2 values remain readable, but
+they cannot be reused because their execution receipt did not bind the
+environment root. They fail closed to explicit native revalidation and produce
+a v3 proof.
 
 The reuse decision binds the exact old and current Dev heads, normalized changed
 paths and rename pairs in `baseDeltaRoot`. This makes local and hosted replay of
@@ -134,13 +143,16 @@ buildchain dev warrant submit --repository owner/repository \
   --source-identity-root <root> --source-patch-root <root> \
   --source-proof-root <root> --plan-root <root> --closure-root <root> \
   --dependency-root <root> --toolchain-root <root> \
+  --environment-root <root> \
   --delivery-class native-proof-required
 
 buildchain dev warrant select --repository owner/repository \
   --branch dev/v4/v4.0 --execute
 
 buildchain dev proof native --branch dev/v4/v4.0 \
-  --qualified-base <sha> --environment-root <root> \
+  --source-head <sha> --qualified-base <sha> \
+  --environment-root <root> \
+  --native-execution-receipt native-heartbeat-run.json \
   --affected-paths-json '["packages/native"]' ...
 
 buildchain dev proof classify-native --source-proof native-proof.json \
@@ -168,7 +180,9 @@ equivalent exact consumer). It performs an exact fenced heartbeat before spawn,
 renews throughout the complete child lifetime, performs a final renewal before
 accepting success, and terminates the process group on heartbeat or fencing
 failure. Missing, stale, expired, or mismatched Warrant state therefore blocks
-native spawn instead of becoming qualification evidence.
+native spawn instead of becoming qualification evidence. The environment root
+is validated and included in the execution binding before the first heartbeat
+or process spawn; it cannot be attached only after a successful run.
 
 Proof commands create, verify, classify, and compose the two proof layers:
 
@@ -290,6 +304,12 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   controller discovers that another candidate owns the active Warrant, a
   configured consumer workflow is dispatched immediately for that exact PR,
   head, and source run; the candidate is not left waiting for a patrol cron.
+
+For a required native delivery class, the reusable controller rejects a
+missing or malformed environment root before runtime checkout, candidate
+submission, Warrant selection, or native execution. The input remains
+conditionally optional so `off`, `shadow`, and `non-native-fast` callers keep
+their documented behavior.
 
 The controller persists a completed native proof before its final base
 reclassification. A later exact retry can supply that proof and avoid the

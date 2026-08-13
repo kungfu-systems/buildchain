@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   createDevDeliveryQueue,
+  createNativeExecutionReceipt,
   createNativeProofReuseDecision,
   createNativeQualificationProof,
   devDeliveryContentRoot,
@@ -58,9 +59,10 @@ function selectedQueue(overrides = {}) {
 }
 
 function nativeProof(overrides = {}) {
-  return createNativeQualificationProof({
+  const input = {
     repository: "kungfu-systems/buildchain",
     protectedBase: "dev/v3/v3.0",
+    sourceHead: SOURCE_HEAD,
     sourceIdentityRoot: ROOT("3"),
     sourcePatchRoot: ROOT("4"),
     planRoot: ROOT("6"),
@@ -73,11 +75,32 @@ function nativeProof(overrides = {}) {
     shardEvidenceRoots: [ROOT("c"), ROOT("d")],
     qualifiedAt: "2026-08-11T00:00:30Z",
     ...overrides,
+  };
+  return createNativeQualificationProof({
+    ...input,
+    nativeExecutionReceipt:
+      input.nativeExecutionReceipt ||
+      createNativeExecutionReceipt({
+        outcome: "succeeded",
+        commandRoot: ROOT("b"),
+        executionBinding: {
+          repository: input.repository,
+          protectedBase: input.protectedBase,
+          sourceHead: input.sourceHead,
+          qualifiedBase: input.qualifiedBase,
+          toolchainRoot: input.toolchainRoot,
+          environmentRoot: input.environmentRoot,
+        },
+        startedAt: "2026-08-11T00:00:10Z",
+        completedAt: "2026-08-11T00:00:29Z",
+        heartbeatCount: 2,
+      }),
   });
 }
 
 function current(overrides = {}) {
   return {
+    sourceHead: SOURCE_HEAD,
     sourceIdentityRoot: ROOT("3"),
     sourcePatchRoot: ROOT("4"),
     planRoot: ROOT("6"),
@@ -170,6 +193,11 @@ test("overlap, unknown attribution, semantic change, and toolchain change fail c
       }),
       "rerun-full-native-qualification",
       "base-delta-attribution-unknown",
+    ],
+    [
+      current({ sourceHead: "e".repeat(40) }),
+      "rerun-full-native-qualification",
+      "sourceHead-changed-or-unknown",
     ],
     [
       current({ sourcePatchRoot: ROOT("e") }),
@@ -280,6 +308,22 @@ test("qualification rejects overlapping base changes and semantic proof drift", 
       }),
     /native proof rejected: sourcePatchRoot-mismatch/u,
   );
+
+  const wrongHead = nativeProof({ sourceHead: "e".repeat(40) });
+  const wrongHeadDecision = createNativeProofReuseDecision({
+    proof: wrongHead,
+    current: current({ sourceHead: "e".repeat(40) }),
+  });
+  assert.throws(
+    () =>
+      qualifyDevDeliveryWarrant(selected.queue, selected.warrant, {
+        nativeProof: wrongHead,
+        reuseDecision: wrongHeadDecision,
+        current: current(),
+        now: "2026-08-11T00:00:31Z",
+      }),
+    /native proof rejected: sourceHead-mismatch/u,
+  );
 });
 
 test("provisional heartbeat preserves order and expiry requires proven worker stop before reselection", () => {
@@ -323,17 +367,70 @@ test("native proof timestamp is observational while semantic evidence is rooted"
   assert.equal(verifyNativeQualificationProof(second).ok, true);
 });
 
-test("legacy v1 native proof remains verifiable but cannot gain v2 reuse", () => {
+test("legacy native proofs remain verifiable but cannot gain receipt-bound reuse", () => {
   const proof = nativeProof();
   proof.schema = "kungfu.buildchain.native-qualification-proof/v1";
   delete proof.environmentRoot;
+  delete proof.sourceHead;
+  delete proof.nativeExecutionBindingRoot;
+  delete proof.nativeExecutionReceiptRoot;
   const identity = structuredClone(proof);
   delete identity.proofRoot;
   delete identity.qualifiedAt;
   delete identity.observationRoot;
   proof.proofRoot = devDeliveryContentRoot(identity);
   assert.equal(verifyNativeQualificationProof(proof).ok, true);
-  const decision = createNativeProofReuseDecision({ proof, current: current() });
+  const decision = createNativeProofReuseDecision({
+    proof,
+    current: current(),
+  });
   assert.equal(decision.reusable, false);
-  assert.equal(decision.reason, "environmentRoot-changed-or-unknown");
+  assert.equal(decision.reason, "native-execution-evidence-unbound");
+});
+
+test("legacy v2 environment proof cannot reuse without a bound execution receipt", () => {
+  const proof = nativeProof();
+  proof.schema = "kungfu.buildchain.native-qualification-proof/v2";
+  delete proof.sourceHead;
+  delete proof.nativeExecutionBindingRoot;
+  delete proof.nativeExecutionReceiptRoot;
+  const identity = structuredClone(proof);
+  delete identity.proofRoot;
+  delete identity.qualifiedAt;
+  delete identity.observationRoot;
+  proof.proofRoot = devDeliveryContentRoot(identity);
+  assert.equal(verifyNativeQualificationProof(proof).ok, true);
+  const decision = createNativeProofReuseDecision({
+    proof,
+    current: current(),
+  });
+  assert.equal(decision.reusable, false);
+  assert.equal(decision.action, "rerun-full-native-qualification");
+  assert.equal(decision.reason, "native-execution-evidence-unbound");
+});
+
+test("v3 native proof rejects execution binding and receipt-root drift", () => {
+  const bindingDrift = nativeProof();
+  bindingDrift.nativeExecutionBindingRoot = ROOT("e");
+  const bindingIdentity = structuredClone(bindingDrift);
+  delete bindingIdentity.proofRoot;
+  delete bindingIdentity.qualifiedAt;
+  delete bindingIdentity.observationRoot;
+  bindingDrift.proofRoot = devDeliveryContentRoot(bindingIdentity);
+  assert.equal(
+    verifyNativeQualificationProof(bindingDrift).reason,
+    "native-execution-binding-root-drift",
+  );
+
+  const receiptDrift = nativeProof();
+  receiptDrift.nativeExecutionReceiptRoot = ROOT("e");
+  const receiptIdentity = structuredClone(receiptDrift);
+  delete receiptIdentity.proofRoot;
+  delete receiptIdentity.qualifiedAt;
+  delete receiptIdentity.observationRoot;
+  receiptDrift.proofRoot = devDeliveryContentRoot(receiptIdentity);
+  assert.equal(
+    verifyNativeQualificationProof(receiptDrift).reason,
+    "native-execution-receipt-unbound",
+  );
 });

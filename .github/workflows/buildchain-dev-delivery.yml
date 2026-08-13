@@ -42,7 +42,7 @@ on:
         type: string
         required: true
       environment-root:
-        description: "Exact native execution environment contract root"
+        description: "Exact native execution environment contract root bound before native spawn"
         type: string
         required: true
       affected-paths-json:
