@@ -189,7 +189,7 @@ test("major bootstrap aligns version-bound release impact to the new line", () =
   );
 });
 
-test("major bootstrap admits only its exact generated KFD claim sidecar", () => {
+test("promotion admits only its exact generated sidecars", () => {
   const configured = ["package.json", "dist/site/buildchain-contract.json"];
   assert.deepEqual(
     versionVerificationAllowedPathsForPromotion("major", configured),
@@ -201,7 +201,7 @@ test("major bootstrap admits only its exact generated KFD claim sidecar", () => 
   );
   assert.deepEqual(
     versionVerificationAllowedPathsForPromotion("release", configured),
-    ["package.json", "dist/site/buildchain-contract.json"],
+    ["package.json", "dist/site/buildchain-contract.json", "dist/site/kfd-claims.json", "dist/site/public-surface-audit.json", "dist/site/workflow-registry.json"],
   );
 });
 const {
