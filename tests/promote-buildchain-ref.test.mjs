@@ -1456,6 +1456,11 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/publication-result.json"),
     "{}\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/recovered-publication/1.0.1"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/recovered-publication/1.0.1/product-payload-manifest.json"),
+    "{}\n",
+  );
   fs.mkdirSync(path.join(cwd, ".buildchain/admitted/artifact/.buildchain/publication"), { recursive: true });
   fs.writeFileSync(
     path.join(cwd, ".buildchain/admitted/artifact/.buildchain/publication/publication-artifact.json"),
