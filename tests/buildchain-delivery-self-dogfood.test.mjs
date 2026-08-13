@@ -1,4 +1,9 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import {
@@ -21,6 +26,7 @@ import {
 import {
   BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT,
   createBuildchainDeliveryInfrastructureSelfDogfood,
+  createPublishedBuildchainDeliveryInfrastructureSelfDogfood,
 } from "../packages/core/buildchain-delivery-self-dogfood.js";
 import {
   createKfdAdopterCategoryProtocolDriver,
@@ -231,4 +237,85 @@ test("missing candidate evidence cannot produce a self-dogfood result", () => {
       ),
     /instance failed closed/,
   );
+});
+
+async function authorityArchive(
+  rootDirectory,
+  { name, version, modules = {} },
+) {
+  const source = path.join(rootDirectory, name.replaceAll("/", "-"));
+  const packageRoot = path.join(source, "package");
+  await mkdir(path.join(packageRoot, "packages/core"), { recursive: true });
+  await writeFile(
+    path.join(packageRoot, "package.json"),
+    `${JSON.stringify({ name, version, type: "module" }, null, 2)}\n`,
+  );
+  for (const [file, body] of Object.entries(modules)) {
+    await writeFile(path.join(packageRoot, "packages/core", file), body);
+  }
+  const archivePath = path.join(
+    rootDirectory,
+    `${name.replaceAll("/", "-")}.tgz`,
+  );
+  execFileSync("tar", ["-czf", archivePath, "-C", source, "package"]);
+  const artifactRoot = `sha256:${createHash("sha256")
+    .update(await readFile(archivePath))
+    .digest("hex")}`;
+  return { name, version, archivePath, artifactRoot };
+}
+
+test("published archive bytes supply every self-dogfood semantic ability", async (t) => {
+  const rootDirectory = await mkdtemp(
+    path.join(tmpdir(), "published-self-dogfood-"),
+  );
+  t.after(() => rm(rootDirectory, { recursive: true, force: true }));
+  const fixedRoot = `sha256:${"a".repeat(64)}`;
+  const authorityPackages = {
+    buildchain: await authorityArchive(rootDirectory, {
+      name: "@kungfu-tech/buildchain",
+      version: "3.0.9-alpha.10",
+      modules: {
+        "adopter-delivery-gate.js": `
+          export const createAdopterDeliveryGate = () => ({ evaluate: (request) => ({
+            schemaVersion: 1, contract: "synthetic-published-gate", status: "passed",
+            project: request.project, artifact: request.artifact, gateRoot: ${JSON.stringify(fixedRoot)}
+          }) });
+          export const createPackageArtifactProfile = () => ({});
+        `,
+        "buildchain-delivery-bootstrap.js": `
+          export const qualifyBuildchainDeliveryInfrastructureBootstrap = () => ({
+            status: "passed", bootstrapRoot: ${JSON.stringify(fixedRoot)}
+          });
+        `,
+        "buildchain-delivery-infrastructure.js": `
+          export const createBuildchainDeliveryInfrastructureInstanceManifest = (value) => value;
+          export const verifyBuildchainDeliveryInfrastructureInstance = () => ({ valid: true, issues: [] });
+        `,
+        "kfd-adopter-category-driver.js": `
+          export const createKfdAdopterCategoryProtocolDriver = () => ({});
+        `,
+      },
+    }),
+    kfd: await authorityArchive(rootDirectory, {
+      name: "@kungfu-tech/kfd",
+      version: "1.0.0-alpha.62",
+    }),
+  };
+  const selfDogfood = fixture();
+  selfDogfood.authority.packageRoot = authorityPackages.buildchain.artifactRoot;
+  selfDogfood.adopterManifest.kfdCut.package.artifactRoot =
+    authorityPackages.kfd.artifactRoot;
+
+  const result =
+    await createPublishedBuildchainDeliveryInfrastructureSelfDogfood({
+      authorityPackages,
+      selfDogfood,
+    });
+
+  assert.equal(result.status, "passed");
+  assert.equal(
+    result.authorityRuntime.buildchainPackage.artifactRoot,
+    authorityPackages.buildchain.artifactRoot,
+  );
+  assert.match(result.publishedAuthorityRoot, /^sha256:[0-9a-f]{64}$/);
 });
