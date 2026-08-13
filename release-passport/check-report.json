@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-release-check-report",
-  "checkedAt": "2026-08-13T15:41:23.007Z",
+  "checkedAt": "2026-08-13T15:45:55.708Z",
   "ok": true,
   "trust": "pass",
   "surfaceImpactRequirement": {

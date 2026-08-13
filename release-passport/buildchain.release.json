@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-release-passport",
-  "generatedAt": "2026-08-13T15:41:23.007Z",
+  "generatedAt": "2026-08-13T15:45:55.708Z",
   "surfaceTimestampPolicy": {
-    "generatedAt": "2026-08-13T15:41:23.007Z",
-    "publishedAt": "2026-08-13T15:41:23.007Z",
+    "generatedAt": "2026-08-13T15:45:55.708Z",
+    "publishedAt": "2026-08-13T15:45:55.708Z",
     "reproducible": true,
     "timestampPolicy": "ci-injected",
     "deterministicInputs": [
@@ -60,7 +60,7 @@
     "treeEquivalent": true,
     "publishToolingSha": "81b45028e54dcb4f93c8fa0595c7d047832398ba",
     "releaseStateRef": "refs/heads/buildchain/release-state/3-0-9-alpha-13",
-    "releaseStateSha": "57f19b4403200e9e0347d04bed457c3205366377",
+    "releaseStateSha": "",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "3.0.9-alpha.13"
@@ -98,7 +98,7 @@
     "statePath": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v3.0.9-alpha.13.json",
     "stateSha": "",
     "evidencePath": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v3.0.9-alpha.13/evidence.json",
-    "updatedAt": "2026-08-13T15:41:17.766Z",
+    "updatedAt": "2026-08-13T15:45:51.575Z",
     "result": {
       "command": "finalize",
       "validation": {
@@ -6850,7 +6850,7 @@
         },
         "sourceVerification": {
           "status": "passed",
-          "verifiedAt": "2026-08-13T15:41:23.007Z",
+          "verifiedAt": "2026-08-13T15:45:55.708Z",
           "required": true,
           "surfaces": [
             {
@@ -7745,7 +7745,7 @@
         },
         "artifactVerification": {
           "status": "passed",
-          "verifiedAt": "2026-08-13T15:41:23.007Z",
+          "verifiedAt": "2026-08-13T15:45:55.708Z",
           "surfaces": [
             {
               "name": ".github/workflows/.build.yml",
@@ -8977,7 +8977,7 @@
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-kfd-2-release-trust-passport-audit",
     "status": "passed",
-    "verifiedAt": "2026-08-13T15:41:23.040Z",
+    "verifiedAt": "2026-08-13T15:45:55.753Z",
     "auditBoundary": {
       "scope": "public release claims visible to humans or agents",
       "policy": "public claims must bind declared sources, machine-readable evidence, hashes, artifact coordinates, verification results, audit boundaries, responsibility state, and residual risk"
@@ -21409,7 +21409,7 @@
         },
         "comparison": {
           "status": "passed",
-          "verifiedAt": "2026-08-13T15:41:23.035Z",
+          "verifiedAt": "2026-08-13T15:45:55.741Z",
           "supportLevel": "release",
           "declaredPublicSurfaceCount": 181,
           "declaredShippedPublicSurfaceCount": 181,
