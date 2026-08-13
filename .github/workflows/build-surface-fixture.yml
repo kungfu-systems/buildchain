@@ -204,6 +204,8 @@ jobs:
           )"
           gh api "repos/${GITHUB_REPOSITORY}/git/commits/${source_head}" \
             > "${evidence_dir}/source-commit.json"
+          gh api "repos/${GITHUB_REPOSITORY}/git/commits/${BUILDCHAIN_SOURCE_DEV_SHA}" \
+            > "${evidence_dir}/dev-merge-commit.json"
 
           npm pack "@kungfu-tech/buildchain@${BUILDCHAIN_AUTHORITY_VERSION}" \
             --ignore-scripts --json --pack-destination "${authority_dir}" \
@@ -255,12 +257,19 @@ jobs:
           );
           if (warrantMatches.length !== 1) throw new Error(`expected one proof-complete terminal Warrant candidate for PR #${pull.number}, found ${warrantMatches.length}`);
           const warrantCandidate = warrantMatches[0];
-          const sourceTree = read(`${evidenceDir}/source-commit.json`).tree?.sha;
-          const devTree = String((await import("node:child_process")).execFileSync(
+          const sourceCommit = read(`${evidenceDir}/source-commit.json`);
+          const devMergeCommit = read(`${evidenceDir}/dev-merge-commit.json`);
+          const sourceTree = sourceCommit.tree?.sha;
+          const devTree = devMergeCommit.tree?.sha;
+          const checkedOutDevTree = String((await import("node:child_process")).execFileSync(
             "git", ["show", "-s", "--format=%T", process.env.BUILDCHAIN_SOURCE_DEV_SHA], { encoding: "utf8" },
           )).trim();
-          if (!/^[0-9a-f]{40}$/.test(sourceTree) || sourceTree !== devTree) {
-            throw new Error(`Dev merge tree ${devTree} differs from reviewed source tree ${sourceTree || "<empty>"}`);
+          if (!/^[0-9a-f]{40}$/.test(sourceTree) || !/^[0-9a-f]{40}$/.test(devTree) || devTree !== checkedOutDevTree) {
+            throw new Error(`invalid reviewed source or exact Dev merge tree: source=${sourceTree || "<empty>"} api=${devTree || "<empty>"} checkout=${checkedOutDevTree}`);
+          }
+          const devParentShas = (devMergeCommit.parents ?? []).map((parent) => parent.sha);
+          if (!devParentShas.includes(pull.head.sha)) {
+            throw new Error(`Dev merge commit ${process.env.BUILDCHAIN_SOURCE_DEV_SHA} does not contain reviewed source head ${pull.head.sha} as an exact parent`);
           }
 
           const buildchainArchive = packedArchive(`${evidenceDir}/buildchain-pack.json`);
