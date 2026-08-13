@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-publication-release-registry",
-  "generatedAt": "2026-08-13T09:05:27.306Z",
-  "publishedAt": "2026-08-13T09:05:27.306Z",
+  "generatedAt": "2026-08-13T12:41:25.818Z",
+  "publishedAt": "2026-08-13T12:41:25.818Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -32,7 +32,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "4.0.0",
+    "version": "4.0.1-alpha.0",
     "versionSource": "package.json#version"
   },
   "sourceKind": "package-site-bundle",
