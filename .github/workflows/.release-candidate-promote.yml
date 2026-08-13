@@ -382,6 +382,10 @@ on:
         description: "Product-owned command that emits KFD-3 artifact-side collaboration-interface witness JSON"
         default: ""
         type: string
+      release-passport-adopter-delivery-json:
+        description: "Passed adopter delivery gate result JSON or path bound into the Release Passport and artifact evidence"
+        default: ""
+        type: string
       release-passport-kfd-adopter-manifest-json:
         description: "Standard full-cut adopter conformance manifest JSON path"
         default: ""

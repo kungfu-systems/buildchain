@@ -1041,6 +1041,7 @@
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-adopter-delivery-json",
           "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
@@ -1078,7 +1079,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 111,
+        "inputCount": 112,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2562,6 +2563,7 @@
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-adopter-delivery-json",
           "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
@@ -2599,7 +2601,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 102,
+        "inputCount": 103,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -8123,7 +8125,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2db0002dc06d97c6ab975f3ba395d23a0c6d7fe2796ded9852a7a127e52637cd",
-    "workflowRegistryDigest": "3f456e31419aa68bf7c6b00f3f19d2c452e5198e77c71285792d95ab1ebf6fc1",
+    "workflowRegistryDigest": "4baaf5f49dd6cb413ac5f11722ce182a7dbcd95bc17901bed074dd35d19baf8f",
     "pageRegistryDigest": "84d717c1b1588e5bb73d367c6ab4f67fee2006b1e146e7257959e8072c100751"
   },
   "comparison": {

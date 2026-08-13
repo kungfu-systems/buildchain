@@ -8,7 +8,6 @@ export const GITHUB_GOVERNANCE_ROLLOUT_CONTRACT =
   "kungfu-buildchain-github-governance-rollout-plan";
 export const GITHUB_GOVERNANCE_RULESET_ROLLOUT_CONTRACT =
   "kungfu-buildchain-github-governance-ruleset-rollout-plan";
-
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
 const GITHUB_ACTIONS_APP_ID = 15368;
 const GITHUB_ACTIONS_BYPASS_ACTOR = Object.freeze({
@@ -55,6 +54,7 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   ],
   buildchain: [
     target("dev/v3/v3.0", [check("check")], false),
+    target("train/v3/v3.0/consumer-equivalent-self-dogfood", [check("check")], false),
     target("alpha/v3/v3.0", [check("check"), check("verify")], false),
     target("release/v3/v3.0", [check("check")], true),
     target("authority/v3/v3.0/artifact-signing", [check("check"), check("verify")], true),
