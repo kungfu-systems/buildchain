@@ -7,7 +7,7 @@ import { compareReleaseBlockerPriority, normalizeReleaseBlockerPriorityClaim } f
 export { devDeliveryContentRoot } from "./dev-delivery-common.js";
 export { RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA, createReleaseBlockerPriorityClaim } from "./release-blocker-priority.js";
 export { SOURCE_QUALIFICATION_PROOF_SCHEMA, PROJECT_CUT_REPLAY_PROOF_SCHEMA, INTEGRATION_DELIVERY_PROOF_SCHEMA, classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "./dev-delivery-proof.js";
-export { DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA, NATIVE_QUALIFICATION_PROOF_SCHEMA, NATIVE_PROOF_REUSE_DECISION_SCHEMA, NATIVE_PROOF_BASE_DELTA_SCHEMA, createNativeProofBaseDelta, createNativeProofReuseDecision, createNativeQualificationProof, verifyNativeProofReuseDecision, verifyNativeQualificationProof } from "./dev-delivery-native-proof.js";
+export { DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA, NATIVE_EXECUTION_BINDING_SCHEMA, NATIVE_EXECUTION_RECEIPT_SCHEMA, NATIVE_QUALIFICATION_PROOF_SCHEMA, NATIVE_PROOF_REUSE_DECISION_SCHEMA, NATIVE_PROOF_BASE_DELTA_SCHEMA, createNativeExecutionBinding, createNativeExecutionReceipt, createNativeProofBaseDelta, createNativeProofReuseDecision, createNativeQualificationProof, verifyNativeExecutionReceipt, verifyNativeProofReuseDecision, verifyNativeQualificationProof } from "./dev-delivery-native-proof.js";
 export { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA };
 export const DEV_DELIVERY_QUEUE_CONTRACT = "kungfu-buildchain-dev-delivery-warrant-queue";
 export const DEV_DELIVERY_WARRANT_SCHEMA = "kungfu.buildchain.dev-delivery-warrant/v1";

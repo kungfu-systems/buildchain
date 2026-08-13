@@ -37,6 +37,7 @@ function candidate(number) {
     closureRoot: root(`closure-${number}`),
     dependencyRoot: root(`dependency-${number}`),
     toolchainRoot: root(`toolchain-${number}`),
+    environmentRoot: root(`environment-${number}`),
     deliveryClass: "native-proof-required",
     priority: "ordinary",
   };

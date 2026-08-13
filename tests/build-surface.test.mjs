@@ -1623,6 +1623,20 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(controller, /provisional\)\s+echo "already-qualified=false"/u);
   assert.match(controller, /dev-delivery-two-phase\.mjs/);
   assert.match(controller, /Run or reuse native proof and atomically qualify Warrant/);
+  assert.match(
+    controller,
+    /Validate native qualification contract before Warrant admission[\s\S]*environment-root must be an exact sha256 content root before required native Warrant admission/u,
+  );
+  assert.ok(
+    controller.indexOf(
+      "Validate native qualification contract before Warrant admission",
+    ) < controller.indexOf("Checkout Buildchain runtime"),
+  );
+  assert.ok(
+    controller.indexOf(
+      "Validate native qualification contract before Warrant admission",
+    ) < controller.indexOf("Submit qualified delivery candidate"),
+  );
   assert.match(controller, /already-qualified=true/);
   assert.match(controller, /activeCandidate\.status == "qualified"/);
   assert.match(controller, /steps\.warrant\.outputs\.already-qualified == 'true'/);

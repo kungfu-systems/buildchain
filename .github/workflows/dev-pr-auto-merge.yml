@@ -118,7 +118,7 @@ on:
         }
       environment-root:
         {
-          description: "Exact native execution environment contract root",
+          description: "Exact native execution environment contract root; required for required native qualification",
           default: "",
           type: string,
           required: false,
@@ -367,6 +367,27 @@ jobs:
           EXPECTED_PR: ${{ inputs.expected-pr-number }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
           DRY_RUN: ${{ inputs.dry-run }}
+
+      - name: Validate native qualification contract before Warrant admission
+        if: inputs.delivery-warrant-mode == 'required'
+        shell: bash
+        run: |
+          case "${DELIVERY_CLASS}" in
+            native-proof-required|cross-platform|release)
+              if [[ ! "${ENVIRONMENT_ROOT}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+                echo "::error::environment-root must be an exact sha256 content root before required native Warrant admission"
+                exit 1
+              fi
+              ;;
+            non-native-fast) ;;
+            *)
+              echo "::error::unsupported delivery-class ${DELIVERY_CLASS}"
+              exit 1
+              ;;
+          esac
+        env:
+          DELIVERY_CLASS: ${{ inputs.delivery-class }}
+          ENVIRONMENT_ROOT: ${{ inputs.environment-root }}
 
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0

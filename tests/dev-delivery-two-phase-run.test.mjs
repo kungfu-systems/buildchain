@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createNativeQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import { createNativeExecutionReceipt, createNativeQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 import {
   composeCandidate,
   GitHubTwoPhaseClient,
@@ -15,6 +15,29 @@ import {
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const HEAD = "a".repeat(40);
 const BASE = "b".repeat(40);
+
+function nativeExecutionReceipt({
+  qualifiedBase = BASE,
+  sourceHead = HEAD,
+  toolchainRoot = ROOT("6"),
+  environmentRoot = ROOT("0"),
+} = {}) {
+  return createNativeExecutionReceipt({
+    outcome: "succeeded",
+    commandRoot: ROOT("f"),
+    executionBinding: {
+      repository: "kungfu-systems/buildchain",
+      protectedBase: "dev/v3/v3.0",
+      sourceHead,
+      qualifiedBase,
+      toolchainRoot,
+      environmentRoot,
+    },
+    startedAt: "2026-08-11T00:00:00Z",
+    completedAt: "2026-08-11T00:00:30Z",
+    heartbeatCount: 2,
+  });
+}
 
 test("candidate replay composes a divergent base without ambient Git identity", (t) => {
   const directory = fs.mkdtempSync(
@@ -170,6 +193,7 @@ test("two-phase controller reuses disjoint native proof and qualifies before mer
   const proof = createNativeQualificationProof({
     repository: "kungfu-systems/buildchain",
     protectedBase: "dev/v3/v3.0",
+    sourceHead: HEAD,
     sourceIdentityRoot: ROOT("1"),
     sourcePatchRoot: ROOT("2"),
     planRoot: ROOT("3"),
@@ -178,6 +202,7 @@ test("two-phase controller reuses disjoint native proof and qualifies before mer
     toolchainRoot: ROOT("6"),
     environmentRoot: ROOT("0"),
     qualifiedBase: BASE,
+    nativeExecutionReceipt: nativeExecutionReceipt(),
     affectedPaths: ["packages/native"],
     shardEvidenceRoots: [ROOT("7")],
     qualifiedAt: "2026-08-11T00:00:00Z",
@@ -239,6 +264,7 @@ test("two-phase proof reuse rejects a changed exact PR head and releases the lea
   const proof = createNativeQualificationProof({
     repository: "kungfu-systems/buildchain",
     protectedBase: "dev/v3/v3.0",
+    sourceHead: HEAD,
     sourceIdentityRoot: ROOT("1"),
     sourcePatchRoot: ROOT("2"),
     planRoot: ROOT("3"),
@@ -247,6 +273,7 @@ test("two-phase proof reuse rejects a changed exact PR head and releases the lea
     toolchainRoot: ROOT("6"),
     environmentRoot: ROOT("0"),
     qualifiedBase: BASE,
+    nativeExecutionReceipt: nativeExecutionReceipt(),
     affectedPaths: ["packages/native"],
     shardEvidenceRoots: [ROOT("7")],
     qualifiedAt: "2026-08-11T00:00:00Z",
@@ -342,6 +369,7 @@ test("controller reclassifies a completed proof after concurrent Dev movement", 
   const proof = createNativeQualificationProof({
     repository: "kungfu-systems/buildchain",
     protectedBase: "dev/v3/v3.0",
+    sourceHead: HEAD,
     sourceIdentityRoot: ROOT("1"),
     sourcePatchRoot: ROOT("2"),
     planRoot: ROOT("3"),
@@ -350,6 +378,7 @@ test("controller reclassifies a completed proof after concurrent Dev movement", 
     toolchainRoot: ROOT("6"),
     environmentRoot: ROOT("0"),
     qualifiedBase: BASE,
+    nativeExecutionReceipt: nativeExecutionReceipt(),
     affectedPaths: ["packages/native"],
     shardEvidenceRoots: [ROOT("7")],
     qualifiedAt: "2026-08-11T00:00:00Z",

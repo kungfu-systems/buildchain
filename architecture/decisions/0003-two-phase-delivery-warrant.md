@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-13
 ---
 
 # ADR 0003: Delivery Order Is Reserved Before Native Qualification
@@ -58,10 +58,14 @@ The transition binds a Native Qualification Proof and a rooted reuse decision.
 Only a qualified Warrant may authorize enqueue. The upgrade does not mint a new
 fence and cannot change the PR head or semantic source roots.
 
-Native Qualification Proof v2 binds semantic source identity, semantic patch,
+Native Qualification Proof v3 binds semantic source identity, semantic patch,
 qualification plan, affected closure, dependency graph, toolchain, execution
-environment contract, covered paths, exact shard evidence roots, and the dev
-base used for qualification. Its
+environment contract, covered paths, exact shard evidence roots, the dev base
+used for qualification, and the exact native execution receipt. That receipt
+contains the normalized repository, protected base, source head, qualified
+base, toolchain root, and environment root binding established before the
+native process starts. The proof repeats and roots that binding, and includes
+the receipt root in its shard evidence. Its
 timestamp is observational rather than part of proof identity. Reuse on another
 base requires an attributed base delta. Identical base is accepted directly; a
 descendant base with no overlap against the affected closure reuses the proof;
@@ -83,13 +87,23 @@ GitHub `merge_group` checks and the protected dev ref remain final integration
 authority. No transition disables a check, changes branch protection, force
 updates the Warrant ref, or freezes dev.
 
+Required native delivery validates the environment root before candidate
+submission, Warrant selection, checkout/composition, or native process spawn.
+An empty or malformed root is therefore an admission failure, not a terminal
+failure after native capacity has been spent. `off`, `shadow`, and
+`non-native-fast` compatibility does not turn the reusable workflow input into
+an unconditional requirement.
+
 ## Compatibility
 
 Existing v1 queue documents remain readable. An historical active Warrant that
 does not contain `phase` is interpreted as the former already-qualified shape
 without rewriting its state root. Newly selected Warrants always contain
 `phase: provisional`. Existing `off` and `shadow` workflow modes remain
-available; `required` now enforces the two-phase upgrade.
+available; `required` now enforces the two-phase upgrade. Native Qualification
+Proof v1 and v2 documents remain verifiable as historical evidence, but their
+execution receipts do not bind the environment root. They cannot gain v3 exact
+reuse authority and must be replaced by an explicit native revalidation.
 
 ## Consequences
 
@@ -101,3 +115,7 @@ available; `required` now enforces the two-phase upgrade.
   unproven protected-dev landing.
 - Consumers need a promotion token that can advance the Warrant state ref and
   emit the wake event, plus a native command or an exact reusable proof.
+- Invalid required-native environment inputs fail before they can allocate a
+  Warrant or native runner time.
+- Legacy unbound native evidence remains readable but intentionally spends a
+  new validation run before qualification.
