@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 560,
+  "generation": 561,
   "fencingCounter": 134,
   "policy": {
     "agingSeconds": 900,
@@ -11,40 +11,7 @@
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v3/v3.0",
-    "candidateId": "sha256:39254c072742150a27c1dd79421797bebf21741ad904cf2f821f30fa6a268f49",
-    "pullRequestNumber": 2720,
-    "sourceHead": "ab61915262e35792b2c5e42a1f415ec898b85585",
-    "assignmentRoot": "sha256:8f55ca1dff163a7b862d9e5c1a568db4a5a470fa33539226ed4f4f417b298455",
-    "initiativeRoot": "sha256:c45531dbd7d307c3a0f429440a6c910b0b9d2c01d5e689e2d60653ab2b7bdf99",
-    "sourceIdentityRoot": "sha256:30c2044b87b48ac121fb9d0fdbb65575fbb41c176717643c7495d554959ac5db",
-    "sourcePatchRoot": "sha256:711eb3abd082933e53845b20c92f972360ce25514b0c7c1f50b8468adb6e9d29",
-    "sourceProofRoot": "sha256:7374b6d19e566d5fbd3a75eeffeeb7f7e9c6d558169f91de95ada0cc9977af21",
-    "planRoot": "sha256:633b3a9e986616cb5277d6caa363ddffd91ae2993d99e3d2bcaea2e3f2c55929",
-    "closureRoot": "sha256:9574457b605a8d6769f3f867195d89dd9da68cb225f102c218685ecedd897b12",
-    "dependencyRoot": "sha256:c1b5ffadfad1b3e605db4d85954c67b854d167cf5e7c34715d7a3935782077c0",
-    "toolchainRoot": "sha256:e47bb305eb0bb860436a8da9462f13ec146f58de3bae42fb433dcaa89587b8f9",
-    "environmentRoot": "sha256:bca147ba80625996a082a446fb8ccc713c92152387832eb737fab29d229c8e92",
-    "affectedPaths": [
-      ".github/workflows/build-surface-fixture.yml",
-      "tests/build-surface-promotion.test.mjs"
-    ],
-    "sourceWorkflowRunId": 31676107643,
-    "deliveryClass": "native-proof-required",
-    "generation": 134,
-    "phase": "qualified",
-    "expectedOldStateRoot": "sha256:70b41d3c736642e848c70fb220a569a47eea1e43eea68cd8f83baefdb9501e15",
-    "issuedAt": "2026-08-13T07:09:15.292Z",
-    "expiresAt": "2026-08-13T08:09:34.539Z",
-    "fencingToken": "sha256:b9ecbe38129d72a009c9e01240656cf9d3ecfe11ef453bbfbe2a7abc54d7487f",
-    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
-    "nativeProofRoot": "sha256:8bcdc015dec93ee0608583851c1280667c43aa0ffe2a6215db39092e80c226b1",
-    "nativeProofReuseRoot": "sha256:c94a34748487f5c5db3a6c8110ea56e58cc55407e5718983a4d427843a9e59a1",
-    "qualifiedAt": "2026-08-13T07:09:40.902Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -4737,17 +4704,26 @@
       "sourceWorkflowRunId": 31676107643,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-13T07:02:09.400Z",
-      "updatedAt": "2026-08-13T07:09:40.902Z",
+      "updatedAt": "2026-08-13T07:17:35.387Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "qualified",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "terminalClass": "authoritative-completion",
+        "reason": "PR #2720 merged through exact GitHub merge-group and push Verify contexts",
+        "evidenceRoot": "sha256:18f0b8349cccf6f851c5242bc513a9c0a48f337d1261e4b49dbe59fd88c0066a",
+        "closedAt": "2026-08-13T07:17:35.387Z",
+        "fencingToken": "sha256:b9ecbe38129d72a009c9e01240656cf9d3ecfe11ef453bbfbe2a7abc54d7487f",
+        "leaseGeneration": 134,
+        "nativeProofRoot": "sha256:8bcdc015dec93ee0608583851c1280667c43aa0ffe2a6215db39092e80c226b1"
+      },
       "affectedPaths": [
         ".github/workflows/build-surface-fixture.yml",
         "tests/build-surface-promotion.test.mjs"
       ]
     }
   ],
-  "updatedAt": "2026-08-13T07:09:40.902Z",
-  "stateRoot": "sha256:39306834e7a23c2c99147879f6b037e05fded74eb4c6c70fab636b800d036f1d"
+  "updatedAt": "2026-08-13T07:17:35.387Z",
+  "stateRoot": "sha256:318669224e8f4eecdcee1978839d7eceaaa9f741a6164f5f56996145dfbd30d2"
 }
