@@ -2350,7 +2350,12 @@ fs.mkdirSync(path.dirname(countPath), { recursive: true });
 fs.writeFileSync(countPath, String(count));
 const witnessPath = path.join(process.cwd(), ".buildchain/release-inputs/witness.json");
 fs.mkdirSync(path.dirname(witnessPath), { recursive: true });
-fs.writeFileSync(witnessPath, JSON.stringify({ count, packageVersion }, null, 2) + "\\n");
+fs.writeFileSync(witnessPath, JSON.stringify({
+  count,
+  packageVersion,
+  tarballPath: process.env.BUILDCHAIN_SEALED_NPM_TARBALL || "",
+  tarballIntegrity: process.env.BUILDCHAIN_SEALED_NPM_INTEGRITY || ""
+}, null, 2) + "\\n");
 fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
 fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   schema: 1,
@@ -2362,8 +2367,8 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   release_material_sha: process.env.BUILDCHAIN_RELEASE_MATERIAL_SHA,
   publish_tooling_sha: process.env.BUILDCHAIN_PUBLISH_TOOLING_SHA,
   artifacts: [{
-    kind: "github-release",
-    name: "rematerialization-fixture",
+    kind: "npm",
+    name: "@kungfu-tech/rematerialization-fixture",
     ref: process.env.BUILDCHAIN_VERSION,
     digest: "sha256:" + String(count).repeat(64)
   }]
@@ -2387,7 +2392,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     channel: "release",
     line: "v1.0",
     publishTransaction: true,
-    publishRequiredArtifactsJson: JSON.stringify([{ kind: "github-release", name: "rematerialization-fixture", ref_template: "{version}" }]),
+    publishRequiredArtifactsJson: JSON.stringify([{ kind: "npm", name: "@kungfu-tech/rematerialization-fixture", ref_template: "{version}" }]),
     publishEvidencePath: evidencePath,
     transactionStatePath: statePath,
   };
@@ -2414,6 +2419,10 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain/release-inputs/witness.json"), "utf8")).packageVersion,
     "1.0.0",
   );
+  const witness = JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain/release-inputs/witness.json"), "utf8"));
+  assert.match(path.basename(witness.tarballPath), /rematerialization-fixture-1\.0\.0\.tgz$/);
+  assert.match(witness.tarballIntegrity, /^sha512-/);
+  assert.equal(fs.existsSync(witness.tarballPath), false);
   assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version, "1.0.0-alpha.0");
   assert.equal(
     JSON.parse(fs.readFileSync(resumed.distTagEvidencePath, "utf8")).source,
