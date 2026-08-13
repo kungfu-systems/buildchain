@@ -45,7 +45,7 @@ jobs:
   buildchain-package-candidate:
     name: Seal Buildchain npm product payload
     needs: [libnode-shaped]
-    if: ${{ needs.libnode-shaped.result == 'success' && github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/')) }}
+    if: ${{ needs.libnode-shaped.result == 'success' && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'buildchain/version-state/') && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/')) }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
