@@ -12,10 +12,7 @@ import {
 const GITHUB_JSON_MAX_BUFFER = 16 * 1024 * 1024;
 const GITHUB_COMMAND_OPTIONS = Object.freeze({ encoding: "utf8", timeout: 60_000, maxBuffer: GITHUB_JSON_MAX_BUFFER });
 
-function flag(name, fallback = "") {
-  const index = process.argv.indexOf(`--${name}`);
-  return index === -1 ? fallback : String(process.argv[index + 1] || "");
-}
+function flag(name, fallback = "") { const index = process.argv.indexOf(`--${name}`); return index === -1 ? fallback : String(process.argv[index + 1] || ""); }
 
 function commandJson(command, args, label) {
   const result = spawnSync(command, args, GITHUB_COMMAND_OPTIONS);
@@ -30,9 +27,7 @@ function commandJson(command, args, label) {
   }
 }
 
-function githubJson(apiPath, label) {
-  return commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label);
-}
+function githubJson(apiPath, label) { return commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label); }
 
 function exactWorkflowText({ repository, workflowPath, workflowRef }) {
   const encodedWorkflow = workflowPath.split("/").map(encodeURIComponent).join("/");
