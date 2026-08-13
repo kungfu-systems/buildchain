@@ -351,7 +351,7 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /publish-source-tree-sha:/);
   assert.match(
     workflow,
-    /publish-source-consumer-version:[\s\S]*?value: \$\{\{ jobs\.resolve-source\.outputs\.publish-source-consumer-version \}\}/,
+    /publish-source-consumer-version:[\s\S]*?value: \$\{\{ jobs\.resolve-source\.outputs\.publish-source-consumer-version \|\| jobs\.tail-reseal-plan\.outputs\.target-version \}\}/,
   );
   assert.match(workflow, /Resolve source tree SHA/);
   assert.match(workflow, /Generate release candidate passport/);
