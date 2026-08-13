@@ -1268,7 +1268,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     workflow,
     /^ {4}environment: \$\{\{ inputs\.github-artifact-attestation-environment \}\}$/m,
   );
-  assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
+  assert.match(
+    workflow,
+    /token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
   assert.match(
     workflow,
     /generated-ref-update-token: \$\{\{ github\.token \}\}/,
