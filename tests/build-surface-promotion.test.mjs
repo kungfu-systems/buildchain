@@ -486,6 +486,10 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
     /candidate\.terminal\?\.nativeProofRoot[\s\S]*candidate\.terminal\?\.evidenceRoot/,
   );
   assert.match(workflow, /expected one proof-complete terminal Warrant candidate/);
+  assert.match(workflow, /dev-merge-commit\.json/);
+  assert.match(workflow, /devParentShas\.includes\(pull\.head\.sha\)/);
+  assert.match(workflow, /does not contain reviewed source head .* as an exact parent/);
+  assert.doesNotMatch(workflow, /sourceTree !== devTree/);
   assert.match(workflow, /"adopter-delivery\.json": result\.gateResult/);
   assert.match(workflow, /"buildchain-delivery-self-dogfood\.json": result/);
   assert.match(workflow, /manifest\.files\.push/);
@@ -1962,6 +1966,8 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
   }
   const breakingContract = structuredClone(bootstrapContract);
   breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
+  breakingContract.surfaces[0].compatibleBreakingDigests = [];
+  breakingContract.surfaces[0].compatibilityProofRoots = [];
   const breakingEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
     current: breakingContract,
