@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { verifyProjectCutReplayProof } from "../packages/core/dev-delivery-warrant.js";
-import { admitExistingQueueEntry, createDevPrAdmissionReceipt, enqueueAfterStatusPropagation, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission, verifyCurrentDeliveryWarrant } from "./dev-pr-delivery-warrant.mjs";
+import { admitExistingQueueEntry, createDevPrAdmissionReceipt, qualifyAtomicQueueAdmission, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission, verifyCurrentDeliveryWarrant } from "./dev-pr-delivery-warrant.mjs";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
 const DEFAULT_REQUIRED_CHECKS = ["check"];
@@ -88,6 +88,7 @@ function normalizeOptions(options = {}) {
     projectCutProofPath: String(options.projectCutProofPath || "").trim(),
     sourcePatchRoot: String(options.sourcePatchRoot || "").trim().toLowerCase(),
     qualificationOnly: boolOption(options.qualificationOnly, false),
+    verifiedDeliveryWarrant: options.verifiedDeliveryWarrant || null,
   };
 }
 
@@ -924,8 +925,9 @@ async function reconcileEnqueueError({ client, options, pr, expectedHeadSha, ent
   entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "failure");
   entry.activeLeaseStatus = await setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, "failure");
   entry.action = "skip";
-  entry.reason = "enqueue-rejected";
+  entry.reason = error.preEnqueue ? (error.code || "pre-enqueue-qualification-failed") : "enqueue-rejected";
   entry.enqueueError = {
+    phase: error.preEnqueue ? "pre-enqueue" : "enqueue",
     status: error.status || null,
     message: error.message || "GitHub rejected merge queue admission",
   };
@@ -1088,17 +1090,15 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
           result.skipped.push(entry);
         } else {
           try {
-            entry.activeLeaseStatus = await setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, "pending");
-            entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "success");
-            const queueEntry = await enqueueAfterStatusPropagation({
-              enqueue: (input) => client.enqueuePullRequest(input),
-              input: { pullRequestId: decision.pullRequestId, expectedHeadOid: expectedHeadSha },
-              attempts: options.pollMergeableAttempts,
-              delayMs: options.pollMergeableDelayMs,
-              sleep: delay,
+            const atomicAdmission = await qualifyAtomicQueueAdmission({
+              client, options, pullRequest: pr, expectedBaseSha: initialBaseSha, expectedHeadSha, projectCut: decision.projectCut, sleep: delay, mergeableAccepted, root: contentRoot,
+              setActiveLeaseStatus: (state) => setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, state),
+              setQueueAdmissionStatus: (state) => setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, state),
             });
+            Object.assign(entry, atomicAdmission.entryFields);
+            const queueEntry = atomicAdmission.exactEntry || await client.enqueuePullRequest({ pullRequestId: decision.pullRequestId, expectedHeadOid: expectedHeadSha });
             entry.action = "enqueued";
-            entry.reason = "enqueued-with-expected-head";
+            entry.reason = atomicAdmission.exactEntry ? "already-enqueued-exact-head" : "enqueued-with-expected-head";
             entry.queueEntry = queueEntry;
             entry.admissionReceipt.reason = entry.reason;
             result.actions.push(entry);

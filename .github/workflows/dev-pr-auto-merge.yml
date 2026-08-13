@@ -188,14 +188,14 @@ on:
         }
       queue-admission-context:
         {
-          description: "Temporary exact-head commit status required before native queue admission",
+          description: "Exact-head status written and read back before native queue admission; required in Warrant mode",
           default: "",
           type: string,
           required: false,
         }
       active-lease-context:
         {
-          description: "Exact-head lease status context that must remain pending while merge-group qualification runs",
+          description: "Exact-head lease status written and read back as pending before enqueue; required in Warrant mode",
           default: "",
           type: string,
           required: false,

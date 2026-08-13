@@ -294,9 +294,15 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   reuses semantic native proof under heartbeat, atomically qualifies the same
   fence, and refuses GitHub enqueue unless the immutable queue commit, state root, active Warrant, and
   selected candidate all pass exact readback validation. Immediately before
-  enqueue, the controller also rereads the current protected state ref and
-  verifies the active candidate, fencing token, generation, pull request, and
-  exact head. A previously valid result is not authority after terminal
+  enqueue, the controller writes and then reads back both the exact-head queue
+  admission status and active lease status. Only after those statuses are
+  visible at their required states does it reread the pull request head,
+  protected base, native merge queue, and current protected Warrant state. The
+  final rooted admission transaction binds the frozen base, source head,
+  candidate, fencing token, generation, native proof roots, Project Cut proof,
+  and both status contexts. Status propagation is retried before enqueue;
+  base, head, queue-predecessor, lease, or Warrant drift revokes both statuses
+  without attempting enqueue. A previously valid result is not authority after terminal
   closeout. Re-running qualification for the same selected head may regenerate
   timestamped proof bytes, but it retains the immutable active Warrant and its
   originally selected proof instead of rewriting or rejecting that attempt.
