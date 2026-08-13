@@ -1763,6 +1763,16 @@ Target: `./packages/core/buildchain-delivery-self-dogfood.js`. Public symbols: 2
 | `BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT` | constant: const BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT | none | value | Import does not declare a throw contract. | none-on-import | `import { BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT } from "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood";` | `packages/core/buildchain-delivery-self-dogfood.js:3` |
 | `createBuildchainDeliveryInfrastructureSelfDogfood` | function: function createBuildchainDeliveryInfrastructureSelfDogfood({ authorityPackage, kfdPackage, authority, candidate, instanceId, adopterManifest, source, artifact, release, evidence = [], warrant, transitionEvidence, verifiedAt, maxAgeSeconds, } = {}, authorityRuntime) | { authorityPackage, kfdPackage, authority, candidate, instanceId, adopterManifest, source, artifact, release, evidence = [], warrant, transitionEvidence, verifiedAt, maxAgeSeconds, } = {}, authorityRuntime | unknown | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { createBuildchainDeliveryInfrastructureSelfDogfood } from "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood";` | `packages/core/buildchain-delivery-self-dogfood.js:54` |
 
+## `@kungfu-tech/buildchain/published-delivery-authority`
+
+Target: `./packages/core/published-delivery-authority.js`. Public symbols: 3.
+
+| Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `loadPublishedBuildchainDeliveryAuthority` | function: async function loadPublishedBuildchainDeliveryAuthority({ buildchain, kfd, } = {}) | { buildchain, kfd, } = {} | Promise<unknown> | Errors from called operations may propagate; no narrower throw contract is declared in source. | local-filesystem-write | `import { loadPublishedBuildchainDeliveryAuthority } from "@kungfu-tech/buildchain/published-delivery-authority";` | `packages/core/published-delivery-authority.js:153` |
+| `PUBLISHED_DELIVERY_AUTHORITY_CONTRACT` | constant: const PUBLISHED_DELIVERY_AUTHORITY_CONTRACT | none | value | Import does not declare a throw contract. | none-on-import | `import { PUBLISHED_DELIVERY_AUTHORITY_CONTRACT } from "@kungfu-tech/buildchain/published-delivery-authority";` | `packages/core/published-delivery-authority.js:12` |
+| `withPublishedBuildchainDeliveryAuthority` | function: async function withPublishedBuildchainDeliveryAuthority(declarations, operation) | declarations, operation | Promise<unknown> | May throw an Error on rejected input or failed operations; follow the linked source contract. | none-detected-by-static-source-scan | `import { withPublishedBuildchainDeliveryAuthority } from "@kungfu-tech/buildchain/published-delivery-authority";` | `packages/core/published-delivery-authority.js:206` |
+
 ## `@kungfu-tech/buildchain/legacy-kfd-adopter-driver`
 
 Target: `./packages/core/legacy-kfd-adopter-driver.js`. Public symbols: 4.

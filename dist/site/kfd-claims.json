@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "837dadd72acd7267e374e0f83ce727e22e01f79bc6ecbdb36df2f50f3c32137e",
+    "sha256": "a963fbc7da975670849ec618bb9f944dcdf8fd2794709bb8d1024427f0ad01cb",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "837dadd72acd7267e374e0f83ce727e22e01f79bc6ecbdb36df2f50f3c32137e",
+      "sha256": "a963fbc7da975670849ec618bb9f944dcdf8fd2794709bb8d1024427f0ad01cb",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -1567,6 +1567,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./buildchain-delivery-self-dogfood"
+        },
+        {
+          "id": "export:./published-delivery-authority",
+          "name": "@kungfu-tech/buildchain/published-delivery-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/published-delivery-authority.js",
+          "evidencePath": "packages/core/published-delivery-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./published-delivery-authority"
         },
         {
           "id": "export:./legacy-kfd-adopter-driver",
@@ -6957,6 +6969,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 446
+    "publicSurfaceCount": 447
   }
 }
