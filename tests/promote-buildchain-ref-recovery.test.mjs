@@ -2186,6 +2186,7 @@ fs.writeFileSync(manifestPath, JSON.stringify({
     });
     assert.equal(recoveryPlan.updates[0].action, "resumed-advanced-publication");
     assert.equal(recoveryPlan.updates[0].currentSha, mergeSha);
+    assert.equal(recoveryPlan.updates[0].transactionState, "complete");
 
     const result = await promoteBuildchainRefs({
       octokit,
