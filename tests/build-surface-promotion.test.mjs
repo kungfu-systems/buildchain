@@ -754,6 +754,25 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(source, /finalizationNeeded !== true/);
 });
 
+test("stable recovery keeps candidate bytes immutable while preparing the next alpha", () => {
+  const versionState = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/internal/version-state-operations.js"),
+    "utf8",
+  );
+  const releaseChannel = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/internal/promote-release-channel.js"),
+    "utf8",
+  );
+  assert.match(
+    versionState,
+    /recoveredCandidate = releaseCandidateValidation\?\.recoveredCandidate === true/u,
+  );
+  assert.match(
+    releaseChannel,
+    /message: `chore\(release\): prepare \$\{selectedNextAlpha\.tag\}`,[\s\S]*?recoveredCandidate: false/u,
+  );
+});
+
 test("publish source-lock docs distinguish source refs from promotion targets", () => {
   const docs = fs.readFileSync(
     path.join(root, "docs/reusable-build-surface.md"),

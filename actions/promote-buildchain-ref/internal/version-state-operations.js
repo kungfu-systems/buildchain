@@ -120,6 +120,7 @@ function createVersionStateOperations(context) {
     workspaceCwd = cwd,
     parents = [baseSha],
     preserveExistingLifecycleIdentity = false,
+    recoveredCandidate = releaseCandidateValidation?.recoveredCandidate === true,
   }) => {
     if (!versionState) {
       return {
@@ -209,8 +210,6 @@ function createVersionStateOperations(context) {
         version,
       });
     }
-    const recoveredCandidate =
-      releaseCandidateValidation?.recoveredCandidate === true;
     if (recoveredCandidate && changedFiles.length) {
       throw new Error(
         `Candidate recovery cannot rewrite version state for ${version}: ${changedFiles.map((file) => file.path).join(", ")}. Create a new candidate explicitly; recovery never rebuilds or rematerializes product state.`,
