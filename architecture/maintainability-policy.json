@@ -6,7 +6,7 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132689,
+    "maxHandMaintainedSourceLines": 132693,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 23636,
     "latestTransition": "Stable recovery now converges a protected next-alpha merge through exact configured version material and protected reconciliation PRs.",

@@ -4333,6 +4333,7 @@ test("release recovery reuses protected next-alpha state before exact tags exist
   const sourceAlphaSha = "b".repeat(40);
   const releaseSha = "c".repeat(40);
   const preparedAlphaSha = "d".repeat(40);
+  const preparedDevSha = "e".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -4344,6 +4345,7 @@ test("release recovery reuses protected next-alpha state before exact tags exist
     refs: new Map([
       ["heads/release/v1/v1.0", releaseSha],
       ["heads/alpha/v1/v1.0", preparedAlphaSha],
+      ["heads/dev/v1/v1.0", preparedDevSha],
       ["tags/v1.0.0-alpha.0", sourceAlphaSha],
       ["tags/v1.0.0", releaseSha],
     ]),
@@ -4375,6 +4377,13 @@ test("release recovery reuses protected next-alpha state before exact tags exist
     "1.0.1-alpha.0",
     [releaseSha],
   );
+  addPackageTree(
+    preparedDevSha,
+    "tree-prepared-dev",
+    "blob-prepared-dev",
+    "1.0.1-alpha.0",
+    [preparedAlphaSha],
+  );
 
   const result = await promoteBuildchainRefs({
     octokit,
@@ -4386,20 +4395,28 @@ test("release recovery reuses protected next-alpha state before exact tags exist
   });
 
   assert.equal(refs.get("heads/alpha/v1/v1.0"), preparedAlphaSha);
-  assert.equal(refs.get("heads/dev/v1/v1.0"), preparedAlphaSha);
+  assert.equal(refs.get("heads/dev/v1/v1.0"), preparedDevSha);
   assert.equal(refs.get("tags/v1.0.1-alpha.0"), preparedAlphaSha);
   assert.equal(refs.get("tags/v1.0-alpha"), preparedAlphaSha);
   assert.equal(result.nextAlphaSha, preparedAlphaSha);
   assert.deepEqual(
-    result.updates.find(
+    result.updates.filter(
       (update) => update.action === "existing-compatible-version-state",
     ),
-    {
-      ref: "alpha/v1/v1.0",
-      action: "existing-compatible-version-state",
-      sha: preparedAlphaSha,
-      version: "1.0.1-alpha.0",
-    },
+    [
+      {
+        ref: "alpha/v1/v1.0",
+        action: "existing-compatible-version-state",
+        sha: preparedAlphaSha,
+        version: "1.0.1-alpha.0",
+      },
+      {
+        ref: "dev/v1/v1.0",
+        action: "existing-compatible-version-state",
+        sha: preparedDevSha,
+        version: "1.0.1-alpha.0",
+      },
+    ],
   );
 });
 
