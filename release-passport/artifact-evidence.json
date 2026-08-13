@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-artifact-evidence",
+  "repository": "kungfu-systems/buildchain",
+  "release": {
+    "tag": "v3.0.9-alpha.15",
+    "sourceSha": "7fd11f6a59ba84bc8df9b54fbd9800458f43a636"
+  },
+  "generatedAt": "2026-08-13T22:04:55.506Z",
+  "runner": {
+    "kind": "github-hosted",
+    "os": "Linux",
+    "arch": "X64",
+    "labels": [],
+    "image": "ubuntu24"
+  },
+  "workflow": {
+    "name": "Buildchain Ref Promotion",
+    "runId": "31746483634",
+    "runAttempt": "1",
+    "url": "https://github.com/kungfu-systems/buildchain/actions/runs/31746483634"
+  },
+  "artifacts": [
+    {
+      "name": "kungfu-tech-buildchain-3.0.9-alpha.15.tgz",
+      "kind": "release-asset",
+      "platform": "",
+      "size": 2208793,
+      "sha256": "25a8ef8aa8008c66547a0aed1c981e9dc7fc51ae3d50a735d901801379f304e9",
+      "url": "",
+      "githubAssetId": "",
+      "attestation": ""
+    }
+  ],
+  "adopterDelivery": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-adopter-delivery-passport-binding",
+    "valid": true,
+    "qualifying": false,
+    "selfCertified": false,
+    "gateResult": {
+      "schemaVersion": 1,
+      "contract": "kungfu-buildchain-adopter-delivery-result",
+      "status": "passed",
+      "qualifying": false,
+      "selfCertified": false,
+      "project": {
+        "instanceId": "kungfu-systems/buildchain@3.0.9-alpha.15",
+        "adopterId": "kungfu-systems/buildchain"
+      },
+      "artifact": {
+        "kind": "package",
+        "coordinate": "@kungfu-tech/buildchain@3.0.9-alpha.15",
+        "root": "sha256:25a8ef8aa8008c66547a0aed1c981e9dc7fc51ae3d50a735d901801379f304e9"
+      },
+      "protocol": {
+        "id": "kfd.adopter-category/instance-manifest",
+        "version": "1.0.0",
+        "loaded": true,
+        "reportRoot": "sha256:7099e3064ce99d0503dab9bf3fdabaa9ccebdcc78f268e99a93db5c77ab28f64"
+      },
+      "artifactProfile": {
+        "id": "buildchain.artifact/package",
+        "version": "1.0.0",
+        "loaded": true,
+        "valid": true
+      },
+      "semanticReport": {
+        "schemaVersion": 1,
+        "contract": "kungfu-buildchain-kfd-adopter-category-driver-report",
+        "valid": true,
+        "conforming": true,
+        "qualifying": false,
+        "selfCertified": false,
+        "independentlyCertified": false,
+        "kfdPackage": {
+          "name": "@kungfu-tech/kfd",
+          "version": "1.0.0-alpha.62"
+        },
+        "categoryReport": {
+          "schemaVersion": 1,
+          "contract": "kfd.adopter-category-instance-report/v1",
+          "valid": true,
+          "conforming": true,
+          "qualifying": false,
+          "independentlyCertified": false,
+          "evidenceInherited": false,
+          "instanceRoot": "sha256:9ec4b8eab6f9b941f1f062458ad5a93e89ea691b3a8a9705d70fa109b870ff36",
+          "projectRoot": "sha256:c5a716bc08ade44671601e404df286358e2a36ca7848135ee22d7e089afa1da3",
+          "adopterManifestRoot": "sha256:f2eda4141cc161b858dd086640b28781249e44206cd31f139a418c50bca064f3",
+          "catalogRoot": "sha256:7cd8ea9735e42aa55467a2e5f17fdf3d6efc34c1401eaeb88352791f5886b385",
+          "selectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78",
+          "resolutionRoot": "sha256:16e5825b07f0ec1eb33a7e5a86e2b61f2bb0b7628eb0138c160a1a966c34fe47",
+          "issues": [],
+          "reportRoot": "sha256:f764e691c7819cde66b789ebba8bc6a2807f56336f5d1dac8e494413a4075b4a"
+        },
+        "adapterIssues": [],
+        "nonClaims": [
+          "Category conformance does not grant runtime permission or release authorization.",
+          "Buildchain carries the published KFD decision and does not certify or reinterpret it."
+        ]
+      },
+      "nonClaims": [
+        "A passing delivery gate does not grant runtime permission, release authorization, or independent certification.",
+        "Protocol semantics remain owned by the selected protocol driver and its published authority."
+      ],
+      "issues": [],
+      "gateRoot": "sha256:44eccd5dfb667d8f88515a4e49c63875e9dbc7bbd3af5df6c2aa66cf0b8fcb7a"
+    },
+    "validationIssues": [],
+    "nonClaims": [
+      "A passing adopter delivery gate does not grant runtime permission or release authority.",
+      "The selected protocol driver retains semantic authority; Buildchain only binds its exact result into delivery evidence."
+    ],
+    "bindingRoot": "sha256:b477374e12d44c7bc3974fb9bd29134b718ecde3113e60b921801796ab9918d3"
+  },
+  "kfdAdopter": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-kfd-adopter-release-binding",
+    "status": "passed",
+    "qualifying": false,
+    "selfCertified": false,
+    "authority": {
+      "manifestPath": "kfd-adopter-manifest.json",
+      "manifestContract": "kfd.adopter-conformance-manifest/v1",
+      "manifestRoot": "sha256:54359d263133985c9050b9da1a58b727f2a2b9b8b62b73f4a5c1a04ae6b8710d",
+      "gatePath": "kfd-adopter-manifest-gate.json",
+      "gateRoot": "sha256:1041409872de49304dfbf8d04b0517feaa32e309d30e148c2bdfac971e4c70e1"
+    },
+    "adopter": {
+      "id": "kungfu-systems/buildchain"
+    },
+    "source": {
+      "repository": "kungfu-systems/buildchain",
+      "coordinate": "kungfu-systems/buildchain@7fd11f6a59ba84bc8df9b54fbd9800458f43a636",
+      "sha": "7fd11f6a59ba84bc8df9b54fbd9800458f43a636",
+      "artifactRoot": "sha256:67f6dedcb03b9bcdc2b059b1486d1bcb028cbaf5cfd531bdc5a9eea594eb983c"
+    },
+    "standardPackage": {
+      "name": "@kungfu-tech/kfd",
+      "version": "1.0.0-alpha.62",
+      "artifactRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+      "registryRoot": "sha256:8ab283dd225e8940a4f9d92eca7d59fff6e8d29e66275c03baa923ad2ff63298",
+      "verifierSetRoot": "sha256:aad9b4193e965b68e465bbe4e648e5a03c3d78a6575dfda1d5e90943404779f4"
+    },
+    "witness": {
+      "decisionRoot": "sha256:80af31aa1e1896447bd8cda9d7043ef5f7fc728876d11a20d3351a6689aa6de0",
+      "verificationReportRoot": "sha256:ea478aebb47254943655480014d024b56497e0afa313df782a9ed711bac366fc",
+      "bundleRoot": "sha256:91d05994d1e762d0d6f6f9acdaf901462e4f5febc331d323292710d3731952a5"
+    },
+    "legacyProjection": {
+      "path": "kfd-support.json",
+      "contract": "kungfu-kfd-support-matrix",
+      "root": "sha256:d066360c44da0950e0cc2cadd2f49e9a4453f180ebb565217e872efc0d3f78f4",
+      "authorityRoot": "sha256:54359d263133985c9050b9da1a58b727f2a2b9b8b62b73f4a5c1a04ae6b8710d",
+      "gateRoot": "sha256:1041409872de49304dfbf8d04b0517feaa32e309d30e148c2bdfac971e4c70e1"
+    },
+    "nonClaims": [
+      "This binding proves exact release-envelope consumption, not KFD certification or release authorization.",
+      "The legacy support matrix remains a projection of the standard adopter manifest authority."
+    ],
+    "bindingRoot": "sha256:bf1172354e0399882b7cd334c635792dd1a74dc80884e44fc90ddeb4a7682115"
+  }
+}
