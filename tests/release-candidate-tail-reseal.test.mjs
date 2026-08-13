@@ -7,6 +7,7 @@ import test from "node:test";
 
 import {
   normalizeTailResealRequest,
+  tailResealFailureMode,
   sealTailResealReceipt,
   verifyTailResealPlatform,
 } from "../scripts/release-candidate-tail-reseal.mjs";
@@ -123,6 +124,26 @@ test("tail reseal request requires one exact four-platform candidate", () => {
     () => normalizeTailResealRequest({ ...request(), platforms: request().platforms.slice(1) }),
     /exactly four platform bindings/u,
   );
+});
+
+test("tail reseal admits only the two exact macOS failure boundaries", () => {
+  assert.equal(tailResealFailureMode(request()), "macos-finalization");
+  assert.equal(tailResealFailureMode({
+    ...request(),
+    failure: {
+      jobId: 456,
+      jobName: "build / Control detached signing macOS ARM64",
+      stepName: "Enforce qualifying detached signing settlement",
+    },
+  }), "macos-signing-control");
+  assert.throws(() => tailResealFailureMode({
+    ...request(),
+    failure: {
+      jobId: 456,
+      jobName: "build / Linux x64",
+      stepName: "Build",
+    },
+  }), /outside the two exact macOS recovery boundaries/u);
 });
 
 test("platform verification rejects changed retained bytes", () => {
