@@ -2262,7 +2262,7 @@ async function assertChannelPromotionPr({
       pullRequest.merged_at &&
       baseRef === targetRef &&
       (
-        headRef === expectedHeadRef ||
+        pullRequest.merge_commit_sha === sha || headRef === expectedHeadRef ||
         matchingVersionStateTarget === targetRef ||
         matchingPublishGateTarget === targetRef ||
         (
