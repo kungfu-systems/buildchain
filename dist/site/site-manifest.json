@@ -34,7 +34,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.9-alpha.4",
+    "version": "3.0.9-alpha.11",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -82,7 +82,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:70bf29e974b190b249fbbcfd9a5de1e33a9b069de5d7811a25e147b860137629"
+      "digest": "sha256:99df84336b7e1cf7a645ea4bc5c0cdfbb6a3495eb01517d65efaca734407c9e7"
     },
     {
       "id": "github-artifact-attestation",
@@ -242,7 +242,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:d6fd9d704376e47a281ce337f6c5d6346e117effe8851d43a9b370955ac07204"
+      "digest": "sha256:079a9e3309e7948f7794426ffce2b5922a874464394b5ec9d3a90c37f410a3b7"
     },
     {
       "id": "node-api-reference",
@@ -250,7 +250,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:af32d0f8f94c23444147f81fb55baea2cab49f2af0f5f8755a25967c81905ea6"
+      "digest": "sha256:3694cb4ecd55b79e45f7643d9e29e1f70139092a3a8c8a84280f9100aee6fc7b"
     },
     {
       "id": "build-facts",

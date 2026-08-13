@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import {
@@ -11,6 +14,7 @@ import {
 } from "../packages/core/adopter-delivery-gate.js";
 import {
   createArtifactEvidence,
+  collectGitHubReleasePassport,
   createReleaseCheckReport,
   createReleasePassport,
 } from "../packages/core/release-passport.js";
@@ -150,6 +154,27 @@ test("release passport and artifact evidence bind one exact category gate closur
   assert.equal(report.completeness.adopterDeliveryPresent, true);
   assert.equal(first.qualifying, false);
   assert.equal(first.selfCertified, false);
+});
+
+test("GitHub release collection preserves one exact category gate closure", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-adopter-delivery-passport-"));
+  const result = gateResult();
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    repository,
+    tag: "v1.2.3",
+    sourceSha,
+    packageName: "@example/tool",
+    packageVersion: "1.2.3",
+    outputDir: "release-passport",
+    assetsJson: JSON.stringify(assets),
+    adopterDeliveryJson: JSON.stringify(result),
+    checkedAt,
+  });
+
+  assert.deepEqual(collected.passport.adopterDelivery, createAdopterDeliveryPassportBinding(result));
+  assert.deepEqual(collected.artifactEvidence.adopterDelivery, collected.passport.adopterDelivery);
+  assert.equal(collected.checkReport.ok, true, JSON.stringify(collected.checkReport.issues));
 });
 
 test("release verification rejects gate, artifact evidence, and project substitution", () => {

@@ -3225,6 +3225,284 @@
       ]
     },
     {
+      "id": "packages/core/buildchain-delivery-bootstrap.js#BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT",
+      "name": "BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-bootstrap.js",
+        "line": 4
+      },
+      "example": "import { BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT } from \"@kungfu-tech/buildchain/buildchain-delivery-bootstrap\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-bootstrap.js#qualifyBuildchainDeliveryInfrastructureBootstrap",
+      "name": "qualifyBuildchainDeliveryInfrastructureBootstrap",
+      "kind": "function",
+      "signature": "function qualifyBuildchainDeliveryInfrastructureBootstrap({ authority, candidate, gateResult, warrant, transitionEvidence, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ authority, candidate, gateResult, warrant, transitionEvidence, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-bootstrap.js",
+        "line": 122
+      },
+      "example": "import { qualifyBuildchainDeliveryInfrastructureBootstrap } from \"@kungfu-tech/buildchain/buildchain-delivery-bootstrap\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
+      "name": "BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-infrastructure.js",
+        "line": 8
+      },
+      "example": "import { BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID } from \"@kungfu-tech/buildchain/buildchain-delivery-infrastructure\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE",
+      "name": "BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-infrastructure.js",
+        "line": 10
+      },
+      "example": "import { BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE } from \"@kungfu-tech/buildchain/buildchain-delivery-infrastructure\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-infrastructure.js#createBuildchainDeliveryInfrastructureInstanceManifest",
+      "name": "createBuildchainDeliveryInfrastructureInstanceManifest",
+      "kind": "function",
+      "signature": "function createBuildchainDeliveryInfrastructureInstanceManifest({ instanceId, adopterManifest, source, artifact, release, evidence = [], } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ instanceId, adopterManifest, source, artifact, release, evidence = [], } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-infrastructure.js",
+        "line": 61
+      },
+      "example": "import { createBuildchainDeliveryInfrastructureInstanceManifest } from \"@kungfu-tech/buildchain/buildchain-delivery-infrastructure\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-infrastructure.js#verifyBuildchainDeliveryInfrastructureInstance",
+      "name": "verifyBuildchainDeliveryInfrastructureInstance",
+      "kind": "function",
+      "signature": "function verifyBuildchainDeliveryInfrastructureInstance(manifest, { adopterManifest, verifiedAt, maxAgeSeconds } = {})",
+      "parameters": [
+        {
+          "name": "manifest",
+          "signature": "manifest"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ adopterManifest, verifiedAt, maxAgeSeconds } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-infrastructure.js",
+        "line": 155
+      },
+      "example": "import { verifyBuildchainDeliveryInfrastructureInstance } from \"@kungfu-tech/buildchain/buildchain-delivery-infrastructure\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-self-dogfood.js#BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT",
+      "name": "BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-self-dogfood.js",
+        "line": 6
+      },
+      "example": "import { BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT } from \"@kungfu-tech/buildchain/buildchain-delivery-self-dogfood\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-self-dogfood.js#createBuildchainDeliveryInfrastructureSelfDogfood",
+      "name": "createBuildchainDeliveryInfrastructureSelfDogfood",
+      "kind": "function",
+      "signature": "function createBuildchainDeliveryInfrastructureSelfDogfood({ authorityPackage, kfdPackage, authority, candidate, instanceId, adopterManifest, source, artifact, release, evidence = [], warrant, transitionEvidence, verifiedAt, maxAgeSeconds, } = {}, authorityRuntime)",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ authorityPackage, kfdPackage, authority, candidate, instanceId, adopterManifest, source, artifact, release, evidence = [], warrant, transitionEvidence, verifiedAt, maxAgeSeconds, } = {}"
+        },
+        {
+          "name": "authorityRuntime",
+          "signature": "authorityRuntime"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-self-dogfood.js",
+        "line": 151
+      },
+      "example": "import { createBuildchainDeliveryInfrastructureSelfDogfood } from \"@kungfu-tech/buildchain/buildchain-delivery-self-dogfood\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-self-dogfood.js#createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood",
+      "name": "createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood",
+      "kind": "function",
+      "signature": "async function createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood({ authorityPackages, authoritySourceCommit, candidatePackage, warrantCandidate, source, release, verifiedAt, maxAgeSeconds = 86400, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ authorityPackages, authoritySourceCommit, candidatePackage, warrantCandidate, source, release, verifiedAt, maxAgeSeconds = 86400, } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-self-dogfood.js",
+        "line": 306
+      },
+      "example": "import { createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood } from \"@kungfu-tech/buildchain/buildchain-delivery-self-dogfood\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-delivery-self-dogfood.js#createPublishedBuildchainDeliveryInfrastructureSelfDogfood",
+      "name": "createPublishedBuildchainDeliveryInfrastructureSelfDogfood",
+      "kind": "function",
+      "signature": "async function createPublishedBuildchainDeliveryInfrastructureSelfDogfood({ authorityPackages, selfDogfood, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ authorityPackages, selfDogfood, } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-delivery-self-dogfood.js",
+        "line": 283
+      },
+      "example": "import { createPublishedBuildchainDeliveryInfrastructureSelfDogfood } from \"@kungfu-tech/buildchain/buildchain-delivery-self-dogfood\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/buildchain-kfd-claims.js#BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT",
       "name": "BUILDCHAIN_KFD_CLAIM_REGISTRY_CONTRACT",
       "kind": "constant",
@@ -6752,7 +7030,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 641
+        "line": 642
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7137,7 +7415,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 651
+        "line": 652
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7297,7 +7575,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 644
+        "line": 645
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -18294,6 +18572,92 @@
       ]
     },
     {
+      "id": "packages/core/published-delivery-authority.js#loadPublishedBuildchainDeliveryAuthority",
+      "name": "loadPublishedBuildchainDeliveryAuthority",
+      "kind": "function",
+      "signature": "async function loadPublishedBuildchainDeliveryAuthority({ buildchain, kfd, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ buildchain, kfd, } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "local-filesystem-write"
+      ],
+      "source": {
+        "path": "packages/core/published-delivery-authority.js",
+        "line": 178
+      },
+      "example": "import { loadPublishedBuildchainDeliveryAuthority } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/published-delivery-authority.js#PUBLISHED_DELIVERY_AUTHORITY_CONTRACT",
+      "name": "PUBLISHED_DELIVERY_AUTHORITY_CONTRACT",
+      "kind": "constant",
+      "signature": "const PUBLISHED_DELIVERY_AUTHORITY_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/published-delivery-authority.js",
+        "line": 12
+      },
+      "example": "import { PUBLISHED_DELIVERY_AUTHORITY_CONTRACT } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/published-delivery-authority.js#withPublishedBuildchainDeliveryAuthority",
+      "name": "withPublishedBuildchainDeliveryAuthority",
+      "kind": "function",
+      "signature": "async function withPublishedBuildchainDeliveryAuthority(declarations, operation)",
+      "parameters": [
+        {
+          "name": "declarations",
+          "signature": "declarations"
+        },
+        {
+          "name": "operation",
+          "signature": "operation"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/published-delivery-authority.js",
+        "line": 233
+      },
+      "example": "import { withPublishedBuildchainDeliveryAuthority } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/readme-badges.js#BADGE_BUNDLE_DEFAULT_CLAIMS",
       "name": "BADGE_BUNDLE_DEFAULT_CLAIMS",
       "kind": "constant",
@@ -20076,11 +20440,11 @@
       "id": "packages/core/release-passport.js#collectGitHubReleasePassport",
       "name": "collectGitHubReleasePassport",
       "kind": "function",
-      "signature": "function collectGitHubReleasePassport({ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", kfdArtifactSearchRoots = [], releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdAdopterManifestJson = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {})",
+      "signature": "function collectGitHubReleasePassport({ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", kfdArtifactSearchRoots = [], releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", adopterDeliveryJson = \"\", kfdAdopterManifestJson = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", kfdArtifactSearchRoots = [], releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdAdopterManifestJson = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {}"
+          "signature": "{ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", kfdArtifactSearchRoots = [], releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", adopterDeliveryJson = \"\", kfdAdopterManifestJson = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -20179,7 +20543,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2682
+        "line": 2689
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20237,7 +20601,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2836
+        "line": 2843
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20386,7 +20750,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2865
+        "line": 2872
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20447,7 +20811,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2752
+        "line": 2759
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20602,7 +20966,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2877
+        "line": 2884
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20631,7 +20995,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2801
+        "line": 2808
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25543,7 +25907,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:7cbbac67c7e77142e77a64ff9cdadae235b00bc388d33896d115a584bf93618b",
+      "digest": "sha256:8693f1bdd159920a4b73dcd740b198170c0c0211810463fb45a5c9625371d1c5",
       "summary": "Durable single-flight Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -25822,6 +26186,107 @@
         "packages/core/kfd-adopter-category-driver.js#KFD_ADOPTER_CATEGORY_PROTOCOL_VERSION",
         "packages/core/kfd-adopter-category-driver.js#resolvePublishedKfdAdopterCategoryProfiles",
         "packages/core/kfd-adopter-category-driver.js#verifyPublishedKfdAdopterCategoryInstance"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/buildchain-delivery-infrastructure",
+      "export": "./buildchain-delivery-infrastructure",
+      "target": "./packages/core/buildchain-delivery-infrastructure.js",
+      "digest": "sha256:fab2e4eee94fe1801f6414b03487189d9a03f422e5bf45cfc8e59fc7d8d0ff59",
+      "summary": "Buildchain-owned delivery-infrastructure category instance construction and published-KFD verification APIs.",
+      "capabilityGroup": "kfd-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 4,
+      "symbolIds": [
+        "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_ADOPTER_ID",
+        "packages/core/buildchain-delivery-infrastructure.js#BUILDCHAIN_DELIVERY_INFRASTRUCTURE_PROFILE",
+        "packages/core/buildchain-delivery-infrastructure.js#createBuildchainDeliveryInfrastructureInstanceManifest",
+        "packages/core/buildchain-delivery-infrastructure.js#verifyBuildchainDeliveryInfrastructureInstance"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/buildchain-delivery-bootstrap",
+      "export": "./buildchain-delivery-bootstrap",
+      "target": "./packages/core/buildchain-delivery-bootstrap.js",
+      "digest": "sha256:9eb0296ced6458fdc407437b05d3691eceb6a52ee9f1ca305d2a4bda48b8ead5",
+      "summary": "Anti-circular protected N-1 bootstrap evidence verification for one exact Buildchain delivery-infrastructure candidate.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 2,
+      "symbolIds": [
+        "packages/core/buildchain-delivery-bootstrap.js#BUILDCHAIN_DELIVERY_BOOTSTRAP_CONTRACT",
+        "packages/core/buildchain-delivery-bootstrap.js#qualifyBuildchainDeliveryInfrastructureBootstrap"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood",
+      "export": "./buildchain-delivery-self-dogfood",
+      "target": "./packages/core/buildchain-delivery-self-dogfood.js",
+      "digest": "sha256:ae96c8211dc4f8efcf6d6939249553b1ac41d39f484c797ba9c9e92ec8ea15f7",
+      "summary": "Pure exact-package self-dogfood assembly through injected published N-1 Buildchain and KFD abilities.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 4,
+      "symbolIds": [
+        "packages/core/buildchain-delivery-self-dogfood.js#BUILDCHAIN_DELIVERY_SELF_DOGFOOD_CONTRACT",
+        "packages/core/buildchain-delivery-self-dogfood.js#createBuildchainDeliveryInfrastructureSelfDogfood",
+        "packages/core/buildchain-delivery-self-dogfood.js#createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood",
+        "packages/core/buildchain-delivery-self-dogfood.js#createPublishedBuildchainDeliveryInfrastructureSelfDogfood"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/published-delivery-authority",
+      "export": "./published-delivery-authority",
+      "target": "./packages/core/published-delivery-authority.js",
+      "digest": "sha256:38e425db6e6aa2674bc230a716feb7659c400a2423291d1268dd6c6730e7087f",
+      "summary": "Exact npm archive-byte loading and constrained N-1 delivery authority imports with guaranteed cleanup.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 3,
+      "symbolIds": [
+        "packages/core/published-delivery-authority.js#loadPublishedBuildchainDeliveryAuthority",
+        "packages/core/published-delivery-authority.js#PUBLISHED_DELIVERY_AUTHORITY_CONTRACT",
+        "packages/core/published-delivery-authority.js#withPublishedBuildchainDeliveryAuthority"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -26839,7 +27304,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:9fdb16bac3b7d2b4a1cacd684e06b4f029d4d4ff41a0d80b54217fc59e010abd",
+      "digest": "sha256:00d5f388d6abc7aaa730bbbda644cdba0e83cff783558102bf143d68bd7429df",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -27246,7 +27711,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:af32d0f8f94c23444147f81fb55baea2cab49f2af0f5f8755a25967c81905ea6"
+      "digest": "sha256:3694cb4ecd55b79e45f7643d9e29e1f70139092a3a8c8a84280f9100aee6fc7b"
     },
     {
       "id": "build-facts",

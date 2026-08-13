@@ -242,6 +242,7 @@ async function handleCollectCommand({ args, runScript, packageVersion }) {
       "kfd-3-artifact-verify-cmd",
       "",
     ),
+    adopterDeliveryJson: readFlag(collectArgs, "adopter-delivery-json", ""),
     kfdAdopterManifestJson: readFlag(
       collectArgs,
       "kfd-adopter-manifest-json",

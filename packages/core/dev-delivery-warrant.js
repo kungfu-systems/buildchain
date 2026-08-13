@@ -610,6 +610,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
         closedAt: currentTime,
         fencingToken: active.fencingToken,
         leaseGeneration: active.generation,
+        ...(active.nativeProofRoot ? { nativeProofRoot: exactRoot(active.nativeProofRoot, "nativeProofRoot") } : {}),
       };
       queue.activeWarrant = null;
       return { candidate, active };

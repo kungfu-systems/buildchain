@@ -1142,11 +1142,15 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-invariant-passport-command:/);
   assert.match(workflow, /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/);
   assert.match(workflow, /release-passport-evidence-jsons:/);
-  assert.match(workflow, /release-passport-evidence-jsons: \$\{\{ inputs\.release-passport-evidence-jsons \}\}/);
+  assert.match(workflow, /release-passport-evidence-jsons: \$\{\{ steps\.buildchain-delivery-self-dogfood\.outputs\.self-dogfood-path \|\| inputs\.release-passport-evidence-jsons \}\}/);
   assert.match(workflow, /release-passport-attachment-command:/);
   assert.match(workflow, /release-passport-attachment-command: \$\{\{ inputs\.release-passport-attachment-command \}\}/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
+  assert.match(workflow, /name: Resolve sealed Buildchain delivery self-dogfood evidence/);
+  assert.match(workflow, /adopter-delivery-path=/);
+  assert.match(workflow, /self-dogfood-path=/);
+  assert.match(workflow, /release-passport-adopter-delivery-json: \$\{\{ steps\.buildchain-delivery-self-dogfood\.outputs\.adopter-delivery-path \|\| inputs\.release-passport-adopter-delivery-json \}\}/);
   assert.match(workflow, /github-artifact-attestation-policy-json:/);
   assert.match(workflow, /release-passport-github-artifact-attestation-policy-jsons: \$\{\{ steps\.attestation-policy\.outputs\.path \}\}/);
   assert.match(workflow, /name: Resolve GitHub artifact attestation policy/);
