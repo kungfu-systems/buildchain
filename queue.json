@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 679,
+  "generation": 680,
   "fencingCounter": 154,
   "policy": {
     "agingSeconds": 900,
@@ -5633,11 +5633,20 @@
       "sourceWorkflowRunId": 31744740271,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-13T21:14:49.109Z",
-      "updatedAt": "2026-08-13T21:14:49.109Z",
+      "updatedAt": "2026-08-13T21:26:17.339Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "PR #2783 source head advanced while resolving the protected dev merge conflict",
+        "evidenceRoot": "sha256:0cec2863d69f3923571d4c0ecf4b2942f0c8a1b64f1f454e295d1d5af4bc10fc",
+        "authority": "queued-candidate-cancellation",
+        "expectedSourceHead": "470d047eca4cb4d4e45019685329efe760f2d976",
+        "observedSourceHead": "df5c65d241924eaf108b0e26b5f2b3fc93ecf752",
+        "eventAction": "synchronize",
+        "closedAt": "2026-08-13T21:26:17.339Z"
+      },
       "affectedPaths": [
         ".github/workflows/.release-candidate-promote.yml",
         "architecture/maintainability-policy.json",
@@ -5646,6 +5655,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-13T21:20:06.510Z",
-  "stateRoot": "sha256:79052f209583ec66909eae76a3fa1f9504381279e458c7f3b2811682a3cf7414"
+  "updatedAt": "2026-08-13T21:26:17.339Z",
+  "stateRoot": "sha256:4d83eb4a61e0e70a7ded0eab11a38389ced314266883db9242c2267c6b63488a"
 }
