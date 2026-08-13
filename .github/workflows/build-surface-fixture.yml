@@ -251,9 +251,9 @@ jobs:
             candidate.pullRequestNumber === pull.number &&
             candidate.sourceHead === pull.head.sha &&
             candidate.status === "merged" &&
-            candidate.terminal?.outcome === "merged"
+            candidate.terminal?.outcome === "merged" && /^sha256:[0-9a-f]{64}$/.test(candidate.terminal?.nativeProofRoot ?? "") && /^sha256:[0-9a-f]{64}$/.test(candidate.terminal?.evidenceRoot ?? "")
           );
-          if (warrantMatches.length !== 1) throw new Error(`expected one terminal Warrant candidate for PR #${pull.number}, found ${warrantMatches.length}`);
+          if (warrantMatches.length !== 1) throw new Error(`expected one proof-complete terminal Warrant candidate for PR #${pull.number}, found ${warrantMatches.length}`);
           const warrantCandidate = warrantMatches[0];
           const sourceTree = read(`${evidenceDir}/source-commit.json`).tree?.sha;
           const devTree = String((await import("node:child_process")).execFileSync(

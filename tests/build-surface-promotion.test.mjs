@@ -481,6 +481,11 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /@kungfu-tech\/buildchain@\$\{BUILDCHAIN_AUTHORITY_VERSION\}/);
   assert.match(workflow, /@kungfu-tech\/kfd@\$\{KFD_AUTHORITY_VERSION\}/);
   assert.match(workflow, /createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood/);
+  assert.match(
+    workflow,
+    /candidate\.terminal\?\.nativeProofRoot[\s\S]*candidate\.terminal\?\.evidenceRoot/,
+  );
+  assert.match(workflow, /expected one proof-complete terminal Warrant candidate/);
   assert.match(workflow, /"adopter-delivery\.json": result\.gateResult/);
   assert.match(workflow, /"buildchain-delivery-self-dogfood\.json": result/);
   assert.match(workflow, /manifest\.files\.push/);
