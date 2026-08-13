@@ -3484,8 +3484,8 @@ function createRefMutationOperations(context) {
       updates.push({ tag, action: "dry-run", sha: tagSha });
       return;
     }
+    const tagRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: `tags/${tag}` }); if (tagRef?.object?.sha === tagSha) return void updates.push({ tag, action: "existing", sha: tagSha });
     try {
-      const tagRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: `tags/${tag}` }); if (tagRef?.object?.sha === tagSha) return void updates.push({ tag, action: "existing", sha: tagSha });
       await context.tagUpdateOctokit.rest.git.updateRef({
         owner,
         repo,
