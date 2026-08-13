@@ -184,7 +184,11 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.doesNotMatch(publicWrapper, /inputs\.buildchain-expected-(?:channel|major)/);
   assert.match(
     wrapper,
-    /- name: Promote-only publish[\s\S]*?uses: \.\/\.buildchain\/runtime\/actions\/promote-buildchain-ref[\s\S]*?with:\n\s+token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+    /- name: Promote-only publish[\s\S]*?uses: \.\/\.buildchain\/runtime\/actions\/promote-buildchain-ref[\s\S]*?with:\n\s+token: \$\{\{ github\.token \}\}/,
+  );
+  assert.doesNotMatch(
+    wrapper,
+    /- name: Promote-only publish[\s\S]*?with:\n\s+token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN/,
   );
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(
