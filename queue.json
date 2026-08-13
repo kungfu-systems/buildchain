@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 606,
+  "generation": 607,
   "fencingCounter": 142,
   "policy": {
     "agingSeconds": 900,
@@ -5096,8 +5096,38 @@
         "dist/site/workflow-registry.json",
         "package.json"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2769,
+      "assignmentRoot": "sha256:048464ca327b6af25445e55deab7b1a47088b87e39e87b3062cfe9708af8a77d",
+      "initiativeRoot": "sha256:2837fc79c38a06aef5e044976d40116f96613526638e15e47ac58b490786b5f2",
+      "sourceIdentityRoot": "sha256:6f3f6c4f8aa5dc7d41431f4f5f7e20198537d484ceaa6a593bfeda9717470fae",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:08fa88254b371b268428a8ffaa4c501250f00c2e5facd1f79bf6cbae450897b4",
+      "sourceHead": "6d8ba6b61f3598fb8e78852baae9f6e1d0c792c7",
+      "sourcePatchRoot": "sha256:3098b87438b750edfe0ae76940403907dd7649794f2704ab4b9d32f0b4bdd108",
+      "sourceProofRoot": "sha256:e7664dc591af508d74e5d0910b90c786928d4ee6dcf544dfe8f148cd4709f4cd",
+      "planRoot": "sha256:ab0551d1172cb06add910331ede691e9903d2ef17b4739344b9b0dd7758fa76c",
+      "closureRoot": "sha256:06f1c274f6c5b4ebfd0885ae02671f998744936f457435a5c27d17c17caed454",
+      "dependencyRoot": "sha256:b1218d1294901b07d01b0e84d319bda94e95b8bf06a7322b6aa474d9ee94cfaa",
+      "toolchainRoot": "sha256:83f7ff5bfb21cf66f5538f53d1f936b5e263e8aa4d073f17961adcfc43fc92fe",
+      "environmentRoot": "sha256:71e1c1414e321b0dfe8690d87275796d4906f1e5074c5cd3b4737c3e96b3049b",
+      "sourceWorkflowRunId": 31726722867,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-13T17:38:50.771Z",
+      "updatedAt": "2026-08-13T17:38:50.771Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "scripts/audit-publication-control-plane.mjs",
+        "tests/publication-control-plane-script.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-13T16:31:57.440Z",
-  "stateRoot": "sha256:59058812d6520de902ce265c452eff95f50685c7ccd8fa6459234d321798b092"
+  "updatedAt": "2026-08-13T17:38:50.771Z",
+  "stateRoot": "sha256:47e58ffedf4b82355fd6e784eadd2f48807321e1de0071e9230661f111a976aa"
 }
