@@ -97,7 +97,7 @@ function needsContainedAlphaFinalization(context, plan, recovery) {
     (!context.expectedPublicationVersion ||
       context.expectedPublicationVersion ===
         plan.currentAlphaTransaction.version) &&
-    recovery.exactTagAcceptsTransaction,
+    recovery.exactTagAccepted,
   );
 }
 
@@ -106,11 +106,10 @@ async function evaluateAlphaRecovery(context, plan) {
     plan.currentAlphaTransaction,
     context.sha,
   );
-  const exactTagAcceptsTransaction = Boolean(
+  const exactTagAccepted =
     plan.currentAlpha &&
-      (!plan.currentAlphaTagSha ||
-        acceptedExactShas.includes(plan.currentAlphaTagSha)),
-  );
+    (!plan.currentAlphaTagSha ||
+      acceptedExactShas.includes(plan.currentAlphaTagSha));
   const settled =
     plan.currentAlpha &&
     plan.currentAlphaDevSha === context.sha &&
@@ -158,11 +157,7 @@ async function evaluateAlphaRecovery(context, plan) {
       containsTransaction ||
       settled ||
       canReplaceStaleTransaction);
-  const recovery = {
-    transactionOpen,
-    containsTransaction,
-    exactTagAcceptsTransaction,
-  };
+  const recovery = { transactionOpen, containsTransaction, exactTagAccepted };
   const needsContainedPublishedFinalization = needsContainedAlphaFinalization(
     context,
     plan,
@@ -597,11 +592,7 @@ async function promoteAlphaChannel(context) {
   const selectedAlpha = selectAlphaCandidate(context, state);
   const settled = await settleExistingAlpha(context, state, selectedAlpha);
   if (settled) return settled;
-  const publication = await publishAlphaCandidate(
-    context,
-    state,
-    selectedAlpha,
-  );
+  const publication = await publishAlphaCandidate(context, state, selectedAlpha);
   return finalizeAlphaPublication(context, state, publication);
 }
 
