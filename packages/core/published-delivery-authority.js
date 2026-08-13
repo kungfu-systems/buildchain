@@ -18,6 +18,7 @@ const PACKAGES = [
   {
     key: "buildchain",
     name: "@kungfu-tech/buildchain",
+    packageRoot: "archive",
     modules: {
       adopterDeliveryGate: "packages/core/adopter-delivery-gate.js",
       bootstrap: "packages/core/buildchain-delivery-bootstrap.js",
@@ -25,7 +26,12 @@ const PACKAGES = [
       kfdCategoryDriver: "packages/core/kfd-adopter-category-driver.js",
     },
   },
-  { key: "kfd", name: "@kungfu-tech/kfd", modules: {} },
+  {
+    key: "kfd",
+    name: "@kungfu-tech/kfd",
+    packageRoot: "profiles/adopter-conformance/adopters/kfd/manifest.json",
+    modules: {},
+  },
 ];
 
 async function sha256File(file) {
@@ -41,6 +47,7 @@ function exactDeclaration(value, expectedName, label) {
     value.version.length === 0 ||
     typeof value.archivePath !== "string" ||
     value.archivePath.length === 0 ||
+    !ROOT_PATTERN.test(value.archiveRoot ?? "") ||
     !ROOT_PATTERN.test(value.artifactRoot ?? "")
   ) {
     throw new TypeError(`${label} package declaration is incomplete`);
@@ -73,10 +80,10 @@ function safeArchiveEntries(listing, verboseListing, label) {
   }
 }
 
-async function extractPackage(declaration, destination, label) {
+async function extractPackage(declaration, destination, definition, label) {
   const observedRoot = await sha256File(declaration.archivePath);
-  if (observedRoot !== declaration.artifactRoot) {
-    throw new Error(`${label} archive bytes do not match artifactRoot`);
+  if (observedRoot !== declaration.archiveRoot) {
+    throw new Error(`${label} archive bytes do not match archiveRoot`);
   }
   const [{ stdout: listing }, { stdout: verboseListing }] = await Promise.all([
     execFileAsync("tar", ["-tzf", declaration.archivePath], {
@@ -108,6 +115,23 @@ async function extractPackage(declaration, destination, label) {
   ) {
     throw new Error(`${label} extracted package identity does not match`);
   }
+  if (definition.packageRoot === "archive") {
+    if (declaration.artifactRoot !== declaration.archiveRoot) {
+      throw new Error(`${label} package artifactRoot must match archiveRoot`);
+    }
+  } else {
+    const packageManifest = JSON.parse(
+      await readFile(path.join(destination, definition.packageRoot), "utf8"),
+    );
+    const packageCut = packageManifest?.kfdCut?.package;
+    if (
+      packageCut?.name !== declaration.name ||
+      packageCut?.version !== declaration.version ||
+      packageCut?.artifactRoot !== declaration.artifactRoot
+    ) {
+      throw new Error(`${label} semantic package identity does not match`);
+    }
+  }
   const destinationRoot = await realpath(destination);
   if (!destinationRoot.endsWith(path.join(...declaration.name.split("/")))) {
     throw new Error(`${label} extraction escaped its package coordinate`);
@@ -115,6 +139,7 @@ async function extractPackage(declaration, destination, label) {
   return {
     name: declaration.name,
     version: declaration.version,
+    archiveRoot: declaration.archiveRoot,
     artifactRoot: declaration.artifactRoot,
   };
 }
@@ -172,6 +197,7 @@ export async function loadPublishedBuildchainDeliveryAuthority({
       identities[definition.key] = await extractPackage(
         declarations[definition.key],
         path.join(temporaryRoot, "node_modules", ...definition.name.split("/")),
+        definition,
         `${definition.key} authority`,
       );
     }
@@ -186,7 +212,8 @@ export async function loadPublishedBuildchainDeliveryAuthority({
       qualifying: false,
       selfCertified: false,
       releaseAuthorized: false,
-      finalAuthority: "caller-bound-public-npm-archive-bytes",
+      finalAuthority:
+        "caller-bound-public-npm-archive-bytes-and-package-identity",
     };
     authority.authorityRoot = adopterDeliveryGateDigest(authority);
     retained = true;
