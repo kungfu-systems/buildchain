@@ -407,7 +407,8 @@ async function main() {
       update.ref ||
       (update.version ? `version-state ${update.version}` : "promotion");
     const detail = update.files?.length ? ` (${update.files.join(", ")})` : "";
-    console.log(`${update.action}: ${target} -> ${update.sha}${detail}`);
+    const reason = update.reason ? `: ${update.reason}` : "";
+    console.log(`${update.action}: ${target} -> ${update.sha}${detail}${reason}`);
   }
   core.setOutput("sha", result.sha);
   core.setOutput("next-anchor-required", String(result.nextAlphaRequired === true));
