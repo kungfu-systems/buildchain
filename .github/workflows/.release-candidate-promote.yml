@@ -1610,15 +1610,32 @@ jobs:
           BUILDCHAIN_EXPECTED_VERSION: ${{ needs.publication-plan.outputs.version }}
         run: |
           set -euo pipefail
-          gate_path="${BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT}/adopter-delivery.json"
-          self_dogfood_path="${BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT}/buildchain-delivery-self-dogfood.json"
-          test -f "${gate_path}"
-          test -f "${self_dogfood_path}"
-          GATE_PATH="${gate_path}" SELF_DOGFOOD_PATH="${self_dogfood_path}" node <<'NODE'
+          node <<'NODE'
           const fs = require("node:fs");
+          const path = require("node:path");
+
           const read = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
-          const gate = read(process.env.GATE_PATH);
-          const selfDogfood = read(process.env.SELF_DOGFOOD_PATH);
+          const findExactPayloadFile = (filename) => {
+            const matches = [];
+            const stack = [process.env.BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT];
+            while (stack.length) {
+              const current = stack.pop();
+              for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+                const candidate = path.join(current, entry.name);
+                if (entry.isDirectory()) stack.push(candidate);
+                else if (entry.isFile() && entry.name === filename) matches.push(candidate);
+              }
+            }
+            if (matches.length !== 1) {
+              throw new Error(`expected exactly one sealed ${filename}, found ${matches.length}`);
+            }
+            return matches[0];
+          };
+
+          const gatePath = findExactPayloadFile("adopter-delivery.json");
+          const selfDogfoodPath = findExactPayloadFile("buildchain-delivery-self-dogfood.json");
+          const gate = read(gatePath);
+          const selfDogfood = read(selfDogfoodPath);
           if (
             selfDogfood.status !== "passed" ||
             selfDogfood.gateResult?.status !== "passed" ||
@@ -1630,9 +1647,11 @@ jobs:
           if (JSON.stringify(gate) !== JSON.stringify(selfDogfood.gateResult)) {
             throw new Error("sealed adopter delivery result differs from self-dogfood gate result");
           }
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `adopter-delivery-path=${gatePath}\nself-dogfood-path=${selfDogfoodPath}\n`,
+          );
           NODE
-          echo "adopter-delivery-path=${gate_path}" >> "${GITHUB_OUTPUT}"
-          echo "self-dogfood-path=${self_dogfood_path}" >> "${GITHUB_OUTPUT}"
 
       - name: Stage exact recovery receipt with Release Passport assets
         if: ${{ inputs.resume-candidate-run-id != '' }}

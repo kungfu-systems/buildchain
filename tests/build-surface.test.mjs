@@ -1150,6 +1150,9 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
   assert.match(workflow, /name: Resolve sealed Buildchain delivery self-dogfood evidence/);
+  assert.match(workflow, /findExactPayloadFile/);
+  assert.match(workflow, /expected exactly one sealed \$\{filename\}, found \$\{matches\.length\}/);
+  assert.doesNotMatch(workflow, /gate_path="\$\{BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT\}\/adopter-delivery\.json"/);
   assert.match(workflow, /adopter-delivery-path=/);
   assert.match(workflow, /self-dogfood-path=/);
   assert.match(workflow, /release-passport-adopter-delivery-json: \$\{\{ steps\.buildchain-delivery-self-dogfood\.outputs\.adopter-delivery-path \|\| inputs\.release-passport-adopter-delivery-json \}\}/);
