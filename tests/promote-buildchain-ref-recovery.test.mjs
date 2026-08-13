@@ -2075,6 +2075,9 @@ fs.writeFileSync(manifestPath, JSON.stringify({
       ["tags/v1.0.0", previousFinalizedSha],
     ]),
   });
+  octokit.rest.repos = {
+    compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
+  };
   commits.set(previousFinalizedSha, {
     sha: previousFinalizedSha,
     tree: { sha: `tree-${previousFinalizedSha}` },
@@ -2140,6 +2143,22 @@ fs.writeFileSync(manifestPath, JSON.stringify({
   process.env.BUILDCHAIN_SOURCE_SHA = "f".repeat(40);
   process.env.BUILDCHAIN_SITE_GENERATED_AT = "2026-07-24T23:00:00.000Z";
   try {
+    const recoveryPlan = await promoteBuildchainRefs({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      sha: oldReleaseSha,
+      targetRef: "release/v1/v1.0",
+      cwd,
+      dryRun: true,
+      publishTransaction: true,
+      publishTransactionOverride: true,
+      requireVersionState: true,
+      expectedPublicationVersion: "1.0.0",
+    });
+    assert.equal(recoveryPlan.updates[0].action, "resumed-advanced-publication");
+    assert.equal(recoveryPlan.updates[0].currentSha, mergeSha);
+
     const result = await promoteBuildchainRefs({
       octokit,
       owner: "kungfu-systems",
