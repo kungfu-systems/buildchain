@@ -1,0 +1,780 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-delivery-infrastructure-self-dogfood/v1",
+  "status": "passed",
+  "authorityRuntime": {
+    "buildchainPackage": {
+      "name": "@kungfu-tech/buildchain",
+      "version": "3.0.9-alpha.10",
+      "archiveRoot": "sha256:62306fe864d414e3bff3523be94ae18ef513956b96e4637261432fb95a2a246e",
+      "artifactRoot": "sha256:62306fe864d414e3bff3523be94ae18ef513956b96e4637261432fb95a2a246e"
+    },
+    "kfdPackage": {
+      "name": "@kungfu-tech/kfd",
+      "version": "1.0.0-alpha.62",
+      "archiveRoot": "sha256:1386745e9c4eba394216951ae71ae7877feb28686978a23044e1e309b4870339",
+      "artifactRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c"
+    }
+  },
+  "candidate": {
+    "version": "3.0.9-alpha.11",
+    "sourceCommit": "df421c0fa4088a7c33dde5cdec58fafcb57518c0",
+    "packageRoot": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7",
+    "gateRoot": "sha256:e1ebb45b3a5136580d03e84ffda17971e11afaef5f7a500f568986457bfa2afc",
+    "protocol": {
+      "id": "kfd.adopter-category/instance-manifest",
+      "version": "1.0.0",
+      "root": "sha256:c5222b8491f75bedc79c410aaae42e7e4ec8fd5fd440193feafce577ba9f6ff6"
+    },
+    "profile": {
+      "id": "kfd.adopter-category/delivery-infrastructure",
+      "version": "1.0.0",
+      "root": "sha256:3d8d46df7fdf3e409bcecca79aecac98a9bb97d12c6c00535cb8e2214c4fa047"
+    },
+    "authorityVersion": "3.0.9-alpha.10"
+  },
+  "roots": {
+    "adopterManifest": "sha256:ea33532ca9a57b8c713c5057ec39c0bb556260c04d5101db548d10d1fd4232e3",
+    "instanceManifest": "sha256:d83bf2d1f2f2b780923c6f986b8dd507e8b92879bc9bf8d2cbf2e34ba8902273",
+    "instanceReport": "sha256:e9fe8a5030f21fc9c33f6eafd31b631e9be9a3e80ed869d8a0c2cec362a191d5",
+    "gateResult": "sha256:b140db61f5b7746cceb9c0cf81f9e6f952dc823d8e1539828228fe0a39d9e070",
+    "bootstrap": "sha256:fa1b0467960707fa5955d2ff7924ea3e8114e4f0390b44ec95cf88e79bd307b3",
+    "warrant": "sha256:59935478a14b707c60c1d2a0b7428c7491f0f6e281d567c806927ee9b366ec36"
+  },
+  "instanceManifest": {
+    "$schema": "https://kfd.libkungfu.dev/schemas/kfd-adopter-conformance/category-instance-manifest.schema.json",
+    "schemaVersion": 1,
+    "contract": "kfd.adopter-category-instance-manifest/v1",
+    "instanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+    "rootAlgorithm": "sha256-kfd-canonical-json-v1",
+    "project": {
+      "adopterId": "kungfu-systems/buildchain",
+      "source": {
+        "kind": "git-commit",
+        "coordinate": "kungfu-systems/buildchain@df421c0fa4088a7c33dde5cdec58fafcb57518c0",
+        "root": "sha256:8366d613c8bf2ad1c58b91863520169b5219ff397e494405d2b2537fc06c4288"
+      },
+      "artifact": {
+        "kind": "package",
+        "coordinate": "@kungfu-tech/buildchain@3.0.9-alpha.11",
+        "root": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7"
+      },
+      "release": {
+        "kind": "release",
+        "coordinate": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.9-alpha.11",
+        "root": "sha256:4c82ac9e09f5624072a709ff5955a028fb5643e431645cb313d00daa353f2dd0"
+      }
+    },
+    "adopterManifest": {
+      "contract": "kfd.adopter-conformance-manifest/v1",
+      "manifestId": "buildchain-delivery-infrastructure-3.0.9-alpha.11",
+      "root": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3"
+    },
+    "kfdCut": {
+      "packageVersion": "1.0.0-alpha.62",
+      "packageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+      "categoryCatalogRoot": "sha256:7cd8ea9735e42aa55467a2e5f17fdf3d6efc34c1401eaeb88352791f5886b385"
+    },
+    "selection": {
+      "schemaVersion": 1,
+      "contract": "kfd.adopter-category-profile-selection/v1",
+      "profiles": [
+        {
+          "id": "kfd.adopter-category/delivery-infrastructure",
+          "version": "1.0.0"
+        }
+      ]
+    },
+    "selectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78",
+    "requirements": [
+      {
+        "id": "adopter-identity",
+        "evidence": [
+          {
+            "kind": "declaration",
+            "coordinate": "evidence://kungfu-systems/buildchain/adopter-identity/declaration",
+            "root": "sha256:8366d613c8bf2ad1c58b91863520169b5219ff397e494405d2b2537fc06c4288",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          }
+        ]
+      },
+      {
+        "id": "artifact-readback",
+        "evidence": [
+          {
+            "kind": "verification",
+            "coordinate": "evidence://kungfu-systems/buildchain/artifact-readback/verification",
+            "root": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          }
+        ]
+      },
+      {
+        "id": "claim-boundary",
+        "evidence": [
+          {
+            "kind": "declaration",
+            "coordinate": "evidence://kungfu-systems/buildchain/claim-boundary/declaration",
+            "root": "sha256:952672af9c06e80484f2044193d7b3867b4351773a0121155708ce1435105065",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          }
+        ]
+      },
+      {
+        "id": "delivery-policy-cut",
+        "evidence": [
+          {
+            "kind": "declaration",
+            "coordinate": "evidence://kungfu-systems/buildchain/delivery-policy-cut/declaration",
+            "root": "sha256:e1ebb45b3a5136580d03e84ffda17971e11afaef5f7a500f568986457bfa2afc",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          },
+          {
+            "kind": "verification",
+            "coordinate": "evidence://kungfu-systems/buildchain/delivery-policy-cut/verification",
+            "root": "sha256:f03fd856bea3d2666eb6c031d37847443b629f312c38b941078752d57e0066f3",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          }
+        ]
+      },
+      {
+        "id": "kfd-cut",
+        "evidence": [
+          {
+            "kind": "verification",
+            "coordinate": "evidence://kungfu-systems/buildchain/kfd-cut/verification",
+            "root": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          }
+        ]
+      },
+      {
+        "id": "protected-delivery",
+        "evidence": [
+          {
+            "kind": "implementation",
+            "coordinate": "evidence://kungfu-systems/buildchain/protected-delivery/implementation",
+            "root": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          },
+          {
+            "kind": "review",
+            "coordinate": "evidence://kungfu-systems/buildchain/protected-delivery/review",
+            "root": "sha256:4f7b599f1da77c0eb9153a656c788b15ff89ca517b2714d70883363298df13d4",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          },
+          {
+            "kind": "verification",
+            "coordinate": "evidence://kungfu-systems/buildchain/protected-delivery/verification",
+            "root": "sha256:6956bd20a49de02d8c6fa7cf67787671a98773b2139f76567b2ae9006c4d3603",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          }
+        ]
+      },
+      {
+        "id": "source-artifact",
+        "evidence": [
+          {
+            "kind": "implementation",
+            "coordinate": "evidence://kungfu-systems/buildchain/source-artifact/implementation",
+            "root": "sha256:8366d613c8bf2ad1c58b91863520169b5219ff397e494405d2b2537fc06c4288",
+            "observedAt": "2026-08-13T06:03:07.000Z",
+            "projectInstanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+            "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+            "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+            "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+            "categorySelectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78"
+          }
+        ]
+      }
+    ],
+    "claimBoundary": {
+      "categoryConformanceIsDeclarationOnly": true,
+      "evidenceTransfer": false,
+      "runtimePermission": false,
+      "releaseAuthorization": false,
+      "independentCertification": false,
+      "semanticAuthorityTransfer": false
+    }
+  },
+  "instanceReport": {
+    "schemaVersion": 1,
+    "contract": "kfd.adopter-category-instance-report/v1",
+    "valid": true,
+    "conforming": true,
+    "qualifying": false,
+    "independentlyCertified": false,
+    "evidenceInherited": false,
+    "instanceRoot": "sha256:21fc8b3f4084f6926ec9195b250211d6b3239f29595a207a1cf8f18438c54713",
+    "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+    "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+    "catalogRoot": "sha256:7cd8ea9735e42aa55467a2e5f17fdf3d6efc34c1401eaeb88352791f5886b385",
+    "selectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78",
+    "resolutionRoot": "sha256:16e5825b07f0ec1eb33a7e5a86e2b61f2bb0b7628eb0138c160a1a966c34fe47",
+    "issues": [],
+    "reportRoot": "sha256:b999e259004af763cf53d1f1ec555debddad78399b72f7bd2c065b287e8aac75"
+  },
+  "gateResult": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-adopter-delivery-result",
+    "status": "passed",
+    "qualifying": false,
+    "selfCertified": false,
+    "project": {
+      "instanceId": "kungfu-systems/buildchain@3.0.9-alpha.11",
+      "adopterId": "kungfu-systems/buildchain"
+    },
+    "artifact": {
+      "kind": "package",
+      "coordinate": "@kungfu-tech/buildchain@3.0.9-alpha.11",
+      "root": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7"
+    },
+    "protocol": {
+      "id": "kfd.adopter-category/instance-manifest",
+      "version": "1.0.0",
+      "loaded": true,
+      "reportRoot": "sha256:237ab4fbd9f401aedca3eb62201ac3344d4abc4b42132fe122331c9d2cacaffb"
+    },
+    "artifactProfile": {
+      "id": "buildchain.artifact/package",
+      "version": "1.0.0",
+      "loaded": true,
+      "valid": true
+    },
+    "semanticReport": {
+      "schemaVersion": 1,
+      "contract": "kungfu-buildchain-kfd-adopter-category-driver-report",
+      "valid": true,
+      "conforming": true,
+      "qualifying": false,
+      "selfCertified": false,
+      "independentlyCertified": false,
+      "kfdPackage": {
+        "name": "@kungfu-tech/kfd",
+        "version": "1.0.0-alpha.62"
+      },
+      "categoryReport": {
+        "schemaVersion": 1,
+        "contract": "kfd.adopter-category-instance-report/v1",
+        "valid": true,
+        "conforming": true,
+        "qualifying": false,
+        "independentlyCertified": false,
+        "evidenceInherited": false,
+        "instanceRoot": "sha256:21fc8b3f4084f6926ec9195b250211d6b3239f29595a207a1cf8f18438c54713",
+        "projectRoot": "sha256:7da2f86f2841748df8e85020bab88c1050faa66b6fba5907bd354ca81f119497",
+        "adopterManifestRoot": "sha256:025de4c280f89a2ac64125fe9da691adf69af6506633dbdecf27458de60a65c3",
+        "catalogRoot": "sha256:7cd8ea9735e42aa55467a2e5f17fdf3d6efc34c1401eaeb88352791f5886b385",
+        "selectionRoot": "sha256:ca5d90e11677cb1efacc69af776c0cf3b6d98be9adeabc42dd191c5b1490ff78",
+        "resolutionRoot": "sha256:16e5825b07f0ec1eb33a7e5a86e2b61f2bb0b7628eb0138c160a1a966c34fe47",
+        "issues": [],
+        "reportRoot": "sha256:b999e259004af763cf53d1f1ec555debddad78399b72f7bd2c065b287e8aac75"
+      },
+      "adapterIssues": [],
+      "nonClaims": [
+        "Category conformance does not grant runtime permission or release authorization.",
+        "Buildchain carries the published KFD decision and does not certify or reinterpret it."
+      ]
+    },
+    "nonClaims": [
+      "A passing delivery gate does not grant runtime permission, release authorization, or independent certification.",
+      "Protocol semantics remain owned by the selected protocol driver and its published authority."
+    ],
+    "issues": [],
+    "gateRoot": "sha256:b140db61f5b7746cceb9c0cf81f9e6f952dc823d8e1539828228fe0a39d9e070"
+  },
+  "bootstrap": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-delivery-infrastructure-bootstrap/v1",
+    "status": "passed",
+    "authority": {
+      "version": "3.0.9-alpha.10",
+      "sourceCommit": "af9a46e55f2bd2a6b9905a7793e885569257767e",
+      "packageRoot": "sha256:62306fe864d414e3bff3523be94ae18ef513956b96e4637261432fb95a2a246e",
+      "gateRoot": "sha256:e1ebb45b3a5136580d03e84ffda17971e11afaef5f7a500f568986457bfa2afc",
+      "protocol": {
+        "id": "kfd.adopter-category/instance-manifest",
+        "version": "1.0.0",
+        "root": "sha256:c5222b8491f75bedc79c410aaae42e7e4ec8fd5fd440193feafce577ba9f6ff6"
+      },
+      "profile": {
+        "id": "kfd.adopter-category/delivery-infrastructure",
+        "version": "1.0.0",
+        "root": "sha256:3d8d46df7fdf3e409bcecca79aecac98a9bb97d12c6c00535cb8e2214c4fa047"
+      },
+      "protected": true,
+      "published": true
+    },
+    "candidate": {
+      "version": "3.0.9-alpha.11",
+      "sourceCommit": "df421c0fa4088a7c33dde5cdec58fafcb57518c0",
+      "packageRoot": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7",
+      "gateRoot": "sha256:e1ebb45b3a5136580d03e84ffda17971e11afaef5f7a500f568986457bfa2afc",
+      "protocol": {
+        "id": "kfd.adopter-category/instance-manifest",
+        "version": "1.0.0",
+        "root": "sha256:c5222b8491f75bedc79c410aaae42e7e4ec8fd5fd440193feafce577ba9f6ff6"
+      },
+      "profile": {
+        "id": "kfd.adopter-category/delivery-infrastructure",
+        "version": "1.0.0",
+        "root": "sha256:3d8d46df7fdf3e409bcecca79aecac98a9bb97d12c6c00535cb8e2214c4fa047"
+      },
+      "authorityVersion": "3.0.9-alpha.10"
+    },
+    "gateResultRoot": "sha256:b140db61f5b7746cceb9c0cf81f9e6f952dc823d8e1539828228fe0a39d9e070",
+    "warrant": {
+      "outcome": "merged",
+      "sourceHead": "df421c0fa4088a7c33dde5cdec58fafcb57518c0",
+      "sourceProofRoot": "sha256:4f7b599f1da77c0eb9153a656c788b15ff89ca517b2714d70883363298df13d4",
+      "nativeProofRoot": "sha256:6956bd20a49de02d8c6fa7cf67787671a98773b2139f76567b2ae9006c4d3603",
+      "integrationProofRoot": "sha256:f03fd856bea3d2666eb6c031d37847443b629f312c38b941078752d57e0066f3"
+    },
+    "transitionRequired": false,
+    "transitionEvidenceRoot": null,
+    "issues": [],
+    "qualifying": false,
+    "selfCertified": false,
+    "releaseAuthorized": false,
+    "finalAuthority": "protected-n-minus-one-plus-exact-delivery-evidence",
+    "bootstrapRoot": "sha256:fa1b0467960707fa5955d2ff7924ea3e8114e4f0390b44ec95cf88e79bd307b3"
+  },
+  "qualifying": false,
+  "selfCertified": false,
+  "releaseAuthorized": false,
+  "finalAuthority": "protected-n-minus-one-runtime-plus-exact-delivery-evidence",
+  "selfDogfoodRoot": "sha256:f51438c690b0993ff956e2157658498575d08fe0bb79237b89b8ad655e85db65",
+  "publishedAuthorityRoot": "sha256:db0a854f3eb876cb3132b9a984faa0ad052b27fe0184fe01797ead76c6532c28",
+  "adopterManifest": {
+    "$schema": "https://kfd.libkungfu.dev/schemas/kfd-adopter-conformance/manifest.schema.json",
+    "schemaVersion": 1,
+    "contract": "kfd.adopter-conformance-manifest/v1",
+    "manifestId": "buildchain-delivery-infrastructure-3.0.9-alpha.11",
+    "rootAlgorithm": "sha256-kfd-canonical-json-v1",
+    "byteDigestAlgorithm": "sha256-bytes-v1",
+    "adopter": {
+      "id": "kungfu-systems/buildchain",
+      "artifact": {
+        "kind": "package",
+        "coordinate": "@kungfu-tech/buildchain@3.0.9-alpha.11",
+        "root": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7"
+      },
+      "scope": "Buildchain delivery infrastructure release candidate self-dogfood"
+    },
+    "kfdCut": {
+      "package": {
+        "name": "@kungfu-tech/kfd",
+        "version": "1.0.0-alpha.62",
+        "artifactRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c"
+      },
+      "registry": {
+        "path": "registry.json",
+        "schemaVersion": 1,
+        "contract": "kfd-registry",
+        "root": "sha256:8ab283dd225e8940a4f9d92eca7d59fff6e8d29e66275c03baa923ad2ff63298"
+      },
+      "standards": {
+        "path": "standards.json",
+        "schemaVersion": 2,
+        "contract": "kfd-standards-metadata",
+        "root": "sha256:37beb576053dd8d75ebb2606974b99c30ae2dbd2bba11b80a1d4468994476ed8"
+      },
+      "schemaSet": [
+        {
+          "path": "schemas/kfd-adopter-conformance/manifest.schema.json",
+          "byteRoot": "sha256:6443189167e6b65c8b6154530af58c38bc2e6471bc3a4d2e7eea1f310fb8d2d6",
+          "schemaId": "https://kfd.libkungfu.dev/schemas/kfd-adopter-conformance/manifest.schema.json"
+        }
+      ],
+      "schemaSetRoot": "sha256:69a9647ccb658460a65e17d5028bbfde5cde1b19b1170fdf44eed656eef5ddd4",
+      "vectorSet": [
+        {
+          "path": "profiles/adopter-conformance/vectors.json",
+          "byteRoot": "sha256:85dbfba06f6286e0a3c4d7b15dbdcc77d01464d5031d925ac1f4f7263f07117d",
+          "contract": "kfd.adopter-conformance-vectors/v1"
+        }
+      ],
+      "vectorSetRoot": "sha256:47ec647e7471037e07c91b2f62223024eb3c3b5ad87309560ab9989b41554b07",
+      "verifierSet": [
+        {
+          "path": "scripts/adopter-conformance-contract.mjs",
+          "byteRoot": "sha256:a98170b011cd22980222fa671c178344314304852372767ec55f5292ca777fbf",
+          "kind": "source"
+        },
+        {
+          "path": "scripts/warrant-evidence-verifier.mjs",
+          "byteRoot": "sha256:d15753d39938aa91cc50eb9bfa91dfc013570565a2395fd35d93d4ddda10adea",
+          "kind": "source"
+        }
+      ],
+      "verifierSetRoot": "sha256:aad9b4193e965b68e465bbe4e648e5a03c3d78a6575dfda1d5e90943404779f4",
+      "decisionSetRoot": "sha256:c22abfcbf92313e2ed94f9d7ec01208726b99bd33f71176652f2ca0956de6c86"
+    },
+    "decisions": [
+      {
+        "id": "KFD-1",
+        "number": 1,
+        "registryStatus": "active",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-2",
+        "number": 2,
+        "registryStatus": "active",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-3",
+        "number": 3,
+        "registryStatus": "active",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-4",
+        "number": 4,
+        "registryStatus": "active",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-5",
+        "number": 5,
+        "registryStatus": "active",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-6",
+        "number": 6,
+        "registryStatus": "draft",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-7",
+        "number": 7,
+        "registryStatus": "active",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-8",
+        "number": 8,
+        "registryStatus": "draft",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-9",
+        "number": 9,
+        "registryStatus": "draft",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-10",
+        "number": 10,
+        "registryStatus": "draft",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-11",
+        "number": 11,
+        "registryStatus": "draft",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-12",
+        "number": 12,
+        "registryStatus": "draft",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      },
+      {
+        "id": "KFD-13",
+        "number": 13,
+        "registryStatus": "draft",
+        "state": "not-used",
+        "usage": "unused",
+        "implementationEvidence": [],
+        "verificationEvidence": [],
+        "negativeEvidence": [],
+        "reviews": [],
+        "witnessBindings": [],
+        "releaseBindingIds": [],
+        "claims": [],
+        "gaps": [
+          "No adopter evidence has been declared for this decision."
+        ]
+      }
+    ],
+    "releaseBindings": [
+      {
+        "id": "buildchain-3.0.9-alpha.11",
+        "artifact": {
+          "kind": "package",
+          "coordinate": "@kungfu-tech/buildchain@3.0.9-alpha.11",
+          "root": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7"
+        },
+        "releasePassport": {
+          "kind": "release",
+          "coordinate": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.9-alpha.11",
+          "root": "sha256:4c82ac9e09f5624072a709ff5955a028fb5643e431645cb313d00daa353f2dd0"
+        },
+        "kfdPackageRoot": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c"
+      }
+    ],
+    "claimBoundary": {
+      "declarationOnly": true,
+      "runtimePermission": false,
+      "releaseAuthorization": false,
+      "independentlyCertified": false,
+      "semanticTruth": false
+    },
+    "gaps": [
+      "Generated declaration contains no adoption, release, runtime, or certification claim."
+    ]
+  },
+  "deliveryEvidence": [
+    {
+      "requirementId": "adopter-identity",
+      "kind": "declaration",
+      "coordinate": "evidence://kungfu-systems/buildchain/adopter-identity/declaration",
+      "root": "sha256:8366d613c8bf2ad1c58b91863520169b5219ff397e494405d2b2537fc06c4288",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "artifact-readback",
+      "kind": "verification",
+      "coordinate": "evidence://kungfu-systems/buildchain/artifact-readback/verification",
+      "root": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "claim-boundary",
+      "kind": "declaration",
+      "coordinate": "evidence://kungfu-systems/buildchain/claim-boundary/declaration",
+      "root": "sha256:952672af9c06e80484f2044193d7b3867b4351773a0121155708ce1435105065",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "delivery-policy-cut",
+      "kind": "declaration",
+      "coordinate": "evidence://kungfu-systems/buildchain/delivery-policy-cut/declaration",
+      "root": "sha256:e1ebb45b3a5136580d03e84ffda17971e11afaef5f7a500f568986457bfa2afc",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "delivery-policy-cut",
+      "kind": "verification",
+      "coordinate": "evidence://kungfu-systems/buildchain/delivery-policy-cut/verification",
+      "root": "sha256:f03fd856bea3d2666eb6c031d37847443b629f312c38b941078752d57e0066f3",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "kfd-cut",
+      "kind": "verification",
+      "coordinate": "evidence://kungfu-systems/buildchain/kfd-cut/verification",
+      "root": "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "protected-delivery",
+      "kind": "implementation",
+      "coordinate": "evidence://kungfu-systems/buildchain/protected-delivery/implementation",
+      "root": "sha256:a264c009a10f0a5cd372c40061dfa76548afb08bcc6cb36346e44bc7b23b8ff7",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "protected-delivery",
+      "kind": "review",
+      "coordinate": "evidence://kungfu-systems/buildchain/protected-delivery/review",
+      "root": "sha256:4f7b599f1da77c0eb9153a656c788b15ff89ca517b2714d70883363298df13d4",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "protected-delivery",
+      "kind": "verification",
+      "coordinate": "evidence://kungfu-systems/buildchain/protected-delivery/verification",
+      "root": "sha256:6956bd20a49de02d8c6fa7cf67787671a98773b2139f76567b2ae9006c4d3603",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    },
+    {
+      "requirementId": "source-artifact",
+      "kind": "implementation",
+      "coordinate": "evidence://kungfu-systems/buildchain/source-artifact/implementation",
+      "root": "sha256:8366d613c8bf2ad1c58b91863520169b5219ff397e494405d2b2537fc06c4288",
+      "observedAt": "2026-08-13T06:03:07.000Z"
+    }
+  ]
+}
