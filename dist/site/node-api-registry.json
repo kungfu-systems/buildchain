@@ -7376,7 +7376,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1363
+        "line": 1365
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7400,7 +7400,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1365
+        "line": 1367
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_PROTECTED_PATHS } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7433,7 +7433,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 417
+        "line": 419
       },
       "example": "import { codeownersForPath } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7462,7 +7462,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 311
+        "line": 313
       },
       "example": "import { compileEffectiveGithubGovernancePolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7486,7 +7486,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 450
+        "line": 452
       },
       "example": "import { createBuildchainGithubGovernanceAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7515,7 +7515,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 932
+        "line": 934
       },
       "example": "import { createGithubGovernanceRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7544,7 +7544,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1110
+        "line": 1112
       },
       "example": "import { createGithubRulesetBypassRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7573,7 +7573,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1189
+        "line": 1191
       },
       "example": "import { createGithubRulesetGovernanceRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7602,7 +7602,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 425
+        "line": 427
       },
       "example": "import { evaluateCodeownersAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7631,7 +7631,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 694
+        "line": 696
       },
       "example": "import { evaluateGithubGovernanceSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7756,7 +7756,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 163
+        "line": 165
       },
       "example": "import { githubGovernanceDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7785,7 +7785,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 540
+        "line": 542
       },
       "example": "import { githubRepositoryIdentityRoot } from \"@kungfu-tech/buildchain/github-governance-authority\";",
       "maturity": "stable",
@@ -7814,7 +7814,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1025
+        "line": 1027
       },
       "example": "import { normalizeGithubBranchProtectionSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7843,7 +7843,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1095
+        "line": 1097
       },
       "example": "import { normalizeGithubRulesetSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7872,7 +7872,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 401
+        "line": 403
       },
       "example": "import { parseCodeowners } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7901,7 +7901,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 607
+        "line": 609
       },
       "example": "import { resolveGithubGovernanceTargetPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -7930,7 +7930,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 630
+        "line": 632
       },
       "example": "import { resolveGithubGovernanceTargetRefs } from \"@kungfu-tech/buildchain/github-governance-authority\";",
       "maturity": "stable",
@@ -7963,7 +7963,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 884
+        "line": 886
       },
       "example": "import { verifyGithubGovernanceReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22688,7 +22688,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:e4be3eae05ce250ffbdfef01698a410430260fc49aba19bcdbf63021e735bda7",
+      "digest": "sha256:228be572fa8b4f373d15facfc7fbc9c18ad43d62c20f298e53b7cf359cc95d3d",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -23303,7 +23303,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:8c96e9e4525e3c3d3f9c71aad2884104206535fac613a719195090d9c091ea64"
+      "digest": "sha256:f8200ba1fbe5779408b4a1e82a0e28a5e8f696b05f97efd2d286d3008755fdbb"
     },
     {
       "id": "build-facts",
