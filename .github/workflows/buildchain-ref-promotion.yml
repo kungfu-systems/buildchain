@@ -167,7 +167,7 @@ jobs:
       # own governed recovery path permanently unreachable.
       buildchain-ref: ${{ github.event.workflow_run.head_sha || ((inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') && github.sha) || inputs.sha || github.sha }}
       buildchain-expected-channel: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && 'alpha' || 'stable' }}
-      buildchain-expected-major: "4"
+      buildchain-expected-major: ${{ (startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/v3/') || startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'release/v3/')) && '3' || '4' }}
       buildchain-contract-lock-path: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && '.buildchain/alpha-contract-lock.json' || '.buildchain/contract-lock.json' }}
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
