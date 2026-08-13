@@ -176,3 +176,13 @@ actions, configuration parsing, and lifecycle behavior. It cannot validate
 changes that require the outer reusable workflow YAML itself to change, such as
 new jobs, permissions, workflow outputs, or matrix topology. Those changes need
 a canary workflow path or a temporary explicit workflow ref.
+
+## v4 persisted-selector boundary
+
+For v4 consumers, never commit a train or exact SHA in a `uses` node. Keep the
+caller on `@v4` or `@v4-alpha`, retain both stable and alpha contract locks, and
+pass a temporary train/SHA only through the trusted `workflow_dispatch`
+`buildchain-ref` input. Consumer admission binds the selected lock to the exact
+workflow-shell commit while recording the separately resolved runtime SHA.
+Therefore a train can exercise candidate runtime code without weakening the
+durable floating-selector policy or masquerading as a channel promotion.

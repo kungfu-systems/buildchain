@@ -17,6 +17,16 @@ on:
         default: ".buildchain/contract-lock.json"
         type: string
         required: false
+      buildchain-alpha-contract-lock-path:
+        description: "Consumer-owned alpha contract lock required by v4 consumer admission"
+        default: ".buildchain/alpha-contract-lock.json"
+        type: string
+        required: false
+      buildchain-stable-contract-lock-path:
+        description: "Consumer-owned stable contract lock required by v4 consumer admission"
+        default: ".buildchain/contract-lock.json"
+        type: string
+        required: false
       buildchain-contract-compatibility-policy:
         description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
         default: "major-compatible"
@@ -313,6 +323,27 @@ jobs:
           ref: ${{ steps.runtime.outputs.runtime-sha }}
           path: .buildchain/runtime
           persist-credentials: false
+
+      - name: Enforce v4 floating consumer policy
+        id: v4-policy
+        shell: bash
+        env:
+          BUILDCHAIN_CONSUMER_ROOT: .
+          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/publication-artifact.yml
+          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
+          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-alpha-contract-lock-path }}
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
+        run: node .buildchain/runtime/scripts/v4-consumer-policy.mjs scan
+
+      - name: Upload rooted v4 consumer policy receipt
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-v4-consumer-policy-${{ github.sha }}
+          path: .buildchain/evidence/v4-consumer-policy-receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Resolve controller identities
         id: controller-identities

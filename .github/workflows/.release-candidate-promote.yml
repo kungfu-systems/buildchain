@@ -1656,6 +1656,19 @@ jobs:
           RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
         run: node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs
 
+      - name: Independently certify v4 floating consumer policy evidence
+        id: v4-policy-certification
+        if: ${{ startsWith(inputs.promotion-shell-ref, 'v4') }}
+        shell: bash
+        env:
+          BUILDCHAIN_EXPECTED_CALLER_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
+          BUILDCHAIN_V4_POLICY_CERTIFICATION_PATH: .buildchain/release-candidate/v4-consumer-policy-certification.json
+        run: >-
+          node .buildchain/runtime/scripts/v4-consumer-policy.mjs certify
+          --input "${{ steps.rc.outputs.release-candidate-passport-path }}"
+
       - name: Resolve Buildchain stable candidate alpha
         id: buildchain-stable-candidate
         if: ${{ needs.preflight.outputs.channel == 'release' && github.repository == 'kungfu-systems/buildchain' }}
@@ -1837,6 +1850,7 @@ jobs:
           release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths || steps.rc.outputs.release-candidate-platform-manifest-paths }}
           release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
           release-passport-promotion-routing-json: ${{ steps.routing-evidence.outputs.routing-path }}
+          release-passport-v4-consumer-policy-certification-json: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-path }}
           release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
           release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
@@ -2257,7 +2271,7 @@ jobs:
       attestations: write
       contents: read
       id-token: write
-    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@375b2d4b8a904776453773a33b4c4e4556c8c999
+    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@v4
     with:
       buildchain-ref: ${{ needs.promote.outputs.github-artifact-attestation-signer-ref }}
       evidence-run-id: ${{ github.run_id }}

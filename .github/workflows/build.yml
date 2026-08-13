@@ -43,6 +43,11 @@ on:
         default: ""
         type: string
         required: false
+      buildchain-visible-workflow:
+        description: "Tracked public workflow path whose floating selector is admitted"
+        default: ".github/workflows/.build.yml"
+        type: string
+        required: false
       buildchain-contract-compatibility-policy:
         description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
         default: "major-compatible"
@@ -562,6 +567,12 @@ on:
       buildchain-contract-digest:
         description: "Current Buildchain runtime contract digest"
         value: ${{ jobs.override.outputs.buildchain-contract-digest || jobs.alpha.outputs.buildchain-contract-digest || jobs.stable.outputs.buildchain-contract-digest }}
+      v4-consumer-policy-receipt-root:
+        description: "Root of the v4 floating consumer policy receipt"
+        value: ${{ jobs.override.outputs.v4-consumer-policy-receipt-root || jobs.alpha.outputs.v4-consumer-policy-receipt-root || jobs.stable.outputs.v4-consumer-policy-receipt-root }}
+      v4-consumer-policy-receipt-json:
+        description: "Source/runtime/dual-lock-bound v4 floating consumer policy receipt"
+        value: ${{ jobs.override.outputs.v4-consumer-policy-receipt-json || jobs.alpha.outputs.v4-consumer-policy-receipt-json || jobs.stable.outputs.v4-consumer-policy-receipt-json }}
       publish-channel:
         description: "Resolved publish channel"
         value: ${{ jobs.override.outputs.publish-channel || jobs.alpha.outputs.publish-channel || jobs.stable.outputs.publish-channel }}
@@ -736,6 +747,7 @@ jobs:
       buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
       buildchain-expected-major: ${{ needs.resolve-channel.outputs.major }}
       buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
+      buildchain-visible-workflow: .github/workflows/build.yml
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       working-directory: ${{ inputs.working-directory }}
@@ -898,6 +910,7 @@ jobs:
       buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
       buildchain-expected-major: ${{ needs.resolve-channel.outputs.major }}
       buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
+      buildchain-visible-workflow: .github/workflows/build.yml
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       working-directory: ${{ inputs.working-directory }}
@@ -1003,6 +1016,7 @@ jobs:
       buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
       buildchain-expected-major: ${{ needs.resolve-channel.outputs.major }}
       buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
+      buildchain-visible-workflow: .github/workflows/build.yml
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       working-directory: ${{ inputs.working-directory }}

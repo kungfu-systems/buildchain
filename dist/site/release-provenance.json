@@ -37,6 +37,7 @@
       "./release-line-bootstrap": "./packages/core/release-line-bootstrap.js",
       "./readme-badges": "./packages/core/readme-badges.js",
       "./public-surface-audit": "./packages/core/public-surface-audit.js",
+      "./v4-floating-consumer-policy": "./packages/core/v4-floating-consumer-policy.js",
       "./logging": "./packages/core/logging.js",
       "./portable-dev-cache": "./packages/core/portable-dev-cache.js",
       "./publication-artifact": "./packages/core/publication-artifact.js",

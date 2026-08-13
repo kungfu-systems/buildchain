@@ -33,6 +33,7 @@ import { normalizeControllerReceiptReferences } from "./controller-evidence.js";
 import {
   normalizeGitHubArtifactAttestationPolicy,
 } from "./github-artifact-attestation.js";
+import { verifyV4FloatingConsumerPolicyCertification } from "./v4-floating-consumer-policy.js";
 
 export { RELEASE_CHECK_REPORT_CONTRACT, RELEASE_PASSPORT_CONTRACT };
 export const ARTIFACT_EVIDENCE_CONTRACT = "kungfu-buildchain-artifact-evidence";
@@ -1085,6 +1086,127 @@ function normalizePromotionRouting(value = undefined) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function isV4PromotionRouting(value = undefined) {
+  return [
+    value?.router?.ref,
+    value?.shell?.ref,
+    value?.runtime?.requestedRef,
+  ].some((ref) => /^v4(?:-alpha)?$/u.test(String(ref || "")));
+}
+
+function normalizeV4ConsumerPolicyCertification(
+  value = undefined,
+  expected = {},
+) {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("v4ConsumerPolicyCertification must be a JSON object");
+  }
+  const certification = value.certification || value;
+  const verification = verifyV4FloatingConsumerPolicyCertification({
+    certification,
+    certificationRoot: value.certificationRoot || "",
+    repository: expected.repository,
+    sourceSha: expected.sourceSha,
+    resolvedRuntimeSha: expected.runtimeSha,
+  });
+  if (!verification.ok) {
+    throw new Error(
+      `v4 consumer policy certification invalid: ${verification.failures.map((failure) => failure.code).join(", ")}`,
+    );
+  }
+  return { certificationRoot: verification.certificationRoot, certification };
+}
+
+function requireV4ConsumerPolicyCertification(
+  value,
+  repository,
+  sourceSha,
+  routing,
+) {
+  const expected = {
+    repository,
+    sourceSha,
+    routing,
+    runtimeSha: routing?.runtime?.resolvedSha || "",
+  };
+  const normalized = normalizeV4ConsumerPolicyCertification(value, expected);
+  if (isV4PromotionRouting(expected.routing) && !normalized) {
+    throw new Error(
+      "Buildchain v4 Release Passport requires an external floating consumer policy certification",
+    );
+  }
+  return normalized;
+}
+
+function normalizePromotionEvidence(
+  release,
+  certification,
+  repository,
+  sourceSha,
+) {
+  const routing = normalizePromotionRouting(release.promotionRouting);
+  return {
+    routing,
+    consumerPolicy: requireV4ConsumerPolicyCertification(
+      certification,
+      repository,
+      sourceSha,
+      routing,
+    ),
+  };
+}
+
+function prepareBuildEvidence({
+  buildSummary,
+  buildFacts,
+  platformArtifactManifests,
+  distTagPromotionEvidence,
+}) {
+  return {
+    buildSummary: buildSummary
+      ? normalizeEvidenceDocument(buildSummary, "buildSummary")
+      : undefined,
+    buildFacts: (buildFacts || [])
+      .map((value, index) =>
+        normalizeEvidenceDocument(value, `buildFacts[${index}]`),
+      )
+      .filter(Boolean),
+    platformArtifactManifests: (platformArtifactManifests || [])
+      .map((manifest, index) =>
+        normalizePlatformArtifactManifest(manifest, index),
+      )
+      .filter(Boolean),
+    distTagPromotionEvidence: distTagPromotionEvidence
+      ? normalizeEvidenceDocument(
+          distTagPromotionEvidence,
+          "distTagPromotionEvidence",
+        )
+      : undefined,
+  };
+}
+
+function normalizeReleaseSourceFields(release) {
+  return {
+    builtSourceSha: releaseField(release, "builtSourceSha", "built_source_sha"),
+    builtSourceTreeSha: releaseField(
+      release,
+      "builtSourceTreeSha",
+      "built_source_tree_sha",
+    ),
+    promotionChannelSha: releaseField(
+      release,
+      "promotionChannelSha",
+      "promotion_channel_sha",
+    ),
+    promotionChannelTreeSha: releaseField(
+      release,
+      "promotionChannelTreeSha",
+      "promotion_channel_tree_sha",
+    ),
+  };
+}
+
 export function createArtifactEvidence({ assets = [], repository = "", tag = "", sourceSha = "", workflow = {}, kfdAdopter = undefined } = {}) {
   const normalizedAssets = assets.map((asset, index) => normalizeAsset(asset, index));
   return buildReleaseArtifactEvidence({ normalizedAssets, repository, tag, sourceSha, workflow, kfdAdopter });
@@ -1161,6 +1283,7 @@ export function createReleasePassport({
   kfdSupportEvidencePath = "",
   invariantPassports = undefined,
   releaseEvidence = [],
+  v4ConsumerPolicyCertification = undefined,
   kfdAgentHubEvidence = undefined,
   kfdAgentHubEvidencePath = "",
   controllerReceipts = [],
@@ -1176,17 +1299,18 @@ export function createReleasePassport({
   const normalizedPackageSet = normalizePackageSet(packageSet, { packageName, packageVersion, publish });
   const normalizedTrustedPublishing = normalizeTrustedPublishing(trustedPublishing, { workflow, publish });
   const normalizedTransaction = normalizeTransaction(transaction);
-  const normalizedPromotionRouting = normalizePromotionRouting(release.promotionRouting);
-  const normalizedBuildSummary = buildSummary ? normalizeEvidenceDocument(buildSummary, "buildSummary") : undefined;
-  const normalizedBuildFacts = (buildFacts || [])
-    .map((fact, index) => normalizeEvidenceDocument(fact, `buildFacts[${index}]`))
-    .filter(Boolean);
-  const normalizedPlatformArtifactManifests = (platformArtifactManifests || [])
-    .map((manifest, index) => normalizePlatformArtifactManifest(manifest, index))
-    .filter(Boolean);
-  const normalizedDistTagPromotionEvidence = distTagPromotionEvidence
-    ? normalizeEvidenceDocument(distTagPromotionEvidence, "distTagPromotionEvidence")
-    : undefined;
+  const promotion = normalizePromotionEvidence(
+    release,
+    v4ConsumerPolicyCertification,
+    repository,
+    sourceSha,
+  );
+  const buildEvidence = prepareBuildEvidence({
+    buildSummary,
+    buildFacts,
+    platformArtifactManifests,
+    distTagPromotionEvidence,
+  });
   const normalizedImpact = normalizeImpactLedger(impact, { tag: normalizedTag, line });
   const generatedAt = optionalString(checkedAt) || nowIso();
   const kfd1Metadata = resolveKfd1Metadata();
@@ -1205,16 +1329,13 @@ export function createReleasePassport({
       support: kfdSupportEvidencePath,
     },
   });
-  const builtSourceSha = releaseField(release, "builtSourceSha", "built_source_sha");
-  const builtSourceTreeSha = releaseField(release, "builtSourceTreeSha", "built_source_tree_sha");
-  const promotionChannelSha = releaseField(release, "promotionChannelSha", "promotion_channel_sha");
-  const promotionChannelTreeSha = releaseField(release, "promotionChannelTreeSha", "promotion_channel_tree_sha");
+  const sourceFields = normalizeReleaseSourceFields(release);
   const treeEquivalent = release.treeEquivalent === true;
   const recoveryTreeEquivalent = Boolean(
     treeEquivalent &&
-    builtSourceTreeSha &&
-    promotionChannelTreeSha &&
-    builtSourceTreeSha === promotionChannelTreeSha,
+    sourceFields.builtSourceTreeSha &&
+    sourceFields.promotionChannelTreeSha &&
+    sourceFields.builtSourceTreeSha === sourceFields.promotionChannelTreeSha,
   );
   const normalizedControllerReceipts = normalizeControllerReceiptReferences({
     receipts: controllerReceipts,
@@ -1222,8 +1343,8 @@ export function createReleasePassport({
     expectedSourceSha: sourceSha,
     acceptedSourceShas: acceptedControllerSourceShas({
       treeEquivalent,
-      builtSourceSha,
-      promotionChannelSha,
+      builtSourceSha: sourceFields.builtSourceSha,
+      promotionChannelSha: sourceFields.promotionChannelSha,
       sourceSha,
       recoveryTreeEquivalent,
     }),
@@ -1285,9 +1406,9 @@ export function createReleasePassport({
       releaseSha,
       releaseMaterialSha,
       builtSourceSha: optionalString(release.builtSourceSha || release.built_source_sha),
-      builtSourceTreeSha,
+      builtSourceTreeSha: sourceFields.builtSourceTreeSha,
       promotionChannelSha: optionalString(release.promotionChannelSha || release.promotion_channel_sha),
-      promotionChannelTreeSha,
+      promotionChannelTreeSha: sourceFields.promotionChannelTreeSha,
       treeEquivalent: release.treeEquivalent === undefined ? undefined : Boolean(release.treeEquivalent),
       publishToolingSha: optionalString(
         release.publishToolingSha ||
@@ -1325,15 +1446,16 @@ export function createReleasePassport({
       ["versionMaterial", versionMaterial],
       ["trustedPublishing", normalizedTrustedPublishing],
       ["transaction", normalizedTransaction],
-      ["promotionRouting", normalizedPromotionRouting],
-      ["buildSummary", normalizedBuildSummary],
-      ["buildFacts", normalizedBuildFacts],
-      ["platformArtifactManifests", normalizedPlatformArtifactManifests],
-      ["distTagPromotion", normalizedDistTagPromotionEvidence],
+      ["promotionRouting", promotion.routing],
+      ["buildSummary", buildEvidence.buildSummary],
+      ["buildFacts", buildEvidence.buildFacts],
+      ["platformArtifactManifests", buildEvidence.platformArtifactManifests],
+      ["distTagPromotion", buildEvidence.distTagPromotionEvidence],
       ...kfdParts.sectionEntries,
       ["kfdAgentHub", normalizedKfdAgentHub],
       ["invariantPassports", invariantPassports],
       ["releaseEvidence", releaseEvidence],
+      ["v4ConsumerPolicy", promotion.consumerPolicy],
       ["controllerReceipts", normalizedControllerReceipts],
       ["githubArtifactAttestations", normalizedGitHubArtifactAttestations],
     ]),
@@ -1360,21 +1482,21 @@ export function createReleasePassport({
       artifactEvidence: artifactEvidencePath,
       publishEvidence: publishEvidencePath,
       transactionState: transactionStatePath,
-      buildSummary: normalizedBuildSummary?.path || "",
-      buildFacts: normalizedBuildFacts.map((fact) => ({
+      buildSummary: buildEvidence.buildSummary?.path || "",
+      buildFacts: buildEvidence.buildFacts.map((fact) => ({
         path: fact.path || "",
         sha256: fact.sha256 || "",
         contract: fact.fields?.contract || "",
         id: fact.fields?.id || "",
         digest: fact.fields?.digest || "",
       })),
-      platformArtifactManifests: normalizedPlatformArtifactManifests.map((manifest) => ({
+      platformArtifactManifests: buildEvidence.platformArtifactManifests.map((manifest) => ({
         path: manifest.path,
         sha256: manifest.sha256,
         platform: manifest.platform,
         artifactName: manifest.artifactName,
       })),
-      distTagPromotionEvidence: normalizedDistTagPromotionEvidence?.path || "",
+      distTagPromotionEvidence: buildEvidence.distTagPromotionEvidence?.path || "",
       ...kfdParts.evidence,
       kfdAgentHub: normalizedKfdAgentHub ? optionalString(kfdAgentHubEvidencePath || "kfd-agent-hub-evidence.json") : "",
       invariantPassports: invariantPassports ? "invariantPassports" : "",
@@ -1456,6 +1578,7 @@ export function collectGitHubReleasePassport({
   invariantPassportJsons = [],
   invariantPassportCommand = "",
   releaseEvidenceJsons = [],
+  v4ConsumerPolicyCertificationJson = "",
   kfdAgentHubEvidenceJson = "",
   controllerReceiptReferences = [],
   githubArtifactAttestationPolicyJsons = [],
@@ -1531,6 +1654,11 @@ export function collectGitHubReleasePassport({
       }),
     )
     .filter((meta) => meta.value);
+  const v4ConsumerPolicyCertificationMeta = parseJsonInputWithMeta(
+    v4ConsumerPolicyCertificationJson,
+    undefined,
+    { cwd, label: "v4ConsumerPolicyCertificationJson" },
+  );
   const kfdAgentHubEvidenceMeta = parseJsonInputWithMeta(
     kfdAgentHubEvidenceJson,
     undefined,
@@ -1656,6 +1784,7 @@ export function collectGitHubReleasePassport({
     kfdSupportEvidencePath: kfdSupport ? "kfd-support.json" : "",
     invariantPassports,
     releaseEvidence: releaseEvidenceAttachments.map(({ reference }) => reference),
+    v4ConsumerPolicyCertification: v4ConsumerPolicyCertificationMeta.value,
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value
       ? { ...kfdAgentHubEvidenceMeta, path: "kfd-agent-hub-evidence.json" }
       : undefined,
@@ -2123,6 +2252,30 @@ function validateReleaseEvidenceAttachments({
     }
   }
   return { evidenceArtifacts, releaseEvidence };
+}
+
+function validateV4ConsumerPolicyPassportSection({ passport, issues }) {
+  const routing = passport?.promotionRouting;
+  const evidence = passport?.v4ConsumerPolicy;
+  if (isV4PromotionRouting(routing) && !evidence) {
+    issues.push(issue(
+      "error",
+      "v4ConsumerPolicy.missing",
+      "Buildchain v4 Release Passport requires an external floating consumer policy certification",
+    ));
+    return;
+  }
+  if (!evidence) return;
+  const verification = verifyV4FloatingConsumerPolicyCertification({
+    certification: evidence.certification,
+    certificationRoot: evidence.certificationRoot,
+    repository: passport?.product?.repository || "",
+    sourceSha: passport?.release?.sourceSha || "",
+    resolvedRuntimeSha: routing?.runtime?.resolvedSha || "",
+  });
+  for (const failure of verification.failures) {
+    issues.push(issue("error", `v4ConsumerPolicy.${failure.code}`, failure.message));
+  }
 }
 
 function validatePublishEvidenceSection({ passport, publishEvidence, normalizedPublishEvidence, issues }) {
@@ -2597,6 +2750,7 @@ export function createReleaseCheckReport({
     releaseEvidenceDocuments,
     issues,
   });
+  validateV4ConsumerPolicyPassportSection({ passport, issues });
   validatePublishEvidenceSection({ passport, publishEvidence, normalizedPublishEvidence, issues });
   const evidenceIndex = indexEvidenceArtifacts(evidenceArtifacts);
   validateReleaseArtifacts({ artifacts, evidenceIndex, issues });

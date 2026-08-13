@@ -50,7 +50,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:94a4866f5a44f97ab10ad460c4d9ff39c58aa28e231311425af2fcb857aa8c72"
+      "digest": "sha256:8836d902c1320d446889ff0e3498184dde73a654b656fec818f6699e2da8150a"
     },
     {
       "id": "getting-started",
@@ -242,7 +242,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f8200ba1fbe5779408b4a1e82a0e28a5e8f696b05f97efd2d286d3008755fdbb"
+      "digest": "sha256:db199fd96ae4ecb0dc68973d8985c737846db6a4bd29e2714e5fa5b8dc8f84eb"
     },
     {
       "id": "build-facts",
@@ -282,7 +282,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:54cadd6e2f168ca40d9ed66d2f9848d5d56c9d05759bf0454f5027b1df274796"
+      "digest": "sha256:f4e1bccad294e2eb7ade3f558d42abcd34f8b8e98bed55693dfb09a5297c49f6"
     },
     {
       "id": "publish-transaction",
@@ -330,7 +330,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:f0a1cdb7fe5f72fc2ed921f1aeadbd16184dda16be3727e4193fa2af250325db"
+      "digest": "sha256:7df1e85785a1bd8d87c22359d63bcd1caf3fc6c4924d04b6802584b189f75a08"
     },
     {
       "id": "versioning",

@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "4209c4ad7c64626e39673439d8ba2ec127e71de1e46367331f19c7bbe1d71b1f",
+    "sha256": "3975e451ccc59004b8980288960c80ecbf5113bfc9d28481c9a6cde9dfa01b50",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 71,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "4209c4ad7c64626e39673439d8ba2ec127e71de1e46367331f19c7bbe1d71b1f",
+      "sha256": "3975e451ccc59004b8980288960c80ecbf5113bfc9d28481c9a6cde9dfa01b50",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 71,
@@ -1543,6 +1543,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./public-surface-audit"
+        },
+        {
+          "id": "export:./v4-floating-consumer-policy",
+          "name": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-floating-consumer-policy.js",
+          "evidencePath": "packages/core/v4-floating-consumer-policy.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-floating-consumer-policy"
         },
         {
           "id": "export:./logging",
@@ -3526,7 +3538,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 90,
+          "inputCount": 91,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -3555,6 +3567,7 @@
             "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
+            "buildchain-visible-workflow",
             "cache-dependency-lock-root",
             "cache-policy-root",
             "cache-toolchain-root",
@@ -4292,7 +4305,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 93,
+          "inputCount": 94,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -4324,6 +4337,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
+            "buildchain-visible-workflow",
             "cache-dependency-lock-root",
             "cache-policy-root",
             "cache-toolchain-root",
@@ -5078,17 +5092,19 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 21,
+          "inputCount": 23,
           "inputs": [
             "artifact-name",
             "artifact-paths",
             "artifact-retention-days",
             "build-command",
+            "buildchain-alpha-contract-lock-path",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
+            "buildchain-stable-contract-lock-path",
             "node-version",
             "package-name",
             "prepare-paper-package",
@@ -5518,7 +5534,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 80,
+          "inputCount": 81,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -5588,6 +5604,7 @@
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
             "release-passport-promotion-routing-json",
+            "release-passport-v4-consumer-policy-certification-json",
             "release-tail-state-path",
             "require-governance",
             "require-publication-qualification",
@@ -6808,6 +6825,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 433
+    "publicSurfaceCount": 434
   }
 }

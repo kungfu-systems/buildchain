@@ -109,12 +109,20 @@ called only by the public reusable workflow and tests. `version-state`,
 `publish`, provider, signing, release, credential, AWS, and production-reuse
 effects remain excluded.
 
+Buildchain v4 workflow calls persisted in tracked source use only `@v4` or
+`@v4-alpha` and retain matching stable and alpha contract locks.
+A source-persisted exact commit SHA, exact default, repository-variable indirection, nested
+composite indirection, missing lock, or stale selected lock fails consumer
+admission. Exact resolved SHAs remain evidence and runtime data, never a durable
+selector.
+
 If public workflow recursion prevents candidate validation, publish the exact
-candidate at `train/v4/v4.0/<capability>` and make the thin caller consume that
-fully qualified public train ref. Fix failures in the train/public contract;
-never solve recursion with an internal exception. After qualification and
-protected merge, repin the durable caller to the exact protected commit when
-the delivery plan requires it. `pnpm run check` and protected Verify run
+candidate at `train/v4/v4.0/<capability>`, keep the thin caller on `@v4-alpha`,
+and pass the train only through the trusted non-persistent runtime input. Fix
+failures in the train/public contract; never solve recursion with an internal exception.
+Never use a persisted train/SHA selector. After qualification and protected
+merge, the durable caller remains on the floating channel with refreshed dual
+contract locks. `pnpm run check` and protected Verify run
 `scripts/check-v4-public-dogfood-contract.mjs`; changing this rule, its gate, or
 the protected caller requires independent `@kungfu-origin` review.
 

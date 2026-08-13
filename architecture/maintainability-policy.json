@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
-    "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132693,
+    "maxHandMaintainedSourceFiles": 347,
+    "maxHandMaintainedSourceLines": 134011,
     "maxWorkflowFiles": 71,
-    "maxWorkflowLines": 23636,
-    "latestTransition": "Stable recovery now converges a protected next-alpha merge through exact configured version material and protected reconciliation PRs.",
-    "rationale": "The bounded recovery and regression growth prevents repeated next-alpha regeneration after a protected PR merge, preserves stable publication identity, and routes any generated reconciliation merge back through branch protection. This measured ceiling cannot grow implicitly."
+    "maxWorkflowLines": 23828,
+    "latestTransition": "The v4 public entrypoints now fail closed on one semantic floating-consumer policy before dependency or release authority and carry independently certified evidence into final Release Passports.",
+    "rationale": "The bounded policy, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. These exact measured ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -72,8 +72,8 @@
       "rationale": "The runtime entrypoint now binds every compatibility command and alias, including the upstream paper command, through the tested command registry; this exact post-integration wiring ceiling cannot grow implicitly."
     },
     "packages/core/release-passport.js": {
-      "maxLines": 2859,
-      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification while the terminal report constructor drops from 470 lines to at most 180. This exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 2906,
+      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification; the bounded v4 additions independently verify consumer-policy certification while extracted normalization keeps createReleasePassport within its existing terminal budget. This exact post-integration ceiling cannot grow implicitly."
     },
     "packages/core/buildchain-contract.js": {
       "maxLines": 1095,
@@ -210,6 +210,7 @@
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
           "release-passport-promotion-routing-json",
+          "release-passport-v4-consumer-policy-certification-json",
           "release-tail-state-path",
           "require-governance",
           "require-publication-qualification",
@@ -226,7 +227,7 @@
         "secrets": [],
         "outputs": []
       },
-      "rationale": "The promote action opts into the reviewed declarative release-tail provider path and exposes only rooted transaction checkpoint inputs; the legacy GitHub Release path remains the default and provider failure cannot select success."
+      "rationale": "The promote action accepts one independently rooted v4 consumer-policy certification for final Release Passport construction; v3 behavior is unchanged and v4 promotion fails closed when certification is absent or stale."
     },
     "cli:architecture": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -435,6 +436,59 @@
       },
       "rationale": "The existing release-propagation command adds one policy-reporting Site upstream entry and exact non-force Work branch executor while preserving plan, lock, pickup, and Work Control compatibility."
     },
+    "workflow:publication-artifact": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "publication-artifact",
+        "path": ".github/workflows/publication-artifact.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-name",
+          "artifact-paths",
+          "artifact-retention-days",
+          "build-command",
+          "buildchain-alpha-contract-lock-path",
+          "buildchain-contract-compatibility-policy",
+          "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-lock-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "buildchain-stable-contract-lock-path",
+          "node-version",
+          "package-name",
+          "prepare-paper-package",
+          "publish-dist-tag",
+          "setup-node",
+          "target-ref",
+          "toolchain-command",
+          "toolchain-digest",
+          "toolchain-image",
+          "toolchain-type",
+          "verify-command",
+          "working-directory"
+        ],
+        "secrets": [],
+        "outputs": [
+          "controller-plan-artifact",
+          "controller-plan-digest",
+          "controller-plan-json",
+          "controller-receipt-artifact",
+          "controller-receipt-digest",
+          "controller-receipt-json",
+          "controller-receipt-status",
+          "package-name",
+          "package-version",
+          "publication-artifact-name",
+          "publication-manifest-json",
+          "publication-manifest-path",
+          "publication-passport-path",
+          "publication-registry-path",
+          "publish-dist-tag",
+          "runtime-sha"
+        ]
+      },
+      "rationale": "The publication workflow adds consumer-owned stable and alpha lock inputs so its earliest semantic v4 admission gate can bind the persisted floating selector before controller or package execution; its outputs and v3 behavior remain unchanged."
+    },
     "workflow:.build": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
@@ -469,6 +523,7 @@
           "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
+          "buildchain-visible-workflow",
           "cache-dependency-lock-root",
           "cache-policy-root",
           "cache-toolchain-root",
@@ -587,10 +642,12 @@
           "release-manifest-json",
           "runner-preset",
           "runner-routing-json",
-          "trusted-event"
+          "trusted-event",
+          "v4-consumer-policy-receipt-json",
+          "v4-consumer-policy-receipt-root"
         ]
       },
-      "rationale": "The reusable build surface adds an opt-in final-byte verification command and trusted platform-native finalization mode. Existing consumers preserve control-runner behavior when both inputs are absent; platform-native mode rejects self-hosted runners and reseals artifacts only after consumer policy succeeds."
+      "rationale": "The reusable build surface carries one internal visible-workflow coordinate into the earliest semantic v4 consumer admission gate and emits the source/runtime/dual-lock-bound receipt; build, install, and release authority remain downstream of that gate."
     },
     "workflow:build": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -629,6 +686,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
+          "buildchain-visible-workflow",
           "cache-dependency-lock-root",
           "cache-policy-root",
           "cache-toolchain-root",
@@ -750,10 +808,12 @@
           "release-manifest-json",
           "runner-preset",
           "runner-routing-json",
-          "trusted-event"
+          "trusted-event",
+          "v4-consumer-policy-receipt-json",
+          "v4-consumer-policy-receipt-root"
         ]
       },
-      "rationale": "The generated channel router forwards the opt-in final-byte verification command and trusted platform-native finalization mode unchanged to the reusable build surface. Existing callers retain the control-runner default; the advanced workflow owns the hosted-runner guard and final artifact reseal."
+      "rationale": "The generated channel router forwards the visible-workflow coordinate and semantic v4 policy receipt while retaining floating v4 or v4-alpha selectors, dual consumer locks, and trusted nonpersistent runtime override routing."
     },
 
     "workflow:paper-release-sealed": {

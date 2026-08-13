@@ -119,6 +119,7 @@
         "buildchain-expected-major",
         "buildchain-ref",
         "buildchain-repository",
+        "buildchain-visible-workflow",
         "cache-dependency-lock-root",
         "cache-policy-root",
         "cache-toolchain-root",
@@ -183,7 +184,7 @@
         "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 90,
+      "inputCount": 91,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -239,9 +240,11 @@
         "release-manifest-json",
         "runner-preset",
         "runner-routing-json",
-        "trusted-event"
+        "trusted-event",
+        "v4-consumer-policy-receipt-json",
+        "v4-consumer-policy-receipt-root"
       ],
-      "outputCount": 43,
+      "outputCount": 45,
       "surface": "reusable-build",
       "capabilityGroup": "api-cli-reference",
       "status": "active",
@@ -1252,6 +1255,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "buildchain-stable-contract-lock-path",
+        "buildchain-visible-workflow",
         "cache-dependency-lock-root",
         "cache-policy-root",
         "cache-toolchain-root",
@@ -1316,7 +1320,7 @@
         "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 93,
+      "inputCount": 94,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1375,9 +1379,11 @@
         "release-manifest-json",
         "runner-preset",
         "runner-routing-json",
-        "trusted-event"
+        "trusted-event",
+        "v4-consumer-policy-receipt-json",
+        "v4-consumer-policy-receipt-root"
       ],
-      "outputCount": 46,
+      "outputCount": 48,
       "surface": "channel-build-router",
       "capabilityGroup": "reusable-build",
       "status": "active",
@@ -2440,11 +2446,13 @@
         "artifact-paths",
         "artifact-retention-days",
         "build-command",
+        "buildchain-alpha-contract-lock-path",
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
+        "buildchain-stable-contract-lock-path",
         "node-version",
         "package-name",
         "prepare-paper-package",
@@ -2458,7 +2466,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 21,
+      "inputCount": 23,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -3150,6 +3158,7 @@
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
         "release-passport-promotion-routing-json",
+        "release-passport-v4-consumer-policy-certification-json",
         "release-tail-state-path",
         "require-governance",
         "require-publication-qualification",
@@ -3163,7 +3172,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 80,
+      "inputCount": 81,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

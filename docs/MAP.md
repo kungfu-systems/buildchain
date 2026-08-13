@@ -159,6 +159,7 @@ replace them.
 | How do self-hosted runners reuse local Git checkout caches without weakening source locks? | [`reusable-build-surface.md`](reusable-build-surface.md#locked-source-checkout-cache) | use | stable |
 | How do ephemeral GitHub-hosted runners share exact dependency or compiler caches without fixed-runner affinity? | [`cli.md`](cli.md#commands) | use/verify | preview |
 | How do I validate an unreleased Buildchain runtime train while keeping `@v3`? | [`runtime-train-validation.md`](runtime-train-validation.md) | use | stable |
+| How do v4 consumers keep floating selectors while proving exact runtime and lock identity? | [`reusable-build-surface.md`](reusable-build-surface.md#v4-floating-consumer-admission) | verify/use | preview |
 | How do I automatically qualify alpha candidates and publish the newest non-revoked qualified candidate at a fixed window? | [`stable-candidate-patrol.md`](stable-candidate-patrol.md) | use | preview |
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
