@@ -134,3 +134,40 @@ test("ensureGitHubRelease patches stable releases with latest metadata", async (
     make_latest: "true",
   });
 });
+
+test("ensureGitHubRelease preserves an exact prerelease without provider writes", async (t) => {
+  const requests = [];
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+  const target = "c".repeat(40);
+  globalThis.fetch = async (url, options = {}) => {
+    requests.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).endsWith("/releases/tags/v2.6.2-alpha.0")) {
+      return jsonResponse({
+        id: 789,
+        tag_name: "v2.6.2-alpha.0",
+        name: "v2.6.2-alpha.0",
+        body: "Buildchain release passport assets for v2.6.2-alpha.0.",
+        prerelease: true,
+        draft: false,
+        target_commitish: target,
+      });
+    }
+    throw new Error(`unexpected request: ${options.method || "GET"} ${url}`);
+  };
+
+  const result = await ensureGitHubRelease({
+    apiUrl: "https://api.github.test",
+    token: "token",
+    repository: "kungfu-systems/buildchain",
+    tag: "v2.6.2-alpha.0",
+    title: "v2.6.2-alpha.0",
+    target,
+    channel: "alpha",
+  });
+
+  assert.equal(result.action, "existing");
+  assert.deepEqual(requests.map(({ method }) => method), ["GET"]);
+});

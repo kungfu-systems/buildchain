@@ -847,6 +847,7 @@ test("promote action preserves byte-identical GitHub Release assets on duplicate
     if (String(url).endsWith("/releases/tags/v1.0.1-alpha.0")) {
       return new Response(JSON.stringify({
         id: 123,
+        tag_name: "v1.0.1-alpha.0",
         html_url: "https://github.test/release",
         name: "v1.0.1-alpha.0",
         body: "Buildchain release passport assets for v1.0.1-alpha.0.",
@@ -896,6 +897,7 @@ test("promote action preserves byte-identical GitHub Release assets on duplicate
     releasePassportOutputDir: path.dirname(files[1]),
   });
 
+  assert.equal(result.action, "existing");
   assert.equal(result.assetCount, 3);
   assert.equal(result.uploadedAssetCount, 0);
   assert.equal(result.preservedAssetCount, 3);

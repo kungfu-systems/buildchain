@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
-
 function classifyPublicationChannel(channel = "") {
   const normalized = String(channel || "").trim().toLowerCase();
   if (!normalized) return undefined;
@@ -148,6 +147,7 @@ export async function ensureGitHubRelease({
     });
     return { action: "created", release: created.data, metadata };
   }
+  if (metadata.prerelease === true && existing.data?.tag_name === metadata.tag && existing.data?.name === (title || metadata.tag) && existing.data?.body === (notes || `Buildchain release passport assets for ${metadata.tag}.`) && existing.data?.prerelease === true && existing.data?.draft !== true && (!target || existing.data?.target_commitish === target)) return { action: "existing", release: existing.data, metadata };
   const patched = await githubRequest({
     apiUrl,
     token,
