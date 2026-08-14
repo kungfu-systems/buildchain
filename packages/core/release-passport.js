@@ -1186,9 +1186,9 @@ function optionalSections(entries) {
 
 function acceptedControllerSourceShas(input) {
   const { treeEquivalent, builtSourceSha, promotionChannelSha, sourceSha, recoveryTreeEquivalent } = input;
-  return treeEquivalent && builtSourceSha && (promotionChannelSha === sourceSha || recoveryTreeEquivalent)
-    ? [builtSourceSha]
-    : [];
+  if (!treeEquivalent || !builtSourceSha || !promotionChannelSha) return [];
+  if (promotionChannelSha !== sourceSha && !recoveryTreeEquivalent) return [];
+  return [builtSourceSha, promotionChannelSha];
 }
 
 function prepareReleaseAdopterArtifacts({ adopterDelivery, kfdAdopter, assets, repository, tag, sourceSha, workflow }) {
@@ -2141,9 +2141,13 @@ function validateReleaseEvidenceContracts({
         release.treeEquivalent === true
         && release.builtSourceTreeSha
         && release.builtSourceTreeSha === release.promotionChannelTreeSha
-        && release.builtSourceSha
       ) {
-        acceptedSourceShas.add(String(release.builtSourceSha).toLowerCase());
+        if (release.builtSourceSha) {
+          acceptedSourceShas.add(String(release.builtSourceSha).toLowerCase());
+        }
+        if (release.promotionChannelSha) {
+          acceptedSourceShas.add(String(release.promotionChannelSha).toLowerCase());
+        }
       }
       if (!acceptedSourceShas.has(policy.caller.sourceSha)) {
         issues.push(issue(
@@ -2159,7 +2163,7 @@ function validateReleaseEvidenceContracts({
           `githubArtifactAttestations[${index}].subject.name`,
           `attestation subject ${policy.subject.name} is absent from the Release Passport artifacts`,
         ));
-      } else if (artifact.sha256 !== policy.subject.digest.sha256) {
+      } else if (`sha256:${artifact.sha256}` !== policy.subject.digest) {
         issues.push(issue(
           "error",
           `githubArtifactAttestations[${index}].subject.digest`,
