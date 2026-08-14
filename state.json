@@ -135,13 +135,13 @@
     },
     "github_release": {
       "status": "complete",
-      "action": "created",
+      "action": "reused",
       "tag": "v3.0.9-alpha.17",
       "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v3.0.9-alpha.17",
-      "assetCount": 10
+      "assetCount": 31
     }
   },
   "resume_command": "buildchain paper resume --version \"3.0.9-alpha.17\" --state-ref \"refs/heads/buildchain/release-state/3-0-9-alpha-17\"",
   "created_at": "2026-08-14T01:55:15.385Z",
-  "updated_at": "2026-08-14T03:10:50.066Z"
+  "updated_at": "2026-08-14T03:11:08.046Z"
 }
