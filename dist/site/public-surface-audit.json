@@ -1056,6 +1056,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-gate-json",
           "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
@@ -1080,7 +1081,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 112,
+        "inputCount": 113,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2579,6 +2580,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-gate-json",
           "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
@@ -2603,7 +2605,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 103,
+        "inputCount": 104,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2974,6 +2976,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-gate-json",
           "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
@@ -2994,7 +2997,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 82
+        "inputCount": 83
       },
       {
         "id": "release-tail",
@@ -8351,8 +8354,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "613ca42d3fe36e953603221d1cf16478ba84e6cf27dd6d11ddb2c1caea42ec3b",
-    "workflowRegistryDigest": "b2ade24ee445b041ad32e95415b574a29ef8f6ece55fc1b07e09e5c9bcdc5859",
-    "pageRegistryDigest": "278318ddd3f832a3681ff805eff19f9a1e3d7da382c62db10a8be663cdc99139"
+    "workflowRegistryDigest": "b96628a4fc2ea164ed508e5fdd09fe04651f2a64792101eae8aa1ecccf8f0234",
+    "pageRegistryDigest": "18255a56a80d74edf7b07009eb4d7499d1ab7d2317afefba1f016f4e644d8912"
   },
   "comparison": {
     "missingCliRegistry": [],
