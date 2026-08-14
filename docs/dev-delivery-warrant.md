@@ -311,6 +311,16 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   configured consumer workflow is dispatched immediately for that exact PR,
   head, and source run; the candidate is not left waiting for a patrol cron.
 
+  Required-mode admission also performs a latest-base Project Cut immediately
+  before enqueue. If the protected base advanced, the controller reclassifies
+  the exact attributed delta against the rooted native proof. Only a disjoint,
+  fully attributed move may reuse that proof; overlap, unknown attribution,
+  missing composition, or merge conflict fails with a stable pre-enqueue reason.
+  The rooted Project Cut receipt binds the frozen and admitted base SHAs,
+  GitHub's exact synthetic merge commit and replay tree, and the unchanged PR
+  head. A final base/head/queue/Warrant compare-and-swap readback must still
+  match that receipt before the enqueue mutation is attempted.
+
 For a required native delivery class, the reusable controller rejects a
 missing or malformed environment root before runtime checkout, candidate
 submission, Warrant selection, or native execution. The input remains

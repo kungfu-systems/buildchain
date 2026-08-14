@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { defaultDevDeliveryStateRef, GitHubDevDeliveryStore } from "./dev-delivery-warrant.mjs";
+import { qualifyPreEnqueueReadback } from "./dev-pr-prequeue-guard.mjs";
 
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
@@ -153,15 +154,9 @@ export async function qualifyAtomicQueueAdmission({ client, options, pullRequest
     const activeLeaseStatus = await setActiveLeaseStatus("pending");
     const queueAdmissionStatus = await setQueueAdmissionStatus("success");
     const statusReadback = await readBackAdmissionStatuses(client, options, expectedHeadSha, sleep);
-    const finalReadback = await Promise.all([
-      client.getPullRequest(pullRequest.number, { attempts: options.pollMergeableAttempts, delayMs: options.pollMergeableDelayMs }), client.getBranchSha(options.targetBranch),
-      client.getMergeQueueState(options.targetBranch), verifyCurrentDeliveryWarrant(client, options, pullRequest, options.verifiedDeliveryWarrant),
-    ]);
-    const [observedPullRequest, observedBaseSha, observedQueueState, currentWarrant] = finalReadback;
-    const observedHeadSha = String(observedPullRequest.head?.sha || "").toLowerCase();
-    if (observedBaseSha !== expectedBaseSha) preEnqueueMismatch("base-sha-drift-after-lease-readback", { observedBaseSha });
-    if (observedHeadSha !== expectedHeadSha) preEnqueueMismatch("head-sha-drift-after-lease-readback", { observedHeadSha });
-    if (!mergeableAccepted(observedPullRequest, "queue", projectCut?.ok === true)) preEnqueueMismatch("not-mergeable-after-lease-readback");
+    const { observedBaseSha, observedQueueState, currentWarrant, preEnqueueProjectCut } = await qualifyPreEnqueueReadback({
+      client, options, pullRequest, expectedBaseSha, expectedHeadSha, projectCut, mergeableAccepted, root, verifyCurrentWarrant: verifyCurrentDeliveryWarrant,
+    });
     const exactEntry = observedQueueState.entries.find((candidate) =>
       candidate.pullRequestNumber === pullRequest.number && candidate.pullRequestHeadSha === expectedHeadSha);
     const predecessor = observedQueueState.entries.find((candidate) => candidate !== exactEntry) || null;
@@ -169,7 +164,7 @@ export async function qualifyAtomicQueueAdmission({ client, options, pullRequest
     const transaction = {
       schema: "kungfu.buildchain.dev-queue-admission-transaction/v1", repository: options.repository.fullName,
       protectedBase: options.targetBranch, pullRequestNumber: pullRequest.number,
-      sourceHead: expectedHeadSha, frozenBase: expectedBaseSha,
+      sourceHead: expectedHeadSha, frozenBase: expectedBaseSha, admittedBase: observedBaseSha,
       queueAdmission: { context: options.queueAdmissionContext, state: statusReadback.queueAdmission?.state || "" },
       activeLease: { context: options.activeLeaseContext, state: statusReadback.activeLease?.state || "" },
       warrant: options.verifiedDeliveryWarrant,
@@ -177,7 +172,10 @@ export async function qualifyAtomicQueueAdmission({ client, options, pullRequest
         candidateId: currentWarrant.activeWarrant.candidateId, fencingToken: currentWarrant.activeWarrant.fencingToken,
         generation: currentWarrant.activeWarrant.generation, sourceHead: currentWarrant.activeWarrant.sourceHead, expiresAt: currentWarrant.activeWarrant.expiresAt,
       } : null,
-      projectCutProofRoot: projectCut?.proofRoot || "", decision: exactEntry ? "already-enqueued" : "qualified",
+      projectCutProofRoot: projectCut?.proofRoot || "",
+      preEnqueueProjectCut: preEnqueueProjectCut?.receipt || null,
+      preEnqueueProjectCutRoot: preEnqueueProjectCut?.receiptRoot || "",
+      decision: exactEntry ? "already-enqueued" : "qualified",
     };
     const entryFields = { activeLeaseStatus, queueAdmissionStatus, atomicAdmissionReceipt: transaction, atomicAdmissionReceiptRoot: root(transaction), atomicAdmissionReadbackAttempts: statusReadback.attempts };
     return { exactEntry, entryFields };
