@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "7b4748b77426a7ad2bd4f5bde7799257ac9a9c1380f5bea26c4927634a7d4649",
+    "sha256": "171c288e2360df384359434c9735f18ca9d414449ed5c2d2d244d652a83f5a03",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "7b4748b77426a7ad2bd4f5bde7799257ac9a9c1380f5bea26c4927634a7d4649",
+      "sha256": "171c288e2360df384359434c9735f18ca9d414449ed5c2d2d244d652a83f5a03",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -4766,13 +4766,18 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 7,
+          "inputCount": 12,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
             "mode",
             "node-version",
             "require-version-state",
+            "source-proof-closure-paths-json",
+            "source-proof-dependency-paths-json",
+            "source-proof-policy-paths-json",
+            "source-proof-required-contexts-json",
+            "source-proof-reuse",
             "upload-artifacts",
             "working-directory"
           ],

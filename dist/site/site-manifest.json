@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:354ccb4a6d2b9d2fbf979d4daace49576919299804129a1e8c9f2d12bf826c5e"
+      "digest": "sha256:e6f061101a8acb3a5b34c99bcd30faa143f279dc12ceb4835019822a98abe261"
     },
     {
       "id": "build-facts",
@@ -285,7 +285,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:9fdab92b63eae0085d460a4ec78511fbb63999a311cd7693c669705bd9897eb2"
+      "digest": "sha256:544ed27bf0fa587dcc57a733c03189f1a40a89896e9165b9d15b9a2191d384fc"
     },
     {
       "id": "reusable-build-surface",
@@ -357,7 +357,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:af1be0d4b9f110807534f1111e5003b2454908993183215badcf7a33b9f48461"
+      "digest": "sha256:ad5333683bd99f627ef3bd252738a8d58790ef56d415c855dbdd565b639c9a59"
     },
     {
       "id": "web-surface-deployments",

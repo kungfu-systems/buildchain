@@ -38,6 +38,31 @@ on:
         default: true
         type: boolean
         required: false
+      source-proof-reuse:
+        description: "Allow exact accepted pull-request source proof reuse for merge groups"
+        default: false
+        type: boolean
+        required: false
+      source-proof-policy-paths-json:
+        description: "JSON array of source policy paths bound into the reusable proof"
+        default: "[]"
+        type: string
+        required: false
+      source-proof-closure-paths-json:
+        description: "JSON array of source closure paths bound into the reusable proof"
+        default: "[]"
+        type: string
+        required: false
+      source-proof-dependency-paths-json:
+        description: "JSON array of dependency paths bound into the reusable proof"
+        default: "[]"
+        type: string
+        required: false
+      source-proof-required-contexts-json:
+        description: "JSON array of required contexts bound into the reusable proof"
+        default: "[]"
+        type: string
+        required: false
     outputs:
       controller-plan-artifact:
         description: "Uploaded source-check controller plan artifact name"
@@ -60,9 +85,26 @@ on:
       controller-receipt-status:
         description: "Final source-check controller status"
         value: ${{ jobs.check.outputs.controller-receipt-status }}
+      source-proof-root:
+        description: "Exact source qualification proof root sealed or reused by this run"
+        value: ${{ jobs.check.outputs.source-proof-root }}
+      source-proof-reused:
+        description: "Whether this run reused an exact accepted source proof"
+        value: ${{ jobs.check.outputs.source-proof-reused }}
+      source-proof-reuse-reason:
+        description: "Reuse decision or fail-closed fallback reason"
+        value: ${{ jobs.check.outputs.source-proof-reuse-reason }}
+      source-proof-producer-run-id:
+        description: "Pull-request workflow run that produced the reused proof"
+        value: ${{ jobs.check.outputs.source-proof-producer-run-id }}
+      source-proof-decision-root:
+        description: "Exact merge-group source-proof reuse decision root"
+        value: ${{ jobs.check.outputs.source-proof-decision-root }}
 
 permissions:
+  actions: read
   contents: read
+  pull-requests: read
 
 jobs:
   check:
@@ -76,6 +118,11 @@ jobs:
       controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}
       controller-receipt-digest: ${{ steps.receipt.outputs.controller-receipt-digest }}
       controller-receipt-status: ${{ steps.receipt.outputs.controller-receipt-status }}
+      source-proof-root: ${{ steps.source-proof-seal.outputs.proof-root || steps.source-proof-verify.outputs.proof-root }}
+      source-proof-reused: ${{ steps.source-proof-verify.outputs.reuse || 'false' }}
+      source-proof-reuse-reason: ${{ steps.source-proof-verify.outputs.reason || steps.source-proof-lookup.outputs.reason }}
+      source-proof-producer-run-id: ${{ steps.source-proof-lookup.outputs.run-id }}
+      source-proof-decision-root: ${{ steps.source-proof-verify.outputs.decision-root }}
     steps:
       - name: Checkout repository
         id: source
@@ -127,21 +174,146 @@ jobs:
           path: .buildchain/controller/plan.json
           if-no-files-found: error
 
+      - name: Locate exact accepted pull-request source proof
+        id: source-proof-lookup
+        if: ${{ inputs.mode == 'source' && inputs.source-proof-reuse && github.event_name == 'merge_group' }}
+        continue-on-error: true
+        uses: actions/github-script@v8
+        env:
+          CALLER_WORKFLOW_REF: ${{ github.workflow_ref }}
+        with:
+          script: |
+            const headRef = String(context.payload.merge_group?.head_ref || "");
+            const match = headRef.match(/\/pr-(\d+)-/u);
+            if (!match) {
+              core.setOutput("found", "false");
+              core.setOutput("reason", "merge-group-pr-number-unresolved");
+              return;
+            }
+            const pullNumber = Number(match[1]);
+            const pull = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullNumber,
+            });
+            const sourceHead = String(pull.data.head.sha || "").toLowerCase();
+            const workflowRef = String(process.env.CALLER_WORKFLOW_REF || "");
+            const prefix = `${context.repo.owner}/${context.repo.repo}/`;
+            const callerPath = workflowRef.startsWith(prefix)
+              ? workflowRef.slice(prefix.length).replace(/@.*$/u, "")
+              : "";
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event: "pull_request",
+              head_sha: sourceHead,
+              status: "completed",
+              per_page: 20,
+            });
+            const candidates = runs.data.workflow_runs
+              .filter((run) => run.conclusion === "success")
+              .filter((run) => !callerPath || String(run.path || "").replace(/@.*$/u, "") === callerPath)
+              .filter((run) => (run.pull_requests || []).some((pullRequest) => pullRequest.number === pullNumber))
+              .slice(0, 5);
+            const artifactName = `buildchain-source-qualification-proof-${sourceHead}`;
+            for (const run of candidates) {
+              const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: run.id,
+                per_page: 100,
+              });
+              const artifact = artifacts.data.artifacts.find((entry) => entry.name === artifactName && !entry.expired);
+              if (artifact) {
+                core.setOutput("found", "true");
+                core.setOutput("reason", "candidate-found");
+                core.setOutput("run-id", String(run.id));
+                core.setOutput("source-head", sourceHead);
+                core.setOutput("artifact-name", artifactName);
+                core.setOutput("workflow-path", run.path);
+                return;
+              }
+            }
+            core.setOutput("found", "false");
+            core.setOutput("reason", candidates.length > 0 ? "source-proof-artifact-missing" : "accepted-source-workflow-missing");
+            core.setOutput("source-head", sourceHead);
+
+      - name: Download exact accepted pull-request source proof
+        id: source-proof-download
+        if: ${{ steps.source-proof-lookup.outputs.found == 'true' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: ${{ steps.source-proof-lookup.outputs.artifact-name }}
+          path: .buildchain/source-proof
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.source-proof-lookup.outputs.run-id }}
+
+      - name: Verify exact source proof for this merge group
+        id: source-proof-verify
+        if: ${{ steps.source-proof-download.outcome == 'success' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          SOURCE_HEAD: ${{ steps.source-proof-lookup.outputs.source-head }}
+          CURRENT_BASE: ${{ github.event.merge_group.base_sha }}
+          PROTECTED_BASE: ${{ github.event.merge_group.base_ref }}
+          MERGE_GROUP_HEAD: ${{ steps.identities.outputs.source-sha }}
+          SOURCE_WORKFLOW_RUN_ID: ${{ steps.source-proof-lookup.outputs.run-id }}
+          RUNTIME_REF: ${{ inputs.buildchain-ref || 'v3' }}
+          RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
+          CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
+          POLICY_PATHS_JSON: ${{ inputs.source-proof-policy-paths-json }}
+          CLOSURE_PATHS_JSON: ${{ inputs.source-proof-closure-paths-json }}
+          DEPENDENCY_PATHS_JSON: ${{ inputs.source-proof-dependency-paths-json }}
+          REQUIRED_CONTEXTS_JSON: ${{ inputs.source-proof-required-contexts-json }}
+        run: |
+          merge_group_tree="$(git rev-parse 'HEAD^{tree}')"
+          protected_base="${PROTECTED_BASE#refs/heads/}"
+          node .buildchain/runtime/scripts/dev-delivery-source-proof-reuse.mjs verify \
+            --repository "$GITHUB_REPOSITORY" \
+            --branch "$protected_base" \
+            --current-base "$CURRENT_BASE" \
+            --source-head "$SOURCE_HEAD" \
+            --source-workflow-run-id "$SOURCE_WORKFLOW_RUN_ID" \
+            --runtime-ref "$RUNTIME_REF" \
+            --runtime-sha "$RUNTIME_SHA" \
+            --contract-digest "$CONTRACT_DIGEST" \
+            --node-version "${{ inputs.node-version }}" \
+            --working-directory "${{ inputs.working-directory }}" \
+            --policy-paths-json "$POLICY_PATHS_JSON" \
+            --closure-paths-json "$CLOSURE_PATHS_JSON" \
+            --dependency-paths-json "$DEPENDENCY_PATHS_JSON" \
+            --required-contexts-json "$REQUIRED_CONTEXTS_JSON" \
+            --controller-receipt .buildchain/source-proof/controller-receipt.json \
+            --source-proof .buildchain/source-proof/source-proof.json \
+            --merge-group-head "$MERGE_GROUP_HEAD" \
+            --merge-group-tree "$merge_group_tree" \
+            --verified-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --output .buildchain/source-proof/reuse-decision.json \
+            --manifest-output .buildchain/artifacts/check-manifest.json \
+            --summary-output .buildchain/artifacts/check-summary.json
+
       - uses: actions/setup-node@v6.4.0
+        if: ${{ steps.source-proof-verify.outputs.reuse != 'true' }}
         with:
           node-version: ${{ inputs.node-version }}
 
       - name: Enable package manager shims
+        if: ${{ steps.source-proof-verify.outputs.reuse != 'true' }}
         run: |
           corepack prepare pnpm@11.7.0 --activate
           corepack enable
           pnpm --version
 
       - name: Install Buildchain runtime dependencies
+        if: ${{ steps.source-proof-verify.outputs.reuse != 'true' }}
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Enforce Paper agent-entry and acceptance policy
         id: paper-policy
+        if: ${{ steps.source-proof-verify.outputs.reuse != 'true' }}
         shell: bash
         env:
           BUILDCHAIN_WORKING_DIRECTORY: ${{ inputs.working-directory }}
@@ -159,6 +331,7 @@ jobs:
 
       - name: Resolve check lifecycle mode
         id: lifecycle
+        if: ${{ steps.source-proof-verify.outputs.reuse != 'true' }}
         shell: bash
         env:
           BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
@@ -175,6 +348,7 @@ jobs:
 
       - name: Validate declared check lifecycle
         id: validate
+        if: ${{ steps.source-proof-verify.outputs.reuse != 'true' }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs validate
           --cwd "${{ inputs.working-directory }}"
@@ -183,6 +357,7 @@ jobs:
 
       - name: Run declared install lifecycle
         id: install
+        if: ${{ steps.source-proof-verify.outputs.reuse != 'true' }}
         env:
           BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
         run: >-
@@ -195,6 +370,7 @@ jobs:
 
       - name: Run selected check lifecycle
         id: selected-check
+        if: ${{ steps.source-proof-verify.outputs.reuse != 'true' }}
         env:
           BUILDCHAIN_CHECK_MODE: ${{ inputs.mode }}
         run: >-
@@ -221,12 +397,57 @@ jobs:
         env:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome }}"},{"id":"checkout-source","status":"${{ steps.source.outcome }}"},{"id":"install","status":"${{ steps.install.outcome }}"},{"id":"check","status":"${{ (steps.validate.outcome == 'failure' || steps.selected-check.outcome == 'failure') && 'failure' || (steps.validate.outcome == 'cancelled' || steps.selected-check.outcome == 'cancelled') && 'cancelled' || (steps.validate.outcome == 'success' && steps.selected-check.outcome == 'success') && 'success' || 'skipped' }}"},{"id":"aggregate","status":"${{ (steps.selected-check.outcome == 'failure' || steps.evidence-upload.outcome == 'failure') && 'failure' || (steps.selected-check.outcome == 'cancelled' || steps.evidence-upload.outcome == 'cancelled') && 'cancelled' || (steps.selected-check.outcome == 'success' && (!inputs.upload-artifacts || steps.evidence-upload.outcome == 'success')) && 'success' || 'skipped' }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.selected-check.outcome == 'success' && '[{"kind":"lifecycle-manifest","path":".buildchain/artifacts/check-manifest.json"},{"kind":"lifecycle-summary","path":".buildchain/artifacts/check-summary.json"}]' || '[]' }}
-          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ steps.selected-check.outcome == 'success' && '' || 'check-incomplete' }}
+            [{"id":"resolve-runtime","status":"${{ steps.runtime.outcome }}"},{"id":"checkout-source","status":"${{ steps.source.outcome }}"},{"id":"install","status":"${{ steps.source-proof-verify.outputs.reuse == 'true' && 'success' || steps.install.outcome }}"},{"id":"check","status":"${{ steps.source-proof-verify.outputs.reuse == 'true' && 'success' || (steps.validate.outcome == 'failure' || steps.selected-check.outcome == 'failure') && 'failure' || (steps.validate.outcome == 'cancelled' || steps.selected-check.outcome == 'cancelled') && 'cancelled' || (steps.validate.outcome == 'success' && steps.selected-check.outcome == 'success') && 'success' || 'skipped' }}"},{"id":"aggregate","status":"${{ steps.source-proof-verify.outputs.reuse == 'true' && ((!inputs.upload-artifacts || steps.evidence-upload.outcome == 'success') && 'success' || 'failure') || (steps.selected-check.outcome == 'failure' || steps.evidence-upload.outcome == 'failure') && 'failure' || (steps.selected-check.outcome == 'cancelled' || steps.evidence-upload.outcome == 'cancelled') && 'cancelled' || (steps.selected-check.outcome == 'success' && (!inputs.upload-artifacts || steps.evidence-upload.outcome == 'success')) && 'success' || 'skipped' }}"}]
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.source-proof-verify.outputs.reuse == 'true' && '[{"kind":"lifecycle-manifest","path":".buildchain/artifacts/check-manifest.json"},{"kind":"lifecycle-summary","path":".buildchain/artifacts/check-summary.json"},{"kind":"source-qualification-proof","path":".buildchain/source-proof/source-proof.json"},{"kind":"source-proof-reuse-decision","path":".buildchain/source-proof/reuse-decision.json"}]' || steps.selected-check.outcome == 'success' && '[{"kind":"lifecycle-manifest","path":".buildchain/artifacts/check-manifest.json"},{"kind":"lifecycle-summary","path":".buildchain/artifacts/check-summary.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ ((steps.source-proof-verify.outputs.reuse == 'true' && (!inputs.upload-artifacts || steps.evidence-upload.outcome == 'success')) || steps.selected-check.outcome == 'success') && '' || 'check-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Source check did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-check-controller-receipt-${{ steps.identities.outputs.source-sha }}
           BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+
+      - name: Seal exact pull-request source qualification proof
+        id: source-proof-seal
+        if: ${{ inputs.mode == 'source' && inputs.source-proof-reuse && github.event_name == 'pull_request' && steps.receipt.outputs.controller-receipt-qualifying == 'true' }}
+        shell: bash
+        env:
+          QUALIFIED_BASE: ${{ github.event.pull_request.base.sha }}
+          PROTECTED_BASE: ${{ github.event.pull_request.base.ref }}
+          SOURCE_HEAD: ${{ steps.identities.outputs.source-sha }}
+          RUNTIME_REF: ${{ inputs.buildchain-ref || 'v3' }}
+          RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
+          CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
+          POLICY_PATHS_JSON: ${{ inputs.source-proof-policy-paths-json }}
+          CLOSURE_PATHS_JSON: ${{ inputs.source-proof-closure-paths-json }}
+          DEPENDENCY_PATHS_JSON: ${{ inputs.source-proof-dependency-paths-json }}
+          REQUIRED_CONTEXTS_JSON: ${{ inputs.source-proof-required-contexts-json }}
+        run: |
+          node .buildchain/runtime/scripts/dev-delivery-source-proof-reuse.mjs seal \
+            --repository "$GITHUB_REPOSITORY" \
+            --branch "$PROTECTED_BASE" \
+            --qualified-base "$QUALIFIED_BASE" \
+            --source-head "$SOURCE_HEAD" \
+            --source-workflow-run-id "$GITHUB_RUN_ID" \
+            --runtime-ref "$RUNTIME_REF" \
+            --runtime-sha "$RUNTIME_SHA" \
+            --contract-digest "$CONTRACT_DIGEST" \
+            --node-version "${{ inputs.node-version }}" \
+            --working-directory "${{ inputs.working-directory }}" \
+            --policy-paths-json "$POLICY_PATHS_JSON" \
+            --closure-paths-json "$CLOSURE_PATHS_JSON" \
+            --dependency-paths-json "$DEPENDENCY_PATHS_JSON" \
+            --required-contexts-json "$REQUIRED_CONTEXTS_JSON" \
+            --controller-receipt .buildchain/controller/receipt.json \
+            --qualified-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --output .buildchain/source-proof/source-proof.json
+          cp .buildchain/controller/receipt.json .buildchain/source-proof/controller-receipt.json
+
+      - name: Upload exact pull-request source qualification proof
+        if: ${{ steps.source-proof-seal.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-source-qualification-proof-${{ steps.identities.outputs.source-sha }}
+          path: .buildchain/source-proof/
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload source-check controller receipt
         if: ${{ always() && steps.receipt.outcome == 'success' }}
