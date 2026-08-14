@@ -1663,10 +1663,15 @@
         "mode",
         "node-version",
         "require-version-state",
+        "source-proof-closure-paths-json",
+        "source-proof-dependency-paths-json",
+        "source-proof-policy-paths-json",
+        "source-proof-required-contexts-json",
+        "source-proof-reuse",
         "upload-artifacts",
         "working-directory"
       ],
-      "inputCount": 7,
+      "inputCount": 12,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1676,9 +1681,14 @@
         "controller-receipt-artifact",
         "controller-receipt-digest",
         "controller-receipt-json",
-        "controller-receipt-status"
+        "controller-receipt-status",
+        "source-proof-decision-root",
+        "source-proof-producer-run-id",
+        "source-proof-reuse-reason",
+        "source-proof-reused",
+        "source-proof-root"
       ],
-      "outputCount": 7,
+      "outputCount": 12,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active",

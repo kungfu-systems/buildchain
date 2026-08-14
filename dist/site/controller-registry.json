@@ -32,6 +32,26 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "source-proof-closure-paths-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "source-proof-dependency-paths-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "source-proof-policy-paths-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "source-proof-required-contexts-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "source-proof-reuse": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "upload-artifacts": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -74,7 +94,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:373723a73d188194d389dee04c394d3b79cb0c016a370f2f5d0f60979a02ed48"
+      "digest": "sha256:91aeff9ffcc598918626c24850a00063a79ddf26aa48702fa22e7dce8c761968"
     },
     {
       "schemaVersion": 1,
@@ -2474,5 +2494,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:1f823374b2161ee4b0e31259462a256e13f6947d8bc9b06c797b5018a32b7553"
+  "digest": "sha256:74ea5bb416c1d592a3b8659a4c560f1fd98e8570d168535cd6f6098bad4265a7"
 }
