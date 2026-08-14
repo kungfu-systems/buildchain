@@ -30,11 +30,18 @@ const SIGNING_CONTROL_JOBS = [
 const FINALIZED_PLATFORM_JOBS = [
   "build / Finalize signed artifact Linux ARM64",
   "build / Finalize signed artifact Linux x64",
+  "build / Finalize signed artifact macOS ARM64",
   "build / Finalize signed artifact Windows x64",
+];
+const CANDIDATE_TAIL_JOBS = [
+  "build / Summarize build contract",
+  "build / Finalize build controller evidence",
+  "Precompute non-secret Alpha publication tail",
 ];
 const FAILURE_MODES = {
   finalization: "macos-finalization",
   signingControl: "macos-signing-control",
+  productUpgradePublicationAdmission: "product-upgrade-publication-admission",
 };
 
 function required(value, label) {
@@ -109,7 +116,11 @@ export function tailResealFailureMode(request) {
     failure.jobName === "build / Control detached signing macOS ARM64" &&
     failure.stepName === "Enforce qualifying detached signing settlement"
   ) return FAILURE_MODES.signingControl;
-  throw new Error("tail reseal failure is outside the two exact macOS recovery boundaries");
+  if (
+    failure.jobName === "Finalize product upgrade publication admission" &&
+    failure.stepName === "Qualify exact product bytes and seal admission receipt"
+  ) return FAILURE_MODES.productUpgradePublicationAdmission;
+  throw new Error("tail reseal failure is outside the supported exact recovery boundaries");
 }
 
 function appendOutputs(values) {
@@ -188,6 +199,7 @@ export function normalizeTailResealRequest(raw) {
       runId: integer(source.runId, "source.runId"),
       runAttempt: integer(source.runAttempt, "source.runAttempt"),
       sha: exactSha(source.sha, "source.sha"),
+      headSha: exactSha(source.headSha || source.sha, "source.headSha"),
       tree: exactSha(source.tree, "source.tree"),
       workflowFile: required(source.workflowFile, "source.workflowFile").replace(/^\.github\/workflows\//u, ""),
       workflowName: required(source.workflowName, "source.workflowName"),
@@ -242,7 +254,7 @@ function validateTailResealEvent({ request, event, repository }) {
     throw new Error(`tail reseal requires a pull_request source event, got ${event.action || "<none>"}`);
   }
   if (event.pull_request?.head?.repo?.full_name !== repository) throw new Error("tail reseal rejects fork pull requests");
-  if (event.pull_request?.head?.sha !== request.source.sha) throw new Error("tail reseal source SHA differs from the exact PR head");
+  if (event.pull_request?.head?.sha !== request.source.headSha) throw new Error("tail reseal source head SHA differs from the exact PR head");
   if (event.pull_request?.base?.ref !== request.target.ref || event.pull_request?.base?.sha !== request.target.baseSha) {
     throw new Error("tail reseal target ref or frozen base SHA differs from the exact PR event");
   }
@@ -255,26 +267,32 @@ function validateTailResealEvent({ request, event, repository }) {
   if (request.consumerController.repository !== repository) throw new Error("tail reseal consumer controller must remain in the caller repository");
 }
 
-function validateTailResealRun({ request, run }) {
+export function validateTailResealRun({ request, run }) {
   const workflowFile = String(run.path || "").split("@")[0].replace(/^\.github\/workflows\//u, "");
+  const failureMode = tailResealFailureMode(request);
+  const expectedEvent = failureMode === FAILURE_MODES.productUpgradePublicationAdmission
+    ? "pull_request"
+    : "workflow_dispatch";
   const exactRun =
     Number(run.id) === request.source.runId &&
     Number(run.run_attempt) === request.source.runAttempt &&
-    run.event === "workflow_dispatch" &&
+    run.event === expectedEvent &&
     run.status === "completed" &&
     run.conclusion === "failure" &&
-    run.head_sha === request.source.sha &&
+    run.head_sha === request.source.headSha &&
     workflowFile === request.source.workflowFile &&
     run.name === request.source.workflowName;
   if (!exactRun) throw new Error("tail reseal source run is not the exact retained failed Build run");
 }
 
-function validateTailResealJobs({ request, jobs }) {
+export function validateTailResealJobs({ request, jobs }) {
   const byName = new Map(jobs.map((job) => [job.name, job]));
   const failureMode = tailResealFailureMode(request);
   const requiredSuccessJobs = failureMode === FAILURE_MODES.finalization
-    ? [...PLATFORM_BUILD_JOBS, ...SIGNING_CONTROL_JOBS, ...FINALIZED_PLATFORM_JOBS]
-    : [...PLATFORM_BUILD_JOBS, ...SIGNING_CONTROL_JOBS.filter((name) => !name.endsWith("macOS ARM64"))];
+    ? [...PLATFORM_BUILD_JOBS, ...SIGNING_CONTROL_JOBS, ...FINALIZED_PLATFORM_JOBS.filter((name) => !name.endsWith("macOS ARM64"))]
+    : failureMode === FAILURE_MODES.signingControl
+      ? [...PLATFORM_BUILD_JOBS, ...SIGNING_CONTROL_JOBS.filter((name) => !name.endsWith("macOS ARM64"))]
+      : [...PLATFORM_BUILD_JOBS, ...SIGNING_CONTROL_JOBS, ...FINALIZED_PLATFORM_JOBS, ...CANDIDATE_TAIL_JOBS];
   for (const name of requiredSuccessJobs) {
     if (byName.get(name)?.conclusion !== "success") throw new Error(`tail reseal required source job did not succeed: ${name}`);
   }
@@ -284,7 +302,7 @@ function validateTailResealJobs({ request, jobs }) {
     failedJob?.name === request.failure.jobName &&
     failedJob?.conclusion === "failure" &&
     JSON.stringify(failedSteps) === JSON.stringify([request.failure.stepName]);
-  if (!exactFailure) throw new Error("tail reseal failure boundary differs from the selected exact macOS recovery step");
+  if (!exactFailure) throw new Error("tail reseal failure boundary differs from the selected exact recovery step");
   if (failureMode === FAILURE_MODES.signingControl) {
     const controller = byName.get("build / Finalize build controller evidence");
     const controllerFailures = (controller?.steps || []).filter((step) => step.conclusion === "failure").map((step) => step.name);
@@ -344,8 +362,9 @@ async function plan() {
   const repository = required(process.env.GITHUB_REPOSITORY, "GITHUB_REPOSITORY");
   validateTailResealEvent({ request, event, repository });
 
-  const [sourceCommit, controllerCommit, run, jobs, artifacts, authorityRun, authorityArtifacts] = await Promise.all([
+  const [sourceCommit, sourceHeadCommit, controllerCommit, run, jobs, artifacts, authorityRun, authorityArtifacts] = await Promise.all([
     githubJson(repository, `/git/commits/${request.source.sha}`, token),
+    githubJson(repository, `/git/commits/${request.source.headSha}`, token),
     githubJson(repository, `/git/commits/${request.consumerController.sha}`, token),
     githubJson(repository, `/actions/runs/${request.source.runId}`, token),
     pagedGithubItems(repository, `/actions/runs/${request.source.runId}/jobs?filter=latest`, "jobs", token),
@@ -354,6 +373,7 @@ async function plan() {
     pagedGithubItems(request.authority.repository, `/actions/runs/${request.authority.runId}/artifacts`, "artifacts", token),
   ]);
   if (sourceCommit.tree?.sha !== request.source.tree) throw new Error("tail reseal source tree mismatch");
+  if (sourceHeadCommit.tree?.sha !== request.source.tree) throw new Error("tail reseal source head is not tree-equivalent to retained artifacts");
   if (controllerCommit.tree?.sha !== request.consumerController.tree) throw new Error("tail reseal consumer controller tree mismatch");
   validateTailResealRun({ request, run });
   validateTailResealJobs({ request, jobs });
@@ -677,6 +697,8 @@ export function sealTailResealReceipt() {
     if (value.artifactName !== platform.artifactName || value.git?.sha !== request.source.sha) throw new Error(`${platform.id} resealed manifest identity mismatch`);
     return { platformId: platform.id, artifactName: platform.artifactName, manifestRoot: sha256File(absolute) };
   });
+  const failureMode = tailResealFailureMode(request);
+  const reusesFinalizedArtifacts = failureMode === FAILURE_MODES.productUpgradePublicationAdmission;
   const receipt = {
     contract: CONTRACT,
     action: "reused-tail-reseal",
@@ -700,8 +722,12 @@ export function sealTailResealReceipt() {
     })),
     resealedManifests: manifests,
     skippedStages: ["install", "build", "verify", "platform-matrix"],
-    rerunStages: ["macos-signing-finalization", "aggregate", "candidate-passport"],
-    payloadPolicy: "reuse-exact-platform-bytes-except-authoritative-macos-signing-import",
+    rerunStages: reusesFinalizedArtifacts
+      ? ["aggregate", "candidate-passport"]
+      : ["macos-signing-finalization", "aggregate", "candidate-passport"],
+    payloadPolicy: reusesFinalizedArtifacts
+      ? "reuse-exact-platform-bytes"
+      : "reuse-exact-platform-bytes-except-authoritative-macos-signing-import",
     currentRun: {
       id: required(process.env.GITHUB_RUN_ID, "GITHUB_RUN_ID"),
       attempt: required(process.env.GITHUB_RUN_ATTEMPT, "GITHUB_RUN_ATTEMPT"),

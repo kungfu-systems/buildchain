@@ -11,6 +11,8 @@ import {
   restoreTailResealManifestRunIdentity,
   tailResealFailureMode,
   sealTailResealReceipt,
+  validateTailResealJobs,
+  validateTailResealRun,
   verifyTailResealCredentialIslandProjection,
   verifyTailResealPlatform,
 } from "../scripts/release-candidate-tail-reseal.mjs";
@@ -129,7 +131,7 @@ test("tail reseal request requires one exact four-platform candidate", () => {
   );
 });
 
-test("tail reseal admits only the two exact macOS failure boundaries", () => {
+test("tail reseal admits the exact macOS and product admission failure boundaries", () => {
   assert.equal(tailResealFailureMode(request()), "macos-finalization");
   assert.equal(tailResealFailureMode({
     ...request(),
@@ -139,6 +141,14 @@ test("tail reseal admits only the two exact macOS failure boundaries", () => {
       stepName: "Enforce qualifying detached signing settlement",
     },
   }), "macos-signing-control");
+  assert.equal(tailResealFailureMode({
+    ...request(),
+    failure: {
+      jobId: 456,
+      jobName: "Finalize product upgrade publication admission",
+      stepName: "Qualify exact product bytes and seal admission receipt",
+    },
+  }), "product-upgrade-publication-admission");
   assert.throws(() => tailResealFailureMode({
     ...request(),
     failure: {
@@ -146,7 +156,62 @@ test("tail reseal admits only the two exact macOS failure boundaries", () => {
       jobName: "build / Linux x64",
       stepName: "Build",
     },
-  }), /outside the two exact macOS recovery boundaries/u);
+  }), /outside the supported exact recovery boundaries/u);
+});
+
+test("product admission recovery binds a pull request run and exact successful candidate tail", () => {
+  const value = normalizeTailResealRequest({
+    ...request(),
+    source: { ...request().source, headSha: "8".repeat(40) },
+    failure: {
+      jobId: 456,
+      jobName: "Finalize product upgrade publication admission",
+      stepName: "Qualify exact product bytes and seal admission receipt",
+    },
+  });
+  validateTailResealRun({
+    request: value,
+    run: {
+      id: 123,
+      run_attempt: 1,
+      event: "pull_request",
+      status: "completed",
+      conclusion: "failure",
+      head_sha: "8".repeat(40),
+      path: ".github/workflows/build.yml@refs/pull/1/merge",
+      name: "Build",
+    },
+  });
+  const successful = [
+    "build / Linux ARM64",
+    "build / Linux x64",
+    "build / macOS ARM64",
+    "build / Windows x64",
+    "build / Control detached signing Linux ARM64",
+    "build / Control detached signing Linux x64",
+    "build / Control detached signing macOS ARM64",
+    "build / Control detached signing Windows x64",
+    "build / Finalize signed artifact Linux ARM64",
+    "build / Finalize signed artifact Linux x64",
+    "build / Finalize signed artifact macOS ARM64",
+    "build / Finalize signed artifact Windows x64",
+    "build / Summarize build contract",
+    "build / Finalize build controller evidence",
+    "Precompute non-secret Alpha publication tail",
+  ].map((name, index) => ({ id: index + 1, name, conclusion: "success", steps: [] }));
+  validateTailResealJobs({
+    request: value,
+    jobs: [...successful, {
+      id: 456,
+      name: value.failure.jobName,
+      conclusion: "failure",
+      steps: [{ name: value.failure.stepName, conclusion: "failure" }],
+    }],
+  });
+  assert.throws(() => validateTailResealJobs({
+    request: value,
+    jobs: successful.filter(({ name }) => name !== "build / Finalize signed artifact Windows x64"),
+  }), /required source job did not succeed/u);
 });
 
 test("platform verification rejects changed retained bytes", () => {

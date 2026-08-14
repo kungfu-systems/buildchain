@@ -2952,7 +2952,7 @@ jobs:
       - resolve-source
       - resolve-contract
       - anchored-release-preflight
-    if: ${{ fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha == github.event.pull_request.head.sha }}
+    if: ${{ (fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.headSha || fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha) == github.event.pull_request.head.sha }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -3109,7 +3109,7 @@ jobs:
           path: .buildchain/artifacts/${{ matrix.platform.id }}
 
       - name: Check out exact candidate Buildchain runtime
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
@@ -3118,7 +3118,7 @@ jobs:
           persist-credentials: false
 
       - name: Check out exact consumer finalization controller
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ github.repository }}
@@ -3127,7 +3127,7 @@ jobs:
           persist-credentials: false
 
       - name: Install exact candidate runtime dependencies
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         run: corepack pnpm@11.7.0 install --dir .buildchain/candidate-runtime --prod --frozen-lockfile --ignore-scripts
 
       - name: Download macOS signing finalization delegation
@@ -3141,7 +3141,7 @@ jobs:
           path: .buildchain/signing/delegations/macos-arm64
 
       - name: Download macOS signing control request
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -3169,7 +3169,7 @@ jobs:
           path: .buildchain/signing
 
       - name: Verify macOS signing finalization delegation
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         id: delegation
         run: node .buildchain/candidate-runtime/scripts/artifact-signing-controller.mjs verify
         env:
@@ -3186,7 +3186,7 @@ jobs:
           BUILDCHAIN_EXPECTED_PLATFORM_ID: macos-arm64
 
       - name: Download immutable macOS signing request
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
@@ -3196,7 +3196,7 @@ jobs:
           path: .buildchain/signing/requests/macos-arm64
 
       - name: Download immutable signed macOS result
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
@@ -3206,7 +3206,7 @@ jobs:
           path: .buildchain/signing/results/macos-arm64
 
       - name: Preserve pre-signing macOS manifest
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs prepare-manifest-recompute
         env:
           BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
@@ -3215,7 +3215,7 @@ jobs:
           BUILDCHAIN_TAIL_RESEAL_PRE_SIGNING_MANIFEST_PATH: .buildchain/tail-reseal/pre-signing/macos-arm64-manifest.json
 
       - name: Verify and import authoritative signed macOS bytes
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         id: signing-import
         run: node .buildchain/candidate-runtime/scripts/import-artifact-signing-results.mjs
         env:
@@ -3225,7 +3225,7 @@ jobs:
           BUILDCHAIN_SIGNING_IMPORTED_EVIDENCE_ROOT: .buildchain/artifacts/signing/macos-arm64
 
       - name: Recompute manifest with the reviewed consumer PAX repair
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         run: >-
           node .buildchain/candidate-runtime/scripts/run-lifecycle.mjs
           --cwd "${{ steps.delegation.outputs.working-directory }}"
@@ -3256,7 +3256,7 @@ jobs:
           BUILDCHAIN_EXPECTED_ARTIFACTS_JSON: ${{ inputs.expected-artifacts-json }}
 
       - name: Restore original build identity after signed manifest recomputation
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs restore-manifest-run
         env:
           BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
@@ -3273,7 +3273,7 @@ jobs:
           BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
 
       - name: Verify authoritative credential-island projection
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         id: credential-projection
         run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs verify-credential-projection
         env:
@@ -3283,7 +3283,7 @@ jobs:
           BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: ${{ steps.signing-import.outputs.credential-artifact-root }}
 
       - name: Upload authoritative credential-island payload
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-macos-credential-${{ needs.tail-reseal-plan.outputs.source-sha }}
@@ -3293,7 +3293,7 @@ jobs:
           compression-level: 0
 
       - name: Upload authoritative credential-island manifest
-        if: ${{ matrix.platform.id == 'macos-arm64' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-credential-manifest-macos-${{ needs.tail-reseal-plan.outputs.source-sha }}
