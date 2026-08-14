@@ -61,6 +61,10 @@ const SUPPORTED_SIGNING_PROFILES = new Set([
   "windows-authenticode",
   "detached-signature-v1",
 ]);
+const SUPPORTED_SIGNING_ENTITLEMENTS_PROFILES = new Set([
+  "none",
+  "jit-executable-v1",
+]);
 const SUPPORTED_SIGNING_ARTIFACT_KINDS = new Set([
   "auto", "binary", "archive", "blob", "directory", "mach-o", "app-bundle",
   "framework-bundle", "plugin-bundle", "xpc-bundle", "dylib", "pkg", "dmg",
@@ -97,6 +101,27 @@ function normalizeStringArray(value, label) {
     throw new Error(`${label} must be an array of strings`);
   }
   return value.map((entry, index) => assertString(entry, `${label}[${index}]`));
+}
+
+function normalizeSigningEntitlementsPaths(value, label) {
+  const paths = normalizeStringArray(value, label);
+  for (const [index, entry] of paths.entries()) {
+    const parts = entry.split("/");
+    if (
+      entry.startsWith("/") ||
+      entry.includes("\\") ||
+      entry.includes(",") ||
+      parts.some((part) => part === "" || part === "." || part === "..")
+    ) {
+      throw new Error(
+        `${label}[${index}] must be a safe archive-relative path`,
+      );
+    }
+  }
+  if (new Set(paths).size !== paths.length) {
+    throw new Error(`${label} must not contain duplicate paths`);
+  }
+  return paths;
 }
 
 function getByDottedKey(target, key) {
@@ -362,7 +387,16 @@ function normalizeSigningSection(signing) {
   const artifacts = signing.artifacts.map((artifact, index) => {
     const label = `signing.artifacts[${index}]`;
     assertPlainObject(artifact, label);
-    const allowedKeys = new Set(["id", "path", "profile", "kind", "platforms", "required"]);
+    const allowedKeys = new Set([
+      "id",
+      "path",
+      "profile",
+      "entitlements_profile",
+      "entitlements_paths",
+      "kind",
+      "platforms",
+      "required",
+    ]);
     for (const key of Object.keys(artifact)) {
       if (!allowedKeys.has(key)) {
         throw new Error(`${label}.${key} is not supported; declare desired signature state only`);
@@ -377,10 +411,41 @@ function normalizeSigningSection(signing) {
     if (!SUPPORTED_SIGNING_ARTIFACT_KINDS.has(kind)) {
       throw new Error(`${label}.kind is not a supported signing artifact kind`);
     }
+    const entitlementsProfile =
+      artifact.entitlements_profile === undefined
+        ? "none"
+        : assertString(
+            artifact.entitlements_profile,
+            `${label}.entitlements_profile`,
+          );
+    if (!SUPPORTED_SIGNING_ENTITLEMENTS_PROFILES.has(entitlementsProfile)) {
+      throw new Error(
+        `${label}.entitlements_profile must be one of none or jit-executable-v1`,
+      );
+    }
+    if (entitlementsProfile !== "none" && kind !== "archive") {
+      throw new Error(
+        `${label}.entitlements_profile ${entitlementsProfile} requires kind = "archive"`,
+      );
+    }
+    const entitlementsPaths = normalizeSigningEntitlementsPaths(
+      artifact.entitlements_paths,
+      `${label}.entitlements_paths`,
+    );
+    if (
+      (entitlementsProfile === "none" && entitlementsPaths.length !== 0) ||
+      (entitlementsProfile !== "none" && entitlementsPaths.length === 0)
+    ) {
+      throw new Error(
+        `${label}.entitlements_paths must be non-empty exactly when entitlements_profile is enabled`,
+      );
+    }
     return {
       id: artifact.id === undefined ? artifactPath : assertString(artifact.id, `${label}.id`),
       path: artifactPath,
       profile,
+      entitlementsProfile,
+      entitlementsPaths,
       kind,
       platforms: normalizeStringArray(artifact.platforms, `${label}.platforms`),
       required: optionalBoolean(artifact.required, true),
