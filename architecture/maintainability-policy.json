@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 351,
-    "maxHandMaintainedSourceLines": 135516,
+    "maxHandMaintainedSourceLines": 135654,
     "maxWorkflowFiles": 71,
-    "maxWorkflowLines": 24081,
-    "latestTransition": "The v4 reusable check now seals and verifies an exact source-qualification proof so an equivalent merge group can avoid repeating the full source lifecycle.",
-    "rationale": "The bounded policy, split evidence and Passport adapters, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors plus missing or self-described receipt authority while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. The current dev queue Warrant admission changes are included in the exact measured source and workflow ceilings. One bounded source-proof driver and the reusable check extension recompute source, base, patch, runtime, plan, policy, closure, dependency, required-context, producer-receipt, and exact two-parent merge composition predicates; every uncertainty retains the full lifecycle. These exact 351-file, 135516-source-line and 24081-workflow-line ceilings cannot grow implicitly."
+    "maxWorkflowLines": 24083,
+    "latestTransition": "The v4 runtime now preserves the existing sealed JIT entitlement contract required by its current Kungfu adopter.",
+    "rationale": "The bounded policy, split evidence and Passport adapters, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors plus missing or self-described receipt authority while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. The current dev queue Warrant admission and exact source-proof reuse changes remain included in the measured ceilings. The adopter compatibility port adds only the existing fail-closed JIT profile, safe archive-relative targets, immutable request propagation, executable-only signing exceptions, entitlement readback, and provider evidence. These exact 351-file, 135654-source-line and 24083-workflow-line ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
