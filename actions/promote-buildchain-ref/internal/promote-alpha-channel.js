@@ -485,7 +485,7 @@ async function finalizeAlphaPublication(context, state, publication) {
         "",
       ),
     });
-    await context.markComplete();
+    const finalizedChannelSha = context.advancedChannelSha || alpha.sha; await context.updateTag(context.rule.alphaTag, finalizedChannelSha); await context.updateMajorAlphaFloatingTag({ sha: finalizedChannelSha }); await context.markComplete();
     context.updates.push({
       action: "finalized-advanced-publication",
       tag: selectedAlpha.tag,
