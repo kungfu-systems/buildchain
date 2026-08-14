@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   assertBuildchainCompatibilityProjection,
   createBuildchainCompatibilityProofRegistry,
+  createHistoricalBuildchainCompatibilityFacts,
   createHistoricalBuildchainCompatibilityProofs,
 } from "./buildchain-compatibility-proof.js";
 import { createControllerRegistry } from "./controller-evidence.js";
@@ -17,6 +18,9 @@ export {
 } from "./buildchain-channel-identity.js";
 
 export {
+  BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA,
+  BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA,
   BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA,
   BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA,
   BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA,
@@ -24,10 +28,17 @@ export {
   contractSummary,
   createBuildchainCompatibilityProof,
   createBuildchainCompatibilityProofRegistry,
+  createBuildchainCompatibilityFact,
+  createBuildchainCompatibilityFactRegistry,
+  createBuildchainCompatibilityPathQuery,
   createBuildchainCompatibilityVerificationReceipt,
+  createHistoricalBuildchainCompatibilityFacts,
   createHistoricalBuildchainCompatibilityProofs,
   evaluateBuildchainContractLock,
   renderBuildchainContractDriftIssueBody,
+  resolveBuildchainCompatibilityProof,
+  verifyBuildchainCompatibilityFact,
+  verifyBuildchainCompatibilityPath,
   verifyBuildchainCompatibilityProof,
   verifyBuildchainCompatibilityVerificationReceipt,
 } from "./buildchain-compatibility-proof.js";
@@ -792,6 +803,7 @@ export function createBuildchainContractWorld({
     },
     majorLine,
     compatibilityPolicy: DEFAULT_POLICY,
+    compatibilityFacts: createHistoricalBuildchainCompatibilityFacts(),
     compatibilityProofs: createHistoricalBuildchainCompatibilityProofs(),
     surfaces,
   };
@@ -799,24 +811,35 @@ export function createBuildchainContractWorld({
 }
 
 export function finalizeBuildchainContractWorld(contractWorld) {
+  if (!Array.isArray(contractWorld?.compatibilityFacts) || !Array.isArray(contractWorld?.compatibilityProofs)) {
+    throw new Error("contract world requires compatibility Facts and their proof projection");
+  }
   const sourceSurfaces = (contractWorld.surfaces || []).map((entry) => ({ ...entry }));
   const proofRegistry = createBuildchainCompatibilityProofRegistry({
-    proofs: contractWorld.compatibilityProofs || createHistoricalBuildchainCompatibilityProofs(),
+    proofs: contractWorld.compatibilityProofs,
     surfaces: sourceSurfaces,
     majorLine: contractWorld.majorLine,
   });
+  if (JSON.stringify(contractWorld.compatibilityFacts) !== JSON.stringify(proofRegistry.facts)) {
+    throw new Error("contract world compatibility Facts drift from the verified registry");
+  }
   const world = {
     ...contractWorld,
+    compatibilityFacts: proofRegistry.facts,
+    compatibilityFactRegistryRoot: proofRegistry.factRegistryRoot,
+    compatibilityFactCutRoot: proofRegistry.factCutRoot,
     compatibilityProofs: proofRegistry.proofs,
     compatibilityProofRegistryRoot: proofRegistry.registryRoot,
     surfaces: sourceSurfaces.map((entry) => {
       const surfaceEntry = { ...entry };
       delete surfaceEntry.compatibleBreakingDigests;
       delete surfaceEntry.compatibilityProofRoots;
+      delete surfaceEntry.compatibilityFactRoots;
       const projection = proofRegistry.projections[entry.id] || [];
       if (projection.length > 0) {
         surfaceEntry.compatibleBreakingDigests = projection.map((item) => item.breakingDigest);
         surfaceEntry.compatibilityProofRoots = projection.map((item) => item.proofRoot);
+        surfaceEntry.compatibilityFactRoots = projection.map((item) => item.factRoot);
       }
       return surfaceEntry;
     }),
@@ -825,12 +848,15 @@ export function finalizeBuildchainContractWorld(contractWorld) {
     schemaVersion: world.schemaVersion,
     contract: world.contract,
     majorLine: world.majorLine,
+    compatibilityFactRegistryRoot: world.compatibilityFactRegistryRoot,
+    compatibilityFactCutRoot: world.compatibilityFactCutRoot,
     compatibilityProofRegistryRoot: world.compatibilityProofRegistryRoot,
     surfaces: world.surfaces.map((entry) => ({
       id: entry.id,
       kind: entry.kind,
       breakingDigest: entry.breakingDigest,
       compatibilityProofRoots: entry.compatibilityProofRoots || [],
+      compatibilityFactRoots: entry.compatibilityFactRoots || [],
     })),
   };
   const digestModel = {
@@ -862,6 +888,8 @@ export function createBuildchainContractLock({
       contract: contractWorld.contract,
       contractDigest: contractWorld.contractDigest,
       compatibilityDigest: contractWorld.compatibilityDigest,
+      compatibilityFactRegistryRoot: contractWorld.compatibilityFactRegistryRoot,
+      compatibilityFactCutRoot: contractWorld.compatibilityFactCutRoot,
       compatibilityProofRegistryRoot: contractWorld.compatibilityProofRegistryRoot,
       majorLine: contractWorld.majorLine,
       compatibilityPolicy,
@@ -871,6 +899,7 @@ export function createBuildchainContractLock({
         kind: entry.kind,
         breakingDigest: entry.breakingDigest,
         compatibilityProofRoots: entry.compatibilityProofRoots || [],
+        compatibilityFactRoots: entry.compatibilityFactRoots || [],
       })),
     },
   };

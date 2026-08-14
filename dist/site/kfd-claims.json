@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:57d37609068590238f547a133b6b69ee994b452825030447d20529683ba61fbd",
+    "compatibilityDigest": "sha256:95c0c5a1dcc77c234b99557f35936702797885663d803d38c1168c1eefbbe0ca",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "d181034018b7a384a3a472d4f646087e66470b4b2eeb3e3dd1a5a01721ea6f56",
+    "sha256": "586e3fe9a0ac9d4bd5ff2f3b6676d1f0dba6fa33311db759e7ed3983c31f8d8e",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 74,
+      "sitePageCount": 75,
       "docCommandRefCount": 989,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "d181034018b7a384a3a472d4f646087e66470b4b2eeb3e3dd1a5a01721ea6f56",
+      "sha256": "586e3fe9a0ac9d4bd5ff2f3b6676d1f0dba6fa33311db759e7ed3983c31f8d8e",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 74,
+        "sitePageCount": 75,
         "docCommandRefCount": 989,
         "failureCount": 0
       },
@@ -1363,6 +1363,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./buildchain-contract"
+        },
+        {
+          "id": "export:./compatibility-fact-authority",
+          "name": "@kungfu-tech/buildchain/compatibility-fact-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-compatibility-proof.js",
+          "evidencePath": "packages/core/buildchain-compatibility-proof.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./compatibility-fact-authority"
         },
         {
           "id": "export:./candidate-timeline",
@@ -6252,6 +6264,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:compatibility-fact-authority",
+          "name": "site-page:manual:compatibility-fact-authority",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:consumer-issue-reporting",
           "name": "site-page:manual:consumer-issue-reporting",
           "kind": "site-page",
@@ -6974,6 +6998,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 447
+    "publicSurfaceCount": 449
   }
 }

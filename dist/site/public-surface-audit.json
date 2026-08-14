@@ -6,7 +6,7 @@
     "cliCommandCount": 114,
     "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 74,
+    "sitePageCount": 75,
     "docCommandRefCount": 989,
     "failureCount": 0
   },
@@ -3221,6 +3221,10 @@
       },
       {
         "id": "manual:cli-reference",
+        "category": "manual"
+      },
+      {
+        "id": "manual:compatibility-fact-authority",
         "category": "manual"
       },
       {
@@ -8362,7 +8366,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "613ca42d3fe36e953603221d1cf16478ba84e6cf27dd6d11ddb2c1caea42ec3b",
     "workflowRegistryDigest": "ee48dbf8ef88792f50336c300c1a5e4ad7f875cc356075a547a44598eab3ece5",
-    "pageRegistryDigest": "45c0ed64af8e2cf4a334c5fa361ff1b5e15d053cb067d11aef32b213550af4a3"
+    "pageRegistryDigest": "cbaa6127a4132fd500b8e79d53f397eeec2af648dcc5d365d5f3485a81acc1ec"
   },
   "comparison": {
     "missingCliRegistry": [],
