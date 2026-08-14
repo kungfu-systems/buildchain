@@ -416,9 +416,22 @@ export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], c
     }
     return {};
   }
+  let authorityPath = "kfd-adopter-manifest.json";
+  let producerCheckedAt = checkedAt;
+  if (comparisonMatrix) {
+    authorityPath = String(comparisonMatrix?.authority?.path || "").trim().replaceAll("\\", "/");
+    if (!authorityPath || path.isAbsolute(authorityPath) || authorityPath.split("/").includes("..")) {
+      throw new Error("legacy KFD support matrix must bind a safe repository-relative adopter manifest authority path");
+    }
+    const gateCheckedAts = [...new Set(gateResults.map((gate) => String(gate?.checkedAt || "").trim()))];
+    if (gateCheckedAts.length !== 1 || !Number.isFinite(Date.parse(gateCheckedAts[0]))) {
+      throw new Error("KFD product gates must bind one exact producer checkedAt cut for legacy projection comparison");
+    }
+    producerCheckedAt = gateCheckedAts[0];
+  }
   const manifestGate = createKfdAdopterManifestGate({
     manifest, packageArtifactRoot: installedKfdPackageArtifactRoot(), gateResults,
-    authorityPath: "kfd-adopter-manifest.json", expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha, checkedAt,
+    authorityPath, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha, checkedAt: producerCheckedAt,
   });
   const legacyProjection = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
   if (comparisonMatrix) {
