@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-adopter-delivery-vectors/v1",
   "rootAlgorithm": "sha256-buildchain-canonical-json-v1",
   "authorities": {
-    "kfdPackage": "@kungfu-tech/kfd@1.0.0-alpha.62",
+    "kfdPackage": "@kungfu-tech/kfd@1.0.0-alpha.65",
     "categoryProfileVectors": "@kungfu-tech/kfd/adopter-conformance/category-profile-vectors.json",
     "categoryInstanceVectors": "@kungfu-tech/kfd/adopter-conformance/category-instance-vectors.json"
   },
@@ -73,5 +73,5 @@
       }
     }
   ],
-  "suiteRoot": "sha256:cf329805d928a9883cbafbdfdf21ef66c6a0889ed8dfe14356b4e0d25d6738f9"
+  "suiteRoot": "sha256:c978707556406ffda4ef4192032332c01c2da1cebb6ad8c4f0edfc65d5cef0c7"
 }
