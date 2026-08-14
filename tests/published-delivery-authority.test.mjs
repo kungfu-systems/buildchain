@@ -105,7 +105,7 @@ async function fixture(t, { buildchainModules = MODULES } = {}) {
     }),
     kfd: await archiveFixture(root, {
       name: "@kungfu-tech/kfd",
-      version: "1.0.0-alpha.62",
+      version: "1.0.0-alpha.65",
       semanticArtifactRoot: `sha256:${"a".repeat(64)}`,
     }),
   };
@@ -119,7 +119,7 @@ test("exact public package bytes load only the declared N-1 abilities", async (t
 
   assert.equal(authority.contract, PUBLISHED_DELIVERY_AUTHORITY_CONTRACT);
   assert.equal(authority.packages.buildchain.version, "3.0.9-alpha.10");
-  assert.equal(authority.packages.kfd.version, "1.0.0-alpha.62");
+  assert.equal(authority.packages.kfd.version, "1.0.0-alpha.65");
   assert.notEqual(
     authority.packages.kfd.archiveRoot,
     authority.packages.kfd.artifactRoot,

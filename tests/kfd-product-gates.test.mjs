@@ -39,7 +39,7 @@ const standardsPath = require.resolve("@kungfu-tech/kfd/standards.json");
 const standards = JSON.parse(fs.readFileSync(standardsPath, "utf8"));
 const sourceSha = "a".repeat(40);
 const checkedAt = "2026-07-26T12:00:00.000Z";
-const kfdPackageArtifactRoot = "sha256:539d68720e26545fa42ad36fa0d716806a83f446d7b2710f0b9b410fa420c08c";
+const kfdPackageArtifactRoot = "sha256:c0781bcaf191a58561ae32ee2fbedabbb48ed50b5725c356fbd83704089637f8";
 const buildchainRepository = "kungfu-systems/buildchain";
 const kungfuRepository = "kungfu-systems/kungfu";
 

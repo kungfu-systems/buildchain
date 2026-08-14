@@ -1490,7 +1490,14 @@ jobs:
         shell: bash
         run: |
           if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
-            if [[ "${{ inputs.promotion-shell-ref }}" =~ ^(refs/heads/)?(train|authority)/v([0-9]+)/ ]]; then expected_major="${BASH_REMATCH[3]}"; else expected_major=""; fi; BUILDCHAIN_EXPECTED_CHANNEL="${{ inputs.promotion-publication-channel }}" BUILDCHAIN_EXPECTED_MAJOR="$expected_major" node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
+            if [[ "${{ inputs.promotion-shell-ref }}" =~ ^(refs/heads/)?(train|authority)/v([0-9]+)/ ]]; then
+              expected_major="${BASH_REMATCH[3]}"
+            elif [[ "${{ inputs.promotion-target-ref || inputs.target-ref }}" =~ ^(alpha|release)/v([0-9]+)/ ]]; then
+              expected_major="${BASH_REMATCH[2]}"
+            else
+              expected_major=""
+            fi
+            BUILDCHAIN_EXPECTED_CHANNEL="${{ inputs.promotion-publication-channel }}" BUILDCHAIN_EXPECTED_MAJOR="$expected_major" node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
           else
             {
               echo "contract-lock-status=runtime-contract-unavailable"
@@ -1601,17 +1608,35 @@ jobs:
         env:
           BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
           BUILDCHAIN_EXPECTED_VERSION: ${{ needs.publication-plan.outputs.version }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
         run: |
           set -euo pipefail
-          gate_path="${BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT}/adopter-delivery.json"
-          self_dogfood_path="${BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT}/buildchain-delivery-self-dogfood.json"
-          test -f "${gate_path}"
-          test -f "${self_dogfood_path}"
-          GATE_PATH="${gate_path}" SELF_DOGFOOD_PATH="${self_dogfood_path}" node <<'NODE'
+          node <<'NODE'
           const fs = require("node:fs");
+          const path = require("node:path");
+
           const read = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
-          const gate = read(process.env.GATE_PATH);
-          const selfDogfood = read(process.env.SELF_DOGFOOD_PATH);
+          const findExactPayloadFile = (filename) => {
+            const matches = [];
+            const stack = [process.env.BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT];
+            while (stack.length) {
+              const current = stack.pop();
+              for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+                const candidate = path.join(current, entry.name);
+                if (entry.isDirectory()) stack.push(candidate);
+                else if (entry.isFile() && entry.name === filename) matches.push(candidate);
+              }
+            }
+            if (matches.length !== 1) {
+              throw new Error(`expected exactly one sealed ${filename}, found ${matches.length}`);
+            }
+            return matches[0];
+          };
+
+          const gatePath = findExactPayloadFile("adopter-delivery.json");
+          const selfDogfoodPath = findExactPayloadFile("buildchain-delivery-self-dogfood.json");
+          const gate = read(gatePath);
+          const selfDogfood = read(selfDogfoodPath);
           if (
             selfDogfood.status !== "passed" ||
             selfDogfood.gateResult?.status !== "passed" ||
@@ -1623,9 +1648,25 @@ jobs:
           if (JSON.stringify(gate) !== JSON.stringify(selfDogfood.gateResult)) {
             throw new Error("sealed adopter delivery result differs from self-dogfood gate result");
           }
+          const releaseEvidencePath = path.join(
+            process.env.RUNNER_TEMP,
+            "buildchain-delivery-self-dogfood-release-evidence.json",
+          );
+          fs.writeFileSync(releaseEvidencePath, `${JSON.stringify({
+            ...selfDogfood,
+            id: "buildchain-delivery-self-dogfood",
+            kind: "product-release-evidence",
+            release: {
+              sourceSha: process.env.BUILDCHAIN_SOURCE_SHA,
+              tag: `v${process.env.BUILDCHAIN_EXPECTED_VERSION}`,
+              channel: "alpha",
+            },
+          }, null, 2)}\n`);
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `adopter-delivery-path=${gatePath}\nself-dogfood-path=${releaseEvidencePath}\n`,
+          );
           NODE
-          echo "adopter-delivery-path=${gate_path}" >> "${GITHUB_OUTPUT}"
-          echo "self-dogfood-path=${self_dogfood_path}" >> "${GITHUB_OUTPUT}"
 
       - name: Stage exact recovery receipt with Release Passport assets
         if: ${{ inputs.resume-candidate-run-id != '' }}
@@ -1779,6 +1820,7 @@ jobs:
           PUBLICATION_VERSION: ${{ needs.publication-plan.outputs.version }}
           DRY_RUN: ${{ inputs.dry-run }}
         with:
+          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           script: |
             const channel = process.env.CHANNEL;
             const targetRef = process.env.TARGET_REF;
@@ -1806,7 +1848,6 @@ jobs:
             core.setOutput("ref", gateRef);
             core.setOutput("sha", targetSha);
             core.setOutput("locked", "true");
-
       - name: Validate release activation command chain
         if: ${{ inputs.release-activation-command != '' || inputs.release-passport-evidence-command != '' }}
         env:
@@ -1829,7 +1870,10 @@ jobs:
           BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
-          token: ${{ github.token }}
+          # Exact tags may point at commits that update workflow files, which
+          # requires the promotion credential's workflows scope. Protected
+          # generated branch updates use the same bounded promotion credential.
+          token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           sha: ${{ needs.preflight.outputs.requested-sha }}
           target-ref: ${{ needs.preflight.outputs.target-ref }}
           dry-run: ${{ inputs.dry-run }}
@@ -1839,7 +1883,7 @@ jobs:
           required-status-check: ${{ inputs.required-status-check }}
           generated-status-check-token: ${{ github.token }}
           generated-pull-request-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
-          generated-ref-update-token: ${{ github.token }}
+          generated-ref-update-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           branch-protection-bypass-apps: ${{ inputs.branch-protection-bypass-apps }}
           branch-protection-bypass-users: ${{ inputs.branch-protection-bypass-users }}
           branch-protection-bypass-teams: ${{ inputs.branch-protection-bypass-teams }}

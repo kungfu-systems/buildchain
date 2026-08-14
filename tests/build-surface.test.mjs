@@ -229,6 +229,8 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(promotion, /"\$\{\{ inputs\.promotion-shell-ref \}\}" =~/);
   assert.match(promotion, /\(train\|authority\)\/v\(\[0-9\]\+\)\//);
+  assert.match(promotion, /inputs\.promotion-target-ref \|\| inputs\.target-ref/);
+  assert.match(promotion, /\^\(alpha\|release\)\/v\(\[0-9\]\+\)\//);
   assert.match(promotion, /BUILDCHAIN_EXPECTED_MAJOR="\$expected_major"/);
   assert.match(
     promotion,
@@ -1148,8 +1150,17 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
   assert.match(workflow, /name: Resolve sealed Buildchain delivery self-dogfood evidence/);
+  assert.match(workflow, /findExactPayloadFile/);
+  assert.match(workflow, /expected exactly one sealed \$\{filename\}, found \$\{matches\.length\}/);
+  assert.doesNotMatch(workflow, /gate_path="\$\{BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT\}\/adopter-delivery\.json"/);
   assert.match(workflow, /adopter-delivery-path=/);
   assert.match(workflow, /self-dogfood-path=/);
+  assert.match(workflow, /buildchain-delivery-self-dogfood-release-evidence\.json/);
+  assert.match(workflow, /id: "buildchain-delivery-self-dogfood"/);
+  assert.match(workflow, /sourceSha: process\.env\.BUILDCHAIN_SOURCE_SHA/);
+  assert.match(workflow, /tag: `v\$\{process\.env\.BUILDCHAIN_EXPECTED_VERSION\}`/);
+  assert.match(workflow, /channel: "alpha"/);
+  assert.doesNotMatch(workflow, /self-dogfood-path=\$\{selfDogfoodPath\}/);
   assert.match(workflow, /release-passport-adopter-delivery-json: \$\{\{ steps\.buildchain-delivery-self-dogfood\.outputs\.adopter-delivery-path \|\| inputs\.release-passport-adopter-delivery-json \}\}/);
   assert.match(workflow, /github-artifact-attestation-policy-json:/);
   assert.match(workflow, /release-passport-github-artifact-attestation-policy-jsons: \$\{\{ steps\.attestation-policy\.outputs\.path \}\}/);
@@ -1263,10 +1274,13 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     workflow,
     /^ {4}environment: \$\{\{ inputs\.github-artifact-attestation-environment \}\}$/m,
   );
-  assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
   assert.match(
     workflow,
-    /generated-ref-update-token: \$\{\{ github\.token \}\}/,
+    /token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
+  );
+  assert.match(
+    workflow,
+    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
   );
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
   assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
@@ -1594,6 +1608,8 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| 'native-proof-required' \}\}/u);
   assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.candidate\.priority \|\| 'ordinary' \}\}/u);
   assert.match(workflow, /required-status-checks: check/);
+  assert.match(workflow, /queue-admission-context: Queue admission lease/);
+  assert.match(workflow, /active-lease-context: Queue family lease\/exact/);
   assert.match(
     workflow,
     /allowed-head-prefixes: feature\/,fix\/,chore\/,docs\/,ci\/,refactor\/,automation\/auditable-demo-/,

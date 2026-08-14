@@ -70,6 +70,7 @@ function client({
   enqueueError = null,
   enqueueErrors = [],
   currentDeliveryQueue,
+  statusReadbackLag = 0,
 } = {}) {
   const merged = [];
   const enqueued = [];
@@ -77,6 +78,7 @@ function client({
   const comments = [];
   let branchRead = 0;
   let queueRead = 0;
+  let statusReadbackCount = 0;
   const detailReads = new Map();
   const fake = {
     merged,
@@ -103,7 +105,12 @@ function client({
       return reviews;
     },
     async listCommitChecks() {
-      return checks;
+      if (commitStatuses.length > 0 && statusReadbackCount < statusReadbackLag) {
+        statusReadbackCount += 1; return checks;
+      }
+      const latestStatuses = new Map();
+      for (const status of commitStatuses) if (status.body?.context) latestStatuses.set(status.body.context, status.body);
+      return { ...checks, statuses: [...latestStatuses.values(), ...(checks.statuses || [])] };
     },
     async mergePullRequest(number, { method, sha }) {
       merged.push({ number, method, sha });
@@ -464,6 +471,8 @@ test("queue apply binds enqueuePullRequest to the immutable PR head", async () =
   }]);
   assert.equal(result.enqueued[0].action, "enqueued");
   assert.equal(result.enqueued[0].admissionReceipt.finalSafetyBoundary, "github-merge-group");
+  assert.match(result.enqueued[0].atomicAdmissionReceiptRoot, /^sha256:[0-9a-f]{64}$/u);
+  assert.equal(result.enqueued[0].atomicAdmissionReceipt.decision, "qualified");
 });
 
 test("queue retry reactivates the exact merge-group lease before enqueue", async () => {
@@ -584,10 +593,7 @@ test("queue admission absorbs provider status propagation inside one controller 
       { enabled: true, id: "MQ_1", entries: [] },
       { enabled: true, id: "MQ_1", entries: [] },
     ],
-    enqueueErrors: [
-      new Error("Pull request Cannot change this locked branch"),
-      new Error('Pull request has failing required statuses and Required status check "Queue admission lease" is failing'),
-    ],
+    statusReadbackLag: 2,
   });
   const result = await runDevPrAutoMerge(
     {
@@ -604,6 +610,23 @@ test("queue admission absorbs provider status propagation inside one controller 
   assert.equal(result.evaluated[0].reason, "enqueued-with-expected-head");
   assert.equal(fake.enqueued.length, 1);
   assert.deepEqual(fake.commitStatuses.map((entry) => entry.body.state), ["success"]);
+  assert.equal(result.evaluated[0].atomicAdmissionReadbackAttempts, 3);
+});
+
+test("post-lease base or queue authority drift fails before enqueue", async () => {
+  const empty = { enabled: true, id: "MQ_1", entries: [] };
+  const predecessor = { ...empty, entries: [{ id: "MQE_other", pullRequestNumber: 2, pullRequestHeadSha: "sha-2", state: "QUEUED" }] };
+  const cases = [
+    { reason: "base-sha-drift-after-lease-readback", branchShas: ["base-1", "base-1", "base-2", "base-2"], queueStates: Array(4).fill(empty) },
+    { reason: "queue-predecessor-after-lease-readback", branchShas: Array(4).fill("base-1"), queueStates: [empty, empty, predecessor, predecessor] },
+  ];
+  for (const scenario of cases) {
+    const fake = client({ ...scenario, pullRequests: [pr({ number: 1, nodeId: "PR_node_1" })] });
+    const result = await runDevPrAutoMerge({ ...baseOptions, landingMode: "queue", dryRun: false, queueAdmissionContext: "Queue admission lease", activeLeaseContext: "Queue family lease/exact" }, fake);
+    assert.equal(result.evaluated[0].reason, scenario.reason);
+    assert.deepEqual(fake.enqueued, []);
+    assert.deepEqual(fake.commitStatuses.map((entry) => entry.body.state), ["pending", "success", "failure", "failure"]);
+  }
 });
 
 test("enqueue error reconciliation requires an exact PR head queue readback", async () => {
@@ -787,6 +810,7 @@ const targetedOptions = {
   expectedHeadSha: exactHead,
   landingMode: "queue",
   queueAdmissionContext: "Queue admission lease",
+  activeLeaseContext: "Queue family lease/exact",
   requiredChecks: "check",
   dryRun: true,
   pollMergeableDelayMs: 0,
@@ -1008,6 +1032,30 @@ test("exact active Warrant remains valid across fenced delivery progress states"
       );
     });
   }
+});
+
+test("required Warrant fails before enqueue on a missing status context or post-readback generation drift", async () => {
+  await withWarrantResult({}, async (resultPath, warrantResult) => {
+    const target = pr({ number: 21, headSha: exactHead });
+    const candidate = { candidateId: ROOT, sourceHead: exactHead, status: "qualified" };
+    const current = { activeWarrant: warrantResult.warrant, candidates: [candidate] };
+    const makeFake = () => client({ pullRequests: [target], branchShas: Array(4).fill("base-1"), queueStates: Array.from({ length: 4 }, () => ({ enabled: true, id: "MQ_1", entries: [] })) });
+    const run = (fake, overrides = {}) => runDevPrAdmission({ ...targetedOptions, dryRun: false, warrantMode: "required", warrantResultPath: resultPath, ...overrides }, fake);
+
+    const missingContext = makeFake();
+    missingContext.getDevDeliveryQueueState = async () => current;
+    const missingResult = await run(missingContext, { activeLeaseContext: "" });
+    assert.equal(missingResult.receipt.reason, "active-lease-context-required");
+    assert.deepEqual(missingContext.enqueued, []);
+
+    const fake = makeFake();
+    let warrantRead = 0;
+    fake.getDevDeliveryQueueState = async () => warrantRead++ === 0 ? current : { activeWarrant: { ...warrantResult.warrant, generation: 2 }, candidates: [candidate] };
+    const result = await run(fake);
+    assert.equal(result.receipt.reason, "delivery-warrant-current-generation-mismatch");
+    assert.deepEqual(fake.enqueued, []);
+    assert.deepEqual(fake.commitStatuses.slice(0, 4).map((entry) => entry.body.state), ["pending", "success", "failure", "failure"]);
+  });
 });
 
 test("terminal current authority rejects a previously valid Warrant readback", async () => {

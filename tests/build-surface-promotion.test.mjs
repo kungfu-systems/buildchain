@@ -164,6 +164,7 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.equal(publicWrapper.match(/attestations: write/g)?.length, 3);
   assert.equal(publicWrapper.match(/pull-requests: write/g)?.length, 3);
   assert.match(wrapper, /token: \$\{\{ github\.token \}\}/);
+  assert.match(wrapper, /id: publish-gate[\s\S]*github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/);
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(
     wrapper,
@@ -172,9 +173,8 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(wrapper, /BUILDCHAIN_PROMOTION_TOKEN:\n\s+description:/);
   assert.match(
     wrapper,
-    /generated-ref-update-token: \$\{\{ github\.token \}\}/,
+    /generated-ref-update-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
   );
-
   const selfPromotion = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
     "utf8",
@@ -480,6 +480,15 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /buildchain\/dev-delivery-warrant\/dev-v3-v3\.0/);
   assert.match(workflow, /@kungfu-tech\/buildchain@\$\{BUILDCHAIN_AUTHORITY_VERSION\}/);
   assert.match(workflow, /@kungfu-tech\/kfd@\$\{KFD_AUTHORITY_VERSION\}/);
+  assert.match(workflow, /KFD_AUTHORITY_VERSION: 1\.0\.0-alpha\.65/);
+  assert.match(
+    workflow,
+    /KFD_AUTHORITY_ARCHIVE_ROOT: sha256:c4dbd3f954910236d7f0823ea6887f4151e43b871df526ccdd599123421bced2/,
+  );
+  assert.match(
+    workflow,
+    /KFD_AUTHORITY_ARTIFACT_ROOT: sha256:c0781bcaf191a58561ae32ee2fbedabbb48ed50b5725c356fbd83704089637f8/,
+  );
   assert.match(workflow, /createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood/);
   assert.match(
     workflow,
@@ -781,6 +790,11 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha/,
   );
+  assert.match(
+    workflow,
+    /promotion-publication-channel: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && 'alpha' \|\| 'stable' \}\}/,
+  );
+  assert.match(workflow, /promotion-target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(
     workflow,

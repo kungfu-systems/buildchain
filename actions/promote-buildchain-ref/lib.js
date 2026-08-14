@@ -2262,7 +2262,7 @@ async function assertChannelPromotionPr({
       pullRequest.merged_at &&
       baseRef === targetRef &&
       (
-        headRef === expectedHeadRef ||
+        pullRequest.merge_commit_sha === sha || headRef === expectedHeadRef ||
         matchingVersionStateTarget === targetRef ||
         matchingPublishGateTarget === targetRef ||
         (
@@ -3261,8 +3261,9 @@ function protectedBranchUpdateRejected(error) {
   const status = error?.status || error?.response?.status;
   const message = error?.response?.data?.message || error?.message || "";
   return (
-    status === 422 &&
-    /Changes must be made through a pull request|Required status check|approving review is required/i.test(message)
+    (status === 403 && /Resource not accessible by integration/i.test(message)) ||
+    (status === 422 &&
+      /Changes must be made through a pull request|Required status check|approving review is required/i.test(message))
   );
 }
 
