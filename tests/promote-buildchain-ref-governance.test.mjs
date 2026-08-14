@@ -184,7 +184,7 @@ test("governed promotion treats a superseded target as an auditable no-op", asyn
 });
 
 test("governed promotion resumes its exact durable transaction after the target ref advanced", async () => {
-  const releaseSha = "c".repeat(40); const advancedSha = "d".repeat(40);
+  const releaseSha = "c".repeat(40); const advancedSha = "d".repeat(40); const staleFloatingSha = "e".repeat(40);
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
@@ -196,8 +196,8 @@ test("governed promotion resumes its exact durable transaction after the target 
     refs: new Map([
       ["heads/alpha/v1/v1.0", advancedSha],
       ["heads/dev/v1/v1.0", advancedSha],
-      ["tags/v1.0-alpha", advancedSha],
-      ["tags/v1-alpha", advancedSha],
+      ["tags/v1.0-alpha", staleFloatingSha],
+      ["tags/v1-alpha", staleFloatingSha],
     ]),
   });
   commits.set(releaseSha, {
