@@ -321,6 +321,11 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   head. A final base/head/queue/Warrant compare-and-swap readback must still
   match that receipt before the enqueue mutation is attempted.
 
+  The protected branch ref is the base authority for that compare-and-swap.
+  A pull request's `base.sha` may remain an older composition snapshot while
+  GitHub reports the pull request as behind, so it is diagnostic rather than a
+  substitute for the separately read protected ref and rooted Project Cut.
+
 For a required native delivery class, the reusable controller rejects a
 missing or malformed environment root before runtime checkout, candidate
 submission, Warrant selection, or native execution. The input remains
