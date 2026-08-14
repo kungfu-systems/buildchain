@@ -16,8 +16,8 @@
   "state_ref": "buildchain/release-state/3-0-9-alpha-17",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v3.0.9-alpha.17.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v3.0.9-alpha.17/evidence.json",
-  "state": "sealed",
-  "previous_state": "prepared",
+  "state": "publishing",
+  "previous_state": "sealed",
   "actor": "kungfu-origin",
   "run_id": "31761477068",
   "superseded_by": "",
@@ -117,5 +117,5 @@
   "milestones": {},
   "resume_command": "buildchain paper resume --version \"3.0.9-alpha.17\" --state-ref \"refs/heads/buildchain/release-state/3-0-9-alpha-17\"",
   "created_at": "2026-08-14T01:55:15.385Z",
-  "updated_at": "2026-08-14T01:55:15.386Z"
+  "updated_at": "2026-08-14T01:55:20.025Z"
 }
