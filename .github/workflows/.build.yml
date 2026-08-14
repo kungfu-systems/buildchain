@@ -1336,7 +1336,7 @@ jobs:
       - anchored-release-preflight
       - artifact-transfer
       - pre-build-contracts
-    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0' && fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha != github.event.pull_request.head.sha }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0' && (fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.headSha || fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha) != github.event.pull_request.head.sha }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -1937,7 +1937,7 @@ jobs:
       - anchored-release-preflight
       - artifact-transfer
       - pre-build-contracts
-    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0' && fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha != github.event.pull_request.head.sha }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0' && (fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.headSha || fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha) != github.event.pull_request.head.sha }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -3809,7 +3809,7 @@ jobs:
       - finalize-artifact-signing
       - credential-island-macos
       - summarize
-    if: ${{ always() && needs.controller-plan.result == 'success' && fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha != github.event.pull_request.head.sha }}
+    if: ${{ always() && needs.controller-plan.result == 'success' && (fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.headSha || fromJSON(vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON || '{}').source.sha) != github.event.pull_request.head.sha }}
     outputs:
       controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
       controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}

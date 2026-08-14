@@ -540,7 +540,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:f891375506fc0a88fa08a5531a7098d8a427f9d8418711cf67584f09c43e9fa5",
+      "auditDigest": "sha256:ffe6b65147215add4356e25e5769f2e1f7c1f19311b0dcd82ce754796c581fc6",
       "compatibleBreakingDigests": [
         "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
       ],
@@ -1946,7 +1946,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:f891375506fc0a88fa08a5531a7098d8a427f9d8418711cf67584f09c43e9fa5",
+      "auditDigest": "sha256:ffe6b65147215add4356e25e5769f2e1f7c1f19311b0dcd82ce754796c581fc6",
       "compatibleBreakingDigests": [
         "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
         "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
@@ -4274,5 +4274,5 @@
   ],
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:57d37609068590238f547a133b6b69ee994b452825030447d20529683ba61fbd",
-  "contractDigest": "sha256:d4fd99fd03185298512c07ec09267c9f997ae0a0b4df0d3c6ca9dc6088b4c3a3"
+  "contractDigest": "sha256:11236e78001db619023006596afd479b472e953f1a5b1c415a04976bc604732e"
 }
