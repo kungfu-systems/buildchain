@@ -8049,7 +8049,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
     "workflowRegistryDigest": "1f2c0e53b941b9c6e6df26d9614f6d3e6fc37e826ad572ae2a288553d863b839",
-    "pageRegistryDigest": "f820599113db263cd6009a978255147c99c7e58306801d3d719250568fd1271a"
+    "pageRegistryDigest": "33d70b4a4e8000ef6bf9ab208a005a6120546bb2750bfd0c414d56feb2e67f18"
   },
   "comparison": {
     "missingCliRegistry": [],
