@@ -566,13 +566,6 @@ export function verifyTailResealCredentialIslandProjection() {
     process.env.BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH,
     "BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH",
   ));
-  const credentialRoot = path.resolve(required(
-    process.env.BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT,
-    "BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT",
-  ));
-  if (!credentialRoot.startsWith(`${root}${path.sep}`) || !fs.statSync(credentialRoot).isDirectory()) {
-    throw new Error("credential-island projection root is outside the retained macos-arm64 payload");
-  }
   const platform = request.platforms.find((entry) => entry.id === "macos-arm64");
   if (!platform) throw new Error("tail reseal request does not bind platform macos-arm64");
   const manifest = object(readJson(manifestPath, "retained macos-arm64 manifest"), "retained macos-arm64 manifest");
@@ -585,6 +578,23 @@ export function verifyTailResealCredentialIslandProjection() {
     String(entry.path || entry.name || "").replaceAll("\\", "/"),
     entry,
   ]));
+  const declaredCredentialRoot = String(process.env.BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT || "").trim();
+  const credentialManifestCandidates = [...manifestFiles.keys()].filter((relative) =>
+    relative.endsWith("/credential-artifact/manifest.json") || relative === "credential-artifact/manifest.json"
+  );
+  if (!declaredCredentialRoot && credentialManifestCandidates.length !== 1) {
+    throw new Error(`retained macos-arm64 manifest must bind exactly one credential-island projection; found ${credentialManifestCandidates.length}`);
+  }
+  const credentialRoot = declaredCredentialRoot
+    ? path.resolve(declaredCredentialRoot)
+    : path.resolve(root, path.dirname(credentialManifestCandidates[0]));
+  if (
+    !credentialRoot.startsWith(`${root}${path.sep}`) ||
+    !fs.existsSync(credentialRoot) ||
+    !fs.statSync(credentialRoot).isDirectory()
+  ) {
+    throw new Error("credential-island projection root is outside the retained macos-arm64 payload");
+  }
   const credentialRelativeRoot = path.relative(root, credentialRoot).split(path.sep).join("/");
   const credentialManifestRelative = `${credentialRelativeRoot}/manifest.json`;
   const credentialManifestPath = verifiedManifestFile({

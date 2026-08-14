@@ -3273,17 +3273,17 @@ jobs:
           BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
 
       - name: Verify authoritative credential-island projection
-        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
         id: credential-projection
         run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs verify-credential-projection
         env:
           BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
           BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
           BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: .buildchain/artifacts/macos-arm64/manifest.json
-          BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: ${{ steps.signing-import.outputs.credential-artifact-root }}
+          BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: ${{ steps.signing-import.outputs.credential-artifact-root || '' }}
 
       - name: Upload authoritative credential-island payload
-        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-macos-credential-${{ needs.tail-reseal-plan.outputs.source-sha }}
@@ -3293,7 +3293,7 @@ jobs:
           compression-level: 0
 
       - name: Upload authoritative credential-island manifest
-        if: ${{ matrix.platform.id == 'macos-arm64' && needs.tail-reseal-plan.outputs.failure-mode != 'product-upgrade-publication-admission' }}
+        if: ${{ matrix.platform.id == 'macos-arm64' }}
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-credential-manifest-macos-${{ needs.tail-reseal-plan.outputs.source-sha }}

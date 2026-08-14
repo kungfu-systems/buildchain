@@ -373,7 +373,6 @@ test("credential-island projection is already byte-bound by the retained macOS m
     BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: requestFile,
     BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: root,
     BUILDCHAIN_TAIL_RESEAL_MANIFEST_PATH: manifestFile,
-    BUILDCHAIN_TAIL_RESEAL_CREDENTIAL_ARTIFACT_ROOT: credentialRoot,
   }, () => verifyTailResealCredentialIslandProjection());
   assert.equal(projected.platform.id, "macos-arm64-credential");
 
