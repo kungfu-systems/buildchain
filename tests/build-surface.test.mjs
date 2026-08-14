@@ -1521,6 +1521,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /diagnostic-context:/);
   assert.match(workflow, /required-status-checks:/);
   assert.match(workflow, /queue-admission-context:/);
+  assert.match(workflow, /active-lease-context:/);
+  assert.match(workflow, /BUILDCHAIN_DEV_PR_ACTIVE_LEASE_CONTEXT/);
   assert.match(workflow, /default: "check \/ check"/);
   assert.match(workflow, /ready-label:/);
   assert.match(workflow, /block-labels:/);
@@ -1610,6 +1612,8 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ inputs\.expected-pr-number \}\} · required Delivery Warrant"/);
   assert.doesNotMatch(workflow, /secrets: inherit/);
   assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
+  assert.match(workflow, /queue-admission-context: Queue admission lease/);
+  assert.match(workflow, /active-lease-context: Queue family lease\/exact/);
   assert.doesNotMatch(workflow.slice(workflow.indexOf("    with:")), /\$\{\{ inputs\./);
   const dispatchInputs = workflow
     .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))

@@ -75,6 +75,8 @@ jobs:
       delivery-class: native-proof-required
       delivery-priority: ordinary
       required-status-checks: check
+      queue-admission-context: Queue admission lease
+      active-lease-context: Queue family lease/exact
       ready-label: ready
       block-labels: blocked,do-not-merge,work-in-progress
       allowed-head-prefixes: feature/,fix/,chore/,docs/,ci/,refactor/,automation/auditable-demo-

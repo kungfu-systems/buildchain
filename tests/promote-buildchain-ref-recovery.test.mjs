@@ -32,6 +32,7 @@ const {
   restoreDurableReleaseTransaction,
   runPublishTransaction,
   resolveTagsForTarget,
+  testReleaseCommitMatchesTransactionMaterial,
   runVersionVerification,
   resolveReleaseImpactInput,
   generateReleaseEvidenceInputs,
@@ -652,6 +653,7 @@ test("published alpha finalization stays bound to its exact transaction after th
     refs: new Map([
       ["heads/alpha/v1/v1.0", channelMergeSha],
       ["heads/dev/v1/v1.0", channelMergeSha],
+      [`tags/${exactTag}`, transactionSourceSha],
     ]),
   });
   commits.set(channelMergeSha, {
@@ -872,6 +874,140 @@ test("publish transaction resumes partial alpha finalization with exact tag on r
   assert.equal(refs.get("tags/v1.0.0-alpha.0"), previousFinalizedSha);
   assert.equal(refs.get("tags/v1.0-alpha"), mergeSha);
   assert.equal(refs.has("tags/v1.0.0-alpha.1"), false);
+});
+
+test("published alpha recovery accepts the exact protected merge tree after the channel advances", async () => {
+  const transactionSourceSha = "3".repeat(40);
+  const transactionReleaseSha = "4".repeat(40);
+  const requestedMergeSha = "5".repeat(40);
+  const currentChannelSha = "6".repeat(40);
+  const materialTreeSha = "tree-published-alpha-material";
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.0-alpha.0",
+      packageManager: "pnpm@11.7.0",
+    },
+  });
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([
+      ["heads/alpha/v1/v1.0", currentChannelSha],
+      ["heads/dev/v1/v1.0", currentChannelSha],
+      ["tags/v1.0.0-alpha.0", transactionSourceSha],
+    ]),
+  });
+  octokit.rest.repos = {
+    compareCommitsWithBasehead: async () => ({ data: { status: "ahead" } }),
+  };
+  commits.set(transactionReleaseSha, {
+    sha: transactionReleaseSha,
+    tree: { sha: materialTreeSha },
+    parents: [{ sha: transactionSourceSha }],
+  });
+  commits.set(requestedMergeSha, {
+    sha: requestedMergeSha,
+    tree: { sha: materialTreeSha },
+    parents: [
+      { sha: transactionSourceSha },
+      { sha: transactionReleaseSha },
+    ],
+  });
+  commits.set(currentChannelSha, {
+    sha: currentChannelSha,
+    tree: { sha: `tree-${currentChannelSha}` },
+    parents: [{ sha: requestedMergeSha }],
+  });
+  const differentTreeMergeSha = "7".repeat(40);
+  commits.set(differentTreeMergeSha, {
+    sha: differentTreeMergeSha,
+    tree: { sha: "tree-with-additional-content" },
+    parents: [
+      { sha: transactionSourceSha },
+      { sha: transactionReleaseSha },
+    ],
+  });
+  assert.equal(
+    await testReleaseCommitMatchesTransactionMaterial({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      releaseSha: requestedMergeSha,
+      transactionReleaseShas: [transactionReleaseSha],
+    }),
+    true,
+  );
+  assert.equal(
+    await testReleaseCommitMatchesTransactionMaterial({
+      octokit,
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      releaseSha: differentTreeMergeSha,
+      transactionReleaseShas: [transactionReleaseSha],
+    }),
+    false,
+  );
+  await persistDurableReleaseTransaction({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    transaction: {
+      schema: 1,
+      id: "published-alpha-protected-merge",
+      repository: "kungfu-systems/buildchain",
+      target_ref: "alpha/v1/v1.0",
+      source_sha: transactionSourceSha,
+      release_sha: transactionReleaseSha,
+      release_material_sha: transactionReleaseSha,
+      publish_tooling_sha: transactionReleaseSha,
+      version: "1.0.0-alpha.0",
+      exact_tag: "v1.0.0-alpha.0",
+      channel: "alpha",
+      line: "v1.0",
+      version_strategy: "",
+      lifecycle_identity: "lifecycle.publish",
+      state_ref: "buildchain/release-state/1-0-0-alpha-0",
+      state_path: "",
+      evidence_path: "",
+      state: "finalizing",
+      previous_state: "published",
+      actor: "codex",
+      run_id: "1",
+      superseded_by: "",
+      failure: "",
+      artifacts: [],
+      evidence: [],
+      created_at: "2026-07-01T00:00:00.000Z",
+      updated_at: "2026-07-01T00:00:00.000Z",
+    },
+    evidencePath: "",
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: requestedMergeSha,
+    targetRef: "alpha/v1/v1.0",
+    cwd,
+    dryRun: true,
+    publishTransaction: true,
+    publishTransactionOverride: true,
+    requireVersionState: true,
+  });
+
+  assert.deepEqual(
+    result.updates.find((update) => update.action === "resumed-advanced-publication"),
+    {
+      action: "resumed-advanced-publication",
+      ref: "alpha/v1/v1.0",
+      requestedSha: requestedMergeSha,
+      currentSha: currentChannelSha,
+      transactionId: "published-alpha-protected-merge",
+      transactionState: "finalizing",
+      sha: currentChannelSha,
+    },
+  );
 });
 
 test("completed alpha transaction does not reuse exact tag for new alpha material", async () => {

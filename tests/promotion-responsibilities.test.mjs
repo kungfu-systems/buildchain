@@ -213,6 +213,68 @@ test("floating tag finalization reads back an exact existing target without rewr
   ]);
 });
 
+test("floating tag finalization lets the writer recover a reader-side ref miss", async () => {
+  const targetSha = "c".repeat(40);
+  const requests = [];
+  const updates = [];
+  const reader = {
+    rest: {
+      git: {
+        getRef: async (request) => {
+          requests.push({ operation: "reader.getRef", ...request });
+          const error = new Error("Not Found");
+          error.status = 404;
+          throw error;
+        },
+      },
+    },
+  };
+  const writer = {
+    rest: {
+      git: {
+        updateRef: async (request) => {
+          requests.push({ operation: "writer.updateRef", ...request });
+        },
+        createRef: async (request) => {
+          requests.push({ operation: "writer.createRef", ...request });
+        },
+      },
+    },
+  };
+  const operations = createRefMutationOperations({
+    octokit: reader,
+    tagUpdateOctokit: writer,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: "a".repeat(40),
+    dryRun: false,
+    rule: { major: 3, minor: 0, releasePrefix: "v3.0" },
+    updates,
+  });
+
+  await operations.updateTag("v3.0-alpha", targetSha);
+
+  assert.deepEqual(requests, [
+    {
+      operation: "reader.getRef",
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      ref: "tags/v3.0-alpha",
+    },
+    {
+      operation: "writer.updateRef",
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      ref: "tags/v3.0-alpha",
+      sha: targetSha,
+      force: true,
+    },
+  ]);
+  assert.deepEqual(updates, [
+    { tag: "v3.0-alpha", action: "updated", sha: targetSha },
+  ]);
+});
+
 test("durable transaction responsibility emits an auditable dry-run plan and enforces the expected version", async () => {
   const updates = [];
   const operations = createDurableTransactionOperations({

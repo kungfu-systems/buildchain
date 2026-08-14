@@ -68,6 +68,8 @@ function client({
   queueStates = [{ enabled: false, id: "", entries: [] }],
   enqueueError = null,
   enqueueErrors = [],
+  currentDeliveryQueue,
+  statusReadbackLag = 0,
 } = {}) {
   const merged = [];
   const enqueued = [];
@@ -75,8 +77,9 @@ function client({
   const comments = [];
   let branchRead = 0;
   let queueRead = 0;
+  let statusReadbackCount = 0;
   const detailReads = new Map();
-  return {
+  const fake = {
     merged,
     enqueued,
     commitStatuses,
@@ -101,7 +104,18 @@ function client({
       return reviews;
     },
     async listCommitChecks() {
-      return checks;
+      if (commitStatuses.length > 0 && statusReadbackCount < statusReadbackLag) {
+        statusReadbackCount += 1;
+        return checks;
+      }
+      const latestStatuses = new Map();
+      for (const status of commitStatuses) {
+        if (status.body?.context) latestStatuses.set(status.body.context, status.body);
+      }
+      return {
+        ...checks,
+        statuses: [...latestStatuses.values(), ...(checks.statuses || [])],
+      };
     },
     async mergePullRequest(number, { method, sha }) {
       merged.push({ number, method, sha });
@@ -155,6 +169,10 @@ function client({
       return { id: commitStatuses.length };
     },
   };
+  if (currentDeliveryQueue !== undefined) {
+    fake.getDevDeliveryQueueState = async () => currentDeliveryQueue;
+  }
+  return fake;
 }
 
 const baseOptions = {
@@ -458,6 +476,8 @@ test("queue apply binds enqueuePullRequest to the immutable PR head", async () =
   }]);
   assert.equal(result.enqueued[0].action, "enqueued");
   assert.equal(result.enqueued[0].admissionReceipt.finalSafetyBoundary, "github-merge-group");
+  assert.match(result.enqueued[0].atomicAdmissionReceiptRoot, /^sha256:[0-9a-f]{64}$/u);
+  assert.equal(result.enqueued[0].atomicAdmissionReceipt.decision, "qualified");
 });
 
 test("queue admission fails closed when the target base moves", async () => {
@@ -498,6 +518,76 @@ test("queue admission revokes the temporary lease when enqueue is rejected", asy
 
   assert.equal(result.evaluated[0].reason, "enqueue-rejected");
   assert.deepEqual(fake.commitStatuses.map((entry) => entry.body.state), ["success", "failure"]);
+});
+
+test("queue admission waits for status readback before enqueue", async () => {
+  const fake = client({
+    pullRequests: [pr({ number: 1, nodeId: "PR_node_1" })],
+    branchShas: ["base-1", "base-1", "base-1"],
+    queueStates: [
+      { enabled: true, id: "MQ_1", entries: [] },
+      { enabled: true, id: "MQ_1", entries: [] },
+    ],
+    statusReadbackLag: 2,
+  });
+  const result = await runDevPrAutoMerge(
+    {
+      ...baseOptions,
+      landingMode: "queue",
+      dryRun: false,
+      queueAdmissionContext: "Queue admission lease",
+      pollMergeableAttempts: 3,
+    },
+    fake,
+  );
+
+  assert.equal(result.evaluated[0].reason, "enqueued-with-expected-head");
+  assert.equal(result.evaluated[0].atomicAdmissionReadbackAttempts, 3);
+  assert.equal(fake.enqueued.length, 1);
+});
+
+test("post-lease base or predecessor drift fails before enqueue", async () => {
+  const empty = { enabled: true, id: "MQ_1", entries: [] };
+  const predecessor = {
+    ...empty,
+    entries: [{
+      id: "MQE_other",
+      pullRequestNumber: 2,
+      pullRequestHeadSha: "sha-2",
+      state: "QUEUED",
+    }],
+  };
+  const cases = [
+    {
+      reason: "base-sha-drift-after-lease-readback",
+      branchShas: ["base-1", "base-1", "base-2", "base-2"],
+      queueStates: Array(4).fill(empty),
+    },
+    {
+      reason: "queue-predecessor-after-lease-readback",
+      branchShas: Array(4).fill("base-1"),
+      queueStates: [empty, empty, predecessor, predecessor],
+    },
+  ];
+  for (const scenario of cases) {
+    const fake = client({
+      ...scenario,
+      pullRequests: [pr({ number: 1, nodeId: "PR_node_1" })],
+    });
+    const result = await runDevPrAutoMerge({
+      ...baseOptions,
+      landingMode: "queue",
+      dryRun: false,
+      queueAdmissionContext: "Queue admission lease",
+      activeLeaseContext: "Queue family lease/exact",
+    }, fake);
+    assert.equal(result.evaluated[0].reason, scenario.reason);
+    assert.deepEqual(fake.enqueued, []);
+    assert.deepEqual(
+      fake.commitStatuses.map((entry) => entry.body.state),
+      ["pending", "success", "failure", "failure"],
+    );
+  }
 });
 
 test("enqueue error reconciliation requires an exact PR head queue readback", async () => {
@@ -642,6 +732,7 @@ const targetedOptions = {
   expectedHeadSha: exactHead,
   landingMode: "queue",
   queueAdmissionContext: "Queue admission lease",
+  activeLeaseContext: "Queue family lease/exact",
   requiredChecks: "check",
   dryRun: true,
   pollMergeableDelayMs: 0,
@@ -766,7 +857,7 @@ test("required Warrant fails closed before GitHub queue admission", async () => 
 });
 
 test("exact active Warrant authorizes only its bound PR head", async () => {
-  await withWarrantResult({}, async (resultPath) => {
+  await withWarrantResult({}, async (resultPath, warrantResult) => {
     const target = pr({ number: 21, headSha: exactHead });
     const fake = client({
       pullRequests: [target],
@@ -776,6 +867,14 @@ test("exact active Warrant authorizes only its bound PR head", async () => {
         id: "MQ_1",
         entries: [],
       })),
+      currentDeliveryQueue: {
+        activeWarrant: warrantResult.warrant,
+        candidates: [{
+          candidateId: warrantResult.warrant.candidateId,
+          sourceHead: warrantResult.warrant.sourceHead,
+          status: "selected",
+        }],
+      },
     });
     const result = await runDevPrAdmission(
       {
@@ -790,6 +889,50 @@ test("exact active Warrant authorizes only its bound PR head", async () => {
     assert.equal(result.receipt.deliveryWarrant.fencingToken, ROOT);
     assert.equal(result.receipt.deliveryWarrant.stateRoot, ROOT);
     assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
+  });
+});
+
+test("required Warrant rejects current generation drift before enqueue", async () => {
+  await withWarrantResult({}, async (resultPath, warrantResult) => {
+    const target = pr({ number: 21, headSha: exactHead });
+    const candidate = {
+      candidateId: warrantResult.warrant.candidateId,
+      sourceHead: warrantResult.warrant.sourceHead,
+      status: "selected",
+    };
+    const current = {
+      activeWarrant: warrantResult.warrant,
+      candidates: [candidate],
+    };
+    const fake = client({
+      pullRequests: [target],
+      branchShas: Array(4).fill("base-1"),
+      queueStates: Array.from({ length: 4 }, () => ({
+        enabled: true,
+        id: "MQ_1",
+        entries: [],
+      })),
+    });
+    let warrantRead = 0;
+    fake.getDevDeliveryQueueState = async () => warrantRead++ === 0
+      ? current
+      : {
+        activeWarrant: { ...warrantResult.warrant, generation: 2 },
+        candidates: [candidate],
+      };
+    const result = await runDevPrAdmission({
+      ...targetedOptions,
+      dryRun: false,
+      warrantMode: "required",
+      warrantResultPath: resultPath,
+    }, fake);
+
+    assert.equal(result.receipt.reason, "delivery-warrant-current-generation-mismatch");
+    assert.deepEqual(fake.enqueued, []);
+    assert.deepEqual(
+      fake.commitStatuses.slice(0, 4).map((entry) => entry.body.state),
+      ["pending", "success", "failure", "failure"],
+    );
   });
 });
 
