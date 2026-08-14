@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "id": "be29d880cf703f7ebd55c9ab7b83776ed94ae8dffdd5906e7877877ae19b5a73",
+  "repository": "kungfu-systems/buildchain",
+  "target_ref": "alpha/v3/v3.0",
+  "source_sha": "bed2e198ed4a491638caf5826c2b642d77baf4c8",
+  "release_sha": "6482a0982124e3d9460c4205995d525c39ef6391",
+  "release_material_sha": "6482a0982124e3d9460c4205995d525c39ef6391",
+  "publish_tooling_sha": "6482a0982124e3d9460c4205995d525c39ef6391",
+  "version": "3.0.9-alpha.17",
+  "exact_tag": "v3.0.9-alpha.17",
+  "channel": "alpha",
+  "line": "v3.0",
+  "version_strategy": "",
+  "lifecycle_identity": "lifecycle.publish",
+  "state_ref": "buildchain/release-state/3-0-9-alpha-17",
+  "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v3.0.9-alpha.17.json",
+  "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v3.0.9-alpha.17/evidence.json",
+  "state": "sealed",
+  "previous_state": "prepared",
+  "actor": "kungfu-origin",
+  "run_id": "31761477068",
+  "superseded_by": "",
+  "failure": "",
+  "artifacts": [],
+  "evidence": [],
+  "sealed_bundle": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-publication-sealed-bundle",
+    "root": "sha256:657d3df5063a1b2e23ec762517b139172ffb0f649868565bc51b67f0445f7a27",
+    "candidate": {
+      "schemaVersion": 1,
+      "contract": "kungfu-buildchain-publication-artifact-candidate",
+      "repository": "kungfu-systems/buildchain",
+      "sourceSha": "178d8ec08ced787924c30cc06945e492f80465f3",
+      "sourceTreeSha": "0e86b6ad28df522bc96691d0c6f4c0ca0704f804",
+      "runtimeSha": "17cb4259831b34ba382b0211500cbb1ef26efd11",
+      "releaseCandidateRoot": "sha256:613fb2dcea7b07d4c288f09457b5bbcf75dfed7ce8a8edd960881e2942e98b8c",
+      "files": [
+        {
+          "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/adopter-delivery.json",
+          "size": 2711,
+          "sha256": "2dbecb82753ec92914adc7558f2557bf9c271751d125db1fe0a211a3b65a5129"
+        },
+        {
+          "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/buildchain-delivery-self-dogfood.json",
+          "size": 32734,
+          "sha256": "3f33f5d30a034356e25212e368b873b47b65e7f12026382322940fa00a3c808a"
+        },
+        {
+          "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/kfd-adopter-manifest.json",
+          "size": 9236,
+          "sha256": "67542380db720537564347675c0239a2142631979f91dc60e236eb74830a3eb2"
+        },
+        {
+          "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/kungfu-tech-buildchain-3.0.9-alpha.17.tgz",
+          "size": 2210717,
+          "sha256": "13f141520e29f846363bc079ef66f0d3ca772a75e4a20e42f66983f117583ddb"
+        },
+        {
+          "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/product-payload-manifest.json",
+          "size": 1394,
+          "sha256": "a2cc8684d41cc8fb34300a2c086aea78e88b7a62daebef0c7852705b0653553b"
+        }
+      ],
+      "candidateDigest": "657d3df5063a1b2e23ec762517b139172ffb0f649868565bc51b67f0445f7a27"
+    },
+    "files": [
+      {
+        "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/adopter-delivery.json",
+        "size": 2711,
+        "sha256": "2dbecb82753ec92914adc7558f2557bf9c271751d125db1fe0a211a3b65a5129"
+      },
+      {
+        "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/buildchain-delivery-self-dogfood.json",
+        "size": 32734,
+        "sha256": "3f33f5d30a034356e25212e368b873b47b65e7f12026382322940fa00a3c808a"
+      },
+      {
+        "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/kfd-adopter-manifest.json",
+        "size": 9236,
+        "sha256": "67542380db720537564347675c0239a2142631979f91dc60e236eb74830a3eb2"
+      },
+      {
+        "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/kungfu-tech-buildchain-3.0.9-alpha.17.tgz",
+        "size": 2210717,
+        "sha256": "13f141520e29f846363bc079ef66f0d3ca772a75e4a20e42f66983f117583ddb"
+      },
+      {
+        "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/product-payload-manifest.json",
+        "size": 1394,
+        "sha256": "a2cc8684d41cc8fb34300a2c086aea78e88b7a62daebef0c7852705b0653553b"
+      }
+    ],
+    "npm": {
+      "name": "@kungfu-tech/buildchain",
+      "version": "3.0.9-alpha.17",
+      "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/kungfu-tech-buildchain-3.0.9-alpha.17.tgz",
+      "size": 2210717,
+      "sha256": "13f141520e29f846363bc079ef66f0d3ca772a75e4a20e42f66983f117583ddb",
+      "integrity": "sha512-bHw9rUBjgjXlEfhQSrG3ph9kxemXkAJnE4VDwKzvkJ5/ChZlIOTCc3uCxpmdsigLjpipS9e9S/OZ+oVs/hW5fQ=="
+    },
+    "releaseAssets": [
+      {
+        "path": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3/kungfu-tech-buildchain-3.0.9-alpha.17.tgz",
+        "size": 2210717,
+        "sha256": "13f141520e29f846363bc079ef66f0d3ca772a75e4a20e42f66983f117583ddb"
+      }
+    ],
+    "completion": {
+      "githubReleaseRequired": true
+    },
+    "durablePath": "sealed-bundle/sha256/657d3df5063a1b2e23ec762517b139172ffb0f649868565bc51b67f0445f7a27",
+    "resumeCommand": "buildchain paper resume --version \"3.0.9-alpha.17\" --state-ref \"refs/heads/buildchain/release-state/3-0-9-alpha-17\""
+  },
+  "publication_state": "sealed",
+  "milestones": {},
+  "resume_command": "buildchain paper resume --version \"3.0.9-alpha.17\" --state-ref \"refs/heads/buildchain/release-state/3-0-9-alpha-17\"",
+  "created_at": "2026-08-14T01:55:15.385Z",
+  "updated_at": "2026-08-14T01:55:15.386Z"
+}

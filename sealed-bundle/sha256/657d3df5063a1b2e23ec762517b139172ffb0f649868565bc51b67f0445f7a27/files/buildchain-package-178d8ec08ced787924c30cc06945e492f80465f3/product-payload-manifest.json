@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-product-payload-manifest/v1",
+  "artifactName": "buildchain-package-178d8ec08ced787924c30cc06945e492f80465f3",
+  "manifestPath": "product-payload-manifest.json",
+  "candidateRoot": "sha256:613fb2dcea7b07d4c288f09457b5bbcf75dfed7ce8a8edd960881e2942e98b8c",
+  "buildSummaryRoot": "sha256:671441f600d309f447a25c38a1cfc3a6f18c89d3ea5880e2a807c0237be4edf6",
+  "source": {
+    "sha": "178d8ec08ced787924c30cc06945e492f80465f3",
+    "tree": "0e86b6ad28df522bc96691d0c6f4c0ca0704f804"
+  },
+  "runtimeSha": "17cb4259831b34ba382b0211500cbb1ef26efd11",
+  "files": [
+    {
+      "path": "adopter-delivery.json",
+      "size": 2711,
+      "sha256": "sha256:2dbecb82753ec92914adc7558f2557bf9c271751d125db1fe0a211a3b65a5129"
+    },
+    {
+      "path": "buildchain-delivery-self-dogfood.json",
+      "size": 32734,
+      "sha256": "sha256:3f33f5d30a034356e25212e368b873b47b65e7f12026382322940fa00a3c808a"
+    },
+    {
+      "path": "kfd-adopter-manifest.json",
+      "size": 9236,
+      "sha256": "sha256:67542380db720537564347675c0239a2142631979f91dc60e236eb74830a3eb2"
+    },
+    {
+      "path": "kungfu-tech-buildchain-3.0.9-alpha.17.tgz",
+      "size": 2210717,
+      "sha256": "sha256:13f141520e29f846363bc079ef66f0d3ca772a75e4a20e42f66983f117583ddb"
+    }
+  ],
+  "root": "sha256:27688cea8aebfe4e8d1ee3c7eacea6952d320a6307282dec3f96b8a016e2c8a6"
+}
