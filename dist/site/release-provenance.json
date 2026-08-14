@@ -20,6 +20,7 @@
       "./detached-artifact-signature": "./packages/core/detached-artifact-signature.js",
       "./anchored-version-material": "./packages/core/anchored-version-material.js",
       "./buildchain-contract": "./packages/core/buildchain-contract.js",
+      "./compatibility-fact-authority": "./packages/core/buildchain-compatibility-proof.js",
       "./candidate-timeline": "./packages/core/candidate-timeline.js",
       "./channel-candidate": "./packages/core/channel-candidate.js",
       "./cache-evidence": "./packages/core/cache-evidence.js",

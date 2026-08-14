@@ -54,11 +54,12 @@ overview, and fixture guides.
 `buildchain-contract.json` is the machine-readable Buildchain runtime contract
 world used by floating-ref contract locks. It records public workflow/action/CLI
 surfaces, compatibility digests, and audit digests for the files that implement
-those surfaces. Its immutable compatibility proofs bind historical breaking
+those surfaces. Its immutable KFR2 compatibility Facts bind historical breaking
 digests to exact target surfaces, operation scopes, protected authority,
-evidence, and Git cuts. `compatibleBreakingDigests` and per-surface proof-root
-lists are generated projections; site consumers must not edit or reinterpret
-them as independent authority.
+evidence, and Git Cuts. The retained proof objects,
+`compatibleBreakingDigests`, and per-surface Fact/proof-root lists are generated
+projections; site consumers must not edit or reinterpret them as independent
+authority. See [Compatibility Fact Authority](compatibility-fact-authority.md).
 `manual-registry.json` enumerates the packaged Markdown manuals with source
 digests so an agent can find complete operating documentation from the npm
 artifact. `node-api-registry.json` enumerates public Node import surfaces from

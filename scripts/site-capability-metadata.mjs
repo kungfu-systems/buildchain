@@ -228,6 +228,7 @@ export function nodeApiMeta(exportName) {
     "./publication-rehearsal-projection": { group: "release-passport-trust", summary: "Canonical generated config, workflow, and Agent projections for release local constructibility." },
     "./release-line-bootstrap": { group: "governance-versioning", summary: "Semver release-line bootstrap planning and version-state APIs." },
     "./buildchain-contract": { group: "governance-versioning", summary: "Runtime contract world and compatibility digest APIs for floating-ref drift checks." },
+    "./compatibility-fact-authority": { group: "governance-versioning", summary: "KFR2 compatibility Fact registry, explicit bounded path verification, and deterministic legacy projection APIs." },
     "./controller-evidence": { group: "reusable-build", summary: "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs." },
     "./surface-manifest": { group: "site-and-propagation", summary: "Surface manifest timestamp and reproducibility policy APIs." },
     "./issue-reporting": { group: "observability-diagnostics", summary: "Buildchain-owned issue reporting API for workflow friction feedback." },

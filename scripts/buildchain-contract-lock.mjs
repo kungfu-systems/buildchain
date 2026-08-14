@@ -21,7 +21,9 @@ function env(name, fallback = "") {
 }
 
 function boolEnv(name, fallback = false) {
-  const value = String(process.env[name] ?? "").trim().toLowerCase();
+  const value = String(process.env[name] ?? "")
+    .trim()
+    .toLowerCase();
   if (!value) {
     return fallback;
   }
@@ -61,9 +63,96 @@ function issueModeAllows(mode, evaluation) {
   return mode === "compatible-and-breaking";
 }
 
+function publishContractLockSummary({
+  evaluation,
+  current,
+  runtimeRef,
+  runtimeSha,
+  workflowShellRef,
+  shouldIssue,
+  issueBodyPath,
+}) {
+  appendSummary(
+    [
+      "## Buildchain contract lock",
+      "",
+      `- Status: \`${evaluation.status}\``,
+      `- Compatible: \`${evaluation.compatible ? "true" : "false"}\``,
+      `- Runtime ref: \`${runtimeRef || "(unknown)"}\``,
+      `- Runtime SHA: \`${runtimeSha || "(unknown)"}\``,
+      `- Workflow shell ref: \`${workflowShellRef || "(unknown)"}\``,
+      evaluation.channelBinding
+        ? `- Bound channel: \`${evaluation.channelBinding.channel || "(unknown)"}\``
+        : "",
+      `- Contract digest: \`${current.contractDigest}\``,
+      `- Compatibility digest: \`${current.compatibilityDigest}\``,
+      `- Compatibility Fact registry: \`${current.compatibilityFactRegistryRoot}\``,
+      `- Compatibility Fact Cut: \`${current.compatibilityFactCutRoot}\``,
+      `- Compatibility proof registry: \`${current.compatibilityProofRegistryRoot || "(legacy)"}\``,
+      `- Verification receipt: \`${evaluation.receiptRoot || "(not-required)"}\``,
+      evaluation.usedProofRoots?.length
+        ? `- Used compatibility proofs: ${evaluation.usedProofRoots.map((root) => `\`${root}\``).join(", ")}`
+        : "",
+      evaluation.usedFactRoots?.length
+        ? `- Used compatibility Facts: ${evaluation.usedFactRoots.map((root) => `\`${root}\``).join(", ")}`
+        : "",
+      evaluation.pathReceiptRoots?.length
+        ? `- Temporal path receipts: ${evaluation.pathReceiptRoots.map((root) => `\`${root}\``).join(", ")}`
+        : "",
+      evaluation.reasons?.length
+        ? `- Reasons: ${evaluation.reasons.join("; ")}`
+        : "",
+      shouldIssue ? `- Drift issue body: \`${issueBodyPath}\`` : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  );
+}
+
+function publishContractLockOutputs({
+  evaluation,
+  current,
+  runtimeSha,
+  shouldIssue,
+  issueBodyPath,
+}) {
+  writeGitHubOutputs({
+    "contract-lock-status": evaluation.status,
+    "contract-lock-compatible": String(evaluation.compatible === true),
+    "contract-lock-drift": String(evaluation.drift === true),
+    "contract-lock-issue-needed": String(shouldIssue),
+    "contract-lock-issue-body-file": shouldIssue ? issueBodyPath : "",
+    "contract-digest": current.contractDigest,
+    "contract-compatibility-digest": current.compatibilityDigest,
+    "contract-compatibility-fact-registry-root":
+      current.compatibilityFactRegistryRoot,
+    "contract-compatibility-fact-cut-root": current.compatibilityFactCutRoot,
+    "contract-compatibility-proof-registry-root":
+      current.compatibilityProofRegistryRoot || "",
+    "contract-compatibility-verification-receipt-root":
+      evaluation.receiptRoot || "",
+    "contract-compatibility-proof-roots": (
+      evaluation.usedProofRoots || []
+    ).join(","),
+    "contract-compatibility-fact-roots": (evaluation.usedFactRoots || []).join(
+      ",",
+    ),
+    "contract-compatibility-path-receipt-roots": (
+      evaluation.pathReceiptRoots || []
+    ).join(","),
+    "accepted-contract-digest": evaluation.accepted?.contractDigest || "",
+    "accepted-buildchain-sha": evaluation.accepted?.resolvedSha || "",
+    "current-buildchain-sha": runtimeSha || "",
+  });
+}
+
 export function checkBuildchainContractLock({
-  lockPath = env("BUILDCHAIN_CONTRACT_LOCK_PATH") || resolveBuildchainContractLockPath(process.cwd()),
-  currentContractPath = env("BUILDCHAIN_CONTRACT_CURRENT_PATH", ".buildchain/runtime/dist/site/buildchain-contract.json"),
+  lockPath = env("BUILDCHAIN_CONTRACT_LOCK_PATH") ||
+    resolveBuildchainContractLockPath(process.cwd()),
+  currentContractPath = env(
+    "BUILDCHAIN_CONTRACT_CURRENT_PATH",
+    ".buildchain/runtime/dist/site/buildchain-contract.json",
+  ),
   runtimeRoot = env("BUILDCHAIN_RUNTIME_ROOT", ".buildchain/runtime"),
   runtimeRef = env("BUILDCHAIN_RUNTIME_REF"),
   runtimeSha = env("BUILDCHAIN_RUNTIME_SHA"),
@@ -73,8 +162,14 @@ export function checkBuildchainContractLock({
   expectedChannel = env("BUILDCHAIN_EXPECTED_CHANNEL"),
   expectedMajor = env("BUILDCHAIN_EXPECTED_MAJOR"),
   allowOpaqueRuntime = boolEnv("BUILDCHAIN_ALLOW_OPAQUE_RUNTIME"),
-  issueMode = env("BUILDCHAIN_CONTRACT_DRIFT_ISSUE_MODE", "compatible-and-breaking"),
-  issueBodyPath = env("BUILDCHAIN_CONTRACT_DRIFT_ISSUE_BODY", ".buildchain/contract-drift/issue-body.md"),
+  issueMode = env(
+    "BUILDCHAIN_CONTRACT_DRIFT_ISSUE_MODE",
+    "compatible-and-breaking",
+  ),
+  issueBodyPath = env(
+    "BUILDCHAIN_CONTRACT_DRIFT_ISSUE_BODY",
+    ".buildchain/contract-drift/issue-body.md",
+  ),
   repository = env("GITHUB_REPOSITORY"),
   workflow = env("GITHUB_WORKFLOW"),
   runUrl = env("BUILDCHAIN_WORKFLOW_RUN_URL"),
@@ -105,52 +200,45 @@ export function checkBuildchainContractLock({
     fs.mkdirSync(path.dirname(issueBodyPath), { recursive: true });
     fs.writeFileSync(issueBodyPath, `${body}\n`);
   }
-  appendSummary([
-    "## Buildchain contract lock",
-    "",
-    `- Status: \`${evaluation.status}\``,
-    `- Compatible: \`${evaluation.compatible ? "true" : "false"}\``,
-    `- Runtime ref: \`${runtimeRef || "(unknown)"}\``,
-    `- Runtime SHA: \`${runtimeSha || "(unknown)"}\``,
-    `- Workflow shell ref: \`${workflowShellRef || "(unknown)"}\``,
-    evaluation.channelBinding ? `- Bound channel: \`${evaluation.channelBinding.channel || "(unknown)"}\`` : "",
-    `- Contract digest: \`${current.contractDigest}\``,
-    `- Compatibility digest: \`${current.compatibilityDigest}\``,
-    `- Compatibility proof registry: \`${current.compatibilityProofRegistryRoot || "(legacy)"}\``,
-    `- Verification receipt: \`${evaluation.receiptRoot || "(not-required)"}\``,
-    evaluation.usedProofRoots?.length ? `- Used compatibility proofs: ${evaluation.usedProofRoots.map((root) => `\`${root}\``).join(", ")}` : "",
-    evaluation.reasons?.length ? `- Reasons: ${evaluation.reasons.join("; ")}` : "",
-    shouldIssue ? `- Drift issue body: \`${issueBodyPath}\`` : "",
-  ].filter(Boolean).join("\n"));
-  writeGitHubOutputs({
-    "contract-lock-status": evaluation.status,
-    "contract-lock-compatible": String(evaluation.compatible === true),
-    "contract-lock-drift": String(evaluation.drift === true),
-    "contract-lock-issue-needed": String(shouldIssue),
-    "contract-lock-issue-body-file": shouldIssue ? issueBodyPath : "",
-    "contract-digest": current.contractDigest,
-    "contract-compatibility-digest": current.compatibilityDigest,
-    "contract-compatibility-proof-registry-root": current.compatibilityProofRegistryRoot || "",
-    "contract-compatibility-verification-receipt-root": evaluation.receiptRoot || "",
-    "contract-compatibility-proof-roots": (evaluation.usedProofRoots || []).join(","),
-    "accepted-contract-digest": evaluation.accepted?.contractDigest || "",
-    "accepted-buildchain-sha": evaluation.accepted?.resolvedSha || "",
-    "current-buildchain-sha": runtimeSha || "",
+  publishContractLockSummary({
+    evaluation,
+    current,
+    runtimeRef,
+    runtimeSha,
+    workflowShellRef,
+    shouldIssue,
+    issueBodyPath,
+  });
+  publishContractLockOutputs({
+    evaluation,
+    current,
+    runtimeSha,
+    shouldIssue,
+    issueBodyPath,
   });
   if (!evaluation.ok) {
-    throw new Error(`Buildchain contract lock rejected: ${(evaluation.reasons || []).join("; ")}`);
+    throw new Error(
+      `Buildchain contract lock rejected: ${(evaluation.reasons || []).join("; ")}`,
+    );
   }
   return { evaluation, current, shouldIssue };
 }
 
 export function writeBuildchainContractLock({
   output = env("BUILDCHAIN_CONTRACT_LOCK_PATH", BUILDCHAIN_CONTRACT_LOCK_PATH),
-  currentContractPath = env("BUILDCHAIN_CONTRACT_CURRENT_PATH", "dist/site/buildchain-contract.json"),
+  currentContractPath = env(
+    "BUILDCHAIN_CONTRACT_CURRENT_PATH",
+    "dist/site/buildchain-contract.json",
+  ),
   runtimeRoot = env("BUILDCHAIN_RUNTIME_ROOT", process.cwd()),
   buildchainRef = env("BUILDCHAIN_RUNTIME_REF", "v3"),
   resolvedSha = env("BUILDCHAIN_RUNTIME_SHA"),
-  compatibilityPolicy = env("BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY", "major-compatible"),
-  acceptedAt = env("BUILDCHAIN_CONTRACT_ACCEPTED_AT") || new Date().toISOString(),
+  compatibilityPolicy = env(
+    "BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY",
+    "major-compatible",
+  ),
+  acceptedAt = env("BUILDCHAIN_CONTRACT_ACCEPTED_AT") ||
+    new Date().toISOString(),
 } = {}) {
   const contractWorld = readCurrentContract(currentContractPath, runtimeRoot);
   const lock = createBuildchainContractLock({
@@ -180,7 +268,10 @@ function main(argv = process.argv.slice(2)) {
   throw new Error(`unknown buildchain contract lock command: ${command}`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   try {
     main();
   } catch (error) {

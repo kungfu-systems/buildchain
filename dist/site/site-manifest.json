@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:81a419036b590cdbb5c927c0324d6e16cf5bdbaf9c7b1d0e206fbaf76ad3fbff"
+      "digest": "sha256:84f1fad4544b4b6f3727d919e4726678ac20d084d1ec55d8cc5193925863538a"
     },
     {
       "id": "getting-started",
@@ -205,7 +205,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:371030eda56d7a968d037e8b9a348e0211038506b8c0b14c539ec790ce884945"
+      "digest": "sha256:5e6878260ee35a19e3451beeda8e1e4057d3afa19a95b0ac95bc37895925aa5e"
     },
     {
       "id": "migration-inventory",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:e6f061101a8acb3a5b34c99bcd30faa143f279dc12ceb4835019822a98abe261"
+      "digest": "sha256:f8109cd3087c81aad497d8423801a986cc4077fe78c0f09e8603a1bb1e452983"
     },
     {
       "id": "build-facts",
@@ -293,7 +293,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:8868acbf7942b0d8e5101203a4ab98b984028b90e0584ea131e1d9b0253e4344"
+      "digest": "sha256:ab14d7fc95b1d1471d6b915ffd6ced3af3ac3bb8882edf5e66a4feb2713ef091"
     },
     {
       "id": "publish-transaction",
