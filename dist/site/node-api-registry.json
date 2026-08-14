@@ -6845,7 +6845,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 75
+        "line": 109
       },
       "example": "import { classifyDevDeliveryDelta } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6874,7 +6874,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 207
+        "line": 241
       },
       "example": "import { createIntegrationDeliveryProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6903,7 +6903,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 121
+        "line": 155
       },
       "example": "import { createProjectCutReplayPlan } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6932,7 +6932,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 141
+        "line": 175
       },
       "example": "import { createProjectCutReplayProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6961,9 +6961,38 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 31
+        "line": 32
       },
       "example": "import { createSourceQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-proof.js#createSourceQualificationProofV2",
+      "name": "createSourceQualificationProofV2",
+      "kind": "function",
+      "signature": "function createSourceQualificationProofV2(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-proof.js",
+        "line": 53
+      },
+      "example": "import { createSourceQualificationProofV2 } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -6985,7 +7014,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 5
+        "line": 6
       },
       "example": "import { INTEGRATION_DELIVERY_PROOF_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7009,7 +7038,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 4
+        "line": 5
       },
       "example": "import { PROJECT_CUT_REPLAY_PROOF_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7043,6 +7072,30 @@
       ]
     },
     {
+      "id": "packages/core/dev-delivery-proof.js#SOURCE_QUALIFICATION_PROOF_V2_SCHEMA",
+      "name": "SOURCE_QUALIFICATION_PROOF_V2_SCHEMA",
+      "kind": "constant",
+      "signature": "const SOURCE_QUALIFICATION_PROOF_V2_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-proof.js",
+        "line": 4
+      },
+      "example": "import { SOURCE_QUALIFICATION_PROOF_V2_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/dev-delivery-proof.js#verifyIntegrationDeliveryProof",
       "name": "verifyIntegrationDeliveryProof",
       "kind": "function",
@@ -7066,7 +7119,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 228
+        "line": 262
       },
       "example": "import { verifyIntegrationDeliveryProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7099,7 +7152,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 187
+        "line": 221
       },
       "example": "import { verifyProjectCutReplayProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7132,7 +7185,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 52
+        "line": 81
       },
       "example": "import { verifySourceQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -26046,14 +26099,14 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:09384bf4419d79ddfada223ee29bd777effabe95aabb11943c6527dac54eac00",
+      "digest": "sha256:4728c4f947b88a07ee9aff4cff2fd24f1c79796cfcb64de6ac37d305d78ae068",
       "summary": "Durable single-flight Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 49,
+      "symbolCount": 51,
       "symbolIds": [
         "packages/core/dev-delivery-warrant.js#cancelQueuedDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#classifyDevDeliveryDelta",
@@ -26069,6 +26122,7 @@
         "packages/core/dev-delivery-proof.js#createProjectCutReplayProof",
         "packages/core/release-blocker-priority.js#createReleaseBlockerPriorityClaim",
         "packages/core/dev-delivery-proof.js#createSourceQualificationProof",
+        "packages/core/dev-delivery-proof.js#createSourceQualificationProofV2",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CLASSES",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_LEASE_RECEIPT_SCHEMA",
@@ -26097,6 +26151,7 @@
         "packages/core/dev-delivery-warrant.js#selectDevDeliveryWarrant",
         "packages/core/dev-delivery-warrant.js#settleDevDeliveryTerminalEvent",
         "packages/core/dev-delivery-proof.js#SOURCE_QUALIFICATION_PROOF_SCHEMA",
+        "packages/core/dev-delivery-proof.js#SOURCE_QUALIFICATION_PROOF_V2_SCHEMA",
         "packages/core/dev-delivery-warrant.js#submitDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#verifyIntegrationDeliveryProof",
         "packages/core/dev-delivery-native-proof.js#verifyNativeExecutionReceipt",
@@ -27855,7 +27910,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:354ccb4a6d2b9d2fbf979d4daace49576919299804129a1e8c9f2d12bf826c5e"
+      "digest": "sha256:e6f061101a8acb3a5b34c99bcd30faa143f279dc12ceb4835019822a98abe261"
     },
     {
       "id": "build-facts",

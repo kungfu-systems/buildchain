@@ -1868,6 +1868,18 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
     3,
   );
   assert.match(reusable, /if: \$\{\{ inputs\.upload-artifacts \}\}/);
+  assert.match(reusable, /source-proof-reuse:/);
+  assert.match(reusable, /github\.event_name == 'merge_group'/);
+  assert.match(reusable, /github\.rest\.actions\.listWorkflowRunsForRepo/);
+  assert.match(reusable, /github\.rest\.actions\.listWorkflowRunArtifacts/);
+  assert.match(reusable, /run\.pull_requests.*pullRequest\.number === pullNumber/);
+  assert.match(reusable, /steps\.source-proof-download\.outcome == 'success'/);
+  assert.match(reusable, /dev-delivery-source-proof-reuse\.mjs verify/);
+  assert.match(reusable, /steps\.source-proof-verify\.outputs\.reuse != 'true'/);
+  assert.match(reusable, /--manifest-output \.buildchain\/artifacts\/check-manifest\.json/);
+  assert.match(reusable, /dev-delivery-source-proof-reuse\.mjs seal/);
+  assert.match(reusable, /buildchain-source-qualification-proof-/);
+  assert.match(reusable, /retention-days: 14/);
   const lifecycleDocs = fs.readFileSync(
     path.join(root, "docs/lifecycle-protocol.md"),
     "utf8",
