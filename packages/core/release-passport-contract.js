@@ -409,7 +409,7 @@ export function prepareReleasePassportKfdSections({ kfd1, kfd2Claims, kfd3, kfdA
   };
 }
 
-export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], comparisonMatrix, expectedAdopterId = "kungfu-systems/buildchain", expectedSourceRepository = "", sourceSha = "", checkedAt } = {}) {
+export function collectKfdAdopterReleaseEvidence({ manifest, manifestGate, gateResults = [], comparisonMatrix, expectedAdopterId = "kungfu-systems/buildchain", expectedSourceRepository = "", sourceSha = "", checkedAt } = {}) {
   if (!manifest) {
     if (comparisonMatrix || gateResults.length > 0) {
       throw new Error("KFD support and product-gate inputs require --kfd-adopter-manifest-json; --kfd-support-matrix-json is comparison-only");
@@ -418,31 +418,43 @@ export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], c
   }
   let authorityPath = "kfd-adopter-manifest.json";
   let producerCheckedAt = checkedAt;
-  if (comparisonMatrix) {
-    authorityPath = String(comparisonMatrix?.authority?.path || "").trim().replaceAll("\\", "/");
+  let maxAgeSeconds = 86400;
+  if (manifestGate || comparisonMatrix) {
+    authorityPath = String(manifestGate?.authority?.path || comparisonMatrix?.authority?.path || "").trim().replaceAll("\\", "/");
     if (!authorityPath || path.isAbsolute(authorityPath) || authorityPath.split("/").includes("..")) {
-      throw new Error("legacy KFD support matrix must bind a safe repository-relative adopter manifest authority path");
+      throw new Error("KFD adopter closure must bind a safe repository-relative manifest authority path");
     }
+  }
+  if (manifestGate) {
+    producerCheckedAt = String(manifestGate?.checkedAt || "").trim();
+    maxAgeSeconds = manifestGate?.verificationCut?.maxAgeSeconds;
+    if (!Number.isFinite(Date.parse(producerCheckedAt)) || !Number.isSafeInteger(maxAgeSeconds) || maxAgeSeconds < 0) {
+      throw new Error("KFD adopter manifest gate must bind an exact checkedAt and non-negative maxAgeSeconds cut");
+    }
+  } else if (comparisonMatrix) {
     const gateCheckedAts = [...new Set(gateResults.map((gate) => String(gate?.checkedAt || "").trim()))];
     if (gateCheckedAts.length !== 1 || !Number.isFinite(Date.parse(gateCheckedAts[0]))) {
       throw new Error("KFD product gates must bind one exact producer checkedAt cut for legacy projection comparison");
     }
     producerCheckedAt = gateCheckedAts[0];
   }
-  const manifestGate = createKfdAdopterManifestGate({
+  const resolvedManifestGate = createKfdAdopterManifestGate({
     manifest, packageArtifactRoot: installedKfdPackageArtifactRoot(), gateResults,
-    authorityPath, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha, checkedAt: producerCheckedAt,
+    authorityPath, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha, checkedAt: producerCheckedAt, maxAgeSeconds,
   });
-  const legacyProjection = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
+  if (manifestGate && passportStableJson(manifestGate) !== passportStableJson(resolvedManifestGate)) {
+    throw new Error("KFD adopter manifest gate drifted from the exact manifest and product-gate closure");
+  }
+  const legacyProjection = createKfdLegacySupportMatrixProjection({ manifest, manifestGate: resolvedManifestGate });
   if (comparisonMatrix) {
-    const comparison = validateKfdLegacySupportMatrixProjection(comparisonMatrix, { manifest, manifestGate });
+    const comparison = validateKfdLegacySupportMatrixProjection(comparisonMatrix, { manifest, manifestGate: resolvedManifestGate });
     if (!comparison.valid) {
       throw new Error(`legacy KFD support matrix drifted from the standard adopter manifest: ${JSON.stringify(comparison.issues)}`);
     }
   }
   return {
-    manifest, manifestGate, legacyProjection,
-    binding: createKfdAdopterReleaseBinding({ manifest, manifestGate, legacyProjection, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha }),
+    manifest, manifestGate: resolvedManifestGate, legacyProjection,
+    binding: createKfdAdopterReleaseBinding({ manifest, manifestGate: resolvedManifestGate, legacyProjection, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha }),
   };
 }
 

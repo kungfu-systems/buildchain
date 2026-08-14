@@ -248,6 +248,11 @@ async function handleCollectCommand({ args, runScript, packageVersion }) {
       "kfd-adopter-manifest-json",
       "",
     ),
+    kfdAdopterManifestGateJson: readFlag(
+      collectArgs,
+      "kfd-adopter-manifest-gate-json",
+      "",
+    ),
     kfdSupportMatrixJson: readFlag(collectArgs, "kfd-support-matrix-json", ""),
     kfdProductGateJsons: readRepeatedFlag(collectArgs, "kfd-product-gate-json"),
     invariantPassportJsons: readRepeatedFlag(

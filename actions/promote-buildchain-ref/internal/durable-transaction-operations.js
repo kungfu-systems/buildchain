@@ -57,6 +57,7 @@ function createDurableTransactionOperations(context) {
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand, releasePassportAdopterDeliveryJson,
     releasePassportKfdAdopterManifestJson,
+    releasePassportKfdAdopterManifestGateJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -231,6 +232,7 @@ function createDurableTransactionOperations(context) {
     passportKfd3ArtifactWitnessJsons = splitPathList(releasePassportKfd3ArtifactWitnessJsons),
     passportAdopterDeliveryJson = releasePassportAdopterDeliveryJson,
     passportKfdAdopterManifestJson = releasePassportKfdAdopterManifestJson,
+    passportKfdAdopterManifestGateJson = releasePassportKfdAdopterManifestGateJson,
     passportKfdSupportMatrixJson = releasePassportKfdSupportMatrixJson,
     passportKfdProductGateJsons = splitPathList(
       releasePassportKfdProductGateJsons,
@@ -272,6 +274,7 @@ function createDurableTransactionOperations(context) {
       kfd3ArtifactVerifyCommand: releasePassportKfd3ArtifactVerifyCommand,
       adopterDeliveryJson: passportAdopterDeliveryJson,
       kfdAdopterManifestJson: passportKfdAdopterManifestJson,
+      kfdAdopterManifestGateJson: passportKfdAdopterManifestGateJson,
       kfdSupportMatrixJson: passportKfdSupportMatrixJson,
       kfdProductGateJsons: passportKfdProductGateJsons,
       invariantPassportJsons: passportInvariantPassportJsons,

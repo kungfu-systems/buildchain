@@ -1473,8 +1473,9 @@ export function createReleasePassport({
   };
 }
 
-function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, productGateJsons, repository, sourceSha, checkedAt }) {
+function collectKfdAdopterReleaseInputs({ cwd, manifestJson, manifestGateJson, supportMatrixJson, productGateJsons, repository, sourceSha, checkedAt }) {
   const manifestMeta = parseJsonInputWithMeta(manifestJson, undefined, { cwd, label: "kfdAdopterManifestJson" });
+  const manifestGateMeta = parseJsonInputWithMeta(manifestGateJson, undefined, { cwd, label: "kfdAdopterManifestGateJson" });
   const supportMatrixMeta = parseJsonInputWithMeta(supportMatrixJson, undefined, { cwd, label: "kfdSupportMatrixJson" });
   const productGateMetas = (productGateJsons || [])
     .filter(Boolean)
@@ -1482,6 +1483,7 @@ function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, 
     .filter((meta) => meta.value);
   return collectKfdAdopterReleaseEvidence({
     manifest: manifestMeta.value,
+    manifestGate: manifestGateMeta.value,
     gateResults: productGateMetas.map((meta) => meta.value),
     comparisonMatrix: supportMatrixMeta.value,
     expectedAdopterId: repository || "kungfu-systems/buildchain", expectedSourceRepository: repository, sourceSha,
@@ -1535,6 +1537,7 @@ export function collectGitHubReleasePassport({
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "", adopterDeliveryJson = "",
   kfdAdopterManifestJson = "",
+  kfdAdopterManifestGateJson = "",
   kfdSupportMatrixJson = "",
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
@@ -1674,7 +1677,7 @@ export function collectGitHubReleasePassport({
   const resolvedCheckedAt = optionalString(checkedAt) || nowIso();
   const productMechanism = defaultProductMechanism({ repository, productName });
   const kfdAdopterEvidence = collectKfdAdopterReleaseInputs({
-    cwd, manifestJson: kfdAdopterManifestJson, supportMatrixJson: kfdSupportMatrixJson,
+    cwd, manifestJson: kfdAdopterManifestJson, manifestGateJson: kfdAdopterManifestGateJson, supportMatrixJson: kfdSupportMatrixJson,
     productGateJsons: kfdProductGateJsons, repository, sourceSha, checkedAt: resolvedCheckedAt,
   });
   const {

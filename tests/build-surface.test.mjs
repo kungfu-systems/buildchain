@@ -1133,6 +1133,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(workflow, /release-passport-kfd-adopter-manifest-json:/);
   assert.match(workflow, /release-passport-kfd-adopter-manifest-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-json \}\}/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-gate-json:/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-gate-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-gate-json \}\}/);
   assert.match(workflow, /release-passport-kfd-support-matrix-json:/);
   assert.match(workflow, /release-passport-kfd-support-matrix-json: \$\{\{ inputs\.release-passport-kfd-support-matrix-json \}\}/);
   assert.match(workflow, /release-passport-kfd-product-gate-jsons:/);
