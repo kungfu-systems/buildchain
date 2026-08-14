@@ -128,9 +128,9 @@ jobs:
         id: source
         uses: actions/checkout@v7.0.0
         with:
+          ref: ${{ inputs.mode == 'source' && inputs.source-proof-reuse && github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: ${{ inputs.mode == 'source' && '0' || '1' }}
           persist-credentials: false
-
       - name: Checkout Buildchain runtime
         id: runtime
         uses: actions/checkout@v7.0.0

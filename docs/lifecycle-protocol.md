@@ -230,6 +230,12 @@ verification skips package setup and the duplicate lifecycle commands while
 retaining the stable `check / check` context and an explicit non-executed
 lifecycle evidence manifest.
 
+The opt-in pull-request producer checks out `pull_request.head.sha`, not the
+ephemeral pull-request merge ref. This keeps the controller receipt, proof
+artifact name, and sealed source identity on the same exact PR head that the
+merge-group verifier binds as its second parent. Other check modes and callers
+retain their existing checkout behavior.
+
 The optimization is fail closed. A missing artifact, API or download error,
 base advance, source change, runtime change, contract change, configured path
 change, file blob change, required-context change, malformed proof, or

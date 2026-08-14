@@ -1782,6 +1782,10 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(reusable, /mode:/);
   assert.match(reusable, /default: "verify"/);
   assert.match(reusable, /runs-on: ubuntu-24\.04/);
+  assert.match(
+    reusable,
+    /ref: \$\{\{ inputs\.mode == 'source' && inputs\.source-proof-reuse && github\.event_name == 'pull_request' && github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
+  );
   assert.match(reusable, /fetch-depth: \$\{\{ inputs\.mode == 'source' && '0' \|\| '1' \}\}/);
   assert.match(reusable, /persist-credentials: false/);
   assert.match(reusable, /Run declared install lifecycle/);
