@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
-    "maxHandMaintainedSourceFiles": 350,
-    "maxHandMaintainedSourceLines": 134918,
+    "maxHandMaintainedSourceFiles": 351,
+    "maxHandMaintainedSourceLines": 135516,
     "maxWorkflowFiles": 71,
-    "maxWorkflowLines": 23860,
-    "latestTransition": "The v4 Delivery Warrant controller now rejects stale or conflicting latest-base composition before merge-queue admission and binds the accepted Project Cut with an exact compare-and-swap readback.",
-    "rationale": "The bounded policy, split evidence and Passport adapters, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors plus missing or self-described receipt authority while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. The current dev queue Warrant admission changes are included in the exact measured source and workflow ceilings; neither surface may grow implicitly."
+    "maxWorkflowLines": 24081,
+    "latestTransition": "The v4 reusable check now seals and verifies an exact source-qualification proof so an equivalent merge group can avoid repeating the full source lifecycle.",
+    "rationale": "The bounded policy, split evidence and Passport adapters, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors plus missing or self-described receipt authority while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. The current dev queue Warrant admission changes are included in the exact measured source and workflow ceilings. One bounded source-proof driver and the reusable check extension recompute source, base, patch, runtime, plan, policy, closure, dependency, required-context, producer-receipt, and exact two-parent merge composition predicates; every uncertainty retains the full lifecycle. These exact 351-file, 135516-source-line and 24081-workflow-line ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -140,6 +140,44 @@
     }
   },
   "approvedPublicSurfaceTransitions": {
+    "workflow:check": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "check",
+        "path": ".github/workflows/check.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "mode",
+          "node-version",
+          "require-version-state",
+          "source-proof-closure-paths-json",
+          "source-proof-dependency-paths-json",
+          "source-proof-policy-paths-json",
+          "source-proof-required-contexts-json",
+          "source-proof-reuse",
+          "upload-artifacts",
+          "working-directory"
+        ],
+        "secrets": [],
+        "outputs": [
+          "controller-plan-artifact",
+          "controller-plan-digest",
+          "controller-plan-json",
+          "controller-receipt-artifact",
+          "controller-receipt-digest",
+          "controller-receipt-json",
+          "controller-receipt-status",
+          "source-proof-decision-root",
+          "source-proof-producer-run-id",
+          "source-proof-reuse-reason",
+          "source-proof-reused",
+          "source-proof-root"
+        ]
+      },
+      "rationale": "Add an opt-in merge-group fast path that accepts only an unexpired artifact from a successful same-workflow pull-request run and recomputes exact source, base, patch, runtime, plan, policy, closure, dependency, required-context, controller-receipt, and two-parent merge-group bindings. Existing callers remain on the full lifecycle by default, while any missing evidence, API failure, mismatch, grouped composition, or malformed proof also runs the full lifecycle."
+    },
     "action:promote-buildchain-ref": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {

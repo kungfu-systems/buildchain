@@ -1874,10 +1874,15 @@
           "mode",
           "node-version",
           "require-version-state",
+          "source-proof-closure-paths-json",
+          "source-proof-dependency-paths-json",
+          "source-proof-policy-paths-json",
+          "source-proof-required-contexts-json",
+          "source-proof-reuse",
           "upload-artifacts",
           "working-directory"
         ],
-        "inputCount": 7,
+        "inputCount": 12,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1887,9 +1892,14 @@
           "controller-receipt-artifact",
           "controller-receipt-digest",
           "controller-receipt-json",
-          "controller-receipt-status"
+          "controller-receipt-status",
+          "source-proof-decision-root",
+          "source-proof-producer-run-id",
+          "source-proof-reuse-reason",
+          "source-proof-reused",
+          "source-proof-root"
         ],
-        "outputCount": 7
+        "outputCount": 12
       },
       {
         "id": "dev-alpha-candidate-patrol",
@@ -8038,8 +8048,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
-    "workflowRegistryDigest": "030d7e2a4425cb1e9cbeebbcc07fd3fa8a4584e230591be7feed2be7945d4781",
-    "pageRegistryDigest": "6732d2ff29eb48d5bfa0ae19b97e7042bdbf16d29bf8a5d1a3c99ac3815ac1fb"
+    "workflowRegistryDigest": "1f2c0e53b941b9c6e6df26d9614f6d3e6fc37e826ad572ae2a288553d863b839",
+    "pageRegistryDigest": "3215234db8af375103374042d05e05d80b0d311c623c9855f7345ec1d5af1135"
   },
   "comparison": {
     "missingCliRegistry": [],
