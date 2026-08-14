@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-08-13T19:53:41.788Z"
+    "updatedAt": "2026-08-14T19:43:46.455Z"
   },
   "candidates": [
     {
@@ -98,7 +98,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-13T19:53:41.788Z",
+        "observedAt": "2026-08-14T19:43:46.455Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -125,12 +125,12 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-13T19:53:41.788Z",
+        "updatedAt": "2026-08-14T19:43:46.455Z",
         "actor": "buildchain-patrol"
       }
     }
   ],
-  "updatedAt": "2026-08-13T09:28:36.000Z",
+  "updatedAt": "2026-08-14T19:43:46.455Z",
   "stableReleases": [
     {
       "version": "4.0.0",
@@ -185,12 +185,6 @@
       "tag": "v2.14.16",
       "publishedAt": "2026-07-22T14:14:51Z",
       "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.16"
-    },
-    {
-      "version": "2.14.15",
-      "tag": "v2.14.15",
-      "publishedAt": "2026-07-22T09:45:06Z",
-      "url": "https://github.com/kungfu-systems/buildchain/releases/tag/v2.14.15"
     }
   ]
 }
