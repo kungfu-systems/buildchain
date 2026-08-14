@@ -2007,6 +2007,7 @@
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
         "inputs": [
+          "active-lease-context",
           "affected-paths-json",
           "allowed-head-prefixes",
           "assignment-root",
@@ -2040,7 +2041,7 @@
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 32,
+        "inputCount": 33,
         "secrets": [
           "github-token"
         ],
@@ -8025,8 +8026,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
-    "workflowRegistryDigest": "1f71726619c464360287b26eac7cf5089e54729ebcb11a5d1f2eee5658dab1ff",
-    "pageRegistryDigest": "37ad877b2470da54afedf71b72983ee2d6f183a6ac7aaef6174bf1a1a5d5296e"
+    "workflowRegistryDigest": "d493f1f78d0fecd011990ffc19c38b3da4e661a77f580b990584cc7653d183f8",
+    "pageRegistryDigest": "e0fbc349eacf8e93716f2d7c7d4671490e89b5256a53358128ed0012acac1bd3"
   },
   "comparison": {
     "missingCliRegistry": [],
