@@ -571,7 +571,7 @@ on:
         value: ${{ jobs.alpha.outputs.publish-source-line || jobs.stable.outputs.publish-source-line }}
       publish-source-consumer-version:
         description: "Consumer version parsed from the publish-gate source ref"
-        value: ${{ jobs.alpha.outputs.publish-source-consumer-version || jobs.stable.outputs.publish-source-consumer-version }}
+        value: ${{ jobs.resolve-source.outputs.publish-source-consumer-version || jobs.tail-reseal-plan.outputs.target-version }}
       release-manifest-json:
         description: "Resolved release manifest JSON"
         value: ${{ jobs.alpha.outputs.release-manifest-json || jobs.stable.outputs.release-manifest-json }}
