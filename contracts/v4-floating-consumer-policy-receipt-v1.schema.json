@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.kungfu-tech.com/schemas/v4-floating-consumer-policy-receipt-v1.schema.json",
+  "title": "Buildchain v4 floating consumer policy receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "caller",
+    "invocation",
+    "contractLocks",
+    "policy",
+    "failures"
+  ],
+  "properties": {
+    "schema": {
+      "const": "kungfu-buildchain-v4-floating-consumer-policy-receipt/v1"
+    },
+    "status": { "enum": ["passed", "failed"] },
+    "caller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "sourceSha"],
+      "properties": {
+        "repository": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workflow",
+        "sourcePath",
+        "sourceLine",
+        "visibleSelector",
+        "selectorClass",
+        "channel",
+        "resolvedWorkflowSha",
+        "resolvedRuntimeSha"
+      ],
+      "properties": {
+        "workflow": {
+          "type": "string",
+          "pattern": "^\\.github/workflows/.+\\.ya?ml$"
+        },
+        "sourcePath": { "type": "string" },
+        "sourceLine": { "type": "integer", "minimum": 0 },
+        "visibleSelector": { "enum": ["", "v4", "v4-alpha"] },
+        "selectorClass": { "enum": ["", "floating", "rejected"] },
+        "channel": { "enum": ["", "stable", "alpha"] },
+        "resolvedWorkflowSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "resolvedRuntimeSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "contractLocks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stable", "alpha"],
+      "properties": {
+        "stable": { "$ref": "#/$defs/lock" },
+        "alpha": { "$ref": "#/$defs/lock" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "root", "scannerRoot", "sourceScanRoot"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "root": { "$ref": "#/$defs/root" },
+        "scannerRoot": { "$ref": "#/$defs/root" },
+        "sourceScanRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message"],
+        "properties": {
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "root"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "root": { "anyOf": [{ "$ref": "#/$defs/root" }, { "const": "" }] }
+      }
+    }
+  }
+}

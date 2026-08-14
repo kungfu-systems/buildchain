@@ -26,7 +26,7 @@
   "publicConsumerDogfood": {
     "callerWorkflow": ".github/workflows/v4-public-consumer-dogfood.yml",
     "reusableWorkflow": "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml",
-    "validationRef": "4178776bf635d0738cb1917e449076d64883218c",
+    "validationRef": "v4-alpha",
     "invocation": "workflow_call",
     "runtimeBinding": "job.workflow_sha",
     "consumerSourceBinding": "github.sha",
@@ -46,7 +46,7 @@
     "relativeOrSelfInvocationAllowed": false,
     "directQualificationInvocationAllowed": false,
     "candidateBranchOverrideAllowed": false,
-    "recursionRecovery": "public-train-ref-only"
+    "recursionRecovery": "floating-selector-with-trusted-runtime-input"
   },
   "faultCampaign": [
     "corrupt",

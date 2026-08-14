@@ -776,9 +776,9 @@ jobs:
           CHANNEL: ${{ steps.route.outputs.channel }}
           SELECTED_SHELL_REF: ${{ steps.route.outputs.shell-ref }}
           ALPHA_SHELL_REF: v4-alpha
-          ALPHA_SHELL_CALL_REF: b2f0d35424a38123b4c71612be27bebeeec1104d
+          ALPHA_SHELL_CALL_REF: v4-alpha
           STABLE_SHELL_REF: v4
-          STABLE_SHELL_CALL_REF: b2f0d35424a38123b4c71612be27bebeeec1104d
+          STABLE_SHELL_CALL_REF: v4
         run: |
           set -euo pipefail
           if [[ "${CHANNEL}" = "alpha" ]]; then
@@ -866,11 +866,54 @@ jobs:
           [[ "$(git -C .buildchain/shell rev-parse HEAD)" = "${SHELL_SHA}" ]] || { echo "::error::Promotion shell checkout moved"; exit 1; }
           [[ "$(git -C .buildchain/runtime rev-parse HEAD)" = "${RUNTIME_SHA}" ]] || { echo "::error::Promotion runtime checkout moved"; exit 1; }
 
+  consumer-admission:
+    name: Admit v4 floating consumer policy
+    needs: resolve-promotion
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.target-sha || github.sha }}
+          path: .buildchain/consumer
+          persist-credentials: false
+
+      - name: Checkout exact policy runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.resolve-promotion.outputs.router-sha }}
+          path: .buildchain/v4-policy-runtime
+          persist-credentials: false
+
+      - name: Enforce v4 floating consumer policy
+        id: policy
+        env:
+          BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
+          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/release-candidate-promote.yml
+          BUILDCHAIN_WORKFLOW_SHA: ${{ needs.resolve-promotion.outputs.router-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.resolve-promotion.outputs.router-sha }}
+          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
+          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-alpha-contract-lock-path }}
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
+        run: >-
+          node .buildchain/v4-policy-runtime/scripts/v4-consumer-policy.mjs scan
+          --source-sha "${{ inputs.target-sha || github.sha }}"
+
+      - name: Upload rooted consumer admission receipt
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-consumer-policy-release-candidate-promote-${{ github.sha }}
+          path: .buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json
+          if-no-files-found: error
+
   alpha:
     name: Promote with alpha workflow shell
-    needs: resolve-promotion
+    needs: [resolve-promotion, consumer-admission]
     if: ${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@b2f0d35424a38123b4c71612be27bebeeec1104d
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write
@@ -897,6 +940,8 @@ jobs:
       promotion-target-ref: ${{ needs.resolve-promotion.outputs.target-ref }}
       promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used == 'true' }}
       buildchain-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
+      buildchain-alpha-contract-lock-path: ${{ inputs.buildchain-alpha-contract-lock-path }}
+      buildchain-stable-contract-lock-path: ${{ inputs.buildchain-stable-contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       allow-repository: ${{ inputs.allow-repository }}
@@ -998,9 +1043,9 @@ jobs:
 
   stable:
     name: Promote with stable workflow shell
-    needs: resolve-promotion
+    needs: [resolve-promotion, consumer-admission]
     if: ${{ needs.resolve-promotion.outputs.channel == 'stable' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@b2f0d35424a38123b4c71612be27bebeeec1104d
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4
     permissions:
       actions: write
       artifact-metadata: write
@@ -1027,6 +1072,8 @@ jobs:
       promotion-target-ref: ${{ needs.resolve-promotion.outputs.target-ref }}
       promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used == 'true' }}
       buildchain-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
+      buildchain-alpha-contract-lock-path: ${{ inputs.buildchain-alpha-contract-lock-path }}
+      buildchain-stable-contract-lock-path: ${{ inputs.buildchain-stable-contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       allow-repository: ${{ inputs.allow-repository }}

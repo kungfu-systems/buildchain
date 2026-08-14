@@ -27,6 +27,11 @@ on:
         default: "buildchain.contract-lock.json"
         type: string
         required: false
+      buildchain-visible-workflow:
+        description: "Tracked public workflow path whose floating selector is admitted"
+        default: ".github/workflows/.build.yml"
+        type: string
+        required: false
       buildchain-contract-compatibility-policy:
         description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
         default: "major-compatible"
@@ -537,6 +542,12 @@ on:
       buildchain-contract-digest:
         description: "Current Buildchain runtime contract digest"
         value: ${{ jobs.trust-gate.outputs.buildchain-contract-digest }}
+      v4-consumer-policy-receipt-root:
+        description: "Root of the v4 floating consumer policy receipt"
+        value: ${{ jobs.trust-gate.outputs.v4-consumer-policy-receipt-root }}
+      v4-consumer-policy-receipt-json:
+        description: "Source/runtime/dual-lock-bound v4 floating consumer policy receipt"
+        value: ${{ jobs.trust-gate.outputs.v4-consumer-policy-receipt-json }}
       publish-channel:
         description: "Resolved publish channel"
         value: ${{ jobs.trust-gate.outputs.publish-channel }}
@@ -627,6 +638,9 @@ jobs:
       buildchain-contract-lock-status: ${{ steps.contract-lock.outputs.contract-lock-status }}
       buildchain-contract-lock-drift: ${{ steps.contract-lock.outputs.contract-lock-drift }}
       buildchain-contract-digest: ${{ steps.contract-lock.outputs.contract-digest }}
+      v4-consumer-policy-receipt-root: ${{ steps.v4-policy.outputs.v4-consumer-policy-receipt-root }}
+      v4-consumer-policy-receipt-json: ${{ steps.v4-policy.outputs.v4-consumer-policy-receipt-json }}
+      v4-consumer-policy-scanner-root: ${{ steps.v4-policy.outputs.v4-consumer-policy-scanner-root }}
     steps:
       - name: Resolve Buildchain runtime
         id: runtime
@@ -847,6 +861,27 @@ jobs:
           clean: true
           persist-credentials: false
           path: .buildchain/consumer
+
+      - name: Enforce v4 floating consumer policy
+        id: v4-policy
+        shell: bash
+        env:
+          BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
+          BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.buildchain-visible-workflow }}
+          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
+          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
+        run: node .buildchain/runtime/scripts/v4-consumer-policy.mjs scan
+
+      - name: Upload rooted v4 consumer policy receipt
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-v4-consumer-policy-${{ github.sha }}
+          path: .buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
 
       - name: Validate consumer package manager contract
         id: package-manager
@@ -3182,6 +3217,8 @@ jobs:
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ inputs.gate-profile-aggregate-json }}
           BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON: ${{ inputs.release-candidate-family-evidence-json }}
+          BUILDCHAIN_V4_POLICY_RECEIPT_JSON: ${{ needs.trust-gate.outputs.v4-consumer-policy-receipt-json }}
+          BUILDCHAIN_V4_POLICY_RECEIPT_ROOT: ${{ needs.trust-gate.outputs.v4-consumer-policy-receipt-root }}
           BUILDCHAIN_CONTROLLER_RECEIPT_JSON: ${{ steps.release-candidate-controller-receipt.outputs.controller-receipt-json }}
           BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}

@@ -50,6 +50,7 @@ function createVersionStateOperations(context) {
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
+    releasePassportV4ConsumerPolicyCertificationJson,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,

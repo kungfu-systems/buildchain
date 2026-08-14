@@ -102,6 +102,29 @@ The router is generated from `.build.yml`'s input/output surface. Run
 `node scripts/generate-channel-build-workflow.mjs` after changing the advanced
 build workflow; inventory and unit tests reject a stale generated router.
 
+### v4 floating consumer admission
+
+The v4 public surfaces add a source policy gate before dependency setup, matrix
+planning, build, publication, or promotion work. Tracked caller YAML may use
+only `@v4` or `@v4-alpha`, and the repository must commit both
+`.buildchain/contract-lock.json` and `.buildchain/alpha-contract-lock.json`.
+Source-persisted exact SHAs, exact defaults, repository/input/environment
+indirection, nested composite indirection, a missing lock, or a stale selected
+lock fail closed.
+
+Admission emits a rooted receipt binding the caller source, public workflow,
+visible selector and workflow-shell SHA, actual runtime SHA, both lock roots,
+and policy/scanner roots. A trusted `workflow_dispatch` train or SHA remains a
+non-persistent runtime override: the tracked floating selector and its selected
+lock still bind the visible workflow shell. Release-candidate evidence carries
+the receipt; promotion certifies it independently; final v4 Release Passport
+construction requires the matching certification.
+
+See the normative
+[`v4 floating consumer policy`](../architecture/v4-floating-consumer-policy.md)
+and its machine declaration for the exact acceptance boundary. This policy does
+not change v3 behavior.
+
 ## Advanced Workflow
 
 Consumers that need direct workflow-shell or runtime control call the advanced

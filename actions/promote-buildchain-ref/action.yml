@@ -155,6 +155,12 @@ inputs:
   release-passport-promotion-routing-json:
     description: "Promotion router/shell/runtime/lock evidence JSON or path to bind into the final release passport"
     default: ""
+  release-passport-v4-consumer-policy-certification-json:
+    description: "External v4 floating consumer policy certification JSON or path bound into the final Release Passport"
+    default: ""
+  release-passport-v4-consumer-policy-certification-root:
+    description: "Exact certification root emitted by the independent v4 consumer policy certification step"
+    default: ""
   release-passport-kfd-1-witness-jsons:
     description: "Newline- or comma-separated KFD-1 contract-world witness JSON paths to include in the release passport"
     default: ""

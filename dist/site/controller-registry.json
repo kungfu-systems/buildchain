@@ -230,6 +230,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "buildchain-visible-workflow": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "cache-dependency-lock-root": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -532,7 +536,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:18bd484d8425b54ad533adde64f874c151a0a90de878c5498cfb99709cb53ea3"
+      "digest": "sha256:03677ba50080b3813a20004c41802e340368e4d225782fae194e3722c763bd01"
     },
     {
       "schemaVersion": 1,
@@ -698,6 +702,10 @@
         },
         "buildchain-stable-contract-lock-path": {
           "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "buildchain-visible-workflow": {
+          "classification": "included",
           "source": "workflow-call-input"
         },
         "cache-dependency-lock-root": {
@@ -986,7 +994,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:47b73fb19d61c06911278ce99f8433596a8539097fdc18fe11f05b0d3c2109c0"
+      "digest": "sha256:45978a572cf3ce57b48e5c3190761ad4fbeedc8e75ea0dae2e66ea5a980282df"
     },
     {
       "schemaVersion": 1,
@@ -1395,6 +1403,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "buildchain-alpha-contract-lock-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "buildchain-contract-compatibility-policy": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1413,6 +1425,10 @@
         },
         "buildchain-repository": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "buildchain-stable-contract-lock-path": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "node-version": {
@@ -1498,7 +1514,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:6b132790b9798e8a5dfbe095701d8e024c160a08bc7c4bd477ee79feef7a9cfd"
+      "digest": "sha256:e48bb7719886d3949d63ec69d638264b20c7de8a70ee2db3cca78d4369f5a41e"
     },
     {
       "schemaVersion": 1,
@@ -1775,6 +1791,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "buildchain-alpha-contract-lock-path": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "buildchain-contract-compatibility-policy": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1813,6 +1833,10 @@
         },
         "buildchain-repository": {
           "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "buildchain-stable-contract-lock-path": {
+          "classification": "digest-only",
           "source": "workflow-call-input"
         },
         "channel": {
@@ -2257,7 +2281,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:1e812ddf411c9f4106e5ff88054e1fe6f0eb6bad76c3985d8adbc9ce5dfe345d"
+      "digest": "sha256:89ec9f109deeaa6a1a16e7836baabdc65bbbdd3c18b73b7b6d952a22b1204a68"
     },
     {
       "schemaVersion": 1,
@@ -2450,5 +2474,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:34776744f57db27b04eec061ea5ff01043b72119475a2bf623c87834cb30bb3d"
+  "digest": "sha256:1f823374b2161ee4b0e31259462a256e13f6947d8bc9b06c797b5018a32b7553"
 }

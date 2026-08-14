@@ -1188,7 +1188,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-github-artifact-attestation-policy-paths/);
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@375b2d4b8a904776453773a33b4c4e4556c8c999/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@v4/,
   );
   assert.doesNotMatch(workflow, /github-artifact-attestation\.yml@v3/);
   assert.match(workflow, /buildchain-ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/);

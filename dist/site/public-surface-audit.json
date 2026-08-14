@@ -680,6 +680,7 @@
           "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
+          "buildchain-visible-workflow",
           "cache-dependency-lock-root",
           "cache-policy-root",
           "cache-toolchain-root",
@@ -744,7 +745,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 90,
+        "inputCount": 91,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -800,9 +801,11 @@
           "release-manifest-json",
           "runner-preset",
           "runner-routing-json",
-          "trusted-event"
+          "trusted-event",
+          "v4-consumer-policy-receipt-json",
+          "v4-consumer-policy-receipt-root"
         ],
-        "outputCount": 43
+        "outputCount": 45
       },
       {
         "id": ".bump-minor-version",
@@ -977,6 +980,7 @@
           "branch-protection-bypass-apps",
           "branch-protection-bypass-teams",
           "branch-protection-bypass-users",
+          "buildchain-alpha-contract-lock-path",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
@@ -984,6 +988,7 @@
           "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
+          "buildchain-stable-contract-lock-path",
           "channel",
           "declarative-release-tail",
           "dry-run",
@@ -1085,7 +1090,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 113,
+        "inputCount": 115,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1583,6 +1588,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
+          "buildchain-visible-workflow",
           "cache-dependency-lock-root",
           "cache-policy-root",
           "cache-toolchain-root",
@@ -1647,7 +1653,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 93,
+        "inputCount": 94,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1706,9 +1712,11 @@
           "release-manifest-json",
           "runner-preset",
           "runner-routing-json",
-          "trusted-event"
+          "trusted-event",
+          "v4-consumer-policy-receipt-json",
+          "v4-consumer-policy-receipt-root"
         ],
-        "outputCount": 46
+        "outputCount": 48
       },
       {
         "id": "buildchain-alpha-self-dogfood",
@@ -2452,11 +2460,13 @@
           "artifact-paths",
           "artifact-retention-days",
           "build-command",
+          "buildchain-alpha-contract-lock-path",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
+          "buildchain-stable-contract-lock-path",
           "node-version",
           "package-name",
           "prepare-paper-package",
@@ -2470,7 +2480,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 21,
+        "inputCount": 23,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -3003,6 +3013,8 @@
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
           "release-passport-promotion-routing-json",
+          "release-passport-v4-consumer-policy-certification-json",
+          "release-passport-v4-consumer-policy-certification-root",
           "release-tail-state-path",
           "require-governance",
           "require-publication-qualification",
@@ -3016,7 +3028,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 80
+        "inputCount": 82
       },
       {
         "id": "release-tail",
@@ -8026,8 +8038,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
-    "workflowRegistryDigest": "d493f1f78d0fecd011990ffc19c38b3da4e661a77f580b990584cc7653d183f8",
-    "pageRegistryDigest": "e0fbc349eacf8e93716f2d7c7d4671490e89b5256a53358128ed0012acac1bd3"
+    "workflowRegistryDigest": "030d7e2a4425cb1e9cbeebbcc07fd3fa8a4584e230591be7feed2be7945d4781",
+    "pageRegistryDigest": "3f7dfcabc176bbf44fb42eb8f076bcd28bc5b5d9896fbb08d3ad272d44d45089"
   },
   "comparison": {
     "missingCliRegistry": [],

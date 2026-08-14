@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "534d075285d62dd259c9b7aa3dd9678d8f6a372a4b58dc83d4dbedd8bbc331a3",
+    "sha256": "ec59fe3131953d2b885013e77ab9ba4e9181f96875e701530d8df15fd6715853",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 71,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "534d075285d62dd259c9b7aa3dd9678d8f6a372a4b58dc83d4dbedd8bbc331a3",
+      "sha256": "ec59fe3131953d2b885013e77ab9ba4e9181f96875e701530d8df15fd6715853",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 71,
@@ -1543,6 +1543,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./public-surface-audit"
+        },
+        {
+          "id": "export:./v4-floating-consumer-policy",
+          "name": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-floating-consumer-policy.js",
+          "evidencePath": "packages/core/v4-floating-consumer-policy.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-floating-consumer-policy"
         },
         {
           "id": "export:./logging",
@@ -3526,7 +3538,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 90,
+          "inputCount": 91,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -3555,6 +3567,7 @@
             "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
+            "buildchain-visible-workflow",
             "cache-dependency-lock-root",
             "cache-policy-root",
             "cache-toolchain-root",
@@ -3769,7 +3782,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 113,
+          "inputCount": 115,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3777,6 +3790,7 @@
             "branch-protection-bypass-apps",
             "branch-protection-bypass-teams",
             "branch-protection-bypass-users",
+            "buildchain-alpha-contract-lock-path",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
@@ -3784,6 +3798,7 @@
             "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
+            "buildchain-stable-contract-lock-path",
             "channel",
             "declarative-release-tail",
             "dry-run",
@@ -4292,7 +4307,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 93,
+          "inputCount": 94,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -4324,6 +4339,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
+            "buildchain-visible-workflow",
             "cache-dependency-lock-root",
             "cache-policy-root",
             "cache-toolchain-root",
@@ -5079,17 +5095,19 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 21,
+          "inputCount": 23,
           "inputs": [
             "artifact-name",
             "artifact-paths",
             "artifact-retention-days",
             "build-command",
+            "buildchain-alpha-contract-lock-path",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
+            "buildchain-stable-contract-lock-path",
             "node-version",
             "package-name",
             "prepare-paper-package",
@@ -5519,7 +5537,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 80,
+          "inputCount": 82,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -5589,6 +5607,8 @@
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
             "release-passport-promotion-routing-json",
+            "release-passport-v4-consumer-policy-certification-json",
+            "release-passport-v4-consumer-policy-certification-root",
             "release-tail-state-path",
             "require-governance",
             "require-publication-qualification",
@@ -6809,6 +6829,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 433
+    "publicSurfaceCount": 434
   }
 }

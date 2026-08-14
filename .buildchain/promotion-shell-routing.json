@@ -3,13 +3,13 @@
   "major": 4,
   "alpha": {
     "logicalRef": "v4-alpha",
-    "callRef": "b2f0d35424a38123b4c71612be27bebeeec1104d",
+    "callRef": "v4-alpha",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true
   },
   "stable": {
     "logicalRef": "v4",
-    "callRef": "b2f0d35424a38123b4c71612be27bebeeec1104d",
+    "callRef": "v4",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true,
     "unsupportedInputs": [

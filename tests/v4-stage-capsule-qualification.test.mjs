@@ -499,17 +499,14 @@ test("architecture freezes the public consumer path, rollback, and authority cei
     architecture.publicConsumerDogfood.excludedStages.publish,
     "provider-mutation",
   );
-  assert.equal(
-    architecture.publicConsumerDogfood.validationRef,
-    "4178776bf635d0738cb1917e449076d64883218c",
-  );
+  assert.equal(architecture.publicConsumerDogfood.validationRef, "v4-alpha");
   assert.equal(
     architecture.publicConsumerDogfood.reusableWorkflow,
     "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml",
   );
   assert.equal(
     architecture.publicConsumerDogfood.recursionRecovery,
-    "public-train-ref-only",
+    "floating-selector-with-trusted-runtime-input",
   );
   assert.equal(
     architecture.publicConsumerDogfood.consumerOrchestrationCopied,
@@ -559,7 +556,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.doesNotMatch(canaryWorkflow, /\$\{BUILDCHAIN_WORKFLOW_SHA,,\}/u);
   assert.equal(
     canaryWorkflow.match(/tr '\[:upper:\]' '\[:lower:\]'/gu)?.length,
-    2,
+    3,
   );
   assert.match(
     canaryWorkflow,
