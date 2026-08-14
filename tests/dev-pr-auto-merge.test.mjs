@@ -1142,7 +1142,7 @@ test("exact active Warrant remains valid across fenced delivery progress states"
   }
 });
 
-test("required Warrant fails before enqueue on a missing status context or post-readback generation drift", async () => {
+test("required Warrant admits a non-family candidate without an active lease context and still rejects generation drift", async () => {
   await withWarrantResult({}, async (resultPath, warrantResult) => {
     const target = pr({ number: 21, headSha: exactHead });
     const candidate = { candidateId: ROOT, sourceHead: exactHead, status: "qualified" };
@@ -1153,8 +1153,26 @@ test("required Warrant fails before enqueue on a missing status context or post-
     const missingContext = makeFake();
     missingContext.getDevDeliveryQueueState = async () => current;
     const missingResult = await run(missingContext, { activeLeaseContext: "" });
-    assert.equal(missingResult.receipt.reason, "active-lease-context-required");
-    assert.deepEqual(missingContext.enqueued, []);
+    assert.equal(missingResult.ok, true);
+    assert.equal(missingResult.receipt.reason, "enqueued-with-expected-head");
+    assert.equal(missingResult.receipt.queue.activeLeaseStatus, undefined);
+    assert.deepEqual(missingResult.receipt.queue.admissionTransaction.activeLease, {
+      context: "",
+      state: "",
+    });
+    assert.deepEqual(missingContext.enqueued, [
+      { pullRequestId: "PR_21", expectedHeadOid: exactHead },
+    ]);
+    assert.deepEqual(
+      missingContext.commitStatuses.map((entry) => [
+        entry.body.context,
+        entry.body.state,
+      ]),
+      [
+        ["Queue admission lease", "success"],
+        ["Buildchain delivery intent", "success"],
+      ],
+    );
 
     const fake = makeFake();
     let warrantRead = 0;

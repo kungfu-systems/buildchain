@@ -149,7 +149,6 @@ export async function qualifyAtomicQueueAdmission({ client, options, pullRequest
     if (options.warrantMode === "required") {
       if (!options.verifiedDeliveryWarrant) preEnqueueMismatch("delivery-warrant-pre-enqueue-readback-missing");
       if (!options.queueAdmissionContext) preEnqueueMismatch("queue-admission-context-required");
-      if (!options.activeLeaseContext) preEnqueueMismatch("active-lease-context-required");
     }
     const activeLeaseStatus = await setActiveLeaseStatus("pending");
     const queueAdmissionStatus = await setQueueAdmissionStatus("success");
