@@ -640,7 +640,7 @@ test("post-lease base or queue authority drift fails before enqueue", async () =
   }
 });
 
-test("required prequeue guard reuses only a disjoint attributed base move and binds a distinct Project Cut", async () => {
+test("required prequeue guard accepts a behind PR base snapshot when the protected ref and Project Cut are exact", async () => {
   const previousBase = "b".repeat(40);
   const currentBase = "c".repeat(40);
   const mergeCommitSha = "d".repeat(40);
@@ -648,6 +648,7 @@ test("required prequeue guard reuses only a disjoint attributed base move and bi
   const root = (digit) => `sha256:${digit.repeat(64)}`;
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-prequeue-native-proof-"));
   const proofPath = path.join(directory, "native-proof.json");
+  const projectCutPath = path.join(directory, "project-cut-proof.json");
   const executionReceipt = createNativeExecutionReceipt({
     outcome: "succeeded", commandRoot: root("f"),
     executionBinding: { repository: "kungfu-systems/buildchain", protectedBase: "dev/v2/v2.6", sourceHead: exactHead, qualifiedBase: previousBase, toolchainRoot: root("6"), environmentRoot: root("0") },
@@ -659,11 +660,18 @@ test("required prequeue guard reuses only a disjoint attributed base move and bi
     nativeExecutionReceipt: executionReceipt, affectedPaths: ["packages/native"], shardEvidenceRoots: [executionReceipt.receiptRoot], qualifiedAt: "2026-08-14T00:00:30Z",
   });
   fs.writeFileSync(proofPath, `${JSON.stringify(proof)}\n`);
+  const projectCutProof = createProjectCutReplayProof({
+    repository: "kungfu-systems/buildchain", protectedBase: "dev/v2/v2.6", pullRequestNumber: 21,
+    sourceHead: exactHead, sourcePatchRoot: root("2"), currentBase, replayTree,
+    qualificationReceipt: { schema: "project.cut.merge-queue-admission/v1", ok: true, decision: "qualified", baseCommitOid: currentBase, headCommitOid: exactHead, candidateCommitOid: mergeCommitSha, candidateTreeOid: replayTree, replayedCommitCount: 1, compositionChanged: false, reasonCodes: [] },
+    requiredContextRoots: [root("1")], verifiedAt: "2026-08-14T00:01:00Z",
+  });
+  fs.writeFileSync(projectCutPath, `${JSON.stringify(projectCutProof)}\n`);
   try {
     await withWarrantResult({}, async (resultPath, warrantResult) => {
-      const target = pr({ number: 21, headSha: exactHead, baseSha: currentBase, mergeCommitSha, mergeable_state: "blocked" });
+      const target = pr({ number: 21, headSha: exactHead, baseSha: previousBase, mergeCommitSha, mergeable_state: "behind" });
       const authority = { activeWarrant: warrantResult.warrant, candidates: [{ candidateId: warrantResult.warrant.candidateId, sourceHead: exactHead, status: "qualified" }] };
-      const run = (fake) => runDevPrAdmission({ ...targetedOptions, dryRun: false, warrantMode: "required", warrantResultPath: resultPath, nativeProofPath: proofPath }, fake);
+      const run = (fake) => runDevPrAdmission({ ...targetedOptions, dryRun: false, warrantMode: "required", warrantResultPath: resultPath, nativeProofPath: proofPath, projectCutProofPath: projectCutPath, sourcePatchRoot: root("2") }, fake);
       const fake = client({ pullRequests: [target], branchShas: [previousBase, currentBase, currentBase, currentBase, currentBase], queueStates: Array.from({ length: 6 }, () => ({ enabled: true, id: "MQ_1", entries: [] })), baseDelta: { status: "ahead", merge_base_commit: { sha: previousBase }, files: [{ status: "modified", filename: "docs/guide.md" }] }, commitTrees: { [mergeCommitSha]: replayTree }, currentDeliveryQueue: authority });
       const result = await run(fake);
       assert.equal(result.ok, true);
@@ -676,12 +684,19 @@ test("required prequeue guard reuses only a disjoint attributed base move and bi
       assert.match(transaction.preEnqueueProjectCut.nativeProofReuseDecisionRoot, /^sha256:[0-9a-f]{64}$/u);
       assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
 
+      const staleSnapshot = pr({ number: 21, headSha: exactHead, baseSha: "a".repeat(40), mergeCommitSha, mergeable_state: "behind" });
+      const stableBase = client({ pullRequests: [staleSnapshot], branchShas: Array(5).fill(currentBase), queueStates: Array.from({ length: 6 }, () => ({ enabled: true, id: "MQ_1", entries: [] })), commitTrees: { [mergeCommitSha]: replayTree }, currentDeliveryQueue: authority });
+      const stableBaseResult = await run(stableBase);
+      assert.equal(stableBaseResult.ok, true);
+      assert.equal(stableBaseResult.receipt.queue.admissionTransaction.admittedBase, currentBase);
+      assert.deepEqual(stableBase.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
+
       const overlap = client({ pullRequests: [target], branchShas: [previousBase, currentBase, currentBase], queueStates: Array.from({ length: 5 }, () => ({ enabled: true, id: "MQ_1", entries: [] })), baseDelta: { status: "ahead", merge_base_commit: { sha: previousBase }, files: [{ status: "modified", filename: "packages/native/runtime.cc" }] }, commitTrees: { [mergeCommitSha]: replayTree }, currentDeliveryQueue: authority });
       const overlapResult = await run(overlap);
       assert.equal(overlapResult.receipt.reason, "pre-enqueue-base-delta-overlap");
       assert.deepEqual(overlap.enqueued, []);
 
-      const postReplayDrift = client({ pullRequests: [target], branchShas: [previousBase, currentBase, currentBase, "f".repeat(40), "f".repeat(40)], queueStates: Array.from({ length: 6 }, () => ({ enabled: true, id: "MQ_1", entries: [] })), baseDelta: { status: "ahead", merge_base_commit: { sha: previousBase }, files: [{ status: "modified", filename: "docs/guide.md" }] }, commitTrees: { [mergeCommitSha]: replayTree }, currentDeliveryQueue: authority });
+      const postReplayDrift = client({ pullRequests: [target], branchShas: [previousBase, currentBase, currentBase, currentBase, "f".repeat(40), "f".repeat(40)], queueStates: Array.from({ length: 6 }, () => ({ enabled: true, id: "MQ_1", entries: [] })), baseDelta: { status: "ahead", merge_base_commit: { sha: previousBase }, files: [{ status: "modified", filename: "docs/guide.md" }] }, commitTrees: { [mergeCommitSha]: replayTree }, currentDeliveryQueue: authority });
       const driftResult = await run(postReplayDrift);
       assert.equal(driftResult.receipt.reason, "base-sha-drift-after-project-cut");
       assert.deepEqual(postReplayDrift.enqueued, []);
