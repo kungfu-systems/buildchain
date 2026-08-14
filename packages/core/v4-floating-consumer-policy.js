@@ -2,18 +2,41 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { parseYamlUses } from "./workflow-yaml-contract.js";
+import {
+  V4_FLOATING_CONSUMER_POLICY,
+  V4_FLOATING_CONSUMER_RECEIPT,
+  v4FloatingConsumerDocumentRoot,
+} from "./v4-floating-consumer-evidence.js";
 
-export const V4_FLOATING_CONSUMER_POLICY =
-  "kungfu-buildchain-v4-floating-consumer-policy/v1";
-export const V4_FLOATING_CONSUMER_RECEIPT =
-  "kungfu-buildchain-v4-floating-consumer-policy-receipt/v1";
-export const V4_FLOATING_CONSUMER_CERTIFICATION =
-  "kungfu-buildchain-v4-floating-consumer-certification/v1";
+export {
+  V4_FLOATING_CONSUMER_CERTIFICATION,
+  V4_FLOATING_CONSUMER_POLICY,
+  V4_FLOATING_CONSUMER_RECEIPT,
+  certifyV4FloatingConsumerPolicyReceipt,
+  v4FloatingConsumerDocumentRoot,
+  verifyV4FloatingConsumerPolicyCertification,
+  verifyV4FloatingConsumerPolicyReceipt,
+} from "./v4-floating-consumer-evidence.js";
 
 const EXACT_SHA = /^[0-9a-f]{40}$/u;
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
 const BUILDCHAIN_REPOSITORY = "kungfu-systems/buildchain";
 const CHANNELS = Object.freeze({ v4: "stable", "v4-alpha": "alpha" });
+const DEFAULT_STABLE_LOCK_PATH = ".buildchain/contract-lock.json";
+const DEFAULT_ALPHA_LOCK_PATH = ".buildchain/alpha-contract-lock.json";
+const SCANNER_PATHS = Object.freeze([
+  "architecture/v4-floating-consumer-policy.json",
+  "contracts/v4-floating-consumer-policy-receipt-v1.schema.json",
+  "packages/core/v4-floating-consumer-policy.js",
+  "packages/core/workflow-yaml-contract.js",
+  "scripts/v4-consumer-policy.mjs",
+]);
+
+function defaultRuntimeRoot() {
+  return typeof import.meta.dirname === "string"
+    ? path.resolve(import.meta.dirname, "../..")
+    : process.cwd();
+}
 
 function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
@@ -28,6 +51,58 @@ function stableJson(value) {
 
 function sha256(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
+}
+
+function resolveInside(root, relative, label) {
+  const resolvedRoot = path.resolve(root);
+  const file = path.resolve(resolvedRoot, relative);
+  if (!file.startsWith(`${resolvedRoot}${path.sep}`)) {
+    throw new Error(`${label} escapes caller root: ${relative}`);
+  }
+  return file;
+}
+
+export function v4ConsumerPolicyScannerRoot(
+  runtimeRoot = defaultRuntimeRoot(),
+) {
+  return sha256(
+    stableJson(
+      SCANNER_PATHS.map((relative) => ({
+        path: relative,
+        digest: sha256(fs.readFileSync(path.join(runtimeRoot, relative))),
+      })),
+    ),
+  );
+}
+
+export function resolveV4FloatingConsumerPolicyAuthority({
+  runtimeRoot = defaultRuntimeRoot(),
+  callerRoot = process.cwd(),
+  stableLockPath = DEFAULT_STABLE_LOCK_PATH,
+  alphaLockPath = DEFAULT_ALPHA_LOCK_PATH,
+} = {}) {
+  const policy = readJson(
+    runtimeRoot,
+    "architecture/v4-floating-consumer-policy.json",
+    "v4 floating consumer policy",
+  ).value;
+  const readLock = (relative, label) => {
+    const file = resolveInside(callerRoot, relative, `${label} contract lock`);
+    if (!fs.existsSync(file)) {
+      throw new Error(`${label} contract lock is missing: ${relative}`);
+    }
+    const value = JSON.parse(fs.readFileSync(file, "utf8"));
+    return { path: relative, root: v4FloatingConsumerDocumentRoot(value) };
+  };
+  return {
+    policy,
+    policyRoot: v4FloatingConsumerDocumentRoot(policy),
+    scannerRoot: v4ConsumerPolicyScannerRoot(runtimeRoot),
+    contractLocks: {
+      stable: readLock(stableLockPath, "stable"),
+      alpha: readLock(alphaLockPath, "alpha"),
+    },
+  };
 }
 
 function readJson(root, relative, label) {
@@ -367,234 +442,5 @@ export function scanV4FloatingConsumerPolicy({
     invocations: buildchainUses,
     receipt,
     receiptRoot,
-  };
-}
-
-export function verifyV4FloatingConsumerPolicyReceipt({
-  receipt,
-  receiptRoot = "",
-  repository = "",
-  sourceSha = "",
-  invokedWorkflow = "",
-  resolvedRuntimeSha = "",
-  policyRoot = "",
-  scannerRoot = "",
-  stableLockRoot = "",
-  alphaLockRoot = "",
-} = {}) {
-  const failures = [];
-  const check = (condition, code, message) => {
-    if (!condition) failures.push({ code, message });
-  };
-  check(
-    receipt?.schema === V4_FLOATING_CONSUMER_RECEIPT,
-    "receipt-contract-invalid",
-    `receipt must use ${V4_FLOATING_CONSUMER_RECEIPT}`,
-  );
-  check(
-    receipt?.status === "passed",
-    "receipt-not-passed",
-    "policy receipt status must be passed",
-  );
-  check(
-    Array.isArray(receipt?.failures) && receipt.failures.length === 0,
-    "receipt-retains-failures",
-    "passed receipt must not retain failures",
-  );
-  const computedRoot = receipt ? sha256(stableJson(receipt)) : "";
-  check(
-    !receiptRoot || receiptRoot === computedRoot,
-    "receipt-root-mismatch",
-    "policy receipt root does not match its content",
-  );
-  if (repository)
-    check(
-      receipt?.caller?.repository === repository,
-      "caller-repository-mismatch",
-      "policy receipt caller repository mismatch",
-    );
-  if (sourceSha)
-    check(
-      receipt?.caller?.sourceSha === sourceSha.toLowerCase(),
-      "caller-source-mismatch",
-      "policy receipt caller source mismatch",
-    );
-  if (invokedWorkflow)
-    check(
-      receipt?.invocation?.workflow === normalizeWorkflowPath(invokedWorkflow),
-      "invoked-workflow-mismatch",
-      "policy receipt workflow mismatch",
-    );
-  if (resolvedRuntimeSha)
-    check(
-      receipt?.invocation?.resolvedRuntimeSha ===
-        resolvedRuntimeSha.toLowerCase(),
-      "runtime-sha-mismatch",
-      "policy receipt runtime SHA mismatch",
-    );
-  if (policyRoot)
-    check(
-      receipt?.policy?.root === policyRoot,
-      "policy-root-mismatch",
-      "policy receipt policy root mismatch",
-    );
-  if (scannerRoot)
-    check(
-      receipt?.policy?.scannerRoot === scannerRoot,
-      "scanner-root-mismatch",
-      "policy receipt scanner root mismatch",
-    );
-  if (stableLockRoot)
-    check(
-      receipt?.contractLocks?.stable?.root === stableLockRoot,
-      "stable-lock-root-mismatch",
-      "policy receipt stable lock root mismatch",
-    );
-  if (alphaLockRoot)
-    check(
-      receipt?.contractLocks?.alpha?.root === alphaLockRoot,
-      "alpha-lock-root-mismatch",
-      "policy receipt alpha lock root mismatch",
-    );
-  check(
-    receipt?.invocation?.selectorClass === "floating",
-    "selector-class-invalid",
-    "policy receipt must bind a floating selector",
-  );
-  check(
-    ["v4", "v4-alpha"].includes(receipt?.invocation?.visibleSelector),
-    "selector-invalid",
-    "policy receipt selector must be v4 or v4-alpha",
-  );
-  return { ok: failures.length === 0, failures, receiptRoot: computedRoot };
-}
-
-export function certifyV4FloatingConsumerPolicyReceipt(options = {}) {
-  const verification = verifyV4FloatingConsumerPolicyReceipt(options);
-  const certification = {
-    schema: V4_FLOATING_CONSUMER_CERTIFICATION,
-    status: verification.ok ? "certified" : "rejected",
-    receiptRoot: verification.receiptRoot,
-    caller: options.receipt?.caller || {},
-    invocation: options.receipt?.invocation || {},
-    policy: options.receipt?.policy || {},
-    contractLocks: options.receipt?.contractLocks || {},
-    failures: verification.failures,
-  };
-  return {
-    ok: verification.ok,
-    verification,
-    certification,
-    certificationRoot: sha256(stableJson(certification)),
-  };
-}
-
-export function verifyV4FloatingConsumerPolicyCertification({
-  certification,
-  certificationRoot = "",
-  repository = "",
-  sourceSha = "",
-  invokedWorkflow = "",
-  resolvedRuntimeSha = "",
-  policyRoot = "",
-  scannerRoot = "",
-  stableLockRoot = "",
-  alphaLockRoot = "",
-} = {}) {
-  const failures = [];
-  const check = (condition, code, message) => {
-    if (!condition) failures.push({ code, message });
-  };
-  check(
-    certification?.schema === V4_FLOATING_CONSUMER_CERTIFICATION,
-    "certification-contract-invalid",
-    `certification must use ${V4_FLOATING_CONSUMER_CERTIFICATION}`,
-  );
-  check(
-    certification?.status === "certified",
-    "certification-not-certified",
-    "certification status must be certified",
-  );
-  check(
-    Array.isArray(certification?.failures) &&
-      certification.failures.length === 0,
-    "certification-retains-failures",
-    "certified evidence must not retain failures",
-  );
-  const computedRoot = certification ? sha256(stableJson(certification)) : "";
-  check(
-    !certificationRoot || certificationRoot === computedRoot,
-    "certification-root-mismatch",
-    "certification root does not match its content",
-  );
-  if (repository)
-    check(
-      certification?.caller?.repository === repository,
-      "caller-repository-mismatch",
-      "certification caller repository mismatch",
-    );
-  if (sourceSha)
-    check(
-      certification?.caller?.sourceSha === sourceSha.toLowerCase(),
-      "caller-source-mismatch",
-      "certification caller source mismatch",
-    );
-  if (invokedWorkflow)
-    check(
-      certification?.invocation?.workflow ===
-        normalizeWorkflowPath(invokedWorkflow),
-      "invoked-workflow-mismatch",
-      "certification workflow mismatch",
-    );
-  if (resolvedRuntimeSha)
-    check(
-      certification?.invocation?.resolvedRuntimeSha ===
-        resolvedRuntimeSha.toLowerCase(),
-      "runtime-sha-mismatch",
-      "certification runtime SHA mismatch",
-    );
-  if (policyRoot)
-    check(
-      certification?.policy?.root === policyRoot,
-      "policy-root-mismatch",
-      "certification policy root mismatch",
-    );
-  if (scannerRoot)
-    check(
-      certification?.policy?.scannerRoot === scannerRoot,
-      "scanner-root-mismatch",
-      "certification scanner root mismatch",
-    );
-  if (stableLockRoot)
-    check(
-      certification?.contractLocks?.stable?.root === stableLockRoot,
-      "stable-lock-root-mismatch",
-      "certification stable lock root mismatch",
-    );
-  if (alphaLockRoot)
-    check(
-      certification?.contractLocks?.alpha?.root === alphaLockRoot,
-      "alpha-lock-root-mismatch",
-      "certification alpha lock root mismatch",
-    );
-  check(
-    SHA256_ROOT.test(String(certification?.receiptRoot || "")),
-    "receipt-root-invalid",
-    "certification must bind a receipt root",
-  );
-  check(
-    certification?.invocation?.selectorClass === "floating",
-    "selector-class-invalid",
-    "certification must bind a floating selector",
-  );
-  check(
-    ["v4", "v4-alpha"].includes(certification?.invocation?.visibleSelector),
-    "selector-invalid",
-    "certification selector must be v4 or v4-alpha",
-  );
-  return {
-    ok: failures.length === 0,
-    failures,
-    certificationRoot: computedRoot,
   };
 }

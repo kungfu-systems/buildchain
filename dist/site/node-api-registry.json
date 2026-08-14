@@ -16466,7 +16466,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 41
+        "line": 46
       },
       "example": "import { AGENT_INDEX_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16490,7 +16490,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 39
+        "line": 44
       },
       "example": "import { ARTIFACT_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16503,11 +16503,11 @@
       "id": "packages/core/release-passport.js#collectGitHubReleasePassport",
       "name": "collectGitHubReleasePassport",
       "kind": "function",
-      "signature": "function collectGitHubReleasePassport({ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdAdopterManifestJson = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], v4ConsumerPolicyCertificationJson = \"\", kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {})",
+      "signature": "function collectGitHubReleasePassport({ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdAdopterManifestJson = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], v4ConsumerPolicyCertificationJson = \"\", v4ConsumerPolicyCertificationRoot = \"\", kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdAdopterManifestJson = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], v4ConsumerPolicyCertificationJson = \"\", kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {}"
+          "signature": "{ cwd = process.cwd(), tag = \"\", repository = process.env.GITHUB_REPOSITORY || \"\", sourceSha = process.env.GITHUB_SHA || \"\", line = \"\", outputDir = \".buildchain/release-passport\", assetsJson = \"\", assetsDir = \"\", releaseJson = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", packageSetJson = \"\", publishEvidenceJson = \"\", trustedPublishingJson = \"\", transactionJson = \"\", anchorManifestJson = \"\", versionMaterialJson = \"\", impactJson = \"\", buildSummaryJson = \"\", buildFactsJsons = [], platformManifestJsons = [], distTagEvidenceJson = \"\", kfd1WitnessJsons = [], kfd2ClaimJsons = [], kfd3PrebuildWitnessJsons = [], kfd3ArtifactWitnessJsons = [], kfd3ArtifactVerifyCommand = \"\", kfdAdopterManifestJson = \"\", kfdSupportMatrixJson = \"\", kfdProductGateJsons = [], invariantPassportJsons = [], invariantPassportCommand = \"\", releaseEvidenceJsons = [], v4ConsumerPolicyCertificationJson = \"\", v4ConsumerPolicyCertificationRoot = \"\", kfdAgentHubEvidenceJson = \"\", controllerReceiptReferences = [], githubArtifactAttestationPolicyJsons = [], basePassportJson = \"\", requireBaseKfd = false, releaseJsonExtra = \"\", publishJson = \"\", workflow = {}, checkedAt = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -16519,7 +16519,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1546
+        "line": 1507
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16548,7 +16548,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1210
+        "line": 1180
       },
       "example": "import { createArtifactEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16577,7 +16577,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 210
+        "line": 215
       },
       "example": "import { createInvariantPassportGate } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -16606,7 +16606,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2708
+        "line": 2668
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16619,11 +16619,11 @@
       "id": "packages/core/release-passport.js#createReleasePassport",
       "name": "createReleasePassport",
       "kind": "function",
-      "signature": "function createReleasePassport({ cwd = process.cwd(), repository = \"\", tag = \"\", sourceSha = \"\", line = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", productMechanismPath = \"product-mechanism.json\", artifactEvidencePath = \"artifact-evidence.json\", impactPath = \"impact.json\", agentIndexPath = \"agent-index.json\", checkReportPath = \"check-report.json\", publishEvidencePath = \"\", transactionStatePath = \"\", assets = [], packageSet = undefined, anchorManifest = undefined, versionMaterial = undefined, publishEvidence = undefined, trustedPublishing = undefined, transaction = undefined, buildSummary = undefined, buildFacts = [], platformArtifactManifests = [], distTagPromotionEvidence = undefined, release = {}, publish = {}, impact = undefined, workflow = {}, kfd1 = undefined, kfd2Claims = [], kfd3 = undefined, kfdAdopter = undefined, kfdAdopterManifestEvidencePath = \"\", kfdAdopterGateEvidencePath = \"\", kfdSupport = undefined, kfdSupportEvidencePath = \"\", invariantPassports = undefined, releaseEvidence = [], v4ConsumerPolicyCertification = undefined, kfdAgentHubEvidence = undefined, kfdAgentHubEvidencePath = \"\", controllerReceipts = [], controllerReceiptReferences = [], githubArtifactAttestations = [], checkedAt = \"\", } = {})",
+      "signature": "function createReleasePassport(options = {})",
       "parameters": [
         {
-          "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), repository = \"\", tag = \"\", sourceSha = \"\", line = \"\", productName = \"Buildchain\", packageName = \"@kungfu-tech/buildchain\", packageVersion = \"\", productMechanismPath = \"product-mechanism.json\", artifactEvidencePath = \"artifact-evidence.json\", impactPath = \"impact.json\", agentIndexPath = \"agent-index.json\", checkReportPath = \"check-report.json\", publishEvidencePath = \"\", transactionStatePath = \"\", assets = [], packageSet = undefined, anchorManifest = undefined, versionMaterial = undefined, publishEvidence = undefined, trustedPublishing = undefined, transaction = undefined, buildSummary = undefined, buildFacts = [], platformArtifactManifests = [], distTagPromotionEvidence = undefined, release = {}, publish = {}, impact = undefined, workflow = {}, kfd1 = undefined, kfd2Claims = [], kfd3 = undefined, kfdAdopter = undefined, kfdAdopterManifestEvidencePath = \"\", kfdAdopterGateEvidencePath = \"\", kfdSupport = undefined, kfdSupportEvidencePath = \"\", invariantPassports = undefined, releaseEvidence = [], v4ConsumerPolicyCertification = undefined, kfdAgentHubEvidence = undefined, kfdAgentHubEvidencePath = \"\", controllerReceipts = [], controllerReceiptReferences = [], githubArtifactAttestations = [], checkedAt = \"\", } = {}"
+          "name": "options",
+          "signature": "options = {}"
         }
       ],
       "returns": "unknown",
@@ -16635,7 +16635,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1245
+        "line": 1215
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16664,7 +16664,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2863
+        "line": 2823
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16688,7 +16688,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 40
+        "line": 45
       },
       "example": "import { IMPACT_LEDGER_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16712,7 +16712,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 46
+        "line": 51
       },
       "example": "import { INVARIANT_PASSPORT_GATE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -16736,7 +16736,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 47
+        "line": 52
       },
       "example": "import { KFD_AGENT_HUB_RELEASE_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -16760,7 +16760,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 44
+        "line": 49
       },
       "example": "import { KFD2_RELEASE_TRUST_PASSPORT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16784,7 +16784,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 45
+        "line": 50
       },
       "example": "import { KFD2_TRUST_PROOF_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16813,7 +16813,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2892
+        "line": 2852
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16837,7 +16837,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 42
+        "line": 47
       },
       "example": "import { PRODUCT_MECHANISM_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16874,7 +16874,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2779
+        "line": 2739
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16922,7 +16922,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 43
+        "line": 48
       },
       "example": "import { RELEASE_EVIDENCE_ATTACHMENT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16976,7 +16976,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 225
+        "line": 230
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17005,7 +17005,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 147
+        "line": 152
       },
       "example": "import { sha256Text } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17029,7 +17029,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2904
+        "line": 2864
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17058,7 +17058,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2828
+        "line": 2788
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20020,7 +20020,7 @@
       ]
     },
     {
-      "id": "packages/core/v4-floating-consumer-policy.js#certifyV4FloatingConsumerPolicyReceipt",
+      "id": "packages/core/v4-floating-consumer-evidence.js#certifyV4FloatingConsumerPolicyReceipt",
       "name": "certifyV4FloatingConsumerPolicyReceipt",
       "kind": "function",
       "signature": "function certifyV4FloatingConsumerPolicyReceipt(options = {})",
@@ -20038,10 +20038,198 @@
         "none-detected-by-static-source-scan"
       ],
       "source": {
-        "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 472
+        "path": "packages/core/v4-floating-consumer-evidence.js",
+        "line": 188
       },
       "example": "import { certifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_CERTIFICATION",
+      "name": "V4_FLOATING_CONSUMER_CERTIFICATION",
+      "kind": "constant",
+      "signature": "const V4_FLOATING_CONSUMER_CERTIFICATION",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-floating-consumer-evidence.js",
+        "line": 7
+      },
+      "example": "import { V4_FLOATING_CONSUMER_CERTIFICATION } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_POLICY",
+      "name": "V4_FLOATING_CONSUMER_POLICY",
+      "kind": "constant",
+      "signature": "const V4_FLOATING_CONSUMER_POLICY",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-floating-consumer-evidence.js",
+        "line": 3
+      },
+      "example": "import { V4_FLOATING_CONSUMER_POLICY } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_RECEIPT",
+      "name": "V4_FLOATING_CONSUMER_RECEIPT",
+      "kind": "constant",
+      "signature": "const V4_FLOATING_CONSUMER_RECEIPT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-floating-consumer-evidence.js",
+        "line": 5
+      },
+      "example": "import { V4_FLOATING_CONSUMER_RECEIPT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-floating-consumer-evidence.js#v4FloatingConsumerDocumentRoot",
+      "name": "v4FloatingConsumerDocumentRoot",
+      "kind": "function",
+      "signature": "function v4FloatingConsumerDocumentRoot(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-floating-consumer-evidence.js",
+        "line": 124
+      },
+      "example": "import { v4FloatingConsumerDocumentRoot } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-floating-consumer-evidence.js#verifyV4FloatingConsumerPolicyCertification",
+      "name": "verifyV4FloatingConsumerPolicyCertification",
+      "kind": "function",
+      "signature": "function verifyV4FloatingConsumerPolicyCertification(options = {})",
+      "parameters": [
+        {
+          "name": "options",
+          "signature": "options = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-floating-consumer-evidence.js",
+        "line": 273
+      },
+      "example": "import { verifyV4FloatingConsumerPolicyCertification } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-floating-consumer-evidence.js#verifyV4FloatingConsumerPolicyReceipt",
+      "name": "verifyV4FloatingConsumerPolicyReceipt",
+      "kind": "function",
+      "signature": "function verifyV4FloatingConsumerPolicyReceipt(options = {})",
+      "parameters": [
+        {
+          "name": "options",
+          "signature": "options = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-floating-consumer-evidence.js",
+        "line": 128
+      },
+      "example": "import { verifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-floating-consumer-policy.js#resolveV4FloatingConsumerPolicyAuthority",
+      "name": "resolveV4FloatingConsumerPolicyAuthority",
+      "kind": "function",
+      "signature": "function resolveV4FloatingConsumerPolicyAuthority({ runtimeRoot = defaultRuntimeRoot(), callerRoot = process.cwd(), stableLockPath = DEFAULT_STABLE_LOCK_PATH, alphaLockPath = DEFAULT_ALPHA_LOCK_PATH, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ runtimeRoot = defaultRuntimeRoot(), callerRoot = process.cwd(), stableLockPath = DEFAULT_STABLE_LOCK_PATH, alphaLockPath = DEFAULT_ALPHA_LOCK_PATH, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-floating-consumer-policy.js",
+        "line": 78
+      },
+      "example": "import { resolveV4FloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -20068,7 +20256,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 250
+        "line": 325
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20078,86 +20266,14 @@
       ]
     },
     {
-      "id": "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_CERTIFICATION",
-      "name": "V4_FLOATING_CONSUMER_CERTIFICATION",
-      "kind": "constant",
-      "signature": "const V4_FLOATING_CONSUMER_CERTIFICATION",
-      "parameters": [],
-      "returns": "value",
-      "errors": [
-        "Import does not declare a throw contract."
-      ],
-      "sideEffects": [
-        "none-on-import"
-      ],
-      "source": {
-        "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 10
-      },
-      "example": "import { V4_FLOATING_CONSUMER_CERTIFICATION } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_POLICY",
-      "name": "V4_FLOATING_CONSUMER_POLICY",
-      "kind": "constant",
-      "signature": "const V4_FLOATING_CONSUMER_POLICY",
-      "parameters": [],
-      "returns": "value",
-      "errors": [
-        "Import does not declare a throw contract."
-      ],
-      "sideEffects": [
-        "none-on-import"
-      ],
-      "source": {
-        "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 6
-      },
-      "example": "import { V4_FLOATING_CONSUMER_POLICY } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_RECEIPT",
-      "name": "V4_FLOATING_CONSUMER_RECEIPT",
-      "kind": "constant",
-      "signature": "const V4_FLOATING_CONSUMER_RECEIPT",
-      "parameters": [],
-      "returns": "value",
-      "errors": [
-        "Import does not declare a throw contract."
-      ],
-      "sideEffects": [
-        "none-on-import"
-      ],
-      "source": {
-        "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 8
-      },
-      "example": "import { V4_FLOATING_CONSUMER_RECEIPT } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/v4-floating-consumer-policy.js#verifyV4FloatingConsumerPolicyCertification",
-      "name": "verifyV4FloatingConsumerPolicyCertification",
+      "id": "packages/core/v4-floating-consumer-policy.js#v4ConsumerPolicyScannerRoot",
+      "name": "v4ConsumerPolicyScannerRoot",
       "kind": "function",
-      "signature": "function verifyV4FloatingConsumerPolicyCertification({ certification, certificationRoot = \"\", repository = \"\", sourceSha = \"\", invokedWorkflow = \"\", resolvedRuntimeSha = \"\", policyRoot = \"\", scannerRoot = \"\", stableLockRoot = \"\", alphaLockRoot = \"\", } = {})",
+      "signature": "function v4ConsumerPolicyScannerRoot(runtimeRoot = defaultRuntimeRoot())",
       "parameters": [
         {
-          "name": "parameter1",
-          "signature": "{ certification, certificationRoot = \"\", repository = \"\", sourceSha = \"\", invokedWorkflow = \"\", resolvedRuntimeSha = \"\", policyRoot = \"\", scannerRoot = \"\", stableLockRoot = \"\", alphaLockRoot = \"\", } = {}"
+          "name": "runtimeRoot",
+          "signature": "runtimeRoot = defaultRuntimeRoot()"
         }
       ],
       "returns": "unknown",
@@ -20169,38 +20285,9 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 492
+        "line": 65
       },
-      "example": "import { verifyV4FloatingConsumerPolicyCertification } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/v4-floating-consumer-policy.js#verifyV4FloatingConsumerPolicyReceipt",
-      "name": "verifyV4FloatingConsumerPolicyReceipt",
-      "kind": "function",
-      "signature": "function verifyV4FloatingConsumerPolicyReceipt({ receipt, receiptRoot = \"\", repository = \"\", sourceSha = \"\", invokedWorkflow = \"\", resolvedRuntimeSha = \"\", policyRoot = \"\", scannerRoot = \"\", stableLockRoot = \"\", alphaLockRoot = \"\", } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ receipt, receiptRoot = \"\", repository = \"\", sourceSha = \"\", invokedWorkflow = \"\", resolvedRuntimeSha = \"\", policyRoot = \"\", scannerRoot = \"\", stableLockRoot = \"\", alphaLockRoot = \"\", } = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 373
-      },
-      "example": "import { verifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
+      "example": "import { v4ConsumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -20355,7 +20442,7 @@
         "developer",
         "agent"
       ],
-      "symbolCount": 615,
+      "symbolCount": 618,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -20448,7 +20535,7 @@
         "packages/core/build-facts.js#buildFactsDigest",
         "packages/core/issue-reporting.js#buildWorkflowFrictionIssueReport",
         "packages/core/cache-evidence.js#cacheEvidenceDigest",
-        "packages/core/v4-floating-consumer-policy.js#certifyV4FloatingConsumerPolicyReceipt",
+        "packages/core/v4-floating-consumer-evidence.js#certifyV4FloatingConsumerPolicyReceipt",
         "packages/core/channel-candidate.js#CHANNEL_CANDIDATE_DECISION_SCHEMA",
         "packages/core/channel-candidate.js#channelCandidateSourceLockRef",
         "packages/core/readme-badges.js#checkBadgeBundleBlock",
@@ -20870,6 +20957,7 @@
         "packages/core/release-propagation.js#resolvePropagationChannel",
         "packages/core/publication-artifact-candidate.js#resolvePublicationCandidateFile",
         "packages/core/buildchain-layout.js#resolveReleasePassportPath",
+        "packages/core/v4-floating-consumer-policy.js#resolveV4FloatingConsumerPolicyAuthority",
         "packages/core/release-propagation-work.js#resumeReleasePropagationWork",
         "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction",
         "packages/core/stable-candidate-ledger.js#revokeStableCandidate",
@@ -20909,9 +20997,11 @@
         "packages/core/buildchain-config.js#updateConfiguredVersionStateContents",
         "packages/core/homebrew.js#updateHomebrewTap",
         "packages/core/readme-badges.js#updateReadmeBadgeBlock",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_CERTIFICATION",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_POLICY",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_RECEIPT",
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_CERTIFICATION",
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_POLICY",
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_RECEIPT",
+        "packages/core/v4-floating-consumer-policy.js#v4ConsumerPolicyScannerRoot",
+        "packages/core/v4-floating-consumer-evidence.js#v4FloatingConsumerDocumentRoot",
         "packages/core/diagnostics.js#validateAnchoredPackageRelease",
         "packages/core/artifact-signing.js#validateArtifactSigningReceipt",
         "packages/core/artifact-signing.js#validateArtifactSigningRequest",
@@ -20953,8 +21043,8 @@
         "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
         "packages/core/release-passport.js#verifyReleasePassport",
         "packages/core/release-propagation-work.js#verifyReleasePropagationWork",
-        "packages/core/v4-floating-consumer-policy.js#verifyV4FloatingConsumerPolicyCertification",
-        "packages/core/v4-floating-consumer-policy.js#verifyV4FloatingConsumerPolicyReceipt",
+        "packages/core/v4-floating-consumer-evidence.js#verifyV4FloatingConsumerPolicyCertification",
+        "packages/core/v4-floating-consumer-evidence.js#verifyV4FloatingConsumerPolicyReceipt",
         "packages/core/web-surface-publication-candidate.js#WEB_SURFACE_PRODUCTION_DECISION_CONTRACT",
         "packages/core/web-surface-publication-candidate.js#WEB_SURFACE_PUBLICATION_CANDIDATE_CONTRACT",
         "packages/core/web-surface-publication-candidate.js#webSurfacePublicationDigest",
@@ -21068,7 +21158,7 @@
         "developer",
         "agent"
       ],
-      "symbolCount": 615,
+      "symbolCount": 618,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -21161,7 +21251,7 @@
         "packages/core/build-facts.js#buildFactsDigest",
         "packages/core/issue-reporting.js#buildWorkflowFrictionIssueReport",
         "packages/core/cache-evidence.js#cacheEvidenceDigest",
-        "packages/core/v4-floating-consumer-policy.js#certifyV4FloatingConsumerPolicyReceipt",
+        "packages/core/v4-floating-consumer-evidence.js#certifyV4FloatingConsumerPolicyReceipt",
         "packages/core/channel-candidate.js#CHANNEL_CANDIDATE_DECISION_SCHEMA",
         "packages/core/channel-candidate.js#channelCandidateSourceLockRef",
         "packages/core/readme-badges.js#checkBadgeBundleBlock",
@@ -21583,6 +21673,7 @@
         "packages/core/release-propagation.js#resolvePropagationChannel",
         "packages/core/publication-artifact-candidate.js#resolvePublicationCandidateFile",
         "packages/core/buildchain-layout.js#resolveReleasePassportPath",
+        "packages/core/v4-floating-consumer-policy.js#resolveV4FloatingConsumerPolicyAuthority",
         "packages/core/release-propagation-work.js#resumeReleasePropagationWork",
         "packages/core/engineering-housekeeper.js#revalidateHousekeeperBranchAction",
         "packages/core/stable-candidate-ledger.js#revokeStableCandidate",
@@ -21622,9 +21713,11 @@
         "packages/core/buildchain-config.js#updateConfiguredVersionStateContents",
         "packages/core/homebrew.js#updateHomebrewTap",
         "packages/core/readme-badges.js#updateReadmeBadgeBlock",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_CERTIFICATION",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_POLICY",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_RECEIPT",
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_CERTIFICATION",
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_POLICY",
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_RECEIPT",
+        "packages/core/v4-floating-consumer-policy.js#v4ConsumerPolicyScannerRoot",
+        "packages/core/v4-floating-consumer-evidence.js#v4FloatingConsumerDocumentRoot",
         "packages/core/diagnostics.js#validateAnchoredPackageRelease",
         "packages/core/artifact-signing.js#validateArtifactSigningReceipt",
         "packages/core/artifact-signing.js#validateArtifactSigningRequest",
@@ -21666,8 +21759,8 @@
         "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
         "packages/core/release-passport.js#verifyReleasePassport",
         "packages/core/release-propagation-work.js#verifyReleasePropagationWork",
-        "packages/core/v4-floating-consumer-policy.js#verifyV4FloatingConsumerPolicyCertification",
-        "packages/core/v4-floating-consumer-policy.js#verifyV4FloatingConsumerPolicyReceipt",
+        "packages/core/v4-floating-consumer-evidence.js#verifyV4FloatingConsumerPolicyCertification",
+        "packages/core/v4-floating-consumer-evidence.js#verifyV4FloatingConsumerPolicyReceipt",
         "packages/core/web-surface-publication-candidate.js#WEB_SURFACE_PRODUCTION_DECISION_CONTRACT",
         "packages/core/web-surface-publication-candidate.js#WEB_SURFACE_PUBLICATION_CANDIDATE_CONTRACT",
         "packages/core/web-surface-publication-candidate.js#webSurfacePublicationDigest",
@@ -22561,22 +22654,25 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:927da939c74fe22ae10d2c4cc8faad83f0a7fdb05441ec951bb5cc2990cc5368",
+      "digest": "sha256:a6b54a83946b01b80de784e0b4cb6b18d46c3d820d519c88562796965bf0bb11",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 7,
+      "symbolCount": 10,
       "symbolIds": [
-        "packages/core/v4-floating-consumer-policy.js#certifyV4FloatingConsumerPolicyReceipt",
+        "packages/core/v4-floating-consumer-evidence.js#certifyV4FloatingConsumerPolicyReceipt",
+        "packages/core/v4-floating-consumer-policy.js#resolveV4FloatingConsumerPolicyAuthority",
         "packages/core/v4-floating-consumer-policy.js#scanV4FloatingConsumerPolicy",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_CERTIFICATION",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_POLICY",
-        "packages/core/v4-floating-consumer-policy.js#V4_FLOATING_CONSUMER_RECEIPT",
-        "packages/core/v4-floating-consumer-policy.js#verifyV4FloatingConsumerPolicyCertification",
-        "packages/core/v4-floating-consumer-policy.js#verifyV4FloatingConsumerPolicyReceipt"
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_CERTIFICATION",
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_POLICY",
+        "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_RECEIPT",
+        "packages/core/v4-floating-consumer-policy.js#v4ConsumerPolicyScannerRoot",
+        "packages/core/v4-floating-consumer-evidence.js#v4FloatingConsumerDocumentRoot",
+        "packages/core/v4-floating-consumer-evidence.js#verifyV4FloatingConsumerPolicyCertification",
+        "packages/core/v4-floating-consumer-evidence.js#verifyV4FloatingConsumerPolicyReceipt"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -23195,7 +23291,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:1e5fa84ef5fe9f551dc10d8968ab5d2a8ddee1587acc8817bf531507ab93d400",
+      "digest": "sha256:94a907f244d97679f4279742beef0aefb9d257904dc60d5a54d8310bbf0b1d36",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -23534,7 +23630,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:db199fd96ae4ecb0dc68973d8985c737846db6a4bd29e2714e5fa5b8dc8f84eb"
+      "digest": "sha256:5759a2927126091a5f01bc16daea125484f46cae9b90fd47b8f0d1b54b9b66d4"
     },
     {
       "id": "build-facts",

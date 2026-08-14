@@ -51,6 +51,20 @@ function assertOrdered(relative, markers) {
   }
 }
 
+export function assertPromotionCertificationWiring(source) {
+  for (const marker of [
+    ".buildchain/runtime/promotion-shell/scripts/v4-consumer-policy.mjs certify",
+    '--caller-root "${{ github.workspace }}"',
+    '--stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}"',
+    '--alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"',
+    "release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}",
+  ]) {
+    if (!source.includes(marker)) {
+      fail(`promotion certification is missing ${marker}`);
+    }
+  }
+}
+
 function assertPersistedSelectors() {
   const offenders = [];
   const workflows = fs
@@ -132,12 +146,19 @@ export function checkV4FloatingConsumerPolicyContract() {
       "release candidate promotion is not transitively gated by consumer admission",
     );
   }
+  assertPromotionCertificationWiring(
+    read(".github/workflows/.release-candidate-promote.yml"),
+  );
   for (const [relative, marker] of [
     ["packages/core/release-candidate.js", "consumerPolicy"],
     ["packages/core/release-passport.js", "v4ConsumerPolicy"],
     [
       "actions/promote-buildchain-ref/action.yml",
       "release-passport-v4-consumer-policy-certification-json",
+    ],
+    [
+      "actions/promote-buildchain-ref/action.yml",
+      "release-passport-v4-consumer-policy-certification-root",
     ],
     [
       ".github/workflows/.release-candidate-promote.yml",

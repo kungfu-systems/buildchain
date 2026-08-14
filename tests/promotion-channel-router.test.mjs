@@ -164,7 +164,13 @@ test("generated promotion router preserves every public input and output exactly
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
   const current = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
-  const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-") || name === "publication-authority-workflow-path" || name === "buildchain-expected-channel" || name === "buildchain-expected-major"));
+  const internal = new Set(workflowFields(advanced, "inputs").filter((name) =>
+    name.startsWith("promotion-") ||
+    name === "publication-authority-workflow-path" ||
+    name === "buildchain-expected-channel" ||
+    name === "buildchain-expected-major" ||
+    name === "buildchain-alpha-contract-lock-path" ||
+    name === "buildchain-stable-contract-lock-path"));
   const expectedInputs = workflowFields(advanced, "inputs").filter((name) => !internal.has(name));
   expectedInputs.push("buildchain-channel", "buildchain-alpha-contract-lock-path", "buildchain-stable-contract-lock-path");
   const actualInputs = workflowFields(generated, "inputs");

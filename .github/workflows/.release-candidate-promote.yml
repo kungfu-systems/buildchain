@@ -82,6 +82,16 @@ on:
         default: ".buildchain/contract-lock.json"
         type: string
         required: false
+      buildchain-alpha-contract-lock-path:
+        description: "Consumer-owned alpha contract lock path"
+        default: ".buildchain/alpha-contract-lock.json"
+        type: string
+        required: false
+      buildchain-stable-contract-lock-path:
+        description: "Consumer-owned stable contract lock path"
+        default: ".buildchain/contract-lock.json"
+        type: string
+        required: false
       buildchain-contract-compatibility-policy:
         description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
         default: "major-compatible"
@@ -1661,13 +1671,20 @@ jobs:
         if: ${{ startsWith(inputs.promotion-shell-ref, 'v4') }}
         shell: bash
         env:
+          BUILDCHAIN_EXPECTED_CALLER_ROOT: ${{ github.workspace }}
           BUILDCHAIN_EXPECTED_CALLER_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_EXPECTED_INVOKED_WORKFLOW: .github/workflows/build.yml
           BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
+          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
+          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-alpha-contract-lock-path }}
           BUILDCHAIN_V4_POLICY_CERTIFICATION_PATH: .buildchain/release-candidate/v4-consumer-policy-certification.json
         run: >-
-          node .buildchain/runtime/scripts/v4-consumer-policy.mjs certify
+          node .buildchain/runtime/promotion-shell/scripts/v4-consumer-policy.mjs certify
           --input "${{ steps.rc.outputs.release-candidate-passport-path }}"
+          --caller-root "${{ github.workspace }}"
+          --stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}"
+          --alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"
 
       - name: Resolve Buildchain stable candidate alpha
         id: buildchain-stable-candidate
@@ -1851,6 +1868,7 @@ jobs:
           release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
           release-passport-promotion-routing-json: ${{ steps.routing-evidence.outputs.routing-path }}
           release-passport-v4-consumer-policy-certification-json: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-path }}
+          release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}
           release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
           release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}

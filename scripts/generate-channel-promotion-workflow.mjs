@@ -23,6 +23,8 @@ const internalInputs = new Set([
   "publication-authority-workflow-path",
   "buildchain-expected-channel",
   "buildchain-expected-major",
+  "buildchain-alpha-contract-lock-path",
+  "buildchain-stable-contract-lock-path",
 ]);
 
 function blockBetween(source, start, end) {

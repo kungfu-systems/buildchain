@@ -7,6 +7,8 @@ import Ajv2020 from "ajv/dist/2020.js";
 import {
   certifyV4FloatingConsumerPolicyReceipt,
   scanV4FloatingConsumerPolicy,
+  v4ConsumerPolicyScannerRoot,
+  v4FloatingConsumerDocumentRoot,
   verifyV4FloatingConsumerPolicyReceipt,
 } from "../packages/core/v4-floating-consumer-policy.js";
 import {
@@ -15,6 +17,7 @@ import {
 } from "../packages/core/release-candidate.js";
 import { createReleasePassport } from "../packages/core/release-passport.js";
 import { parseYamlUses } from "../packages/core/workflow-yaml-contract.js";
+import { certifyCommand } from "../scripts/v4-consumer-policy.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const policy = JSON.parse(
@@ -113,16 +116,44 @@ function workspace(fixture) {
   return destination;
 }
 
-function evaluate(fixture) {
+function evaluate(fixture, { scannerRoot = ROOT } = {}) {
+  const callerRoot = workspace(fixture);
   const selectedSha = fixture.selector === "v4-alpha" ? ALPHA_SHA : STABLE_SHA;
-  return scanV4FloatingConsumerPolicy({
-    root: workspace(fixture),
+  const result = scanV4FloatingConsumerPolicy({
+    root: callerRoot,
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
     invokedWorkflow: "v4-stage-capsule-canary.yml",
     resolvedRuntimeSha: selectedSha,
     policy,
-    scannerRoot: ROOT,
+    scannerRoot,
+  });
+  return { ...result, callerRoot };
+}
+
+function certifyFromExactCaller(result, receipt = result.receipt, receiptRoot) {
+  const input = path.join(
+    result.callerRoot,
+    ".buildchain/evidence/candidate-policy.json",
+  );
+  const output = path.join(
+    result.callerRoot,
+    ".buildchain/evidence/external-certification.json",
+  );
+  writeJson(input, {
+    receipt,
+    receiptRoot: receiptRoot ?? v4FloatingConsumerDocumentRoot(receipt),
+  });
+  return certifyCommand({
+    input,
+    output,
+    callerRoot: result.callerRoot,
+    repository: "kungfu-systems/consumer",
+    sourceSha: SOURCE_SHA,
+    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    resolvedRuntimeSha: STABLE_SHA,
+    stableLock: ".buildchain/contract-lock.json",
+    alphaLock: ".buildchain/alpha-contract-lock.json",
   });
 }
 
@@ -180,6 +211,104 @@ test("receipt verification and external certification fail closed on stale roots
   assert.ok(
     certified.verification.failures.some(
       (failure) => failure.code === "caller-source-mismatch",
+    ),
+  );
+});
+
+test("receipt verification rejects a missing receiptRoot", () => {
+  const result = evaluate(fixtures.cases[0]);
+  const verification = verifyV4FloatingConsumerPolicyReceipt({
+    receipt: result.receipt,
+    receiptRoot: "",
+  });
+  assert.equal(verification.ok, false);
+  assert.ok(
+    verification.failures.some(
+      (failure) => failure.code === "receipt-root-invalid",
+    ),
+  );
+});
+
+for (const field of ["root", "scannerRoot"]) {
+  test(`external certification rejects a forged policy ${field}`, () => {
+    const result = evaluate(fixtures.cases[0], {
+      scannerRoot: v4ConsumerPolicyScannerRoot(),
+    });
+    const forged = structuredClone(result.receipt);
+    forged.policy[field] = `sha256:${"f".repeat(64)}`;
+    const certification = certifyFromExactCaller(result, forged);
+    assert.equal(certification.ok, false);
+    assert.ok(
+      certification.verification.failures.some((failure) =>
+        [
+          "receipt-authority-root-mismatch",
+          field === "root" ? "policy-root-mismatch" : "scanner-root-mismatch",
+        ].includes(failure.code),
+      ),
+    );
+  });
+}
+
+test("external certification rejects a self-authored certification document", () => {
+  const result = evaluate(fixtures.cases[0], {
+    scannerRoot: v4ConsumerPolicyScannerRoot(),
+  });
+  const forged = structuredClone(certifyFromExactCaller(result));
+  forged.certification.authority.policyRoot = `sha256:${"f".repeat(64)}`;
+  forged.certification.authority.scannerRoot = `sha256:${"a".repeat(64)}`;
+  forged.certificationRoot = v4FloatingConsumerDocumentRoot(
+    forged.certification,
+  );
+  const input = path.join(result.callerRoot, "forged-certification.json");
+  writeJson(input, forged);
+  const recertified = certifyCommand({
+    input,
+    output: path.join(result.callerRoot, "recertification.json"),
+    callerRoot: result.callerRoot,
+    repository: "kungfu-systems/consumer",
+    sourceSha: SOURCE_SHA,
+    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    resolvedRuntimeSha: STABLE_SHA,
+    stableLock: ".buildchain/contract-lock.json",
+    alphaLock: ".buildchain/alpha-contract-lock.json",
+  });
+  assert.equal(recertified.ok, false);
+  assert.ok(
+    recertified.verification.failures.some(
+      (failure) => failure.code === "receipt-contract-invalid",
+    ),
+  );
+});
+
+for (const channel of ["stable", "alpha"]) {
+  test(`external certification rejects a stale ${channel} lock root`, () => {
+    const result = evaluate(fixtures.cases[0], {
+      scannerRoot: v4ConsumerPolicyScannerRoot(),
+    });
+    const forged = structuredClone(result.receipt);
+    forged.contractLocks[channel].root = `sha256:${"f".repeat(64)}`;
+    const certification = certifyFromExactCaller(result, forged);
+    assert.equal(certification.ok, false);
+    assert.ok(
+      certification.verification.failures.some(
+        (failure) => failure.code === `${channel}-lock-root-mismatch`,
+      ),
+    );
+  });
+}
+
+test("current external runtime rejects an old runtime fabricated passed receipt", () => {
+  const result = evaluate(fixtures.cases[0], {
+    scannerRoot: v4ConsumerPolicyScannerRoot(),
+  });
+  const fabricated = structuredClone(result.receipt);
+  fabricated.policy.sourceScanRoot = `sha256:${"f".repeat(64)}`;
+  fabricated.invocation.sourceLine += 1;
+  const certification = certifyFromExactCaller(result, fabricated);
+  assert.equal(certification.ok, false);
+  assert.ok(
+    certification.verification.failures.some(
+      (failure) => failure.code === "receipt-authority-root-mismatch",
     ),
   );
 });
@@ -250,14 +379,10 @@ test("v4 release candidate passports require and hash the source/runtime-bound r
 });
 
 test("final v4 Release Passport construction requires fresh external certification", () => {
-  const result = evaluate(fixtures.cases[0]);
-  const certification = certifyV4FloatingConsumerPolicyReceipt({
-    receipt: result.receipt,
-    receiptRoot: result.receiptRoot,
-    repository: "kungfu-systems/consumer",
-    sourceSha: SOURCE_SHA,
-    resolvedRuntimeSha: STABLE_SHA,
+  const result = evaluate(fixtures.cases[0], {
+    scannerRoot: v4ConsumerPolicyScannerRoot(),
   });
+  const certification = certifyFromExactCaller(result);
   const promotionRouting = {
     contract: "buildchain.promotion-routing/v1",
     router: { ref: "v4", sha: STABLE_SHA },
@@ -267,6 +392,7 @@ test("final v4 Release Passport construction requires fresh external certificati
     publication: { channel: "release", targetRef: "release/v4/v4.0" },
   };
   const input = {
+    cwd: result.callerRoot,
     repository: "kungfu-systems/consumer",
     tag: "v4.0.0",
     sourceSha: SOURCE_SHA,
@@ -276,9 +402,18 @@ test("final v4 Release Passport construction requires fresh external certificati
     () => createReleasePassport(input),
     /requires an external floating consumer policy certification/u,
   );
+  assert.throws(
+    () =>
+      createReleasePassport({
+        ...input,
+        v4ConsumerPolicyCertification: certification,
+      }),
+    /requires an expected external certification root/u,
+  );
   const passport = createReleasePassport({
     ...input,
     v4ConsumerPolicyCertification: certification,
+    v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
   });
   assert.equal(passport.v4ConsumerPolicy.certification.status, "certified");
   assert.throws(
@@ -287,9 +422,68 @@ test("final v4 Release Passport construction requires fresh external certificati
         ...input,
         v4ConsumerPolicyCertification: {
           ...certification,
+          certificationRoot: "",
+        },
+        v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
+      }),
+    /certification-root-invalid/u,
+  );
+  assert.throws(
+    () =>
+      createReleasePassport({
+        ...input,
+        v4ConsumerPolicyCertification: {
+          ...certification,
           certificationRoot: `sha256:${"f".repeat(64)}`,
         },
+        v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
       }),
     /certification-root-mismatch/u,
+  );
+  const forged = structuredClone(certification);
+  forged.certification.policy.root = `sha256:${"f".repeat(64)}`;
+  forged.certification.authority.policyRoot = forged.certification.policy.root;
+  forged.certificationRoot = v4FloatingConsumerDocumentRoot(
+    forged.certification,
+  );
+  assert.throws(
+    () =>
+      createReleasePassport({
+        ...input,
+        v4ConsumerPolicyCertification: forged,
+        v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
+      }),
+    /certification-authority-root-mismatch/u,
+  );
+
+  const forgedScanner = structuredClone(certification);
+  forgedScanner.certification.policy.scannerRoot = `sha256:${"a".repeat(64)}`;
+  forgedScanner.certification.authority.scannerRoot =
+    forgedScanner.certification.policy.scannerRoot;
+  forgedScanner.certificationRoot = v4FloatingConsumerDocumentRoot(
+    forgedScanner.certification,
+  );
+  assert.throws(
+    () =>
+      createReleasePassport({
+        ...input,
+        v4ConsumerPolicyCertification: forgedScanner,
+        v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
+      }),
+    /certification-authority-root-mismatch/u,
+  );
+
+  writeJson(
+    path.join(result.callerRoot, ".buildchain/contract-lock.json"),
+    lock("v4", "f".repeat(40)),
+  );
+  assert.throws(
+    () =>
+      createReleasePassport({
+        ...input,
+        v4ConsumerPolicyCertification: certification,
+        v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
+      }),
+    /stable-lock-root-mismatch/u,
   );
 });

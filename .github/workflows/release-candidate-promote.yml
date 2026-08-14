@@ -940,6 +940,8 @@ jobs:
       promotion-target-ref: ${{ needs.resolve-promotion.outputs.target-ref }}
       promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used == 'true' }}
       buildchain-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
+      buildchain-alpha-contract-lock-path: ${{ inputs.buildchain-alpha-contract-lock-path }}
+      buildchain-stable-contract-lock-path: ${{ inputs.buildchain-stable-contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       allow-repository: ${{ inputs.allow-repository }}
@@ -1070,6 +1072,8 @@ jobs:
       promotion-target-ref: ${{ needs.resolve-promotion.outputs.target-ref }}
       promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used == 'true' }}
       buildchain-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
+      buildchain-alpha-contract-lock-path: ${{ inputs.buildchain-alpha-contract-lock-path }}
+      buildchain-stable-contract-lock-path: ${{ inputs.buildchain-stable-contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       allow-repository: ${{ inputs.allow-repository }}

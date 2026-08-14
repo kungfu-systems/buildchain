@@ -268,6 +268,9 @@ async function main() {
   const releasePassportV4ConsumerPolicyCertificationJson = core.getInput(
     "release-passport-v4-consumer-policy-certification-json",
   );
+  const releasePassportV4ConsumerPolicyCertificationRoot = core.getInput(
+    "release-passport-v4-consumer-policy-certification-root",
+  );
   const releasePassportKfd1WitnessJsons = core.getInput("release-passport-kfd-1-witness-jsons");
   const releasePassportKfd2ClaimJsons = core.getInput("release-passport-kfd-2-claim-jsons");
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
@@ -381,6 +384,7 @@ async function main() {
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
     releasePassportV4ConsumerPolicyCertificationJson,
+    releasePassportV4ConsumerPolicyCertificationRoot,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,

@@ -1,30 +1,16 @@
 #!/usr/bin/env node
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   certifyV4FloatingConsumerPolicyReceipt,
+  resolveV4FloatingConsumerPolicyAuthority,
   scanV4FloatingConsumerPolicy,
+  v4ConsumerPolicyScannerRoot,
 } from "../packages/core/v4-floating-consumer-policy.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 const RUNTIME_ROOT = path.resolve(import.meta.dirname, "..");
-
-function stableJson(value) {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
-  if (value && typeof value === "object") {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-function sha256(value) {
-  return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
-}
 
 function parseArgs(argv) {
   const options = {};
@@ -55,23 +41,7 @@ function writeJson(file, value) {
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-export function v4ConsumerPolicyScannerRoot(runtimeRoot = RUNTIME_ROOT) {
-  const paths = [
-    "architecture/v4-floating-consumer-policy.json",
-    "contracts/v4-floating-consumer-policy-receipt-v1.schema.json",
-    "packages/core/v4-floating-consumer-policy.js",
-    "packages/core/workflow-yaml-contract.js",
-    "scripts/v4-consumer-policy.mjs",
-  ];
-  return sha256(
-    stableJson(
-      paths.map((relative) => ({
-        path: relative,
-        digest: sha256(fs.readFileSync(path.join(runtimeRoot, relative))),
-      })),
-    ),
-  );
-}
+export { v4ConsumerPolicyScannerRoot };
 
 export function scanCommand(options = {}) {
   const root = path.resolve(
@@ -139,24 +109,74 @@ export function certifyCommand(options = {}) {
     evidence.receiptRoot ||
     document.receiptRoot ||
     env("BUILDCHAIN_V4_POLICY_RECEIPT_ROOT");
+  const callerRoot = path.resolve(
+    options.callerRoot || env("BUILDCHAIN_EXPECTED_CALLER_ROOT", process.cwd()),
+  );
+  const stableLockPath =
+    options.stableLock ||
+    env(
+      "BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH",
+      ".buildchain/contract-lock.json",
+    );
+  const alphaLockPath =
+    options.alphaLock ||
+    env(
+      "BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH",
+      ".buildchain/alpha-contract-lock.json",
+    );
+  const repository =
+    options.repository || env("BUILDCHAIN_EXPECTED_CALLER_REPOSITORY");
+  const sourceSha =
+    options.sourceSha || env("BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA");
+  const invokedWorkflow =
+    options.invokedWorkflow ||
+    env("BUILDCHAIN_EXPECTED_INVOKED_WORKFLOW") ||
+    receipt?.invocation?.workflow;
+  const resolvedRuntimeSha =
+    options.resolvedRuntimeSha || env("BUILDCHAIN_EXPECTED_RUNTIME_SHA");
+  const authority = resolveV4FloatingConsumerPolicyAuthority({
+    runtimeRoot: RUNTIME_ROOT,
+    callerRoot,
+    stableLockPath,
+    alphaLockPath,
+  });
+  const selectedLock =
+    receipt?.invocation?.visibleSelector === "v4-alpha"
+      ? readJson(path.join(callerRoot, alphaLockPath))
+      : readJson(path.join(callerRoot, stableLockPath));
+  const authorityScan = scanV4FloatingConsumerPolicy({
+    root: callerRoot,
+    repository,
+    sourceSha,
+    invokedWorkflow,
+    resolvedWorkflowSha: selectedLock.buildchain?.resolvedSha,
+    resolvedRuntimeSha,
+    stableLockPath,
+    alphaLockPath,
+    policy: authority.policy,
+    scannerRoot: authority.scannerRoot,
+  });
+  const certificationAuthority = {
+    receiptRoot: authorityScan.receiptRoot,
+    policyRoot: authority.policyRoot,
+    scannerRoot: authority.scannerRoot,
+    contractLocks: authority.contractLocks,
+  };
   const result = certifyV4FloatingConsumerPolicyReceipt({
     receipt,
     receiptRoot,
-    repository:
-      options.repository || env("BUILDCHAIN_EXPECTED_CALLER_REPOSITORY"),
-    sourceSha:
-      options.sourceSha || env("BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA"),
-    invokedWorkflow:
-      options.invokedWorkflow || env("BUILDCHAIN_EXPECTED_INVOKED_WORKFLOW"),
-    resolvedRuntimeSha:
-      options.resolvedRuntimeSha || env("BUILDCHAIN_EXPECTED_RUNTIME_SHA"),
-    policyRoot: options.policyRoot || env("BUILDCHAIN_EXPECTED_V4_POLICY_ROOT"),
-    scannerRoot:
-      options.scannerRoot || env("BUILDCHAIN_EXPECTED_V4_SCANNER_ROOT"),
-    stableLockRoot:
-      options.stableLockRoot || env("BUILDCHAIN_EXPECTED_STABLE_LOCK_ROOT"),
-    alphaLockRoot:
-      options.alphaLockRoot || env("BUILDCHAIN_EXPECTED_ALPHA_LOCK_ROOT"),
+    expectedReceiptRoot: authorityScan.receiptRoot,
+    repository,
+    sourceSha,
+    invokedWorkflow,
+    resolvedRuntimeSha,
+    policyRoot: authority.policyRoot,
+    scannerRoot: authority.scannerRoot,
+    stableLockRoot: authority.contractLocks.stable.root,
+    alphaLockRoot: authority.contractLocks.alpha.root,
+    stableLockPath,
+    alphaLockPath,
+    authority: certificationAuthority,
   });
   const output = path.resolve(
     options.output ||
@@ -165,7 +185,11 @@ export function certifyCommand(options = {}) {
         ".buildchain/evidence/v4-consumer-policy-certification.json",
       ),
   );
-  writeJson(output, result);
+  const documentWithAuthority = {
+    ...result,
+    authority: certificationAuthority,
+  };
+  writeJson(output, documentWithAuthority);
   writeGitHubOutputs({
     "v4-consumer-policy-certification-status": result.ok
       ? "certified"
@@ -173,7 +197,7 @@ export function certifyCommand(options = {}) {
     "v4-consumer-policy-certification-path": output,
     "v4-consumer-policy-certification-root": result.certificationRoot,
   });
-  return result;
+  return documentWithAuthority;
 }
 
 function main(argv = process.argv.slice(2)) {

@@ -980,6 +980,7 @@
           "branch-protection-bypass-apps",
           "branch-protection-bypass-teams",
           "branch-protection-bypass-users",
+          "buildchain-alpha-contract-lock-path",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
@@ -987,6 +988,7 @@
           "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
+          "buildchain-stable-contract-lock-path",
           "channel",
           "declarative-release-tail",
           "dry-run",
@@ -1088,7 +1090,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 113,
+        "inputCount": 115,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3011,6 +3013,7 @@
           "release-passport-product-name",
           "release-passport-promotion-routing-json",
           "release-passport-v4-consumer-policy-certification-json",
+          "release-passport-v4-consumer-policy-certification-root",
           "release-tail-state-path",
           "require-governance",
           "require-publication-qualification",
@@ -3024,7 +3027,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 81
+        "inputCount": 82
       },
       {
         "id": "release-tail",
@@ -8034,8 +8037,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
-    "workflowRegistryDigest": "74372cdcc25737cabfbd61ce1a59af2b92b21992b483454f7fb0163f8e27ec66",
-    "pageRegistryDigest": "2663a02e6658a320f0e0786868eaaac2d2b38586e62525d97c95bb008c73dafb"
+    "workflowRegistryDigest": "8d41aebb47983fc467b53606ceeee5cacfa678011aa4feff19748f0e6b7c5ed2",
+    "pageRegistryDigest": "83d5fccc647084680f6043f1dbe70ad35bd82e73056e4ad76260a7f5f0e72975"
   },
   "comparison": {
     "missingCliRegistry": [],

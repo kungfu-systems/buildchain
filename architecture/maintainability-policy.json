@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
-    "maxHandMaintainedSourceFiles": 347,
-    "maxHandMaintainedSourceLines": 134011,
+    "maxHandMaintainedSourceFiles": 349,
+    "maxHandMaintainedSourceLines": 134328,
     "maxWorkflowFiles": 71,
-    "maxWorkflowLines": 23828,
-    "latestTransition": "The v4 public entrypoints now fail closed on one semantic floating-consumer policy before dependency or release authority and carry independently certified evidence into final Release Passports.",
-    "rationale": "The bounded policy, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. These exact measured ceilings cannot grow implicitly."
+    "maxWorkflowLines": 23850,
+    "latestTransition": "The v4 public entrypoints now fail closed on one semantic floating-consumer policy before dependency or release authority, and the promotion shell independently reconstructs receipt authority from the exact caller source before final Passport verification.",
+    "rationale": "The bounded policy, split evidence and Passport adapters, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors plus missing or self-described receipt authority while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. These exact measured ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -211,6 +211,7 @@
           "release-passport-product-name",
           "release-passport-promotion-routing-json",
           "release-passport-v4-consumer-policy-certification-json",
+          "release-passport-v4-consumer-policy-certification-root",
           "release-tail-state-path",
           "require-governance",
           "require-publication-qualification",
@@ -227,7 +228,7 @@
         "secrets": [],
         "outputs": []
       },
-      "rationale": "The promote action accepts one independently rooted v4 consumer-policy certification for final Release Passport construction; v3 behavior is unchanged and v4 promotion fails closed when certification is absent or stale."
+      "rationale": "The promote action accepts one independently rooted v4 consumer-policy certification and its workflow-bound expected root for final Release Passport construction; v3 behavior is unchanged and v4 promotion fails closed when either binding is absent or stale."
     },
     "cli:architecture": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -987,6 +988,7 @@
           "branch-protection-bypass-apps",
           "branch-protection-bypass-teams",
           "branch-protection-bypass-users",
+          "buildchain-alpha-contract-lock-path",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
@@ -994,6 +996,7 @@
           "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
+          "buildchain-stable-contract-lock-path",
           "channel",
           "declarative-release-tail",
           "dry-run",
@@ -1138,7 +1141,7 @@
           "release-tail-transaction-state"
         ]
       },
-      "rationale": "The advanced promotion workflow preserves explicit expected channel and major bindings for opaque exact-runtime contract-lock checks while adding one opt-in declarative release-tail input and five rooted transaction outputs. Existing callers preserve legacy GitHub Release behavior by default; candidate, target tree, controller, command, authority workflow and provider transaction identities remain independently bound, and incomplete or mismatched evidence still fails closed without a hidden rebuild."
+      "rationale": "The advanced promotion workflow preserves explicit expected channel and major bindings for opaque exact-runtime contract-lock checks and now receives both caller lock paths so the promotion-shell certifier reads their roots from the exact source checkout. Existing callers preserve legacy GitHub Release behavior by default; candidate, target tree, controller, command, policy, scanner, dual-lock, authority workflow and provider transaction identities remain independently bound, and incomplete or mismatched evidence still fails closed without a hidden rebuild."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",

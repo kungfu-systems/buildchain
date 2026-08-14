@@ -1,5 +1,12 @@
 function finalizationRequirements(material, rematerialize = false) { return (material?.artifacts || []).map((artifact) => rematerialize && artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
 
+function releasePassportOutputPath(context) {
+  return context.path.resolve(
+    context.cwd,
+    context.releasePassportOutputDir || ".buildchain/release-passport",
+  );
+}
+
 function createDurableTransactionOperations(context) {
   const {
     octokit,
@@ -47,13 +54,11 @@ function createDurableTransactionOperations(context) {
     publicationUsedQualificationNoncesJson,
     publicationQualificationNow,
     releasePassport,
-    releasePassportOutputDir,
     releasePassportProductName,
     releasePassportBuildSummaryPath,
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
-    releasePassportV4ConsumerPolicyCertificationJson,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
@@ -224,7 +229,8 @@ function createDurableTransactionOperations(context) {
       releasePassportPlatformManifestPaths,
     ),
     passportPromotionRoutingJson = releasePassportPromotionRoutingJson,
-    passportV4ConsumerPolicyCertificationJson = releasePassportV4ConsumerPolicyCertificationJson,
+    passportV4ConsumerPolicyCertificationJson =
+      context.releasePassportV4ConsumerPolicyCertificationJson,
     passportKfd1WitnessJsons = splitPathList(releasePassportKfd1WitnessJsons),
     passportKfd2ClaimJsons = splitPathList(releasePassportKfd2ClaimJsons),
     passportKfd3PrebuildWitnessJsons = splitPathList(
@@ -259,16 +265,15 @@ function createDurableTransactionOperations(context) {
       channel: channel || rule.channel,
       line: line || rule.releasePrefix || "",
       packageName: publishPackageMain,
-      outputDir: path.resolve(
-        cwd,
-        releasePassportOutputDir || ".buildchain/release-passport",
-      ),
+      outputDir: releasePassportOutputPath(context),
       productName: releasePassportProductName,
       buildSummaryPath: passportBuildSummaryPath,
       platformManifestPaths: passportPlatformManifestPaths,
       impactJson: releasePassportImpactJson,
       promotionRoutingJson: passportPromotionRoutingJson,
       v4ConsumerPolicyCertificationJson: passportV4ConsumerPolicyCertificationJson,
+      v4ConsumerPolicyCertificationRoot:
+        context.releasePassportV4ConsumerPolicyCertificationRoot,
       kfd1WitnessJsons: passportKfd1WitnessJsons,
       kfd2ClaimJsons: passportKfd2ClaimJsons,
       kfd3PrebuildWitnessJsons: passportKfd3PrebuildWitnessJsons,
