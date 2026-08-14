@@ -3,8 +3,8 @@ import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { verifyProjectCutReplayProof } from "../packages/core/dev-delivery-warrant.js";
 import { admitExistingQueueEntry, createDevPrAdmissionReceipt, qualifyAtomicQueueAdmission, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission, setActiveLeaseStatus, verifyCurrentDeliveryWarrant } from "./dev-pr-delivery-warrant.mjs";
+import { projectCutQualification } from "./dev-pr-prequeue-guard.mjs";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
 const DEFAULT_REQUIRED_CHECKS = ["check"];
@@ -86,6 +86,7 @@ function normalizeOptions(options = {}) {
     warrantMode: choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode"),
     warrantResultPath: String(options.warrantResultPath || "").trim(),
     projectCutProofPath: String(options.projectCutProofPath || "").trim(),
+    sourceProofPath: String(options.sourceProofPath || ".buildchain/dev-delivery/source-proof.json").trim(),
     sourcePatchRoot: String(options.sourcePatchRoot || "").trim().toLowerCase(),
     qualificationOnly: boolOption(options.qualificationOnly, false),
     verifiedDeliveryWarrant: options.verifiedDeliveryWarrant || null,
@@ -193,26 +194,8 @@ function mergeableAccepted(pr, landingMode = "direct", projectCutQualified = fal
   return state ? ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked", ...(projectCutQualified ? ["behind"] : [])] : [])].includes(state) : pr.mergeable === true;
 }
 
-async function projectCutQualification(pr, options, client) {
-  if (!options.projectCutProofPath) return { ok: false, reason: "project-cut-proof-required" };
-  let proof;
-  try {
-    proof = JSON.parse(fs.readFileSync(options.projectCutProofPath, "utf8"));
-  } catch {
-    return { ok: false, reason: "project-cut-proof-invalid" };
-  }
-  const currentBase = await client.getBranchSha(options.targetBranch).catch(() => "");
-  const verification = verifyProjectCutReplayProof(proof, {
-    repository: options.repository.fullName,
-    protectedBase: options.targetBranch,
-    pullRequestNumber: Number(pr.number),
-    sourceHead: String(pr.head?.sha || "").toLowerCase(),
-    ...(options.sourcePatchRoot ? { sourcePatchRoot: options.sourcePatchRoot } : {}),
-    currentBase,
-  });
-  return verification.ok
-    ? { ok: true, reason: verification.reason, proofRoot: verification.proofRoot, currentBase }
-    : { ok: false, reason: `project-cut-${verification.reason}`, currentBase };
+function rejectBaseMoveBeforeAtomicReplay(options, initialBaseSha, observedBaseSha) {
+  return observedBaseSha !== initialBaseSha && options.warrantMode !== "required";
 }
 async function setQueueAdmissionStatus(client, repository, sha, context, state) {
   if (!context) return null;
@@ -255,6 +238,7 @@ export async function evaluatePullRequest(pr, options, client) {
     ? await projectCutQualification(detailed, options, client)
     : null;
   if (projectCut && !projectCut.ok) return skip(projectCut.reason, { projectCut });
+  if (options.landingMode === "queue" && detailed.mergeable === false) return skip("pre-enqueue-merge-conflict", { mergeable: false, mergeableState });
   if (!mergeableAccepted(detailed, options.landingMode, projectCut?.ok === true)) {
     return skip("not-mergeable", {
       mergeable: detailed.mergeable,
@@ -1031,7 +1015,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
         admissionDecision = "blocked";
         admissionReason = "blocked-by-predecessor";
         predecessor = queuePredecessor(observedQueueState);
-      } else if (observedBaseSha !== initialBaseSha) {
+      } else if (rejectBaseMoveBeforeAtomicReplay(options, initialBaseSha, observedBaseSha)) {
         admissionDecision = "rejected";
         admissionReason = "base-sha-drift";
       } else if (observedHeadSha !== expectedHeadSha) {
@@ -1163,6 +1147,7 @@ export function cliOptions(args = [], environment = process.env) {
     warrantMode: cliValue(args, "warrant-mode", environment.BUILDCHAIN_DEV_PR_WARRANT_MODE),
     warrantResultPath: cliValue(args, "warrant-result", environment.BUILDCHAIN_DEV_PR_WARRANT_RESULT_PATH),
     projectCutProofPath: cliValue(args, "project-cut-proof", environment.BUILDCHAIN_DEV_PR_PROJECT_CUT_PROOF_PATH),
+    sourceProofPath: cliValue(args, "source-proof", environment.BUILDCHAIN_DEV_PR_SOURCE_PROOF_PATH),
     sourcePatchRoot: cliValue(args, "source-patch-root", environment.BUILDCHAIN_DEV_PR_SOURCE_PATCH_ROOT),
     qualificationOnly: cliFlag(args, "qualification-only"),
     requireApproval: environment.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,

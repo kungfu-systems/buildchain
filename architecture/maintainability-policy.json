@@ -5,11 +5,11 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
-    "maxHandMaintainedSourceFiles": 349,
-    "maxHandMaintainedSourceLines": 134549,
+    "maxHandMaintainedSourceFiles": 350,
+    "maxHandMaintainedSourceLines": 134918,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 23860,
-    "latestTransition": "The v4 public entrypoints now fail closed on one semantic floating-consumer policy before dependency or release authority, and the promotion shell independently reconstructs receipt authority from the exact caller source before final Passport verification.",
+    "latestTransition": "The v4 Delivery Warrant controller now rejects stale or conflicting latest-base composition before merge-queue admission and binds the accepted Project Cut with an exact compare-and-swap readback.",
     "rationale": "The bounded policy, split evidence and Passport adapters, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors plus missing or self-described receipt authority while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. The current dev queue Warrant admission changes are included in the exact measured source and workflow ceilings; neither surface may grow implicitly."
   },
   "sourceBudgets": {
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/dev-pr-prequeue-guard.mjs": {
+      "maxLines": 399,
+      "rationale": "The bounded guard keeps latest-base delta attribution, rooted source-proof reuse classification, synthetic merge composition readback, stable pre-enqueue failures, and the final base, head, queue, and Warrant compare-and-swap outside the legacy Dev PR controller; it cannot mutate the frozen source head or authorize landing by itself, and this exact file ceiling cannot grow implicitly."
+    },
     "scripts/v4-architecture.mjs": {
       "maxLines": 610,
       "rationale": "The v4 architecture validator adds only the bounded production-authority, fallback, rollback, writer-runtime, and legacy-retirement checks required for the final release cutover. This exact reviewed ceiling cannot grow implicitly."

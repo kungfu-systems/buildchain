@@ -8039,7 +8039,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
     "workflowRegistryDigest": "030d7e2a4425cb1e9cbeebbcc07fd3fa8a4584e230591be7feed2be7945d4781",
-    "pageRegistryDigest": "3f7dfcabc176bbf44fb42eb8f076bcd28bc5b5d9896fbb08d3ad272d44d45089"
+    "pageRegistryDigest": "6732d2ff29eb48d5bfa0ae19b97e7042bdbf16d29bf8a5d1a3c99ac3815ac1fb"
   },
   "comparison": {
     "missingCliRegistry": [],
