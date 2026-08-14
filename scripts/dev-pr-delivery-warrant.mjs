@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { defaultDevDeliveryStateRef, GitHubDevDeliveryStore } from "./dev-delivery-warrant.mjs";
+import { qualifyPreEnqueueReadback } from "./dev-pr-prequeue-guard.mjs";
 
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
@@ -118,6 +119,7 @@ export function readDeliveryWarrantResult(options, pullRequest) {
     protectedBase: warrant.protectedBase,
     pullRequestNumber: warrant.pullRequestNumber,
     sourceHead: warrant.sourceHead,
+    sourceProofRoot: warrant.sourceProofRoot,
   };
 }
 
@@ -159,6 +161,7 @@ export async function verifyCurrentDeliveryWarrant(client, options, pullRequest,
   requireMatch(Number(active?.generation) === Number(warrant.generation), "delivery-warrant-current-generation-mismatch");
   requireMatch(Number(active?.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-current-pr-mismatch");
   requireMatch(String(active?.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-current-head-mismatch");
+  requireMatch(active?.sourceProofRoot === warrant.sourceProofRoot, "delivery-warrant-current-source-proof-mismatch");
   requireMatch(Number.isFinite(Date.parse(active?.expiresAt)) && Date.parse(active.expiresAt) > Date.now(), "delivery-warrant-current-expired");
   requireMatch(["selected", "proving", "waiting", "blocked", "qualified"].includes(candidate?.status), "delivery-warrant-current-candidate-not-selected");
   requireMatch(candidate?.sourceHead === active.sourceHead, "delivery-warrant-current-candidate-head-mismatch");
@@ -251,30 +254,9 @@ export async function qualifyAtomicQueueAdmission({
       expectedHeadSha,
       sleep,
     );
-    const [observedPullRequest, observedBaseSha, observedQueueState, currentWarrant] = await Promise.all([
-      client.getPullRequest(pullRequest.number, {
-        attempts: options.pollMergeableAttempts,
-        delayMs: options.pollMergeableDelayMs,
-      }),
-      client.getBranchSha(options.targetBranch),
-      client.getMergeQueueState(options.targetBranch),
-      verifyCurrentDeliveryWarrant(
-        client,
-        options,
-        pullRequest,
-        options.verifiedDeliveryWarrant,
-      ),
-    ]);
-    const observedHeadSha = String(observedPullRequest.head?.sha || "").toLowerCase();
-    if (observedBaseSha !== expectedBaseSha) {
-      preEnqueueMismatch("base-sha-drift-after-lease-readback", { observedBaseSha });
-    }
-    if (observedHeadSha !== expectedHeadSha) {
-      preEnqueueMismatch("head-sha-drift-after-lease-readback", { observedHeadSha });
-    }
-    if (!mergeableAccepted(observedPullRequest, "queue", projectCut?.ok === true)) {
-      preEnqueueMismatch("not-mergeable-after-lease-readback");
-    }
+    const { observedBaseSha, observedQueueState, currentWarrant, preEnqueueProjectCut } = await qualifyPreEnqueueReadback({
+      client, options, pullRequest, expectedBaseSha, expectedHeadSha, projectCut, mergeableAccepted, root, verifyCurrentWarrant: verifyCurrentDeliveryWarrant,
+    });
     const exactEntry = observedQueueState.entries.find(
       (candidate) => candidate.pullRequestNumber === pullRequest.number &&
         candidate.pullRequestHeadSha === expectedHeadSha,
@@ -292,6 +274,7 @@ export async function qualifyAtomicQueueAdmission({
       pullRequestNumber: pullRequest.number,
       sourceHead: expectedHeadSha,
       frozenBase: expectedBaseSha,
+      admittedBase: observedBaseSha,
       queueAdmission: {
         context: options.queueAdmissionContext,
         state: statusReadback.queueAdmission?.state || "",
@@ -309,6 +292,8 @@ export async function qualifyAtomicQueueAdmission({
         expiresAt: currentWarrant.activeWarrant.expiresAt,
       } : null,
       projectCutProofRoot: projectCut?.proofRoot || "",
+      preEnqueueProjectCut: preEnqueueProjectCut?.receipt || null,
+      preEnqueueProjectCutRoot: preEnqueueProjectCut?.receiptRoot || "",
       decision: exactEntry ? "already-enqueued" : "qualified",
     };
     return {
