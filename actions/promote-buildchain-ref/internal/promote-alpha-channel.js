@@ -430,7 +430,7 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
       exactTag: selectedAlpha.tag,
       channel: context.rule.channel,
       line: context.rule.releasePrefix,
-      releaseSha: alpha.sha,
+      releaseSha: alpha.sha, sourceShaOverride: selectedAlpha.transaction?.source_sha || context.sha, releaseMaterialShaOverride: selectedAlpha.transaction?.release_material_sha || selectedAlpha.transaction?.release_sha, publishToolingShaOverride: selectedAlpha.transaction?.publish_tooling_sha || selectedAlpha.transaction?.release_sha,
       publishDistTagOverride: state.alphaPublishDistTag,
       durablePublicationMaterial: selectedAlpha.transaction,
       allowVersionStateFinalization:
