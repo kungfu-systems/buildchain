@@ -392,6 +392,24 @@ test("tail reseal preserves source-bound GitHub artifact attestation policy evid
   );
 });
 
+test("publication authority hydrates retained tail-reseal auxiliary evidence", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.publication-authority.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /name: Hydrate retained tail-reseal auxiliary evidence/,
+  );
+  assert.match(workflow, /-tail-reseal-request-\[0-9a-f\]\{40\}\$/);
+  assert.match(workflow, /-attestation-policy-/);
+  assert.match(workflow, /source\.runId/);
+  assert.match(
+    workflow,
+    /\.buildchain\/publication-evidence\/payloads\/\$policy_artifact/,
+  );
+});
+
 test("reusable build exposes runner-local tools before lifecycle execution", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
