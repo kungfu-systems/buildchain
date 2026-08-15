@@ -42,7 +42,7 @@ export function isCredentialVariableName(name) {
 }
 
 function readProcFile(procRoot, pid, name, readFileSync) {
-  const file = path.join(procRoot, String(pid), name);
+  const file = path.posix.join(procRoot, String(pid), name);
   return ancestryRead(readFileSync, file, "utf8");
 }
 
@@ -105,7 +105,7 @@ function hostedBoundary(procRoot, pid, command, readlinkSync) {
   ) {
     return null;
   }
-  const link = path.join(procRoot, String(pid), "exe");
+  const link = path.posix.join(procRoot, String(pid), "exe");
   const executable = ancestryRead(readlinkSync, link);
   if (
     !GITHUB_HOSTED_LINUX_WORKER.test(executable) ||

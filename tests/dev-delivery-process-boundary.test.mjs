@@ -500,7 +500,7 @@ test("recursive transfer membership rejects extras, links, directories, case col
       fs.writeFileSync(path.join(directory, "WARRANT.JSON"), "{}\n");
     assert.throws(
       () => verifyNativeExecutionTransfer(transfer, { directory }),
-      /membership|symlink|case-colliding|non-regular/u,
+      /membership|symlink|case-colliding|non-regular|byte drift/u,
       variant,
     );
   }

@@ -130,7 +130,9 @@ test("candidate replay composes a divergent base without ambient Git identity", 
   assert.doesNotThrow(() => composeCandidate(directory, head, advancedBase));
   assert.equal(git("rev-parse", "HEAD").stdout.trim(), head);
   assert.equal(
-    fs.readFileSync(path.join(directory, "base.txt"), "utf8"),
+    fs
+      .readFileSync(path.join(directory, "base.txt"), "utf8")
+      .replaceAll("\r\n", "\n"),
     "advanced base\n",
   );
 });
