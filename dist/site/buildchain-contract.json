@@ -805,7 +805,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers"
       ],
       "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-      "auditDigest": "sha256:e7386c747ff6282ef128903bcac9f6dcd47581d19ac4f0bafc589c2037e0467c",
+      "auditDigest": "sha256:b8b5334298e895712186902428b1fb4ab51d2bf7bee79dd6cb2b8ef0b70a1297",
       "compatibleBreakingDigests": [
         "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
       ],
@@ -4094,5 +4094,5 @@
   ],
   "compatibilityProofRegistryRoot": "sha256:aec674d174461493e3493b3fe3164d62745a9ce18cb6a560f94bd99f2759eb53",
   "compatibilityDigest": "sha256:eb2fafb181b33002f81102a966f0a801ab1798101446635703ab6acfea51d9aa",
-  "contractDigest": "sha256:ccccbf6a43b389132e4532b9bf4e3083c087757b989fef9fc1f59d9ef3669088"
+  "contractDigest": "sha256:ac434d401740379fbfe5843661b7f57784e777a91a671a1e1204d8fa8b232803"
 }

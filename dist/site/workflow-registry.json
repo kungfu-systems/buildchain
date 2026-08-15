@@ -3101,6 +3101,7 @@
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-kfd-3-artifact-witness-jsons",
         "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-adopter-manifest-gate-json",
         "release-passport-kfd-adopter-manifest-json",
         "release-passport-kfd-product-gate-jsons",
         "release-passport-kfd-support-matrix-json",
@@ -3121,7 +3122,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 81,
+      "inputCount": 82,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
