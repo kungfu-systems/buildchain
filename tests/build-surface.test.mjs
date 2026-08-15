@@ -232,6 +232,11 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(promotion, /BUILDCHAIN_EXPECTED_MAJOR="\$expected_major"/);
   assert.match(
     promotion,
+    /else\n\s+node \.buildchain\/runtime\/scripts\/buildchain-contract-lock\.mjs check\n\s+fi/,
+    "direct recovery must preserve native contract-lock channel and major inference",
+  );
+  assert.match(
+    promotion,
     /"id":"publication-authority","status":"\$\{\{ needs\.promote\.result == 'success' && 'success' \|\| needs\.publication-authority\.result \}\}"/,
     "a successful promotion must preserve its already-enforced publication authority result",
   );
