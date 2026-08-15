@@ -472,8 +472,8 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
-  assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/);
-  assert.match(workflow, /buildchain-channel: stable/);
+  assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4-alpha/);
+  assert.match(workflow, /buildchain-channel: alpha/);
   assert.match(
     workflow,
     /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
@@ -483,7 +483,8 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
     /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
   );
   assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
-  assert.match(workflow, /checkout-cache-mode: auto/);
+  assert.match(workflow, /buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/);
+  assert.doesNotMatch(workflow, /checkout-cache-mode:/);
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.match(
     workflow,

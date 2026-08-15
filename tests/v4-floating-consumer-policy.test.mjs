@@ -17,6 +17,7 @@ import {
 } from "../packages/core/release-candidate.js";
 import { createReleasePassport } from "../packages/core/release-passport.js";
 import { parseYamlUses } from "../packages/core/workflow-yaml-contract.js";
+import { resolveLegacyConsumerPolicyReceipt } from "../scripts/generate-release-candidate-passport.mjs";
 import { certifyCommand } from "../scripts/v4-consumer-policy.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -381,22 +382,58 @@ test("an old Buildchain runtime cannot self-authorize without a rooted receipt",
 });
 
 test("v4 release candidate passports require and hash the source/runtime-bound receipt", () => {
-  const result = evaluate(fixtures.cases[0]);
-  const input = {
+  const caller = evaluate(fixtures.cases[1]);
+  const runtimeSha = "a".repeat(40);
+  const fallbackInput = {
+    root: caller.callerRoot,
     repository: "kungfu-systems/consumer",
+    sourceSha: SOURCE_SHA,
+    targetChannel: "alpha",
+    runtimeRef: runtimeSha,
+    runtimeSha,
+    workflowShellRef: "v4-alpha",
+    runtimeOverride: true,
+    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invocationSourcePath: ".github/workflows/build.yml",
+    sourceTreeHash: ROOT,
+    runtimeTreeHash: () => ROOT,
+  };
+  assert.equal(resolveLegacyConsumerPolicyReceipt(fallbackInput), undefined);
+  fallbackInput.repository = "kungfu-systems/buildchain";
+  const consumerPolicyReceipt =
+    resolveLegacyConsumerPolicyReceipt(fallbackInput);
+  for (const override of [
+    { targetChannel: "release" },
+    { workflowShellRef: "v4" },
+    { runtimeOverride: false },
+    { runtimeRef: "v4-alpha" },
+    { runtimeSha: STABLE_SHA },
+    { runtimeTreeHash: () => STABLE_SHA },
+  ])
+    assert.equal(
+      resolveLegacyConsumerPolicyReceipt({ ...fallbackInput, ...override }),
+      undefined,
+    );
+  assert.equal(
+    consumerPolicyReceipt.receipt.invocation.visibleSelector,
+    "v4-alpha",
+  );
+  const input = {
+    repository: "kungfu-systems/buildchain",
     targetChannel: "alpha",
     version: "4.0.0-alpha.1",
     sourceHeadSha: SOURCE_SHA,
     sourceTreeHash: "a".repeat(40),
-    buildchain: { ref: "v4", sha: STABLE_SHA, workflowShellRef: "v4" },
-    consumerPolicyReceipt: {
-      receipt: result.receipt,
-      receiptRoot: result.receiptRoot,
+    buildchain: {
+      ref: runtimeSha,
+      sha: runtimeSha,
+      workflowShellRef: "v4-alpha",
     },
+    consumerPolicyReceipt,
     buildSummary: {
       contract: "kungfu-buildchain-build-summary",
       git: {
-        repository: "kungfu-systems/consumer",
+        repository: "kungfu-systems/buildchain",
         sha: SOURCE_SHA,
         treeSha: "a".repeat(40),
       },
