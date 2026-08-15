@@ -28,6 +28,7 @@ import {
   heartbeatDevDeliveryLandingWarrant,
   heartbeatDevDeliveryLandingWarrantWithGitHubProvider,
   readGitHubLandingActiveProviderAttempt,
+  readGitHubLandingTerminalState,
   heartbeatDevDeliveryQualificationLease,
   migrateDevDeliveryAuthorityState,
   normalizeDevDeliveryAuthorityState,
@@ -278,7 +279,7 @@ test("public Delivery Authority Node API owns live readback and merge-group admi
       ),
       now: "2026-08-12T00:00:05Z",
     }),
-    /GitHub context run id must be a positive integer/u,
+    /GitHub provider run id must be a positive integer/u,
   );
 });
 
@@ -914,6 +915,8 @@ test("expired Landing authority is retained until exact provider stop or termina
     admissionRoot: admitted.admissionRoot,
     pullRequestState: "open",
     pullRequestMerged: false,
+    protectedBaseHead: "e".repeat(40),
+    providerRunHeadInProtectedBase: false,
     outcome: "terminal-failure",
     reason: "independent-provider-stop-readback",
     observedAt: "2026-08-12T00:30:16Z",
@@ -944,6 +947,11 @@ test("expired Landing authority is retained until exact provider stop or termina
       "false",
       /provider pull request merged must be a boolean/u,
     ],
+    [
+      "providerRunHeadInProtectedBase",
+      "false",
+      /provider run head in protected base must be a boolean/u,
+    ],
     ["outcome", "neutral", /provider outcome is unsupported/u],
   ]) {
     assert.throws(
@@ -955,6 +963,25 @@ test("expired Landing authority is retained until exact provider stop or termina
       message,
     );
   }
+  const mergedReadback = sealLandingTerminalReadbackForTesting({
+    ...validReadback,
+    providerRunConclusion: "success",
+    providerJobConclusion: "success",
+    pullRequestState: "closed",
+    pullRequestMerged: true,
+    protectedBaseHead: admitted.state.landingWarrant.mergeGroupHead,
+    providerRunHeadInProtectedBase: true,
+    outcome: "merged",
+  });
+  assert.equal(mergedReadback.outcome, "merged");
+  assert.throws(
+    () =>
+      sealLandingTerminalReadbackForTesting({
+        ...mergedReadback,
+        providerRunHeadInProtectedBase: false,
+      }),
+    /exact admitted run head in the protected base/u,
+  );
   const forgedRoot = { ...validReadback, readbackRoot: root("e") };
   assert.throws(
     () =>
@@ -1251,6 +1278,8 @@ test("expired Landing never cancels a run-level successor and settles only termi
   let cancelled = false;
   let wrongHead = true;
   let synchronized = false;
+  let pullRequestMerged = false;
+  let providerRunLanded = false;
   let missingRunConclusion = false;
   const requests = [];
   const server = http.createServer((request, response) => {
@@ -1338,14 +1367,41 @@ test("expired Landing never cancels a run-level successor and settles only termi
       response.end(
         JSON.stringify({
           number: 181,
-          state: "open",
-          merged_at: null,
+          state: pullRequestMerged ? "closed" : "open",
+          merged_at: pullRequestMerged ? "2026-08-12T00:30:16Z" : null,
           head: {
             sha: synchronized ? "9".repeat(40) : input.sourceHead,
           },
           base: {
             ref: "dev/v4/v4.0",
             repo: { full_name: "kungfu-systems/kungfu" },
+          },
+        }),
+      );
+      return;
+    }
+    if (
+      request.url ===
+      `/repos/kungfu-systems/kungfu/compare/${"d".repeat(40)}...dev%2Fv4%2Fv4.0`
+    ) {
+      response.end(
+        JSON.stringify({
+          status: providerRunLanded ? "identical" : "diverged",
+          merge_base_commit: {
+            sha: providerRunLanded ? "d".repeat(40) : "e".repeat(40),
+          },
+        }),
+      );
+      return;
+    }
+    if (
+      request.url ===
+      "/repos/kungfu-systems/kungfu/git/ref/heads/dev%2Fv4%2Fv4.0"
+    ) {
+      response.end(
+        JSON.stringify({
+          object: {
+            sha: providerRunLanded ? "d".repeat(40) : "8".repeat(40),
           },
         }),
       );
@@ -1405,9 +1461,31 @@ test("expired Landing never cancels a run-level successor and settles only termi
         providerRequest,
         providerOptions,
       ),
-      /provider run conclusion is required/u,
+      /provider terminal conclusion is missing/u,
     );
     missingRunConclusion = false;
+    pullRequestMerged = true;
+    const supersededReadback = await readGitHubLandingTerminalState({
+      state: admitted.state,
+      candidate: admitted.state.candidates[0],
+      warrant: admitted.state.landingWarrant,
+      ...providerOptions,
+    });
+    assert.equal(supersededReadback.pullRequestMerged, true);
+    assert.equal(supersededReadback.providerRunHeadInProtectedBase, false);
+    assert.equal(supersededReadback.outcome, "dequeued");
+    providerRunLanded = true;
+    const mergedReadback = await readGitHubLandingTerminalState({
+      state: admitted.state,
+      candidate: admitted.state.candidates[0],
+      warrant: admitted.state.landingWarrant,
+      ...providerOptions,
+    });
+    assert.equal(mergedReadback.protectedBaseHead, "d".repeat(40));
+    assert.equal(mergedReadback.providerRunHeadInProtectedBase, true);
+    assert.equal(mergedReadback.outcome, "merged");
+    pullRequestMerged = false;
+    providerRunLanded = false;
     const settled = await settleDevDeliveryAuthorityCandidateWithGitHubProvider(
       admitted.state,
       providerRequest,
@@ -1446,23 +1524,16 @@ test("Landing provider attempt is derived from exact live execution context", ()
     state: submitted.state,
     candidate: durableCandidate,
     mergeGroupHead,
-    context: {
-      repository: "kungfu-systems/kungfu",
-      eventName: "merge_group",
-      runId: "1200",
-      runAttempt: "2",
-      sha: mergeGroupHead,
-      workflowRef:
-        "kungfu-systems/kungfu/.github/workflows/check.yml@refs/heads/dev/v4/v4.0",
-      workflowSha: "c".repeat(40),
-      runnerName: "GitHub Actions 1300",
-    },
+    providerRunId: "1200",
+    providerRunAttempt: "2",
     run: {
       id: 1200,
       run_attempt: 2,
       workflow_id: 700,
       event: "merge_group",
       head_sha: mergeGroupHead,
+      head_branch:
+        "gh-readonly-queue/dev/v4/v4.0/pr-182-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       repository: { full_name: "kungfu-systems/kungfu" },
     },
     jobs: {
@@ -1492,7 +1563,11 @@ test("Landing provider attempt is derived from exact live execution context", ()
   assert.equal(attempt.runAttempt, 2);
   assert.equal(attempt.jobId, 1201);
   assert.equal(attempt.runnerId, 1300);
-  assert.equal(attempt.workflowSha, "c".repeat(40));
+  assert.equal(attempt.workflowSha, mergeGroupHead);
+  assert.equal(
+    attempt.workflowRef,
+    "kungfu-systems/kungfu/.github/workflows/check.yml@refs/heads/gh-readonly-queue/dev/v4/v4.0/pr-182-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  );
   assert.equal(attempt.mergeGroupHead, mergeGroupHead);
   assert.throws(
     () =>
@@ -1500,23 +1575,16 @@ test("Landing provider attempt is derived from exact live execution context", ()
         state: submitted.state,
         candidate: durableCandidate,
         mergeGroupHead,
-        context: {
-          repository: "kungfu-systems/kungfu",
-          eventName: "merge_group",
-          runId: "1200",
-          runAttempt: "1",
-          sha: mergeGroupHead,
-          workflowRef:
-            "kungfu-systems/kungfu/.github/workflows/check.yml@refs/heads/dev/v4/v4.0",
-          workflowSha: "c".repeat(40),
-          runnerName: "GitHub Actions 1300",
-        },
+        providerRunId: "1200",
+        providerRunAttempt: "1",
         run: {
           id: 1200,
           run_attempt: 2,
           workflow_id: 700,
           event: "merge_group",
           head_sha: mergeGroupHead,
+          head_branch:
+            "gh-readonly-queue/dev/v4/v4.0/pr-182-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
           repository: { full_name: "kungfu-systems/kungfu" },
         },
         jobs: { jobs: [] },
@@ -2127,7 +2195,7 @@ test("public authority CLI stays opt-in and persists through expected-old state 
   const writes = [];
   const store = {
     async read() {
-      return { exists: false, commitSha: "", queue: initial };
+      return { exists: true, commitSha: "a".repeat(40), queue: initial };
     },
     async write(input) {
       writes.push(input);
@@ -2176,6 +2244,25 @@ test("public authority CLI stays opt-in and persists through expected-old state 
   assert.equal(writes.length, 1);
   assert.equal(writes[0].expectedStateRoot, initial.stateRoot);
   assert.equal(result.observation.authorityMode, DEV_DELIVERY_AUTHORITY_MODE);
+
+  await assert.rejects(
+    runDevDeliveryAuthorityCommand(
+      {
+        command: "submit",
+        repository: "kungfu-systems/kungfu",
+        branch: "dev/v4/v4.0",
+        now: "2026-08-12T02:00:01Z",
+        execute: true,
+        ...candidate(301),
+      },
+      {
+        async read() {
+          return { exists: false, commitSha: "", queue: initial };
+        },
+      },
+    ),
+    /explicitly migrate the exact current v1 state/u,
+  );
 });
 
 test("public migration command requires an empty target and writes one rooted v2 state", async () => {

@@ -4770,7 +4770,7 @@
       "id": "packages/core/dev-delivery-authority-landing.js#admitDevDeliveryMergeGroup",
       "name": "admitDevDeliveryMergeGroup",
       "kind": "function",
-      "signature": "async function admitDevDeliveryMergeGroup(stateInput, authorityInput, { mergeGroupHead, context, token = process.env.GITHUB_TOKEN, apiUrl = process.env.GITHUB_API_URL || \"https://api.github.com\", now = new Date().toISOString(), } = {})",
+      "signature": "async function admitDevDeliveryMergeGroup(stateInput, authorityInput, { mergeGroupHead, providerRunId, providerRunAttempt, token = process.env.GITHUB_TOKEN, apiUrl = process.env.GITHUB_API_URL || \"https://api.github.com\", now = new Date().toISOString(), } = {})",
       "parameters": [
         {
           "name": "stateInput",
@@ -4782,7 +4782,7 @@
         },
         {
           "name": "parameter3",
-          "signature": "{ mergeGroupHead, context, token = process.env.GITHUB_TOKEN, apiUrl = process.env.GITHUB_API_URL || \"https://api.github.com\", now = new Date().toISOString(), } = {}"
+          "signature": "{ mergeGroupHead, providerRunId, providerRunAttempt, token = process.env.GITHUB_TOKEN, apiUrl = process.env.GITHUB_API_URL || \"https://api.github.com\", now = new Date().toISOString(), } = {}"
         }
       ],
       "returns": "Promise<unknown>",
@@ -4925,7 +4925,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 409
+        "line": 411
       },
       "example": "import { settleDevDeliveryAuthorityCandidate } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -4962,7 +4962,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 422
+        "line": 424
       },
       "example": "import { settleDevDeliveryAuthorityCandidateWithGitHubProvider } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5492,11 +5492,11 @@
       "id": "packages/core/dev-delivery-landing-readback.js#deriveDevDeliveryLandingProviderAttempt",
       "name": "deriveDevDeliveryLandingProviderAttempt",
       "kind": "function",
-      "signature": "function deriveDevDeliveryLandingProviderAttempt({ state, candidate, mergeGroupHead, context = {}, run, jobs, workflow, pullRequest, } = {})",
+      "signature": "function deriveDevDeliveryLandingProviderAttempt({ state, candidate, mergeGroupHead, providerRunId, providerRunAttempt, run, jobs, workflow, pullRequest, } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ state, candidate, mergeGroupHead, context = {}, run, jobs, workflow, pullRequest, } = {}"
+          "signature": "{ state, candidate, mergeGroupHead, providerRunId, providerRunAttempt, run, jobs, workflow, pullRequest, } = {}"
         }
       ],
       "returns": "unknown",
@@ -5508,7 +5508,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 132
+        "line": 135
       },
       "example": "import { deriveDevDeliveryLandingProviderAttempt } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5537,7 +5537,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 356
+        "line": 397
       },
       "example": "import { readGitHubLandingActiveProviderAttempt } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5550,11 +5550,11 @@
       "id": "packages/core/dev-delivery-landing-readback.js#readGitHubLandingProviderAttempt",
       "name": "readGitHubLandingProviderAttempt",
       "kind": "function",
-      "signature": "async function readGitHubLandingProviderAttempt({ state, candidate, mergeGroupHead, context, token, apiUrl = \"https://api.github.com\", fetchImpl = globalThis.fetch, } = {})",
+      "signature": "async function readGitHubLandingProviderAttempt({ state, candidate, mergeGroupHead, providerRunId, providerRunAttempt, token, apiUrl = \"https://api.github.com\", fetchImpl = globalThis.fetch, } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ state, candidate, mergeGroupHead, context, token, apiUrl = \"https://api.github.com\", fetchImpl = globalThis.fetch, } = {}"
+          "signature": "{ state, candidate, mergeGroupHead, providerRunId, providerRunAttempt, token, apiUrl = \"https://api.github.com\", fetchImpl = globalThis.fetch, } = {}"
         }
       ],
       "returns": "Promise<unknown>",
@@ -5566,7 +5566,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 209
+        "line": 205
       },
       "example": "import { readGitHubLandingProviderAttempt } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5595,7 +5595,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 444
+        "line": 492
       },
       "example": "import { readGitHubLandingTerminalState } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5648,7 +5648,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-terminal-evidence.js",
-        "line": 204
+        "line": 222
       },
       "example": "import { verifyExpiredLandingSettlementReadback } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -23953,7 +23953,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-authority",
       "export": "./dev-delivery-authority",
       "target": "./packages/core/dev-delivery-authority-landing.js",
-      "digest": "sha256:45c4de175a6ffd20012b15f5d017760fd0d2df0650769697550a97c5270d24e7",
+      "digest": "sha256:f83f56eacaa0ffaf116cbd582d4a101feb17856d2c20a53321cf4779539c5dde",
       "summary": "Opt-in bounded Qualification Lease, exclusive Landing Warrant, provider-attempt admission and heartbeat readback, terminal sealing, and expired-Landing verification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -25479,7 +25479,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:7da363d723da544a565fe1768c9f85d9664b59aa55888e0361800b7af565e80a"
+      "digest": "sha256:94119f52de4a5af29bda2e2a328c1fe2d0f512e30d91b1db3961ae066dacd4c8"
     },
     {
       "id": "build-facts",

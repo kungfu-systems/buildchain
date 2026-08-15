@@ -372,7 +372,8 @@ export async function admitDevDeliveryMergeGroup(
   authorityInput,
   {
     mergeGroupHead,
-    context,
+    providerRunId,
+    providerRunAttempt,
     token = process.env.GITHUB_TOKEN,
     apiUrl = process.env.GITHUB_API_URL || "https://api.github.com",
     now = new Date().toISOString(),
@@ -395,7 +396,8 @@ export async function admitDevDeliveryMergeGroup(
     state,
     candidate,
     mergeGroupHead,
-    context,
+    providerRunId,
+    providerRunAttempt,
     token,
     apiUrl,
   });

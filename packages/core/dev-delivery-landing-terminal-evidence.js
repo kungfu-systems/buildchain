@@ -157,6 +157,14 @@ function readbackBody(input) {
       input.pullRequestMerged,
       "provider pull request merged",
     ),
+    protectedBaseHead: exactSha(
+      requiredText(input.protectedBaseHead, "provider protected base head"),
+      "provider protected base head",
+    ),
+    providerRunHeadInProtectedBase: exactBoolean(
+      input.providerRunHeadInProtectedBase,
+      "provider run head in protected base",
+    ),
     outcome: exactValue(input.outcome, TERMINAL_OUTCOMES, "provider outcome"),
     reason: requiredText(input.reason, "provider reason"),
     observedAt: timestamp(
@@ -168,6 +176,14 @@ function readbackBody(input) {
 
 export function sealLandingTerminalReadback(input) {
   const body = readbackBody(input);
+  if (
+    (body.outcome === "merged") !==
+    (body.pullRequestMerged && body.providerRunHeadInProtectedBase)
+  ) {
+    throw new Error(
+      "merged provider outcome requires the exact admitted run head in the protected base",
+    );
+  }
   const evidence = {
     schema: "kungfu.buildchain.github-landing-terminal-evidence/v1",
     repository: body.repository,
@@ -182,6 +198,8 @@ export function sealLandingTerminalReadback(input) {
     admissionRoot: body.admissionRoot,
     providerAttempt: body.providerAttempt,
     providerJobConclusion: body.providerJobConclusion,
+    protectedBaseHead: body.protectedBaseHead,
+    providerRunHeadInProtectedBase: body.providerRunHeadInProtectedBase,
     outcome: body.outcome,
     observedAt: body.observedAt,
   };

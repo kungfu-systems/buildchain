@@ -111,7 +111,9 @@ async function readProviderSnapshot({
   return { run, job, pullRequest, workflow };
 }
 
-function currentProviderJob(jobsInput, context) {
+const LANDING_AUTHORITY_JOB_NAME = "Landing authority";
+
+function currentProviderJob(jobsInput) {
   const entries = Array.isArray(jobsInput) ? jobsInput : jobsInput?.jobs;
   if (!Array.isArray(entries)) {
     throw new Error("GitHub provider current-attempt jobs readback is missing");
@@ -119,7 +121,8 @@ function currentProviderJob(jobsInput, context) {
   const matches = entries.filter(
     (entry) =>
       entry.status === "in_progress" &&
-      entry.runner_name === context.runnerName,
+      (entry.name === LANDING_AUTHORITY_JOB_NAME ||
+        String(entry.name || "").endsWith(` / ${LANDING_AUTHORITY_JOB_NAME}`)),
   );
   if (matches.length !== 1) {
     throw new Error(
@@ -133,44 +136,36 @@ export function deriveDevDeliveryLandingProviderAttempt({
   state,
   candidate,
   mergeGroupHead,
-  context = {},
+  providerRunId,
+  providerRunAttempt,
   run,
   jobs,
   workflow,
   pullRequest,
 } = {}) {
   const { fullName } = repositoryParts(state?.repository);
-  const runId = positiveInteger(context.runId, "GitHub context run id");
+  const runId = positiveInteger(providerRunId, "GitHub provider run id");
   const runAttempt = positiveInteger(
-    context.runAttempt,
-    "GitHub context run attempt",
+    providerRunAttempt,
+    "GitHub provider run attempt",
   );
   const exactMergeGroupHead = exactSha(
     mergeGroupHead,
     "provider merge-group head",
   );
-  const contextWorkflowRef = text(context.workflowRef);
-  const workflowSha = exactSha(
-    context.workflowSha,
-    "GitHub context workflow SHA",
-  );
+  const workflowSha = exactSha(run?.head_sha, "GitHub provider workflow SHA");
+  const runHeadBranch = text(run?.head_branch);
   if (
-    context.repository !== fullName ||
-    context.eventName !== "merge_group" ||
-    exactSha(context.sha, "GitHub context SHA") !== exactMergeGroupHead ||
     Number(run?.id) !== runId ||
     Number(run?.run_attempt) !== runAttempt ||
     run?.repository?.full_name !== fullName ||
     run?.event !== "merge_group" ||
-    run?.head_sha !== exactMergeGroupHead
+    run?.head_sha !== exactMergeGroupHead ||
+    !runHeadBranch.startsWith(`gh-readonly-queue/${state.protectedBase}/`)
   ) {
     throw new Error("GitHub provider current execution context mismatch");
   }
-  if (
-    Number(workflow?.id) !== Number(run.workflow_id) ||
-    !workflow?.path ||
-    !contextWorkflowRef.startsWith(`${fullName}/${workflow.path}@refs/`)
-  ) {
+  if (Number(workflow?.id) !== Number(run.workflow_id) || !workflow?.path) {
     throw new Error("GitHub provider current workflow context mismatch");
   }
   if (
@@ -181,13 +176,14 @@ export function deriveDevDeliveryLandingProviderAttempt({
   ) {
     throw new Error("GitHub provider pull request readback binding mismatch");
   }
-  const providerJob = currentProviderJob(jobs, context);
+  const providerJob = currentProviderJob(jobs);
+  const workflowRef = `${fullName}/${workflow.path}@refs/heads/${runHeadBranch}`;
   return normalizeDevDeliveryProviderAttempt({
     schema: "kungfu.buildchain.github-landing-provider-attempt/v1",
     repository: fullName,
     workflowId: Number(workflow.id),
     workflowPath: workflow.path,
-    workflowRef: contextWorkflowRef,
+    workflowRef,
     workflowSha,
     event: run.event,
     runId,
@@ -210,16 +206,17 @@ export async function readGitHubLandingProviderAttempt({
   state,
   candidate,
   mergeGroupHead,
-  context,
+  providerRunId,
+  providerRunAttempt,
   token,
   apiUrl = "https://api.github.com",
   fetchImpl = globalThis.fetch,
 } = {}) {
   const { owner, repo } = repositoryParts(state.repository);
-  const runId = positiveInteger(context?.runId, "GitHub context run id");
+  const runId = positiveInteger(providerRunId, "GitHub provider run id");
   const runAttempt = positiveInteger(
-    context?.runAttempt,
-    "GitHub context run attempt",
+    providerRunAttempt,
+    "GitHub provider run attempt",
   );
   const run = await githubJson({
     apiUrl,
@@ -251,7 +248,8 @@ export async function readGitHubLandingProviderAttempt({
     state,
     candidate,
     mergeGroupHead,
-    context,
+    providerRunId: runId,
+    providerRunAttempt: runAttempt,
     run,
     jobs,
     workflow,
@@ -286,6 +284,49 @@ function providerJobMatches(job, attempt) {
       JSON.stringify(attempt.runnerLabels) &&
     String(job.run_url || "").endsWith(`/actions/runs/${attempt.runId}`)
   );
+}
+
+async function readProtectedBaseLanding({
+  apiUrl,
+  token,
+  owner,
+  repo,
+  protectedBase,
+  mergeGroupHead,
+  fetchImpl = globalThis.fetch,
+}) {
+  const [comparison, protectedRef] = await Promise.all([
+    githubJson({
+      apiUrl,
+      token,
+      path: `/repos/${owner}/${repo}/compare/${mergeGroupHead}...${encodeURIComponent(protectedBase)}`,
+      fetchImpl,
+    }),
+    githubJson({
+      apiUrl,
+      token,
+      path: `/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(protectedBase)}`,
+      fetchImpl,
+    }),
+  ]);
+  const protectedBaseHead = exactSha(
+    protectedRef.object?.sha,
+    "GitHub protected base head",
+  );
+  const mergeBase = exactSha(
+    comparison.merge_base_commit?.sha,
+    "GitHub protected base merge-base",
+  );
+  const status = text(comparison.status);
+  if (!new Set(["ahead", "behind", "diverged", "identical"]).has(status)) {
+    throw new Error("GitHub protected base comparison status is unsupported");
+  }
+  return {
+    protectedBaseHead,
+    providerRunHeadInProtectedBase:
+      mergeBase === mergeGroupHead &&
+      new Set(["ahead", "identical"]).has(status),
+  };
 }
 
 function providerPullRequestMatches(
@@ -420,8 +461,15 @@ export async function readGitHubLandingActiveProviderAttempt({
   return persistedAttempt;
 }
 
-function outcomeFromProvider(run, job, pullRequest) {
-  if (pullRequest.merged_at) return "merged";
+function outcomeFromProvider(
+  run,
+  job,
+  pullRequest,
+  { providerRunHeadInProtectedBase },
+) {
+  if (pullRequest.merged_at) {
+    return providerRunHeadInProtectedBase ? "merged" : "dequeued";
+  }
   if (pullRequest.state === "closed") return "cancelled";
   if (job.conclusion === "cancelled") return "cancelled";
   if (
@@ -487,36 +535,8 @@ export async function readGitHubLandingTerminalState({
     );
   }
   const { run, job, pullRequest } = snapshot;
-  assertProviderAttemptIdentity({
-    snapshot,
-    fullName,
-    candidate,
-    warrant,
-    observedAt,
-    requireCurrentSourceHead: false,
-  });
-  if (
-    Number(run.id) !== runId ||
-    run.repository?.full_name !== fullName ||
-    run.status !== "completed" ||
-    run.head_sha !== providerAttempt.mergeGroupHead
-  ) {
-    throw new Error("GitHub provider run readback binding mismatch");
-  }
-  if (
-    Number(job.id) !== jobId ||
-    job.status !== "completed" ||
-    !job.conclusion ||
-    !String(job.run_url || "").endsWith(`/actions/runs/${runId}`)
-  ) {
-    throw new Error("GitHub provider job readback binding mismatch");
-  }
-  if (
-    Number(pullRequest.number) !== candidate.pullRequestNumber ||
-    pullRequest.base?.ref !== state.protectedBase ||
-    pullRequest.base?.repo?.full_name !== fullName
-  ) {
-    throw new Error("GitHub provider pull request readback binding mismatch");
+  if (!run.conclusion || !job.conclusion) {
+    throw new Error("GitHub provider terminal conclusion is missing");
   }
   const completedAt = timestamp(job.completed_at, "provider job completion");
   if (
@@ -527,7 +547,20 @@ export async function readGitHubLandingTerminalState({
       "GitHub provider job readback is stale for this Landing fence",
     );
   }
-  const outcome = outcomeFromProvider(run, job, pullRequest);
+  const protectedBaseLanding = await readProtectedBaseLanding({
+    apiUrl,
+    token,
+    owner,
+    repo,
+    protectedBase: state.protectedBase,
+    mergeGroupHead: providerAttempt.mergeGroupHead,
+  });
+  const outcome = outcomeFromProvider(
+    run,
+    job,
+    pullRequest,
+    protectedBaseLanding,
+  );
   return sealLandingTerminalReadback({
     repository: state.repository,
     protectedBase: state.protectedBase,
@@ -551,6 +584,7 @@ export async function readGitHubLandingTerminalState({
     admissionRoot: warrant.mergeGroupAdmissionRoot,
     pullRequestState: pullRequest.state,
     pullRequestMerged: Boolean(pullRequest.merged_at),
+    ...protectedBaseLanding,
     outcome,
     reason: `GitHub run ${runId} job ${jobId} concluded ${job.conclusion}`,
     observedAt,

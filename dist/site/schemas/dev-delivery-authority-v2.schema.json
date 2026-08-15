@@ -248,6 +248,8 @@
         "admissionRoot",
         "pullRequestState",
         "pullRequestMerged",
+        "protectedBaseHead",
+        "providerRunHeadInProtectedBase",
         "outcome",
         "evidenceRoot",
         "reason",
@@ -307,6 +309,8 @@
         "admissionRoot": { "$ref": "#/$defs/root" },
         "pullRequestState": { "enum": ["open", "closed"] },
         "pullRequestMerged": { "type": "boolean" },
+        "protectedBaseHead": { "$ref": "#/$defs/sha" },
+        "providerRunHeadInProtectedBase": { "type": "boolean" },
         "outcome": {
           "enum": ["merged", "terminal-failure", "dequeued", "cancelled"]
         },

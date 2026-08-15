@@ -101,11 +101,12 @@ The Landing Warrant carries:
 Only `admitDevDeliveryMergeGroup` and `buildchain dev authority
 admit-merge-group` consume Landing authority. They bind the exact current state
 root, candidate, protected base, source head, merge-group head, token, and
-generation. Before persistence, the public Node API and CLI adapter derive the
-workflow, current run attempt, current job, hosted runner, and merge-group head
-from trusted GitHub execution context plus live provider readback; the raw
-verified-attempt transition is internal and caller-supplied provider fields have
-no package export path. A Qualification Lease fails closed at this boundary.
+generation. Before persistence, the public Node API and CLI adapter accept only
+the current run and run-attempt locator, then derive the workflow ref and SHA,
+current Landing-authority job, hosted runner, source head, and merge-group head
+from live GitHub readback. The raw verified-attempt transition is internal and
+caller-supplied provider fields have no package export path. A Qualification
+Lease fails closed at this boundary.
 
 A new Landing Warrant is eligible only from
 `authority = verified-native-qualification` with
@@ -143,13 +144,17 @@ slot: elapsed time does not prove that an already-admitted provider attempt
 stopped. Recovery therefore returns a rooted stop-required no-op until exact
 provider stop or terminal evidence settles that same token and generation.
 The cleanup verifier is independent of the caller and must return one rooted,
-terminal readback bound to the exact repository, protected base, state root,
-candidate, pull request, source head, Landing token and generation, provider run
-and job, and an observation time fresh for that Warrant. Forged roots, wrong
-bindings, nonterminal states, and stale observations fail closed. Only then does
-the deterministic wake expose the next fair landing candidate. Completion,
-cancellation, terminal failure, dequeue, and already-merged settlement emit the
-same wake shape. Exact duplicate heartbeats, recovery, and terminal events are
+terminal readback bound to the exact repository, protected base and observed
+base head, state root, candidate, pull request, source head, Landing token and
+generation, provider run and job, and an observation time fresh for that
+Warrant. A merged outcome additionally requires provider comparison evidence
+that the admitted merge-group head is contained by the protected base. If the
+PR later merges another head, the old attempt settles as dequeued rather than
+receiving false merge evidence. Forged roots, wrong bindings, nonterminal
+states, and stale observations fail closed. Only then does the deterministic
+wake expose the next fair landing candidate. Completion, cancellation,
+terminal failure, dequeue, and already-merged settlement emit the same wake
+shape. Exact duplicate heartbeats, recovery, and terminal events are
 state-root-preserving no-ops. Competing controllers still commit through one
 expected-old, non-force ref update, so only one transition can become durable.
 

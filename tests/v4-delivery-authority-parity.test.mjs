@@ -669,6 +669,8 @@ test("every implemented parity disposition has an executable behavioral proof", 
     admissionRoot: admittedLanding.admissionRoot,
     pullRequestState: "open",
     pullRequestMerged: false,
+    protectedBaseHead: "e".repeat(40),
+    providerRunHeadInProtectedBase: false,
     outcome: "terminal-failure",
     reason: "provider-stop-readback",
     observedAt: "2026-08-15T01:00:20Z",
@@ -721,7 +723,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
   const store = {
     async read() {
       return {
-        exists: false,
+        exists: true,
         commitSha: "a".repeat(40),
         queue: persistedInitial,
       };

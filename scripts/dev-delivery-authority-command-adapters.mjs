@@ -131,7 +131,8 @@ const commandAdapters = {
   "admit-merge-group": (state, options) =>
     admitDevDeliveryMergeGroup(state, identity(options), {
       mergeGroupHead: options.mergeGroupHead,
-      context: options.providerContext,
+      providerRunId: options.providerRunId,
+      providerRunAttempt: options.providerRunAttempt,
       token: options.token || process.env.GITHUB_TOKEN,
       apiUrl:
         options.apiUrl ||
@@ -162,6 +163,15 @@ function readCommandDocuments(options) {
 export async function runDevDeliveryAuthorityCommandAdapter(loaded, options) {
   if (options.command === "migrate" && loaded.exists) {
     throw new Error("migration target state ref already exists");
+  }
+  if (
+    !loaded.exists &&
+    options.command !== "migrate" &&
+    options.command !== "observe"
+  ) {
+    throw new Error(
+      "v2 authority state is missing; explicitly migrate the exact current v1 state before mutation",
+    );
   }
   if (
     options.expectedOldStateRoot &&

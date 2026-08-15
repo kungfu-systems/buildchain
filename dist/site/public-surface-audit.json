@@ -8403,7 +8403,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "087622facc5eda24065f444c060ac2e3d796783369962fd47b6a14e62929c511",
     "workflowRegistryDigest": "4ea208ec4a23ba70e9c83e32ec3fd3b6a7582b10518398101bdf0de145bd98df",
-    "pageRegistryDigest": "7c2902950b061cb6037fd8389a7bd29e3fb5957e61512cc5a53190a8f08450e2"
+    "pageRegistryDigest": "997318d3f3a811f55404434f74bfb5b34ab89a5b5df03fadf251c0538680857e"
   },
   "comparison": {
     "missingCliRegistry": [],
