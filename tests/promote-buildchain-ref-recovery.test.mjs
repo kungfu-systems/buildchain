@@ -88,6 +88,7 @@ import {
   transientGitHubError,
   versionStateBranchName,
 } from "./helpers/promote-buildchain-ref-fixtures.mjs";
+import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 test("stable recovery checks the advanced protected head for sealed release material", async () => {
   const requestedSourceSha = "1".repeat(40);
@@ -2626,10 +2627,24 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   fs.rmSync(statePath);
   fs.rmSync(evidencePath);
 
-  const resumed = await runPublishTransaction({
-    ...args,
-    publishRematerializeOnResume: true,
-  });
+  const fakeBin = path.join(cwd, "bin");
+  fs.mkdirSync(fakeBin);
+  materializeCommandShim(path.join(fakeBin, "npm"), `#!/usr/bin/env node
+const fs = require("node:fs"), path = require("node:path"), args = process.argv.slice(2);
+fs.writeFileSync("npm-pack-argv.json", JSON.stringify(args));
+const destination = args[args.indexOf("--pack-destination") + 1];
+const filename = "kungfu-tech-rematerialization-fixture-1.0.0.tgz";
+fs.writeFileSync(path.join(destination, filename), "published exact bytes");
+process.stdout.write(JSON.stringify([{ name: "@kungfu-tech/rematerialization-fixture", version: "1.0.0", filename }]));
+`);
+  const previousPath = process.env.PATH;
+  process.env.PATH = `${fakeBin}${path.delimiter}${previousPath}`;
+  let resumed;
+  try {
+    resumed = await runPublishTransaction({ ...args, publishRematerializeOnResume: true });
+  } finally {
+    process.env.PATH = previousPath;
+  }
 
   assert.equal(resumed.validation.valid, true);
   assert.equal(fs.readFileSync(path.join(cwd, ".buildchain/publish-count"), "utf8"), "2");
@@ -2642,6 +2657,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     "1.0.0",
   );
   const witness = JSON.parse(fs.readFileSync(path.join(cwd, ".buildchain/release-inputs/witness.json"), "utf8"));
+  assert.equal(JSON.parse(fs.readFileSync(path.join(cwd, "npm-pack-argv.json"), "utf8"))[1], "@kungfu-tech/rematerialization-fixture@1.0.0");
   assert.match(path.basename(witness.tarballPath), /rematerialization-fixture-1\.0\.0\.tgz$/);
   assert.match(witness.tarballIntegrity, /^sha512-/);
   assert.equal(fs.existsSync(witness.tarballPath), false);
