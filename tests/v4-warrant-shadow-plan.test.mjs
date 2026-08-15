@@ -72,7 +72,7 @@ test("shared fixtures freeze legacy successes, no-ops, and typed faults", () => 
     "duplicate-noop",
     "heartbeat",
     "terminal-closeout",
-    "recovered-expired-lease",
+    "expired-lease-fenced-stop-required",
     "duplicate-terminal-event-noop",
     "duplicate-cancellation-noop",
     "cas-rejected",

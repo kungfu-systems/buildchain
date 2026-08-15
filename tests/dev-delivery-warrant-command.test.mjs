@@ -1,12 +1,25 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { GitHubDevDeliveryStore, defaultDevDeliveryStateRef, runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
-import { createDevDeliveryQueue, selectDevDeliveryWarrant, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
+import {
+  GitHubDevDeliveryStore,
+  defaultDevDeliveryStateRef,
+  runDevDeliveryCommand,
+} from "../scripts/dev-delivery-warrant.mjs";
+import {
+  createDevDeliveryQueue,
+  devDeliveryContentRoot,
+  createNativeCommandContract,
+  selectDevDeliveryWarrant,
+  submitDevDeliveryCandidate,
+} from "../packages/core/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "..");
+const NATIVE_COMMAND = "native-shards";
+const NATIVE_COMMAND_CONTRACT = createNativeCommandContract(NATIVE_COMMAND);
 
 function initialQueue() {
   return createDevDeliveryQueue({
@@ -32,6 +45,9 @@ function submitOptions(overrides = {}) {
     closureRoot: ROOT("6"),
     dependencyRoot: ROOT("7"),
     toolchainRoot: ROOT("8"),
+    environmentRoot: ROOT("0"),
+    nativeCommand: NATIVE_COMMAND,
+    nativeCommandContract: NATIVE_COMMAND_CONTRACT,
     deliveryClass: "native-proof-required",
     priority: "ordinary",
     now: "2026-08-04T00:01:00Z",
@@ -51,8 +67,10 @@ class MemoryStore {
   }
 
   async write(input) {
-    if (input.expectedCommitSha !== this.commitSha) throw new Error("commit CAS mismatch");
-    if (input.expectedStateRoot !== this.queue.stateRoot) throw new Error("state CAS mismatch");
+    if (input.expectedCommitSha !== this.commitSha)
+      throw new Error("commit CAS mismatch");
+    if (input.expectedStateRoot !== this.queue.stateRoot)
+      throw new Error("state CAS mismatch");
     this.writes.push(input);
     this.queue = input.queue;
     this.commitSha = "b".repeat(40);
@@ -77,8 +95,16 @@ class ConcurrentTerminalStore extends MemoryStore {
   }
 }
 
-test("state refs are deterministic and remain inside the Buildchain namespace", () => {
-  assert.equal(defaultDevDeliveryStateRef("dev/v4/v4.0"), "buildchain/dev-delivery-warrant/dev-v4-v4.0");
+test("state refs and the CLI process entrypoint remain executable", () => {
+  assert.equal(
+    defaultDevDeliveryStateRef("dev/v4/v4.0"),
+    "buildchain/dev-delivery-warrant/dev-v4-v4.0",
+  );
+  const entrypoint = "scripts/dev-delivery-warrant.mjs";
+  const cli = spawnSync(process.execPath, [entrypoint, "--help"], {
+    encoding: "utf8",
+  });
+  assert.equal(cli.status, 0, cli.stderr);
 });
 
 test("plan mode emits rooted receipts without writing authority", async () => {
@@ -94,7 +120,10 @@ test("plan mode emits rooted receipts without writing authority", async () => {
 
 test("execute mode persists one expected-old transition and exact readback root", async () => {
   const store = new MemoryStore();
-  const result = await runDevDeliveryCommand(submitOptions({ execute: true }), store);
+  const result = await runDevDeliveryCommand(
+    submitOptions({ execute: true }),
+    store,
+  );
   assert.equal(result.mode, "execute");
   assert.equal(result.mutationApplied, true);
   assert.equal(store.writes.length, 1);
@@ -105,7 +134,13 @@ test("execute mode persists one expected-old transition and exact readback root"
 
 test("stale expected-old input fails before any write", async () => {
   const store = new MemoryStore();
-  await assert.rejects(runDevDeliveryCommand(submitOptions({ execute: true, expectedOldStateRoot: ROOT("f") }), store), /expected-old state drift/);
+  await assert.rejects(
+    runDevDeliveryCommand(
+      submitOptions({ execute: true, expectedOldStateRoot: ROOT("f") }),
+      store,
+    ),
+    /expected-old state drift/,
+  );
   assert.equal(store.writes.length, 0);
 });
 
@@ -135,22 +170,28 @@ test("selection and observation use the same durable state contract", async () =
     store,
   );
   assert.equal(observed.mode, "observe");
-  assert.equal(observed.observation.activeWarrant.fencingToken, selected.warrant.fencingToken);
+  assert.equal(
+    observed.observation.activeWarrant.fencingToken,
+    selected.warrant.fencingToken,
+  );
 });
 
 test("terminal settlement records a verified non-applicable no-op without writing", async () => {
   const store = new MemoryStore();
-  const result = await runDevDeliveryCommand({
-    command: "settle",
-    repository: "kungfu-systems/kungfu",
-    branch: "dev/v4/v4.0",
-    pullRequestNumber: 2545,
-    expectedSourceHead: "c".repeat(40),
-    outcome: "merged",
-    reason: "Warrant rollout was off",
-    now: "2026-08-04T00:02:00Z",
-    execute: true,
-  }, store);
+  const result = await runDevDeliveryCommand(
+    {
+      command: "settle",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      pullRequestNumber: 2545,
+      expectedSourceHead: "c".repeat(40),
+      outcome: "merged",
+      reason: "Warrant rollout was off",
+      now: "2026-08-04T00:02:00Z",
+      execute: true,
+    },
+    store,
+  );
   assert.equal(result.mode, "execute");
   assert.equal(result.mutationApplied, false);
   assert.equal(result.receipt.action, "terminal-event-not-applicable");
@@ -159,46 +200,76 @@ test("terminal settlement records a verified non-applicable no-op without writin
   assert.equal(store.writes.length, 0);
 });
 
-test("terminal settlement reconciles a concurrent identical winner as an exact no-op", async () => {
-  const submitted = submitDevDeliveryCandidate(initialQueue(), {
-    ...submitOptions(),
-    pullRequestNumber: 2549,
-  }, { now: "2026-08-04T00:01:00Z" });
-  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:02:00Z" });
+test("terminal failure settlement reconciles a concurrent identical winner as an exact no-op", async () => {
+  const submitted = submitDevDeliveryCandidate(
+    initialQueue(),
+    {
+      ...submitOptions(),
+      pullRequestNumber: 2549,
+    },
+    { now: "2026-08-04T00:01:00Z" },
+  );
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:02:00Z",
+  });
   const store = new ConcurrentTerminalStore(selected.queue);
-  const result = await runDevDeliveryCommand({
-    command: "settle",
-    repository: "kungfu-systems/kungfu",
-    branch: "dev/v4/v4.0",
-    pullRequestNumber: 2549,
-    expectedSourceHead: "a".repeat(40),
-    fencingToken: selected.warrant.fencingToken,
-    leaseGeneration: selected.warrant.generation,
-    outcome: "merged",
-    evidenceRoot: ROOT("e"),
-    reason: "protected pull request merged",
-    now: "2026-08-04T00:03:00Z",
-    execute: true,
-  }, store);
+  const result = await runDevDeliveryCommand(
+    {
+      command: "settle",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      pullRequestNumber: 2549,
+      expectedSourceHead: "a".repeat(40),
+      fencingToken: selected.warrant.fencingToken,
+      leaseGeneration: selected.warrant.generation,
+      outcome: "terminal-failure",
+      evidenceRoot: ROOT("e"),
+      reason: "protected pull request merged",
+      now: "2026-08-04T00:03:00Z",
+      execute: true,
+    },
+    store,
+  );
   assert.equal(result.mutationApplied, false);
   assert.equal(result.receipt.action, "duplicate-terminal-event-noop");
   assert.equal(result.before.commitSha, "c".repeat(40));
   assert.equal(result.after.commitSha, "c".repeat(40));
-  assert.equal(result.concurrencyRecovery.action, "terminal-settlement-race-noop");
+  assert.equal(
+    result.concurrencyRecovery.action,
+    "terminal-settlement-race-noop",
+  );
   assert.equal(result.concurrencyRecovery.initialCommitSha, "a".repeat(40));
 });
 
 test("terminal workflow resolves active fencing or an explicit settlement no-op", () => {
-  const workflow = fs.readFileSync(path.join(REPOSITORY_ROOT, ".github/workflows/dev-delivery-warrant-close.yml"), "utf8");
-  assert.match(workflow, /name: Resolve terminal settlement mode[\s\S]*mode=inactive/u);
-  assert.match(workflow, /activeCandidate\.candidateId == \.observation\.activeWarrant\.candidateId/u);
+  const workflow = fs.readFileSync(
+    path.join(
+      REPOSITORY_ROOT,
+      ".github/workflows/dev-delivery-warrant-close.yml",
+    ),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /name: Resolve terminal settlement mode[\s\S]*mode=inactive/u,
+  );
+  assert.match(
+    workflow,
+    /activeCandidate\.candidateId == \.observation\.activeWarrant\.candidateId/u,
+  );
   assert.match(workflow, /dev-delivery-warrant\.mjs "\$\{args\[@\]\}"/u);
-  assert.match(workflow, /settle[\s\S]*--pull-request "\$\{EXPECTED_PR\}"[\s\S]*--expected-source-head "\$\{EXPECTED_HEAD\}"/u);
+  assert.match(
+    workflow,
+    /settle[\s\S]*--pull-request "\$\{EXPECTED_PR\}"[\s\S]*--expected-source-head "\$\{EXPECTED_HEAD\}"/u,
+  );
 });
 
 test("queued cancellation persists once and repeats as an exact no-op", async () => {
   const store = new MemoryStore();
-  const submitted = await runDevDeliveryCommand(submitOptions({ execute: true }), store);
+  const submitted = await runDevDeliveryCommand(
+    submitOptions({ execute: true }),
+    store,
+  );
   const queued = submitted.observation.queued[0];
   const options = {
     command: "cancel-queued",
@@ -238,7 +309,10 @@ test("queued cancellation persists once and repeats as an exact no-op", async ()
 
 test("queued cancellation loses a concurrent expected-old race without writing", async () => {
   const store = new MemoryStore();
-  const submitted = await runDevDeliveryCommand(submitOptions({ execute: true }), store);
+  const submitted = await runDevDeliveryCommand(
+    submitOptions({ execute: true }),
+    store,
+  );
   const queued = submitted.observation.queued[0];
   await runDevDeliveryCommand(
     submitOptions({
@@ -308,12 +382,20 @@ test("GitHub state store advances a non-forced child commit and verifies its imm
   const fetchImpl = async (url, options) => {
     const body = options.body ? JSON.parse(options.body) : null;
     calls.push({ url, method: options.method, body });
-    if (options.method === "POST" && url.endsWith("/git/blobs")) return jsonResponse({ sha: "blob-sha" });
-    if (options.method === "POST" && url.endsWith("/git/trees")) return jsonResponse({ sha: "tree-sha" });
-    if (options.method === "POST" && url.endsWith("/git/commits")) return jsonResponse({ sha: nextCommit });
-    if (options.method === "PATCH" && url.includes("/git/refs/heads/")) return jsonResponse({ object: { sha: nextCommit } });
-    if (options.method === "GET" && url.includes("/git/ref/heads/")) throw new Error("write must not reread the mutable state ref after its expected-old update");
-    if (options.method === "GET" && url.endsWith(`/git/commits/${nextCommit}`)) return jsonResponse({ tree: { sha: "tree-sha" } });
+    if (options.method === "POST" && url.endsWith("/git/blobs"))
+      return jsonResponse({ sha: "blob-sha" });
+    if (options.method === "POST" && url.endsWith("/git/trees"))
+      return jsonResponse({ sha: "tree-sha" });
+    if (options.method === "POST" && url.endsWith("/git/commits"))
+      return jsonResponse({ sha: nextCommit });
+    if (options.method === "PATCH" && url.includes("/git/refs/heads/"))
+      return jsonResponse({ object: { sha: nextCommit } });
+    if (options.method === "GET" && url.includes("/git/ref/heads/"))
+      throw new Error(
+        "write must not reread the mutable state ref after its expected-old update",
+      );
+    if (options.method === "GET" && url.endsWith(`/git/commits/${nextCommit}`))
+      return jsonResponse({ tree: { sha: "tree-sha" } });
     if (options.method === "GET" && url.endsWith("/git/trees/tree-sha")) {
       return jsonResponse({
         tree: [{ path: "queue.json", type: "blob", sha: "blob-sha" }],
@@ -322,7 +404,9 @@ test("GitHub state store advances a non-forced child commit and verifies its imm
     if (options.method === "GET" && url.endsWith("/git/blobs/blob-sha")) {
       return jsonResponse({
         encoding: "base64",
-        content: Buffer.from(`${JSON.stringify(changed.queue)}\n`).toString("base64"),
+        content: Buffer.from(
+          `${JSON.stringify(changed.queue, null, 2)}\n`,
+        ).toString("base64"),
       });
     }
     throw new Error(`unexpected request: ${options.method} ${url}`);
@@ -341,11 +425,18 @@ test("GitHub state store advances a non-forced child commit and verifies its imm
   });
   assert.equal(result.commitSha, nextCommit);
   assert.equal(result.stateRoot, changed.queue.stateRoot);
-  const commitCall = calls.find((call) => call.method === "POST" && call.url.endsWith("/git/commits"));
+  const commitCall = calls.find(
+    (call) => call.method === "POST" && call.url.endsWith("/git/commits"),
+  );
   assert.deepEqual(commitCall.body.parents, [beforeCommit]);
   const updateCall = calls.find((call) => call.method === "PATCH");
   assert.equal(updateCall.body.force, false);
-  assert.equal(calls.some((call) => call.method === "GET" && call.url.includes("/git/ref/heads/")), false);
+  assert.equal(
+    calls.some(
+      (call) => call.method === "GET" && call.url.includes("/git/ref/heads/"),
+    ),
+    false,
+  );
 });
 
 test("GitHub state store exposes a concurrent non-fast-forward rejection", async () => {
@@ -359,10 +450,14 @@ test("GitHub state store exposes a concurrent non-fast-forward rejection", async
     { now: "2026-08-04T00:01:00Z" },
   );
   const fetchImpl = async (url, options) => {
-    if (options.method === "POST" && url.endsWith("/git/blobs")) return jsonResponse({ sha: "blob-sha" });
-    if (options.method === "POST" && url.endsWith("/git/trees")) return jsonResponse({ sha: "tree-sha" });
-    if (options.method === "POST" && url.endsWith("/git/commits")) return jsonResponse({ sha: "b".repeat(40) });
-    if (options.method === "PATCH") return jsonResponse({ message: "Update is not a fast forward" }, 422);
+    if (options.method === "POST" && url.endsWith("/git/blobs"))
+      return jsonResponse({ sha: "blob-sha" });
+    if (options.method === "POST" && url.endsWith("/git/trees"))
+      return jsonResponse({ sha: "tree-sha" });
+    if (options.method === "POST" && url.endsWith("/git/commits"))
+      return jsonResponse({ sha: "b".repeat(40) });
+    if (options.method === "PATCH")
+      return jsonResponse({ message: "Update is not a fast forward" }, 422);
     throw new Error(`unexpected request: ${options.method} ${url}`);
   };
   const store = new GitHubDevDeliveryStore({
@@ -379,5 +474,61 @@ test("GitHub state store exposes a concurrent non-fast-forward rejection", async
       receiptRoot: changed.receiptRoot,
     }),
     /not a fast forward/,
+  );
+});
+
+test("GitHub state store deeply rejects recomputed but different readback bytes", async () => {
+  const state = initialQueue();
+  const changed = submitDevDeliveryCandidate(
+    state,
+    {
+      ...submitOptions(),
+      pullRequestNumber: 203,
+    },
+    { now: "2026-08-04T00:01:00Z" },
+  );
+  const tampered = structuredClone(changed.queue);
+  tampered.candidates[0].sourceHead = "d".repeat(40);
+  delete tampered.stateRoot;
+  tampered.stateRoot = devDeliveryContentRoot(tampered);
+  const nextCommit = "b".repeat(40);
+  const fetchImpl = async (url, options) => {
+    if (options.method === "POST" && url.endsWith("/git/blobs"))
+      return jsonResponse({ sha: "blob-sha" });
+    if (options.method === "POST" && url.endsWith("/git/trees"))
+      return jsonResponse({ sha: "tree-sha" });
+    if (options.method === "POST" && url.endsWith("/git/commits"))
+      return jsonResponse({ sha: nextCommit });
+    if (options.method === "PATCH")
+      return jsonResponse({ object: { sha: nextCommit } });
+    if (options.method === "GET" && url.endsWith(`/git/commits/${nextCommit}`))
+      return jsonResponse({ tree: { sha: "tree-sha" } });
+    if (options.method === "GET" && url.endsWith("/git/trees/tree-sha"))
+      return jsonResponse({
+        tree: [{ path: "queue.json", type: "blob", sha: "blob-sha" }],
+      });
+    if (options.method === "GET" && url.endsWith("/git/blobs/blob-sha"))
+      return jsonResponse({
+        encoding: "base64",
+        content: Buffer.from(`${JSON.stringify(tampered, null, 2)}\n`).toString(
+          "base64",
+        ),
+      });
+    throw new Error(`unexpected request: ${options.method} ${url}`);
+  };
+  const store = new GitHubDevDeliveryStore({
+    repository: "kungfu-systems/kungfu",
+    token: "test-token",
+    fetchImpl,
+  });
+  await assert.rejects(
+    store.write({
+      stateRef: defaultDevDeliveryStateRef("dev/v4/v4.0"),
+      queue: changed.queue,
+      expectedCommitSha: "a".repeat(40),
+      expectedStateRoot: state.stateRoot,
+      receiptRoot: changed.receiptRoot,
+    }),
+    /readback mismatch/u,
   );
 });

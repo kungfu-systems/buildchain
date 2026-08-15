@@ -44,7 +44,14 @@ export function createDevDeliveryCandidateIdentity(
 
 export function validateDevDeliveryCandidateChain(candidates, terminalStates) {
   const precedingCandidates = new Map();
+  const latestByPullRequest = new Map();
   for (const candidate of candidates) {
+    const latest = latestByPullRequest.get(candidate.pullRequestNumber);
+    if (latest && candidate.identitySemantics !== CHAINED_ATTEMPT_IDENTITY) {
+      throw new Error(
+        "same-PR successor must chain the latest durable predecessor",
+      );
+    }
     if (candidate.identitySemantics === CHAINED_ATTEMPT_IDENTITY) {
       const predecessor = precedingCandidates.get(
         candidate.predecessorCandidateId,
@@ -61,8 +68,14 @@ export function validateDevDeliveryCandidateChain(candidates, terminalStates) {
       if (!terminalStates.has(predecessor.status)) {
         throw new Error("chained candidate predecessor must be terminal");
       }
+      if (latest?.candidateId !== predecessor.candidateId) {
+        throw new Error(
+          "chained candidate must bind the latest durable predecessor",
+        );
+      }
     }
     precedingCandidates.set(candidate.candidateId, candidate);
+    latestByPullRequest.set(candidate.pullRequestNumber, candidate);
   }
 }
 

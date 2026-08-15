@@ -46,6 +46,10 @@ import {
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
 const README_PATH = "README.md";
+const DEV_DELIVERY_AUTHORITY_SCHEMA =
+  "schemas/dev-delivery-authority-v2.schema.json";
+const DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE =
+  "contracts/dev-delivery-authority-v2.schema.json";
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
 const requireFromHere = createRequire(import.meta.url);
@@ -71,6 +75,18 @@ function writeJson(filePath, value) {
 
 function stableJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+function siteFileBytes(name, value) {
+  return name === DEV_DELIVERY_AUTHORITY_SCHEMA
+    ? readText(DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE)
+    : stableJson(value);
+}
+
+function writeSiteFile(name, value) {
+  const filePath = path.join(outputDir, name);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, siteFileBytes(name, value));
 }
 
 function env(name) {
@@ -931,6 +947,7 @@ function buildSiteBundle() {
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/dev-delivery-authority-v2.schema.json",
       "kfd-support.json",
       "artifact-evidence.json",
       "product-mechanism.json",
@@ -965,6 +982,7 @@ function buildSiteBundle() {
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/dev-delivery-authority-v2.schema.json",
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1095,6 +1113,7 @@ function buildSiteBundle() {
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/dev-delivery-authority-v2.schema.json",
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1269,6 +1288,9 @@ function buildSiteBundle() {
     "schemas/release-passport-v1.schema.json": RELEASE_PASSPORT_SCHEMA,
     "schemas/kfd-agent-hub-adoption.schema.json": KFD_AGENT_HUB_ADOPTION_SCHEMA,
     "schemas/kfd-product-gate-input-v1.schema.json": KFD_PRODUCT_GATE_INPUT_SCHEMA,
+    [DEV_DELIVERY_AUTHORITY_SCHEMA]: readJson(
+      DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE,
+    ),
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),
@@ -1288,7 +1310,7 @@ export function writeSiteBundle({ check = false } = {}) {
   const mismatches = [];
   for (const [name, value] of Object.entries(files)) {
     const filePath = path.join(outputDir, name);
-    const next = stableJson(value);
+    const next = siteFileBytes(name, value);
     if (check) {
       if (existingJson(filePath) !== next) {
         mismatches.push(path.relative(root, filePath));
@@ -1301,11 +1323,11 @@ export function writeSiteBundle({ check = false } = {}) {
   if (!check) {
     for (let iteration = 0; iteration < 5; iteration += 1) {
       for (const [name, value] of Object.entries(files)) {
-        writeJson(path.join(outputDir, name), value);
+        writeSiteFile(name, value);
       }
       const nextFiles = buildSiteBundle();
       const stable = Object.entries(nextFiles).every(([name, value]) => (
-        existingJson(path.join(outputDir, name)) === stableJson(value)
+        existingJson(path.join(outputDir, name)) === siteFileBytes(name, value)
       ));
       files = nextFiles;
       if (stable) {
@@ -1316,7 +1338,7 @@ export function writeSiteBundle({ check = false } = {}) {
       }
     }
     for (const [name, value] of Object.entries(files)) {
-      writeJson(path.join(outputDir, name), value);
+      writeSiteFile(name, value);
     }
   }
   return {

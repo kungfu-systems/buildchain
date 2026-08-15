@@ -193,8 +193,13 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
 }, null, 2) + "\\n");
 `,
   });
-  const { octokit, refs } = createGitMock({
+  const { octokit, refs, commits } = createGitMock({
     refs: new Map([["heads/alpha/v1/v1.0", SHA]]),
+  });
+  commits.set(SHA, {
+    sha: SHA,
+    tree: { sha: `tree-${SHA}` },
+    parents: [{ sha: OTHER_SHA }],
   });
   await persistDurableReleaseTransaction({
     octokit,

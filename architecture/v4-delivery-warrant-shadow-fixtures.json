@@ -61,7 +61,7 @@
           "now": "2026-08-07T00:02:00Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:e01018e4797e98813454328aba2c0a04932885fcd6da7d216697c7961bc26f56"
+      "expectedLegacyProjectionRoot": "sha256:d360d0c66dde487b9020b1b0e90d0c7a3e0777bdfbac72f9ac40602bbe419826"
     },
     {
       "id": "lease-expiry-and-stale-fence",
@@ -76,14 +76,29 @@
           "id": "submit",
           "operation": "submit",
           "pullRequestNumber": 120,
+          "overrides": {
+            "environmentRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "nativeCommandContract": {
+              "schema": "kungfu.buildchain.native-command-contract/v1",
+              "runner": "bash-lc",
+              "command": "node --test tests/v4-warrant-shadow-plan.test.mjs",
+              "commandRoot": "sha256:4d9a03536802c46fe254f247b7236925aec49d789e5e9ac7b2dceac08d7cefab"
+            }
+          },
           "now": "2026-08-07T01:00:01Z"
+        },
+        {
+          "id": "submit-successor",
+          "operation": "submit",
+          "pullRequestNumber": 121,
+          "now": "2026-08-07T01:00:02Z"
         },
         {
           "id": "select-old",
           "operation": "select",
           "saveWarrant": "old",
           "leaseSeconds": 60,
-          "now": "2026-08-07T01:00:02Z"
+          "now": "2026-08-07T01:00:03Z"
         },
         {
           "id": "recover",
@@ -91,21 +106,29 @@
           "now": "2026-08-07T01:02:00Z"
         },
         {
+          "id": "close-expired",
+          "operation": "close",
+          "useWarrant": "old",
+          "outcome": "terminal-failure",
+          "reason": "fenced native worker stop proved",
+          "now": "2026-08-07T01:02:01Z"
+        },
+        {
           "id": "select-new",
           "operation": "select",
           "saveWarrant": "new",
           "leaseSeconds": 60,
-          "now": "2026-08-07T01:02:01Z"
+          "now": "2026-08-07T01:02:02Z"
         },
         {
           "id": "reject-old",
           "operation": "heartbeat",
           "useWarrant": "old",
           "expectError": "stale-fencing-token",
-          "now": "2026-08-07T01:02:02Z"
+          "now": "2026-08-07T01:02:03Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:3c39ba66a2329a22f3834c4212bda001b6d5c527dcb9fa8a1b3ca88a199a7d16"
+      "expectedLegacyProjectionRoot": "sha256:64065e071d1099cb2187b57ba111fc444c95dc958dc6f97dc912e40c1738a081"
     },
     {
       "id": "settlement-idempotence",
@@ -153,7 +176,7 @@
           "now": "2026-08-07T02:02:00Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:b67669b2093105f3b4539ca5e4ba3d366bd7005a8781b5352377ae724d310d26"
+      "expectedLegacyProjectionRoot": "sha256:4f8a9030750600b2f87f627c33d63147ae33a1612c6a5022fb21474ad6118015"
     },
     {
       "id": "queued-cancellation-idempotence",

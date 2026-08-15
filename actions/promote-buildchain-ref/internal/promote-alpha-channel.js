@@ -100,7 +100,6 @@ function needsContainedAlphaFinalization(context, plan, recovery) {
     recovery.exactTagAccepted,
   );
 }
-
 async function evaluateAlphaRecovery(context, plan) {
   const acceptedExactShas = context.transactionAcceptedExactTagShas(
     plan.currentAlphaTransaction,
@@ -282,7 +281,8 @@ function selectAlphaCandidate(context, state) {
   if (advanced) return { tag: advanced.exact_tag, transaction: advanced };
   if (state.explicitAlphaTags[0]) return { tag: state.explicitAlphaTags[0] };
   if (state.transactionOpen && state.containsTransaction && !state.settled) {
-    return state.currentAlpha;
+    return ["publish_failed", "repair_required"].includes(state.currentAlphaTransaction?.state || "")
+      ? { ...state.currentAlpha, transaction: state.currentAlphaTransaction } : state.currentAlpha;
   }
   if (
     state.currentAlpha &&

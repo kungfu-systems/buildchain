@@ -1,0 +1,662 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/dev-delivery-authority-v2.schema.json",
+  "title": "Buildchain Dev Delivery Authority State v2",
+  "description": "Opt-in durable state separating bounded qualification-only leases from one exclusive merge_group Landing Warrant.",
+  "$comment": "Cross-job authority also requires dedicated exact staging, two recursive regular-file-only membership snapshots, canonical transfer and failure JSON bytes, and the rooted failure-transfer-provider-boundary-job-state-fence settlement chain; those filesystem and provider checks are enforced by the delivery boundary verifier.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "authorityMode",
+    "repository",
+    "protectedBase",
+    "generation",
+    "qualificationCounter",
+    "landingCounter",
+    "policy",
+    "qualificationLeases",
+    "landingWarrant",
+    "candidates",
+    "migration",
+    "updatedAt",
+    "stateRoot"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "contract": { "const": "kungfu-buildchain-dev-delivery-authority" },
+    "authorityMode": { "const": "bounded-qualification-landing" },
+    "repository": {
+      "type": "string",
+      "pattern": "^[^/\\s]+/[^/\\s]+$"
+    },
+    "protectedBase": {
+      "type": "string",
+      "pattern": "^dev/v[0-9]+/v[0-9]+\\.[0-9]+$"
+    },
+    "generation": { "type": "integer", "minimum": 0 },
+    "qualificationCounter": { "type": "integer", "minimum": 0 },
+    "landingCounter": { "type": "integer", "minimum": 0 },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxQualificationLeases",
+        "qualificationLeaseSeconds",
+        "landingLeaseSeconds"
+      ],
+      "properties": {
+        "maxQualificationLeases": { "type": "integer", "minimum": 1 },
+        "qualificationLeaseSeconds": { "type": "integer", "minimum": 1 },
+        "landingLeaseSeconds": { "type": "integer", "minimum": 1 },
+        "maxLandingOvertakes": { "type": "integer", "minimum": 0 },
+        "maxQualificationAttempts": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "qualificationLeases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/qualificationLease" }
+    },
+    "landingWarrant": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/landingWarrant" }]
+    },
+    "candidates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/candidate" }
+    },
+    "migration": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/migration" }]
+    },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "stateRoot": { "$ref": "#/$defs/root" }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "nativeFailureEvidence": {
+      "description": "Canonical credentialless-native failure JSON bytes whose exact body and evidenceRoot are recomputed before provider settlement.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "pullRequestNumber",
+        "expectedHead",
+        "fencingToken",
+        "leaseGeneration",
+        "nativeAttempts",
+        "reason",
+        "workerTerminationProven",
+        "evidenceRoot"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.two-phase-delivery-failure/v1"
+        },
+        "pullRequestNumber": { "type": "integer", "minimum": 1 },
+        "expectedHead": { "$ref": "#/$defs/sha" },
+        "fencingToken": { "$ref": "#/$defs/root" },
+        "leaseGeneration": { "type": "integer", "minimum": 1 },
+        "nativeAttempts": { "type": "integer", "minimum": 0 },
+        "reason": { "type": "string", "minLength": 1 },
+        "workerTerminationProven": { "type": "boolean" },
+        "evidenceRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "providerFailureSettlement": {
+      "description": "Finalizer settlement coordinates bound to the exact failure, transfer, provider boundary, native job, and live Warrant state.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "outcome",
+        "evidenceRoot",
+        "reason",
+        "warrantStateRoot",
+        "candidateId",
+        "fencingToken",
+        "leaseGeneration",
+        "pullRequestNumber",
+        "sourceHead",
+        "transferRoot",
+        "nativeJobId",
+        "sealJobId",
+        "nativeJobConclusion",
+        "finalizerBoundaryRoot"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.provider-failure-settlement/v1"
+        },
+        "outcome": { "const": "terminal-failure" },
+        "evidenceRoot": { "$ref": "#/$defs/root" },
+        "reason": { "type": "string", "minLength": 1 },
+        "warrantStateRoot": { "$ref": "#/$defs/root" },
+        "candidateId": { "$ref": "#/$defs/root" },
+        "fencingToken": { "$ref": "#/$defs/root" },
+        "leaseGeneration": { "type": "integer", "minimum": 1 },
+        "pullRequestNumber": { "type": "integer", "minimum": 1 },
+        "sourceHead": { "$ref": "#/$defs/sha" },
+        "transferRoot": { "$ref": "#/$defs/root" },
+        "nativeJobId": { "type": "integer", "minimum": 1 },
+        "sealJobId": { "type": "integer", "minimum": 1 },
+        "nativeJobConclusion": { "const": "failure" },
+        "finalizerBoundaryRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "providerAttempt": {
+      "description": "Exact GitHub merge_group workflow job and hosted runner that atomically received Landing authority.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "repository",
+        "workflowId",
+        "workflowPath",
+        "workflowRef",
+        "workflowSha",
+        "event",
+        "runId",
+        "runAttempt",
+        "jobId",
+        "jobName",
+        "jobRole",
+        "runnerId",
+        "runnerName",
+        "runnerGroupId",
+        "runnerGroupName",
+        "runnerLabels",
+        "sourceHead",
+        "mergeGroupHead",
+        "protectedBase"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.github-landing-provider-attempt/v1"
+        },
+        "repository": {
+          "type": "string",
+          "pattern": "^[^/\\s]+/[^/\\s]+$"
+        },
+        "workflowId": { "type": "integer", "minimum": 1 },
+        "workflowPath": {
+          "type": "string",
+          "pattern": "^\\.github/workflows/[^/]+\\.ya?ml$"
+        },
+        "workflowRef": {
+          "type": "string",
+          "pattern": "^[^/\\s]+/[^/\\s]+/\\.github/workflows/[^/]+\\.ya?ml@refs/(heads|tags)/[^\\s]+$"
+        },
+        "workflowSha": { "$ref": "#/$defs/sha" },
+        "event": { "const": "merge_group" },
+        "runId": { "type": "integer", "minimum": 1 },
+        "runAttempt": { "type": "integer", "minimum": 1 },
+        "jobId": { "type": "integer", "minimum": 1 },
+        "jobName": { "type": "string", "minLength": 1 },
+        "jobRole": { "const": "landing-authority" },
+        "runnerId": { "type": "integer", "minimum": 1 },
+        "runnerName": { "type": "string", "minLength": 1 },
+        "runnerGroupId": { "type": "integer", "minimum": 1 },
+        "runnerGroupName": { "type": "string", "minLength": 1 },
+        "runnerLabels": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "sourceHead": { "$ref": "#/$defs/sha" },
+        "mergeGroupHead": { "$ref": "#/$defs/sha" },
+        "protectedBase": {
+          "type": "string",
+          "pattern": "^dev/v[0-9]+/v[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "landingTerminalReadback": {
+      "description": "Independent provider terminal evidence required to settle an expired Landing Warrant. The verifier must bind every exact coordinate and enforce observedAt freshness for the Warrant generation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "verifier",
+        "terminal",
+        "repository",
+        "protectedBase",
+        "stateRoot",
+        "candidateId",
+        "pullRequestNumber",
+        "sourceHead",
+        "landingWarrantToken",
+        "landingWarrantGeneration",
+        "providerRunId",
+        "providerRunAttempt",
+        "providerRunState",
+        "providerRunConclusion",
+        "providerRunHead",
+        "providerJobId",
+        "providerJobState",
+        "providerJobConclusion",
+        "providerJobStartedAt",
+        "providerJobCompletedAt",
+        "providerAttempt",
+        "admissionRoot",
+        "pullRequestState",
+        "pullRequestMerged",
+        "protectedBaseHead",
+        "providerRunHeadInProtectedBase",
+        "outcome",
+        "evidenceRoot",
+        "reason",
+        "observedAt",
+        "readbackRoot"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.github-landing-terminal-readback/v2"
+        },
+        "verifier": {
+          "const": "buildchain-github-provider-live-readback"
+        },
+        "terminal": { "const": true },
+        "repository": {
+          "type": "string",
+          "pattern": "^[^/\\s]+/[^/\\s]+$"
+        },
+        "protectedBase": {
+          "type": "string",
+          "pattern": "^dev/v[0-9]+/v[0-9]+\\.[0-9]+$"
+        },
+        "stateRoot": { "$ref": "#/$defs/root" },
+        "candidateId": { "$ref": "#/$defs/root" },
+        "pullRequestNumber": { "type": "integer", "minimum": 1 },
+        "sourceHead": { "$ref": "#/$defs/sha" },
+        "landingWarrantToken": { "$ref": "#/$defs/root" },
+        "landingWarrantGeneration": { "type": "integer", "minimum": 1 },
+        "providerRunId": { "type": "integer", "minimum": 1 },
+        "providerRunAttempt": { "type": "integer", "minimum": 1 },
+        "providerRunState": { "const": "completed" },
+        "providerRunConclusion": { "type": "string", "minLength": 1 },
+        "providerRunHead": { "$ref": "#/$defs/sha" },
+        "providerJobId": { "type": "integer", "minimum": 1 },
+        "providerJobState": { "const": "completed" },
+        "providerJobConclusion": {
+          "enum": [
+            "cancelled",
+            "failure",
+            "action_required",
+            "skipped",
+            "stale",
+            "startup_failure",
+            "success",
+            "timed_out"
+          ]
+        },
+        "providerJobStartedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "providerJobCompletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "providerAttempt": { "$ref": "#/$defs/providerAttempt" },
+        "admissionRoot": { "$ref": "#/$defs/root" },
+        "pullRequestState": { "enum": ["open", "closed"] },
+        "pullRequestMerged": { "type": "boolean" },
+        "protectedBaseHead": { "$ref": "#/$defs/sha" },
+        "providerRunHeadInProtectedBase": { "type": "boolean" },
+        "outcome": {
+          "enum": ["merged", "terminal-failure", "dequeued", "cancelled"]
+        },
+        "evidenceRoot": { "$ref": "#/$defs/root" },
+        "reason": { "type": "string" },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "readbackRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "qualificationLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "authority",
+        "mergeGroupAdmission",
+        "candidateId",
+        "token",
+        "generation",
+        "issuedAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.dev-delivery-qualification-lease/v1"
+        },
+        "authority": { "const": "qualification-only" },
+        "mergeGroupAdmission": { "const": false },
+        "candidateId": { "$ref": "#/$defs/root" },
+        "token": { "$ref": "#/$defs/root" },
+        "generation": { "type": "integer", "minimum": 1 },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "heartbeatAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "landingWarrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "authority",
+        "mergeGroupAdmission",
+        "candidateId",
+        "token",
+        "generation",
+        "issuedAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.dev-delivery-landing-warrant/v1"
+        },
+        "authority": { "const": "merge-group-admission" },
+        "mergeGroupAdmission": { "const": true },
+        "candidateId": { "$ref": "#/$defs/root" },
+        "token": { "$ref": "#/$defs/root" },
+        "generation": { "type": "integer", "minimum": 1 },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "heartbeatAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "mergeGroupHead": { "$ref": "#/$defs/sha" },
+        "mergeGroupAdmissionRoot": { "$ref": "#/$defs/root" },
+        "expectedAdmissionStateRoot": { "$ref": "#/$defs/root" },
+        "admittedAt": { "type": "string", "format": "date-time" },
+        "providerAttempt": { "$ref": "#/$defs/providerAttempt" }
+      },
+      "dependentRequired": {
+        "mergeGroupHead": [
+          "mergeGroupAdmissionRoot",
+          "expectedAdmissionStateRoot",
+          "admittedAt",
+          "providerAttempt"
+        ],
+        "mergeGroupAdmissionRoot": [
+          "mergeGroupHead",
+          "expectedAdmissionStateRoot",
+          "admittedAt",
+          "providerAttempt"
+        ],
+        "expectedAdmissionStateRoot": [
+          "mergeGroupHead",
+          "mergeGroupAdmissionRoot",
+          "admittedAt",
+          "providerAttempt"
+        ],
+        "admittedAt": [
+          "mergeGroupHead",
+          "mergeGroupAdmissionRoot",
+          "expectedAdmissionStateRoot",
+          "providerAttempt"
+        ],
+        "providerAttempt": [
+          "mergeGroupHead",
+          "mergeGroupAdmissionRoot",
+          "expectedAdmissionStateRoot",
+          "admittedAt"
+        ]
+      }
+    },
+    "nativeQualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "authority",
+        "nativeProofAuthority",
+        "qualificationReceiptRoot",
+        "sourceProofRoot",
+        "nativeProofRoot",
+        "nativeExecutionBindingRoot",
+        "nativeExecutionReceiptRoot",
+        "nativeCommandRoot",
+        "qualificationContractRoot",
+        "qualifiedAt"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.dev-delivery-native-qualification/v1"
+        },
+        "authority": { "const": "verified-native-qualification" },
+        "nativeProofAuthority": { "const": true },
+        "evidenceRoot": { "$ref": "#/$defs/root" },
+        "qualificationReceiptRoot": { "$ref": "#/$defs/root" },
+        "sourceProofRoot": { "$ref": "#/$defs/root" },
+        "nativeProofRoot": { "$ref": "#/$defs/root" },
+        "nativeExecutionBindingRoot": { "$ref": "#/$defs/root" },
+        "nativeExecutionReceiptRoot": { "$ref": "#/$defs/root" },
+        "nativeCommandRoot": { "$ref": "#/$defs/root" },
+        "qualificationContractRoot": { "$ref": "#/$defs/root" },
+        "qualifiedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "compatibilityQualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "authority",
+        "nativeProofAuthority",
+        "legacyStateRoot",
+        "legacyWarrantPhase",
+        "legacyFencingToken",
+        "legacyGeneration",
+        "qualificationReceiptRoot",
+        "sourceProofRoot",
+        "nativeProofRoot",
+        "nativeExecutionBindingRoot",
+        "nativeExecutionReceiptRoot",
+        "nativeCommandRoot",
+        "qualificationContractRoot",
+        "qualifiedAt"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.dev-delivery-compatibility-qualification/v1"
+        },
+        "authority": { "const": "legacy-compatibility-only" },
+        "nativeProofAuthority": { "const": false },
+        "legacyStateRoot": { "$ref": "#/$defs/root" },
+        "legacyWarrantPhase": { "enum": ["phase-less", "qualified"] },
+        "legacyFencingToken": { "$ref": "#/$defs/root" },
+        "legacyGeneration": { "type": "integer", "minimum": 1 },
+        "qualificationReceiptRoot": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/root" }]
+        },
+        "sourceProofRoot": { "$ref": "#/$defs/root" },
+        "nativeProofRoot": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/root" }]
+        },
+        "nativeExecutionBindingRoot": { "type": "null" },
+        "nativeExecutionReceiptRoot": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/root" }]
+        },
+        "nativeCommandRoot": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/root" }]
+        },
+        "qualificationContractRoot": { "type": "null" },
+        "qualifiedAt": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "format": "date-time" }
+          ]
+        }
+      }
+    },
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "evidenceRoot", "reason", "settledAt"],
+      "properties": {
+        "outcome": {
+          "enum": ["merged", "terminal-failure", "dequeued", "cancelled"]
+        },
+        "evidenceRoot": { "$ref": "#/$defs/root" },
+        "reason": { "type": "string" },
+        "settledAt": { "type": "string", "format": "date-time" },
+        "transferRoot": { "$ref": "#/$defs/root" },
+        "finalizerBoundaryRoot": { "$ref": "#/$defs/root" },
+        "nativeJobId": { "type": "integer", "minimum": 1 },
+        "sealJobId": { "type": "integer", "minimum": 1 },
+        "providerAttempt": { "$ref": "#/$defs/providerAttempt" },
+        "providerTerminalReadbackRoot": { "$ref": "#/$defs/root" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              { "required": ["transferRoot"] },
+              { "required": ["finalizerBoundaryRoot"] },
+              { "required": ["nativeJobId"] },
+              { "required": ["sealJobId"] }
+            ]
+          },
+          "then": {
+            "required": [
+              "transferRoot",
+              "finalizerBoundaryRoot",
+              "nativeJobId",
+              "sealJobId"
+            ]
+          }
+        }
+      ]
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "legacyContract", "legacyStateRoot", "migratedAt"],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.dev-delivery-authority-migration/v1"
+        },
+        "legacyContract": {
+          "const": "kungfu-buildchain-dev-delivery-warrant-queue"
+        },
+        "legacyStateRoot": { "$ref": "#/$defs/root" },
+        "migratedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "protectedBase",
+        "pullRequestNumber",
+        "assignmentRoot",
+        "initiativeRoot",
+        "sourceIdentityRoot",
+        "deliveryClass",
+        "candidateId",
+        "sourceHead",
+        "sourcePatchRoot",
+        "sourceProofRoot",
+        "planRoot",
+        "closureRoot",
+        "dependencyRoot",
+        "toolchainRoot",
+        "enqueuedAt",
+        "updatedAt",
+        "status",
+        "qualification",
+        "terminal"
+      ],
+      "properties": {
+        "repository": { "type": "string" },
+        "protectedBase": { "type": "string" },
+        "pullRequestNumber": { "type": "integer", "minimum": 1 },
+        "assignmentRoot": { "$ref": "#/$defs/root" },
+        "initiativeRoot": { "$ref": "#/$defs/root" },
+        "sourceIdentityRoot": { "$ref": "#/$defs/root" },
+        "deliveryClass": {
+          "enum": [
+            "non-native-fast",
+            "native-proof-required",
+            "cross-platform",
+            "release"
+          ]
+        },
+        "identitySemantics": { "const": "chained-attempt-v2" },
+        "predecessorCandidateId": { "$ref": "#/$defs/root" },
+        "candidateId": { "$ref": "#/$defs/root" },
+        "sourceHead": { "$ref": "#/$defs/sha" },
+        "sourcePatchRoot": { "$ref": "#/$defs/root" },
+        "sourceProofRoot": { "$ref": "#/$defs/root" },
+        "planRoot": { "$ref": "#/$defs/root" },
+        "closureRoot": { "$ref": "#/$defs/root" },
+        "dependencyRoot": { "$ref": "#/$defs/root" },
+        "toolchainRoot": { "$ref": "#/$defs/root" },
+        "environmentRoot": { "$ref": "#/$defs/root" },
+        "nativeCommandContract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "runner", "command", "commandRoot"],
+          "properties": {
+            "schema": {
+              "const": "kungfu.buildchain.native-command-contract/v1"
+            },
+            "runner": { "const": "bash-lc" },
+            "command": { "type": "string", "minLength": 1 },
+            "commandRoot": { "$ref": "#/$defs/root" }
+          }
+        },
+        "affectedPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "shardEvidenceRoots": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/root" }
+        },
+        "qualificationDomains": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/root" }
+        },
+        "qualificationAttempts": { "type": "integer", "minimum": 0 },
+        "landingOvertakes": { "type": "integer", "minimum": 0 },
+        "enqueuedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "status": {
+          "enum": [
+            "queued",
+            "qualifying",
+            "qualified",
+            "landing",
+            "merged",
+            "terminal-failure",
+            "dequeued",
+            "cancelled"
+          ]
+        },
+        "qualification": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/nativeQualification" },
+            { "$ref": "#/$defs/compatibilityQualification" }
+          ]
+        },
+        "terminal": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/terminal" }]
+        }
+      }
+    }
+  }
+}
