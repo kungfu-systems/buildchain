@@ -1167,7 +1167,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /RECOVERED_PAYLOAD_ROOT: \$\{\{ steps\.rc\.outputs\.release-candidate-payload-dir \}\}/);
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@375b2d4b8a904776453773a33b4c4e4556c8c999/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@9a0e8c8a65bb6c0380ae8206c06af5b7b9a77e97/,
   );
   assert.doesNotMatch(workflow, /github-artifact-attestation\.yml@v3/);
   assert.match(workflow, /buildchain-ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/);
