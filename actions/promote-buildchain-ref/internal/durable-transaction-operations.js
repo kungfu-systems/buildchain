@@ -1,4 +1,4 @@
-export function finalizationRequirements(material, rematerialize = false) { return (material?.artifacts || []).map((artifact) => !rematerialize ? artifact : artifact?.kind === "npm" ? { group: artifact.group, kind: artifact.kind, name: artifact.name, ref_template: "{version}", role: artifact.role, required: artifact.required } : artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
+export function finalizationRequirements(material, rematerialize = false) { return (typeof material === "string" ? JSON.parse(material || "[]") : material?.artifacts || []).map((artifact) => !rematerialize ? artifact : artifact?.kind === "npm" ? { group: artifact.group, kind: artifact.kind, name: artifact.name, ref_template: "{version}", role: artifact.role, required: artifact.required } : artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
 
 function releasePassportOutputPath(context) {
   return context.path.resolve(
@@ -179,9 +179,7 @@ function createDurableTransactionOperations(context) {
       expectedTransactionId,
       publishSealedBundleRoot,
       publishSealedBundleManifest: material ? "" : publishSealedBundleManifest,
-      publishRequiredArtifactsJson: material
-        ? JSON.stringify(finalizationRequirements(material, rematerialize))
-        : publishRequiredArtifactsJson,
+      publishRequiredArtifactsJson: material || rematerialize ? JSON.stringify(finalizationRequirements(material || publishRequiredArtifactsJson, rematerialize)) : publishRequiredArtifactsJson,
       releaseMaterialSha: releaseMaterialShaOverride,
       publishToolingSha: publishToolingShaOverride,
       publishMode,
