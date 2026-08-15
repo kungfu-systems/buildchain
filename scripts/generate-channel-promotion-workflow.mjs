@@ -203,7 +203,6 @@ function consumerAdmissionJob() {
           ref: \${{ inputs.target-sha || github.sha }}
           path: .buildchain/consumer
           persist-credentials: false
-
       - name: Checkout exact policy runtime
         uses: actions/checkout@v7.0.0
         with:
@@ -211,11 +210,11 @@ function consumerAdmissionJob() {
           ref: \${{ needs.resolve-promotion.outputs.router-sha }}
           path: .buildchain/v4-policy-runtime
           persist-credentials: false
-
       - name: Enforce v4 floating consumer policy
         id: policy
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
+          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: \${{ needs.resolve-promotion.outputs.channel }}
           BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/release-candidate-promote.yml
           BUILDCHAIN_WORKFLOW_SHA: \${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_RUNTIME_SHA: \${{ needs.resolve-promotion.outputs.router-sha }}
