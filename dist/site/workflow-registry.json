@@ -948,6 +948,8 @@
         "build-command",
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-expected-channel",
+        "buildchain-contract-expected-major",
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
@@ -985,7 +987,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 41,
+      "inputCount": 43,
       "secrets": [
         "production-release-app-private-key"
       ],

@@ -1163,6 +1163,14 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "buildchain-contract-expected-channel": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
+        "buildchain-contract-expected-major": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "buildchain-contract-lock-path": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1355,7 +1363,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:c5274b37f04d0054559fdc8698c51bd0f0d8ae470baf163e9caa7699aa970575"
+      "digest": "sha256:834c08b0099b646075b1850548454986b7c150f808019c6ec7d8eae377214a19"
     },
     {
       "schemaVersion": 1,
@@ -2434,5 +2442,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:3f261061b08975e5ab7789398bedb36a90e262bac168295eea59f67369f37a97"
+  "digest": "sha256:e949b254dd5810d2eef68b39c4a5fec562d3daa3116d84da0f0774d0c92cb7c8"
 }

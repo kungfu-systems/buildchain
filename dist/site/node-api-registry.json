@@ -3282,7 +3282,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 872
+        "line": 874
       },
       "example": "import { createBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3340,7 +3340,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 813
+        "line": 815
       },
       "example": "import { finalizeBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3369,7 +3369,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 929
+        "line": 931
       },
       "example": "import { readBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3398,7 +3398,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 908
+        "line": 910
       },
       "example": "import { readBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -26108,7 +26108,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:b5d248a163021f603fcf00676865b7c846d00909aeed6c6b5fcddc5e27deaee8",
+      "digest": "sha256:6678b9780c2cb4404746e579023261a78fd6c0ed13f679d3fdf6947a8525bdc5",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -28235,7 +28235,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:b034b77889449b3fdafc84c72556958c4e567244592d7d2af55adaa616baf851"
+      "digest": "sha256:0c2b983ac1d276d39007d536ba81844f36f419a4d9482c75f5ed38c1437098c0"
     },
     {
       "id": "build-facts",

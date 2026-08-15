@@ -84,6 +84,32 @@ test("contract compatibility cannot bypass channel binding on unchanged digests"
   assert.match(result.reasons.join("\n"), /runtime v3-alpha is alpha, expected stable/);
 });
 
+test("immutable web-surface shell accepts an explicit consumer channel identity", () => {
+  const current = createBuildchainContractWorld({
+    root: path.resolve(import.meta.dirname, ".."),
+    packageJson: { name: "@kungfu-tech/buildchain", version: "3.0.0-alpha.0" },
+  });
+  const lock = createBuildchainContractLock({
+    buildchainRef: "v3-alpha",
+    resolvedSha: "a".repeat(40),
+    contractWorld: current,
+  });
+  const pinnedSha = "b".repeat(40);
+  const result = evaluateBuildchainContractLock({
+    lock,
+    current,
+    workflowShellRef: `kungfu-systems/buildchain/.github/workflows/.web-surface.yml@${pinnedSha}`,
+    runtimeRef: pinnedSha,
+    runtimeSha: pinnedSha,
+    runtimeClass: "exact-sha",
+    expectedChannel: "alpha",
+    expectedMajor: "3",
+    allowOpaqueRuntime: true,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.status, "non-floating-runtime");
+});
+
 test("optional promote action inputs remain compatible with the accepted alpha contract", () => {
   const current = createBuildchainContractWorld({
     root: path.resolve(import.meta.dirname, ".."),

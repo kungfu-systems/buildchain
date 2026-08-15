@@ -205,6 +205,12 @@ caller build command, and applies these rules:
 - breaking drift: fail closed before rendering, deployment planning, deploy
   apply, or release publication.
 
+When a caller deliberately pins the reusable workflow shell to an immutable
+Buildchain SHA, it must also pass `buildchain-contract-expected-channel` and
+`buildchain-contract-expected-major`. Those values preserve the reviewed
+stable/alpha identity while the shell and runtime remain byte-exact; the
+consumer contract lock must independently agree with both values.
+
 The caller no longer needs to run `scripts/buildchain-contract-lock.mjs` inside
 its own build command. That check belongs to Buildchain because the actual
 contract world is stored in the Buildchain runtime ref being used.
