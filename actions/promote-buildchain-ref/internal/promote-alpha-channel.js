@@ -99,6 +99,13 @@ function needsContainedAlphaFinalization(context, plan, recovery) {
   );
 }
 
+function containedFinalizationPassportCwd(context, finalizationSource) {
+  if (context.releaseCandidateValidation?.recoveredCandidate === true) {
+    return context.cwd;
+  }
+  return finalizationSource?.workspace || context.cwd;
+}
+
 async function evaluateAlphaRecovery(context, plan) {
   const acceptedExactShas = context.transactionAcceptedExactTagShas(
     plan.currentAlphaTransaction,
@@ -232,7 +239,10 @@ async function finalizeContainedAlpha(context, state) {
     await context.updateTag(context.rule.alphaTag, transaction.release_sha);
     await context.updateMajorAlphaFloatingTag({ sha: transaction.release_sha });
     await context.markComplete({
-      passportCwd: finalizationSource?.workspace || context.cwd,
+      passportCwd: containedFinalizationPassportCwd(
+        context,
+        finalizationSource,
+      ),
       passportBuildSummaryPath: "",
       passportPlatformManifestPaths: [],
       passportPromotionRoutingJson: "",
@@ -596,4 +606,4 @@ async function promoteAlphaChannel(context) {
   );
   return finalizeAlphaPublication(context, state, publication);
 }
-export { promoteAlphaChannel };
+export { containedFinalizationPassportCwd, promoteAlphaChannel };

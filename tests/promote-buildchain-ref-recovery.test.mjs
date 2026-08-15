@@ -53,6 +53,9 @@ const {
 const {
   createDurableTransactionOperations,
 } = await import("../actions/promote-buildchain-ref/internal/durable-transaction-operations.js");
+const {
+  containedFinalizationPassportCwd,
+} = await import("../actions/promote-buildchain-ref/internal/promote-alpha-channel.js");
 
 const {
   explainReleaseLineDryRun,
@@ -61,6 +64,26 @@ const {
 const {
   transitionReleaseTransaction,
 } = await import("../packages/core/publish-transaction.js");
+
+test("recovered alpha finalization keeps hydrated candidate evidence as the Passport cwd", () => {
+  assert.equal(
+    containedFinalizationPassportCwd(
+      {
+        cwd: "/runner/work/kungfu",
+        releaseCandidateValidation: { recoveredCandidate: true },
+      },
+      { workspace: "/tmp/transaction-source" },
+    ),
+    "/runner/work/kungfu",
+  );
+  assert.equal(
+    containedFinalizationPassportCwd(
+      { cwd: "/runner/work/kungfu", releaseCandidateValidation: undefined },
+      { workspace: "/tmp/transaction-source" },
+    ),
+    "/tmp/transaction-source",
+  );
+});
 
 test("release passport recovers assets from the durable sealed-bundle manifest", () => {
   const cwd = path.join("/tmp", "buildchain-recovered-passport");
