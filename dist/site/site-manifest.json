@@ -234,7 +234,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7eeba08521991a9584acb8e45fc046b550dc0555028cbe6b03cd4f81914389de"
+      "digest": "sha256:82b5d7afa63fc4cfa29ffb813f1830b30eeee3d9b0da821f77240a9ddb25584e"
     },
     {
       "id": "node-api-reference",

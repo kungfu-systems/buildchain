@@ -187,8 +187,11 @@ execution roots and traverses the complete Linux `/proc` ancestry. An unreadable
 process environment or status is a failure, as is any variable name containing a
 generic auth, credential, key, password, secret, or token segment. The child
 still receives only the fixed process-basics allowlist. The command root,
-execution binding, local retained-fence checks, complete child lifetime, final
-check, and process-group termination result are included in the native receipt.
+exact execution binding and root, successful outcome, child start and completion
+times, and heartbeat count are included in the native receipt. The controller
+keeps retained-fence heartbeats across the direct child lifetime and requires a
+final successful heartbeat after child exit; process-group termination on fence
+loss remains fail-closed runtime behavior rather than a claimed receipt field.
 
 The reusable workflow does not run that controller in a credentialed job. A
 GitHub-hosted `native-execution` job has read-only checkout permission, no

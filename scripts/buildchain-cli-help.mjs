@@ -127,7 +127,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                              [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>]
                              [--check-response-timeout-minutes <n>]
                              [--max-entries-to-build <n>] [--apply]
-  buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe>
+  buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe>
                              --repository <owner/repo> --branch <dev/vN/vN.M>
                              [--execute] [--output <file>] [--json]
   buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe>
