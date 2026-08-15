@@ -43,6 +43,7 @@ const {
   selectReleaseTag,
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
+  publishTransactionEnvironment,
   sanitizedPublishProcessEnvironment,
 } = await import("../actions/promote-buildchain-ref/lib.js");
 const {
@@ -200,6 +201,44 @@ test("publish subprocesses omit oversized inline variables", () => {
     if (previous === undefined) delete process.env[name];
     else process.env[name] = previous;
   }
+});
+
+test("publish transaction forwards the verified gate aggregate after input sanitization", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-publish-gate-"));
+  const aggregate = JSON.stringify({
+    contract: "buildchain.shifu-gate-aggregate/v1",
+    digest: `sha256:${"a".repeat(64)}`,
+  });
+  const publishEnv = publishTransactionEnvironment({
+    cwd,
+    version: "4.0.0-alpha.2",
+    channel: "alpha",
+    sourceSha: "a".repeat(40),
+    targetRef: "alpha/v4/v4.0",
+    resolvedStatePath: path.join(cwd, "state.json"),
+    resolvedEvidencePath: path.join(cwd, "evidence.json"),
+    releaseSha: "b".repeat(40),
+    expected: {
+      releaseMaterialSha: "c".repeat(40),
+      publishToolingSha: "d".repeat(40),
+    },
+    promotionGeneratedAt: "2026-08-15T00:00:00.000Z",
+    publishSealedNpmTarball: false,
+    requiredArtifacts: [],
+    publishContract: {
+      mode: "publish-final-version",
+      auth: "trusted-publishing",
+      distTag: "alpha",
+      packageSetOrder: "",
+      mainPackage: "",
+    },
+    publicationGateAggregateJson: aggregate,
+  });
+  const sanitized = sanitizedPublishProcessEnvironment(publishEnv);
+  assert.equal(
+    sanitized.BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON,
+    aggregate,
+  );
 });
 const {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,

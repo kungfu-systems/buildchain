@@ -1432,6 +1432,7 @@ function publishTransactionEnvironment({
   cwd, version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
   publishSealedNpmTarball, requiredArtifacts, publishContract,
+  publicationGateAggregateJson,
 }) {
   const requiredArtifactsJson = JSON.stringify(requiredArtifacts);
   const requiredArtifactsPath = path.resolve(
@@ -1463,6 +1464,7 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SEALED_NPM_SHA256: (publishSealedNpmTarball && sealedBundleVerification?.npm.sha256) || "",
     BUILDCHAIN_REQUIRED_ARTIFACTS: requiredArtifactsJson,
     BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH: requiredArtifactsPath,
+    BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON: publicationGateAggregateJson || "",
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
     BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
@@ -5167,5 +5169,6 @@ export {
   releasePassportArtifactFiles, releasePassportAssetsFromSealedBundle,
   verifyCollectedReleasePassport,
   validatePromotionReleaseCandidate,
+  publishTransactionEnvironment,
   sanitizedPublishProcessEnvironment,
 };
