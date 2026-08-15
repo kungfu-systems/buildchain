@@ -203,6 +203,7 @@ test("promotion admits only its exact generated sidecars", () => {
     versionVerificationAllowedPathsForPromotion("release", configured),
     ["package.json", "dist/site/buildchain-contract.json", "dist/site/kfd-claims.json", "dist/site/public-surface-audit.json", "dist/site/workflow-registry.json"],
   );
+  assert.deepEqual(versionVerificationAllowedPathsForPromotion("alpha", configured), versionVerificationAllowedPathsForPromotion("release", configured));
 });
 const {
   explainReleaseLineDryRun,
