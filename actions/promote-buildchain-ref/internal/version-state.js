@@ -151,7 +151,7 @@ function uniquePaths(paths) {
 function versionVerificationAllowedPathsForPromotion(channel, discoveredPaths = []) {
   return uniquePaths([
     ...discoveredPaths,
-    ...(channel === "release" ? ["dist/site/kfd-claims.json", "dist/site/public-surface-audit.json", "dist/site/workflow-registry.json"] : []),
+    ...(["alpha", "release"].includes(channel) ? ["dist/site/kfd-claims.json", "dist/site/public-surface-audit.json", "dist/site/workflow-registry.json"] : []),
     ...(channel === "major" ? ["dist/site/kfd-claims.json"] : []),
   ]);
 }
