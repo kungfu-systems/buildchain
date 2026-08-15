@@ -360,6 +360,56 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
 });
 
+test("tail reseal preserves source-bound GitHub artifact attestation policy evidence", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
+  const tailReseal = workflow.slice(
+    workflow.indexOf("  tail-reseal-platforms:"),
+    workflow.indexOf("  tail-reseal-summarize:"),
+  );
+
+  assert.match(
+    tailReseal,
+    /name: Recreate retained GitHub artifact attestation policy/,
+  );
+  assert.match(
+    tailReseal,
+    /\.buildchain\/recovery-runtime\/scripts\/create-github-artifact-attestation-policy\.mjs/,
+  );
+  assert.match(
+    tailReseal,
+    /BUILDCHAIN_RUNTIME_SHA: \$\{\{ needs\.tail-reseal-plan\.outputs\.candidate-runtime-sha \}\}/,
+  );
+  assert.match(
+    tailReseal,
+    /name: Upload retained GitHub artifact attestation policy/,
+  );
+  assert.match(
+    tailReseal,
+    /attestation-policy-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.tail-reseal-plan\.outputs\.source-sha \}\}/,
+  );
+});
+
+test("publication authority hydrates retained tail-reseal auxiliary evidence", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.publication-authority.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /name: Hydrate retained tail-reseal auxiliary evidence/,
+  );
+  assert.match(workflow, /-tail-reseal-request-\[0-9a-f\]\{40\}\$/);
+  assert.match(workflow, /-attestation-policy-/);
+  assert.match(workflow, /source\.runId/);
+  assert.match(
+    workflow,
+    /\.buildchain\/publication-evidence\/payloads\/\$policy_artifact/,
+  );
+});
+
 test("reusable build exposes runner-local tools before lifecycle execution", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
