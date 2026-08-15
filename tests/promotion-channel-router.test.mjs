@@ -234,6 +234,7 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-passport-evidence-jsons",
       "release-passport-evidence-path",
       "release-passport-kfd-adopter-manifest-json",
+      "release-passport-kfd-adopter-manifest-gate-json",
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
       "release-propagation-config-path",

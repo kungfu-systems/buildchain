@@ -345,25 +345,23 @@ on:
         type: string
       release-passport-adopter-delivery-json:
         description: "Passed adopter delivery gate result JSON or path bound into the Release Passport and artifact evidence"
-        default: ""
         type: string
       release-passport-kfd-adopter-manifest-json:
         description: "Standard full-cut adopter conformance manifest JSON path"
-        default: ""
+        type: string
+      release-passport-kfd-adopter-manifest-gate-json:
+        description: "Producer-generated adopter manifest gate JSON path"
         type: string
       release-passport-kfd-support-matrix-json:
         description: "Legacy KFD support projection JSON path accepted only for exact manifest comparison"
-        default: ""
         type: string
         required: false
       release-passport-kfd-product-gate-jsons:
         description: "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths"
-        default: ""
         type: string
         required: false
       release-passport-invariant-passport-jsons:
         description: "Newline- or comma-separated invariant Passport JSON paths passed to the release gate"
-        default: ""
         type: string
         required: false
       release-passport-invariant-passport-command:
@@ -958,6 +956,7 @@ jobs:
       release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
       release-passport-adopter-delivery-json: ${{ inputs.release-passport-adopter-delivery-json }}
       release-passport-kfd-adopter-manifest-json: ${{ inputs.release-passport-kfd-adopter-manifest-json }}
+      release-passport-kfd-adopter-manifest-gate-json: ${{ inputs.release-passport-kfd-adopter-manifest-gate-json }}
       release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}
       release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
       release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}
