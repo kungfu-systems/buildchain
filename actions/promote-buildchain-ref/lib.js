@@ -1541,6 +1541,11 @@ function publishTransactionEnvironment({
   };
 }
 
+async function reopenValidatedRepair(transaction, durable, validation, explicitOverride, actor, runId, persist) {
+  if (transaction.state !== "repair_required" || !explicitOverride || !validation?.valid) return { transaction, durable };
+  return persist(transitionReleaseTransaction(transaction, "publishing", { actor, runId, failure: "" }));
+}
+
 async function runPublishTransaction(options) {
   const prepared = preparePublishTransactionContext(options);
   if (!prepared) return undefined;
@@ -1650,15 +1655,9 @@ async function runPublishTransaction(options) {
     if (recovery.blocked) {
       throw new Error(`release transaction cannot recover: ${recovery.reason}`);
     }
-    if (
-      existing &&
-      existing.state !== "complete" &&
-      validation?.valid &&
-      publishRematerializeOnResume
-    ) {
-      publishSource = runResumeRematerializedPublish({
-        existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version, published: true,
-      });
+    ({ transaction, durable } = await reopenValidatedRepair(transaction, durable, validation, explicitOverride, actor, runId, persistTransaction));
+    if (existing && existing.state !== "complete" && validation?.valid && publishRematerializeOnResume) {
+      publishSource = runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version, published: true });
     }
     if (!validation?.valid) {
       if (transaction.state === "repair_required" && explicitOverride) {
