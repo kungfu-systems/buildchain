@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import {
   GitHubDevDeliveryStore,
@@ -94,11 +95,16 @@ class ConcurrentTerminalStore extends MemoryStore {
   }
 }
 
-test("state refs are deterministic and remain inside the Buildchain namespace", () => {
+test("state refs and the CLI process entrypoint remain executable", () => {
   assert.equal(
     defaultDevDeliveryStateRef("dev/v4/v4.0"),
     "buildchain/dev-delivery-warrant/dev-v4-v4.0",
   );
+  const entrypoint = "scripts/dev-delivery-warrant.mjs";
+  const cli = spawnSync(process.execPath, [entrypoint, "--help"], {
+    encoding: "utf8",
+  });
+  assert.equal(cli.status, 0, cli.stderr);
 });
 
 test("plan mode emits rooted receipts without writing authority", async () => {

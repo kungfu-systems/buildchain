@@ -458,7 +458,7 @@ function usage() {
 
 async function main() {
   const args = process.argv.slice(2);
-  if (args.length === 0 || hasFlag(args, "help")) {
+  if (args.length === 0 || args.includes("--help")) {
     process.stdout.write(usage());
     return;
   }
