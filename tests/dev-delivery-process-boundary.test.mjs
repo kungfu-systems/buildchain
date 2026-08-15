@@ -275,6 +275,10 @@ function providerSourceFixture(overrides = {}) {
   };
 }
 
+test("credential ancestry classifies GitHub artifact runtime authority", () => {
+  assert.equal(isCredentialVariableName("ACTIONS_RUNTIME_TOKEN"), true);
+});
+
 function boundaryFixture(transfer, overrides = {}) {
   return {
     jobs: jobsFixture(),

@@ -296,24 +296,29 @@ async function readProtectedBaseLanding({
   mergeGroupHead,
   fetchImpl = globalThis.fetch,
 }) {
-  const [comparison, protectedRef] = await Promise.all([
-    githubJson({
-      apiUrl,
-      token,
-      path: `/repos/${owner}/${repo}/compare/${mergeGroupHead}...${encodeURIComponent(protectedBase)}`,
-      fetchImpl,
-    }),
-    githubJson({
-      apiUrl,
-      token,
-      path: `/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(protectedBase)}`,
-      fetchImpl,
-    }),
-  ]);
+  const protectedRef = await githubJson({
+    apiUrl,
+    token,
+    path: `/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(protectedBase)}`,
+    fetchImpl,
+  });
   const protectedBaseHead = exactSha(
     protectedRef.object?.sha,
     "GitHub protected base head",
   );
+  const comparison = await githubJson({
+    apiUrl,
+    token,
+    path: `/repos/${owner}/${repo}/compare/${mergeGroupHead}...${protectedBaseHead}`,
+    fetchImpl,
+  });
+  const comparisonHead = exactSha(
+    comparison.base_commit?.sha,
+    "GitHub protected base comparison head",
+  );
+  if (comparisonHead !== protectedBaseHead) {
+    throw new Error("GitHub protected base comparison head drifted");
+  }
   const mergeBase = exactSha(
     comparison.merge_base_commit?.sha,
     "GitHub protected base merge-base",

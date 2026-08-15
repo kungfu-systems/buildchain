@@ -56,6 +56,35 @@ function stateRef(value, protectedBranch) {
   }
   return normalized;
 }
+function authorityPolicy(options) {
+  return {
+    maxQualificationLeases: positiveInteger(
+      options.maxQualificationLeases,
+      "maxQualificationLeases",
+      2,
+    ),
+    qualificationLeaseSeconds: positiveInteger(
+      options.qualificationLeaseSeconds,
+      "qualificationLeaseSeconds",
+      3600,
+    ),
+    landingLeaseSeconds: positiveInteger(
+      options.landingLeaseSeconds,
+      "landingLeaseSeconds",
+      900,
+    ),
+    maxLandingOvertakes: nonNegativeInteger(
+      options.maxLandingOvertakes,
+      "maxLandingOvertakes",
+      2,
+    ),
+    maxQualificationAttempts: positiveInteger(
+      options.maxQualificationAttempts,
+      "maxQualificationAttempts",
+      3,
+    ),
+  };
+}
 function normalizedAuthorityOptions(optionsInput) {
   const options = {
     ...optionsInput,
@@ -65,6 +94,7 @@ function normalizedAuthorityOptions(optionsInput) {
     execute: bool(optionsInput.execute),
   };
   options.stateRef = stateRef(optionsInput.stateRef, options.branch);
+  options.authorityPolicy = authorityPolicy(options);
   return options;
 }
 
@@ -86,33 +116,7 @@ function createAuthorityStore(options, clientInput) {
         createDevDeliveryAuthorityState({
           repository: repositoryInput,
           protectedBase,
-          policy: {
-            maxQualificationLeases: positiveInteger(
-              options.maxQualificationLeases,
-              "maxQualificationLeases",
-              2,
-            ),
-            qualificationLeaseSeconds: positiveInteger(
-              options.qualificationLeaseSeconds,
-              "qualificationLeaseSeconds",
-              3600,
-            ),
-            landingLeaseSeconds: positiveInteger(
-              options.landingLeaseSeconds,
-              "landingLeaseSeconds",
-              900,
-            ),
-            maxLandingOvertakes: nonNegativeInteger(
-              options.maxLandingOvertakes,
-              "maxLandingOvertakes",
-              2,
-            ),
-            maxQualificationAttempts: positiveInteger(
-              options.maxQualificationAttempts,
-              "maxQualificationAttempts",
-              3,
-            ),
-          },
+          policy: options.authorityPolicy,
           now,
         }),
     })

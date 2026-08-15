@@ -44,7 +44,7 @@ function migrateAuthority(state, options) {
   }
   return migrateDevDeliveryAuthorityState(options.migrationSource.queue, {
     now: options.now,
-    policy: state.policy,
+    policy: options.authorityPolicy,
   });
 }
 

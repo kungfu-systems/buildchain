@@ -67,7 +67,6 @@ export function devDeliveryWorkflowContractSurface(pkg, majorLine) {
     guarantees: [
       "this reusable workflow executes the single-flight v1 Delivery Warrant and does not advertise bounded v2 Landing integration",
       "bounded v2 authority is a separate opt-in CLI, Node API, and schema surface whose controller deployment must be explicit",
-      "v2 migration atomically replaces the exact live canonical v1 state ref after recheck instead of accepting caller-supplied legacy bytes or creating parallel authority",
       "candidate execution and evidence sealing receive no provider write credentials",
       "a separate credentialed hosted runner durably heartbeats the exact fence through provider-confirmed native and seal completion",
       "the finalizer validates rooted heartbeat continuity and latest durable state before qualification, failure settlement, or landing",

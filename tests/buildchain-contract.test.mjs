@@ -32,6 +32,7 @@ test("public dev workflow contract does not overstate bounded v2 authority", () 
   assert.deepEqual(surface.breakingDefaults.boundedAuthoritySupportedSurfaces, ["cli", "node-api", "schema"]);
   assert.match(surface.guarantees.join("\n"), /single-flight v1/u);
   assert.match(surface.guarantees.join("\n"), /does not advertise bounded v2/u);
+  assert.doesNotMatch(surface.guarantees.join("\n"), /v2 migration/u);
   assert.doesNotMatch(surface.guarantees.join("\n"), /Landing admission persists one exact provider workflow run/u);
 });
 

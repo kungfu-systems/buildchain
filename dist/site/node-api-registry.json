@@ -5537,7 +5537,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 398
+        "line": 403
       },
       "example": "import { readGitHubLandingActiveProviderAttempt } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5595,7 +5595,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 493
+        "line": 498
       },
       "example": "import { readGitHubLandingTerminalState } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -25504,7 +25504,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:d53a0fcd8311c105dbba75aacdf74aa464997b41ee41f049f810ede0c1b91d4b"
+      "digest": "sha256:8f0c42d4453003d9bff861392c890f557a54608662e1cc380ed9aaa6635df016"
     },
     {
       "id": "build-facts",

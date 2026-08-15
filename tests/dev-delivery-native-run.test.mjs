@@ -24,13 +24,13 @@ const RUNNER_WORKER = "/home/runner/runners/2.999.0/bin/Runner.Worker";
 
 function hostedAncestryFiles(overrides = {}) {
   return new Map([
-    ["/proc/40/environ", "PATH=/bin\0ACTIONS_RUNTIME_TOKEN=transport\0"],
+    ["/proc/40/environ", "PATH=/bin\0"],
     ["/proc/40/cmdline", "/usr/bin/node\0controller.mjs\0"],
     ["/proc/40/status", "Name:\tnode\nPPid:\t30\n"],
-    ["/proc/30/environ", "LANG=C\0ACTIONS_RUNTIME_TOKEN=transport\0"],
+    ["/proc/30/environ", "LANG=C\0"],
     ["/proc/30/cmdline", "/usr/bin/bash\0-e\0"],
     ["/proc/30/status", "Name:\tbash\nPPid:\t20\n"],
-    ["/proc/20/environ", "ACTIONS_RUNTIME_TOKEN=transport\0"],
+    ["/proc/20/environ", "RUNNER_TEMP=/tmp\0"],
     [
       "/proc/20/cmdline",
       `${RUNNER_WORKER}\u0000spawnclient\u000010\u000011\u0000`,
@@ -190,8 +190,8 @@ test("mock native spawn cannot receive controller credentials", async () => {
   assert.equal(JSON.stringify(spawnedEnvironment).includes("sentinel"), false);
 });
 
-test("hosted Linux ancestry accepts runner transport variables through the trusted worker boundary", () => {
-  assert.equal(isCredentialVariableName("ACTIONS_RUNTIME_TOKEN"), false);
+test("hosted Linux ancestry accepts only non-credential runtime variables through the trusted worker boundary", () => {
+  assert.equal(isCredentialVariableName("ACTIONS_RUNTIME_TOKEN"), true);
   assert.equal(
     isCredentialVariableName("ACTIONS_ID_TOKEN_REQUEST_TOKEN"),
     true,
@@ -253,6 +253,7 @@ test("hosted Linux ancestry rejects GitHub and provider write credentials", () =
   for (const [pid, credential] of [
     [40, "GITHUB_TOKEN"],
     [30, "GH_TOKEN"],
+    [30, "ACTIONS_RUNTIME_TOKEN"],
     [20, "OPENAI_API_KEY"],
     [20, "AWS_SECRET_ACCESS_KEY"],
   ]) {

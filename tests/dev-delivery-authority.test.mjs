@@ -1352,6 +1352,7 @@ test("expired Landing never cancels a run-level successor and settles only termi
   let synchronized = false;
   let pullRequestMerged = false;
   let providerRunLanded = false;
+  let comparisonHeadDrift = false;
   let missingRunConclusion = false;
   const requests = [];
   const server = http.createServer((request, response) => {
@@ -1454,11 +1455,17 @@ test("expired Landing never cancels a run-level successor and settles only termi
     }
     if (
       request.url ===
-      `/repos/kungfu-systems/kungfu/compare/${"d".repeat(40)}...dev%2Fv4%2Fv4.0`
+      `/repos/kungfu-systems/kungfu/compare/${"d".repeat(40)}...${providerRunLanded ? "d".repeat(40) : "8".repeat(40)}`
     ) {
+      const protectedBaseHead = providerRunLanded
+        ? "d".repeat(40)
+        : "8".repeat(40);
       response.end(
         JSON.stringify({
           status: providerRunLanded ? "identical" : "diverged",
+          base_commit: {
+            sha: comparisonHeadDrift ? "7".repeat(40) : protectedBaseHead,
+          },
           merge_base_commit: {
             sha: providerRunLanded ? "d".repeat(40) : "e".repeat(40),
           },
@@ -1547,6 +1554,17 @@ test("expired Landing never cancels a run-level successor and settles only termi
     assert.equal(supersededReadback.providerRunHeadInProtectedBase, false);
     assert.equal(supersededReadback.outcome, "dequeued");
     providerRunLanded = true;
+    comparisonHeadDrift = true;
+    await assert.rejects(
+      readGitHubLandingTerminalState({
+        state: admitted.state,
+        candidate: admitted.state.candidates[0],
+        warrant: admitted.state.landingWarrant,
+        ...providerOptions,
+      }),
+      /protected base comparison head drifted/u,
+    );
+    comparisonHeadDrift = false;
     const mergedReadback = await readGitHubLandingTerminalState({
       state: admitted.state,
       candidate: admitted.state.candidates[0],
@@ -2364,6 +2382,11 @@ test("public migration command atomically replaces the live v1 state ref", async
       repository: "kungfu-systems/kungfu",
       branch: "dev/v4/v4.0",
       now: "2026-08-12T03:00:03Z",
+      maxQualificationLeases: 1,
+      qualificationLeaseSeconds: 120,
+      landingLeaseSeconds: 60,
+      maxLandingOvertakes: 0,
+      maxQualificationAttempts: 5,
       execute: true,
     },
     store,
@@ -2376,6 +2399,13 @@ test("public migration command atomically replaces the live v1 state ref", async
   );
   assert.equal(writes[0].expectedCommitSha, "d".repeat(40));
   assert.equal(writes[0].expectedStateRoot, selected.queue.stateRoot);
+  assert.deepEqual(writes[0].queue.policy, {
+    maxQualificationLeases: 1,
+    qualificationLeaseSeconds: 120,
+    landingLeaseSeconds: 60,
+    maxLandingOvertakes: 0,
+    maxQualificationAttempts: 5,
+  });
   assert.equal(result.receipt.legacyStateRoot, selected.queue.stateRoot);
   assert.deepEqual(result.migrationSource, {
     stateRef: "buildchain/dev-delivery-warrant/dev-v4-v4.0",
