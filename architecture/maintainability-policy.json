@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 351,
-    "maxHandMaintainedSourceLines": 135654,
+    "maxHandMaintainedSourceLines": 135721,
     "maxWorkflowFiles": 71,
     "maxWorkflowLines": 24083,
-    "latestTransition": "The v4 runtime now preserves the existing sealed JIT entitlement contract required by its current Kungfu adopter.",
-    "rationale": "The bounded policy, split evidence and Passport adapters, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors plus missing or self-described receipt authority while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. The current dev queue Warrant admission and exact source-proof reuse changes remain included in the measured ceilings. The adopter compatibility port adds only the existing fail-closed JIT profile, safe archive-relative targets, immutable request propagation, executable-only signing exceptions, entitlement readback, and provider evidence. These exact 351-file, 135654-source-line and 24083-workflow-line ceilings cannot grow implicitly."
+    "latestTransition": "Exact source-proof reuse now admits GitHub's linear merge-group replay only when every replayed commit tree matches the pull-request sequence.",
+    "rationale": "The bounded policy, split evidence and Passport adapters, receipt schema, semantic YAML scanner, dual-lock fixtures, protected workflow gates, and negative tests reject persisted exact or indirect v4 selectors plus missing or self-described receipt authority while preserving trusted nonpersistent runtime overrides and untouched v3 behavior. The current dev queue Warrant admission and exact source-proof reuse changes remain included in the measured ceilings. The adopter compatibility port retains its existing fail-closed JIT profile and provider evidence. Source-proof reuse now accepts either the reviewed two-parent composition or a linear replay with identical base ancestry, commit count and per-commit trees; every mismatch retains the full lifecycle. These exact 351-file, 135721-source-line and 24083-workflow-line ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,10 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/dev-delivery-source-proof-reuse.mjs": {
+      "maxLines": 631,
+      "rationale": "The bounded source-proof driver seals one exact PR qualification and verifies either the reviewed two-parent merge or GitHub's exact linear replay by base ancestry, commit count and every intermediate tree. Unknown, nonlinear, extra-commit or tree-drift compositions still fail closed to the full lifecycle, and this exact file ceiling cannot grow implicitly."
+    },
     "scripts/dev-pr-prequeue-guard.mjs": {
       "maxLines": 399,
       "rationale": "The bounded guard keeps latest-base delta attribution, rooted source-proof reuse classification, synthetic merge composition readback, stable pre-enqueue failures, and the final base, head, queue, and Warrant compare-and-swap outside the legacy Dev PR controller; it cannot mutate the frozen source head or authorize landing by itself, and this exact file ceiling cannot grow implicitly."

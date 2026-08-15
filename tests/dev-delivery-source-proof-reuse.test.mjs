@@ -49,7 +49,10 @@ function fixture() {
   const base = git(cwd, "rev-parse", "HEAD");
   write(cwd, "src/value.mjs", "export const value = 2;\n");
   git(cwd, "add", ".");
-  git(cwd, "commit", "-qm", "source");
+  git(cwd, "commit", "-qm", "source 1");
+  write(cwd, "src/extra.mjs", "export const extra = true;\n");
+  git(cwd, "add", ".");
+  git(cwd, "commit", "-qm", "source 2");
   const head = git(cwd, "rev-parse", "HEAD");
   const mergeGroupTree = git(cwd, "rev-parse", `${head}^{tree}`);
   const mergeGroupHead = git(
@@ -143,8 +146,69 @@ test("exact source proof reuse binds every semantic predicate and merge-group co
     assert.equal(decision.mergeGroupHead, value.common.mergeGroupHead);
     assert.equal(decision.mergeGroupTree, value.common.mergeGroupTree);
     assert.deepEqual(decision.mergeGroupParents, [value.base, value.head]);
+    assert.equal(decision.mergeGroupCompositionMode, "two-parent-merge");
+    assert.deepEqual(decision.mergeGroupReplayTrees, []);
     assert.equal(decision.warrantBinding, "sourceProofRoot");
     assert.match(decision.decisionRoot, /^sha256:[0-9a-f]{64}$/u);
+  } finally {
+    fs.rmSync(value.cwd, { recursive: true, force: true });
+  }
+});
+
+test("source proof reuse accepts GitHub's exact linear merge-group replay", () => {
+  const value = fixture();
+  try {
+    const sourceCommits = git(
+      value.cwd,
+      "rev-list",
+      "--reverse",
+      `${value.base}..${value.head}`,
+    ).split(/\s+/u);
+    const firstReplay = git(
+      value.cwd,
+      "commit-tree",
+      git(value.cwd, "rev-parse", `${sourceCommits[0]}^{tree}`),
+      "-p",
+      value.base,
+      "-m",
+      "replayed source 1",
+    );
+    const replayedHead = git(
+      value.cwd,
+      "commit-tree",
+      value.common.mergeGroupTree,
+      "-p",
+      firstReplay,
+      "-m",
+      "replayed source 2",
+    );
+    const decision = verifySourceQualificationReuse({
+      ...value.common,
+      mergeGroupHead: replayedHead,
+    });
+    assert.equal(decision.reusable, true);
+    assert.equal(decision.mergeGroupCompositionMode, "linear-replay");
+    assert.deepEqual(decision.mergeGroupParents, [firstReplay]);
+    assert.deepEqual(decision.mergeGroupReplayTrees, [
+      git(value.cwd, "rev-parse", `${sourceCommits[0]}^{tree}`),
+      value.common.mergeGroupTree,
+    ]);
+
+    const extraCommit = git(
+      value.cwd,
+      "commit-tree",
+      value.common.mergeGroupTree,
+      "-p",
+      replayedHead,
+      "-m",
+      "unexpected extra replay commit",
+    );
+    const extraDecision = verifySourceQualificationReuse({
+      ...value.common,
+      mergeGroupHead: extraCommit,
+    });
+    assert.equal(extraDecision.reusable, false);
+    assert.equal(extraDecision.reason, "merge-group-parent-mismatch");
   } finally {
     fs.rmSync(value.cwd, { recursive: true, force: true });
   }
