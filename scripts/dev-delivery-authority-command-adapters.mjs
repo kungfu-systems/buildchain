@@ -39,10 +39,10 @@ function rootedList(value) {
 }
 
 function migrateAuthority(state, options) {
-  if (!options.legacyState) {
-    throw new Error("migrate requires --legacy-state <v1-queue.json>");
+  if (!options.migrationSource?.exists) {
+    throw new Error("migrate requires the live v1 authority state ref");
   }
-  return migrateDevDeliveryAuthorityState(options.legacyState, {
+  return migrateDevDeliveryAuthorityState(options.migrationSource.queue, {
     now: options.now,
     policy: state.policy,
   });
@@ -144,11 +144,6 @@ const commandAdapters = {
 };
 
 function readCommandDocuments(options) {
-  if (options.legacyStatePath) {
-    options.legacyState = JSON.parse(
-      fs.readFileSync(path.resolve(options.legacyStatePath), "utf8"),
-    );
-  }
   for (const [field, file] of [
     ["sourceProof", options.sourceProofPath],
     ["nativeProof", options.nativeProofPath],
@@ -161,14 +156,14 @@ function readCommandDocuments(options) {
 }
 
 export async function runDevDeliveryAuthorityCommandAdapter(loaded, options) {
-  if (options.command === "migrate" && loaded.exists) {
+  const loadedV2 =
+    loaded.exists &&
+    loaded.queue?.contract === "kungfu-buildchain-dev-delivery-authority" &&
+    Number(loaded.queue?.schemaVersion) === 2;
+  if (options.command === "migrate" && loadedV2) {
     throw new Error("migration target state ref already exists");
   }
-  if (
-    !loaded.exists &&
-    options.command !== "migrate" &&
-    options.command !== "observe"
-  ) {
+  if (options.command !== "migrate" && !loadedV2) {
     throw new Error(
       "v2 authority state is missing; explicitly migrate the exact current v1 state before mutation",
     );

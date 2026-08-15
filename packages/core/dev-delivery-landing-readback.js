@@ -9,6 +9,7 @@ import { sealLandingTerminalReadback } from "./dev-delivery-landing-terminal-evi
 
 export {
   DEV_DELIVERY_LANDING_TERMINAL_READBACK_SCHEMA,
+  verifyLandingSettlementReadback,
   verifyExpiredLandingSettlementReadback,
 } from "./dev-delivery-landing-terminal-evidence.js";
 

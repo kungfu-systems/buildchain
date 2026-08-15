@@ -4757,7 +4757,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 118
+        "line": 119
       },
       "example": "import { acquireDevDeliveryLandingWarrant } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -4794,7 +4794,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 370
+        "line": 371
       },
       "example": "import { admitDevDeliveryMergeGroup } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -4831,7 +4831,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 303
+        "line": 304
       },
       "example": "import { heartbeatDevDeliveryLandingWarrant } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -4855,7 +4855,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 367
+        "line": 368
       },
       "example": "import { heartbeatDevDeliveryLandingWarrantWithGitHubProvider } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -4888,7 +4888,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 76
+        "line": 77
       },
       "example": "import { recoverDevDeliveryAuthority } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -4925,7 +4925,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 411
+        "line": 412
       },
       "example": "import { settleDevDeliveryAuthorityCandidate } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -4962,7 +4962,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-authority-landing.js",
-        "line": 424
+        "line": 425
       },
       "example": "import { settleDevDeliveryAuthorityCandidateWithGitHubProvider } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5508,7 +5508,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 135
+        "line": 136
       },
       "example": "import { deriveDevDeliveryLandingProviderAttempt } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5537,7 +5537,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 397
+        "line": 398
       },
       "example": "import { readGitHubLandingActiveProviderAttempt } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5566,7 +5566,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 205
+        "line": 206
       },
       "example": "import { readGitHubLandingProviderAttempt } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5595,7 +5595,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-landing-readback.js",
-        "line": 492
+        "line": 493
       },
       "example": "import { readGitHubLandingTerminalState } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
@@ -5631,8 +5631,32 @@
     {
       "id": "packages/core/dev-delivery-landing-terminal-evidence.js#verifyExpiredLandingSettlementReadback",
       "name": "verifyExpiredLandingSettlementReadback",
+      "kind": "constant",
+      "signature": "const verifyExpiredLandingSettlementReadback",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-landing-terminal-evidence.js",
+        "line": 270
+      },
+      "example": "import { verifyExpiredLandingSettlementReadback } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-landing-terminal-evidence.js#verifyLandingSettlementReadback",
+      "name": "verifyLandingSettlementReadback",
       "kind": "function",
-      "signature": "function verifyExpiredLandingSettlementReadback({ state, candidate, warrant, sealedProviderReadback, })",
+      "signature": "function verifyLandingSettlementReadback({ state, candidate, warrant, sealedProviderReadback, })",
       "parameters": [
         {
           "name": "parameter1",
@@ -5650,7 +5674,7 @@
         "path": "packages/core/dev-delivery-landing-terminal-evidence.js",
         "line": 222
       },
-      "example": "import { verifyExpiredLandingSettlementReadback } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
+      "example": "import { verifyLandingSettlementReadback } from \"@kungfu-tech/buildchain/dev-delivery-authority\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -23953,14 +23977,14 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-authority",
       "export": "./dev-delivery-authority",
       "target": "./packages/core/dev-delivery-authority-landing.js",
-      "digest": "sha256:f83f56eacaa0ffaf116cbd582d4a101feb17856d2c20a53321cf4779539c5dde",
+      "digest": "sha256:831af82181735133764884845c6145515a39982789f9f96826210602e58855af",
       "summary": "Opt-in bounded Qualification Lease, exclusive Landing Warrant, provider-attempt admission and heartbeat readback, terminal sealing, and expired-Landing verification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 34,
+      "symbolCount": 35,
       "symbolIds": [
         "packages/core/dev-delivery-authority-landing.js#acquireDevDeliveryLandingWarrant",
         "packages/core/dev-delivery-authority-qualification.js#acquireDevDeliveryQualificationLease",
@@ -23995,7 +24019,8 @@
         "packages/core/dev-delivery-authority-landing.js#settleDevDeliveryAuthorityCandidateWithGitHubProvider",
         "packages/core/dev-delivery-authority-qualification.js#submitDevDeliveryAuthorityCandidate",
         "packages/core/dev-delivery-authority-evidence.js#verifyDevDeliveryQualificationEvidence",
-        "packages/core/dev-delivery-landing-terminal-evidence.js#verifyExpiredLandingSettlementReadback"
+        "packages/core/dev-delivery-landing-terminal-evidence.js#verifyExpiredLandingSettlementReadback",
+        "packages/core/dev-delivery-landing-terminal-evidence.js#verifyLandingSettlementReadback"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -25479,7 +25504,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:94119f52de4a5af29bda2e2a328c1fe2d0f512e30d91b1db3961ae066dacd4c8"
+      "digest": "sha256:d53a0fcd8311c105dbba75aacdf74aa464997b41ee41f049f810ede0c1b91d4b"
     },
     {
       "id": "build-facts",

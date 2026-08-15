@@ -62,6 +62,7 @@ export {
   readGitHubLandingActiveProviderAttempt,
   readGitHubLandingProviderAttempt,
   readGitHubLandingTerminalState,
+  verifyLandingSettlementReadback,
   verifyExpiredLandingSettlementReadback,
 } from "./dev-delivery-landing-readback.js";
 function recoverExpiredLandingWarrant(state, now) {
@@ -442,19 +443,17 @@ export async function settleDevDeliveryAuthorityCandidateWithGitHubProvider(
       entry.sourceHead === sourceHead &&
       initial.landingWarrant?.candidateId === entry.candidateId,
   );
-  const expired =
-    candidate &&
-    Date.parse(initial.landingWarrant.expiresAt) <= Date.parse(now);
-  const sealedProviderReadback = expired
-    ? await readGitHubLandingTerminalState({
-        state: initial,
-        candidate,
-        warrant: initial.landingWarrant,
-        token,
-        apiUrl,
-        now,
-      })
-    : null;
+  const sealedProviderReadback =
+    candidate && initial.landingWarrant?.providerAttempt
+      ? await readGitHubLandingTerminalState({
+          state: initial,
+          candidate,
+          warrant: initial.landingWarrant,
+          token,
+          apiUrl,
+          now,
+        })
+      : null;
   return settleDevDeliveryAuthorityCandidateInternal(stateInput, input, {
     now,
     sealedProviderReadback,

@@ -5,10 +5,10 @@ import {
   createDevDeliveryAuthorityState,
   observeDevDeliveryAuthorityState,
 } from "../packages/core/dev-delivery-authority-landing.js";
+import { defaultDevDeliveryStateRef } from "./dev-delivery-warrant.mjs";
 import { GitHubDevDeliveryStore } from "./dev-delivery-warrant.mjs";
 import { flag, hasFlag } from "./dev-delivery-warrant-options.mjs";
 import { runDevDeliveryAuthorityCommandAdapter } from "./dev-delivery-authority-command-adapters.mjs";
-const STATE_REF_PREFIX = "buildchain/dev-delivery-authority/";
 function text(value = "") {
   return String(value ?? "").trim();
 }
@@ -44,14 +44,15 @@ function branch(value) {
   return normalized;
 }
 export function defaultDevDeliveryAuthorityStateRef(value) {
-  return `${STATE_REF_PREFIX}${branch(value).replaceAll("/", "-")}`;
+  return defaultDevDeliveryStateRef(branch(value));
 }
 function stateRef(value, protectedBranch) {
-  const normalized = text(
-    value || defaultDevDeliveryAuthorityStateRef(protectedBranch),
-  ).replace(/^refs\/heads\//, "");
-  if (!normalized.startsWith(STATE_REF_PREFIX) || normalized.includes("..")) {
-    throw new Error(`state ref must remain under ${STATE_REF_PREFIX}`);
+  const expected = defaultDevDeliveryAuthorityStateRef(protectedBranch);
+  const normalized = text(value || expected).replace(/^refs\/heads\//, "");
+  if (normalized !== expected) {
+    throw new Error(
+      `state ref must be the canonical authority ref ${expected}`,
+    );
   }
   return normalized;
 }
@@ -130,6 +131,20 @@ function assertAuthorityTransitionScope(changed, options) {
 async function writeAuthorityTransition(store, loaded, changed, options) {
   const mutates = changed.state.stateRoot !== loaded.queue.stateRoot;
   if (!options.execute || !mutates) return null;
+  if (options.command === "migrate") {
+    const currentSource = await store.read({
+      stateRef: options.migrationSource.stateRef,
+      protectedBase: options.branch,
+      now: options.now,
+    });
+    if (
+      !currentSource.exists ||
+      currentSource.commitSha !== options.migrationSource.commitSha ||
+      currentSource.queue.stateRoot !== options.migrationSource.queue.stateRoot
+    ) {
+      throw new Error("live v1 authority changed during migration");
+    }
+  }
   if (
     options.command !== "migrate" &&
     changed.receipt.expectedOldStateRoot !== loaded.queue.stateRoot
@@ -168,6 +183,13 @@ function authorityCommandResult({ loaded, changed, write, options }) {
     observation: observeDevDeliveryAuthorityState(changed.state, {
       now: options.now,
     }),
+    migrationSource: options.migrationSource
+      ? {
+          stateRef: options.migrationSource.stateRef,
+          commitSha: options.migrationSource.commitSha,
+          stateRoot: options.migrationSource.queue.stateRoot,
+        }
+      : null,
   };
 }
 
@@ -182,6 +204,17 @@ export async function runDevDeliveryAuthorityCommand(
     protectedBase: options.branch,
     now: options.now,
   });
+  if (options.command === "migrate") {
+    if (!loaded.exists) {
+      throw new Error(
+        `live v1 authority state ref ${options.stateRef} is missing`,
+      );
+    }
+    options.migrationSource = {
+      ...loaded,
+      stateRef: options.stateRef,
+    };
+  }
   const operation = await runDevDeliveryAuthorityCommandAdapter(
     loaded,
     options,
@@ -329,11 +362,6 @@ export function devDeliveryAuthorityCliOptions(
       "provider-attempt",
       environment.BUILDCHAIN_DEV_LANDING_PROVIDER_ATTEMPT,
     ),
-    legacyStatePath: flag(
-      rest,
-      "legacy-state",
-      environment.BUILDCHAIN_DEV_AUTHORITY_LEGACY_STATE,
-    ),
     deliveryClass: flag(
       rest,
       "delivery-class",
@@ -414,7 +442,7 @@ export function devDeliveryAuthorityCliOptions(
   };
 }
 function usage() {
-  return "Usage: buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--legacy-state <v1-queue.json>] [--execute] [--output <file>] [--json]\n";
+  return "Usage: buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]\n";
 }
 async function main() {
   const args = process.argv.slice(2);

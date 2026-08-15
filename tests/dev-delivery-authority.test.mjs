@@ -132,6 +132,77 @@ function providerAttemptFor(sourceHead, mergeGroupHead, overrides = {}) {
   };
 }
 
+function settleLandingWithProviderReadback(
+  landing,
+  input,
+  {
+    outcome = "merged",
+    now,
+    reason = "independent provider terminal readback",
+    settlement = {},
+  },
+) {
+  const mergeGroupHead = "d".repeat(40);
+  const admitted = admitDevDeliveryMergeGroupForTesting(
+    landing.state,
+    landing.warrant,
+    {
+      mergeGroupHead,
+      providerAttempt: providerAttemptFor(input.sourceHead, mergeGroupHead),
+      now: landing.warrant.issuedAt,
+    },
+  );
+  const merged = outcome === "merged";
+  const readback = sealLandingTerminalReadbackForTesting({
+    repository: admitted.state.repository,
+    protectedBase: admitted.state.protectedBase,
+    stateRoot: admitted.state.stateRoot,
+    candidateId: admitted.state.landingWarrant.candidateId,
+    pullRequestNumber: input.pullRequestNumber,
+    sourceHead: input.sourceHead,
+    landingWarrantToken: admitted.state.landingWarrant.token,
+    landingWarrantGeneration: admitted.state.landingWarrant.generation,
+    providerRunId: admitted.state.landingWarrant.providerAttempt.runId,
+    providerRunAttempt:
+      admitted.state.landingWarrant.providerAttempt.runAttempt,
+    providerRunState: "completed",
+    providerRunConclusion: merged ? "success" : "failure",
+    providerRunHead: mergeGroupHead,
+    providerJobId: admitted.state.landingWarrant.providerAttempt.jobId,
+    providerJobState: "completed",
+    providerJobConclusion: merged ? "success" : "failure",
+    providerJobStartedAt: admitted.state.landingWarrant.issuedAt,
+    providerJobCompletedAt: now,
+    providerAttempt: admitted.state.landingWarrant.providerAttempt,
+    admissionRoot: admitted.admissionRoot,
+    pullRequestState: merged ? "closed" : "open",
+    pullRequestMerged: merged,
+    protectedBaseHead: merged ? mergeGroupHead : "e".repeat(40),
+    providerRunHeadInProtectedBase: merged,
+    outcome,
+    reason,
+    observedAt: now,
+  });
+  const changed = settleDevDeliveryAuthorityCandidate(
+    admitted.state,
+    {
+      pullRequestNumber: input.pullRequestNumber,
+      sourceHead: input.sourceHead,
+      outcome,
+      evidenceRoot: readback.evidenceRoot,
+      authorityToken: admitted.state.landingWarrant.token,
+      authorityGeneration: admitted.state.landingWarrant.generation,
+      reason,
+      ...settlement,
+    },
+    {
+      now,
+      [DEV_DELIVERY_TESTING_PROVIDER_READBACK]: readback,
+    },
+  );
+  return { ...changed, admitted, readback };
+}
+
 function sourceProofFor(candidateInput) {
   return createSourceQualificationProof({
     repository: "kungfu-systems/kungfu",
@@ -241,6 +312,7 @@ test("public Delivery Authority Node API owns live readback and merge-group admi
     "DEV_DELIVERY_LANDING_TERMINAL_READBACK_SCHEMA",
     "readGitHubLandingActiveProviderAttempt",
     "readGitHubLandingTerminalState",
+    "verifyLandingSettlementReadback",
     "verifyExpiredLandingSettlementReadback",
   ]) {
     assert.equal(
@@ -1696,18 +1768,25 @@ test("issue #2410 terminal settlement releases authority immediately and is idem
     now: "2026-08-12T01:00:07Z",
     leaseSeconds: 3600,
   });
-  const merged = settleDevDeliveryAuthorityCandidate(
-    landing.state,
-    {
-      pullRequestNumber: 201,
-      sourceHead: candidate(201).sourceHead,
-      outcome: "merged",
-      evidenceRoot: root("d"),
-      authorityToken: landing.warrant.token,
-      authorityGeneration: landing.warrant.generation,
-    },
-    { now: "2026-08-12T01:00:08Z" },
+  assert.throws(
+    () =>
+      settleDevDeliveryAuthorityCandidate(
+        landing.state,
+        {
+          pullRequestNumber: 201,
+          sourceHead: candidate(201).sourceHead,
+          outcome: "merged",
+          evidenceRoot: root("d"),
+          authorityToken: landing.warrant.token,
+          authorityGeneration: landing.warrant.generation,
+        },
+        { now: "2026-08-12T01:00:08Z" },
+      ),
+    /product-owned GitHub live readback/u,
   );
+  const merged = settleLandingWithProviderReadback(landing, candidate(201), {
+    now: "2026-08-12T01:00:08Z",
+  });
 
   assert.equal(merged.state.landingWarrant, null);
   assert.equal(merged.receipt.releasedAuthority.kind, "landing-warrant");
@@ -1721,7 +1800,7 @@ test("issue #2410 terminal settlement releases authority immediately and is idem
       pullRequestNumber: 201,
       sourceHead: candidate(201).sourceHead,
       outcome: "merged",
-      evidenceRoot: root("d"),
+      evidenceRoot: merged.readback.evidenceRoot,
     },
     { now: "2026-08-12T01:00:09Z" },
   );
@@ -1765,8 +1844,16 @@ test("v2 terminal provider evidence survives write-normalize-observe-remutate", 
     nativeJobId: 2201,
     sealJobId: 2202,
   };
-  const written = settleDevDeliveryAuthorityCandidate(landing.state, terminal, {
+  const written = settleLandingWithProviderReadback(landing, input, {
+    outcome: "terminal-failure",
     now: "2026-08-12T01:10:05Z",
+    reason: terminal.reason,
+    settlement: {
+      transferRoot: terminal.transferRoot,
+      finalizerBoundaryRoot: terminal.finalizerBoundaryRoot,
+      nativeJobId: terminal.nativeJobId,
+      sealJobId: terminal.sealJobId,
+    },
   });
   const normalized = normalizeDevDeliveryAuthorityState(
     JSON.parse(JSON.stringify(written.state)),
@@ -1774,13 +1861,15 @@ test("v2 terminal provider evidence survives write-normalize-observe-remutate", 
   assert.equal(normalized.stateRoot, written.state.stateRoot);
   assert.deepEqual(normalized.candidates[0].terminal, {
     outcome: "terminal-failure",
-    evidenceRoot: root("b"),
+    evidenceRoot: written.readback.evidenceRoot,
     reason: "exact provider failure",
     settledAt: "2026-08-12T01:10:05.000Z",
     transferRoot: root("c"),
     finalizerBoundaryRoot: root("d"),
     nativeJobId: 2201,
     sealJobId: 2202,
+    providerAttempt: written.admitted.state.landingWarrant.providerAttempt,
+    providerTerminalReadbackRoot: written.readback.readbackRoot,
   });
   assert.equal(
     observeDevDeliveryAuthorityState(normalized, {
@@ -1788,9 +1877,11 @@ test("v2 terminal provider evidence survives write-normalize-observe-remutate", 
     }).stateRoot,
     written.state.stateRoot,
   );
-  const repeated = settleDevDeliveryAuthorityCandidate(normalized, terminal, {
-    now: "2026-08-12T01:10:07Z",
-  });
+  const repeated = settleDevDeliveryAuthorityCandidate(
+    normalized,
+    { ...terminal, evidenceRoot: written.readback.evidenceRoot },
+    { now: "2026-08-12T01:10:07Z" },
+  );
   assert.equal(repeated.receipt.action, "duplicate-terminal-event-noop");
   assert.equal(repeated.state.stateRoot, written.state.stateRoot);
 });
@@ -1881,18 +1972,9 @@ test("bounded overtaking reserves eventual landing priority for a slow predecess
       landing.warrant.candidateId,
       state.candidates[index].candidateId,
     );
-    state = settleDevDeliveryAuthorityCandidate(
-      landing.state,
-      {
-        pullRequestNumber: inputs[index].pullRequestNumber,
-        sourceHead: inputs[index].sourceHead,
-        outcome: "merged",
-        evidenceRoot: root(index === 1 ? "f" : "8"),
-        authorityToken: landing.warrant.token,
-        authorityGeneration: landing.warrant.generation,
-      },
-      { now: `2026-08-12T01:20:4${index}Z` },
-    ).state;
+    state = settleLandingWithProviderReadback(landing, inputs[index], {
+      now: `2026-08-12T01:20:4${index}Z`,
+    }).state;
   }
 
   state = completeDevDeliveryQualification(state, leases[3], {
@@ -2081,19 +2163,10 @@ test("cancellation and already-merged reconciliation release and wake exactly on
   const landing = acquireDevDeliveryLandingWarrant(qualified.state, {
     now: "2026-08-12T01:40:08Z",
   });
-  const merged = settleDevDeliveryAuthorityCandidate(
-    landing.state,
-    {
-      pullRequestNumber: nextInput.pullRequestNumber,
-      sourceHead: nextInput.sourceHead,
-      outcome: "merged",
-      evidenceRoot: root("e"),
-      authorityToken: landing.warrant.token,
-      authorityGeneration: landing.warrant.generation,
-      reason: "provider-already-merged-reconciliation",
-    },
-    { now: "2026-08-12T01:40:09Z" },
-  );
+  const merged = settleLandingWithProviderReadback(landing, nextInput, {
+    now: "2026-08-12T01:40:09Z",
+    reason: "provider-already-merged-reconciliation",
+  });
   assert.equal(merged.state.landingWarrant, null);
   assert.equal(merged.receipt.releasedAuthority.kind, "landing-warrant");
   assert.equal(
@@ -2170,16 +2243,9 @@ test("stress scheduling never exposes more than one Landing Warrant", () => {
           (entry) => entry.candidateId === landing.warrant.candidateId,
         ).pullRequestNumber,
     );
-    state = settleDevDeliveryAuthorityCandidate(
-      state,
-      {
-        pullRequestNumber: input.pullRequestNumber,
-        sourceHead: input.sourceHead,
-        outcome: "merged",
-        evidenceRoot: root("b"),
-        authorityToken: landing.warrant.token,
-        authorityGeneration: landing.warrant.generation,
-      },
+    state = settleLandingWithProviderReadback(
+      { state, warrant: landing.warrant },
+      input,
       { now: new Date(clock++).toISOString() },
     ).state;
   }
@@ -2225,7 +2291,7 @@ test("public authority CLI stays opt-in and persists through expected-old state 
   );
   assert.equal(
     defaultDevDeliveryAuthorityStateRef("dev/v4/v4.0"),
-    "buildchain/dev-delivery-authority/dev-v4-v4.0",
+    "buildchain/dev-delivery-warrant/dev-v4-v4.0",
   );
 
   const result = await runDevDeliveryAuthorityCommand(
@@ -2265,7 +2331,7 @@ test("public authority CLI stays opt-in and persists through expected-old state 
   );
 });
 
-test("public migration command requires an empty target and writes one rooted v2 state", async () => {
+test("public migration command atomically replaces the live v1 state ref", async () => {
   const legacy = createDevDeliveryQueue({
     repository: "kungfu-systems/kungfu",
     protectedBase: "dev/v4/v4.0",
@@ -2281,7 +2347,11 @@ test("public migration command requires an empty target and writes one rooted v2
   const writes = [];
   const store = {
     async read() {
-      return { exists: false, commitSha: "", queue: initial };
+      return {
+        exists: true,
+        commitSha: "d".repeat(40),
+        queue: selected.queue,
+      };
     },
     async write(input) {
       writes.push(input);
@@ -2295,13 +2365,65 @@ test("public migration command requires an empty target and writes one rooted v2
       branch: "dev/v4/v4.0",
       now: "2026-08-12T03:00:03Z",
       execute: true,
-      legacyState: selected.queue,
     },
     store,
   );
 
   assert.equal(writes.length, 1);
+  assert.equal(
+    writes[0].stateRef,
+    "buildchain/dev-delivery-warrant/dev-v4-v4.0",
+  );
+  assert.equal(writes[0].expectedCommitSha, "d".repeat(40));
+  assert.equal(writes[0].expectedStateRoot, selected.queue.stateRoot);
   assert.equal(result.receipt.legacyStateRoot, selected.queue.stateRoot);
+  assert.deepEqual(result.migrationSource, {
+    stateRef: "buildchain/dev-delivery-warrant/dev-v4-v4.0",
+    commitSha: "d".repeat(40),
+    stateRoot: selected.queue.stateRoot,
+  });
   assert.equal(result.observation.qualification.active.length, 1);
   assert.equal(result.mutationApplied, true);
+
+  await assert.rejects(
+    runDevDeliveryAuthorityCommand(
+      {
+        command: "migrate",
+        repository: "kungfu-systems/kungfu",
+        branch: "dev/v4/v4.0",
+        now: "2026-08-12T03:00:04Z",
+        execute: true,
+      },
+      {
+        async read() {
+          return { exists: false, commitSha: "", queue: initial };
+        },
+      },
+    ),
+    /live v1 authority state ref .* is missing/u,
+  );
+
+  let reads = 0;
+  await assert.rejects(
+    runDevDeliveryAuthorityCommand(
+      {
+        command: "migrate",
+        repository: "kungfu-systems/kungfu",
+        branch: "dev/v4/v4.0",
+        now: "2026-08-12T03:00:05Z",
+        execute: true,
+      },
+      {
+        async read() {
+          reads += 1;
+          return {
+            exists: true,
+            commitSha: (reads === 1 ? "d" : "c").repeat(40),
+            queue: selected.queue,
+          };
+        },
+      },
+    ),
+    /live v1 authority changed during migration/u,
+  );
 });

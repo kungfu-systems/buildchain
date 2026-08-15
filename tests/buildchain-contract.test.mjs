@@ -22,6 +22,19 @@ function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-contract-${name}-`));
 }
 
+test("public dev workflow contract does not overstate bounded v2 authority", () => {
+  const root = path.resolve(import.meta.dirname, "..");
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+  const world = createBuildchainContractWorld({ root, packageJson: pkg });
+  const surface = world.surfaces.find((entry) => entry.id === "dev-pr-auto-merge");
+  assert.equal(surface.breakingDefaults.authorityMode, "two-phase-delivery-warrant");
+  assert.equal(surface.breakingDefaults.boundedAuthorityWorkflowIntegration, "not-advertised");
+  assert.deepEqual(surface.breakingDefaults.boundedAuthoritySupportedSurfaces, ["cli", "node-api", "schema"]);
+  assert.match(surface.guarantees.join("\n"), /single-flight v1/u);
+  assert.match(surface.guarantees.join("\n"), /does not advertise bounded v2/u);
+  assert.doesNotMatch(surface.guarantees.join("\n"), /Landing admission persists one exact provider workflow run/u);
+});
+
 test("Buildchain contract lock allows compatible floating SHA drift", () => {
   const current = createBuildchainContractWorld({
     root: path.resolve(import.meta.dirname, ".."),

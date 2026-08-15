@@ -306,7 +306,7 @@ The public command family is explicit:
 
 ```sh
 buildchain dev authority migrate --repository owner/repository \
-  --branch dev/v4/v4.0 --legacy-state v1-queue.json --execute --json
+  --branch dev/v4/v4.0 --execute --json
 buildchain dev authority submit --repository owner/repository \
   --branch dev/v4/v4.0 --environment-root <root> \
   --qualification-domains '["<root>"]' ... --execute

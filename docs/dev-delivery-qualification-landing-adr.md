@@ -25,11 +25,18 @@ Buildchain has two explicit protected-dev authority modes:
    configured number of Qualification Leases, but it may issue exactly one
    Landing Warrant.
 
-The modes use different contracts, state refs, and CLI command families. There
-is no implicit reinterpretation of a v1 Warrant. A consumer turns the new mode
-on only by explicitly migrating the exact current v1 state and deploying the
-v2 controller against the dedicated
-`buildchain/dev-delivery-authority/<dev-line>` state ref.
+The modes use different contracts and CLI command families on one canonical
+state ref. There is no implicit reinterpretation of a v1 Warrant. A consumer
+turns the new mode on only by explicitly migrating the exact current v1 state
+and deploying the v2 controller against the canonical
+`buildchain/dev-delivery-warrant/<dev-line>` state ref.
+The migration command reads the canonical
+`buildchain/dev-delivery-warrant/<dev-line>` ref itself, records its exact
+commit and state root, and rechecks both immediately before an expected-old,
+non-force update replaces v1 bytes with v2 bytes on that same ref. A v1
+controller then fails closed instead of becoming a parallel writer, while the
+prior v1 commit remains immutable Git history. Caller-supplied legacy JSON is
+never migration authority.
 
 Migration preserves the immutable v1 `stateRoot`, candidate identity, source
 and proof roots, fencing token, generation, and lease times in a rooted
@@ -178,8 +185,8 @@ generation for that transition. Repeating the same outcome and evidence is a
 root-preserving no-op; outcome or evidence drift fails closed. A terminal event
 for a candidate that never entered the state is also an explicit no-op.
 
-For an expired Landing Warrant, caller-supplied outcome and evidence are not
-cleanup authority. The settlement uses the independently verified provider
+For every Landing Warrant, caller-supplied outcome and evidence are not cleanup
+authority, regardless of whether its TTL has expired. The settlement uses the independently verified provider
 readback outcome and evidence root after exact binding and freshness checks.
 It reads `/actions/runs/{run_id}/attempts/{run_attempt}` rather than the mutable
 run-scoped projection, and verifies the caller workflow through its persisted
@@ -215,13 +222,21 @@ skipped, nonterminal, or cross-PR predecessors.
   packaged as `dist/site/schemas/dev-delivery-authority-v2.schema.json`.
 - Node API: `@kungfu-tech/buildchain/dev-delivery-authority` exports the v2
   state, migration, lease, heartbeat, recovery, Landing, admission,
-  observation, settlement, terminal-readback creation, and expired-Landing
-  readback verification functions. `@kungfu-tech/buildchain/dev-delivery-warrant`
+  observation, settlement, terminal-readback creation, and Landing readback
+  verification functions. The older expired-Landing verifier name remains a
+  compatibility alias. `@kungfu-tech/buildchain/dev-delivery-warrant`
   remains byte- and behavior-compatible for v1 consumers.
 - CLI: `buildchain dev authority
 <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe>`.
 - Generated references: [`cli-reference.md`](cli-reference.md) and
   [`node-api-reference.md`](node-api-reference.md).
+
+The existing public `dev-pr-auto-merge.yml` reusable workflow remains the
+single-flight v1 controller and does not advertise v2 Landing guarantees.
+Bounded v2 is a separate opt-in controller contract built from the public CLI,
+Node API, and schema; merely calling the v1 reusable workflow never enables or
+claims it. Buildchain's tracked floating `@v4-alpha` self-delivery caller
+continues to exercise that public v1 path without overstating v2 execution.
 
 All mutations are plan-only unless `--execute` is supplied. Merge-group
 admission is always a read-only authority check; it never mutates GitHub Merge

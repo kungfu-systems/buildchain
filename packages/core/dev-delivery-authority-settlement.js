@@ -13,7 +13,7 @@ import {
   transition,
 } from "./dev-delivery-authority-state.js";
 import { schedulerWake } from "./dev-delivery-authority-qualification.js";
-import { verifyExpiredLandingSettlementReadback } from "./dev-delivery-landing-terminal-evidence.js";
+import { verifyLandingSettlementReadback } from "./dev-delivery-landing-terminal-evidence.js";
 import { normalizeDevDeliveryTerminalProviderEvidence } from "./dev-delivery-provider-attempt.js";
 import { normalizeProviderFailureAuthorityBinding } from "./dev-delivery-warrant-settlement.js";
 
@@ -64,23 +64,22 @@ export function settleDevDeliveryAuthorityCandidateInternal(
       entry.sourceHead === requestedSourceHead &&
       initial.landingWarrant?.candidateId === entry.candidateId,
   );
-  const expiredLanding =
-    initialCandidate &&
-    Date.parse(initial.landingWarrant.expiresAt) <= Date.parse(currentTime)
-      ? verifyExpiredLandingSettlementReadback({
+  const verifiedLanding =
+    initialCandidate && initial.landingWarrant
+      ? verifyLandingSettlementReadback({
           state: initial,
           candidate: initialCandidate,
           warrant: initial.landingWarrant,
           sealedProviderReadback,
         })
       : null;
-  const outcome = text(expiredLanding?.outcome || input?.outcome);
+  const outcome = text(verifiedLanding?.outcome || input?.outcome);
   if (!TERMINAL_STATES.has(outcome))
     throw new Error(
       `outcome must be one of ${[...TERMINAL_STATES].join(", ")}`,
     );
-  const evidenceRoot = expiredLanding
-    ? expiredLanding.evidenceRoot
+  const evidenceRoot = verifiedLanding
+    ? verifiedLanding.evidenceRoot
     : exactRoot(input?.evidenceRoot, "evidenceRoot");
   const providerFailureAuthority = normalizeProviderFailureAuthorityBinding(
     input || {},
@@ -187,12 +186,12 @@ export function settleDevDeliveryAuthorityCandidateInternal(
       candidate.terminal = {
         outcome,
         evidenceRoot,
-        reason: text(expiredLanding?.reason || input?.reason),
+        reason: text(verifiedLanding?.reason || input?.reason),
         settledAt: currentTime,
         ...(providerFailureAuthority || {}),
         ...normalizeDevDeliveryTerminalProviderEvidence({
           providerAttempt: before.landingWarrant?.providerAttempt,
-          providerTerminalReadbackRoot: expiredLanding?.readbackRoot,
+          providerTerminalReadbackRoot: verifiedLanding?.readbackRoot,
         }),
       };
       candidate.updatedAt = currentTime;
@@ -205,7 +204,7 @@ export function settleDevDeliveryAuthorityCandidateInternal(
     outcome,
     evidenceRoot,
     releasedAuthority: transaction.result.released,
-    providerTerminalReadbackRoot: expiredLanding?.readbackRoot || null,
+    providerTerminalReadbackRoot: verifiedLanding?.readbackRoot || null,
     ...(providerFailureAuthority || {}),
     nextAction:
       "Authority is released immediately; select the next eligible candidate.",

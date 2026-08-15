@@ -165,6 +165,9 @@ export class GitHubDevDeliveryStore {
   }) {
     if (queue.stateRoot === expectedStateRoot)
       throw new Error("state transition did not advance the queue root");
+    const parent = expectedCommitSha
+      ? exactSha(expectedCommitSha, "expected state commit")
+      : "";
     validateStoredState(queue);
     const expectedBytes = `${JSON.stringify(queue, null, 2)}\n`;
     const blob = await this.request(
@@ -190,7 +193,7 @@ export class GitHubDevDeliveryStore {
       {
         message: `chore(dev-delivery): advance Warrant queue ${receiptRoot.slice(0, 20)}`,
         tree: tree.sha,
-        parents: expectedCommitSha ? [expectedCommitSha] : [],
+        parents: parent ? [parent] : [],
       },
     );
     if (expectedCommitSha) {

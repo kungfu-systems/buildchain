@@ -18,6 +18,8 @@ export function devDeliveryWorkflowContractSurface(pkg, majorLine) {
     breakingDefaults: {
       runtimeSelectorDefault: majorLine,
       authorityMode: "two-phase-delivery-warrant",
+      boundedAuthorityWorkflowIntegration: "not-advertised",
+      boundedAuthoritySupportedSurfaces: ["cli", "node-api", "schema"],
       publicFloatingCaller: `${majorLine}-alpha`,
       durableSelfDeliveryRef: `${majorLine}-alpha`,
       independentHeartbeatRunner: "macos-15",
@@ -63,10 +65,9 @@ export function devDeliveryWorkflowContractSurface(pkg, majorLine) {
       "dry-run",
     ],
     guarantees: [
-      "Landing admission persists one exact provider workflow run, job, hosted runner, source, merge-group head, protected base, and admission root",
-      "every admitted Landing heartbeat carries that persisted provider attempt and renews only through the non-injectable public GitHub workflow-run-attempt and job readback",
-      "heartbeat loss verifies and records the exact admitted provider attempt but withholds the run-scoped cancellation API so a successor rerun cannot be cancelled",
-      "terminal cleanup reads the immutable historical run-attempt endpoint and does not confuse the caller workflow with referenced reusable workflows or a synchronized current PR head",
+      "this reusable workflow executes the single-flight v1 Delivery Warrant and does not advertise bounded v2 Landing integration",
+      "bounded v2 authority is a separate opt-in CLI, Node API, and schema surface whose controller deployment must be explicit",
+      "v2 migration atomically replaces the exact live canonical v1 state ref after recheck instead of accepting caller-supplied legacy bytes or creating parallel authority",
       "candidate execution and evidence sealing receive no provider write credentials",
       "a separate credentialed hosted runner durably heartbeats the exact fence through provider-confirmed native and seal completion",
       "the finalizer validates rooted heartbeat continuity and latest durable state before qualification, failure settlement, or landing",

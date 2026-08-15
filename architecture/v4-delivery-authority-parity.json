@@ -163,7 +163,7 @@
     },
     {
       "id": "DA-11",
-      "claim": "Every Landing admission derives the provider attempt through non-injectable live GitHub readback, and every admitted heartbeat carries that exact persisted attempt and renews only through the public GitHub workflow run-attempt and job readback; qualification expiry releases only qualification capacity, while an expired Landing Warrant remains exclusive until an independent terminal verifier reads the immutable historical attempt endpoint and returns fresh rooted evidence bound to state, fence, generation, candidate, admitted source head, provider run, and provider job without depending on a mutable run projection, referenced-workflow inference, or the synchronized current PR head; runtime sealing enforces the published repository, protected-base, numeric identity, completed-state, run-conclusion, job-conclusion, pull-request-state, merged-flag, and outcome schema, and every resulting settlement is deterministic and idempotent.",
+      "claim": "Every Landing admission derives the provider attempt through non-injectable live GitHub readback, and every admitted heartbeat carries that exact persisted attempt and renews only through the public GitHub workflow run-attempt and job readback; qualification expiry releases only qualification capacity, while every Landing Warrant remains exclusive until an independent terminal verifier reads the immutable historical attempt endpoint and returns fresh rooted evidence bound to state, fence, generation, candidate, admitted source head, provider run, provider job, and protected-base containment without depending on a mutable run projection, referenced-workflow inference, or the synchronized current PR head; runtime sealing enforces the published repository, protected-base, numeric identity, completed-state, run-conclusion, job-conclusion, pull-request-state, merged-flag, containment, and outcome schema, and every resulting settlement is deterministic and idempotent.",
       "disposition": "implemented",
       "implementationEvidence": [
         "packages/core/dev-delivery-authority-qualification.js",
@@ -216,7 +216,7 @@
     },
     {
       "id": "DA-15",
-      "claim": "The supported CLI, Node exports including independent Landing terminal readback, schema, documentation, generated references, byte-exact generated site schema, native template, and Buildchain public v4-alpha delivery caller with matching stable and alpha contract locks expose the same authority model.",
+      "claim": "The supported CLI, Node exports including independent Landing terminal readback, schema, documentation, generated references, and byte-exact generated site schema expose bounded v2 authority consistently, while the native template and Buildchain public v4-alpha caller truthfully remain single-flight v1 and do not advertise v2 Landing execution; matching stable and alpha contract locks preserve that explicit boundary.",
       "disposition": "implemented",
       "implementationEvidence": [
         "bin/buildchain.mjs",
@@ -246,5 +246,5 @@
       "verificationEvidence": []
     }
   ],
-  "matrixRoot": "sha256:8900a9eda20da478e9bdcd5f1b13d46d1ecca70b027c2f25885abf5d4aa52df8"
+  "matrixRoot": "sha256:5be5abf70b982374f32a1400d4ec7c830017a0473d03165e831a506c94c8b881"
 }

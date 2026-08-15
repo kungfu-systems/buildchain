@@ -115,6 +115,12 @@
       "breakingDefaults": {
         "runtimeSelectorDefault": "v4",
         "authorityMode": "two-phase-delivery-warrant",
+        "boundedAuthorityWorkflowIntegration": "not-advertised",
+        "boundedAuthoritySupportedSurfaces": [
+          "cli",
+          "node-api",
+          "schema"
+        ],
         "publicFloatingCaller": "v4-alpha",
         "durableSelfDeliveryRef": "v4-alpha",
         "independentHeartbeatRunner": "macos-15",
@@ -160,16 +166,15 @@
         "dry-run"
       ],
       "guarantees": [
-        "Landing admission persists one exact provider workflow run, job, hosted runner, source, merge-group head, protected base, and admission root",
-        "every admitted Landing heartbeat carries that persisted provider attempt and renews only through the non-injectable public GitHub workflow-run-attempt and job readback",
-        "heartbeat loss verifies and records the exact admitted provider attempt but withholds the run-scoped cancellation API so a successor rerun cannot be cancelled",
-        "terminal cleanup reads the immutable historical run-attempt endpoint and does not confuse the caller workflow with referenced reusable workflows or a synchronized current PR head",
+        "this reusable workflow executes the single-flight v1 Delivery Warrant and does not advertise bounded v2 Landing integration",
+        "bounded v2 authority is a separate opt-in CLI, Node API, and schema surface whose controller deployment must be explicit",
+        "v2 migration atomically replaces the exact live canonical v1 state ref after recheck instead of accepting caller-supplied legacy bytes or creating parallel authority",
         "candidate execution and evidence sealing receive no provider write credentials",
         "a separate credentialed hosted runner durably heartbeats the exact fence through provider-confirmed native and seal completion",
         "the finalizer validates rooted heartbeat continuity and latest durable state before qualification, failure settlement, or landing",
         "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
       ],
-      "breakingDigest": "sha256:1946bbcbe4ff41e263d1c65024e25c8c9ae261acea1bf62c490b95d412f87d9e",
+      "breakingDigest": "sha256:95dbc7fb64677ccba903d71403eca1b2c724c0fa8d704a59006b87686fddf268",
       "auditDigest": "sha256:65dd95900973fec345043d1ce92fc7625719fc9b7312f319a03a75a4c3705b0c"
     },
     {
@@ -871,7 +876,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:2def52a68b3ca12ff2cadee6c707086a23dccf2bfc240dfb21f41448277c2c6b"
+      "auditDigest": "sha256:8c187fa8e82d214ff8ee34e51d815aa04c573ce342eb70b3dce325569d6e858d"
     },
     {
       "contractVersion": 1,
@@ -893,7 +898,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:15fd1eec7a072ebb669c38adf554ae527c17b59e17e469d06fdd812b6467d0ad"
+      "auditDigest": "sha256:3c8fccc354b11eca7fd53c4b5295203b01502c74112751ffddc2ae7e4767f95c"
     },
     {
       "contractVersion": 1,
@@ -3938,6 +3943,6 @@
       "auditDigest": "sha256:d07482cd66413a2fb3781a3b76f960b8151b6231841799647fe237820de2fde6"
     }
   ],
-  "compatibilityDigest": "sha256:ebb8ce660fea4ad4334bc30855a96b718a0dadcd3825584a625e3ea0507e2c28",
-  "contractDigest": "sha256:690eb681826df7cd0b857ddfb3703010d912645c8c26a9c8f5b6782e5f5be0f0"
+  "compatibilityDigest": "sha256:04aa86c50fa288d7605cc686157a07f94b2d3ad44082439e6afd1e23f5fa6959",
+  "contractDigest": "sha256:5281c554ccf245138b094660e9c1e8c24cfc609274156352ba7f385f2656e751"
 }

@@ -219,7 +219,7 @@ export function sealLandingTerminalReadbackForTesting(input) {
   return sealLandingTerminalReadback(input);
 }
 
-export function verifyExpiredLandingSettlementReadback({
+export function verifyLandingSettlementReadback({
   state,
   candidate,
   warrant,
@@ -227,7 +227,7 @@ export function verifyExpiredLandingSettlementReadback({
 }) {
   if (!sealedReadbacks.has(sealedProviderReadback)) {
     throw new Error(
-      "expired Landing settlement requires product-owned GitHub live readback",
+      "Landing settlement requires product-owned GitHub live readback",
     );
   }
   const readback = sealedProviderReadback;
@@ -266,3 +266,6 @@ export function verifyExpiredLandingSettlementReadback({
   }
   return readback;
 }
+
+export const verifyExpiredLandingSettlementReadback =
+  verifyLandingSettlementReadback;
