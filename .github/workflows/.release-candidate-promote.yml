@@ -1689,6 +1689,13 @@ jobs:
             fi
             policy="$DISCOVERED_POLICIES"
           fi
+          if [[ "$policy" == \{* ]]; then
+            inline_policy="$RUNNER_TEMP/buildchain-github-artifact-attestation-policy.json"
+            printf '%s\n' "$policy" \
+              | jq -e 'select(.contract == "buildchain.github-artifact-attestation-policy/v1")' \
+              > "$inline_policy"
+            policy="$inline_policy"
+          fi
           if [ ! -f "$policy" ]; then
             echo "::error::GitHub artifact attestation policy is not a downloaded release-candidate file: $policy"
             exit 1
