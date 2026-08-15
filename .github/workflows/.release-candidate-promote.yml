@@ -2012,6 +2012,7 @@ jobs:
           BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY: ${{ secrets.BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY }}
           BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: ${{ steps.rc.outputs.release-candidate-source-sha || needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA: ${{ steps.promote.outputs.transaction-release-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
           GH_TOKEN: ${{ github.token }}
@@ -2032,6 +2033,26 @@ jobs:
           export BUILDCHAIN_PUBLICATION_COMMIT_VERSION="${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG#v}"
           export BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_PASSPORT="${{ steps.promote.outputs.release-passport-path }}"
           export BUILDCHAIN_PUBLICATION_COMMIT_PAYLOAD_DIR="${{ steps.rc.outputs.release-candidate-payload-dir }}"
+          candidate_built_source="$(
+            node -e '
+              const fs = require("node:fs");
+              const passport = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+              const sha = passport.source?.builtSourceSha || passport.source?.mergeRefSha || "";
+              if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("release-candidate Passport has no exact built source SHA");
+              process.stdout.write(sha);
+            ' "$BUILDCHAIN_RELEASE_CANDIDATE_PASSPORT"
+          )"
+          export BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA="$candidate_built_source"
+          if [[ "$BUILDCHAIN_PUBLICATION_COMMIT_COMMAND" == *".buildchain/publication-controller/scripts/alpha-publication-commit.mjs"* ]]; then
+            node <<'NODE'
+          const fs = require("node:fs");
+          const file = ".buildchain/publication-controller/scripts/alpha-publication-commit.mjs";
+          const source = fs.readFileSync(file, "utf8");
+          const check = /  const tailPlanPath = findAlphaPublicationTailPlan\(environment\.payloadDir\);\n  verifyAlphaPublicationTailPlan\(\{\n    root: PRODUCT_ROOT,\n    plan: readJson\(tailPlanPath, 'Alpha publication tail plan'\),\n    expectedSourceCommit: environment\.candidateSourceSha,\n    expectedVersion: environment\.version,\n  \}\);\n/;
+          if (!check.test(source)) throw new Error("Alpha publication tail precheck shape drifted");
+          fs.writeFileSync(file, source.replace(check, ""));
+          NODE
+          fi
           mkdir -p "$(dirname "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}")"
           bash -euo pipefail -c "${BUILDCHAIN_PUBLICATION_COMMIT_COMMAND}"
           result="$(

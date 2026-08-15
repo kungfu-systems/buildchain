@@ -317,6 +317,12 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /PUBLICATION_COMMIT_SUCCEEDED: \$\{\{ steps\.publication-commit\.outcome == 'success' \}\}/,
   );
+  assert.match(wrapper, /BUILDCHAIN_RELEASE_CANDIDATE_PASSPORT:/);
+  assert.match(
+    wrapper,
+    /passport\.source\?\.builtSourceSha \|\| passport\.source\?\.mergeRefSha/,
+  );
+  assert.match(wrapper, /Alpha publication tail precheck shape drifted/);
   assert.match(
     wrapper,
     /Commit consumer publication authority last[\s\S]*?steps\.promote\.outputs\.finalization-needed != 'true'/,
