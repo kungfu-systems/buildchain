@@ -3201,6 +3201,30 @@ jobs:
           BUILDCHAIN_TAIL_RESEAL_PLATFORM_ID: ${{ matrix.platform.id }}
           BUILDCHAIN_TAIL_RESEAL_ARTIFACT_ROOT: .
 
+      - name: Recreate retained GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        run: node .buildchain/recovery-runtime/scripts/create-github-artifact-attestation-policy.mjs
+        env:
+          BUILDCHAIN_SOURCE_CWD: ${{ inputs.working-directory }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SUBJECT_PATH: ${{ inputs.github-artifact-attestation-subject-path }}
+          BUILDCHAIN_GITHUB_ATTESTATION_PLATFORM_MANIFEST: .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
+          BUILDCHAIN_GITHUB_ATTESTATION_POLICY_OUTPUT: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_SOURCE_SHA: ${{ needs.tail-reseal-plan.outputs.source-sha }}
+          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.tail-reseal-plan.outputs.source-tree }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ needs.tail-reseal-plan.outputs.candidate-runtime-sha }}
+          BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA: ${{ inputs.github-artifact-attestation-signer-sha }}
+          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
+
+      - name: Upload retained GitHub artifact attestation policy
+        if: ${{ inputs.github-artifact-attestation-subject-path != '' && matrix.platform.id == inputs.github-artifact-attestation-platform-id }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ${{ inputs.artifact-name }}-attestation-policy-${{ matrix.platform.id }}-${{ needs.tail-reseal-plan.outputs.source-sha }}
+          path: .buildchain/artifacts/${{ matrix.platform.id }}/github-artifact-attestation-policy.json
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact-retention-days }}
+
       - name: Upload resealed platform payload
         uses: actions/upload-artifact@v7.0.1
         with:
