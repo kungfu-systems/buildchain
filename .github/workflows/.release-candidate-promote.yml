@@ -1952,7 +1952,11 @@ jobs:
         run: |
           set -euo pipefail
           ATTESTATION_SUBJECT_ROOTS="$(realpath "$ATTESTATION_SUBJECT_ROOTS")"
-          node .buildchain/runtime/scripts/stage-github-artifact-attestation-inputs.mjs \
+          attestation_stager=.buildchain/runtime/scripts/stage-github-artifact-attestation-inputs.mjs
+          if [ -f .buildchain/promotion-shell/scripts/stage-github-artifact-attestation-inputs.mjs ]; then
+            attestation_stager=.buildchain/promotion-shell/scripts/stage-github-artifact-attestation-inputs.mjs
+          fi
+          node "$attestation_stager" \
             --policy "$ATTESTATION_POLICY" \
             --subject-roots "$ATTESTATION_SUBJECT_ROOTS" \
             --platform-manifests "$ATTESTATION_PLATFORM_MANIFESTS" \

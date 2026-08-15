@@ -311,6 +311,10 @@ test("promotion commits consumer discovery authority only after public release a
   assert.match(wrapper, /ATTESTATION_SUBJECT_ROOTS="\$\(realpath "\$ATTESTATION_SUBJECT_ROOTS"\)"/);
   assert.match(
     wrapper,
+    /attestation_stager=\.buildchain\/promotion-shell\/scripts\/stage-github-artifact-attestation-inputs\.mjs/,
+  );
+  assert.match(
+    wrapper,
     /PUBLICATION_COMMIT_SUCCEEDED: \$\{\{ steps\.publication-commit\.outcome == 'success' \}\}/,
   );
   assert.match(
