@@ -16,12 +16,12 @@
   "state_ref": "buildchain/release-state/4-0-1-alpha-2",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v4.0.1-alpha.2.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v4.0.1-alpha.2/evidence.json",
-  "state": "publishing",
-  "previous_state": "sealed",
+  "state": "repair_required",
+  "previous_state": "publishing",
   "actor": "dongkeren",
   "run_id": "31882430302",
   "superseded_by": "",
-  "failure": "",
+  "failure": "publish evidence invalid: artifact coordinate or provenance mismatch: npm:@kungfu-tech/buildchain:ref",
   "artifacts": [],
   "evidence": [],
   "sealed_bundle": {
@@ -83,9 +83,9 @@
     "durablePath": "sealed-bundle/sha256/50a3be7cf7db115329f4022a11a4fc78a925f60fe6d0a3f7479493b5d6c19a88",
     "resumeCommand": "buildchain paper resume --version \"4.0.1-alpha.0\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-0\""
   },
-  "publication_state": "sealed",
+  "publication_state": "repair-required",
   "milestones": {},
   "resume_command": "buildchain paper resume --version \"4.0.1-alpha.0\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-0\"",
   "created_at": "2026-08-15T11:41:53.436Z",
-  "updated_at": "2026-08-15T11:41:56.554Z"
+  "updated_at": "2026-08-15T11:42:07.124Z"
 }
