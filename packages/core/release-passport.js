@@ -1185,10 +1185,28 @@ function optionalSections(entries) {
 }
 
 function acceptedControllerSourceShas(input) {
-  const { treeEquivalent, builtSourceSha, promotionChannelSha, sourceSha, recoveryTreeEquivalent } = input;
+  const {
+    treeEquivalent,
+    builtSourceSha,
+    candidateSourceSha,
+    candidateSourceTreeSha,
+    promotionChannelSha,
+    promotionChannelTreeSha,
+    sourceSha,
+    recoveryTreeEquivalent,
+  } = input;
   if (!treeEquivalent || !builtSourceSha || !promotionChannelSha) return [];
   if (promotionChannelSha !== sourceSha && !recoveryTreeEquivalent) return [];
-  return [builtSourceSha, promotionChannelSha];
+  const acceptedSourceShas = [builtSourceSha, promotionChannelSha];
+  if (
+    candidateSourceSha &&
+    candidateSourceTreeSha &&
+    promotionChannelTreeSha &&
+    candidateSourceTreeSha === promotionChannelTreeSha
+  ) {
+    acceptedSourceShas.push(candidateSourceSha);
+  }
+  return [...new Set(acceptedSourceShas)];
 }
 
 function prepareReleaseAdopterArtifacts({ adopterDelivery, kfdAdopter, assets, repository, tag, sourceSha, workflow }) {
@@ -1289,6 +1307,8 @@ export function createReleasePassport({
   });
   const builtSourceSha = releaseField(release, "builtSourceSha", "built_source_sha");
   const builtSourceTreeSha = releaseField(release, "builtSourceTreeSha", "built_source_tree_sha");
+  const candidateSourceSha = releaseField(release, "candidateSourceSha", "candidate_source_sha");
+  const candidateSourceTreeSha = releaseField(release, "candidateSourceTreeSha", "candidate_source_tree_sha");
   const promotionChannelSha = releaseField(release, "promotionChannelSha", "promotion_channel_sha");
   const promotionChannelTreeSha = releaseField(release, "promotionChannelTreeSha", "promotion_channel_tree_sha");
   const treeEquivalent = release.treeEquivalent === true;
@@ -1305,7 +1325,10 @@ export function createReleasePassport({
     acceptedSourceShas: acceptedControllerSourceShas({
       treeEquivalent,
       builtSourceSha,
+      candidateSourceSha,
+      candidateSourceTreeSha,
       promotionChannelSha,
+      promotionChannelTreeSha,
       sourceSha,
       recoveryTreeEquivalent,
     }),
@@ -1368,6 +1391,8 @@ export function createReleasePassport({
       releaseMaterialSha,
       builtSourceSha: optionalString(release.builtSourceSha || release.built_source_sha),
       builtSourceTreeSha,
+      candidateSourceSha,
+      candidateSourceTreeSha,
       promotionChannelSha: optionalString(release.promotionChannelSha || release.promotion_channel_sha),
       promotionChannelTreeSha,
       treeEquivalent: release.treeEquivalent === undefined ? undefined : Boolean(release.treeEquivalent),
@@ -2151,6 +2176,13 @@ function validateReleaseEvidenceContracts({
         if (release.promotionChannelSha) {
           acceptedSourceShas.add(String(release.promotionChannelSha).toLowerCase());
         }
+        if (
+          release.candidateSourceSha
+          && release.candidateSourceTreeSha
+          && release.candidateSourceTreeSha === release.promotionChannelTreeSha
+        ) {
+          acceptedSourceShas.add(String(release.candidateSourceSha).toLowerCase());
+        }
       }
       if (!acceptedSourceShas.has(policy.caller.sourceSha)) {
         issues.push(issue(
@@ -2548,6 +2580,14 @@ function validatePassportTrustSections({ passport, issues }) {
     passport?.release?.builtSourceSha,
     passport?.release?.promotionChannelSha,
   ].filter(Boolean));
+  if (
+    passport?.release?.treeEquivalent === true
+    && passport?.release?.candidateSourceSha
+    && passport?.release?.candidateSourceTreeSha
+    && passport?.release?.candidateSourceTreeSha === passport?.release?.promotionChannelTreeSha
+  ) {
+    acceptedSourceShas.add(passport.release.candidateSourceSha);
+  }
   for (const [index, entry] of (section.passports || []).entries()) {
     const prefix = `invariantPassports.passports[${index}]`;
     if (entry.admission?.scope !== "consumer-invariant-coverage" || entry.admission?.result !== "passed") {

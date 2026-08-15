@@ -287,6 +287,53 @@ test("promotion stages a policy bound to a tree-equivalent promotion source", ()
   assert.equal(staged.policy.caller.sourceSha, promotionSourceSha);
 });
 
+test("promotion stages a policy bound to the sealed candidate source on the exact promotion tree", () => {
+  const value = fixture();
+  const candidateSourceSha = "6".repeat(40);
+  const manifest = JSON.parse(fs.readFileSync(value.manifestPath, "utf8"));
+  manifest.git.sha = candidateSourceSha;
+  writeJson(value.manifestPath, manifest);
+  const manifestDigest = githubArtifactAttestationSha256File(value.manifestPath);
+  const policy = createGitHubArtifactAttestationPolicy({
+    ...value.policy,
+    caller: { ...value.policy.caller, sourceSha: candidateSourceSha },
+    build: {
+      ...value.policy.build,
+      platformManifestDigest: manifestDigest,
+      runnerReceiptRoot: manifestDigest,
+    },
+  });
+  writeJson(value.passportPath, createReleasePassport({
+    repository: "kungfu-systems/kungfu",
+    tag: "v4.0.0-alpha.2",
+    sourceSha: SOURCE_SHA,
+    assets: [{
+      name: policy.subject.name,
+      size: policy.subject.size,
+      sha256: policy.subject.digest.replace(/^sha256:/, ""),
+    }],
+    release: {
+      candidateSourceSha,
+      candidateSourceTreeSha: SOURCE_TREE_SHA,
+      builtSourceSha: SOURCE_SHA,
+      builtSourceTreeSha: SOURCE_TREE_SHA,
+      promotionChannelSha: "5".repeat(40),
+      promotionChannelTreeSha: SOURCE_TREE_SHA,
+      treeEquivalent: true,
+    },
+    githubArtifactAttestations: [policy],
+  }));
+
+  const staged = stageGitHubArtifactAttestationInputs({
+    policy,
+    subjectRoots: [path.dirname(path.dirname(value.subjectPath))],
+    platformManifestPaths: [value.manifestPath],
+    releasePassportPath: value.passportPath,
+    outputDir: path.join(value.root, "candidate-source-staged"),
+  });
+  assert.equal(staged.policy.caller.sourceSha, candidateSourceSha);
+});
+
 test("promotion refuses a digest-identical subject at the wrong declared path", () => {
   const value = fixture();
   const wrongRoot = path.join(value.root, "wrong-subject-root");

@@ -459,6 +459,52 @@ test("release passport preserves a tree-equivalent promotion controller source d
   assert.deepEqual(passport.controllerReceipts, [reference]);
 });
 
+test("release passport preserves the sealed candidate controller source only for the exact promotion tree", () => {
+  const transactionSourceSha = "f".repeat(40);
+  const candidateSourceSha = "9".repeat(40);
+  const builtSourceSha = "a".repeat(40);
+  const promotionChannelSha = "e".repeat(40);
+  const equivalentTreeSha = "1".repeat(40);
+  const reference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"b".repeat(64)}`,
+    receiptDigest: `sha256:${"c".repeat(64)}`,
+    sourceSha: candidateSourceSha,
+    runtimeSha: "d".repeat(40),
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
+  const release = {
+    candidateSourceSha,
+    candidateSourceTreeSha: equivalentTreeSha,
+    builtSourceSha,
+    builtSourceTreeSha: equivalentTreeSha,
+    promotionChannelSha,
+    promotionChannelTreeSha: equivalentTreeSha,
+    treeEquivalent: true,
+  };
+  const passport = createReleasePassport({
+    repository: "kungfu-systems/buildchain",
+    tag: "v3.0.1",
+    sourceSha: transactionSourceSha,
+    release,
+    controllerReceiptReferences: [reference],
+  });
+
+  assert.deepEqual(passport.controllerReceipts, [reference]);
+  assert.equal(passport.release.candidateSourceSha, candidateSourceSha);
+  assert.equal(passport.release.candidateSourceTreeSha, equivalentTreeSha);
+  assert.throws(
+    () => createReleasePassport({
+      tag: "v3.0.1",
+      sourceSha: transactionSourceSha,
+      release: { ...release, candidateSourceTreeSha: "2".repeat(40) },
+      controllerReceiptReferences: [reference],
+    }),
+    /source SHA mismatch/,
+  );
+});
+
 test("KFD release gate metadata is statically bundled for action runtimes", () => {
   const source = fs.readFileSync(path.resolve("packages/core/kfd-gate.js"), "utf8");
   assert.match(source, /from "@kungfu-tech\/kfd\/package\.json" with \{ type: "json" \}/);

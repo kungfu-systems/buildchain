@@ -261,7 +261,15 @@ function passportAcceptsPolicySource(passport, policy) {
   ) {
     return false;
   }
-  return [release.builtSourceSha, release.promotionChannelSha]
+  const acceptedSourceShas = [release.builtSourceSha, release.promotionChannelSha];
+  if (
+    release.candidateSourceSha
+    && release.candidateSourceTreeSha
+    && release.candidateSourceTreeSha === release.promotionChannelTreeSha
+  ) {
+    acceptedSourceShas.push(release.candidateSourceSha);
+  }
+  return acceptedSourceShas
     .map((value) => String(value || "").toLowerCase())
     .includes(policySourceSha);
 }

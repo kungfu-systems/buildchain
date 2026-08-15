@@ -612,6 +612,8 @@ function validatePromotionReleaseCandidate({
     gateProfileEvidence: passport.gateProfileEvidence,
     familyEvidence: passport.familyEvidence,
     controllerReceipts: passport.controllerReceipts || [],
+    candidateSourceSha: passport.source?.headSha || "",
+    candidateSourceTreeSha: passport.source?.treeHash || "",
     builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
     builtSourceTreeSha: passport.source?.treeHash || "",
     promotionChannelSha: sourceHeadSha || "",
@@ -2110,6 +2112,8 @@ async function collectAndPersistReleasePassport({
         ? {
             builtSourceSha: releaseCandidateValidation.builtSourceSha,
             builtSourceTreeSha: releaseCandidateValidation.builtSourceTreeSha,
+            candidateSourceSha: releaseCandidateValidation.candidateSourceSha,
+            candidateSourceTreeSha: releaseCandidateValidation.candidateSourceTreeSha,
             promotionChannelSha: releaseCandidateValidation.promotionChannelSha,
             promotionChannelTreeSha: releaseCandidateValidation.promotionChannelTreeSha,
             treeEquivalent: releaseCandidateValidation.treeEquivalent,

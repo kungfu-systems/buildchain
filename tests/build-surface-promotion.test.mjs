@@ -3024,6 +3024,8 @@ test("release-candidate passport validates tree-equivalent promote-only source l
       sourceHeadSha: "c".repeat(40),
       sourceTreeSha: "b".repeat(40),
     });
+    assert.equal(validation.candidateSourceSha, "a".repeat(40));
+    assert.equal(validation.candidateSourceTreeSha, "b".repeat(40));
     assert.equal(validation.builtSourceSha, "a".repeat(40));
     assert.equal(validation.builtSourceTreeSha, "b".repeat(40));
     assert.equal(validation.promotionChannelSha, "c".repeat(40));
