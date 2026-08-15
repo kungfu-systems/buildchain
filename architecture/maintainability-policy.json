@@ -1049,6 +1049,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-gate-json",
           "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
@@ -1116,7 +1117,7 @@
           "release-tail-transaction-state"
         ]
       },
-      "rationale": "Add the opt-in declarative release-tail input and rooted transaction outputs required for consumer-equivalent Buildchain alpha self-dogfood, plus the optional adopter-delivery input accepted by the protected train shell without claiming support from the already-published runtime action. Existing callers retain defaults, stable routing does not receive the alpha-only input, and provider failure remains fail-closed."
+      "rationale": "Add the opt-in declarative release-tail input and rooted transaction outputs required for consumer-equivalent Buildchain alpha self-dogfood, plus the optional adopter-delivery and producer KFD manifest-gate inputs accepted by the protected train shell without claiming support from the already-published stable runtime action. Existing callers retain defaults, stable routing does not receive alpha-only inputs, and provider failure remains fail-closed."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -1205,6 +1206,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-gate-json",
           "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
@@ -1284,7 +1286,7 @@
           "release-tail-transaction-state"
         ]
       },
-      "rationale": "Add the opt-in declarative release-tail input and rooted transaction outputs required for consumer-equivalent Buildchain alpha self-dogfood, plus the optional adopter-delivery input accepted by the protected train shell without claiming support from the already-published runtime action. Existing callers retain defaults, stable routing does not receive the alpha-only input, and provider failure remains fail-closed."
+      "rationale": "Add the opt-in declarative release-tail input and rooted transaction outputs required for consumer-equivalent Buildchain alpha self-dogfood, plus the optional adopter-delivery and producer KFD manifest-gate inputs accepted by the protected train shell without claiming support from the already-published stable runtime action. Existing callers retain defaults, stable routing does not receive alpha-only inputs, and provider failure remains fail-closed."
     }
   },
   "approvedExtractedDebt": {

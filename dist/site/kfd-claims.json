@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f2190011d83c806ff30602f62fe70aa01097076600353b1456e800e748f23d3d",
+    "sha256": "777a4914687a0d11bd31f7eea737c592d6bc76a286a8c4a82c82516d90a26f07",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f2190011d83c806ff30602f62fe70aa01097076600353b1456e800e748f23d3d",
+      "sha256": "777a4914687a0d11bd31f7eea737c592d6bc76a286a8c4a82c82516d90a26f07",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -3849,7 +3849,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 112,
+          "inputCount": 113,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3940,6 +3940,7 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-adopter-manifest-gate-json",
             "release-passport-kfd-adopter-manifest-json",
             "release-passport-kfd-product-gate-jsons",
             "release-passport-kfd-support-matrix-json",
@@ -5196,7 +5197,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 103,
+          "inputCount": 104,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -5278,6 +5279,7 @@
             "release-passport-kfd-3-artifact-verify-command",
             "release-passport-kfd-3-artifact-witness-jsons",
             "release-passport-kfd-3-prebuild-witness-jsons",
+            "release-passport-kfd-adopter-manifest-gate-json",
             "release-passport-kfd-adopter-manifest-json",
             "release-passport-kfd-product-gate-jsons",
             "release-passport-kfd-support-matrix-json",

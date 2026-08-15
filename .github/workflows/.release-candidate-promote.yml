@@ -384,23 +384,29 @@ on:
         type: string
       release-passport-adopter-delivery-json:
         description: "Passed adopter delivery gate result JSON or path bound into the Release Passport and artifact evidence"
+        default: ""
         type: string
       release-passport-kfd-adopter-manifest-json:
         description: "Standard full-cut adopter conformance manifest JSON path"
+        default: ""
         type: string
       release-passport-kfd-adopter-manifest-gate-json:
         description: "Producer-generated adopter manifest gate JSON path"
+        default: ""
         type: string
       release-passport-kfd-support-matrix-json:
         description: "Legacy KFD support projection JSON path accepted only for exact manifest comparison"
+        default: ""
         type: string
         required: false
       release-passport-kfd-product-gate-jsons:
         description: "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths"
+        default: ""
         type: string
         required: false
       release-passport-invariant-passport-jsons:
         description: "Newline- or comma-separated invariant Passport JSON paths passed to the release gate"
+        default: ""
         type: string
         required: false
       release-passport-invariant-passport-command:
@@ -666,14 +672,11 @@ on:
       controller-receipt-status:
         description: "Controller receipt status"
         value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
-
 concurrency:
   group: buildchain-release-promotion-${{ github.repository }}
   cancel-in-progress: false
-
 permissions:
   contents: read
-
 jobs:
   preflight:
     name: Revalidate promotion intent
@@ -701,7 +704,6 @@ jobs:
             echo "::error::GitHub artifact attestation requires release-passport=true and github-release=true"
             exit 1
           fi
-
       - name: Revalidate queued promotion intent
         id: intent
         uses: actions/github-script@v8
@@ -798,7 +800,6 @@ jobs:
           ref: ${{ inputs.buildchain-ref || 'v3' }}
           path: .buildchain/runtime
           persist-credentials: false
-
       - name: Checkout selected promotion workflow shell
         if: ${{ inputs.promotion-shell-ref != '' }}
         uses: actions/checkout@v7.0.0
@@ -807,7 +808,6 @@ jobs:
           ref: ${{ inputs.promotion-shell-sha }}
           path: .buildchain/promotion-shell
           persist-credentials: false
-
       - name: Checkout promotion router
         if: ${{ inputs.promotion-router-ref != '' }}
         uses: actions/checkout@v7.0.0
@@ -816,7 +816,6 @@ jobs:
           ref: ${{ inputs.promotion-router-sha }}
           path: .buildchain/promotion-router
           persist-credentials: false
-
       - name: Checkout promotion source for contract-lock binding
         if: ${{ inputs.promotion-contract-lock-path != '' }}
         uses: actions/checkout@v7.0.0
@@ -824,7 +823,6 @@ jobs:
           ref: ${{ needs.preflight.outputs.requested-sha }}
           path: .buildchain/promotion-source
           persist-credentials: false
-
       - name: Resolve controller runtime identity
         id: controller-runtime
         shell: bash
@@ -835,7 +833,6 @@ jobs:
             echo "sha=${runtime_sha}"
             echo "contract-digest=${contract_digest}"
           } >> "$GITHUB_OUTPUT"
-
       - name: Verify promotion router binding
         if: ${{ inputs.promotion-router-ref != '' || inputs.promotion-shell-ref != '' || inputs.promotion-runtime-ref != '' }}
         shell: bash
@@ -857,7 +854,6 @@ jobs:
           CALLED_WORKFLOW_REF: ${{ job.workflow_ref }}
           CALLED_WORKFLOW_SHA: ${{ job.workflow_sha }}
         run: bash .buildchain/promotion-shell/scripts/verify-promotion-router-binding.sh
-
       - name: Create release-candidate-promotion controller plan
         id: controller-plan
         run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode plan
