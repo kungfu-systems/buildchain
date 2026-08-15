@@ -246,7 +246,8 @@ function normalizeCandidate(input, expected) {
       "candidate shardEvidenceRoots",
     );
   }
-  if (candidate.environmentRoot && !candidate.nativeCommandContract) {
+  const { environmentRoot: env, nativeCommandContract: cmd } = candidate;
+  if (env && !cmd && !TERMINAL_STATES.has(status)) {
     throw new Error(
       "native candidate requires an exact native command contract",
     );

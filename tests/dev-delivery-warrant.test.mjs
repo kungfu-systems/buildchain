@@ -68,6 +68,28 @@ test("queue readback preserves native qualification metadata", () => {
   assert.equal(normalizeDevDeliveryQueue(submitted.queue).stateRoot, submitted.queue.stateRoot);
 });
 
+test("queue readback accepts legacy terminal native candidates without weakening live authority", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, { outcome: "dequeued", evidenceRoot: ROOTS.evidence, now: "2026-08-04T00:01:00Z" });
+  const asLegacyState = (state) => {
+    const legacy = structuredClone(state);
+    delete legacy.candidates[0].nativeCommandContract;
+    delete legacy.stateRoot;
+    legacy.stateRoot = devDeliveryContentRoot(legacy);
+    return legacy;
+  };
+
+  const legacyTerminal = asLegacyState(terminal.queue);
+  assert.equal(normalizeDevDeliveryQueue(legacyTerminal).stateRoot, legacyTerminal.stateRoot);
+
+  const legacyLive = asLegacyState(submitted.queue);
+  assert.throws(
+    () => normalizeDevDeliveryQueue(legacyLive),
+    /native candidate requires an exact native command contract/u,
+  );
+});
+
 test("duplicate submission is idempotent and safe head repair retains queue age", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const duplicate = submitDevDeliveryCandidate(first.queue, candidate(100), {
