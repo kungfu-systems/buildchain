@@ -474,7 +474,12 @@ only inputs declared by the locked floating workflow contract. New native and
 bounded-authority inputs remain on the candidate reusable surface until the
 floating channel declares them; the durable caller must not pass them early,
 because GitHub rejects an unsupported reusable-workflow input before creating
-the first job. The reusable workflow defaults the explicit runtime input to
+the first job. While the floating v1 caller cannot forward
+`active-lease-context`, required-Warrant execution uses the canonical
+`Queue family lease/exact` context, writes that pending lease status, and reads
+it back before enqueue. An explicit context still overrides the canonical name;
+an absent caller input never skips the active-lease fence. The reusable workflow
+defaults the explicit runtime input to
 `v4-alpha`; an empty input or any v3 selector fails before the first runtime
 checkout.
 
