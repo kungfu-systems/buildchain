@@ -639,18 +639,18 @@ function validatePublicationEvidence(publicationEvidence, admission) {
     repository: admission.repository,
     targetChannel: releaseCandidateEvidenceChannel(admission.channel),
   });
-  if (!passportValidation.ok) {
-    throw new Error(`release-candidate passport did not qualify: ${passportValidation.errors.join("; ")}`);
-  }
+  if (!passportValidation.ok) throw new Error(`release-candidate passport did not qualify: ${passportValidation.errors.join("; ")}`);
+  const evidence = (key) => passport[key] ? { [key]: passport[key] } : {};
   const candidateHash = sha256Json({
     repository: passport.repository,
     target: passport.target,
     source: passport.source,
     platformMatrix: passport.platformMatrix,
     buildchain: passport.buildchain,
-    ...(passport.gateProfileEvidence ? { gateProfileEvidence: passport.gateProfileEvidence } : {}),
+    ...evidence("gateProfileEvidence"),
     ...(passport.familyEvidence ? { familyEvidence: passport.familyEvidence } : {}),
-    ...(passport.controllerReceipts ? { controllerReceipts: passport.controllerReceipts } : {}),
+    ...evidence("consumerPolicy"),
+    ...evidence("controllerReceipts"),
   });
   if (normalizeDigest(passport.candidateHash, "releaseCandidatePassport.candidateHash") !== candidateHash) {
     throw new Error("release-candidate passport candidate hash mismatch");
