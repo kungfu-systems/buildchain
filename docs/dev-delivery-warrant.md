@@ -383,8 +383,10 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   The shipped Buildchain caller and native template configure this handoff path
   and accept the same complete input contract. A historical phase-less owner
   uses the distinct `legacy-phase-less-active-owner` command path. That path
-  carries the exact queue state root, fencing token, generation, PR, head, and
-  source-run binding, omits `environment-root`, `native-command`, and
+  carries the exact queue state root observed before its duplicate submission,
+  fencing token, generation, PR, head, and source-run binding. The submission
+  receipt proves that pre-transition root even though the queue transition
+  advances the current state root. The path omits `environment-root`, `native-command`, and
   `native-command-root`, and rejects readback drift. It therefore resumes the
   historical non-native authority without inventing a native command contract
   or upgrading the owner to native proof authority.
@@ -471,8 +473,10 @@ consumer workflow. It supports both explicit dispatch and the bounded wake
 event, calls the allowed floating `@v4-alpha` selector, explicitly passes the v4
 runtime ref that locks every delivery job to the same checkout, and keeps the
 native command in the consumer repository rather than inventing
-provider-specific shards. The reusable workflow defaults that explicit input
-to `v4-alpha`; an empty input or any v3 selector fails before the first runtime
+provider-specific shards. Both callers explicitly bind the queue-admission
+and active-lease status contexts so write/readback fencing uses the same exact
+names. The reusable workflow defaults the explicit runtime input to
+`v4-alpha`; an empty input or any v3 selector fails before the first runtime
 checkout.
 
 This mechanism schedules protected delivery only. It does not serialize local

@@ -70,7 +70,7 @@ function normalizeOptions(options = {}) {
     allowedHeadPrefixes: splitList(options.allowedHeadPrefixes, DEFAULT_ALLOWED_HEAD_PREFIXES),
     requiredChecks: splitList(options.requiredChecks, DEFAULT_REQUIRED_CHECKS),
     queueAdmissionContext: String(options.queueAdmissionContext || "").trim(),
-    activeLeaseContext: String(options.activeLeaseContext || "").trim(),
+    activeLeaseContext: String(options.activeLeaseContext || (choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode") === "required" ? "Queue family lease/exact" : "")).trim(),
     requireApproval: boolOption(options.requireApproval, true),
     sameRepositoryOnly: boolOption(options.sameRepositoryOnly, true),
     maxMerges: intOption(options.maxMerges, 1),

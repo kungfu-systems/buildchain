@@ -246,11 +246,10 @@ function normalizeCandidate(input, expected) {
       "candidate shardEvidenceRoots",
     );
   }
-  if (candidate.environmentRoot && !candidate.nativeCommandContract) {
-    throw new Error(
-      "native candidate requires an exact native command contract",
-    );
-  }
+  const { environmentRoot: env, nativeCommandContract: cmd } = candidate;
+  const native = candidate.deliveryClass !== "non-native-fast" || env || cmd;
+  if (native && (!env || !cmd) && !TERMINAL_STATES.has(status))
+    throw new Error("live native candidate requires exact native proof");
   if (Object.hasOwn(input, "releaseBlockerPriority"))
     candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(
       input.releaseBlockerPriority,
