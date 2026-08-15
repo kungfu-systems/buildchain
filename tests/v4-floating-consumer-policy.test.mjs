@@ -167,6 +167,54 @@ test("shared YAML semantic layer ignores uses-like text inside run blocks", () =
   );
 });
 
+test("source scan treats materialized Buildchain runtime actions as transient", () => {
+  const callerRoot = workspace(fixtures.cases[0]);
+  fs.writeFileSync(
+    path.join(callerRoot, ".github/workflows/runtime-action.yml"),
+    "jobs:\n  report:\n    steps:\n      - uses: ./.buildchain/runtime/actions/report-buildchain-issue\n",
+  );
+  const result = scanV4FloatingConsumerPolicy({
+    root: callerRoot,
+    repository: "kungfu-systems/consumer",
+    sourceSha: SOURCE_SHA,
+    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    resolvedRuntimeSha: STABLE_SHA,
+    policy,
+    scannerRoot: ROOT,
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.ok(
+    result.invocations.every(
+      (entry) =>
+        entry.uses !== "./.buildchain/runtime/actions/report-buildchain-issue",
+    ),
+  );
+});
+
+test("caller workflow source disambiguates repeated public workflow targets", () => {
+  const callerRoot = workspace(fixtures.cases[0]);
+  fs.writeFileSync(
+    path.join(callerRoot, ".github/workflows/second.yml"),
+    "jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@v4\n",
+  );
+  const result = scanV4FloatingConsumerPolicy({
+    root: callerRoot,
+    repository: "kungfu-systems/consumer",
+    sourceSha: SOURCE_SHA,
+    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invocationSourcePath:
+      "kungfu-systems/consumer/.github/workflows/build.yml@refs/heads/main",
+    resolvedRuntimeSha: STABLE_SHA,
+    policy,
+    scannerRoot: ROOT,
+  });
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.equal(
+    result.receipt.invocation.sourcePath,
+    ".github/workflows/build.yml",
+  );
+});
+
 for (const fixture of fixtures.cases) {
   test(`v4 floating consumer policy fixture: ${fixture.id}`, () => {
     const result = evaluate(fixture);

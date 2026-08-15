@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   libnode-shaped:
-    uses: ./.github/workflows/build.yml
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
     secrets: inherit
     with:
       buildchain-ref: ${{ github.event.pull_request.head.sha || github.sha }}

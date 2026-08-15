@@ -20280,7 +20280,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 78
+        "line": 79
       },
       "example": "import { resolveV4FloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20293,11 +20293,11 @@
       "id": "packages/core/v4-floating-consumer-policy.js#scanV4FloatingConsumerPolicy",
       "name": "scanV4FloatingConsumerPolicy",
       "kind": "function",
-      "signature": "function scanV4FloatingConsumerPolicy({ root = process.cwd(), repository = \"\", sourceSha = \"\", invokedWorkflow = \"\", resolvedWorkflowSha = \"\", resolvedRuntimeSha = \"\", stableLockPath = \".buildchain/contract-lock.json\", alphaLockPath = \".buildchain/alpha-contract-lock.json\", policy, scannerRoot = \"\", } = {})",
+      "signature": "function scanV4FloatingConsumerPolicy({ root = process.cwd(), repository = \"\", sourceSha = \"\", invokedWorkflow = \"\", invocationSourcePath = \"\", resolvedWorkflowSha = \"\", resolvedRuntimeSha = \"\", stableLockPath = \".buildchain/contract-lock.json\", alphaLockPath = \".buildchain/alpha-contract-lock.json\", policy, scannerRoot = \"\", } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ root = process.cwd(), repository = \"\", sourceSha = \"\", invokedWorkflow = \"\", resolvedWorkflowSha = \"\", resolvedRuntimeSha = \"\", stableLockPath = \".buildchain/contract-lock.json\", alphaLockPath = \".buildchain/alpha-contract-lock.json\", policy, scannerRoot = \"\", } = {}"
+          "signature": "{ root = process.cwd(), repository = \"\", sourceSha = \"\", invokedWorkflow = \"\", invocationSourcePath = \"\", resolvedWorkflowSha = \"\", resolvedRuntimeSha = \"\", stableLockPath = \".buildchain/contract-lock.json\", alphaLockPath = \".buildchain/alpha-contract-lock.json\", policy, scannerRoot = \"\", } = {}"
         }
       ],
       "returns": "unknown",
@@ -20309,7 +20309,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 325
+        "line": 317
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20338,7 +20338,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 65
+        "line": 66
       },
       "example": "import { v4ConsumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22968,7 +22968,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:a6b54a83946b01b80de784e0b4cb6b18d46c3d820d519c88562796965bf0bb11",
+      "digest": "sha256:1b93efb1f3dc2a2535f096a1c10d7ca2d1c7df9673c2162f75b52c1413ef7d7f",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -23975,7 +23975,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:47e71a84348657ca00fbfdbc53f047407bb8b65a73149b6c136604ce15f3dc5d"
+      "digest": "sha256:ee7d04835444c1479143b66ff399424413cee7ae0b5100fb2b78308e36e962e9"
     },
     {
       "id": "build-facts",
