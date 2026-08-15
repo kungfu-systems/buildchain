@@ -33,6 +33,7 @@ const SUPPORTED_DEPLOY_ADAPTERS = new Set([
 ]);
 const SUPPORTED_DIRECTORY_INDEX_REWRITE = new Set(["buildchain", "external"]);
 const SUPPORTED_HEALTH_STRATEGIES = new Set(["http", "s3-object"]);
+const SUPPORTED_WEB_SURFACE_REDIRECT_STATUSES = new Set([301, 302, 307, 308]);
 const SUPPORTED_INFRA_ADAPTERS = new Set([
   "manual-observed",
   "aws-cloudformation",
@@ -964,12 +965,17 @@ function normalizeDeployConfig(name, config) {
     throw new Error(`deploy.${name}.health_strategy must be one of http or s3-object`);
   }
   const cacheControl = normalizeWebSurfaceCacheControl(config, `deploy.${name}`);
+  const redirects = normalizeWebSurfaceRedirects(
+    config.redirects,
+    `deploy.${name}.redirects`,
+  );
   const normalized = {
     ...config,
     adapter,
     directoryIndexRewrite,
     healthStrategy,
     cacheControl,
+    redirects,
     artifactPath: config.artifact_path === undefined
       ? undefined
       : posixPath(assertString(config.artifact_path, `deploy.${name}.artifact_path`)),
@@ -991,11 +997,66 @@ function normalizeDeployConfig(name, config) {
   if (normalized.cacheControl === undefined) {
     delete normalized.cacheControl;
   }
+  if (normalized.redirects.length === 0) {
+    delete normalized.redirects;
+  }
   if (normalized.surfaces === undefined) {
     delete normalized.surfaces;
   }
   assertNoInlineSecretValues(config, `deploy.${name}`, new Set(["secret_refs", "surfaces"]));
   return normalized;
+}
+
+function normalizeWebSurfaceRedirects(value, label) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    throw new Error(`${label} must be an array of redirect tables`);
+  }
+  const sources = new Set();
+  return value.map((entry, index) => {
+    const entryLabel = `${label}[${index}]`;
+    assertPlainObject(entry, entryLabel);
+    const source = assertString(entry.from, `${entryLabel}.from`);
+    if (
+      !source.startsWith("/") ||
+      source.startsWith("//") ||
+      source.includes("\\") ||
+      source.includes("?") ||
+      source.includes("#") ||
+      source.split("/").some((part) => part === "." || part === "..")
+    ) {
+      throw new Error(`${entryLabel}.from must be one exact root-relative request path`);
+    }
+    if (sources.has(source)) {
+      throw new Error(`${label} must not repeat redirect source ${source}`);
+    }
+    sources.add(source);
+    const target = assertString(entry.to, `${entryLabel}.to`);
+    let targetUrl;
+    try {
+      targetUrl = new URL(target);
+    } catch {
+      throw new Error(`${entryLabel}.to must be an absolute public HTTPS URL`);
+    }
+    if (
+      targetUrl.protocol !== "https:" ||
+      targetUrl.username ||
+      targetUrl.password ||
+      targetUrl.search ||
+      targetUrl.hash
+    ) {
+      throw new Error(`${entryLabel}.to must be an absolute public HTTPS URL without credentials, query, or fragment`);
+    }
+    const status = entry.status === undefined ? 307 : Number(entry.status);
+    if (!Number.isInteger(status) || !SUPPORTED_WEB_SURFACE_REDIRECT_STATUSES.has(status)) {
+      throw new Error(`${entryLabel}.status must be one of 301, 302, 307, or 308`);
+    }
+    const unknown = Object.keys(entry).filter((key) => !["from", "to", "status"].includes(key));
+    if (unknown.length > 0) {
+      throw new Error(`${entryLabel} contains unsupported keys: ${unknown.join(", ")}`);
+    }
+    return { source, target: targetUrl.href, status };
+  });
 }
 
 function normalizeWebSurfaceCacheControl(config, label) {
@@ -1674,6 +1735,7 @@ export function validateBuildchainConfig(
               artifactPath: deploy.artifactPath,
               directoryIndexRewrite: deploy.directoryIndexRewrite,
               healthStrategy: deploy.healthStrategy,
+              redirects: deploy.redirects,
               secretRefs: deploy.secretRefs,
             },
           ]),

@@ -547,6 +547,28 @@ compatible with S3 REST origins, where copying alias objects such as
 `pr-29/buildchain` or `pr-29/buildchain/` is not a reliable substitute for an
 edge rewrite.
 
+The same Buildchain-managed viewer-request function can own a small set of
+exact public redirects. Declare them on the deploy channel:
+
+```toml
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+redirects = [
+  { from = "/install.sh", to = "https://libkungfu.dev/install.sh", status = 307 },
+  { from = "/install.ps1", to = "https://libkungfu.dev/install.ps1", status = 307 },
+]
+```
+
+Redirect sources are exact root-relative request paths; targets must be public
+HTTPS URLs without credentials, query strings, or fragments. Buildchain accepts
+only `301`, `302`, `307`, and `308`, rejects duplicate sources, evaluates the
+redirect before directory-index rewriting, and emits `cache-control: no-store`.
+The deployment manifest records the normalized redirect map. Public health
+checks use manual redirect handling to require the configured status and
+`Location`; managed-network health verifies the same map from applied routing
+evidence. A channel whose viewer-request function is externally managed must
+leave redirects to that external router rather than declaring them here.
+
 If the distribution already has a viewer-request function that owns preview
 alias routing and surface-prefix routing, set `directory_index_rewrite =
 "external"` on the deploy channel or surface override. In that mode Buildchain

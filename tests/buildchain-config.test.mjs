@@ -1035,6 +1035,91 @@ adapter = "aws-s3-cloudfront"
   );
 });
 
+test("buildchain.toml normalizes exact HTTPS web-surface redirects", () => {
+  withTempRepo(
+    {
+      "buildchain.toml": `
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-kungfu-tech"
+site = "kungfu-tech"
+
+[channels.preview]
+url_pattern = "https://{alias}.preview.kungfu.tech"
+
+[channels.staging]
+url = "https://staging.kungfu.tech"
+access_control = "managed-network"
+edge_auth = "none"
+noindex = true
+
+[channels.production]
+url = "https://kungfu.tech"
+noindex = false
+
+[surfaces.hub]
+path = "/"
+production_url = "https://kungfu.tech"
+staging_url = "https://staging.kungfu.tech"
+preview_url_pattern = "https://{alias}.preview.kungfu.tech"
+
+[deploy.preview]
+adapter = "aws-s3-cloudfront"
+
+[deploy.staging]
+adapter = "aws-s3-cloudfront"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+redirects = [
+  { from = "/install.sh", to = "https://libkungfu.dev/install.sh", status = 307 },
+  { from = "/install.ps1", to = "https://libkungfu.dev/install.ps1" },
+]
+`,
+    },
+    (dir) => {
+      const summary = validateBuildchainConfig(dir);
+      assert.deepEqual(summary.deploy.production.redirects, [
+        { source: "/install.sh", target: "https://libkungfu.dev/install.sh", status: 307 },
+        { source: "/install.ps1", target: "https://libkungfu.dev/install.ps1", status: 307 },
+      ]);
+    },
+  );
+});
+
+test("buildchain.toml rejects unsafe or ambiguous web-surface redirects", () => {
+  const base = `
+schema = 1
+
+[project]
+type = "web-surface"
+name = "site-kungfu-tech"
+site = "kungfu-tech"
+
+[channels.production]
+url = "https://kungfu.tech"
+
+[surfaces.hub]
+path = "/"
+production_url = "https://kungfu.tech"
+
+[deploy.production]
+adapter = "aws-s3-cloudfront"
+`;
+  for (const [redirects, expected] of [
+    ['redirects = [{ from = "install.sh", to = "https://libkungfu.dev/install.sh" }]', /root-relative request path/],
+    ['redirects = [{ from = "/install.sh", to = "http://libkungfu.dev/install.sh" }]', /public HTTPS URL/],
+    ['redirects = [{ from = "/install.sh", to = "https://libkungfu.dev/install.sh", status = 200 }]', /one of 301, 302, 307, or 308/],
+    ['redirects = [{ from = "/install.sh", to = "https://libkungfu.dev/install.sh" }, { from = "/install.sh", to = "https://example.com/install.sh" }]', /must not repeat redirect source/],
+  ]) {
+    withTempRepo({ "buildchain.toml": `${base}${redirects}\n` }, (dir) => {
+      assert.throws(() => validateBuildchainConfig(dir), expected);
+    });
+  }
+});
+
 test("buildchain.toml normalizes infra-contract configuration", () => {
   withTempRepo(
     {
