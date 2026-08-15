@@ -378,7 +378,7 @@ export function prepareGitHubArtifactAttestation({
 function walkRegularFiles(root) {
   const resolvedRoot = path.resolve(root);
   if (!fs.existsSync(resolvedRoot)) return [];
-  const pending = [resolvedRoot];
+  const pending = [fs.realpathSync(resolvedRoot)];
   const files = [];
   while (pending.length > 0) {
     const current = pending.pop();

@@ -1951,6 +1951,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          ATTESTATION_SUBJECT_ROOTS="$(realpath "$ATTESTATION_SUBJECT_ROOTS")"
           node .buildchain/runtime/scripts/stage-github-artifact-attestation-inputs.mjs \
             --policy "$ATTESTATION_POLICY" \
             --subject-roots "$ATTESTATION_SUBJECT_ROOTS" \
@@ -2156,7 +2157,7 @@ jobs:
           PUBLISH_EVIDENCE: ${{ steps.promote.outputs.publish-evidence-path }}
           RELEASE_PASSPORT: ${{ steps.promote.outputs.release-passport-path }}
           FINALIZATION_NEEDED: ${{ steps.promote.outputs.finalization-needed }}
-          PUBLICATION_COMMIT_ENABLED: ${{ inputs.publication-commit-command != '' }}
+          PUBLICATION_COMMIT_SUCCEEDED: ${{ steps.publication-commit.outcome == 'success' }}
           PUBLICATION_COMMIT_EVIDENCE: ${{ steps.publication-commit.outputs.evidence-path }}
           RELEASE_ACTIVATION_RECEIPTS: ${{ steps.release-activation.outputs.receipt-set-path }}
           RELEASED_PRODUCT_EVIDENCE: ${{ steps.release-evidence.outputs.evidence-path }}
@@ -2173,7 +2174,7 @@ jobs:
           if (!finalizationNeeded) {
             files.push([process.env.RELEASE_PASSPORT, "release-passport.json"]);
           }
-          if (process.env.PUBLICATION_COMMIT_ENABLED === "true" && !finalizationNeeded) {
+          if (process.env.PUBLICATION_COMMIT_SUCCEEDED === "true" && !finalizationNeeded) {
             files.push([process.env.PUBLICATION_COMMIT_EVIDENCE, "publication-commit-evidence.json"]);
           }
           if (process.env.RELEASE_ACTIVATION_RECEIPTS && !finalizationNeeded) {

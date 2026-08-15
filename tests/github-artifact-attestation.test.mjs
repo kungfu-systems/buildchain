@@ -239,6 +239,32 @@ test("promotion stages one digest-selected subject, manifest, policy, and Passpo
   assert.deepEqual(JSON.parse(fs.readFileSync(staged.paths.policy, "utf8")), value.policy);
 });
 
+test("promotion follows the recovered candidate payload root symlink without following nested symlinks", () => {
+  const value = fixture();
+  const recoveredPayloadRoot = path.join(value.root, "recovered-payloads");
+  fs.symlinkSync(path.join(value.root, "subject"), recoveredPayloadRoot, "dir");
+  fs.symlinkSync(
+    path.join(value.root, "subject", "dist"),
+    path.join(value.root, "subject", "nested-link"),
+    "dir",
+  );
+
+  const staged = stageGitHubArtifactAttestationInputs({
+    policy: value.policy,
+    subjectRoots: [recoveredPayloadRoot],
+    platformManifestPaths: [value.manifestPath],
+    releasePassportPath: value.passportPath,
+    outputDir: path.join(value.root, "symlink-root-staged"),
+  });
+
+  assert.equal(staged.policy.subject.digest, value.policy.subject.digest);
+  assert.equal(staged.relativePaths.subject, "subject/kungfu-linux-x64.tar.gz");
+  assert.equal(
+    githubArtifactAttestationSha256File(staged.paths.subject),
+    value.policy.subject.digest,
+  );
+});
+
 test("promotion stages a policy bound to a tree-equivalent promotion source", () => {
   const value = fixture();
   const promotionSourceSha = "5".repeat(40);

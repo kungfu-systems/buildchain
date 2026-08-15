@@ -308,6 +308,11 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /PUBLICATION_COMMIT_EVIDENCE.*publication-commit-evidence\.json/s,
   );
+  assert.match(wrapper, /ATTESTATION_SUBJECT_ROOTS="\$\(realpath "\$ATTESTATION_SUBJECT_ROOTS"\)"/);
+  assert.match(
+    wrapper,
+    /PUBLICATION_COMMIT_SUCCEEDED: \$\{\{ steps\.publication-commit\.outcome == 'success' \}\}/,
+  );
   assert.match(
     wrapper,
     /Commit consumer publication authority last[\s\S]*?steps\.promote\.outputs\.finalization-needed != 'true'/,
