@@ -1618,14 +1618,38 @@ jobs:
         id: attestation-policy
         if: ${{ inputs.github-artifact-attestation-policy-json != '' }}
         env:
+          GH_TOKEN: ${{ github.token }}
           REQUESTED_POLICY: ${{ inputs.github-artifact-attestation-policy-json }}
           DISCOVERED_POLICIES: ${{ steps.rc.outputs.release-candidate-github-artifact-attestation-policy-paths }}
           DISCOVERED_POLICY_COUNT: ${{ steps.rc.outputs.release-candidate-github-artifact-attestation-policy-count }}
+          CANDIDATE_REPOSITORY: ${{ inputs.resume-candidate-repository }}
+          CANDIDATE_RUN_ID: ${{ inputs.resume-candidate-run-id }}
+          RECOVERED_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
         shell: bash
         run: |
           set -euo pipefail
           policy="$REQUESTED_POLICY"
           if [ "$policy" = "auto" ]; then
+            if [ "$DISCOVERED_POLICY_COUNT" = "0" ] && [ -n "$CANDIDATE_RUN_ID" ]; then
+              candidate_artifacts="$RUNNER_TEMP/buildchain-candidate-artifacts.json"
+              request_root="$RUNNER_TEMP/buildchain-tail-reseal-request"
+              gh api --paginate "repos/${CANDIDATE_REPOSITORY}/actions/runs/${CANDIDATE_RUN_ID}/artifacts?per_page=100" | jq -s '[.[].artifacts[]]' > "$candidate_artifacts"
+              request_artifact="$(jq -er '[.[] | select(.expired == false and (.name | test("-tail-reseal-request-[0-9a-f]{40}$")))] | if length == 0 then "" elif length == 1 then .[0].name else error("multiple tail-reseal request artifacts") end' "$candidate_artifacts")"
+              if [ -n "$request_artifact" ]; then
+                mkdir -p "$request_root"
+                gh run download "$CANDIDATE_RUN_ID" --repo "$CANDIDATE_REPOSITORY" --name "$request_artifact" --dir "$request_root"
+                source_run_id="$(jq -er --arg repository "$CANDIDATE_REPOSITORY" 'select(.repository == $repository and (.contract | endswith("-release-candidate-tail-reseal/v1"))) | .source.runId' "$request_root/request.json")"
+                source_sha="$(jq -er '.source.sha | select(test("^[0-9a-f]{40}$"))' "$request_root/request.json")"
+                source_artifacts="$RUNNER_TEMP/buildchain-tail-reseal-source-artifacts.json"
+                gh api --paginate "repos/${CANDIDATE_REPOSITORY}/actions/runs/${source_run_id}/artifacts?per_page=100" | jq -s '[.[].artifacts[]]' > "$source_artifacts"
+                policy_artifact="$(jq -er --arg suffix "$source_sha" '[.[] | select(.expired == false and (.name | contains("-attestation-policy-")) and (.name | endswith($suffix)))] | if length == 1 then .[0].name else error("expected exactly one retained attestation-policy artifact") end' "$source_artifacts")"
+                policy_root="$RECOVERED_PAYLOAD_ROOT/$policy_artifact"
+                mkdir -p "$policy_root"
+                gh run download "$source_run_id" --repo "$CANDIDATE_REPOSITORY" --name "$policy_artifact" --dir "$policy_root"
+                DISCOVERED_POLICIES="$policy_root/github-artifact-attestation-policy.json"
+                DISCOVERED_POLICY_COUNT=1
+              fi
+            fi
             if [ "$DISCOVERED_POLICY_COUNT" != "1" ]; then
               echo "::error::github-artifact-attestation-policy-json=auto requires exactly one discovered policy, found ${DISCOVERED_POLICY_COUNT:-0}"
               exit 1
