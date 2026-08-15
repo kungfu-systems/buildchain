@@ -1,4 +1,4 @@
-function finalizationRequirements(material, rematerialize = false) { return (material?.artifacts || []).map((artifact) => rematerialize && artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
+export function finalizationRequirements(material, rematerialize = false) { return (material?.artifacts || []).map((artifact) => !rematerialize ? artifact : artifact?.kind === "npm" ? { group: artifact.group, kind: artifact.kind, name: artifact.name, ref_template: "{version}", role: artifact.role, required: artifact.required } : artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
 
 function releasePassportOutputPath(context) {
   return context.path.resolve(
