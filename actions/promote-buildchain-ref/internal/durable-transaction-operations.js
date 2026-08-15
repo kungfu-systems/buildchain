@@ -182,6 +182,7 @@ function createDurableTransactionOperations(context) {
       publishDistTag: publishDistTagOverride,
       publishPackageSetOrder,
       publishPackageMain,
+      publicationGateAggregateJson,
       publishRematerializeOnResume,
       actor,
       runId,

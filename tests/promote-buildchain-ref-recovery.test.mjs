@@ -50,6 +50,9 @@ const {
 const {
   loadBuildchainConfig,
 } = await import("../packages/core/buildchain-config.js");
+const {
+  createDurableTransactionOperations,
+} = await import("../actions/promote-buildchain-ref/internal/durable-transaction-operations.js");
 
 const {
   explainReleaseLineDryRun,
@@ -237,6 +240,60 @@ test("publish transaction context forwards the verified gate aggregate after inp
   const sanitized = sanitizedPublishProcessEnvironment(publishEnv);
   assert.equal(
     sanitized.BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON,
+    aggregate,
+  );
+});
+
+test("durable transaction operations forward the verified gate aggregate", async () => {
+  const aggregate = JSON.stringify({
+    contract: "buildchain.shifu-gate-aggregate/v1",
+    digest: `sha256:${"b".repeat(64)}`,
+  });
+  let observedEnvironment;
+  const operations = createDurableTransactionOperations({
+    octokit: {},
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    sha: "a".repeat(40),
+    targetRef: "alpha/v4/v4.0",
+    cwd: "/tmp",
+    publishTransaction: true,
+    publishCommand: "node consumer-publish.mjs",
+    publicationGateAggregateJson: aggregate,
+    updates: [],
+    assertExpectedPublicationVersion() {},
+    assertPublicationQualification() {},
+    loadBuildchainConfig() {
+      return {};
+    },
+    getLifecycleStage() {
+      return undefined;
+    },
+    async runPublishTransaction(options) {
+      const prepared = preparePublishTransactionContext({
+        ...options,
+        loadedConfig: {},
+      });
+      observedEnvironment = sanitizedPublishProcessEnvironment(
+        publishTransactionEnvironment(prepared),
+      );
+      return undefined;
+    },
+    releaseTagForPublishedVersion(version) {
+      return `v${version}`;
+    },
+  });
+
+  await operations.executePublishTransaction({
+    version: "4.0.0-alpha.2",
+    exactTag: "v4.0.0-alpha.2",
+    channel: "alpha",
+    line: "v4/v4.0",
+    releaseSha: "c".repeat(40),
+  });
+
+  assert.equal(
+    observedEnvironment.BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON,
     aggregate,
   );
 });
