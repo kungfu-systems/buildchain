@@ -2419,14 +2419,23 @@ async function assertProviderEnforcedChannelTransaction({
   const providerCheckRefs = [...new Set([pullRequestHeadSha, sourceSha])].filter((ref) => /^[0-9a-f]{40}$/i.test(ref));
   let requiredCheckPassed = false;
   for (const ref of providerCheckRefs) {
-    const { data: checkRuns } = await octokit.rest.checks.listForRef(
-      { owner, repo, ref, per_page: 100 },
-    );
-    requiredCheckPassed = (checkRuns.check_runs || []).some((entry) =>
-      entry.name === resolvedStatusCheck &&
-      entry.conclusion === "success" &&
-      (!requiredCheck?.app_id || entry.app?.id === requiredCheck.app_id),
-    );
+    for (let page = 1; page <= 100; page += 1) {
+      const { data: checkRuns } = await octokit.rest.checks.listForRef(
+        { owner, repo, ref, per_page: 100, page },
+      );
+      const entries = checkRuns.check_runs || [];
+      requiredCheckPassed = entries.some((entry) =>
+        entry.name === resolvedStatusCheck &&
+        entry.conclusion === "success" &&
+        (!requiredCheck?.app_id || entry.app?.id === requiredCheck.app_id),
+      );
+      if (requiredCheckPassed) break;
+      const totalCount = Number(checkRuns.total_count);
+      const hasNextPage = Number.isSafeInteger(totalCount)
+        ? page * 100 < totalCount
+        : entries.length === 100;
+      if (!hasNextPage) break;
+    }
     if (requiredCheckPassed) break;
   }
   const missing = [];
