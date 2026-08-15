@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 767,
+  "generation": 768,
   "fencingCounter": 166,
   "policy": {
     "agingSeconds": 900,
@@ -6271,8 +6271,54 @@
         "tests/web-surface-cloudfront-rewrite.test.mjs",
         "tests/web-surface.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2826,
+      "assignmentRoot": "sha256:85c19e94acec3bb09c17e55446dc8995b7c1b3a627d057d1d4fb1afbef87c450",
+      "initiativeRoot": "sha256:2e0f4f0a5c51a30800eb15a02b0c58ea1c2f83b89d2f443bea0b65602d6c4e91",
+      "sourceIdentityRoot": "sha256:15afbb18dbb78d430331b2683860ab959132c57b7f29628167331f5722293fd6",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:61be26d19c04475a8697433cd381af135979c53e228e2461525fac357354a918",
+      "sourceHead": "f8be4bb9172ac9490c0d7e2597ffa6c3fa8e375d",
+      "sourcePatchRoot": "sha256:f7ef9dcbc534f44451684b36c5b4874bf641a6b6564bba72e36d5a12e91507f6",
+      "sourceProofRoot": "sha256:d5fa65dbe9c30333eda0abef5a1b7af4b95293292df37fcab7aa60591bf6d95b",
+      "planRoot": "sha256:c8af77030e3dd57dd6e944049de698768e40a9a57b4ed1a8d26fb458cc05b6d0",
+      "closureRoot": "sha256:25d16ffaad6d665891041e21e9d9464a9f87d19e97f3d47a8198aaf7fcfd8db3",
+      "dependencyRoot": "sha256:73edba239f8ad585f51f5ee4c359a8672ea4593069b1ca764ee87b673eab33a3",
+      "toolchainRoot": "sha256:f8366a6ebc6fa418529289fa3a0d8cfac32ab937aca160f833713ca5176914e2",
+      "environmentRoot": "sha256:9af55be4389e6e8ae1251ee4a0af4a09e6067e5ee45736d70c2ef759c6c47bca",
+      "sourceWorkflowRunId": 31874747892,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-15T08:33:00.234Z",
+      "updatedAt": "2026-08-15T08:33:00.234Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/.web-surface.yml",
+        "actions/promote-buildchain-ref/dist/index.js",
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/controller-registry.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/site-manifest.json",
+        "dist/site/workflow-registry.json",
+        "docs/node-api-reference.md",
+        "docs/web-surface-deployments.md",
+        "packages/core/buildchain-contract.js",
+        "tests/build-surface.test.mjs",
+        "tests/buildchain-contract.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-15T08:00:12.610Z",
-  "stateRoot": "sha256:11fb0cc54e21fb0e631488b07f3185a1e29218149905bfea05ca741c0704c030"
+  "updatedAt": "2026-08-15T08:33:00.234Z",
+  "stateRoot": "sha256:38529b83906aff069f1b249e912a1b088bd3952264b80c0fa074134999f5469c"
 }
