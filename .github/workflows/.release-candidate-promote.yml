@@ -1906,7 +1906,7 @@ jobs:
 
       - name: Stage sealed GitHub artifact attestation inputs
         id: attestation-input
-        if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && steps.promote.outcome == 'success' }}
+        if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && steps.promote.outcome == 'success' && steps.promote.outputs.finalization-needed != 'true' }}
         env:
           ATTESTATION_POLICY: ${{ steps.attestation-policy.outputs.path }}
           ATTESTATION_SUBJECT_ROOTS: ${{ steps.rc.outputs.release-candidate-payload-dir }}

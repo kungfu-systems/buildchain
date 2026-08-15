@@ -537,31 +537,47 @@ async function finalizeAlphaPublication(context, state, publication) {
         { finalizationNeeded: true },
       );
     }
-    const devUpdate = await context.updateBranch(
-      `dev/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`,
-      alpha.sha,
-      "updated",
-      {
-        title: `Prepare ${selectedAlpha.tag}`,
-        body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
-        allowPendingPullRequest: true,
-        ...{ allowMergeCommitOnNonFastForward: true, allowMergeCommitOnNonFastForwardPaths: alpha.commit.files, reconciliationVersion: alpha.version },
-      },
-    );
-    if (devUpdate.pending) {
-      return context.withPublishTransaction(
+    const transaction =
+      context.getLatestPublishTransaction()?.transaction ||
+      state.currentAlphaTransaction;
+    const deferDevMirror =
+      context.publishTransactionOverride === true &&
+      context.transactionHasPublishedMaterial(transaction);
+    const devRef =
+      `dev/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`;
+    if (deferDevMirror) {
+      context.updates.push({
+        ref: devRef,
+        action: "deferred-post-publication-dev-mirror",
+        sha: (await context.readRefSha(`heads/${devRef}`)) || "",
+      });
+    } else {
+      const devUpdate = await context.updateBranch(
+        devRef,
+        alpha.sha,
+        "updated",
         {
-          owner: context.owner,
-          repo: context.repo,
-          sourceSha: context.sha,
-          sha: alpha.sha,
-          targetRef: context.targetRef,
-          pendingPullRequest:
-            devUpdate.pullRequest.html_url || devUpdate.pullRequest.url,
-          updates: context.updates,
+          title: `Prepare ${selectedAlpha.tag}`,
+          body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
+          allowPendingPullRequest: true,
+          ...{ allowMergeCommitOnNonFastForward: true, allowMergeCommitOnNonFastForwardPaths: alpha.commit.files, reconciliationVersion: alpha.version },
         },
-        { finalizationNeeded: true },
       );
+      if (devUpdate.pending) {
+        return context.withPublishTransaction(
+          {
+            owner: context.owner,
+            repo: context.repo,
+            sourceSha: context.sha,
+            sha: alpha.sha,
+            targetRef: context.targetRef,
+            pendingPullRequest:
+              devUpdate.pullRequest.html_url || devUpdate.pullRequest.url,
+            updates: context.updates,
+          },
+          { finalizationNeeded: true },
+        );
+      }
     }
   }
   await context.markFinalizing();
