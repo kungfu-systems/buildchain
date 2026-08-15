@@ -2542,7 +2542,7 @@ test("publish transaction durable ref restores state and evidence in a fresh wor
 });
 
 test("publish transaction can opt in to rematerialize ephemeral Passport inputs on resume", async () => {
-  assert.deepEqual(finalizationRequirements({ artifacts: [{ group: "node", kind: "npm", name: "@kungfu-tech/buildchain", ref: "4.0.1-alpha.0", digest: "sha512:old", role: "main", required: true }] }, true), [{ group: "node", kind: "npm", name: "@kungfu-tech/buildchain", ref_template: "{version}", role: "main", required: true }]);
+  assert.deepEqual(finalizationRequirements(JSON.stringify([{ group: "node", kind: "npm", name: "@kungfu-tech/buildchain", ref: "4.0.1-alpha.0", digest: "sha512:old", role: "main", required: true }]), true), [{ group: "node", kind: "npm", name: "@kungfu-tech/buildchain", ref_template: "{version}", role: "main", required: true }]);
   const cwd = makeTempWorkspace({
     "package.json": JSON.stringify({
       name: "@kungfu-tech/rematerialization-fixture",
