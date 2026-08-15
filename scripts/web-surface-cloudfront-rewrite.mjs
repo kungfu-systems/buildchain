@@ -5,15 +5,44 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const FUNCTION_CODE = `function handler(event) {
+const REDIRECT_STATUS_DESCRIPTIONS = new Map([
+  [301, "Moved Permanently"],
+  [302, "Found"],
+  [307, "Temporary Redirect"],
+  [308, "Permanent Redirect"],
+]);
+
+export function renderCloudFrontViewerRequestFunction(redirects = []) {
+  const redirectMap = Object.fromEntries(redirects.map((redirect) => [
+    redirect.source,
+    {
+      statusCode: redirect.status,
+      statusDescription: REDIRECT_STATUS_DESCRIPTIONS.get(redirect.status),
+      target: redirect.target,
+    },
+  ]));
+  return `var redirects = ${JSON.stringify(redirectMap)};
+function handler(event) {
   var request = event.request;
   var uri = request.uri || "/";
+  var redirect = redirects[uri];
+  if (redirect) {
+    return {
+      statusCode: redirect.statusCode,
+      statusDescription: redirect.statusDescription,
+      headers: {
+        location: { value: redirect.target },
+        "cache-control": { value: "no-store" }
+      }
+    };
+  }
   if (uri.slice(-1) === "/") {
     request.uri = uri + "index.html";
   }
   return request;
 }
 `;
+}
 
 const DISTRIBUTION_UPDATE_MAX_ATTEMPTS = 3;
 const DISTRIBUTION_UPDATE_RETRY_DELAY_MS = 250;
@@ -25,6 +54,39 @@ function readArg(name, fallback = "") {
     return fallback;
   }
   return process.argv[index + 1] || fallback;
+}
+
+function parseRedirectsBase64(value = "") {
+  if (!value) return [];
+  let redirects;
+  try {
+    redirects = JSON.parse(Buffer.from(value, "base64").toString("utf8"));
+  } catch {
+    throw new Error("--redirects-base64 must encode a JSON redirect array");
+  }
+  if (!Array.isArray(redirects)) {
+    throw new Error("--redirects-base64 must encode a JSON redirect array");
+  }
+  return redirects.map((redirect, index) => {
+    const label = `redirects[${index}]`;
+    if (!redirect || typeof redirect !== "object" || Array.isArray(redirect)) {
+      throw new Error(`${label} must be an object`);
+    }
+    if (typeof redirect.source !== "string" || !redirect.source.startsWith("/") || redirect.source.startsWith("//")) {
+      throw new Error(`${label}.source must be one root-relative request path`);
+    }
+    if (typeof redirect.target !== "string" || !redirect.target.startsWith("https://")) {
+      throw new Error(`${label}.target must be one absolute HTTPS URL`);
+    }
+    if (!REDIRECT_STATUS_DESCRIPTIONS.has(redirect.status)) {
+      throw new Error(`${label}.status must be one of 301, 302, 307, or 308`);
+    }
+    return {
+      source: redirect.source,
+      target: redirect.target,
+      status: redirect.status,
+    };
+  });
 }
 
 function runAws(args, { allowFailure = false } = {}) {
@@ -77,9 +139,9 @@ function sleepSync(milliseconds) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
 }
 
-function writeFunctionCode(tmpDir) {
+function writeFunctionCode(tmpDir, redirects) {
   const file = path.join(tmpDir, "directory-index-rewrite.js");
-  fs.writeFileSync(file, FUNCTION_CODE);
+  fs.writeFileSync(file, renderCloudFrontViewerRequestFunction(redirects));
   return file;
 }
 
@@ -233,7 +295,8 @@ function attachFunction({ distributionId, functionArn }) {
 export function ensureCloudFrontDirectoryIndexRewrite({
   distributionId = "",
   functionName = "",
-  comment = "Buildchain web-surface directory index rewrite",
+  comment = "Buildchain web-surface viewer request routing",
+  redirects = [],
 } = {}) {
   if (!distributionId) {
     throw new Error("--distribution-id is required");
@@ -243,7 +306,7 @@ export function ensureCloudFrontDirectoryIndexRewrite({
   }
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-cloudfront-function-"));
   try {
-    const codeFile = writeFunctionCode(tmpDir);
+    const codeFile = writeFunctionCode(tmpDir, redirects);
     const ensured = ensureFunction({ name: functionName, comment, codeFile });
     const published = publishFunction({ name: functionName, etag: ensured.etag });
     const attached = attachFunction({ distributionId, functionArn: published.arn });
@@ -254,6 +317,7 @@ export function ensureCloudFrontDirectoryIndexRewrite({
       functionName,
       functionAction: ensured.action,
       functionArn: published.arn,
+      redirects,
       ...attached,
     };
   } finally {
@@ -265,7 +329,8 @@ async function main() {
   const result = ensureCloudFrontDirectoryIndexRewrite({
     distributionId: readArg("distribution-id"),
     functionName: readArg("function-name"),
-    comment: readArg("comment", "Buildchain web-surface directory index rewrite"),
+    comment: readArg("comment", "Buildchain web-surface viewer request routing"),
+    redirects: parseRedirectsBase64(readArg("redirects-base64")),
   });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }

@@ -502,20 +502,23 @@ function directoryIndexRoutingStrategy(binding) {
 }
 
 function cloudFrontDirectoryIndexRewriteOperations(bindings) {
-  const seen = new Set();
+  const distributions = new Map();
   const helper = path.join(moduleDir, "web-surface-cloudfront-rewrite.mjs");
-  return bindings
-    .filter((binding) => directoryIndexRewriteMode(binding) === "buildchain")
-    .map((binding) => binding.distributionId || "")
-    .filter(Boolean)
-    .filter((distributionId) => {
-      if (seen.has(distributionId)) {
-        return false;
-      }
-      seen.add(distributionId);
-      return true;
-    })
-    .map((distributionId) => ({
+  for (const binding of bindings) {
+    if (directoryIndexRewriteMode(binding) !== "buildchain" || !binding.distributionId) {
+      continue;
+    }
+    const redirects = binding.redirects || [];
+    const existing = distributions.get(binding.distributionId);
+    if (existing && JSON.stringify(existing) !== JSON.stringify(redirects)) {
+      throw new Error(
+        `web-surface bindings sharing CloudFront distribution ${binding.distributionId} must declare identical redirects`,
+      );
+    }
+    distributions.set(binding.distributionId, redirects);
+  }
+  return [...distributions.entries()]
+    .map(([distributionId, redirects]) => ({
       action: "ensure-cloudfront-directory-index-rewrite",
       surface: "__distribution__",
       command: "node",
@@ -525,6 +528,9 @@ function cloudFrontDirectoryIndexRewriteOperations(bindings) {
         distributionId,
         "--function-name",
         cloudFrontDirectoryIndexFunctionName(distributionId),
+        ...(redirects.length > 0
+          ? ["--redirects-base64", Buffer.from(JSON.stringify(redirects), "utf8").toString("base64")]
+          : []),
       ],
       routing: {
         contract: "kungfu-buildchain-web-surface-directory-index-rewrite",
@@ -533,6 +539,7 @@ function cloudFrontDirectoryIndexRewriteOperations(bindings) {
         distributionId,
         functionName: cloudFrontDirectoryIndexFunctionName(distributionId),
         requestRewrite: "viewer request paths ending in / are rewritten to /index.html",
+        redirects,
       },
     }));
 }
@@ -823,6 +830,7 @@ function resolveSurfaceBindings({ config, channelName, alias, deployConfig }) {
       directoryIndex: "index.html",
       directoryIndexResolution: true,
       directoryIndexRewrite: effectiveDeploy.directoryIndexRewrite || "buildchain",
+      redirects: deployConfig.redirects || [],
       healthStrategy: effectiveDeploy.healthStrategy || "",
       cacheControl: effectiveDeploy.cacheControl || undefined,
       canonicalUrl: surface.productionUrl || (channelName === "production" ? url : ""),
@@ -920,6 +928,7 @@ function withSurfaceRoutingEvidence(bindings, { artifactPath, files }) {
         directoryIndexRewrite,
         directoryIndexManagedBy: directoryIndexRewrite === "external" ? "external" : "buildchain",
         directoryIndexStrategy: directoryIndexRoutingStrategy(binding),
+        redirects: binding.redirects || [],
       },
       smokeUrls: smokeUrlsForBinding({ binding, artifactPath, files }),
     };
@@ -1760,6 +1769,156 @@ function retryingHealthFetch(fetchImpl, attempts, intervalMs) {
 const DEFAULT_HEALTH_HTTP_RETRY_ATTEMPTS = 12;
 const DEFAULT_HEALTH_HTTP_RETRY_INTERVAL_MS = 10000;
 
+async function observeWebSurfaceRedirect({
+  redirect,
+  publicBase,
+  fetchImpl,
+  attempts,
+  intervalMs,
+}) {
+  const sourceUrl = new URL(redirect.source, publicBase).href;
+  try {
+    const { response, attempts: observedAttempts } = await fetchWithRetry(sourceUrl, {
+      fetchImpl,
+      attempts,
+      intervalMs,
+      requestOptions: { redirect: "manual" },
+      shouldRetry(candidate) {
+        const location = candidate.headers?.get?.("location") || "";
+        const resolvedLocation = location ? new URL(location, sourceUrl).href : "";
+        return candidate.status !== redirect.status || resolvedLocation !== redirect.target;
+      },
+    });
+    const location = response.headers?.get?.("location") || "";
+    const resolvedLocation = location ? new URL(location, sourceUrl).href : "";
+    return {
+      source: redirect.source,
+      sourceUrl,
+      target: redirect.target,
+      expectedStatus: redirect.status,
+      httpStatus: response.status,
+      location,
+      attempts: observedAttempts,
+      status: response.status === redirect.status && resolvedLocation === redirect.target ? "pass" : "fail",
+    };
+  } catch (error) {
+    return {
+      source: redirect.source,
+      sourceUrl,
+      target: redirect.target,
+      expectedStatus: redirect.status,
+      httpStatus: 0,
+      location: "",
+      attempts: error.attempts || 1,
+      status: "fail",
+      message: String(error.message || error),
+    };
+  }
+}
+
+async function checkWebSurfaceRedirects({
+  redirects,
+  publicBase,
+  managedNetwork,
+  result,
+  plan,
+  fetchImpl,
+  httpRetryAttempts,
+  httpRetryIntervalMs,
+}) {
+  if (managedNetwork) {
+    const operationSource = Array.isArray(result?.operations) && result.operations.length > 0
+      ? result.operations
+      : (Array.isArray(plan?.steps) ? plan.steps : []);
+    const operation = operationSource.find((entry) =>
+      entry.action === "ensure-cloudfront-directory-index-rewrite" &&
+      operationEvidenceStatus(entry, { plannedEvidence: !result }),
+    );
+    const observed = operation?.routing?.redirects || [];
+    const matched = JSON.stringify(observed) === JSON.stringify(redirects);
+    return {
+      surface: "__redirects__",
+      url: publicBase.href,
+      status: matched ? "pass" : "fail",
+      healthStrategy: "deployment-evidence",
+      redirects,
+      observed,
+      message: matched
+        ? "managed-network redirects match the applied CloudFront viewer-request routing evidence"
+        : "managed-network redirect routing evidence is missing or does not match configuration",
+    };
+  }
+  const observations = [];
+  for (const redirect of redirects) {
+    observations.push(await observeWebSurfaceRedirect({
+      redirect,
+      publicBase,
+      fetchImpl,
+      attempts: httpRetryAttempts,
+      intervalMs: httpRetryIntervalMs,
+    }));
+  }
+  const passed = observations.every((observation) => observation.status === "pass");
+  return {
+    surface: "__redirects__",
+    url: publicBase.href,
+    status: passed ? "pass" : "fail",
+    healthStrategy: "http",
+    redirects: observations,
+    message: passed
+      ? "public redirect routes return the configured status and Location"
+      : "one or more public redirect routes do not match configuration",
+  };
+}
+
+async function checkInstallerPublicationReadback({
+  installerPublication,
+  managedInstallerSurface,
+  urls,
+  manifest,
+  redirects,
+  fetchImpl,
+  httpRetryAttempts,
+  httpRetryIntervalMs,
+}) {
+  if (!installerPublication || managedInstallerSurface) return null;
+  const publicBaseUrl = urls.hub || manifest?.url || Object.values(urls)[0];
+  try {
+    const publicBase = new URL(publicBaseUrl);
+    const projected = {
+      ...installerPublication,
+      assets: installerPublication.assets.map((asset) => ({
+        ...asset,
+        friendlyUrl: new URL(new URL(asset.friendlyUrl).pathname, publicBase).href,
+        immutableUrl: new URL(new URL(asset.immutableUrl).pathname, publicBase).href,
+      })),
+    };
+    const friendlyRoutesRedirected = installerPublication.assets.every((asset) =>
+      redirects.some((redirect) => redirect.source === new URL(asset.friendlyUrl).pathname));
+    const evidence = await verifyInstallerPublicReadback({
+      publication: projected,
+      fetchImpl: retryingHealthFetch(fetchImpl, httpRetryAttempts, httpRetryIntervalMs),
+      routes: friendlyRoutesRedirected ? ["immutable"] : ["friendly", "immutable"],
+    });
+    return {
+      surface: "__installer__",
+      url: publicBase.href,
+      status: "pass",
+      evidence,
+      message: friendlyRoutesRedirected
+        ? "immutable installer routes match signed publication bytes and cache policy; friendly routes are verified as configured redirects"
+        : "friendly and immutable installer routes match signed publication bytes and cache policy",
+    };
+  } catch (error) {
+    return {
+      surface: "__installer__",
+      url: publicBaseUrl || "",
+      status: "fail",
+      message: String(error.message || error),
+    };
+  }
+}
+
 export async function checkWebSurfaceHealth({
   result = null,
   plan = null,
@@ -1911,6 +2070,21 @@ export async function checkWebSurfaceHealth({
     }
   }
 
+  const redirects = config.deploy?.[channel]?.redirects || [];
+  if (redirects.length > 0) {
+    const publicBase = new URL(urls.hub || manifest?.url || Object.values(urls)[0]);
+    checks.push(await checkWebSurfaceRedirects({
+      redirects,
+      publicBase,
+      managedNetwork: config.channels?.[channel]?.accessControl === "managed-network" && !allowedManagedNetworkRunner,
+      result,
+      plan,
+      fetchImpl,
+      httpRetryAttempts,
+      httpRetryIntervalMs,
+    }));
+  }
+
   const immutableBindings = bindings.filter((binding) => binding.immutablePublication);
   if (immutableBindings.length > 0) {
     const operationSource = Array.isArray(result?.operations) && result.operations.length > 0
@@ -1977,37 +2151,17 @@ export async function checkWebSurfaceHealth({
   const managedInstallerSurface =
     config.channels?.[channel]?.accessControl === "managed-network" &&
     !allowedManagedNetworkRunner;
-  if (installerPublication && !managedInstallerSurface) {
-    try {
-      const publicBase = new URL(urls.hub || manifest?.url || Object.values(urls)[0]);
-      const projected = {
-        ...installerPublication,
-        assets: installerPublication.assets.map((asset) => ({
-          ...asset,
-          friendlyUrl: new URL(new URL(asset.friendlyUrl).pathname, publicBase).href,
-          immutableUrl: new URL(new URL(asset.immutableUrl).pathname, publicBase).href,
-        })),
-      };
-      const evidence = await verifyInstallerPublicReadback({
-        publication: projected,
-        fetchImpl: retryingHealthFetch(fetchImpl, httpRetryAttempts, httpRetryIntervalMs),
-      });
-      checks.push({
-        surface: "__installer__",
-        url: publicBase.href,
-        status: "pass",
-        evidence,
-        message: "friendly and immutable installer routes match signed publication bytes and cache policy",
-      });
-    } catch (error) {
-      checks.push({
-        surface: "__installer__",
-        url: urls.hub || manifest?.url || "",
-        status: "fail",
-        message: String(error.message || error),
-      });
-    }
-  }
+  const installerCheck = await checkInstallerPublicationReadback({
+    installerPublication,
+    managedInstallerSurface,
+    urls,
+    manifest,
+    redirects,
+    fetchImpl,
+    httpRetryAttempts,
+    httpRetryIntervalMs,
+  });
+  if (installerCheck) checks.push(installerCheck);
 
   const manifestChecks = bindings.map((binding) => ({
     surface: binding.surface,

@@ -3,7 +3,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { ensureCloudFrontDirectoryIndexRewrite } from "../scripts/web-surface-cloudfront-rewrite.mjs";
+import vm from "node:vm";
+import {
+  ensureCloudFrontDirectoryIndexRewrite,
+  renderCloudFrontViewerRequestFunction,
+} from "../scripts/web-surface-cloudfront-rewrite.mjs";
 
 const DESIRED_ARN = "arn:aws:cloudfront::123456789012:function/buildchain-directory-index";
 
@@ -91,6 +95,29 @@ function preconditionFailure() {
     stderr: "An error occurred (PreconditionFailed) when calling the UpdateDistribution operation: stale If-Match ETag\n",
   };
 }
+
+function runViewerRequest(code, uri) {
+  const context = {
+    event: { request: { uri, headers: {} } },
+    result: null,
+  };
+  vm.runInNewContext(`${code}\nresult = handler(event);`, context);
+  return context.result;
+}
+
+test("CloudFront viewer-request routing applies exact redirects before directory-index rewrites", () => {
+  const code = renderCloudFrontViewerRequestFunction([
+    { source: "/install.sh", target: "https://libkungfu.dev/install.sh", status: 307 },
+  ]);
+  const redirect = runViewerRequest(code, "/install.sh");
+  assert.equal(redirect.statusCode, 307);
+  assert.equal(redirect.statusDescription, "Temporary Redirect");
+  assert.equal(redirect.headers.location.value, "https://libkungfu.dev/install.sh");
+  assert.equal(redirect.headers["cache-control"].value, "no-store");
+
+  assert.equal(runViewerRequest(code, "/docs/").uri, "/docs/index.html");
+  assert.equal(runViewerRequest(code, "/install.sh/extra").uri, "/install.sh/extra");
+});
 
 test("CloudFront directory-index attachment retries a stale distribution ETag", () => {
   withFakeAws({

@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:f8109cd3087c81aad497d8423801a986cc4077fe78c0f09e8603a1bb1e452983",
+      "digest": "sha256:b034b77889449b3fdafc84c72556958c4e567244592d7d2af55adaa616baf851",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -560,7 +560,7 @@
       "title": "Web surface deployments",
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
-      "digest": "sha256:484e896746d2f4cca4f9f18d29c14784ec20143c12affc3dbb9ccfbf8f221b55",
+      "digest": "sha256:9287a7f2fe7a5072f096475d050e03b572419cca4832e35964222d273c2d0b8a",
       "capabilityGroup": "site-and-propagation",
       "audience": [
         "site",

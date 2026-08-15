@@ -253,15 +253,20 @@ async function readPublicAsset(url, fetchImpl) {
 export async function verifyInstallerPublicReadback({
   publication,
   fetchImpl = globalThis.fetch,
+  routes = ["friendly", "immutable"],
 }) {
   if (typeof fetchImpl !== "function")
     throw new Error("fetch implementation is required");
+  const selectedRoutes = new Set(routes);
+  if ([...selectedRoutes].some((route) => !["friendly", "immutable"].includes(route))) {
+    throw new Error("installer public read-back routes must be friendly and/or immutable");
+  }
   const observations = [];
   for (const asset of publication.assets || []) {
     for (const [route, url] of [
       ["friendly", asset.friendlyUrl],
       ["immutable", asset.immutableUrl],
-    ]) {
+    ].filter(([route]) => selectedRoutes.has(route))) {
       const observed = await readPublicAsset(url, fetchImpl);
       const digest = sha256(observed.bytes);
       if (observed.bytes.length !== asset.size || digest !== asset.digest) {
