@@ -479,11 +479,9 @@ export class GitHubClient {
     );
     return data;
   }
-
   async listIssueComments(number) {
     return this.paginate(`/repos/${this.repository.owner}/${this.repository.repo}/issues/${number}/comments?per_page=100`);
   }
-
   async createIssueComment(number, body) {
     const { data } = await this.request(
       "POST",
@@ -492,7 +490,6 @@ export class GitHubClient {
     );
     return data;
   }
-
   async updateIssueComment(commentId, body) {
     const { data } = await this.request(
       "PATCH",
@@ -501,7 +498,6 @@ export class GitHubClient {
     );
     return data;
   }
-
   async setCommitStatus(sha, { state, context, description, targetUrl = "" }) {
     const { data } = await this.request(
       "POST",
@@ -511,12 +507,20 @@ export class GitHubClient {
     return data;
   }
 }
-
+function ghEnvironment() {
+  const environment = { ...process.env };
+  delete environment.GITHUB_TOKEN;
+  delete environment.GH_TOKEN;
+  return environment;
+}
+function ghAuthToken() {
+  const result = spawnSync("gh", ["auth", "token"], { encoding: "utf8", env: ghEnvironment() });
+  if (result.error) throw result.error;
+  if (result.status !== 0 || !result.stdout.trim()) throw new Error((result.stderr || "gh auth token failed").trim());
+  return result.stdout.trim();
+}
 function ghJson(args, { input } = {}) {
-  const ghEnvironment = { ...process.env };
-  delete ghEnvironment.GITHUB_TOKEN;
-  delete ghEnvironment.GH_TOKEN;
-  const result = spawnSync("gh", args, { encoding: "utf8", input, env: ghEnvironment });
+  const result = spawnSync("gh", args, { encoding: "utf8", input, env: ghEnvironment() });
   if (result.error) throw result.error;
   if (result.status !== 0) {
     const error = new Error((result.stderr || result.stdout || "gh command failed").trim());
@@ -525,12 +529,10 @@ function ghJson(args, { input } = {}) {
   }
   return result.stdout.trim() ? JSON.parse(result.stdout) : null;
 }
-
 export class GhCliClient extends GitHubClient {
-  constructor({ repository } = {}) {
-    super({ token: "gh-cli", repository, fetchImpl: async () => { throw new Error("unexpected fetch"); } });
+  constructor({ repository, token = "", fetchImpl = globalThis.fetch } = {}) {
+    super({ token: token || ghAuthToken(), repository, fetchImpl });
   }
-
   async request(method, requestPath, { body } = {}) {
     const endpoint = requestPath.replace(/^https:\/\/api\.github\.com/, "");
     const args = ["api", "--method", method, endpoint];
@@ -540,11 +542,9 @@ export class GhCliClient extends GitHubClient {
       response: { headers: { get: () => "" } },
     };
   }
-
   async paginate(requestPath) {
     return ghJson(["api", "--paginate", requestPath, "--slurp"]).flatMap((page) => page);
   }
-
   async getMergeQueueState(branch) {
     const query = `query($owner:String!,$repo:String!,$branch:String!){repository(owner:$owner,name:$repo){mergeQueue(branch:$branch){id entries(first:100){nodes{id position state baseCommit{oid} headCommit{oid} pullRequest{number headRefOid}}}}}}`;
     const data = ghJson([

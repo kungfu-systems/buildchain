@@ -7,11 +7,13 @@ import { createProjectCutReplayProof, createSourceQualificationProof } from "../
 import {
   cliOptions,
   evaluatePullRequest,
+  GhCliClient,
   GitHubClient,
   renderMarkdownSummary,
   runDevPrAdmission,
   runDevPrAutoMerge,
 } from "../scripts/dev-pr-auto-merge.mjs";
+import { readCurrentDeliveryQueueState } from "../scripts/dev-pr-delivery-warrant.mjs";
 
 test("targeted CLI defaults to an explicit readiness label", () => {
   const options = cliOptions([
@@ -827,6 +829,24 @@ const targetedOptions = {
 };
 
 const ROOT = `sha256:${"1".repeat(64)}`;
+
+test("gh CLI client preserves authenticated REST fallback for current Warrant readback", async () => {
+  const queue = { activeWarrant: { candidateId: ROOT } };
+  const responses = [
+    { object: { sha: "c".repeat(40) } },
+    { tree: { sha: "tree-sha" } },
+    { tree: [{ path: "queue.json", type: "blob", sha: "blob-sha" }] },
+    { encoding: "base64", content: Buffer.from(JSON.stringify(queue)).toString("base64") },
+  ];
+  const requests = [];
+  const fetchImpl = async (_url, options) => {
+    requests.push(options);
+    return { ok: true, status: 200, text: async () => JSON.stringify(responses.shift()) };
+  };
+  const github = new GhCliClient({ repository: { owner: "kungfu-systems", repo: "buildchain" }, token: "test-token", fetchImpl });
+  assert.deepEqual(await readCurrentDeliveryQueueState(github, github.repository, "dev/v4/v4.0"), queue);
+  assert.equal(requests[0].headers.authorization, "Bearer test-token");
+});
 
 async function withWarrantResult(overrides, callback) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-warrant-"));
