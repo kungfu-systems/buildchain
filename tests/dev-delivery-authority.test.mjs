@@ -432,6 +432,7 @@ test("historical phase-less active Warrant migrates with schema-safe compatibili
   });
   const historical = candidate(91, {
     environmentRoot: undefined,
+    nativeCommandContract: undefined,
     deliveryClass: "non-native-fast",
   });
   const submitted = submitLegacyDevDeliveryCandidate(legacy, historical, {
