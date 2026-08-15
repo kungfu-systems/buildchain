@@ -204,7 +204,9 @@
       "sourcePaths": [
         "packages/core/dev-delivery-proof.js",
         "packages/core/dev-delivery-warrant-cancellation.js",
+        "packages/core/dev-delivery-warrant-qualification.js",
         "packages/core/dev-delivery-warrant-settlement.js",
+        "packages/core/dev-delivery-warrant-state.js",
         "packages/core/dev-delivery-warrant.js",
         "packages/core/release-blocker-priority.js",
         "scripts/dev-delivery-proof.mjs",

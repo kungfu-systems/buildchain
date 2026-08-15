@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createProjectCutReplayProof, createSourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import { createDevDeliveryQueue, createProjectCutReplayProof, createSourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 import {
   cliOptions,
   evaluatePullRequest,
@@ -831,7 +831,11 @@ const targetedOptions = {
 const ROOT = `sha256:${"1".repeat(64)}`;
 
 test("gh CLI client preserves authenticated REST fallback for current Warrant readback", async () => {
-  const queue = { activeWarrant: { candidateId: ROOT } };
+  const queue = createDevDeliveryQueue({
+    repository: "kungfu-systems/buildchain",
+    protectedBase: "dev/v4/v4.0",
+    now: "2026-08-15T00:00:00Z",
+  });
   const responses = [
     { object: { sha: "c".repeat(40) } },
     { tree: { sha: "tree-sha" } },

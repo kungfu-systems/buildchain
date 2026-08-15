@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:7234ed200c568b1fea0e469de61ec7a67da48ede0af6290fb49b93a9e62e0b65",
+    "compatibilityDigest": "sha256:c8407195cafe42cb62ac2a4f5ff5b2c3f9b8aa65c27cc678efd46240cb3f0ecc",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "401b2f2f00cbcf2aa6c8d8cc21961ce98490e63dc4f3afc81e47369a7f0e7d7b",
+    "sha256": "165f57ccd04b4c0d7bda417c565f78209fae406537dde6af5c0fa7898f29796d",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 71,
       "actionCount": 7,
-      "sitePageCount": 76,
-      "docCommandRefCount": 919,
+      "sitePageCount": 77,
+      "docCommandRefCount": 987,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "401b2f2f00cbcf2aa6c8d8cc21961ce98490e63dc4f3afc81e47369a7f0e7d7b",
+      "sha256": "165f57ccd04b4c0d7bda417c565f78209fae406537dde6af5c0fa7898f29796d",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 71,
         "actionCount": 7,
-        "sitePageCount": 76,
-        "docCommandRefCount": 919,
+        "sitePageCount": 77,
+        "docCommandRefCount": 987,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1399,6 +1399,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./diagnostics"
+        },
+        {
+          "id": "export:./dev-delivery-authority",
+          "name": "@kungfu-tech/buildchain/dev-delivery-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/dev-delivery-authority-landing.js",
+          "evidencePath": "packages/core/dev-delivery-authority-landing.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./dev-delivery-authority"
         },
         {
           "id": "export:./dev-delivery-warrant",
@@ -4728,7 +4740,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 33,
+          "inputCount": 43,
           "inputs": [
             "active-lease-context",
             "affected-paths-json",
@@ -4744,22 +4756,32 @@
             "dependency-root",
             "diagnostic-context",
             "dry-run",
+            "environment-root",
             "expected-head-sha",
             "expected-pr-number",
+            "handoff-workflow-id",
             "initiative-root",
             "landing-mode",
+            "legacy-active-owner-binding-json",
             "max-merges",
             "merge-method",
+            "native-command",
+            "native-command-root",
+            "native-heartbeat-seconds",
+            "native-proof-json",
             "plan-root",
             "project-cut-proof-json",
             "queue-admission-context",
             "ready-label",
+            "release-blocker-priority-json",
             "require-approval",
             "required-status-checks",
             "same-repository-only",
             "shard-evidence-roots-json",
             "source-identity-root",
             "source-patch-root",
+            "source-workflow-id",
+            "source-workflow-run-id",
             "target-branch",
             "toolchain-root",
             "warrant-lease-seconds"
@@ -6141,6 +6163,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:dev-delivery-qualification-landing-adr",
+          "name": "site-page:manual:dev-delivery-qualification-landing-adr",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:dev-delivery-warrant",
           "name": "site-page:manual:dev-delivery-warrant",
           "kind": "site-page",
@@ -6863,6 +6897,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 436
+    "publicSurfaceCount": 438
   }
 }
