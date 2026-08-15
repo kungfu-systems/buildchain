@@ -235,6 +235,7 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-passport-evidence-jsons",
       "release-passport-evidence-path",
       "release-passport-kfd-adopter-manifest-json",
+      "release-passport-kfd-adopter-manifest-gate-json",
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
       "release-propagation-config-path",
@@ -294,6 +295,7 @@ test("stable route forwards only inputs supported by the current workflow shell"
     assert.doesNotMatch(stableBlock, new RegExp(`^      ${name}:`, "m"));
   }
   assert.doesNotMatch(stableBlock, /^      release-passport-kfd-adopter-manifest-json:/m);
+  assert.doesNotMatch(stableBlock, /^      release-passport-kfd-adopter-manifest-gate-json:/m);
   assert.doesNotMatch(stableBlock, /^      release-passport-kfd-support-matrix-json:/m);
   assert.doesNotMatch(stableBlock, /^      release-passport-kfd-product-gate-jsons:/m);
   assert.doesNotMatch(stableBlock, /^      github-artifact-attestation-policy-json:/m);
