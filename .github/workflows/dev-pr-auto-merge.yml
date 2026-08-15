@@ -789,7 +789,7 @@ jobs:
             --argjson pr "${EXPECTED_PR}" \
             --arg head "${EXPECTED_HEAD}" \
             --arg phase "$selected_phase" \
-            --arg legacyOwnerStateRoot "$(jq -er '.receipt.expectedOldStateRoot' .buildchain/dev-delivery/result.json)" \
+            --arg legacyOwnerStateRoot "$(jq -er '.receipt.expectedOldStateRoot' .buildchain/dev-delivery/submission.json)" \
             --argjson legacyBinding "${LEGACY_ACTIVE_OWNER_BINDING:-null}" \
             '.schema == "kungfu.buildchain.dev-delivery-command-result/v1"
              and .mode == "execute"

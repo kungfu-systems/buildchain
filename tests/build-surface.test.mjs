@@ -2376,6 +2376,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(legacyHandoff, /\.observation\.activeWarrant\.fencingToken/);
   assert.match(legacyHandoff, /\.observation\.activeWarrant\.generation/);
   assert.match(workflow, /\.receipt\.expectedOldStateRoot/);
+  assert.match(workflow, /\.buildchain\/dev-delivery\/submission\.json/);
+  assert.doesNotMatch(workflow, /\.buildchain\/dev-delivery\/result\.json/);
   assert.match(
     workflow,
     /\$legacyBinding\.stateRoot == \$legacyOwnerStateRoot/,
