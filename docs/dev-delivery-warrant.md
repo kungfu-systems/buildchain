@@ -469,10 +469,13 @@ operator-time weakening of a specific delivery attempt.
 `templates/native-dev-delivery.yml` provides the corresponding protected-dev
 consumer workflow. It supports both explicit dispatch and the bounded wake
 event, calls the allowed floating `@v4-alpha` selector, explicitly passes the v4
-runtime ref that locks every delivery job to the same checkout, and keeps the
-native command in the consumer repository rather than inventing
-provider-specific shards. The reusable workflow defaults that explicit input
-to `v4-alpha`; an empty input or any v3 selector fails before the first runtime
+runtime ref that locks every delivery job to the same checkout, and forwards
+only inputs declared by the locked floating workflow contract. New native and
+bounded-authority inputs remain on the candidate reusable surface until the
+floating channel declares them; the durable caller must not pass them early,
+because GitHub rejects an unsupported reusable-workflow input before creating
+the first job. The reusable workflow defaults the explicit runtime input to
+`v4-alpha`; an empty input or any v3 selector fails before the first runtime
 checkout.
 
 This mechanism schedules protected delivery only. It does not serialize local
