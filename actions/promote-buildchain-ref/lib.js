@@ -186,7 +186,7 @@ function runPublishCommand({ cwd, command, loadedConfig, env }) {
   return "none";
 }
 
-function rematerializedNpmPackEnvironment({ cwd, env, version }) {
+function rematerializedNpmPackEnvironment({ cwd, env, version, published = false }) {
   const packagePath = path.join(cwd, "package.json");
   if (!fs.existsSync(packagePath)) return undefined;
   const pkg = JSON.parse(fs.readFileSync(packagePath, "utf8"));
@@ -198,7 +198,7 @@ function rematerializedNpmPackEnvironment({ cwd, env, version }) {
   }
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rematerialized-npm-"));
   try {
-    const packed = JSON.parse(execNpmSync(["pack", "--json", "--pack-destination", temporaryRoot, "--registry=https://registry.npmjs.org/"], {
+    const packed = JSON.parse(execNpmSync(["pack", ...(published ? [`${pkg.name}@${version}`] : []), "--json", "--pack-destination", temporaryRoot, "--registry=https://registry.npmjs.org/"], {
       cwd, env: { ...process.env, ...env }, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"],
     }));
     const result = Array.isArray(packed) ? packed[0] : packed;
@@ -223,7 +223,7 @@ function rematerializedNpmPackEnvironment({ cwd, env, version }) {
   }
 }
 
-function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, version }) {
+function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, version, published = false }) {
   const discovered = discoverVersionStateFiles(cwd);
   const changedFiles = updateVersionStateContents(discovered.files, version);
   const originals = changedFiles.map((file) => {
@@ -237,7 +237,7 @@ function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, vers
     for (const [index, file] of changedFiles.entries()) {
       fs.writeFileSync(originals[index].resolved, file.content);
     }
-    const npmPack = rematerializedNpmPackEnvironment({ cwd, env, version });
+    const npmPack = rematerializedNpmPackEnvironment({ cwd, env, version, published });
     const sealedEnvironmentNames = [
           "BUILDCHAIN_SEALED_BUNDLE_ROOT",
           "BUILDCHAIN_SEALED_NPM_TARBALL",
@@ -269,7 +269,7 @@ function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, vers
   }
 }
 
-function runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version }) {
+function runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version, published = false }) {
   if (existingNpmPromotion) {
     throw new Error(
       "publish-rematerialize-on-resume cannot replay promote-existing-version provider mutations",
@@ -280,7 +280,7 @@ function runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishComm
     command: publishCommand,
     loadedConfig,
     env: publishTransactionEnvironment(context, { useSealedBundle: false }),
-    version,
+    version, published,
   });
   if (source === "none") {
     throw new Error(
@@ -1657,7 +1657,7 @@ async function runPublishTransaction(options) {
       publishRematerializeOnResume
     ) {
       publishSource = runResumeRematerializedPublish({
-        existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version,
+        existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version, published: true,
       });
     }
     if (!validation?.valid) {
