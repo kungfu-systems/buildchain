@@ -1171,7 +1171,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.doesNotMatch(workflow, /github-artifact-attestation\.yml@v3/);
   assert.match(workflow, /buildchain-ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/);
-  assert.match(workflow, /ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-buildchain-ref \}\}/);
+  assert.match(workflow, /ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/);
   assert.match(workflow, /artifact-metadata: write/);
   assert.match(workflow, /attestations: write/);
   assert.match(workflow, /name: Publish verified attestation evidence to GitHub Release/);

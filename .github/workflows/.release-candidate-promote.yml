@@ -2446,7 +2446,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kungfu-systems/buildchain
-          ref: ${{ needs.promote.outputs.github-artifact-attestation-buildchain-ref }}
+          ref: ${{ needs.promote.outputs.github-artifact-attestation-signer-ref }}
           path: .buildchain/publisher-runtime
           persist-credentials: false
           sparse-checkout: |
