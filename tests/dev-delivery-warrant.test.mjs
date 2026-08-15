@@ -303,6 +303,7 @@ test("heartbeat and terminal failure closeout bind the current fencing generatio
     now: "2026-08-04T00:01:00Z",
   });
   assert.equal(heartbeat.receipt.action, "heartbeat");
+  assert.equal(heartbeat.queue.activeWarrant.heartbeatAt, "2026-08-04T00:01:00.000Z");
   assert.equal(heartbeat.queue.candidates[0].status, "proving");
 
   assert.throws(

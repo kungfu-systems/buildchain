@@ -267,6 +267,7 @@ export function heartbeatDevDeliveryWarrant(
         "leaseSeconds",
         queue.policy.leaseSeconds,
       );
+      queue.activeWarrant.heartbeatAt = currentTime;
       queue.activeWarrant.expiresAt = new Date(
         Date.parse(currentTime) + effectiveLeaseSeconds * 1000,
       ).toISOString();
