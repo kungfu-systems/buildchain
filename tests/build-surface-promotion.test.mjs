@@ -334,6 +334,29 @@ test("promotion commits consumer discovery authority only after public release a
   );
 });
 
+test("promotion executes the provider transaction from the selected tail shell", () => {
+  const wrapper = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const promoteStart = wrapper.indexOf("- name: Promote-only publish");
+  const promoteEnd = wrapper.indexOf(
+    "- name: Retain declarative release-tail contract and transaction",
+    promoteStart,
+  );
+  const promoteStep = wrapper.slice(promoteStart, promoteEnd);
+
+  assert.ok(promoteStart >= 0 && promoteEnd > promoteStart);
+  assert.match(
+    promoteStep,
+    /uses: \.\/\.buildchain\/promotion-shell\/actions\/promote-buildchain-ref/,
+  );
+  assert.doesNotMatch(
+    promoteStep,
+    /uses: \.\/\.buildchain\/runtime\/actions\/promote-buildchain-ref/,
+  );
+});
+
 test("reusable build exposes release-candidate passport outputs", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),

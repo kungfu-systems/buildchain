@@ -1817,7 +1817,7 @@ jobs:
           BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
           BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
           BUILDCHAIN_RELEASE_CANDIDATE_PAYLOAD_ROOT: ${{ steps.rc.outputs.release-candidate-payload-dir }}
-        uses: ./.buildchain/runtime/actions/promote-buildchain-ref
+        uses: ./.buildchain/promotion-shell/actions/promote-buildchain-ref
         with:
           token: ${{ github.token }}
           sha: ${{ needs.preflight.outputs.requested-sha }}
