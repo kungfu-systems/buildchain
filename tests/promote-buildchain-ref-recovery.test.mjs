@@ -174,7 +174,7 @@ command = "node scripts/publish.mjs"
     "scripts/publish.mjs": `
 import fs from "node:fs";
 
-fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
+fs.writeFileSync("unexpected-publish", ""); fs.mkdirSync(process.env.BUILDCHAIN_EVIDENCE_DIR, { recursive: true });
 fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
   schema: 1,
   version: process.env.BUILDCHAIN_VERSION,
@@ -281,12 +281,12 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
       state_ref: "buildchain/release-state/1-0-0-alpha-0",
       state_path: "",
       evidence_path: "",
-      state: "published",
+      state: "repair_required",
       previous_state: "publishing",
       actor: "",
       run_id: "",
       superseded_by: "",
-      failure: "",
+      failure: "publish evidence invalid: artifact coordinate or provenance mismatch: npm:@kungfu-tech/buildchain:ref",
       artifacts: [],
       evidence: [],
       created_at: "2026-07-01T00:00:00.000Z",
@@ -303,7 +303,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     sha: SHA,
     targetRef: "alpha/v1/v1.0",
     cwd,
-    publishTransaction: true,
+    publishTransaction: true, publishTransactionOverride: true, publishToolingSha: "f".repeat(40),
     publishRequiredArtifactsJson: JSON.stringify([
       {
         kind: "npm",
@@ -314,7 +314,7 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     ]),
   });
 
-  assert.equal(result.publishTransaction.state, "complete");
+  assert.equal(result.publishTransaction.state, "complete"); assert.equal(fs.existsSync(path.join(cwd, "unexpected-publish")), false);
   assert.equal(result.publishTransaction.exactTag, "v1.0.0-alpha.0");
   assert.equal(result.publishTransaction.releaseSha, OTHER_SHA);
   assert.equal(refs.get("heads/alpha/v1/v1.0"), OTHER_SHA);
