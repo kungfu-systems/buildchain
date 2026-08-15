@@ -296,12 +296,13 @@ function classifyBuildchainUses(records, failures) {
   return uses;
 }
 
-function selectInvocation(uses, workflow, failures, source = "") {
+function selectInvocation(uses, workflow, failures, source = "", channel = "") {
   const expectedWorkflow = normalizeWorkflowPath(workflow);
   const invocations = uses.filter(
     (entry) =>
       normalizeWorkflowPath(entry.path) === expectedWorkflow &&
-      (!source || entry.sourcePath === source),
+      (!source || entry.sourcePath === source) &&
+      (!channel || entry.channel === channel),
   );
   if (invocations.length !== 1) {
     failures.push({
@@ -320,6 +321,7 @@ export function scanV4FloatingConsumerPolicy({
   sourceSha = "",
   invokedWorkflow = "",
   invocationSourcePath = "",
+  expectedInvocationChannel = "",
   resolvedWorkflowSha = "",
   resolvedRuntimeSha = "",
   stableLockPath = ".buildchain/contract-lock.json",
@@ -376,6 +378,7 @@ export function scanV4FloatingConsumerPolicy({
     invokedWorkflow,
     failures,
     sourcePath,
+    expectedInvocationChannel,
   );
   const selectedLock = selected?.channel === "alpha" ? alpha : stable;
   if (

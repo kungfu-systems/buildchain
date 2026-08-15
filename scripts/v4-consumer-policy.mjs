@@ -9,9 +9,7 @@ import {
   v4ConsumerPolicyScannerRoot,
 } from "../packages/core/v4-floating-consumer-policy.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
-
 const RUNTIME_ROOT = path.resolve(import.meta.dirname, "..");
-
 function parseArgs(argv) {
   const options = {};
   for (let index = 0; index < argv.length; index += 1) {
@@ -34,14 +32,11 @@ function env(name, fallback = "") {
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
-
 function writeJson(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 }
-
 export { v4ConsumerPolicyScannerRoot };
-
 export function scanCommand(options = {}) {
   const root = path.resolve(
     options.root || env("BUILDCHAIN_CONSUMER_ROOT", process.cwd()),
@@ -66,6 +61,9 @@ export function scanCommand(options = {}) {
     invocationSourcePath:
       options.invocationSourcePath ||
       env("BUILDCHAIN_INVOCATION_SOURCE_PATH", env("GITHUB_WORKFLOW_REF")),
+    expectedInvocationChannel:
+      options.expectedInvocationChannel ||
+      env("BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL"),
     resolvedWorkflowSha:
       options.resolvedWorkflowSha || env("BUILDCHAIN_WORKFLOW_SHA"),
     resolvedRuntimeSha:
@@ -102,8 +100,7 @@ export function scanCommand(options = {}) {
 export function certifyCommand(options = {}) {
   const inputValue = options.input || env("BUILDCHAIN_V4_POLICY_RECEIPT_PATH");
   if (!inputValue) throw new Error("certify requires --input");
-  const input = path.resolve(inputValue);
-  const document = readJson(input);
+  const document = readJson(path.resolve(inputValue));
   const evidence = document.consumerPolicy || document;
   const receipt = evidence.receipt || evidence;
   const receiptRoot =
@@ -152,6 +149,7 @@ export function certifyCommand(options = {}) {
     sourceSha,
     invokedWorkflow,
     invocationSourcePath: receipt?.invocation?.sourcePath,
+    expectedInvocationChannel: receipt?.invocation?.channel,
     resolvedWorkflowSha: selectedLock.buildchain?.resolvedSha,
     resolvedRuntimeSha,
     stableLockPath,

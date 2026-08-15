@@ -191,11 +191,11 @@ test("source scan treats materialized Buildchain runtime actions as transient", 
   );
 });
 
-test("caller workflow source disambiguates repeated public workflow targets", () => {
+test("caller source and channel disambiguate repeated public targets", () => {
   const callerRoot = workspace(fixtures.cases[0]);
-  fs.writeFileSync(
-    path.join(callerRoot, ".github/workflows/second.yml"),
-    "jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@v4\n",
+  fs.appendFileSync(
+    path.join(callerRoot, ".github/workflows/build.yml"),
+    "  alpha:\n    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@v4-alpha\n",
   );
   const result = scanV4FloatingConsumerPolicy({
     root: callerRoot,
@@ -204,6 +204,7 @@ test("caller workflow source disambiguates repeated public workflow targets", ()
     invokedWorkflow: "v4-stage-capsule-canary.yml",
     invocationSourcePath:
       "kungfu-systems/consumer/.github/workflows/build.yml@refs/heads/main",
+    expectedInvocationChannel: "stable",
     resolvedRuntimeSha: STABLE_SHA,
     policy,
     scannerRoot: ROOT,
@@ -214,7 +215,6 @@ test("caller workflow source disambiguates repeated public workflow targets", ()
     ".github/workflows/build.yml",
   );
 });
-
 for (const fixture of fixtures.cases) {
   test(`v4 floating consumer policy fixture: ${fixture.id}`, () => {
     const result = evaluate(fixture);
