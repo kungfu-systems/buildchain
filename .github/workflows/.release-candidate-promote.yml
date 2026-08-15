@@ -1367,16 +1367,16 @@ jobs:
 
       - name: Resolve post-release reconciliation checkout
         id: reconciliation
-        if: ${{ needs.preflight.outputs.channel == 'release' }}
+        if: ${{ needs.preflight.outputs.channel == 'release' || needs.preflight.outputs.channel == 'alpha' }}
         shell: bash
         env:
           BUILDCHAIN_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
         run: |
-          if [[ ! "${BUILDCHAIN_TARGET_REF}" =~ ^release/v[0-9]+/v[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release reconciliation requires a release/vN/vN.M target, got ${BUILDCHAIN_TARGET_REF}"
+          if [[ ! "${BUILDCHAIN_TARGET_REF}" =~ ^(release|alpha)/v[0-9]+/v[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release reconciliation requires a release/vN/vN.M or alpha/vN/vN.M target, got ${BUILDCHAIN_TARGET_REF}"
             exit 1
           fi
-          echo "ref=${BUILDCHAIN_TARGET_REF/release\//dev/}" >> "${GITHUB_OUTPUT}"
+          echo "ref=dev/${BUILDCHAIN_TARGET_REF#*/}" >> "${GITHUB_OUTPUT}"
           echo "workspace=.buildchain/reconciliation/dev" >> "${GITHUB_OUTPUT}"
 
       - name: Checkout current development channel for reconciliation

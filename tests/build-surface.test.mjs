@@ -1282,6 +1282,12 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /corepack pnpm install --frozen-lockfile/);
   assert.match(workflow, /cd "\$\{RECONCILIATION_WORKSPACE\}"[\s\S]*corepack pnpm install --frozen-lockfile/);
   assert.match(workflow, /Resolve post-release reconciliation checkout/);
+  assert.match(
+    workflow,
+    /needs\.preflight\.outputs\.channel == 'release' \|\| needs\.preflight\.outputs\.channel == 'alpha'/,
+  );
+  assert.match(workflow, /\^\(release\|alpha\)\/v\[0-9\]\+\/v\[0-9\]\+\\\.\[0-9\]\+\$/);
+  assert.match(workflow, /ref=dev\//);
   assert.match(workflow, /Checkout current development channel for reconciliation/);
   assert.match(workflow, /Install reconciliation dependencies/);
   assert.match(workflow, /workspace=\.buildchain\/reconciliation\/dev/);
