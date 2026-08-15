@@ -66,7 +66,7 @@
           "now": "2026-08-07T00:02:00Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:959589afaaed6e0f18ac25bca3e7e2f017e007e41a51027e3811c05e5a5805c4"
+      "expectedLegacyProjectionRoot": "sha256:da58eec588414e16781ffad1b92d3733b207b43e2c7846f6b659c71b150d964d"
     },
     {
       "id": "lease-expiry-and-stale-fence",

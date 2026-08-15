@@ -207,6 +207,15 @@ test("hosted Linux ancestry accepts only non-credential runtime variables throug
   });
 });
 
+test("hosted Linux ancestry accepts the kernel-resolved worker with basename argv zero", () => {
+  const files = hostedAncestryFiles({
+    "/proc/20/cmdline": "Runner.Worker\u0000spawnclient\u000010\u000011\u0000",
+  });
+  const result = inspectCredentiallessProcessAncestry(ancestryOptions(files));
+  assert.equal(result.ok, true);
+  assert.equal(result.boundary.executable, RUNNER_WORKER);
+});
+
 test("hosted Linux ancestry requires the exact versioned Runner.Worker spawnclient argv", () => {
   for (const [label, worker, command] of [
     [
@@ -223,6 +232,11 @@ test("hosted Linux ancestry requires the exact versioned Runner.Worker spawnclie
       "lookalike worker name",
       "/home/runner/runners/2.999.0/bin/Runner.Worker.backup",
       "/home/runner/runners/2.999.0/bin/Runner.Worker.backup\u0000spawnclient\u000010\u000011\u0000",
+    ],
+    [
+      "lookalike basename",
+      RUNNER_WORKER,
+      "Worker\u0000spawnclient\u000010\u000011\u0000",
     ],
     [
       "extra worker argv",
@@ -243,7 +257,7 @@ test("hosted Linux ancestry requires the exact versioned Runner.Worker spawnclie
             },
           }),
         ),
-      /credential ancestry (?:escaped before trusted boundary|is unreadable)/u,
+      /credential ancestry (?:escaped before trusted boundary|found an untrusted Runner\.Worker|is unreadable)/u,
       label,
     );
   }
