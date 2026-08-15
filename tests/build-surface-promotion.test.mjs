@@ -690,6 +690,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(action, /release-passport-kfd-adopter-manifest-json:/);
+  assert.match(action, /release-passport-kfd-adopter-manifest-gate-json:/);
   assert.match(action, /release-passport-kfd-support-matrix-json:/);
   assert.match(action, /release-passport-kfd-product-gate-jsons:/);
   assert.match(action, /release-passport-invariant-passport-jsons:/);
