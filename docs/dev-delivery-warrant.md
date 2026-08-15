@@ -93,10 +93,10 @@ affected closure, dependencies, toolchain, covered paths, and exact acceptance
 evidence. Ready state and approval are established before provisional
 selection.
 
-Native Qualification Proof is separate. Its v3 form binds semantic source and patch,
+Native Qualification Proof is separate. Its v4 form binds semantic source and patch,
 plan, affected closure, dependency graph, toolchain, the exact execution
 environment contract, covered paths, native shard evidence, the exact dev
-base used by the native composition, and the v2 native heartbeat-run receipt.
+base used by the native composition, and the v3 native heartbeat-run receipt.
 That receipt exposes and roots the exact repository, protected base, source
 head, qualified base, toolchain, and environment binding established before
 process spawn. The proof carries the exact receipt bytes as well as repeating
@@ -104,7 +104,7 @@ the binding and receipt roots in its shard evidence. Public verification
 recomputes those bytes and requires a successful outcome, positive heartbeat
 count, exact command root, ordered start/completion/qualification timestamps,
 and the complete execution binding; caller-computed roots without the receipt
-bytes are not a v3 proof. Before reuse, the consumer roots the
+bytes are not a v4 proof. Before reuse, the consumer roots the
 complete attributed Dev delta, including both sides of every rename, then
 classifies it:
 
@@ -119,10 +119,10 @@ classifies it:
   changed source, plan, closure, dependency, toolchain, or environment root
   fails closed to full native qualification.
 
-Historical Native Qualification Proof v1 and v2 values remain readable, but
-they cannot be reused because their execution receipt did not bind the
-environment root. They fail closed to explicit native revalidation and produce
-a v3 proof.
+Historical Native Qualification Proof v1, v2, and v3 values remain readable,
+but they cannot be reused because they do not carry the current v4 exact native
+execution evidence. They fail closed to explicit native revalidation and
+produce a v4 proof.
 
 The reuse decision binds the exact old and current Dev heads, normalized changed
 paths and rename pairs in `baseDeltaRoot`. This makes local and hosted replay of
