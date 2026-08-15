@@ -5,7 +5,7 @@ import { DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA, createDevDeliveryTerminalSettle
 import { compareReleaseBlockerPriority, normalizeReleaseBlockerPriorityClaim } from "./release-blocker-priority.js";
 export { devDeliveryContentRoot } from "./dev-delivery-common.js";
 export { RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA, createReleaseBlockerPriorityClaim } from "./release-blocker-priority.js";
-export { SOURCE_QUALIFICATION_PROOF_SCHEMA, PROJECT_CUT_REPLAY_PROOF_SCHEMA, INTEGRATION_DELIVERY_PROOF_SCHEMA, classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "./dev-delivery-proof.js";
+export { SOURCE_QUALIFICATION_PROOF_SCHEMA, SOURCE_QUALIFICATION_PROOF_V2_SCHEMA, PROJECT_CUT_REPLAY_PROOF_SCHEMA, INTEGRATION_DELIVERY_PROOF_SCHEMA, classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, createSourceQualificationProofV2, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "./dev-delivery-proof.js";
 export { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA };
 export const DEV_DELIVERY_QUEUE_CONTRACT = "kungfu-buildchain-dev-delivery-warrant-queue";
 export const DEV_DELIVERY_WARRANT_SCHEMA = "kungfu.buildchain.dev-delivery-warrant/v1";
@@ -70,7 +70,7 @@ function normalizeCandidate(input, expected) {
     planRoot: exactRoot(input.planRoot, "planRoot"),
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
-    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"), ...(input.environmentRoot ? { environmentRoot: exactRoot(input.environmentRoot, "environmentRoot") } : {}), ...(Object.hasOwn(input, "sourceWorkflowRunId") ? { sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0) } : {}),
     priority: priority(input.priority),
     enqueuedAt: timestamp(input.enqueuedAt, "candidate enqueuedAt"),
     updatedAt: timestamp(input.updatedAt || input.enqueuedAt, "candidate updatedAt"),
@@ -79,7 +79,7 @@ function normalizeCandidate(input, expected) {
     status,
     terminal: input.terminal || null,
   };
-  if (Object.hasOwn(input, "releaseBlockerPriority")) candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(input.releaseBlockerPriority, candidate, expected);
+  if (Object.hasOwn(input, "affectedPaths")) { if (!Array.isArray(input.affectedPaths)) throw new Error("candidate affectedPaths must be an array"); candidate.affectedPaths = [...new Set(input.affectedPaths.map(text).filter(Boolean))].sort(); } if (Object.hasOwn(input, "releaseBlockerPriority")) candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(input.releaseBlockerPriority, candidate, expected);
   return candidate;
 }
 

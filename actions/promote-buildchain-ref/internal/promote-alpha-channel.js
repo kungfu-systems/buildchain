@@ -13,7 +13,9 @@ async function planAlphaPublication(context) {
     ? context.requestedTags.filter((tag) => tag.includes("-alpha."))
     : [];
   if (explicitAlphaTags.length > 1) {
-    throw new Error("Alpha promotion accepts at most one explicit prerelease tag");
+    throw new Error(
+      "Alpha promotion accepts at most one explicit prerelease tag",
+    );
   }
   const currentAlpha = explicitAlphaTags[0]
     ? undefined
@@ -32,11 +34,11 @@ async function planAlphaPublication(context) {
     : undefined;
   const publishTransactionEnabled = Boolean(
     context.publishTransaction ||
-      context.publishCommand ||
-      context.getLifecycleStage(
-        context.loadBuildchainConfig(context.cwd),
-        "publish",
-      ),
+    context.publishCommand ||
+    context.getLifecycleStage(
+      context.loadBuildchainConfig(context.cwd),
+      "publish",
+    ),
   );
   const resumableAlpha =
     explicitAlphaTags[0] || !publishTransactionEnabled
@@ -83,19 +85,19 @@ async function planAlphaPublication(context) {
 function needsContainedAlphaFinalization(context, plan, recovery) {
   return Boolean(
     plan.currentAlpha &&
-      recovery.transactionOpen &&
-      ["published", "finalizing"].includes(
-        plan.currentAlphaTransaction.state || "",
-      ) &&
-      context.transactionHasPublishedMaterial(plan.currentAlphaTransaction) &&
-      recovery.containsTransaction &&
-      plan.currentAlpha.version === plan.currentAlphaTransaction.version &&
-      plan.currentAlpha.tag === plan.currentAlphaTransaction.exact_tag &&
-      plan.currentAlphaTransaction.target_ref === context.targetRef &&
-      (!context.expectedPublicationVersion ||
-        context.expectedPublicationVersion ===
-          plan.currentAlphaTransaction.version) &&
-      !plan.currentAlphaTagSha,
+    recovery.transactionOpen &&
+    ["published", "finalizing"].includes(
+      plan.currentAlphaTransaction.state || "",
+    ) &&
+    context.transactionHasPublishedMaterial(plan.currentAlphaTransaction) &&
+    recovery.containsTransaction &&
+    plan.currentAlpha.version === plan.currentAlphaTransaction.version &&
+    plan.currentAlpha.tag === plan.currentAlphaTransaction.exact_tag &&
+    plan.currentAlphaTransaction.target_ref === context.targetRef &&
+    (!context.expectedPublicationVersion ||
+      context.expectedPublicationVersion ===
+        plan.currentAlphaTransaction.version) &&
+    recovery.exactTagAccepted,
   );
 }
 
@@ -104,6 +106,10 @@ async function evaluateAlphaRecovery(context, plan) {
     plan.currentAlphaTransaction,
     context.sha,
   );
+  const exactTagAccepted =
+    plan.currentAlpha &&
+    (!plan.currentAlphaTagSha ||
+      acceptedExactShas.includes(plan.currentAlphaTagSha));
   const settled =
     plan.currentAlpha &&
     plan.currentAlphaDevSha === context.sha &&
@@ -116,8 +122,8 @@ async function evaluateAlphaRecovery(context, plan) {
     plan.currentAlpha &&
     Boolean(
       plan.currentAlphaTagSha ||
-        plan.currentAlphaFloatingSha ||
-        plan.currentAlphaDevSha,
+      plan.currentAlphaFloatingSha ||
+      plan.currentAlphaDevSha,
     );
   const transactionOpen =
     plan.currentAlphaTransaction &&
@@ -151,7 +157,7 @@ async function evaluateAlphaRecovery(context, plan) {
       containsTransaction ||
       settled ||
       canReplaceStaleTransaction);
-  const recovery = { transactionOpen, containsTransaction };
+  const recovery = { transactionOpen, containsTransaction, exactTagAccepted };
   const needsContainedPublishedFinalization = needsContainedAlphaFinalization(
     context,
     plan,
@@ -271,16 +277,11 @@ async function finalizeContainedAlpha(context, state) {
     updates: context.updates,
   });
 }
-
 function selectAlphaCandidate(context, state) {
-  if (state.explicitAlphaTags[0]) {
-    return { tag: state.explicitAlphaTags[0] };
-  }
-  if (
-    state.transactionOpen &&
-    state.containsTransaction &&
-    !state.settled
-  ) {
+  const advanced = context.advancedPublicationTransaction;
+  if (advanced) return { tag: advanced.exact_tag, transaction: advanced };
+  if (state.explicitAlphaTags[0]) return { tag: state.explicitAlphaTags[0] };
+  if (state.transactionOpen && state.containsTransaction && !state.settled) {
     return state.currentAlpha;
   }
   if (
@@ -333,7 +334,11 @@ async function settleExistingAlpha(context, state, selectedAlpha) {
   });
   context.updates.push(
     state.ownsMajorAlphaTag
-      ? { tag: context.rule.majorAlphaTag, action: "existing", sha: context.sha }
+      ? {
+          tag: context.rule.majorAlphaTag,
+          action: "existing",
+          sha: context.sha,
+        }
       : {
           tag: context.rule.majorAlphaTag,
           action: "skipped-newer-minor-alpha-exists",
@@ -405,9 +410,7 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
     selectedAlpha.tag === state.currentAlpha.tag &&
     state.transactionOpen &&
     context.transactionHasPublishedMaterial(state.currentAlphaTransaction) &&
-    !["existing", "existing-publish-transaction"].includes(
-      alpha.commit.action,
-    );
+    !["existing", "existing-publish-transaction"].includes(alpha.commit.action);
   if (currentRequiresNewPublication) {
     context.updates.push({
       tag: selectedAlpha.tag,
@@ -429,6 +432,7 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
       line: context.rule.releasePrefix,
       releaseSha: alpha.sha,
       publishDistTagOverride: state.alphaPublishDistTag,
+      durablePublicationMaterial: selectedAlpha.transaction,
       allowVersionStateFinalization:
         state.currentAlpha &&
         selectedAlpha.tag === state.currentAlpha.tag &&
@@ -481,7 +485,7 @@ async function finalizeAlphaPublication(context, state, publication) {
         "",
       ),
     });
-    await context.markComplete();
+    const finalizedChannelSha = context.advancedChannelSha || alpha.sha; await context.updateTag(context.rule.alphaTag, finalizedChannelSha); await context.updateMajorAlphaFloatingTag({ sha: finalizedChannelSha }); await context.markComplete();
     context.updates.push({
       action: "finalized-advanced-publication",
       tag: selectedAlpha.tag,
@@ -588,12 +592,8 @@ async function promoteAlphaChannel(context) {
   const selectedAlpha = selectAlphaCandidate(context, state);
   const settled = await settleExistingAlpha(context, state, selectedAlpha);
   if (settled) return settled;
-  const publication = await publishAlphaCandidate(
-    context,
-    state,
-    selectedAlpha,
-  );
+  const publication = await publishAlphaCandidate(context, state, selectedAlpha);
   return finalizeAlphaPublication(context, state, publication);
 }
 
-export { promoteAlphaChannel };
+export { promoteAlphaChannel, publishAlphaCandidate, selectAlphaCandidate };

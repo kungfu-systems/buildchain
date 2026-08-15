@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
-
 function classifyPublicationChannel(channel = "") {
   const normalized = String(channel || "").trim().toLowerCase();
   if (!normalized) return undefined;
@@ -131,6 +130,8 @@ export async function ensureGitHubRelease({
     if (tagRef.status === 404) {
       throw new Error(`Git tag ${metadata.tag} does not exist in ${repository}`);
     }
+    // Existing exact tags are authoritative; target_commitish is redundant and
+    // can require workflow mutation authority for workflow-changing commits.
     const created = await githubRequest({
       apiUrl,
       token,
@@ -142,11 +143,11 @@ export async function ensureGitHubRelease({
         body: notes || `Buildchain release passport assets for ${metadata.tag}.`,
         prerelease: metadata.prerelease,
         make_latest: metadata.makeLatest,
-        ...(target ? { target_commitish: target } : {}),
       },
     });
     return { action: "created", release: created.data, metadata };
   }
+  if (metadata.prerelease === true && existing.data?.tag_name === metadata.tag && existing.data?.name === (title || metadata.tag) && existing.data?.body === (notes || `Buildchain release passport assets for ${metadata.tag}.`) && existing.data?.prerelease === true && existing.data?.draft !== true && (!target || existing.data?.target_commitish === target)) return { action: "existing", release: existing.data, metadata };
   const patched = await githubRequest({
     apiUrl,
     token,
@@ -156,7 +157,6 @@ export async function ensureGitHubRelease({
       name: title || existing.data.name || metadata.tag,
       prerelease: metadata.prerelease,
       make_latest: metadata.makeLatest,
-      ...(target ? { target_commitish: target } : {}),
     },
   });
   return { action: "updated", release: patched.data, metadata };

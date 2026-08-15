@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
-    "maxHandMaintainedSourceFiles": 344,
-    "maxHandMaintainedSourceLines": 132432,
+    "maxHandMaintainedSourceFiles": 353,
+    "maxHandMaintainedSourceLines": 136936,
     "maxWorkflowFiles": 71,
-    "maxWorkflowLines": 23636,
-    "latestTransition": "The v4 architecture and Warrant-plan validators now fail closed unless production release authority, writers, and migration phases have completed the v3-to-v4 cutover.",
-    "rationale": "Sixteen validation lines close the production-authority, fallback, rollback, writer-runtime, legacy-retirement, and historical-comparison separation invariants required for the v4 release. This exact measured ceiling cannot grow implicitly."
+    "maxWorkflowLines": 24190,
+    "latestTransition": "The v4 promotion surface now admits one rooted transient exact-runtime authorization, rejects persisted selector authority, and carries fresh-attempt Stage Capsule reuse lineage into the final Release Passport.",
+    "rationale": "The existing dev queue Warrant admission, adopter compatibility port, and exact source-proof reuse remain included unchanged. Two bounded runtime-resume modules, one provider authorization adapter, rooted schema and fixtures, workflow admission gates, action and Passport plumbing, capability metadata, and negative tests account for this transition's exact growth. Exact SHAs remain transient, failed jobs are never rerun, unaffected sealed platform capsules are reused by identity, and v3 behavior remains unchanged. These exact 353-file, 136936-source-line and 24190-workflow-line ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -19,6 +19,14 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "scripts/dev-delivery-source-proof-reuse.mjs": {
+      "maxLines": 631,
+      "rationale": "The bounded source-proof driver seals one exact PR qualification and verifies either the reviewed two-parent merge or GitHub's exact linear replay by base ancestry, commit count and every intermediate tree. Unknown, nonlinear, extra-commit or tree-drift compositions still fail closed to the full lifecycle, and this exact file ceiling cannot grow implicitly."
+    },
+    "scripts/dev-pr-prequeue-guard.mjs": {
+      "maxLines": 399,
+      "rationale": "The bounded guard keeps latest-base delta attribution, rooted source-proof reuse classification, synthetic merge composition readback, stable pre-enqueue failures, and the final base, head, queue, and Warrant compare-and-swap outside the legacy Dev PR controller; it cannot mutate the frozen source head or authorize landing by itself, and this exact file ceiling cannot grow implicitly."
+    },
     "scripts/v4-architecture.mjs": {
       "maxLines": 610,
       "rationale": "The v4 architecture validator adds only the bounded production-authority, fallback, rollback, writer-runtime, and legacy-retirement checks required for the final release cutover. This exact reviewed ceiling cannot grow implicitly."
@@ -56,12 +64,24 @@
       "maxFunctionLines": 255,
       "maxFunctionComplexity": 33,
       "rationale": "The one versioned transaction authority keeps strict declaration normalization, deterministic effect planning, atomic checkpoints, rooted observations and receipts, and bounded recovery in one independently tested audit surface; this exact preview ceiling cannot grow implicitly."
+    },
+    "packages/core/v4-runtime-ref-resume-authority.js": {
+      "maxLines": 625,
+      "rationale": "The reviewed v4 authority keeps exact-runtime authorization, source and lock binding, fresh-attempt Stage Capsule reuse, floating-ref movement, final readback, and Passport lineage verification in one bounded public module; persistence scanning is separately owned and this exact ceiling cannot grow implicitly."
+    },
+    "packages/core/v4-runtime-selector-persistence.js": {
+      "maxLines": 228,
+      "rationale": "The isolated source scanner rejects persisted exact, train, authority, variable, secret, and environment selector authority while inventorying OIDC, IAM, and external authority metadata without reading credentials; this exact ceiling cannot grow implicitly."
     }
   },
   "approvedExistingDebtTransitions": {
     "packages/core/index.js": {
-      "maxLines": 698,
-      "rationale": "The public facade forwards the reviewed declarative release-tail transaction, adapter and compatibility APIs without adding a second implementation or execution path; this exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 699,
+      "rationale": "The public facade forwards the reviewed runtime-resume authority beside the existing declarative release-tail and v4 governance APIs without adding a second implementation or execution path; this exact post-integration ceiling cannot grow implicitly."
+    },
+    "actions/promote-buildchain-ref/index.js": {
+      "maxFunctionLines": 276,
+      "rationale": "The existing action entrypoint forwards one optional rooted v4 runtime-resume evidence document into the already audited durable Passport operation; this one-line terminal widening is exact and cannot grow implicitly."
     },
     "actions/promote-buildchain-ref/lib.js": {
       "maxLines": 6952,
@@ -72,8 +92,9 @@
       "rationale": "The runtime entrypoint now binds every compatibility command and alias, including the upstream paper command, through the tested command registry; this exact post-integration wiring ceiling cannot grow implicitly."
     },
     "packages/core/release-passport.js": {
-      "maxLines": 2859,
-      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, and upstream release-evidence attachment verification while the terminal report constructor drops from 470 lines to at most 180. This exact post-integration ceiling cannot grow implicitly."
+      "maxLines": 2958,
+      "maxFunctionLines": 304,
+      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, upstream release evidence, consumer-policy certification, and the new rooted runtime A+B resume lineage. The optional attachment is normalized and independently reverified before inclusion; these exact post-integration ceilings cannot grow implicitly."
     },
     "packages/core/buildchain-contract.js": {
       "maxLines": 1095,
@@ -84,6 +105,10 @@
     "packages/core/github-governance-authority.js": {
       "maxLines": 1368,
       "rationale": "The publication authority now declares the alpha/v4/v4.0 and release/v4/v4.0 protected channels required for the v4 public train. This exact two-line channel transition cannot grow implicitly."
+    },
+    "packages/core/buildchain-config.js": {
+      "maxLines": 1806,
+      "rationale": "Artifact signing configuration admits only the Buildchain-owned JIT profile with exact safe archive-relative target paths while rejecting credentials, entitlement files, wildcard paths, incompatible artifact kinds, and incomplete declarations; this exact wiring ceiling cannot grow implicitly."
     },
     "scripts/check-internal-architecture.mjs": {
       "maxFunctionComplexity": 37,
@@ -136,6 +161,44 @@
     }
   },
   "approvedPublicSurfaceTransitions": {
+    "workflow:check": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "check",
+        "path": ".github/workflows/check.yml",
+        "reusable": true,
+        "inputs": [
+          "buildchain-ref",
+          "buildchain-repository",
+          "mode",
+          "node-version",
+          "require-version-state",
+          "source-proof-closure-paths-json",
+          "source-proof-dependency-paths-json",
+          "source-proof-policy-paths-json",
+          "source-proof-required-contexts-json",
+          "source-proof-reuse",
+          "upload-artifacts",
+          "working-directory"
+        ],
+        "secrets": [],
+        "outputs": [
+          "controller-plan-artifact",
+          "controller-plan-digest",
+          "controller-plan-json",
+          "controller-receipt-artifact",
+          "controller-receipt-digest",
+          "controller-receipt-json",
+          "controller-receipt-status",
+          "source-proof-decision-root",
+          "source-proof-producer-run-id",
+          "source-proof-reuse-reason",
+          "source-proof-reused",
+          "source-proof-root"
+        ]
+      },
+      "rationale": "Add an opt-in merge-group fast path that accepts only an unexpired artifact from a successful same-workflow pull-request run and recomputes exact source, base, patch, runtime, plan, policy, closure, dependency, required-context, controller-receipt, and two-parent merge-group bindings. Existing callers remain on the full lifecycle by default, while any missing evidence, API failure, mismatch, grouped composition, or malformed proof also runs the full lifecycle."
+    },
     "action:promote-buildchain-ref": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
@@ -210,6 +273,9 @@
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
           "release-passport-promotion-routing-json",
+          "release-passport-v4-consumer-policy-certification-json",
+          "release-passport-v4-consumer-policy-certification-root",
+          "release-passport-v4-runtime-resume-evidence-json",
           "release-tail-state-path",
           "require-governance",
           "require-publication-qualification",
@@ -226,7 +292,7 @@
         "secrets": [],
         "outputs": []
       },
-      "rationale": "The promote action opts into the reviewed declarative release-tail provider path and exposes only rooted transaction checkpoint inputs; the legacy GitHub Release path remains the default and provider failure cannot select success."
+      "rationale": "The promote action preserves the independently rooted v4 consumer-policy certification and now accepts one optional verified runtime-resume evidence document for final Release Passport construction; v3 behavior remains unchanged."
     },
     "cli:architecture": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -339,6 +405,7 @@
         "path": ".github/workflows/dev-pr-auto-merge.yml",
         "reusable": true,
         "inputs": [
+          "active-lease-context",
           "affected-paths-json",
           "allowed-head-prefixes",
           "assignment-root",
@@ -389,7 +456,7 @@
           "warrant-state-root"
         ]
       },
-      "rationale": "Extend targeted exact-head admission with an optional rooted Project Cut replay proof for the exact current base and immutable Warrant state-commit readback while independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
+      "rationale": "Extend targeted exact-head admission with an optional rooted Project Cut replay proof and the exact active-lease status context needed to read back the same fenced Warrant before enqueue, while independent approval, required checks, native queue admission, and exact integration proof remain authoritative."
     },
     "workflow:stable-candidate-patrol": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -435,6 +502,59 @@
       },
       "rationale": "The existing release-propagation command adds one policy-reporting Site upstream entry and exact non-force Work branch executor while preserving plan, lock, pickup, and Work Control compatibility."
     },
+    "workflow:publication-artifact": {
+      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+      "contract": {
+        "id": "publication-artifact",
+        "path": ".github/workflows/publication-artifact.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-name",
+          "artifact-paths",
+          "artifact-retention-days",
+          "build-command",
+          "buildchain-alpha-contract-lock-path",
+          "buildchain-contract-compatibility-policy",
+          "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-lock-path",
+          "buildchain-ref",
+          "buildchain-repository",
+          "buildchain-stable-contract-lock-path",
+          "node-version",
+          "package-name",
+          "prepare-paper-package",
+          "publish-dist-tag",
+          "setup-node",
+          "target-ref",
+          "toolchain-command",
+          "toolchain-digest",
+          "toolchain-image",
+          "toolchain-type",
+          "verify-command",
+          "working-directory"
+        ],
+        "secrets": [],
+        "outputs": [
+          "controller-plan-artifact",
+          "controller-plan-digest",
+          "controller-plan-json",
+          "controller-receipt-artifact",
+          "controller-receipt-digest",
+          "controller-receipt-json",
+          "controller-receipt-status",
+          "package-name",
+          "package-version",
+          "publication-artifact-name",
+          "publication-manifest-json",
+          "publication-manifest-path",
+          "publication-passport-path",
+          "publication-registry-path",
+          "publish-dist-tag",
+          "runtime-sha"
+        ]
+      },
+      "rationale": "The publication workflow adds consumer-owned stable and alpha lock inputs so its earliest semantic v4 admission gate can bind the persisted floating selector before controller or package execution; its outputs and v3 behavior remain unchanged."
+    },
     "workflow:.build": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
       "contract": {
@@ -469,6 +589,7 @@
           "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
+          "buildchain-visible-workflow",
           "cache-dependency-lock-root",
           "cache-policy-root",
           "cache-toolchain-root",
@@ -587,10 +708,12 @@
           "release-manifest-json",
           "runner-preset",
           "runner-routing-json",
-          "trusted-event"
+          "trusted-event",
+          "v4-consumer-policy-receipt-json",
+          "v4-consumer-policy-receipt-root"
         ]
       },
-      "rationale": "The reusable build surface adds an opt-in final-byte verification command and trusted platform-native finalization mode. Existing consumers preserve control-runner behavior when both inputs are absent; platform-native mode rejects self-hosted runners and reseals artifacts only after consumer policy succeeds."
+      "rationale": "The reusable build surface carries one internal visible-workflow coordinate into the earliest semantic v4 consumer admission gate and emits the source/runtime/dual-lock-bound receipt; build, install, and release authority remain downstream of that gate."
     },
     "workflow:build": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -629,6 +752,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "buildchain-stable-contract-lock-path",
+          "buildchain-visible-workflow",
           "cache-dependency-lock-root",
           "cache-policy-root",
           "cache-toolchain-root",
@@ -750,10 +874,12 @@
           "release-manifest-json",
           "runner-preset",
           "runner-routing-json",
-          "trusted-event"
+          "trusted-event",
+          "v4-consumer-policy-receipt-json",
+          "v4-consumer-policy-receipt-root"
         ]
       },
-      "rationale": "The generated channel router forwards the opt-in final-byte verification command and trusted platform-native finalization mode unchanged to the reusable build surface. Existing callers retain the control-runner default; the advanced workflow owns the hosted-runner guard and final artifact reseal."
+      "rationale": "The generated channel router forwards the visible-workflow coordinate and semantic v4 policy receipt while retaining floating v4 or v4-alpha selectors, dual consumer locks, and trusted nonpersistent runtime override routing."
     },
 
     "workflow:paper-release-sealed": {
@@ -927,6 +1053,7 @@
           "branch-protection-bypass-apps",
           "branch-protection-bypass-teams",
           "branch-protection-bypass-users",
+          "buildchain-alpha-contract-lock-path",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
           "buildchain-contract-lock-path",
@@ -934,6 +1061,7 @@
           "buildchain-expected-major",
           "buildchain-ref",
           "buildchain-repository",
+          "buildchain-stable-contract-lock-path",
           "channel",
           "declarative-release-tail",
           "dry-run",
@@ -952,6 +1080,8 @@
           "promotion-publication-channel",
           "promotion-router-ref",
           "promotion-router-sha",
+          "promotion-runtime-authorization-json",
+          "promotion-runtime-authorization-root",
           "promotion-runtime-ref",
           "promotion-runtime-sha",
           "promotion-shell-ref",
@@ -1017,6 +1147,7 @@
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
+          "release-passport-v4-runtime-resume-evidence-json",
           "release-propagation-config-path",
           "required-artifact-count",
           "required-status-check",
@@ -1078,7 +1209,7 @@
           "release-tail-transaction-state"
         ]
       },
-      "rationale": "The advanced promotion workflow preserves explicit expected channel and major bindings for opaque exact-runtime contract-lock checks while adding one opt-in declarative release-tail input and five rooted transaction outputs. Existing callers preserve legacy GitHub Release behavior by default; candidate, target tree, controller, command, authority workflow and provider transaction identities remain independently bound, and incomplete or mismatched evidence still fails closed without a hidden rebuild."
+      "rationale": "The advanced promotion workflow preserves exact contract-lock and channel bindings while adding a trusted transient runtime authorization plus expected root and an optional final Passport resume attachment. Candidate, target tree, policy, scanner, dual-lock, provider and fresh-attempt lineage remain independently bound, and incomplete or mismatched evidence fails closed before heavy work."
     },
     "workflow:release-candidate-promote": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -1172,6 +1303,7 @@
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
+          "release-passport-v4-runtime-resume-evidence-json",
           "release-propagation-config-path",
           "required-artifact-count",
           "required-status-check",
@@ -1245,7 +1377,7 @@
           "release-tail-transaction-state"
         ]
       },
-      "rationale": "The generated v4 promotion router forwards the opt-in declarative release-tail contract and its rooted outputs through both existing channel jobs while preserving v4-alpha and v4 shell selection, exact contract-lock routing, candidate identity and default legacy publication behavior."
+      "rationale": "The generated v4 promotion router preserves the opt-in declarative release-tail contract and exact contract-lock routing while forwarding one optional verified runtime-resume attachment through both existing channel jobs without changing default legacy publication behavior."
     }
   },
   "approvedExtractedDebt": {

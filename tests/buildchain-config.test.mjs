@@ -659,12 +659,50 @@ platforms = ["macos-arm64", "macos-x64"]
         id: "native-engine",
         path: "dist/kungfu-engine",
         profile: "auto",
+        entitlementsProfile: "none",
+        entitlementsPaths: [],
         kind: "mach-o",
         platforms: ["macos-arm64", "macos-x64"],
         required: true,
       }],
     });
   });
+});
+
+test("buildchain.toml accepts only a Buildchain-owned JIT profile for archives", () => {
+  withTempRepo({
+    "buildchain.toml": `
+schema = 1
+
+[[signing.artifacts]]
+path = "dist/runtime.tar.gz"
+kind = "archive"
+entitlements_profile = "jit-executable-v1"
+entitlements_paths = ["runtime/python/bin/python3"]
+`,
+  }, (dir) => {
+    const loaded = loadBuildchainConfig(dir);
+    assert.equal(
+      loaded.config.signing.artifacts[0].entitlementsProfile,
+      "jit-executable-v1",
+    );
+    assert.deepEqual(loaded.config.signing.artifacts[0].entitlementsPaths, [
+      "runtime/python/bin/python3",
+    ]);
+  });
+  assert.throws(
+    () => normalizeBuildchainConfig({
+      schema: 1,
+      signing: {
+        artifacts: [{
+          path: "dist/runtime",
+          kind: "mach-o",
+          entitlements_profile: "jit-executable-v1",
+        }],
+      },
+    }),
+    /requires kind = "archive"/,
+  );
 });
 
 test("buildchain.toml signing declarations reject credentials and authority config", () => {

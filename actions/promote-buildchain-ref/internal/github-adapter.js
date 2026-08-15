@@ -176,6 +176,107 @@ async function collectRemoteVersionMaterial({
   );
 }
 
+async function remoteVersionStateFilesMatch({
+  octokit,
+  owner,
+  repo,
+  currentSha,
+  generatedSha,
+  paths,
+}) {
+  if (
+    !currentSha ||
+    !generatedSha ||
+    !paths?.length ||
+    typeof octokit.rest.git.getBlob !== "function"
+  ) {
+    return false;
+  }
+  let current;
+  let generated;
+  try {
+    [current, generated] = await Promise.all([
+      collectRemoteVersionMaterial({ octokit, owner, repo, commitSha: currentSha, paths }),
+      collectRemoteVersionMaterial({ octokit, owner, repo, commitSha: generatedSha, paths }),
+    ]);
+  } catch (error) {
+    if (
+      error?.status === 404 ||
+      error?.response?.status === 404 ||
+      error?.response?.data?.message === "Reference does not exist"
+    ) {
+      return false;
+    }
+    throw error;
+  }
+  return current.every((entry, index) => {
+    const expected = generated[index];
+    return (
+      entry.path === expected?.path &&
+      entry.present === true &&
+      expected.present === true &&
+      entry.bytes === expected.bytes &&
+      entry.sha256 === expected.sha256
+    );
+  });
+}
+
+async function collectPromotionVersionMaterial(
+  context,
+  releaseCommit,
+  releaseSha,
+  sourceAlphaMaterial,
+) {
+  if (
+    !(releaseCommit.derivedVersionMaterial?.length > 0) ||
+    !sourceAlphaMaterial?.sha
+  ) {
+    return undefined;
+  }
+  const allowedPaths = releaseCommit.releaseTreeAllowedPaths || releaseCommit.files;
+  const [alphaCommit, releaseCommitInfo, alphaMaterial, releaseMaterial] =
+    await Promise.all([
+      context.getCommitInfo(context.octokit, context.owner, context.repo, sourceAlphaMaterial.sha),
+      context.getCommitInfo(context.octokit, context.owner, context.repo, releaseSha),
+      collectRemoteVersionMaterial({
+        octokit: context.octokit,
+        owner: context.owner,
+        repo: context.repo,
+        commitSha: sourceAlphaMaterial.sha,
+        paths: allowedPaths,
+      }),
+      collectRemoteVersionMaterial({
+        octokit: context.octokit,
+        owner: context.owner,
+        repo: context.repo,
+        commitSha: releaseSha,
+        paths: allowedPaths,
+      }),
+    ]);
+  return {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-anchored-version-material/v1",
+    strategy: releaseCommit.versionStrategy,
+    alpha: {
+      ref: sourceAlphaMaterial.tag,
+      commit: sourceAlphaMaterial.sha,
+      tree: alphaCommit.treeSha,
+      material: alphaMaterial,
+    },
+    release: {
+      ref: context.targetRef,
+      commit: releaseSha,
+      tree: releaseCommitInfo.treeSha,
+      material: releaseMaterial,
+    },
+    allowedPaths,
+    versionFiles: releaseCommit.files,
+    manifest: releaseCommit.anchorManifest?.path || "",
+    derivedPaths: releaseCommit.derivedVersionMaterial.map((file) => file.path),
+    derivedFiles: releaseCommit.derivedVersionMaterial,
+  };
+}
+
 async function listPullRequestsAssociatedWithCommitWithRetry({
   octokit,
   owner,
@@ -194,7 +295,9 @@ async function listPullRequestsAssociatedWithCommitWithRetry({
 }
 
 export {
+  collectPromotionVersionMaterial,
   collectRemoteVersionMaterial,
+  remoteVersionStateFilesMatch,
   decodeGitBlob,
   decodeGitBlobBuffer,
   getGitCommitWithRetry,

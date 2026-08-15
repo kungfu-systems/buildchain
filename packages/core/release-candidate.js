@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { verifyV4FloatingConsumerPolicyReceipt } from "./v4-floating-consumer-policy.js";
 import { normalizeControllerReceiptReferences, validateControllerReceiptReference } from "./controller-evidence.js";
 
 export const RELEASE_CANDIDATE_PASSPORT_CONTRACT = "kungfu-buildchain-release-candidate-passport";
@@ -171,6 +172,64 @@ function normalizeGateProfileEvidence(gateAggregate = undefined) {
   };
 }
 
+function isV4BuildchainRuntime(buildchain = {}) {
+  return [buildchain.ref, buildchain.workflowShellRef]
+    .some((value) => /^v4(?:-alpha)?$/u.test(String(value || "")))
+    || /^4\./u.test(String(buildchain.version || ""));
+}
+
+function normalizeConsumerPolicyEvidence(value, expected = {}) {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("consumerPolicyReceipt must be an object");
+  }
+  const receipt = value.receipt || value;
+  const verification = verifyV4FloatingConsumerPolicyReceipt({
+    receipt,
+    receiptRoot: value.receiptRoot || "",
+    repository: expected.repository,
+    sourceSha: expected.sourceSha,
+    resolvedRuntimeSha: expected.runtimeSha,
+  });
+  if (!verification.ok) {
+    throw new Error(`consumer policy receipt invalid: ${verification.failures.map((failure) => failure.code).join(", ")}`);
+  }
+  return { receiptRoot: verification.receiptRoot, receipt };
+}
+
+function validateConsumerPolicyEvidence(passport, check) {
+  if (isV4BuildchainRuntime(passport.buildchain)) {
+    check(Boolean(passport.consumerPolicy), "Buildchain v4 release candidate requires consumer policy evidence");
+  }
+  if (!passport.consumerPolicy) return;
+  const verification = verifyV4FloatingConsumerPolicyReceipt({
+    receipt: passport.consumerPolicy.receipt,
+    receiptRoot: passport.consumerPolicy.receiptRoot,
+    repository: passport.repository,
+    sourceSha: passport.source?.headSha,
+    resolvedRuntimeSha: passport.buildchain?.sha,
+  });
+  for (const failure of verification.failures) {
+    check(false, `consumer policy evidence invalid: ${failure.code}`);
+  }
+}
+
+function validateEvidenceBoundCandidateHash(passport, check) {
+  if (!passport.familyEvidence && !passport.consumerPolicy) return;
+  const expectedCandidateHash = sha256Json({
+    repository: passport.repository,
+    target: passport.target,
+    source: passport.source,
+    platformMatrix: passport.platformMatrix,
+    buildchain: passport.buildchain,
+    ...(passport.gateProfileEvidence ? { gateProfileEvidence: passport.gateProfileEvidence } : {}),
+    ...(passport.familyEvidence ? { familyEvidence: passport.familyEvidence } : {}),
+    ...(passport.consumerPolicy ? { consumerPolicy: passport.consumerPolicy } : {}),
+    ...(passport.controllerReceipts ? { controllerReceipts: passport.controllerReceipts } : {}),
+  });
+  check(passport.candidateHash === expectedCandidateHash, "candidate hash mismatch");
+}
+
 function normalizeFamilyReleaseEvidence(value = undefined) {
   if (value === undefined || value === null || value === "") return undefined;
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -320,6 +379,7 @@ export function createReleaseCandidatePassport({
   buildchain = {},
   gateAggregate = undefined,
   familyEvidence = undefined,
+  consumerPolicyReceipt = undefined,
   controllerReceipts = [],
   controllerReceiptReferences = [],
   workflow = {},
@@ -335,6 +395,20 @@ export function createReleaseCandidatePassport({
   const resolvedVersion = version || normalizedSummary.publishSource?.consumerVersion || inferVersionFromReleaseManifest(normalizedSummary);
   const gateProfileEvidence = normalizeGateProfileEvidence(gateAggregate);
   const normalizedFamilyEvidence = normalizeFamilyReleaseEvidence(familyEvidence);
+  const resolvedBuildchain = {
+    ref: optionalString(buildchain.ref || normalizedSummary.runtime?.ref),
+    sha: optionalString(buildchain.sha || normalizedSummary.runtime?.sha),
+    version: optionalString(buildchain.version),
+    workflowShellRef: optionalString(buildchain.workflowShellRef || normalizedSummary.runtime?.workflowShellRef),
+  };
+  const normalizedConsumerPolicy = normalizeConsumerPolicyEvidence(consumerPolicyReceipt, {
+    repository: repository || normalizedSummary.git?.repository || "",
+    sourceSha,
+    runtimeSha: resolvedBuildchain.sha,
+  });
+  if (isV4BuildchainRuntime(resolvedBuildchain) && !normalizedConsumerPolicy) {
+    throw new Error("Buildchain v4 release candidate passport requires a valid floating consumer policy receipt");
+  }
   const controllerReceiptEvidence = normalizeControllerReceiptReferences({
     receipts: controllerReceipts,
     references: controllerReceiptReferences,
@@ -366,12 +440,7 @@ export function createReleaseCandidatePassport({
       builtSourceSha: nonEmptyString(mergeRefSha || sourceSha, "builtSourceSha"),
       builtSourceTreeSha: resolvedTreeHash,
     },
-    buildchain: {
-      ref: optionalString(buildchain.ref || normalizedSummary.runtime?.ref),
-      sha: optionalString(buildchain.sha || normalizedSummary.runtime?.sha),
-      version: optionalString(buildchain.version),
-      workflowShellRef: optionalString(buildchain.workflowShellRef || normalizedSummary.runtime?.workflowShellRef),
-    },
+    buildchain: resolvedBuildchain,
     workflow: {
       name: optionalString(workflow.name),
       runId: optionalString(workflow.runId || normalizedSummary.git?.runId),
@@ -386,6 +455,7 @@ export function createReleaseCandidatePassport({
     },
     ...(gateProfileEvidence ? { gateProfileEvidence } : {}),
     ...(normalizedFamilyEvidence ? { familyEvidence: normalizedFamilyEvidence } : {}),
+    ...(normalizedConsumerPolicy ? { consumerPolicy: normalizedConsumerPolicy } : {}),
     ...(controllerReceiptEvidence.length > 0 ? { controllerReceipts: controllerReceiptEvidence } : {}),
   };
   candidate.candidateHash = sha256Json({
@@ -396,6 +466,7 @@ export function createReleaseCandidatePassport({
     buildchain: candidate.buildchain,
     ...(candidate.gateProfileEvidence ? { gateProfileEvidence: candidate.gateProfileEvidence } : {}),
     ...(candidate.familyEvidence ? { familyEvidence: candidate.familyEvidence } : {}),
+    ...(candidate.consumerPolicy ? { consumerPolicy: candidate.consumerPolicy } : {}),
     ...(candidate.controllerReceipts ? { controllerReceipts: candidate.controllerReceipts } : {}),
   });
   return candidate;
@@ -463,6 +534,7 @@ export function validateReleaseCandidatePassport({
     check(Boolean(passport.gateProfileEvidence.digest), "gate profile evidence digest is required");
     check(Boolean(passport.gateProfileEvidence.matrixDigest), "gate profile matrix digest is required");
   }
+  validateConsumerPolicyEvidence(passport, check);
   if (requireFamilyEvidence || familyEvidenceRoot || familyInitiativeId || familyAssignmentId) {
     check(Boolean(passport.familyEvidence), "family evidence is required");
   }
@@ -514,18 +586,6 @@ export function validateReleaseCandidatePassport({
       controllerIds.add(reference.controllerId);
     }
   }
-  if (passport.familyEvidence) {
-    const expectedCandidateHash = sha256Json({
-      repository: passport.repository,
-      target: passport.target,
-      source: passport.source,
-      platformMatrix: passport.platformMatrix,
-      buildchain: passport.buildchain,
-      ...(passport.gateProfileEvidence ? { gateProfileEvidence: passport.gateProfileEvidence } : {}),
-      familyEvidence: passport.familyEvidence,
-      ...(passport.controllerReceipts ? { controllerReceipts: passport.controllerReceipts } : {}),
-    });
-    check(passport.candidateHash === expectedCandidateHash, "candidate hash mismatch");
-  }
+  validateEvidenceBoundCandidateHash(passport, check);
   return { ok: errors.length === 0, errors };
 }

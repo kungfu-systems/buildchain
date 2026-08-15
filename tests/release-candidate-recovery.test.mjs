@@ -14,6 +14,7 @@ import {
   verifyReleaseCandidateRecovery,
 } from "../packages/core/release-candidate-recovery.js";
 import {
+  candidateArtifactNames,
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
   normalizePlatformManifests,
@@ -304,6 +305,30 @@ test("recovered sealed publication identity stays bound to the original candidat
     }),
     /recovered publication candidate runtime mismatch/,
   );
+});
+
+test("recovery seals only original publication payload artifacts", () => {
+  const selected = {
+    prefix: "libnode-shaped",
+    sourceSha: SOURCE_SHA,
+    passport: { name: `libnode-shaped-release-candidate-${SOURCE_SHA}` },
+    summary: { name: `libnode-shaped-summary-${SOURCE_SHA}` },
+  };
+  const artifacts = [
+    { name: `buildchain-package-${SOURCE_SHA}`, expired: false },
+    { name: `libnode-shaped-summary-${SOURCE_SHA}`, expired: false },
+    { name: `libnode-shaped-manifest-linux-x64-${SOURCE_SHA}`, expired: false },
+    { name: `libnode-shaped-controller-receipt-${SOURCE_SHA}`, expired: false },
+  ];
+  const { names, publicationNames } = candidateArtifactNames({
+    passport: { controllerReceipts: [], platformMatrix: [] },
+    artifacts,
+    selected,
+    artifactPatterns: "buildchain-package-*",
+  });
+  assert.deepEqual([...publicationNames], [`buildchain-package-${SOURCE_SHA}`]);
+  assert.ok(names.has(`libnode-shaped-summary-${SOURCE_SHA}`));
+  assert.ok(!publicationNames.has(`libnode-shaped-summary-${SOURCE_SHA}`));
 });
 
 test("recovery binds transaction identity to the sealed product publication version", () => {

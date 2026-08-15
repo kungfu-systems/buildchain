@@ -189,7 +189,7 @@ test("major bootstrap aligns version-bound release impact to the new line", () =
   );
 });
 
-test("major bootstrap admits only its exact generated KFD claim sidecar", () => {
+test("promotion admits only its exact generated sidecars", () => {
   const configured = ["package.json", "dist/site/buildchain-contract.json"];
   assert.deepEqual(
     versionVerificationAllowedPathsForPromotion("major", configured),
@@ -201,7 +201,7 @@ test("major bootstrap admits only its exact generated KFD claim sidecar", () => 
   );
   assert.deepEqual(
     versionVerificationAllowedPathsForPromotion("release", configured),
-    ["package.json", "dist/site/buildchain-contract.json"],
+    ["package.json", "dist/site/buildchain-contract.json", "dist/site/kfd-claims.json", "dist/site/public-surface-audit.json", "dist/site/workflow-registry.json"],
   );
 });
 const {
@@ -742,7 +742,7 @@ test("promote action publishes semver GitHub Release evidence assets", async (t)
       const body = JSON.parse(options.body);
       assert.equal(body.prerelease, true);
       assert.equal(body.make_latest, "false");
-      assert.equal(body.target_commitish, SHA);
+      assert.equal("target_commitish" in body, false);
       return new Response(JSON.stringify({ id: 123, html_url: "https://github.test/release" }), { status: 201 });
     }
     throw new Error(`unexpected request: ${options.method || "GET"} ${url}`);
@@ -847,6 +847,7 @@ test("promote action preserves byte-identical GitHub Release assets on duplicate
     if (String(url).endsWith("/releases/tags/v1.0.1-alpha.0")) {
       return new Response(JSON.stringify({
         id: 123,
+        tag_name: "v1.0.1-alpha.0",
         html_url: "https://github.test/release",
         name: "v1.0.1-alpha.0",
         body: "Buildchain release passport assets for v1.0.1-alpha.0.",
@@ -896,6 +897,7 @@ test("promote action preserves byte-identical GitHub Release assets on duplicate
     releasePassportOutputDir: path.dirname(files[1]),
   });
 
+  assert.equal(result.action, "existing");
   assert.equal(result.assetCount, 3);
   assert.equal(result.uploadedAssetCount, 0);
   assert.equal(result.preservedAssetCount, 3);
@@ -1456,6 +1458,11 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/publication-result.json"),
     "{}\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/recovered-publication/1.0.1"), { recursive: true });
+  fs.writeFileSync(
+    path.join(cwd, ".buildchain/recovered-publication/1.0.1/product-payload-manifest.json"),
+    "{}\n",
+  );
   fs.mkdirSync(path.join(cwd, ".buildchain/admitted/artifact/.buildchain/publication"), { recursive: true });
   fs.writeFileSync(
     path.join(cwd, ".buildchain/admitted/artifact/.buildchain/publication/publication-artifact.json"),
@@ -1724,13 +1731,17 @@ test("release promotion creates v-prefixed release tag and prepares next alpha t
     ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
     ["getRef", "tags/v1.0.0"],
     ["createRef", "refs/tags/v1.0.0", SHA],
+    ["getRef", "tags/v1.0"],
     ["updateRef", "tags/v1.0", SHA, true],
     ["getRef", "tags/v1.1"],
+    ["getRef", "tags/v1"],
     ["updateRef", "tags/v1", SHA, true],
     ["getRef", "tags/v1.0.1-alpha.0"],
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
+    ["getRef", "tags/v1.0-alpha"],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
     ["listMatchingRefs", "tags/v1."],
+    ["getRef", "tags/v1-alpha"],
     ["updateRef", "tags/v1-alpha", SHA, true],
   ]);
 });
@@ -1824,7 +1835,9 @@ test("alpha promotion creates exact prerelease tag and moves minor and major alp
     ["listMatchingRefs", "tags/v1."],
     ["getRef", "tags/v1.0.1-alpha.0"],
     ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
+    ["getRef", "tags/v1.0-alpha"],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
+    ["getRef", "tags/v1-alpha"],
     ["updateRef", "tags/v1-alpha", SHA, true],
   ]);
 });
@@ -2438,6 +2451,17 @@ test("release finalization merges protected alpha next-alpha ancestry", async ()
             };
             throw error;
           }
+          if (ref === "heads/alpha/v1/v1.0" && sha.startsWith("commit-3")) {
+            const error = new Error("Repository rule violations found");
+            error.status = 422;
+            error.response = {
+              data: {
+                message:
+                  "Repository rule violations found: Changes must be made through a pull request.",
+              },
+            };
+            throw error;
+          }
           refs.set(ref, sha);
           return {};
         },
@@ -2492,16 +2516,31 @@ test("release finalization merges protected alpha next-alpha ancestry", async ()
   const nextAlphaSha = commits[1].sha;
   const nextAlphaMergeSha = commits[2].sha;
   assert.equal(refs.get("heads/release/v1/v1.0"), releaseSha);
-  assert.equal(refs.get("heads/alpha/v1/v1.0"), nextAlphaMergeSha);
+  assert.equal(refs.get("heads/alpha/v1/v1.0"), OTHER_SHA);
   assert.deepEqual(commits[1].parents, [releaseSha]);
   assert.deepEqual(commits[2].parents, [OTHER_SHA, nextAlphaSha]);
-  assert.equal(createdPullRequest, undefined);
-  assert.equal(result.nextAlphaSha, nextAlphaMergeSha);
+  assert.deepEqual(createdPullRequest, {
+    html_url: "https://github.com/kungfu-systems/buildchain/pull/test",
+    head: versionStateBranchName("alpha/v1/v1.0", nextAlphaMergeSha),
+    base: "alpha/v1/v1.0",
+    title: "Prepare v1.0.1-alpha.0",
+  });
+  assert.equal(result.nextAlphaSha, nextAlphaSha);
+  assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
   assert.equal(
     result.updates.some(
       (update) =>
         update.ref === "alpha/v1/v1.0" &&
         update.action === "created-version-state-merge" &&
+        update.sha === nextAlphaMergeSha,
+    ),
+    true,
+  );
+  assert.equal(
+    result.updates.some(
+      (update) =>
+        update.ref === "alpha/v1/v1.0" &&
+        update.action === "pending-version-state-pr" &&
         update.sha === nextAlphaMergeSha,
     ),
     true,

@@ -82,6 +82,10 @@ export function inspectArtifactSigningRequests({
       if (seen.has(key))
         throw new Error(`duplicate artifact signing request: ${key}`);
       seen.add(key);
+      const {
+        entitlementsProfile = "none",
+        entitlementsPaths = [],
+      } = request.signature;
       const item = {
         id: request.artifact.id,
         slug: safeId(request.artifact.id),
@@ -104,6 +108,8 @@ export function inspectArtifactSigningRequests({
         sourceSha: request.source.sha,
         sourceTreeSha: request.source.treeSha,
         transportFormat: request.artifact.transport?.format || "",
+        entitlementsProfile,
+        entitlementsPaths: entitlementsPaths.join(","),
       };
       if (request.signature.profile === "detached-signature-v1")
         matrices.detached.push(item);

@@ -639,6 +639,8 @@ export {
 } from "./kfd3-surface-register.js";
 
 export * from "./release-propagation.js";
+export * from "./v4-floating-consumer-policy.js";
+export * from "./v4-runtime-ref-resume-authority.js";
 
 export {
   RELEASE_ACTIVATION_CONTRACT,

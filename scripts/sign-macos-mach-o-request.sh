@@ -29,6 +29,24 @@ compound_work="${authority_tmp}/compound-work"
 notary_root="${authority_tmp}/notary-root"
 notary_timeout="${BUILDCHAIN_APPLE_NOTARY_TIMEOUT:-55m}"
 artifact_kind="${BUILDCHAIN_ARTIFACT_KIND:-mach-o}"
+entitlements_profile="${BUILDCHAIN_ENTITLEMENTS_PROFILE:-none}"
+entitlements_paths="${BUILDCHAIN_ENTITLEMENTS_PATHS:-}"
+
+case "${entitlements_profile}" in
+  none|jit-executable-v1) ;;
+  *) echo "unsupported Buildchain entitlements profile: ${entitlements_profile}" >&2; exit 1 ;;
+esac
+
+if [ "${entitlements_profile}" != "none" ] && [ "${artifact_kind}" != "archive" ]; then
+  echo "Buildchain entitlements profile ${entitlements_profile} requires an Apple archive" >&2
+  exit 1
+fi
+
+if { [ "${entitlements_profile}" = "none" ] && [ -n "${entitlements_paths}" ]; } ||
+   { [ "${entitlements_profile}" != "none" ] && [ -z "${entitlements_paths}" ]; }; then
+  echo "Buildchain entitlements paths must be non-empty exactly when a profile is enabled" >&2
+  exit 1
+fi
 
 cleanup() {
   security delete-keychain "${keychain_path}" >/dev/null 2>&1 || true
@@ -63,7 +81,9 @@ case "${artifact_kind}" in
       --evidence "${compound_evidence}" \
       --identity "${BUILDCHAIN_APPLE_CERTIFICATE_SHA1}" \
       --keychain "${keychain_path}" \
-      --team-id "${BUILDCHAIN_APPLE_TEAM_ID}"
+      --team-id "${BUILDCHAIN_APPLE_TEAM_ID}" \
+      --entitlements-profile "${entitlements_profile}" \
+      --entitlements-paths "${entitlements_paths}"
     /usr/bin/ditto -c -k --keepParent "${notary_root}" "${notary_archive}"
     ;;
   mach-o|binary|dylib)

@@ -19,19 +19,19 @@ permissions:
   contents: read
   issues: write
   id-token: write
-
 jobs:
   libnode-shaped:
-    uses: ./.github/workflows/build.yml
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
     secrets: inherit
     with:
+      buildchain-channel: alpha
       buildchain-ref: ${{ github.event.pull_request.head.sha || github.sha }}
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify
       artifact-transfer-mode: ${{ github.event.inputs['artifact-transfer-mode'] || 'github-artifacts' }}
       buildchain-contract-drift-issue-mode: "off"
-      checkout-cache-mode: auto
+      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
       checkout-cache-fallback: github
       artifact-name: libnode-shaped
       artifact-name-template: "{artifact}-{platform}-{shortSha}"

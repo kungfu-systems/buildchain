@@ -163,9 +163,11 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(action, /generated-ref-update-token:/);
   assert.match(implementation, /branchProtectionBypassApps/);
   assert.match(implementation, /generatedRefUpdateToken/);
+  assert.match(implementation, /tagUpdateToken/);
   assert.match(implementation, /generatedPullRequestToken/);
   assert.match(implementation, /pullRequestOctokit/);
   assert.match(implementation, /refUpdateOctokit/);
+  assert.match(implementation, /tagUpdateOctokit/);
   assert.match(wrapper, /branch-protection-bypass-apps:/);
   assert.match(wrapper, /default: "github-actions"/);
   assert.match(wrapper, /branch-protection-bypass-users:/);
@@ -182,7 +184,14 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   );
   assert.equal(publicWrapper.match(/buildchain-expected-major: "4"/g)?.length, 2);
   assert.doesNotMatch(publicWrapper, /inputs\.buildchain-expected-(?:channel|major)/);
-  assert.match(wrapper, /token: \$\{\{ github\.token \}\}/);
+  assert.match(
+    wrapper,
+    /- name: Promote-only publish[\s\S]*?uses: \.\/\.buildchain\/runtime\/actions\/promote-buildchain-ref[\s\S]*?with:\n\s+token: \$\{\{ github\.token \}\}/,
+  );
+  assert.doesNotMatch(
+    wrapper,
+    /- name: Promote-only publish[\s\S]*?with:\n\s+token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN/,
+  );
   assert.match(wrapper, /generated-status-check-token: \$\{\{ github\.token \}\}/);
   assert.match(
     wrapper,
@@ -192,6 +201,10 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.match(
     wrapper,
     /generated-ref-update-token: \$\{\{ github\.token \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /BUILDCHAIN_TAG_UPDATE_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \|\| github\.token \}\}/,
   );
 
   const selfPromotion = fs.readFileSync(
@@ -459,7 +472,8 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/build\.yml/);
+  assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4-alpha/);
+  assert.match(workflow, /buildchain-channel: alpha/);
   assert.match(
     workflow,
     /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
@@ -469,7 +483,8 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
     /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
   );
   assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
-  assert.match(workflow, /checkout-cache-mode: auto/);
+  assert.match(workflow, /buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/);
+  assert.doesNotMatch(workflow, /checkout-cache-mode:/);
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.match(
     workflow,
@@ -648,7 +663,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /buildchain-expected-channel: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && 'alpha' \|\| 'stable' \}\}/,
   );
-  assert.match(workflow, /buildchain-expected-major: "4"/);
+  assert.match(
+    workflow,
+    /buildchain-expected-major: \$\{\{ \(startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/v3\/'\) \|\| startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'release\/v3\/'\)\) && '3' \|\| '4' \}\}/,
+  );
   assert.match(
     workflow,
     /buildchain-contract-lock-path: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && '\.buildchain\/alpha-contract-lock\.json' \|\| '\.buildchain\/contract-lock\.json' \}\}/,
@@ -689,7 +707,14 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /publish-required-artifacts-json: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'release\/'\) && '\[\{"group":"node","kind":"npm","name":"@kungfu-tech\/buildchain","ref_template":"\{version\}","role":"main","required":true\}\]' \|\| '' \}\}/,
   );
-  assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/);
+  assert.match(
+    workflow,
+    /artifact-patterns: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) && 'buildchain-package-\*' \|\| '' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-rematerialize-on-resume: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'release\/'\) \}\}/,
+  );
   assert.doesNotMatch(
     workflow,
     /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != ''/,
@@ -739,6 +764,25 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(source, /publishTransaction\?\.state === "complete"/);
   assert.match(source, /transaction-state=/);
   assert.match(source, /finalizationNeeded !== true/);
+});
+
+test("stable recovery keeps candidate bytes immutable while preparing the next alpha", () => {
+  const versionState = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/internal/version-state-operations.js"),
+    "utf8",
+  );
+  const releaseChannel = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/internal/promote-release-channel.js"),
+    "utf8",
+  );
+  assert.match(
+    versionState,
+    /recoveredCandidate = releaseCandidateValidation\?\.recoveredCandidate === true/u,
+  );
+  assert.match(
+    releaseChannel,
+    /message: `chore\(release\): prepare \$\{selectedNextAlpha\.tag\}`,[\s\S]*?recoveredCandidate: false/u,
+  );
 });
 
 test("publish source-lock docs distinguish source refs from promotion targets", () => {

@@ -263,6 +263,54 @@ export function parseWorkflowCallJobs(text) {
     .filter((job) => job.uses);
 }
 
+function blockScalarIndent(lines, lineIndex, parentIndent) {
+  for (let index = lineIndex + 1; index < lines.length; index += 1) {
+    if (!lines[index].trim()) continue;
+    const indent = indentation(lines[index]);
+    return indent > parentIndent ? indent : null;
+  }
+  return null;
+}
+
+/**
+ * Enumerate semantic `uses` mapping nodes without mistaking shell/heredoc text
+ * inside YAML block scalars for workflow syntax. The returned scalar retains
+ * expression-vs-literal classification used by the reusable-call contract.
+ */
+export function parseYamlUses(text) {
+  const lines = String(text || "").split(/\r?\n/);
+  const uses = [];
+  let block = null;
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const indent = indentation(line);
+    if (block) {
+      if (!line.trim()) continue;
+      if (indent >= block.contentIndent) continue;
+      block = null;
+    }
+    const mapping = line.match(
+      /^(\s*)(?:-\s+)?([A-Za-z0-9_.-]+):(?:\s*(.*))?$/,
+    );
+    if (!mapping) continue;
+    const value = stripComment(mapping[3] || "");
+    if (/^[>|][+-]?$/.test(value)) {
+      const contentIndent = blockScalarIndent(lines, index, indent);
+      if (contentIndent !== null) block = { contentIndent };
+      continue;
+    }
+    if (mapping[2] !== "uses") continue;
+    uses.push({
+      line: index + 1,
+      column: mapping[1].length + 1,
+      raw: value,
+      scalar: scalar(value),
+      value: unquote(value),
+    });
+  }
+  return uses;
+}
+
 export function parseWorkflowDocument(text) {
   return {
     triggers: parseTriggers(String(text || "").split(/\r?\n/)),

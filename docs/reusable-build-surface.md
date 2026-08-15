@@ -102,6 +102,36 @@ The router is generated from `.build.yml`'s input/output surface. Run
 `node scripts/generate-channel-build-workflow.mjs` after changing the advanced
 build workflow; inventory and unit tests reject a stale generated router.
 
+### v4 floating consumer admission
+
+The v4 public surfaces add a source policy gate before dependency setup, matrix
+planning, build, publication, or promotion work. Tracked caller YAML may use
+only `@v4` or `@v4-alpha`, and the repository must commit both
+`.buildchain/contract-lock.json` and `.buildchain/alpha-contract-lock.json`.
+Source-persisted exact SHAs, exact defaults, repository/input/environment
+indirection, nested composite indirection, a missing lock, or a stale selected
+lock fail closed.
+
+Admission emits a rooted receipt binding the caller source, public workflow,
+visible selector and workflow-shell SHA, actual runtime SHA, both lock roots,
+and policy/scanner roots. A trusted `workflow_dispatch` train or SHA remains a
+non-persistent runtime override: the tracked floating selector and its selected
+lock still bind the visible workflow shell. Release-candidate evidence carries
+the receipt; promotion certifies it independently; final v4 Release Passport
+construction requires the matching certification.
+
+Transient train, authority, and exact-SHA selections additionally produce a
+provider-readback-bound runtime authorization receipt. A resumed failed tail
+uses a fresh attempt and records the original build runtime, the resume runtime,
+the exact sealed Stage Capsules reused per platform, and the platforms rebuilt
+in the final Release Passport. See
+[`v4-runtime-ref-resume-authority.md`](v4-runtime-ref-resume-authority.md).
+
+See the normative
+[`v4 floating consumer policy`](../architecture/v4-floating-consumer-policy.md)
+and its machine declaration for the exact acceptance boundary. This policy does
+not change v3 behavior.
+
 ## Advanced Workflow
 
 Consumers that need direct workflow-shell or runtime control call the advanced
@@ -699,6 +729,17 @@ For a declared macOS `archive`, the authority safely extracts the sealed
 container, signs and verifies every Mach-O payload, signs Mach-O payloads inside
 embedded Python wheels, rebuilds each affected wheel's PEP 427 `RECORD`, and
 recreates the original zip or tar.gz before returning the exact final bytes.
+Archives whose executable hosts a JIT runtime can additionally request the
+Buildchain-owned `entitlements_profile = "jit-executable-v1"` and exact paths,
+for example `entitlements_paths = ["product/runtime/python/bin/python3"]`.
+Paths are relative to the extracted archive root. The authority
+then attaches only `com.apple.security.cs.allow-jit` to the exact executable
+Mach-O files sealed in `entitlements_paths`, leaves every other executable and
+library without exception entitlements, and records the profile, paths, and
+entitled executable count in provider evidence. Consumer-provided entitlement
+files and wildcard target paths are unsupported. The profile is valid only for
+Apple `archive` requests and fails closed on an unsafe, missing,
+non-executable, duplicate, or unsealed target path.
 Windows `pe` and `binary` artifacts
 resolve to timestamped native `windows-authenticode`; Windows PE never falls
 back to a detached signature. Linux and other non-native binary files,

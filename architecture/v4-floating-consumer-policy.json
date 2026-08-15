@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-floating-consumer-policy/v1",
+  "policyVersion": "2026-08-14",
+  "scope": {
+    "repository": "kungfu-systems/buildchain",
+    "majorLine": "v4",
+    "persistedSelectors": ["v4", "v4-alpha"],
+    "publicWorkflowEntrypoints": [
+      ".github/workflows/.build.yml",
+      ".github/workflows/publication-artifact.yml",
+      ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/v4-stage-capsule-canary.yml"
+    ]
+  },
+  "contractLocks": {
+    "stable": {
+      "selector": "v4",
+      "path": ".buildchain/contract-lock.json"
+    },
+    "alpha": {
+      "selector": "v4-alpha",
+      "path": ".buildchain/alpha-contract-lock.json"
+    },
+    "selectedLockMustBindResolvedWorkflowShell": true,
+    "bothRootsRequiredInReceipt": true
+  },
+  "sourcePolicy": {
+    "directExactSha": "deny",
+    "exactDefault": "deny",
+    "repositoryVariableIndirection": "deny",
+    "inputOrEnvironmentIndirection": "deny",
+    "nestedCompositeIndirection": "deny",
+    "unknownSyntax": "deny",
+    "missingCallerCheckout": "deny"
+  },
+  "runtimeEscapeBoundary": {
+    "persistedSelectorOverride": false,
+    "trustedNonPersistentInput": true,
+    "requiresSeparateAuthority": true,
+    "requiresReadback": true,
+    "receiptReuse": false
+  },
+  "receipt": {
+    "schema": "contracts/v4-floating-consumer-policy-receipt-v1.schema.json",
+    "bindings": [
+      "caller-repository",
+      "caller-source-sha",
+      "invoked-workflow",
+      "visible-selector-class",
+      "channel",
+      "stable-contract-lock-root",
+      "alpha-contract-lock-root",
+      "resolved-workflow-shell-sha",
+      "resolved-runtime-sha",
+      "policy-version",
+      "policy-root",
+      "scanner-root",
+      "source-scan-root"
+    ]
+  },
+  "enforcement": {
+    "earliestConsumerAdmissionRequired": true,
+    "heavyJobsTransitivelyGated": true,
+    "externalCertificationRequired": true,
+    "releasePassportRequired": true,
+    "oldRuntimeSelfAuthorization": false
+  },
+  "authority": {
+    "v3BehaviorChange": false,
+    "providerEffects": false,
+    "credentials": false,
+    "productionMutation": false
+  }
+}

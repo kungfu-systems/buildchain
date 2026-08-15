@@ -73,6 +73,20 @@ test("queue identity and state roots fail closed on drift", () => {
   );
 });
 
+test("queue readback preserves native qualification metadata", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z", {
+    environmentRoot: ROOTS.context,
+    sourceWorkflowRunId: 31665171177,
+    affectedPaths: ["tests/dev-delivery-warrant.test.mjs", "packages/core/dev-delivery-warrant.js"],
+  });
+  const candidate = submitted.queue.candidates[0];
+
+  assert.equal(candidate.environmentRoot, ROOTS.context);
+  assert.equal(candidate.sourceWorkflowRunId, 31665171177);
+  assert.deepEqual(candidate.affectedPaths, ["packages/core/dev-delivery-warrant.js", "tests/dev-delivery-warrant.test.mjs"]);
+  assert.equal(normalizeDevDeliveryQueue(submitted.queue).stateRoot, submitted.queue.stateRoot);
+});
+
 test("duplicate submission is idempotent and safe head repair retains queue age", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const duplicate = submitDevDeliveryCandidate(first.queue, candidate(100), {

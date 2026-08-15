@@ -167,7 +167,7 @@ jobs:
       # own governed recovery path permanently unreachable.
       buildchain-ref: ${{ github.event.workflow_run.head_sha || ((inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') && github.sha) || inputs.sha || github.sha }}
       buildchain-expected-channel: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && 'alpha' || 'stable' }}
-      buildchain-expected-major: "4"
+      buildchain-expected-major: ${{ (startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/v3/') || startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'release/v3/')) && '3' || '4' }}
       buildchain-contract-lock-path: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && '.buildchain/alpha-contract-lock.json' || '.buildchain/contract-lock.json' }}
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
@@ -185,7 +185,8 @@ jobs:
       resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
       # Alpha consumes sealed candidate npm bytes; stable materializes final bytes and cannot reuse alpha ref/digest.
-      artifact-patterns: "buildchain-package-*"
+      artifact-patterns: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && 'buildchain-package-*' || '' }}
+      publish-rematerialize-on-resume: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'release/') }}
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
       standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}

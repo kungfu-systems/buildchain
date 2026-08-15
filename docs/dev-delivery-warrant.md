@@ -150,7 +150,25 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
 - `shadow` qualifies the source and emits a read-only queue submission plan;
 - `required` persists the submission, selects the Warrant, and refuses GitHub
   enqueue unless the immutable queue commit, state root, active Warrant, and
-  selected candidate all pass exact readback validation.
+  selected candidate all pass exact readback validation. Immediately before
+  enqueue, the controller writes and reads back both the exact-head queue
+  admission status and the active lease status. Only after both are visible at
+  their required states does it reread the pull request head, protected base,
+  native merge queue, and current protected Warrant. The final rooted
+  admission transaction binds the frozen base, source head, Warrant fence and
+  generation, Project Cut proof, and both status contexts. Status propagation
+  is retried before enqueue; base, head, predecessor, lease, or Warrant drift
+  revokes both statuses without attempting enqueue.
+
+  Required-mode admission also performs a latest-base Project Cut immediately
+  before enqueue. If the protected base advanced, the controller reclassifies
+  the exact attributed delta against the Warrant-bound source proof. Only a disjoint,
+  fully attributed move may reuse that proof; overlap, unknown attribution,
+  missing composition, or merge conflict fails with a stable pre-enqueue reason.
+  The rooted Project Cut receipt binds the frozen and admitted base SHAs,
+  GitHub's exact synthetic merge commit and replay tree, and the unchanged PR
+  head. A final base/head/queue/Warrant compare-and-swap readback must still
+  match that receipt before the enqueue mutation is attempted.
 
 Consumers should deploy `shadow` first, inspect receipts, then change their
 protected caller to `required`. Rollback is a reviewed caller change back to

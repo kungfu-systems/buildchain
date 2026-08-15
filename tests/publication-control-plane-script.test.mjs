@@ -101,10 +101,10 @@ function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCom
       merge_base_commit: { sha: SOURCE_SHA },
     },
   };
-  return `#!/usr/bin/env node\nconst responses = ${JSON.stringify(responses)};\nconst route = process.argv[3];\nif (!(route in responses)) { console.error(\`missing fake route: \${route}\`); process.exit(1); }\nprocess.stdout.write(JSON.stringify(responses[route]));\n`;
+  return `#!/usr/bin/env node\nconst responses = ${JSON.stringify(responses)};\nconst route = process.argv[3];\nif (process.env.FAIL_PRIMARY_PUBLIC_READ === "1" && route.includes("/contents/") && process.env.GH_TOKEN !== "public-read-token") { console.error("primary public read unavailable"); process.exit(1); }\nif (process.env.FAIL_PRIMARY_AUTHORITY_READ === "1" && route.includes("/rulesets?") && process.env.GH_TOKEN !== "public-read-token") { console.error("primary authority read unavailable"); process.exit(1); }\nif (!(route in responses)) { console.error(\`missing fake route: \${route}\`); process.exit(1); }\nprocess.stdout.write(JSON.stringify(responses[route]));\n`;
 }
 
-function runAudit({ requiredCheckConclusion = "success", historicalSource = false, largeSourceCommit = false } = {}) {
+function runAudit({ requiredCheckConclusion = "success", historicalSource = false, largeSourceCommit = false, failPrimaryPublicRead = false, failPrimaryAuthorityRead = false } = {}) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-control-plane-"));
   const bin = path.join(cwd, "bin");
   fs.mkdirSync(bin);
@@ -122,6 +122,10 @@ function runAudit({ requiredCheckConclusion = "success", historicalSource = fals
     env: {
       ...process.env,
       PATH: `${bin}${path.delimiter}${process.env.PATH || ""}`,
+      GH_TOKEN: "governance-app-token",
+      BUILDCHAIN_GITHUB_PUBLIC_READ_TOKEN: "public-read-token",
+      FAIL_PRIMARY_PUBLIC_READ: failPrimaryPublicRead ? "1" : "",
+      FAIL_PRIMARY_AUTHORITY_READ: failPrimaryAuthorityRead ? "1" : "",
     },
   });
   fs.rmSync(cwd, { recursive: true, force: true });
@@ -155,9 +159,12 @@ test("publication control-plane audit accepts source commit JSON beyond the defa
   assert.equal(receipt.facts.find((entry) => entry.id === "branch-policy").status, "pass");
 });
 
-test("publication control-plane audit queries the exact required check instead of truncating crowded check history", () => {
-  const result = runAudit();
+test("publication control-plane audit queries the exact required check and retries only public metadata", () => {
+  const result = runAudit({ failPrimaryPublicRead: true });
   assert.equal(result.status, 0, result.stderr);
   const receipt = JSON.parse(result.stdout);
   assert.equal(receipt.facts.find((entry) => entry.id === "branch-policy").status, "pass");
+  const authorityFailure = runAudit({ failPrimaryAuthorityRead: true });
+  assert.equal(authorityFailure.status, 1);
+  assert.match(authorityFailure.stderr, /repository rulesets is unavailable/);
 });

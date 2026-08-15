@@ -262,6 +262,11 @@ async function handleCollectCommand({ args, runScript, packageVersion }) {
       collectArgs,
       "release-evidence-json",
     ),
+    v4RuntimeResumeEvidenceJson: readFlag(
+      collectArgs,
+      "v4-runtime-resume-evidence-json",
+      "",
+    ),
     githubArtifactAttestationPolicyJsons: readRepeatedFlag(
       collectArgs,
       "github-artifact-attestation-policy-json",

@@ -74,6 +74,8 @@ jobs:
           node-version: "24"
       - name: Enforce public consumer-only v4 dogfood
         run: node scripts/check-v4-public-dogfood-contract.mjs
+      - name: Enforce v4 floating consumer policy contract
+        run: node scripts/check-v4-floating-consumer-policy-contract.mjs
       - uses: actions/setup-go@v6.5.0
         with:
           go-version: "1.25.x"

@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "06ae9e1f95e87be2732432c4943b9d9c078b6fd52de803c52ff486fe4590e7fc",
+    "sha256": "401b2f2f00cbcf2aa6c8d8cc21961ce98490e63dc4f3afc81e47369a7f0e7d7b",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 71,
       "actionCount": 7,
-      "sitePageCount": 75,
+      "sitePageCount": 76,
       "docCommandRefCount": 919,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "06ae9e1f95e87be2732432c4943b9d9c078b6fd52de803c52ff486fe4590e7fc",
+      "sha256": "401b2f2f00cbcf2aa6c8d8cc21961ce98490e63dc4f3afc81e47369a7f0e7d7b",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 71,
         "actionCount": 7,
-        "sitePageCount": 75,
+        "sitePageCount": 76,
         "docCommandRefCount": 919,
         "failureCount": 0
       },
@@ -1543,6 +1543,30 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./public-surface-audit"
+        },
+        {
+          "id": "export:./v4-floating-consumer-policy",
+          "name": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-floating-consumer-policy.js",
+          "evidencePath": "packages/core/v4-floating-consumer-policy.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-floating-consumer-policy"
+        },
+        {
+          "id": "export:./v4-runtime-ref-resume-authority",
+          "name": "@kungfu-tech/buildchain/v4-runtime-ref-resume-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-runtime-ref-resume-authority.js",
+          "evidencePath": "packages/core/v4-runtime-ref-resume-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-runtime-ref-resume-authority"
         },
         {
           "id": "export:./logging",
@@ -3526,7 +3550,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 90,
+          "inputCount": 91,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -3555,6 +3579,7 @@
             "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
+            "buildchain-visible-workflow",
             "cache-dependency-lock-root",
             "cache-policy-root",
             "cache-toolchain-root",
@@ -3769,7 +3794,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 113,
+          "inputCount": 118,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -3777,6 +3802,7 @@
             "branch-protection-bypass-apps",
             "branch-protection-bypass-teams",
             "branch-protection-bypass-users",
+            "buildchain-alpha-contract-lock-path",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
@@ -3784,6 +3810,7 @@
             "buildchain-expected-major",
             "buildchain-ref",
             "buildchain-repository",
+            "buildchain-stable-contract-lock-path",
             "channel",
             "declarative-release-tail",
             "dry-run",
@@ -3802,6 +3829,8 @@
             "promotion-publication-channel",
             "promotion-router-ref",
             "promotion-router-sha",
+            "promotion-runtime-authorization-json",
+            "promotion-runtime-authorization-root",
             "promotion-runtime-ref",
             "promotion-runtime-sha",
             "promotion-shell-ref",
@@ -3867,6 +3896,7 @@
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
+            "release-passport-v4-runtime-resume-evidence-json",
             "release-propagation-config-path",
             "required-artifact-count",
             "required-status-check",
@@ -4292,7 +4322,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 93,
+          "inputCount": 94,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -4324,6 +4354,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "buildchain-stable-contract-lock-path",
+            "buildchain-visible-workflow",
             "cache-dependency-lock-root",
             "cache-policy-root",
             "cache-toolchain-root",
@@ -4571,13 +4602,18 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 7,
+          "inputCount": 12,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
             "mode",
             "node-version",
             "require-version-state",
+            "source-proof-closure-paths-json",
+            "source-proof-dependency-paths-json",
+            "source-proof-policy-paths-json",
+            "source-proof-required-contexts-json",
+            "source-proof-reuse",
             "upload-artifacts",
             "working-directory"
           ],
@@ -4692,8 +4728,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 32,
+          "inputCount": 33,
           "inputs": [
+            "active-lease-context",
             "affected-paths-json",
             "allowed-head-prefixes",
             "assignment-root",
@@ -5078,17 +5115,19 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 21,
+          "inputCount": 23,
           "inputs": [
             "artifact-name",
             "artifact-paths",
             "artifact-retention-days",
             "build-command",
+            "buildchain-alpha-contract-lock-path",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
+            "buildchain-stable-contract-lock-path",
             "node-version",
             "package-name",
             "prepare-paper-package",
@@ -5114,7 +5153,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 102,
+          "inputCount": 103,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -5201,6 +5240,7 @@
             "release-passport-output-dir",
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
+            "release-passport-v4-runtime-resume-evidence-json",
             "release-propagation-config-path",
             "required-artifact-count",
             "required-status-check",
@@ -5518,7 +5558,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 80,
+          "inputCount": 83,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -5588,6 +5628,9 @@
             "release-passport-platform-manifest-paths",
             "release-passport-product-name",
             "release-passport-promotion-routing-json",
+            "release-passport-v4-consumer-policy-certification-json",
+            "release-passport-v4-consumer-policy-certification-root",
+            "release-passport-v4-runtime-resume-evidence-json",
             "release-tail-state-path",
             "require-governance",
             "require-publication-qualification",
@@ -6590,6 +6633,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-runtime-ref-resume-authority",
+          "name": "site-page:manual:v4-runtime-ref-resume-authority",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-stage-capsule",
           "name": "site-page:manual:v4-stage-capsule",
           "kind": "site-page",
@@ -6808,6 +6863,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 433
+    "publicSurfaceCount": 436
   }
 }

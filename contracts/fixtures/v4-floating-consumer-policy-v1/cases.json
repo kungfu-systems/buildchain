@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-floating-consumer-policy-fixtures/v1",
+  "cases": [
+    {
+      "id": "stable-floating-dual-lock",
+      "selector": "v4",
+      "expected": "passed"
+    },
+    {
+      "id": "alpha-floating-dual-lock",
+      "selector": "v4-alpha",
+      "expected": "passed"
+    },
+    {
+      "id": "persistent-exact-sha",
+      "selector": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expectedCode": "persistent-exact-sha-selector"
+    },
+    {
+      "id": "repository-variable-indirection",
+      "selector": "${{ vars.BUILDCHAIN_REF }}",
+      "expectedCode": "persistent-selector-indirection"
+    },
+    {
+      "id": "input-default-indirection",
+      "selector": "${{ inputs.buildchain-ref }}",
+      "expectedCode": "persistent-selector-indirection"
+    },
+    {
+      "id": "wrong-channel",
+      "selector": "v4.0",
+      "expectedCode": "unapproved-v4-selector"
+    },
+    {
+      "id": "missing-alpha-lock",
+      "selector": "v4",
+      "remove": ".buildchain/alpha-contract-lock.json",
+      "expectedCode": "alpha-lock-missing"
+    },
+    {
+      "id": "stale-selected-lock",
+      "selector": "v4-alpha",
+      "stale": "alpha",
+      "expectedCode": "selected-lock-runtime-mismatch"
+    },
+    {
+      "id": "nested-composite-exact-sha",
+      "selector": "local-composite",
+      "expectedCode": "persistent-exact-sha-selector"
+    }
+  ]
+}

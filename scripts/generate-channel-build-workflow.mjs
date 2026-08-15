@@ -90,6 +90,9 @@ function forwardedInputs(names) {
       if (name === "buildchain-contract-lock-path") {
         return "      buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}";
       }
+      if (name === "buildchain-visible-workflow") {
+        return "      buildchain-visible-workflow: .github/workflows/build.yml";
+      }
       return `      ${name}: \${{ inputs.${name} }}`;
     })
     .join("\n");

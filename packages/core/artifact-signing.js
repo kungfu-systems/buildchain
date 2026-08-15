@@ -9,6 +9,7 @@ export const ARTIFACT_SIGNING_AUTHORITY_CONTRACT =
 
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/u;
 const SOURCE_SHA_PATTERN = /^[0-9a-f]{40}$/u;
+const ENTITLEMENTS_PROFILES = new Set(["none", "jit-executable-v1"]);
 const FORBIDDEN_CREDENTIAL_KEYS =
   /(?:certificate|password|private.?key|secret|token|notary|issuer|team.?id|environment)/iu;
 
@@ -86,6 +87,64 @@ function exactSourceSha(value, label) {
     throw new Error(`${label} must be a 40-character Git SHA`);
   }
   return normalized;
+}
+
+function entitlementsPaths(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) {
+    throw new Error("signing entitlements paths must be an array");
+  }
+  const paths = value.map((entry, index) => {
+    const normalized = nonEmptyString(
+      entry,
+      `signing entitlements paths[${index}]`,
+    );
+    const parts = normalized.split("/");
+    if (
+      normalized.startsWith("/") ||
+      normalized.includes("\\") ||
+      normalized.includes(",") ||
+      parts.some((part) => part === "" || part === "." || part === "..")
+    ) {
+      throw new Error(
+        `signing entitlements paths[${index}] must be a safe archive-relative path`,
+      );
+    }
+    return normalized;
+  });
+  if (new Set(paths).size !== paths.length) {
+    throw new Error("signing entitlements paths must not contain duplicates");
+  }
+  return paths;
+}
+
+function signingEntitlements(profileId, kind, signature) {
+  const profile = String(signature.entitlementsProfile || "none").trim();
+  const paths = entitlementsPaths(signature.entitlementsPaths);
+  if (!ENTITLEMENTS_PROFILES.has(profile)) {
+    throw new Error(
+      `unsupported signing entitlements profile: ${profile || "<empty>"}`,
+    );
+  }
+  if (
+    profile !== "none" &&
+    (profileId !== "apple-developer-id" || kind !== "archive")
+  ) {
+    throw new Error(
+      `signing entitlements profile ${profile} requires an Apple archive`,
+    );
+  }
+  if (
+    (profile === "none" && paths.length !== 0) ||
+    (profile !== "none" && paths.length === 0)
+  ) {
+    throw new Error(
+      "signing entitlements paths must be non-empty exactly when an entitlements profile is enabled",
+    );
+  }
+  return profile === "none"
+    ? {}
+    : { entitlementsProfile: profile, entitlementsPaths: paths };
 }
 
 function assertNoCredentialMaterial(value, path = "request") {
@@ -191,6 +250,7 @@ export function createArtifactSigningRequest({
     platform,
     artifactKind: kind,
   });
+  const entitlementIntent = signingEntitlements(profile.id, kind, signature);
   const request = {
     schemaVersion: 1,
     contract: ARTIFACT_SIGNING_REQUEST_CONTRACT,
@@ -253,6 +313,7 @@ export function createArtifactSigningRequest({
       profile: profile.id,
       provider: profile.provider,
       semantics: profile.semantics,
+      ...entitlementIntent,
     },
     delivery: {
       mode: nonEmptyString(

@@ -8,12 +8,11 @@ import { pathToFileURL } from "node:url";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 import {
   generatePublishRequiredArtifacts,
-  readNpmPackageArtifact,
-  selectReleaseCandidateArtifacts,
-} from "./release-candidate-resolver.mjs";
-import {
   githubDownload,
   githubJson,
+  readNpmPackageArtifact,
+  selectPayloadArtifacts,
+  selectReleaseCandidateArtifacts,
   unzip,
   verifyArtifactArchive,
 } from "./release-candidate-resolver.mjs";
@@ -156,7 +155,7 @@ async function downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir,
   };
 }
 
-function candidateArtifactNames({ passport, selected, artifacts, artifactPatterns }) {
+export function candidateArtifactNames({ passport, selected, artifacts, artifactPatterns }) {
   const names = new Set([selected.passport.name, selected.summary.name]);
   for (const reference of passport.controllerReceipts || []) {
     if (!reference.artifact) throw new Error(`Passport controller receipt ${reference.controllerId} has no artifact identity`);
@@ -171,11 +170,9 @@ function candidateArtifactNames({ passport, selected, artifacts, artifactPattern
   for (const artifact of artifacts) {
     if (manifestPattern.test(String(artifact.name || ""))) names.add(artifact.name);
   }
-  const matchers = splitPatterns(artifactPatterns).map(patternMatcher);
-  for (const artifact of artifacts) {
-    if (matchers.some((matcher) => matcher.test(String(artifact.name || "")))) names.add(artifact.name);
-  }
-  return names;
+  const publicationNames = new Set(selectPayloadArtifacts({ artifacts, artifactName: selected.prefix, sourceSha: selected.sourceSha, patterns: artifactPatterns }).map((artifact) => artifact.name));
+  for (const name of publicationNames) names.add(name);
+  return { names, publicationNames };
 }
 
 export function normalizePlatformManifests(downloads, passport) {
@@ -352,7 +349,7 @@ async function recoverCandidateEvidence({
   for (const artifact of [selected.passport, selected.summary]) initialDownloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   const passport = readOnlyJson(initialDownloads[0].files.filter((file) => path.basename(file.path) === "release-candidate-passport.json"), "release-candidate-passport.json");
   const buildSummary = readOnlyJson(initialDownloads[1].files.filter((file) => path.basename(file.path) === "build-summary.json"), "build-summary.json");
-  const requiredNames = candidateArtifactNames({ passport, selected, artifacts, artifactPatterns });
+  const { names: requiredNames, publicationNames } = candidateArtifactNames({ passport, selected, artifacts, artifactPatterns });
   const chosen = artifacts.filter((artifact) => requiredNames.has(artifact.name));
   if (chosen.length !== requiredNames.size) {
     const found = new Set(chosen.map((artifact) => artifact.name));
@@ -363,7 +360,7 @@ async function recoverCandidateEvidence({
   for (const artifact of chosen.filter((entry) => ![selected.passport.id, selected.summary.id].includes(entry.id))) downloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   return {
     run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-    passport, buildSummary, chosen, downloads,
+    passport, buildSummary, chosen, downloads, publicationNames,
   };
 }
 
@@ -396,7 +393,7 @@ export async function resumeFromCandidateRun({
   try {
     const {
       run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-      passport, buildSummary, chosen, downloads,
+      passport, buildSummary, chosen, downloads, publicationNames,
     } = await recoverCandidateEvidence({
       repoInfo, runId, artifactName, artifactPatterns, requiredArtifactCount,
       outputDir, apiUrl, token, fetchImpl, archiveDir,
@@ -412,7 +409,7 @@ export async function resumeFromCandidateRun({
     const controllerReceipts = normalizeControllerReceipts(downloads, passport);
     const productPayloadManifests = normalizeProductPayloadManifests(downloads);
     const publication = createRecoveredPublication({
-      downloads,
+      downloads: downloads.filter(({ artifact }) => publicationNames.has(artifact.name)),
       bundleRoot,
       repository: repoInfo.fullName,
       passport,

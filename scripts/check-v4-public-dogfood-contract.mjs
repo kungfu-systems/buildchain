@@ -10,9 +10,7 @@ const DEFAULT_ROOT = path.resolve(
 );
 const CALLER_PATH = ".github/workflows/v4-public-consumer-dogfood.yml";
 const REUSABLE_PATH = ".github/workflows/v4-stage-capsule-canary.yml";
-export const V4_PUBLIC_DOGFOOD_TRAIN_REF =
-  "train/v4/v4.0/public-consumer-self-dogfood";
-const EXACT_SHA = /^[0-9a-f]{40}$/u;
+export const V4_PUBLIC_DOGFOOD_ALPHA_REF = "v4-alpha";
 const PRIVATE_CONSUMER = ["buildchain", "self", "dogfood"].join("-");
 const PRIVATE_SHADOW = ["kungfu", "shadow"].join("-");
 
@@ -139,13 +137,8 @@ function assertArchitecture(root) {
   );
   const dogfood = architecture.publicConsumerDogfood;
   const validationRef = dogfood?.validationRef;
-  if (
-    validationRef !== V4_PUBLIC_DOGFOOD_TRAIN_REF &&
-    !EXACT_SHA.test(String(validationRef))
-  )
-    fail(
-      "architecture validationRef must be the exact public train or a protected commit SHA",
-    );
+  if (validationRef !== V4_PUBLIC_DOGFOOD_ALPHA_REF)
+    fail("architecture validationRef must use the floating v4-alpha channel");
   const caller = read(root, CALLER_PATH);
   if (caller !== expectedV4PublicDogfoodWorkflow(validationRef))
     fail(`${CALLER_PATH} must remain the exact thin public consumer caller`);
@@ -168,7 +161,7 @@ function assertArchitecture(root) {
     dogfood.relativeOrSelfInvocationAllowed !== false ||
     dogfood.directQualificationInvocationAllowed !== false ||
     dogfood.candidateBranchOverrideAllowed !== false ||
-    dogfood.recursionRecovery !== "public-train-ref-only"
+    dogfood.recursionRecovery !== "floating-selector-with-trusted-runtime-input"
   )
     fail(
       "architecture publicConsumerDogfood contract is incomplete or widened",
@@ -226,6 +219,8 @@ function assertPolicySources(root) {
     "No agent may add or restore a relative/self reusable-workflow call",
     "never solve recursion with an internal exception",
     "scripts/check-v4-public-dogfood-contract.mjs",
+    "source-persisted exact commit SHA",
+    "v4-alpha",
   ])
     if (!agents.includes(invariant))
       fail(`AGENTS.md is missing invariant: ${invariant}`);

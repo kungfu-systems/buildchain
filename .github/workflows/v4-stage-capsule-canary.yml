@@ -34,8 +34,59 @@ permissions:
   contents: read
 
 jobs:
+  consumer-admission:
+    name: Admit floating-only v4 consumer source
+    runs-on: ubuntu-24.04
+    outputs:
+      receipt-root: ${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}
+      scanner-root: ${{ steps.policy.outputs.v4-consumer-policy-scanner-root }}
+    steps:
+      - name: Checkout exact consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          path: .buildchain/consumer
+          persist-credentials: false
+      - name: Resolve exact called-workflow runtime
+        id: runtime
+        shell: bash
+        env:
+          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${BUILDCHAIN_WORKFLOW_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::job.workflow_sha is not an exact commit SHA"
+            exit 1
+          fi
+          printf 'sha=%s\n' "$(printf '%s' "${BUILDCHAIN_WORKFLOW_SHA}" | tr '[:upper:]' '[:lower:]')" >> "${GITHUB_OUTPUT}"
+      - name: Checkout exact Buildchain policy runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ steps.runtime.outputs.sha }}
+          path: .buildchain/v4-policy-runtime
+          persist-credentials: false
+      - name: Enforce v4 floating consumer policy
+        id: policy
+        shell: bash
+        env:
+          BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
+          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-stage-capsule-canary.yml
+          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
+          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
+          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
+        run: node .buildchain/v4-policy-runtime/scripts/v4-consumer-policy.mjs scan
+      - name: Upload rooted consumer admission receipt
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-consumer-policy-${{ inputs.consumer }}-${{ github.sha }}
+          path: .buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json
+          if-no-files-found: error
+
   qualify:
     name: Real lifecycle (${{ matrix.platform }})
+    needs: consumer-admission
     strategy:
       fail-fast: false
       matrix:
@@ -156,7 +207,7 @@ jobs:
 
   reconcile:
     name: Reconcile exact three-platform evidence
-    needs: qualify
+    needs: [consumer-admission, qualify]
     runs-on: ubuntu-24.04
     steps:
       - name: Resolve exact called-workflow runtime

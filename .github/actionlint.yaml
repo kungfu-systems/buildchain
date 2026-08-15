@@ -32,10 +32,11 @@ paths:
     ignore:
       - 'property "workflow_sha" is not defined in object type'
   .github/workflows/.build.yml:
-    # GitHub.com exposes job.workflow_ref for called-workflow identity. Keep
-    # this exact false-positive scoped until actionlint's context schema ships it.
+    # GitHub.com exposes called-workflow identity on job. Keep these exact
+    # false-positives scoped until actionlint's context schema ships them.
     ignore:
       - 'property "workflow_ref" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
   .github/workflows/.auditable-demo.yml:
     # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
     ignore:
@@ -71,5 +72,8 @@ paths:
     ignore:
       - 'property "workflow_ref" is not defined in object type'
   .github/workflows/publication-artifact.yml:
+    # GitHub.com exposes called-workflow identity on job. Keep these exact
+    # false-positives scoped until actionlint's context schema ships them.
     ignore:
       - 'property "workflow_ref" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
