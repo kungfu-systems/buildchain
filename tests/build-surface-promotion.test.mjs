@@ -296,6 +296,14 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: \$\{\{ steps\.rc\.outputs\.release-candidate-source-sha \|\| needs\.preflight\.outputs\.requested-sha \}\}/,
   );
+  assert.match(
+    wrapper,
+    /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /BUILDCHAIN_PUBLICATION_GATE_CONTROLLER_SHA: \$\{\{ inputs\.publication-gate-controller-sha \}\}/,
+  );
   assert.doesNotMatch(wrapper, /loadUncheckedUpgradePublicationAdmission/);
   assert.doesNotMatch(
     wrapper,

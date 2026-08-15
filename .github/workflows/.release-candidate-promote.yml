@@ -2022,6 +2022,10 @@ jobs:
           BUILDCHAIN_RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA: ${{ steps.promote.outputs.transaction-release-sha }}
           BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG: ${{ steps.promote.outputs.public-release-tag }}
+          BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
+          BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON: ${{ needs.publication-authority.outputs.gate-aggregate-json }}
+          BUILDCHAIN_PUBLICATION_GATE_CONTROLLER_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_PUBLICATION_GATE_CONTROLLER_SHA: ${{ inputs.publication-gate-controller-sha }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
