@@ -104,7 +104,7 @@ import { promoteMajorChannel } from "./internal/promote-major-channel.js";
 import { promoteAlphaChannel } from "./internal/promote-alpha-channel.js";
 import { promoteReleaseChannel } from "./internal/promote-release-channel.js";
 import { createVersionStateOperations as createVersionStateOperationsModule } from "./internal/version-state-operations.js";
-import { createDurableTransactionOperations as createDurableTransactionOperationsModule } from "./internal/durable-transaction-operations.js";
+import { createDurableTransactionOperations as createDurableTransactionOperationsModule, finalizationRequirements } from "./internal/durable-transaction-operations.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -5083,6 +5083,7 @@ export {
   generateReleaseEvidenceInputs,
   createTreeEquivalentReleaseImpact,
   createDurableTransactionOperations,
+  finalizationRequirements,
   createRefMutationOperations,
   releaseCommitMatchesTransactionMaterial as testReleaseCommitMatchesTransactionMaterial,
   releasePassportArtifactFiles,
