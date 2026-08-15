@@ -2727,6 +2727,7 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     selfPromotion,
     /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/,
   );
+  assert.match(selfPromotion, /publish-rematerialize-on-resume:.*alpha\/.*\|\|.*release\//);
   assert.match(
     selfPromotion,
     /recover-durable-transaction:[\s\S]*?type: boolean/,
