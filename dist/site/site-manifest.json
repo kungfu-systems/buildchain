@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:b034b77889449b3fdafc84c72556958c4e567244592d7d2af55adaa616baf851"
+      "digest": "sha256:0c2b983ac1d276d39007d536ba81844f36f419a4d9482c75f5ed38c1437098c0"
     },
     {
       "id": "build-facts",
@@ -365,7 +365,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:9287a7f2fe7a5072f096475d050e03b572419cca4832e35964222d273c2d0b8a"
+      "digest": "sha256:4aba152fbf373129363f106914a612cd0d6a135e74f4714976e3361ad670cac7"
     }
   ],
   "facts": [

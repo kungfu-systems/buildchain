@@ -385,6 +385,8 @@ export function createBuildchainContractWorld({
         "buildchain-ref",
         "buildchain-contract-lock-path",
         "buildchain-contract-compatibility-policy",
+        "buildchain-contract-expected-channel",
+        "buildchain-contract-expected-major",
         "buildchain-contract-drift-issue-mode",
         "build-command",
         "verify-command",

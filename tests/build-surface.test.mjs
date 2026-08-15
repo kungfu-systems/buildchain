@@ -1939,6 +1939,8 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
   assert.match(workflow, /buildchain-contract-compatibility-policy:/);
+  assert.match(workflow, /buildchain-contract-expected-channel:/);
+  assert.match(workflow, /buildchain-contract-expected-major:/);
   assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
   assert.match(workflow, /default: "major-compatible"/);
   assert.match(workflow, /default: "compatible-and-breaking"/);
@@ -1949,6 +1951,9 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /Check Buildchain contract lock/);
   assert.match(workflow, /buildchain-contract-lock\.mjs check/);
   assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_CHANNEL:/);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_MAJOR:/);
+  assert.match(workflow, /runtime-class == 'exact-sha'/);
   assert.doesNotMatch(workflow, /contract-lock-compatible=true/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /contract-lock-status=/);

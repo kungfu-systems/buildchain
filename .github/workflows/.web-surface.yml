@@ -22,6 +22,16 @@ on:
         default: "major-compatible"
         type: string
         required: false
+      buildchain-contract-expected-channel:
+        description: "Stable or alpha channel identity for an immutable workflow-shell SHA."
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-expected-major:
+        description: "Buildchain major identity for an immutable workflow-shell SHA."
+        default: ""
+        type: string
+        required: false
       buildchain-contract-drift-issue-mode:
         description: "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking."
         default: "compatible-and-breaking"
@@ -789,7 +799,9 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ needs.runtime.outputs.runtime-class }}
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ job.workflow_ref }}
-          BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ needs.runtime.outputs.runtime-override }}
+          BUILDCHAIN_EXPECTED_CHANNEL: ${{ inputs.buildchain-contract-expected-channel }}
+          BUILDCHAIN_EXPECTED_MAJOR: ${{ inputs.buildchain-contract-expected-major }}
+          BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ needs.runtime.outputs.runtime-override == 'true' || needs.runtime.outputs.runtime-class == 'exact-sha' }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Report consumer Buildchain contract drift
