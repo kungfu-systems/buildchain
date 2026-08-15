@@ -198,6 +198,14 @@ export function normalizeTailResealRequest(raw) {
   };
 }
 
+export function validateTailResealRuntimeBinding(request, expectedRuntimeSha) {
+  const expected = exactSha(expectedRuntimeSha, "BUILDCHAIN_EXPECTED_RUNTIME_SHA");
+  if (request.candidateRuntime.sha !== expected) {
+    throw new Error(`tail reseal candidate runtime ${request.candidateRuntime.sha} differs from the trusted workflow runtime ${expected}`);
+  }
+  return request;
+}
+
 function exactArtifact(artifacts, name, digest, label) {
   const matches = artifacts.filter((artifact) => artifact.name === name);
   if (matches.length !== 1) throw new Error(`${label} must resolve to exactly one retained artifact`);
@@ -298,6 +306,7 @@ async function plan() {
   const token = required(process.env.GITHUB_TOKEN, "GITHUB_TOKEN");
   const raw = required(process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_JSON, "BUILDCHAIN_TAIL_RESEAL_REQUEST_JSON");
   const request = normalizeTailResealRequest(JSON.parse(raw));
+  validateTailResealRuntimeBinding(request, process.env.BUILDCHAIN_EXPECTED_RUNTIME_SHA);
   const event = readJson(required(process.env.GITHUB_EVENT_PATH, "GITHUB_EVENT_PATH"), "GitHub event");
   const repository = required(process.env.GITHUB_REPOSITORY, "GITHUB_REPOSITORY");
   validateTailResealEvent({ request, event, repository });
