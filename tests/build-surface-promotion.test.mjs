@@ -296,8 +296,12 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: \$\{\{ steps\.rc\.outputs\.release-candidate-source-sha \|\| needs\.preflight\.outputs\.requested-sha \}\}/,
   );
-  assert.match(wrapper, /loadUncheckedUpgradePublicationAdmission/);
-  assert.match(wrapper, /'--clobber'/);
+  assert.doesNotMatch(wrapper, /loadUncheckedUpgradePublicationAdmission/);
+  assert.doesNotMatch(
+    wrapper,
+    /fs\.writeFileSync\(file, source\)/,
+    "Buildchain must execute the exact consumer publication controller without rewriting it",
+  );
   assert.match(
     wrapper,
     /PUBLICATION_COMMIT_EVIDENCE.*publication-commit-evidence\.json/s,
