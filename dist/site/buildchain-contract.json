@@ -97,6 +97,85 @@
       "contractVersion": 1,
       "stability": "stable",
       "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+      "id": "dev-pr-auto-merge",
+      "kind": "workflow",
+      "path": ".github/workflows/dev-pr-auto-merge.yml",
+      "publicRef": "kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v4-alpha",
+      "requiredInputs": [
+        "target-branch",
+        "expected-pr-number",
+        "expected-head-sha"
+      ],
+      "requiredOutputs": [
+        "admission-receipt-root",
+        "warrant-state-root",
+        "provider-heartbeat-receipt-root",
+        "provider-finalizer-boundary-root"
+      ],
+      "breakingDefaults": {
+        "runtimeSelectorDefault": "v4",
+        "authorityMode": "two-phase-delivery-warrant",
+        "publicFloatingCaller": "v4-alpha",
+        "durableSelfDeliveryRef": "v4-alpha",
+        "independentHeartbeatRunner": "macos-15",
+        "candidateCredentialAccess": "forbidden"
+      },
+      "optionalInputs": [
+        "buildchain-repository",
+        "buildchain-ref",
+        "source-workflow-run-id",
+        "legacy-active-owner-binding-json",
+        "delivery-warrant-mode",
+        "handoff-workflow-id",
+        "source-workflow-id",
+        "assignment-root",
+        "initiative-root",
+        "source-identity-root",
+        "source-patch-root",
+        "plan-root",
+        "closure-root",
+        "dependency-root",
+        "toolchain-root",
+        "environment-root",
+        "affected-paths-json",
+        "shard-evidence-roots-json",
+        "release-blocker-priority-json",
+        "native-proof-json",
+        "native-command",
+        "native-command-root",
+        "native-heartbeat-seconds",
+        "delivery-class",
+        "delivery-priority",
+        "required-status-checks",
+        "queue-admission-context",
+        "active-lease-context",
+        "ready-label",
+        "block-labels",
+        "allowed-head-prefixes",
+        "require-approval",
+        "same-repository-only",
+        "max-merges",
+        "merge-method",
+        "landing-mode",
+        "dry-run"
+      ],
+      "guarantees": [
+        "Landing admission persists one exact provider workflow run, job, hosted runner, source, merge-group head, protected base, and admission root",
+        "every admitted Landing heartbeat carries that persisted provider attempt and renews only through the non-injectable public GitHub workflow-run-attempt and job readback",
+        "heartbeat loss verifies and records the exact admitted provider attempt but withholds the run-scoped cancellation API so a successor rerun cannot be cancelled",
+        "terminal cleanup reads the immutable historical run-attempt endpoint and does not confuse the caller workflow with referenced reusable workflows or a synchronized current PR head",
+        "candidate execution and evidence sealing receive no provider write credentials",
+        "a separate credentialed hosted runner durably heartbeats the exact fence through provider-confirmed native and seal completion",
+        "the finalizer validates rooted heartbeat continuity and latest durable state before qualification, failure settlement, or landing",
+        "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
+      ],
+      "breakingDigest": "sha256:1946bbcbe4ff41e263d1c65024e25c8c9ae261acea1bf62c490b95d412f87d9e",
+      "auditDigest": "sha256:65dd95900973fec345043d1ce92fc7625719fc9b7312f319a03a75a4c3705b0c"
+    },
+    {
+      "contractVersion": 1,
+      "stability": "stable",
+      "additiveChanges": "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
       "id": "release-candidate-promote",
       "kind": "workflow",
       "path": ".github/workflows/release-candidate-promote.yml",
@@ -702,7 +781,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:377a975d16ffd1e36f5abd60538107380c3bd9e60337482af6aa5b1384742a1b"
+      "auditDigest": "sha256:35f1f62be899e4c0ddf0f7c830f6a081496d16c016278fdef35b1c2b92cc8216"
     },
     {
       "contractVersion": 1,
@@ -792,7 +871,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:e55862ef0e7e4c93238c953d01c758846fd72f73fbf0d1c99a589fc900142127"
+      "auditDigest": "sha256:de53c0e3756627fa0e5fbfb26f62c399d74f9dd183e194096539216abcab740a"
     },
     {
       "contractVersion": 1,
@@ -814,7 +893,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:67fa2bad84b1c726e71b9a22c8ca3fe80864b044476fd6fe18d776bfb3b21cc0"
+      "auditDigest": "sha256:e8cf15eab3aec819289f0c6ab42b79588c9b3aa5433031c55d1fd9d9ee773e0b"
     },
     {
       "contractVersion": 1,
@@ -3859,6 +3938,6 @@
       "auditDigest": "sha256:d07482cd66413a2fb3781a3b76f960b8151b6231841799647fe237820de2fde6"
     }
   ],
-  "compatibilityDigest": "sha256:7234ed200c568b1fea0e469de61ec7a67da48ede0af6290fb49b93a9e62e0b65",
-  "contractDigest": "sha256:c07a4c7eed8316656b5c0e1381acbd4d98ce8dc78c9829fba818d4bf806716f3"
+  "compatibilityDigest": "sha256:ebb8ce660fea4ad4334bc30855a96b718a0dadcd3825584a625e3ea0507e2c28",
+  "contractDigest": "sha256:d8876cf926951e203bf974057f535591207d55d5bd24412f5cd05878cea22f2a"
 }

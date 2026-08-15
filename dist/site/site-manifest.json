@@ -50,7 +50,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:c6be6076530f21d1a81f4f3d64f7aa2a9e5e8fb35a02f79a895814a85cad4838"
+      "digest": "sha256:16120e34c1a178b00309887d7903c2c8acb95815326091cf46a608d375435b99"
     },
     {
       "id": "getting-started",
@@ -234,7 +234,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0aa0c937ca4f3f239f67c10a3e656ca0934cd3618bf84639525ea1fbd685c055"
+      "digest": "sha256:7eeba08521991a9584acb8e45fc046b550dc0555028cbe6b03cd4f81914389de"
     },
     {
       "id": "node-api-reference",
@@ -242,7 +242,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1771331eea141e17dc27d19ccd6ccdf2d3a7d2ecdb98fb9e0d0d563b1e61b438"
+      "digest": "sha256:7da363d723da544a565fe1768c9f85d9664b59aa55888e0361800b7af565e80a"
     },
     {
       "id": "build-facts",

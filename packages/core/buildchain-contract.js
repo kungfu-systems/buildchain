@@ -9,6 +9,7 @@ import {
 } from "./buildchain-channel-identity.js";
 import { createControllerRegistry } from "./controller-evidence.js";
 import { enumerateWorkflowInputs } from "./public-surface-audit.js";
+import { devDeliveryWorkflowContractSurface } from "./dev-delivery-contract-surface.js";
 
 export {
   BUILDCHAIN_CHANNELS,
@@ -125,8 +126,7 @@ export function createBuildchainContractWorld({
   packageJson = undefined,
   controllerRegistry = undefined,
 } = {}) {
-  const pkg = packageJson || readJson(path.join(root, "package.json"), {});
-  const majorLine = majorLineFromPackageVersion(pkg.version);
+  const pkg = packageJson || readJson(path.join(root, "package.json"), {}), majorLine = majorLineFromPackageVersion(pkg.version);
   const workflowDescriptors = controllerRegistry ? [] : enumerateWorkflowInputs({ root });
   const controllerWorkflowIds = new Set([
     "check",
@@ -217,6 +217,7 @@ export function createBuildchainContractWorld({
         "alpha and stable channel selections use separate consumer contract locks by default",
       ],
     }),
+    surface(root, devDeliveryWorkflowContractSurface(pkg, majorLine)),
     surface(root, {
       id: "release-candidate-promote",
       kind: "workflow",

@@ -52,6 +52,11 @@ function exactWarrantBinding({ result, warrant, candidate, options, pullRequest 
   requireMatch(Number.isInteger(Number(warrant.generation)) && Number(warrant.generation) >= 1, "delivery-warrant-generation-invalid");
   requireMatch(Number.isFinite(Date.parse(warrant.expiresAt)) && Date.parse(warrant.expiresAt) > Date.now(), "delivery-warrant-expired");
   requireMatch(ROOT_PATTERN.test(String(result.receiptRoot || "")), "delivery-warrant-receipt-root-missing");
+  requireMatch((warrant.phase || "qualified") === "qualified", "delivery-warrant-not-qualified");
+  if (warrant.phase === "qualified") {
+    requireMatch(ROOT_PATTERN.test(String(warrant.nativeProofRoot || "")), "delivery-warrant-native-proof-missing");
+    requireMatch(ROOT_PATTERN.test(String(warrant.nativeProofReuseRoot || "")), "delivery-warrant-native-reuse-missing");
+  }
 }
 
 export function createDevPrAdmissionReceipt({ options, pr = {}, state, reason, readiness, decision = {}, queue = null, warrant = null, labels = [], nextAction }) {
@@ -120,6 +125,8 @@ export function readDeliveryWarrantResult(options, pullRequest) {
     pullRequestNumber: warrant.pullRequestNumber,
     sourceHead: warrant.sourceHead,
     sourceProofRoot: warrant.sourceProofRoot,
+    nativeProofRoot: warrant.nativeProofRoot || "",
+    nativeProofReuseRoot: warrant.nativeProofReuseRoot || "",
   };
 }
 
@@ -162,6 +169,9 @@ export async function verifyCurrentDeliveryWarrant(client, options, pullRequest,
   requireMatch(Number(active?.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-current-pr-mismatch");
   requireMatch(String(active?.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-current-head-mismatch");
   requireMatch(active?.sourceProofRoot === warrant.sourceProofRoot, "delivery-warrant-current-source-proof-mismatch");
+  requireMatch((active?.phase || "qualified") === "qualified", "delivery-warrant-current-not-qualified");
+  requireMatch((active?.nativeProofRoot || "") === (warrant.nativeProofRoot || ""), "delivery-warrant-current-native-proof-mismatch");
+  requireMatch((active?.nativeProofReuseRoot || "") === (warrant.nativeProofReuseRoot || ""), "delivery-warrant-current-native-reuse-mismatch");
   requireMatch(Number.isFinite(Date.parse(active?.expiresAt)) && Date.parse(active.expiresAt) > Date.now(), "delivery-warrant-current-expired");
   requireMatch(["selected", "proving", "waiting", "blocked", "qualified"].includes(candidate?.status), "delivery-warrant-current-candidate-not-selected");
   requireMatch(candidate?.sourceHead === active.sourceHead, "delivery-warrant-current-candidate-head-mismatch");

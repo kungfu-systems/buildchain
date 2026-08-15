@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-delivery-authority-parity",
+  "sourceAuthority": {
+    "decision": "architecture/decisions/0003-two-phase-delivery-warrant.md",
+    "reference": "docs/dev-delivery-warrant.md",
+    "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
+    "schemaVersion": 1
+  },
+  "target": {
+    "branch": "dev/v4/v4.0",
+    "singleFlightContract": "kungfu-buildchain-dev-delivery-warrant-queue",
+    "boundedAuthorityContract": "kungfu-buildchain-dev-delivery-authority",
+    "boundedAuthoritySchemaVersion": 2
+  },
+  "allowedDispositions": [
+    "implemented",
+    "superseded-equivalent",
+    "missing-before-closeout"
+  ],
+  "invariants": [
+    {
+      "id": "DA-01",
+      "claim": "Native delivery receives provisional authority before expensive execution and cannot use that phase as merge admission.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-warrant.js",
+        "scripts/dev-delivery-two-phase.mjs"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-two-phase.test.mjs",
+        "tests/dev-delivery-two-phase-run.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-01"
+    },
+    {
+      "id": "DA-02",
+      "claim": "The provisional Warrant heartbeats one exact token and generation, and stale or expired owners cannot renew or qualify.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-warrant.js",
+        "scripts/dev-delivery-native-run.mjs"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-two-phase.test.mjs",
+        "tests/dev-delivery-native-run.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-02"
+    },
+    {
+      "id": "DA-03",
+      "claim": "Native proof binds semantic source, exact source head, qualified base, affected closure, dependency and toolchain roots, environment, heartbeat receipt, and shard evidence; PR-controlled native code and its complete readable process ancestry receive no controller or provider write credentials, the recursively enumerated transfer is an exact regular-file-only closed set staged separately from candidate evidence, an independent hosted heartbeat runner chains durable state and receipt roots through native and seal completion, and only a live-readback-proven distinct GitHub-hosted finalizer job and runner may verify the latest state, revalidate bytes, recompute canonical failure evidence, qualify, or settle the exact bound failure.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-native-proof.js",
+        "packages/core/dev-delivery-execution-failure.js",
+        "packages/core/dev-delivery-execution-transfer.js",
+        "packages/core/dev-delivery-process-boundary.js",
+        "packages/core/dev-delivery-provider-heartbeat.js",
+        "scripts/dev-delivery-native-run.mjs",
+        "scripts/dev-delivery-process-boundary.mjs",
+        "scripts/dev-delivery-provider-heartbeat.mjs",
+        ".github/workflows/dev-pr-auto-merge.yml"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-two-phase.test.mjs",
+        "tests/dev-delivery-native-run.test.mjs",
+        "tests/dev-delivery-process-boundary.test.mjs",
+        "tests/dev-delivery-process-boundary-negative.test.mjs",
+        "tests/dev-delivery-provider-heartbeat.test.mjs",
+        "tests/build-surface.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-03"
+    },
+    {
+      "id": "DA-04",
+      "claim": "Interruption resumes only from a live qualified fence or a proof whose complete attributed base delta remains disjoint; ambiguity or overlap revalidates.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-native-proof.js",
+        "scripts/dev-delivery-two-phase-resume.mjs"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-two-phase.test.mjs",
+        "tests/dev-delivery-two-phase-run.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-04"
+    },
+    {
+      "id": "DA-05",
+      "claim": "Native success upgrades the same fence atomically to qualified authority and records exact proof and reuse roots without minting a second token.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-native-proof.js",
+        "packages/core/dev-delivery-warrant.js"
+      ],
+      "verificationEvidence": ["tests/dev-delivery-two-phase.test.mjs"],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-05"
+    },
+    {
+      "id": "DA-06",
+      "claim": "Expiry does not imply worker termination; an expired provisional holder remains exclusive until exact fenced terminal settlement, and duplicate settlement is idempotent.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-warrant.js",
+        "packages/core/dev-delivery-warrant-settlement.js"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-warrant.test.mjs",
+        "tests/dev-delivery-two-phase.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-06"
+    },
+    {
+      "id": "DA-07",
+      "claim": "GitHub merge_group and the protected Project Cut remain final integration authority; a Warrant alone never mutates branch protection or proves landing.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-proof.js",
+        "scripts/dev-pr-delivery-warrant.mjs",
+        ".github/workflows/dev-pr-auto-merge.yml"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-warrant.test.mjs",
+        "tests/dev-pr-auto-merge.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-07"
+    },
+    {
+      "id": "DA-08",
+      "claim": "Bounded mode issues no more than the configured Qualification Leases and only across disjoint rooted safety domains; unknown or overlapping domains serialize.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-authority-qualification.js",
+        "packages/core/dev-delivery-authority-state.js"
+      ],
+      "verificationEvidence": ["tests/dev-delivery-authority.test.mjs"],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-08"
+    },
+    {
+      "id": "DA-09",
+      "claim": "Qualification authority cannot admit merge_group; a new Landing requires complete verified-native qualification, its public admission API derives provider identity only from live GitHub readback, and exactly one exclusive Landing Warrant binds the candidate, source head, token, generation, state root, protected base, merge-group head, and verified provider attempt.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-authority-landing.js",
+        "packages/core/dev-delivery-landing-admission-core.js",
+        "packages/core/dev-delivery-authority-qualification.js",
+        "contracts/dev-delivery-authority-v2.schema.json"
+      ],
+      "verificationEvidence": ["tests/dev-delivery-authority.test.mjs"],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-09"
+    },
+    {
+      "id": "DA-10",
+      "claim": "Landing is fair under bounded overtaking, including strict FIFO at zero, and never exposes more than one landing writer under contention.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-authority-qualification.js",
+        "packages/core/dev-delivery-authority-landing.js"
+      ],
+      "verificationEvidence": ["tests/dev-delivery-authority.test.mjs"],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-10"
+    },
+    {
+      "id": "DA-11",
+      "claim": "Every Landing admission derives the provider attempt through non-injectable live GitHub readback, and every admitted heartbeat carries that exact persisted attempt and renews only through the public GitHub workflow run-attempt and job readback; qualification expiry releases only qualification capacity, while an expired Landing Warrant remains exclusive until an independent terminal verifier reads the immutable historical attempt endpoint and returns fresh rooted evidence bound to state, fence, generation, candidate, admitted source head, provider run, and provider job without depending on a mutable run projection, referenced-workflow inference, or the synchronized current PR head; runtime sealing enforces the published repository, protected-base, numeric identity, completed-state, run-conclusion, job-conclusion, pull-request-state, merged-flag, and outcome schema, and every resulting settlement is deterministic and idempotent.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-authority-qualification.js",
+        "packages/core/dev-delivery-authority-landing.js",
+        "packages/core/dev-delivery-landing-admission-core.js",
+        "packages/core/dev-delivery-landing-readback.js"
+      ],
+      "verificationEvidence": ["tests/dev-delivery-authority.test.mjs"],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-11"
+    },
+    {
+      "id": "DA-12",
+      "claim": "Expected-old state roots and non-force Git ref advancement serialize admission and prevent partial or competing writes from becoming two durable authorities.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "scripts/dev-delivery-authority.mjs",
+        "scripts/dev-delivery-warrant.mjs"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-authority.test.mjs",
+        "tests/dev-delivery-warrant-command.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-12"
+    },
+    {
+      "id": "DA-13",
+      "claim": "One-shot v1 migration preserves the rooted legacy state and exact active fence while representing phase-less and qualified v1 compatibility honestly; compatibility-only evidence cannot acquire v2 native proof authority or mint a new Landing Warrant.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-authority-state.js",
+        "scripts/dev-delivery-authority.mjs"
+      ],
+      "verificationEvidence": ["tests/dev-delivery-authority.test.mjs"],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-13"
+    },
+    {
+      "id": "DA-14",
+      "claim": "Historical v1 queue bytes and native proofs remain readable, phase-less active-owner handoff uses exact legacy-safe bindings without a native command contract, and unbound or compatibility-only legacy proof cannot acquire new exact reuse or Landing authority.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/dev-delivery-warrant.js",
+        "packages/core/dev-delivery-native-proof.js",
+        ".github/workflows/dev-pr-auto-merge.yml"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-authority.test.mjs",
+        "tests/dev-delivery-two-phase.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-14"
+    },
+    {
+      "id": "DA-15",
+      "claim": "The supported CLI, Node exports including independent Landing terminal readback, schema, documentation, generated references, byte-exact generated site schema, native template, and Buildchain public v4-alpha delivery caller with matching stable and alpha contract locks expose the same authority model.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "bin/buildchain.mjs",
+        "package.json",
+        "packages/core/dev-delivery-landing-readback.js",
+        "packages/core/dev-delivery-contract-surface.js",
+        "contracts/dev-delivery-authority-v2.schema.json",
+        "docs/dev-delivery-warrant.md",
+        "docs/dev-delivery-qualification-landing-adr.md",
+        "templates/native-dev-delivery.yml",
+        ".github/workflows/buildchain-dev-delivery.yml",
+        ".buildchain/contract-lock.json",
+        ".buildchain/alpha-contract-lock.json"
+      ],
+      "verificationEvidence": [
+        "tests/dev-delivery-authority.test.mjs",
+        "tests/dev-pr-auto-merge.test.mjs",
+        "tests/build-surface.test.mjs"
+      ],
+      "behavioralProof": "tests/v4-delivery-authority-parity.test.mjs#DA-15"
+    },
+    {
+      "id": "DA-16",
+      "claim": "Independent review, protected merge into dev/v4/v4.0, and exact post-merge readback are required external closeout evidence and are not established by local tests.",
+      "disposition": "missing-before-closeout",
+      "implementationEvidence": [],
+      "verificationEvidence": []
+    }
+  ],
+  "matrixRoot": "sha256:8900a9eda20da478e9bdcd5f1b13d46d1ecca70b027c2f25885abf5d4aa52df8"
+}
