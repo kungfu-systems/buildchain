@@ -113,6 +113,7 @@ export function checkV4FloatingConsumerPolicyContract() {
     "Enforce v4 floating consumer policy",
     "Validate consumer package manager contract",
   ]);
+  if (!read(".github/workflows/.build.yml").includes("BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ inputs.buildchain-expected-channel }}")) fail("channel builds must disambiguate dual-channel caller invocations");
   assertTrustGatedJobs(read(".github/workflows/.build.yml"), [
     "resolve-source",
     "resolve-contract",
