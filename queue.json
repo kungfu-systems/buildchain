@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 237,
+  "generation": 238,
   "fencingCounter": 73,
   "policy": {
     "agingSeconds": 900,
@@ -11,46 +11,7 @@
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:d85b41f38331e444d9e27c0fa4ee7a4ff85bc74bfa75c051c6269a4c3d53a00c",
-    "pullRequestNumber": 2850,
-    "sourceHead": "9c2537949939842b47708066d3d06803f4a41249",
-    "assignmentRoot": "sha256:b8cb2aad4416b77e9f53742aa2479c41143c7b1869f7729a52de5077045df9e6",
-    "initiativeRoot": "sha256:0fc567629323a724deea1e21b4156681613164431b97a254b6c68673a6c9c139",
-    "sourceIdentityRoot": "sha256:f2a95cac1a509e59ba6aea0d1edaac2665562767a58fb33af6fe73cdc0e5c0e4",
-    "sourcePatchRoot": "sha256:6780827efa3156fca7e2361caaf8e4de316c9d36ed59dda8ce8f6d59f347048d",
-    "sourceProofRoot": "sha256:15beb9e47b049bac4e3a1458ff79c5073c6cafd4ce30cd3dfb4dd60395c12065",
-    "planRoot": "sha256:9ef9f5452275e578d50d4cd72924a58a7e68160fae159575ff3293a7d08c03e3",
-    "closureRoot": "sha256:ee1d119270ec822c04e3f63598ae46e99939727cceb3b350683165d710af11d1",
-    "dependencyRoot": "sha256:32d861a8cf162b8055570e53b700ee0e4ad0d3c613416877f749122f2ae96928",
-    "toolchainRoot": "sha256:da638506a0475c2724dfc4a13de0443ddbaba2c29de910e73153a2aa29813687",
-    "environmentRoot": "sha256:9cc495d4cc889468152f3987620af651a352835185bef33b40802088139227e6",
-    "nativeCommandContract": {
-      "schema": "kungfu.buildchain.native-command-contract/v1",
-      "runner": "bash-lc",
-      "command": "node scripts/check-v4-floating-consumer-policy-contract.mjs && node --test tests/v4-floating-consumer-policy-contract.test.mjs",
-      "commandRoot": "sha256:3181ccc5bea07980e52881a2de964b6888241374a05d61140d51fb47632aa587"
-    },
-    "affectedPaths": [
-      ".github/workflows/.build.yml",
-      "dist/site/buildchain-contract.json",
-      "scripts/check-v4-floating-consumer-policy-contract.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 31913848373,
-    "deliveryClass": "native-proof-required",
-    "priority": "ordinary",
-    "generation": 73,
-    "expectedOldStateRoot": "sha256:52904977ff1022a2f6eacae7f0111b19665d7abd19b11f669c34c966d311524d",
-    "issuedAt": "2026-08-15T23:14:26.486Z",
-    "expiresAt": "2026-08-16T00:14:40.404Z",
-    "fencingToken": "sha256:12f177417c2e488810792403e74b7cf9794a9bb2cf6f3ca4adaaabbf67d3e95f",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -2446,11 +2407,18 @@
       "sourceWorkflowRunId": 31913848373,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-15T23:14:24.076Z",
-      "updatedAt": "2026-08-15T23:14:40.404Z",
+      "updatedAt": "2026-08-15T23:24:02.150Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
-      "terminal": null,
+      "status": "terminal-failure",
+      "terminal": {
+        "outcome": "terminal-failure",
+        "reason": "GitHub-hosted native worker terminated after trusted-boundary rejection; provider heartbeat compatibility defect prevented automatic settlement",
+        "evidenceRoot": "sha256:16ebc9535f168bb7e8aa3d33247053f9bad29c7c56f2b14863d0fcc3d83af97d",
+        "closedAt": "2026-08-15T23:24:02.150Z",
+        "fencingToken": "sha256:12f177417c2e488810792403e74b7cf9794a9bb2cf6f3ca4adaaabbf67d3e95f",
+        "leaseGeneration": 73
+      },
       "affectedPaths": [
         ".github/workflows/.build.yml",
         "dist/site/buildchain-contract.json",
@@ -2459,6 +2427,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-15T23:14:40.404Z",
-  "stateRoot": "sha256:53be88ff877b8c81e06983586a978882f8b4f19b970518b4fda987b9369b42b5"
+  "updatedAt": "2026-08-15T23:24:02.150Z",
+  "stateRoot": "sha256:725cfa66c46894294b82d39d0cd6ad7b0dbbe2a49f774d8542ca5253e23c326d"
 }
