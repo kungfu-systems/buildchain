@@ -129,15 +129,80 @@ function exactMergeGroupBinding(input = {}) {
     ["rev-list", "--parents", "-n", "1", mergeGroupHead],
     { cwd },
   ).split(/\s+/u);
+  if (commit !== mergeGroupHead) {
+    return { ok: false, reason: "merge-group-parent-mismatch" };
+  }
   if (
-    commit !== mergeGroupHead ||
-    parents.length !== 2 ||
-    parents[0] !== currentBase ||
-    parents[1] !== sourceHead
+    parents.length === 2 &&
+    parents[0] === currentBase &&
+    parents[1] === sourceHead
+  ) {
+    return {
+      ok: true,
+      mergeGroupHead,
+      mergeGroupTree: actualTree,
+      parents,
+      compositionMode: "two-parent-merge",
+      replayedCommitTrees: [],
+    };
+  }
+
+  const linearRange = (head) => {
+    try {
+      git(["merge-base", "--is-ancestor", currentBase, head], { cwd });
+    } catch {
+      return null;
+    }
+    const commits = git(
+      ["rev-list", "--reverse", "--topo-order", `${currentBase}..${head}`],
+      { cwd },
+    )
+      .split(/\s+/u)
+      .filter(Boolean);
+    if (commits.length === 0) return null;
+    let expectedParent = currentBase;
+    const trees = [];
+    for (const rangeCommit of commits) {
+      const [observedCommit, ...rangeParents] = git(
+        ["rev-list", "--parents", "-n", "1", rangeCommit],
+        { cwd },
+      ).split(/\s+/u);
+      if (
+        observedCommit !== rangeCommit ||
+        rangeParents.length !== 1 ||
+        rangeParents[0] !== expectedParent
+      ) {
+        return null;
+      }
+      trees.push(
+        exactSha(
+          git(["rev-parse", `${rangeCommit}^{tree}`], { cwd }),
+          "replayedCommitTree",
+        ),
+      );
+      expectedParent = rangeCommit;
+    }
+    return trees;
+  };
+
+  const sourceTrees = linearRange(sourceHead);
+  const mergeGroupTrees = linearRange(mergeGroupHead);
+  if (
+    !sourceTrees ||
+    !mergeGroupTrees ||
+    sourceTrees.length !== mergeGroupTrees.length ||
+    sourceTrees.some((tree, index) => tree !== mergeGroupTrees[index])
   ) {
     return { ok: false, reason: "merge-group-parent-mismatch" };
   }
-  return { ok: true, mergeGroupHead, mergeGroupTree: actualTree, parents };
+  return {
+    ok: true,
+    mergeGroupHead,
+    mergeGroupTree: actualTree,
+    parents,
+    compositionMode: "linear-replay",
+    replayedCommitTrees: mergeGroupTrees,
+  };
 }
 
 export function sourceQualificationPredicates(input = {}) {
@@ -432,6 +497,8 @@ export function verifySourceQualificationReuse(input = {}) {
     mergeGroupHead: mergeGroup.mergeGroupHead,
     mergeGroupTree: mergeGroup.mergeGroupTree,
     mergeGroupParents: mergeGroup.parents,
+    mergeGroupCompositionMode: mergeGroup.compositionMode,
+    mergeGroupReplayTrees: mergeGroup.replayedCommitTrees,
     predicateRoots: {
       sourceIdentityRoot: proof.sourceIdentityRoot,
       sourcePatchRoot: proof.sourcePatchRoot,
