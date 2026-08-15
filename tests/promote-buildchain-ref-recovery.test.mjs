@@ -43,6 +43,7 @@ const {
   selectReleaseTag,
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
+  preparePublishTransactionContext,
   publishTransactionEnvironment,
   sanitizedPublishProcessEnvironment,
 } = await import("../actions/promote-buildchain-ref/lib.js");
@@ -203,37 +204,36 @@ test("publish subprocesses omit oversized inline variables", () => {
   }
 });
 
-test("publish transaction forwards the verified gate aggregate after input sanitization", () => {
+test("publish transaction context forwards the verified gate aggregate after input sanitization", () => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-publish-gate-"));
   const aggregate = JSON.stringify({
     contract: "buildchain.shifu-gate-aggregate/v1",
     digest: `sha256:${"a".repeat(64)}`,
   });
-  const publishEnv = publishTransactionEnvironment({
+  const context = preparePublishTransactionContext({
+    octokit: {},
+    owner: "kungfu-systems",
+    repo: "kungfu",
     cwd,
+    loadedConfig: {},
+    publishTransaction: true,
+    publishCommand: "node consumer-publish.mjs",
     version: "4.0.0-alpha.2",
+    exactTag: "v4.0.0-alpha.2",
     channel: "alpha",
+    line: "v4/v4.0",
     sourceSha: "a".repeat(40),
     targetRef: "alpha/v4/v4.0",
-    resolvedStatePath: path.join(cwd, "state.json"),
-    resolvedEvidencePath: path.join(cwd, "evidence.json"),
     releaseSha: "b".repeat(40),
-    expected: {
-      releaseMaterialSha: "c".repeat(40),
-      publishToolingSha: "d".repeat(40),
-    },
+    releaseMaterialSha: "c".repeat(40),
+    publishToolingSha: "d".repeat(40),
     promotionGeneratedAt: "2026-08-15T00:00:00.000Z",
-    publishSealedNpmTarball: false,
-    requiredArtifacts: [],
-    publishContract: {
-      mode: "publish-final-version",
-      auth: "trusted-publishing",
-      distTag: "alpha",
-      packageSetOrder: "",
-      mainPackage: "",
-    },
+    publishMode: "publish-final-version",
+    publishAuth: "trusted-publishing",
+    publishDistTag: "alpha",
     publicationGateAggregateJson: aggregate,
   });
+  const publishEnv = publishTransactionEnvironment(context);
   const sanitized = sanitizedPublishProcessEnvironment(publishEnv);
   assert.equal(
     sanitized.BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON,

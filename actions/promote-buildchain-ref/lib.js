@@ -1141,6 +1141,7 @@ function preparePublishTransactionContext({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  publicationGateAggregateJson = "",
   publishRematerializeOnResume = false,
   actor = "",
   runId = "",
@@ -1224,6 +1225,7 @@ function preparePublishTransactionContext({
     version, exactTag, channel, line, publishCommand, publishRematerializeOnResume,
     actor, runId, explicitOverride, allowVersionStateFinalization, promotionGeneratedAt,
     repository, resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
+    publicationGateAggregateJson,
     existingNpmPromotion, expected, durableStateRef, requestedBundleRoot, requestedBundleManifest,
     expectedTransactionId: String(expectedTransactionId || "").trim(),
   };
@@ -5169,6 +5171,7 @@ export {
   releasePassportArtifactFiles, releasePassportAssetsFromSealedBundle,
   verifyCollectedReleasePassport,
   validatePromotionReleaseCandidate,
+  preparePublishTransactionContext,
   publishTransactionEnvironment,
   sanitizedPublishProcessEnvironment,
 };
