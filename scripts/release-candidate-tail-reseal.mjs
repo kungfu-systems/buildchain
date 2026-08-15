@@ -28,9 +28,9 @@ function required(value, label) {
   return result;
 }
 
-function exactSha(value, label) {
+function exactSha(value, label, expected = "") {
   const result = required(value, label);
-  if (!SHA.test(result)) throw new Error(`${label} must be an exact lowercase Git SHA`);
+  if (!SHA.test(result) || (expected && result !== expected)) throw new Error(expected && SHA.test(result) ? `${label} ${result} differs from the trusted workflow runtime ${expected}` : `${label} must be an exact lowercase Git SHA`);
   return result;
 }
 
@@ -123,7 +123,7 @@ async function pagedGithubItems(repository, apiPath, key, token) {
   }
 }
 
-export function normalizeTailResealRequest(raw) {
+export function normalizeTailResealRequest(raw, expectedRuntimeSha = "") {
   const request = object(raw, "tail reseal request");
   if (request.contract !== CONTRACT) throw new Error(`tail reseal contract must be ${CONTRACT}`);
   const source = object(request.source, "source");
@@ -173,7 +173,7 @@ export function normalizeTailResealRequest(raw) {
     candidateRuntime: {
       repository: required(candidateRuntime.repository, "candidateRuntime.repository"),
       ref: required(candidateRuntime.ref, "candidateRuntime.ref"),
-      sha: exactSha(candidateRuntime.sha, "candidateRuntime.sha"),
+      sha: exactSha(candidateRuntime.sha, "candidateRuntime.sha", expectedRuntimeSha),
       contractDigest: contentRoot(candidateRuntime.contractDigest, "candidateRuntime.contractDigest"),
     },
     consumerController: {
@@ -196,14 +196,6 @@ export function normalizeTailResealRequest(raw) {
     controllerPlanArtifact: required(request.controllerPlanArtifact, "controllerPlanArtifact"),
     platforms: normalizedPlatforms,
   };
-}
-
-export function validateTailResealRuntimeBinding(request, expectedRuntimeSha) {
-  const expected = exactSha(expectedRuntimeSha, "BUILDCHAIN_EXPECTED_RUNTIME_SHA");
-  if (request.candidateRuntime.sha !== expected) {
-    throw new Error(`tail reseal candidate runtime ${request.candidateRuntime.sha} differs from the trusted workflow runtime ${expected}`);
-  }
-  return request;
 }
 
 function exactArtifact(artifacts, name, digest, label) {
@@ -305,8 +297,7 @@ function writeTailResealPlan(request) {
 async function plan() {
   const token = required(process.env.GITHUB_TOKEN, "GITHUB_TOKEN");
   const raw = required(process.env.BUILDCHAIN_TAIL_RESEAL_REQUEST_JSON, "BUILDCHAIN_TAIL_RESEAL_REQUEST_JSON");
-  const request = normalizeTailResealRequest(JSON.parse(raw));
-  validateTailResealRuntimeBinding(request, process.env.BUILDCHAIN_EXPECTED_RUNTIME_SHA);
+  const request = normalizeTailResealRequest(JSON.parse(raw), exactSha(process.env.BUILDCHAIN_EXPECTED_RUNTIME_SHA, "BUILDCHAIN_EXPECTED_RUNTIME_SHA"));
   const event = readJson(required(process.env.GITHUB_EVENT_PATH, "GITHUB_EVENT_PATH"), "GitHub event");
   const repository = required(process.env.GITHUB_REPOSITORY, "GITHUB_REPOSITORY");
   validateTailResealEvent({ request, event, repository });

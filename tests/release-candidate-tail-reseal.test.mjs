@@ -8,7 +8,6 @@ import test from "node:test";
 import {
   normalizeTailResealRequest,
   sealTailResealReceipt,
-  validateTailResealRuntimeBinding,
   verifyTailResealPlatform,
 } from "../scripts/release-candidate-tail-reseal.mjs";
 
@@ -128,21 +127,11 @@ test("tail reseal request requires one exact four-platform candidate", () => {
 
 test("repository-variable tail reseal cannot select a second exact runtime", () => {
   const workflow = fs.readFileSync(".github/workflows/.build.yml", "utf8");
-  assert.match(
-    workflow,
-    /if: \$\{\{ fromJSON\(vars\.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON \|\| '\{\}'\)\.source\.sha == github\.event\.pull_request\.head\.sha \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_EXPECTED_RUNTIME_SHA: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-sha \}\}/u,
-  );
-
+  assert.match(workflow, /if: \$\{\{ fromJSON\(vars\.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON \|\| '\{\}'\)\.source\.sha == github\.event\.pull_request\.head\.sha \}\}/u);
+  assert.match(workflow, /BUILDCHAIN_EXPECTED_RUNTIME_SHA: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-sha \}\}/u);
   const normalized = normalizeTailResealRequest(request());
-  assert.equal(validateTailResealRuntimeBinding(normalized, RUNTIME_SHA), normalized);
-  assert.throws(
-    () => validateTailResealRuntimeBinding(normalized, "8".repeat(40)),
-    /differs from the trusted workflow runtime/u,
-  );
+  assert.equal(normalizeTailResealRequest(request(), RUNTIME_SHA).candidateRuntime.sha, normalized.candidateRuntime.sha);
+  assert.throws(() => normalizeTailResealRequest(request(), "8".repeat(40)), /differs from the trusted workflow runtime/u);
 });
 
 test("platform verification rejects changed retained bytes", () => {
