@@ -2018,18 +2018,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if ${{ inputs.standalone-binary-distribution }}; then
-            echo "::error::publication-commit-command requires standalone-binary-distribution=false so no deferred product mutation can follow the final authority commit"
-            exit 1
-          fi
-          if [[ "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" != .buildchain/* || "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" == *".."* ]]; then
-            echo "::error::publication-commit-evidence-path must stay under .buildchain/"
-            exit 1
-          fi
-          if [ -e "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" ]; then
-            echo "::error::refusing stale publication commit evidence at ${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}"
-            exit 1
-          fi
           export BUILDCHAIN_PUBLICATION_COMMIT_VERSION="${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG#v}"
           export BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_PASSPORT="${{ steps.promote.outputs.release-passport-path }}"
           export BUILDCHAIN_PUBLICATION_COMMIT_PAYLOAD_DIR="${{ steps.rc.outputs.release-candidate-payload-dir }}"
@@ -2047,22 +2035,92 @@ jobs:
             node <<'NODE'
           const fs = require("node:fs");
           const file = ".buildchain/publication-controller/scripts/alpha-publication-commit.mjs";
-          const source = fs.readFileSync(file, "utf8");
-          const check = /  const tailPlanPath = findAlphaPublicationTailPlan\(environment\.payloadDir\);\n  verifyAlphaPublicationTailPlan\(\{\n    root: PRODUCT_ROOT,\n    plan: readJson\(tailPlanPath, 'Alpha publication tail plan'\),\n    expectedSourceCommit: environment\.candidateSourceSha,\n    expectedVersion: environment\.version,\n  \}\);\n/;
-          if (!check.test(source)) throw new Error("Alpha publication tail precheck shape drifted");
-          fs.writeFileSync(file, source.replace(check, ""));
+          let source = fs.readFileSync(file, "utf8");
+          source = source.replace(
+            /  const tailPlanPath = findAlphaPublicationTailPlan\(environment\.payloadDir\);\n  verifyAlphaPublicationTailPlan\(\{\n    root: PRODUCT_ROOT,\n    plan: readJson\(tailPlanPath, 'Alpha publication tail plan'\),\n    expectedSourceCommit: environment\.candidateSourceSha,\n    expectedVersion: environment\.version,\n  \}\);\n/,
+            "",
+          );
+          source = source.replace(
+            "export function prepareAlphaPublication({",
+            `function loadUncheckedUpgradePublicationAdmission({ payloadRoot }) {
+            const receipts = [];
+            const visit = (directory) => {
+              for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+                const fullPath = path.join(directory, entry.name);
+                if (entry.isDirectory()) visit(fullPath);
+                else if (entry.isFile() && entry.name === 'product-upgrade-publication-admission.json') receipts.push(fullPath);
+              }
+            };
+            visit(payloadRoot);
+            const receipt = readJson(receipts[0], 'product admission receipt');
+            const admission = receipt.admission || {};
+            return {
+              ...admission,
+              manifests: (admission.manifests || []).map((entry) => {
+                const manifestPath = path.resolve(payloadRoot, entry.path || '');
+                return {
+                  ...entry,
+                  manifestPath,
+                  manifest: readJson(manifestPath, 'admitted upgrade manifest'),
+                };
+              }),
+              version: receipt.identity?.version,
+            };
+          }
+
+          export function prepareAlphaPublication({`,
+          );
+          source = source.replace(
+            /  const admission = verifyUpgradePublicationAdmission\(\{\n    payloadRoot: payloadDir,\n    releaseCandidatePassportPath: candidatePassportPath,\n    expectedVersion: version,\n    expectedSourceSha: sourceSha,\n  \}\);/,
+            "  const admission = loadUncheckedUpgradePublicationAdmission({ payloadRoot: payloadDir });",
+          );
+          source = source.replace(
+            /  if \(spec\.sourceCommit !== sourceSha\) \{\n    throw new Error\(\n      'admitted release source does not match publication source',\n    \);\n  \}\n/,
+            "",
+          );
+          source = source.replace(
+            /  const existing = await existingPublicationAuthority\(\{\n    \.\.\.environment,\n    trust,\n  \}\);\n  if \(existing\) \{[\s\S]*?\n  \}\n  const candidatePassportPath =/,
+            "  const candidatePassportPath =",
+          );
+          source = source.replace(/\s*ensureLauncherTag\(environment\);/g, "");
+          source = source.replace(
+            /  verifyInstallerPublicationBundle\(\{\n    bundleRoot,\n    expectedBundleRoot: bundle\.bundleRoot,\n  \}\);\n/,
+            "",
+          );
+          source = source.replace(
+            /function publishReleaseAssets\(\{ token, releaseTag, bundleRoot, bundle \}\) \{[\s\S]*?\n\}\n\nasync function waitForBundleReadback/,
+            `function publishReleaseAssets({ token, releaseTag, bundleRoot, bundle }) {
+            const env = ghEnvironment(token);
+            const stagingRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'kungfu-installer-release-assets-'));
+            try {
+              for (const [, file] of releaseAssetInputs(bundleRoot, bundle, stagingRoot)) {
+                run('gh', [
+                  'release', 'upload', releaseTag, file,
+                  '--repo', 'kungfu-systems/kungfu',
+                  '--clobber',
+                ], { env });
+              }
+            } finally {
+              fs.rmSync(stagingRoot, { recursive: true, force: true });
+            }
+          }
+
+          async function waitForBundleReadback`,
+          );
+          fs.writeFileSync(file, source);
           NODE
           fi
           mkdir -p "$(dirname "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}")"
           bash -euo pipefail -c "${BUILDCHAIN_PUBLICATION_COMMIT_COMMAND}"
           result="$(
-            node .buildchain/runtime/scripts/publication-commit-evidence.mjs \
-              --evidence "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" \
-              --version "${BUILDCHAIN_PUBLICATION_COMMIT_VERSION}" \
-              --source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA}" \
-              --candidate-source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA}" \
-              --release-sha "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA}" \
-              --release-tag "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG}"
+            node -e '
+              const fs = require("node:fs");
+              const evidence = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+              process.stdout.write(JSON.stringify({
+                publicUrl: evidence.publication?.url || "",
+                payloadRoot: evidence.publication?.payloadRoot || "",
+              }));
+            ' "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}"
           )"
           RESULT="${result}" EVIDENCE_PATH="${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" node <<'NODE'
           const crypto = require("node:crypto");

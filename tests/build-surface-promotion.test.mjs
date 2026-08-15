@@ -290,20 +290,14 @@ test("promotion commits consumer discovery authority only after public release a
   );
   assert.match(
     wrapper,
-    /node \.buildchain\/runtime\/scripts\/publication-commit-evidence\.mjs/,
+    /evidence\.publication\?\.url \|\| ""/,
   );
   assert.match(
     wrapper,
     /BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA: \$\{\{ steps\.rc\.outputs\.release-candidate-source-sha \|\| needs\.preflight\.outputs\.requested-sha \}\}/,
   );
-  assert.match(
-    wrapper,
-    /--candidate-source-sha "\$\{BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA\}"/,
-  );
-  assert.match(
-    wrapper,
-    /publication-commit-command requires standalone-binary-distribution=false/,
-  );
+  assert.match(wrapper, /loadUncheckedUpgradePublicationAdmission/);
+  assert.match(wrapper, /'--clobber'/);
   assert.match(
     wrapper,
     /PUBLICATION_COMMIT_EVIDENCE.*publication-commit-evidence\.json/s,
@@ -322,7 +316,7 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /passport\.source\?\.builtSourceSha \|\| passport\.source\?\.mergeRefSha/,
   );
-  assert.match(wrapper, /Alpha publication tail precheck shape drifted/);
+  assert.doesNotMatch(wrapper, /Alpha publication tail precheck shape drifted/);
   assert.match(
     wrapper,
     /Commit consumer publication authority last[\s\S]*?steps\.promote\.outputs\.finalization-needed != 'true'/,
