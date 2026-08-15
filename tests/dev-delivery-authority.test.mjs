@@ -1455,14 +1455,12 @@ test("expired Landing never cancels a run-level successor and settles only termi
     }
     if (
       request.url ===
-      `/repos/kungfu-systems/kungfu/compare/${"d".repeat(40)}...${providerRunLanded ? "d".repeat(40) : "8".repeat(40)}`
+      `/repos/kungfu-systems/kungfu/compare/${"8".repeat(40)}...${"d".repeat(40)}`
     ) {
-      const protectedBaseHead = providerRunLanded
-        ? "d".repeat(40)
-        : "8".repeat(40);
+      const protectedBaseHead = "8".repeat(40);
       response.end(
         JSON.stringify({
-          status: providerRunLanded ? "identical" : "diverged",
+          status: providerRunLanded ? "behind" : "diverged",
           base_commit: {
             sha: comparisonHeadDrift ? "7".repeat(40) : protectedBaseHead,
           },
@@ -1480,7 +1478,7 @@ test("expired Landing never cancels a run-level successor and settles only termi
       response.end(
         JSON.stringify({
           object: {
-            sha: providerRunLanded ? "d".repeat(40) : "8".repeat(40),
+            sha: "8".repeat(40),
           },
         }),
       );
@@ -1571,7 +1569,7 @@ test("expired Landing never cancels a run-level successor and settles only termi
       warrant: admitted.state.landingWarrant,
       ...providerOptions,
     });
-    assert.equal(mergedReadback.protectedBaseHead, "d".repeat(40));
+    assert.equal(mergedReadback.protectedBaseHead, "8".repeat(40));
     assert.equal(mergedReadback.providerRunHeadInProtectedBase, true);
     assert.equal(mergedReadback.outcome, "merged");
     pullRequestMerged = false;

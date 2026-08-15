@@ -309,7 +309,7 @@ async function readProtectedBaseLanding({
   const comparison = await githubJson({
     apiUrl,
     token,
-    path: `/repos/${owner}/${repo}/compare/${mergeGroupHead}...${protectedBaseHead}`,
+    path: `/repos/${owner}/${repo}/compare/${protectedBaseHead}...${mergeGroupHead}`,
     fetchImpl,
   });
   const comparisonHead = exactSha(
@@ -331,7 +331,7 @@ async function readProtectedBaseLanding({
     protectedBaseHead,
     providerRunHeadInProtectedBase:
       mergeBase === mergeGroupHead &&
-      new Set(["ahead", "identical"]).has(status),
+      new Set(["behind", "identical"]).has(status),
   };
 }
 
