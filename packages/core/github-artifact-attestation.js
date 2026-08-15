@@ -506,6 +506,10 @@ export function createGitHubArtifactAttestationEvidence({
   workflow = {},
 } = {}) {
   const prepared = object(preparation, "preparation");
+  const providerSourceSha = commit(
+    workflow.sourceSha || prepared.policy.caller.sourceSha,
+    "workflow.sourceSha",
+  );
   const resolvedBundle = path.resolve(string(bundlePath, "bundlePath"));
   const bundle = readJson(resolvedBundle, "attestation bundle");
   validateStatement(decodeBundleStatement(bundle), prepared);
@@ -528,6 +532,7 @@ export function createGitHubArtifactAttestationEvidence({
     },
     workflow: {
       repository: repository(workflow.repository, "workflow.repository"),
+      sourceSha: providerSourceSha,
       runId: string(workflow.runId, "workflow.runId"),
       runAttempt: string(workflow.runAttempt, "workflow.runAttempt"),
       job: string(workflow.job, "workflow.job"),
@@ -537,7 +542,7 @@ export function createGitHubArtifactAttestationEvidence({
       repository: prepared.policy.caller.repository,
       signerWorkflow: `${prepared.policy.signer.repository}/${prepared.policy.signer.workflowPath}`,
       signerDigest: prepared.policy.signer.workflowDigest,
-      sourceDigest: prepared.policy.caller.sourceSha,
+      sourceDigest: providerSourceSha,
       predicateType: prepared.predicateType,
       denySelfHostedRunners: true,
     },

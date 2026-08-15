@@ -28,6 +28,7 @@ function workflowEvidence() {
   const runId = process.env.GITHUB_RUN_ID || "";
   return {
     repository,
+    sourceSha: process.env.GITHUB_SHA || "",
     runId,
     runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
     job: process.env.GITHUB_JOB || "",

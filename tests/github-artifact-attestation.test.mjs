@@ -21,6 +21,7 @@ const SOURCE_SHA = "1".repeat(40);
 const SOURCE_TREE_SHA = "2".repeat(40);
 const BUILDCHAIN_SHA = "3".repeat(40);
 const SIGNER_SHA = "4".repeat(40);
+const PROVIDER_SOURCE_SHA = "5".repeat(40);
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -126,6 +127,7 @@ function fixture() {
     bundlePath,
     workflow: {
       repository: "kungfu-systems/kungfu",
+      sourceSha: PROVIDER_SOURCE_SHA,
       runId: "42",
       runAttempt: "1",
       job: "attest",
@@ -208,6 +210,8 @@ test("reusable signer verifies the actual certificate identity before retaining 
   ]) {
     assert.ok(workflow.includes(flag), `missing exact provider verification flag ${flag}`);
   }
+  assert.match(workflow, /PROVIDER_SOURCE_SHA: \$\{\{ github\.sha \}\}/u);
+  assert.match(workflow, /--source-digest "\$PROVIDER_SOURCE_SHA"/u);
 });
 
 test("preparation binds exact subject, original runner manifest, source tree, Buildchain SHA, and Release Passport", () => {
@@ -403,7 +407,9 @@ test("retained evidence and explicit gh policy verify the matching bundle", () =
   assert.ok(plan.args.includes("--deny-self-hosted-runners"));
   assert.equal(plan.args[plan.args.indexOf("--repo") + 1], "kungfu-systems/kungfu");
   assert.equal(plan.args[plan.args.indexOf("--signer-digest") + 1], SIGNER_SHA);
-  assert.equal(plan.args[plan.args.indexOf("--source-digest") + 1], SOURCE_SHA);
+  assert.equal(plan.args[plan.args.indexOf("--source-digest") + 1], PROVIDER_SOURCE_SHA);
+  assert.equal(value.evidence.caller.sourceSha, SOURCE_SHA);
+  assert.equal(value.evidence.workflow.sourceSha, PROVIDER_SOURCE_SHA);
   const report = verifyGitHubArtifactAttestationEvidence({
     artifactPath: value.subjectPath,
     platformManifestPath: value.manifestPath,
