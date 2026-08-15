@@ -10,18 +10,12 @@ import {
 } from "../packages/core/publication-control-plane-audit.js";
 
 const GITHUB_JSON_MAX_BUFFER = 16 * 1024 * 1024;
+const GITHUB_COMMAND_OPTIONS = Object.freeze({ encoding: "utf8", timeout: 60_000, maxBuffer: GITHUB_JSON_MAX_BUFFER });
 
-function flag(name, fallback = "") {
-  const index = process.argv.indexOf(`--${name}`);
-  return index === -1 ? fallback : String(process.argv[index + 1] || "");
-}
+function flag(name, fallback = "") { const index = process.argv.indexOf(`--${name}`); return index === -1 ? fallback : String(process.argv[index + 1] || ""); }
 
 function commandJson(command, args, label) {
-  const result = spawnSync(command, args, {
-    encoding: "utf8",
-    timeout: 60_000,
-    maxBuffer: GITHUB_JSON_MAX_BUFFER,
-  });
+  const result = spawnSync(command, args, GITHUB_COMMAND_OPTIONS);
   if (result.status !== 0) {
     const category = /401|E401|unauthorized/i.test(result.stderr) ? "unauthorized" : "unavailable";
     throw new Error(`${label} is ${category}; publication control-plane audit fails closed`);
@@ -33,16 +27,28 @@ function commandJson(command, args, label) {
   }
 }
 
-function githubJson(apiPath, label) {
-  return commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label);
+function githubJson(apiPath, label) { return commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label); }
+
+function exactWorkflowText({ repository, workflowPath, workflowRef }) {
+  const encodedWorkflow = workflowPath.split("/").map(encodeURIComponent).join("/");
+  try {
+    const workflowFile = githubJson(
+      `repos/${repository}/contents/${encodedWorkflow}${workflowRef ? `?ref=${encodeURIComponent(workflowRef)}` : ""}`,
+      "publication workflow source",
+    );
+    return Buffer.from(String(workflowFile.content || ""), "base64").toString("utf8");
+  } catch (error) {
+    if (!/^[0-9a-fA-F]{40}$/.test(workflowRef)) throw error;
+    const checkoutHead = spawnSync("git", ["rev-parse", "HEAD"], GITHUB_COMMAND_OPTIONS);
+    if (checkoutHead.status !== 0 || checkoutHead.stdout.trim().toLowerCase() !== workflowRef.toLowerCase()) throw error;
+    const localWorkflow = spawnSync("git", ["show", `${workflowRef}:${workflowPath}`], GITHUB_COMMAND_OPTIONS);
+    if (localWorkflow.status !== 0 || !localWorkflow.stdout) throw error;
+    return localWorkflow.stdout;
+  }
 }
 
 function githubJsonOptional(apiPath, label, fallback) {
-  const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
-    encoding: "utf8",
-    timeout: 60_000,
-    maxBuffer: GITHUB_JSON_MAX_BUFFER,
-  });
+  const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], GITHUB_COMMAND_OPTIONS);
   if (result.status !== 0) {
     if (/404|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
     const category = /401|403|unauthorized|forbidden/i.test(`${result.stdout}\n${result.stderr}`) ? "unauthorized" : "unavailable";
@@ -56,11 +62,7 @@ function githubJsonOptional(apiPath, label, fallback) {
 }
 
 function githubJsonReadLimited(apiPath, label, fallback) {
-  const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
-    encoding: "utf8",
-    timeout: 60_000,
-    maxBuffer: GITHUB_JSON_MAX_BUFFER,
-  });
+  const result = spawnSync("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], GITHUB_COMMAND_OPTIONS);
   if (result.status !== 0) {
     if (/401|403|404|unauthorized|forbidden|not found/i.test(`${result.stdout}\n${result.stderr}`)) return fallback;
     throw new Error(`${label} is unavailable; publication control-plane audit fails closed`);
@@ -217,12 +219,11 @@ function main() {
   const allowReleaseReconciliation = process.argv.includes("--allow-release-reconciliation");
   if (!repository || !branch) throw new Error("--repository and --branch are required");
 
-  const encodedWorkflow = workflowPath.split("/").map(encodeURIComponent).join("/");
-  const workflowFile = githubJson(
-    `repos/${workflowRepository}/contents/${encodedWorkflow}${workflowRef ? `?ref=${encodeURIComponent(workflowRef)}` : ""}`,
-    "publication workflow source",
-  );
-  const workflowText = Buffer.from(String(workflowFile.content || ""), "base64").toString("utf8");
+  const workflowText = exactWorkflowText({
+    repository: workflowRepository,
+    workflowPath,
+    workflowRef,
+  });
   const block = jobBlock(workflowText, jobId);
   if (!block) throw new Error(`publication workflow job is missing: ${workflowPath}#${jobId}`);
   const jobsOffset = workflowText.search(/^jobs:\s*$/m);

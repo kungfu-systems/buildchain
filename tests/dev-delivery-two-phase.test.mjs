@@ -3,8 +3,10 @@ import test from "node:test";
 
 import {
   createDevDeliveryQueue,
+  createNativeExecutionReceipt,
   createNativeProofReuseDecision,
   createNativeQualificationProof,
+  devDeliveryContentRoot,
   heartbeatDevDeliveryWarrant,
   qualifyDevDeliveryWarrant,
   recoverExpiredDevDeliveryWarrant,
@@ -31,6 +33,7 @@ function candidate(number = 401, overrides = {}) {
     closureRoot: ROOT("7"),
     dependencyRoot: ROOT("8"),
     toolchainRoot: ROOT("9"),
+    environmentRoot: ROOT("a"),
     deliveryClass: "native-proof-required",
     priority: "ordinary",
     ...overrides,
@@ -56,34 +59,60 @@ function selectedQueue(overrides = {}) {
 }
 
 function nativeProof(overrides = {}) {
-  return createNativeQualificationProof({
+  const input = {
     repository: "kungfu-systems/buildchain",
     protectedBase: "dev/v3/v3.0",
+    sourceHead: SOURCE_HEAD,
     sourceIdentityRoot: ROOT("3"),
     sourcePatchRoot: ROOT("4"),
     planRoot: ROOT("6"),
     closureRoot: ROOT("7"),
     dependencyRoot: ROOT("8"),
     toolchainRoot: ROOT("9"),
+    environmentRoot: ROOT("a"),
     qualifiedBase: QUALIFIED_BASE,
     affectedPaths: ["packages/native", "pnpm-lock.yaml"],
     shardEvidenceRoots: [ROOT("c"), ROOT("d")],
     qualifiedAt: "2026-08-11T00:00:30Z",
     ...overrides,
+  };
+  return createNativeQualificationProof({
+    ...input,
+    nativeExecutionReceipt:
+      input.nativeExecutionReceipt ||
+      createNativeExecutionReceipt({
+        outcome: "succeeded",
+        commandRoot: ROOT("b"),
+        executionBinding: {
+          repository: input.repository,
+          protectedBase: input.protectedBase,
+          sourceHead: input.sourceHead,
+          qualifiedBase: input.qualifiedBase,
+          toolchainRoot: input.toolchainRoot,
+          environmentRoot: input.environmentRoot,
+        },
+        startedAt: "2026-08-11T00:00:10Z",
+        completedAt: "2026-08-11T00:00:29Z",
+        heartbeatCount: 2,
+      }),
   });
 }
 
 function current(overrides = {}) {
   return {
+    sourceHead: SOURCE_HEAD,
     sourceIdentityRoot: ROOT("3"),
     sourcePatchRoot: ROOT("4"),
     planRoot: ROOT("6"),
     closureRoot: ROOT("7"),
     dependencyRoot: ROOT("8"),
     toolchainRoot: ROOT("9"),
+    environmentRoot: ROOT("a"),
     currentBase: QUALIFIED_BASE,
     graphKnown: true,
+    attributionComplete: true,
     changedPaths: [],
+    renames: [],
     ...overrides,
   };
 }
@@ -166,6 +195,11 @@ test("overlap, unknown attribution, semantic change, and toolchain change fail c
       "base-delta-attribution-unknown",
     ],
     [
+      current({ sourceHead: "e".repeat(40) }),
+      "rerun-full-native-qualification",
+      "sourceHead-changed-or-unknown",
+    ],
+    [
       current({ sourcePatchRoot: ROOT("e") }),
       "rerun-full-native-qualification",
       "sourcePatchRoot-changed-or-unknown",
@@ -175,6 +209,19 @@ test("overlap, unknown attribution, semantic change, and toolchain change fail c
       "rerun-full-native-qualification",
       "toolchainRoot-changed-or-unknown",
     ],
+    [
+      current({ environmentRoot: ROOT("e") }),
+      "rerun-full-native-qualification",
+      "environmentRoot-changed-or-unknown",
+    ],
+    [
+      current({
+        currentBase: "c".repeat(40),
+        attributionComplete: false,
+      }),
+      "rerun-full-native-qualification",
+      "base-delta-attribution-unknown",
+    ],
   ];
   for (const [value, action, reason] of cases) {
     const decision = createNativeProofReuseDecision({ proof, current: value });
@@ -182,6 +229,46 @@ test("overlap, unknown attribution, semantic change, and toolchain change fail c
     assert.equal(decision.action, action);
     assert.equal(decision.reason, reason);
   }
+});
+
+test("rename and generated-surface overlap are attributed on both sides", () => {
+  const proof = nativeProof({
+    affectedPaths: ["packages/native", "dist/native"],
+  });
+  const renamed = createNativeProofReuseDecision({
+    proof,
+    current: current({
+      currentBase: "c".repeat(40),
+      changedPaths: ["docs/native.md"],
+      renames: [{ from: "packages/native/README.md", to: "docs/native.md" }],
+    }),
+  });
+  assert.equal(renamed.reusable, false);
+  assert.equal(renamed.reason, "base-delta-overlaps-affected-closure");
+  assert.deepEqual(renamed.overlappingPaths, ["packages/native/README.md"]);
+
+  const generated = createNativeProofReuseDecision({
+    proof,
+    current: current({
+      currentBase: "c".repeat(40),
+      changedPaths: ["dist/native/index.js"],
+    }),
+  });
+  assert.equal(generated.reusable, false);
+  assert.equal(generated.action, "rerun-affected-native-shards");
+});
+
+test("reuse decision and base-delta lineage root are deterministic", () => {
+  const proof = nativeProof();
+  const input = current({
+    currentBase: "c".repeat(40),
+    changedPaths: ["docs/b.md", "docs/a.md", "docs/a.md"],
+  });
+  const first = createNativeProofReuseDecision({ proof, current: input });
+  const second = createNativeProofReuseDecision({ proof, current: input });
+  assert.deepEqual(first, second);
+  assert.match(first.baseDeltaRoot, /^sha256:[0-9a-f]{64}$/u);
+  assert.equal(first.decisionRoot, second.decisionRoot);
 });
 
 test("qualification rejects overlapping base changes and semantic proof drift", () => {
@@ -221,9 +308,25 @@ test("qualification rejects overlapping base changes and semantic proof drift", 
       }),
     /native proof rejected: sourcePatchRoot-mismatch/u,
   );
+
+  const wrongHead = nativeProof({ sourceHead: "e".repeat(40) });
+  const wrongHeadDecision = createNativeProofReuseDecision({
+    proof: wrongHead,
+    current: current({ sourceHead: "e".repeat(40) }),
+  });
+  assert.throws(
+    () =>
+      qualifyDevDeliveryWarrant(selected.queue, selected.warrant, {
+        nativeProof: wrongHead,
+        reuseDecision: wrongHeadDecision,
+        current: current(),
+        now: "2026-08-11T00:00:31Z",
+      }),
+    /native proof rejected: sourceHead-mismatch/u,
+  );
 });
 
-test("provisional heartbeat preserves order and expiry recovery fences stale workers", () => {
+test("provisional heartbeat preserves order and expiry requires proven worker stop before reselection", () => {
   const selected = selectedQueue();
   const heartbeat = heartbeatDevDeliveryWarrant(
     selected.queue,
@@ -239,20 +342,19 @@ test("provisional heartbeat preserves order and expiry recovery fences stale wor
   const recovered = recoverExpiredDevDeliveryWarrant(heartbeat.queue, {
     now: "2026-08-11T00:04:00Z",
   });
-  const reselection = selectDevDeliveryWarrant(recovered.queue, {
+  assert.equal(recovered.receipt.action, "expired-lease-fenced-stop-required");
+  assert.equal(recovered.queue.stateRoot, heartbeat.queue.stateRoot);
+  const blocked = selectDevDeliveryWarrant(recovered.queue, {
     now: "2026-08-11T00:04:01Z",
   });
-  assert.equal(reselection.warrant.phase, "provisional");
-  assert.notEqual(
-    reselection.warrant.fencingToken,
-    selected.warrant.fencingToken,
-  );
+  assert.equal(blocked.receipt.selected, false);
+  assert.equal(blocked.warrant.fencingToken, selected.warrant.fencingToken);
   assert.throws(
     () =>
-      heartbeatDevDeliveryWarrant(reselection.queue, selected.warrant, {
+      heartbeatDevDeliveryWarrant(blocked.queue, selected.warrant, {
         now: "2026-08-11T00:04:02Z",
       }),
-    /stale fencing token/u,
+    /lease expired/u,
   );
 });
 
@@ -263,4 +365,72 @@ test("native proof timestamp is observational while semantic evidence is rooted"
   assert.notEqual(first.observationRoot, second.observationRoot);
   assert.equal(verifyNativeQualificationProof(first).ok, true);
   assert.equal(verifyNativeQualificationProof(second).ok, true);
+});
+
+test("legacy native proofs remain verifiable but cannot gain receipt-bound reuse", () => {
+  const proof = nativeProof();
+  proof.schema = "kungfu.buildchain.native-qualification-proof/v1";
+  delete proof.environmentRoot;
+  delete proof.sourceHead;
+  delete proof.nativeExecutionBindingRoot;
+  delete proof.nativeExecutionReceiptRoot;
+  const identity = structuredClone(proof);
+  delete identity.proofRoot;
+  delete identity.qualifiedAt;
+  delete identity.observationRoot;
+  proof.proofRoot = devDeliveryContentRoot(identity);
+  assert.equal(verifyNativeQualificationProof(proof).ok, true);
+  const decision = createNativeProofReuseDecision({
+    proof,
+    current: current(),
+  });
+  assert.equal(decision.reusable, false);
+  assert.equal(decision.reason, "native-execution-evidence-unbound");
+});
+
+test("legacy v2 environment proof cannot reuse without a bound execution receipt", () => {
+  const proof = nativeProof();
+  proof.schema = "kungfu.buildchain.native-qualification-proof/v2";
+  delete proof.sourceHead;
+  delete proof.nativeExecutionBindingRoot;
+  delete proof.nativeExecutionReceiptRoot;
+  const identity = structuredClone(proof);
+  delete identity.proofRoot;
+  delete identity.qualifiedAt;
+  delete identity.observationRoot;
+  proof.proofRoot = devDeliveryContentRoot(identity);
+  assert.equal(verifyNativeQualificationProof(proof).ok, true);
+  const decision = createNativeProofReuseDecision({
+    proof,
+    current: current(),
+  });
+  assert.equal(decision.reusable, false);
+  assert.equal(decision.action, "rerun-full-native-qualification");
+  assert.equal(decision.reason, "native-execution-evidence-unbound");
+});
+
+test("v3 native proof rejects execution binding and receipt-root drift", () => {
+  const bindingDrift = nativeProof();
+  bindingDrift.nativeExecutionBindingRoot = ROOT("e");
+  const bindingIdentity = structuredClone(bindingDrift);
+  delete bindingIdentity.proofRoot;
+  delete bindingIdentity.qualifiedAt;
+  delete bindingIdentity.observationRoot;
+  bindingDrift.proofRoot = devDeliveryContentRoot(bindingIdentity);
+  assert.equal(
+    verifyNativeQualificationProof(bindingDrift).reason,
+    "native-execution-binding-root-drift",
+  );
+
+  const receiptDrift = nativeProof();
+  receiptDrift.nativeExecutionReceiptRoot = ROOT("e");
+  const receiptIdentity = structuredClone(receiptDrift);
+  delete receiptIdentity.proofRoot;
+  delete receiptIdentity.qualifiedAt;
+  delete receiptIdentity.observationRoot;
+  receiptDrift.proofRoot = devDeliveryContentRoot(receiptIdentity);
+  assert.equal(
+    verifyNativeQualificationProof(receiptDrift).reason,
+    "native-execution-receipt-unbound",
+  );
 });

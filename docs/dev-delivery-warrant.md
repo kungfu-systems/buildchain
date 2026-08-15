@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-11
+last_reviewed: 2026-08-13
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -44,8 +44,11 @@ source binding. It reserves the next protected-dev landing before expensive
 native shards start, but it is not GitHub Merge Queue admission authority.
 Heartbeat extends only that generation. Native proof success atomically
 upgrades the same token and generation to `qualified`; only then may enqueue
-begin. Expiry recovery rejects the old token, retains queue age, and returns
-the candidate to selection.
+begin. Expiry fences further mutations by the old token, but it does not prove
+that the old native process stopped. The active Warrant therefore remains in
+place until bounded termination is proven by rooted terminal evidence. Only
+that exact fenced settlement may clear the holder and permit successor
+selection.
 
 A terminal event may cancel a candidate before selection without minting a
 Warrant. This transition is limited to an exact non-active queued candidate and
@@ -55,7 +58,12 @@ An active candidate still requires its current fencing token and lease
 generation. Exact duplicate cancellation evidence is a visible no-op; identity,
 state, event, or evidence drift fails closed.
 
-The reusable terminal controller uses one `settle` operation for active,
+The reusable terminal controller classifies authoritative completion,
+cancellation, supersession, native failure, and transient dequeue separately.
+`dequeued` alone never clears an active Warrant: a fresh holder continues with
+the same generation and token, while an expired holder waits for proof that its
+fenced worker stopped. Queued work may still settle as dequeued because it never
+started native execution. The controller uses one `settle` operation for active,
 queued, already-terminal, and never-admitted pull requests. An active Warrant
 still requires its exact fence and evidence. A matching queued cancellation is
 persisted normally. A duplicate terminal event or a pull request that never
@@ -85,10 +93,16 @@ affected closure, dependencies, toolchain, covered paths, and exact acceptance
 evidence. Ready state and approval are established before provisional
 selection.
 
-Native Qualification Proof is separate. It binds semantic source and patch,
-plan, affected closure, dependency graph, toolchain, covered paths, native
-shard evidence, and the exact dev base used by the native composition. Before
-reuse, the consumer classifies the dev delta:
+Native Qualification Proof is separate. Its v3 form binds semantic source and patch,
+plan, affected closure, dependency graph, toolchain, the exact execution
+environment contract, covered paths, native shard evidence, the exact dev
+base used by the native composition, and the v2 native heartbeat-run receipt.
+That receipt exposes and roots the exact repository, protected base, source
+head, qualified base, toolchain, and environment binding established before
+process spawn. The proof repeats the binding root and includes the receipt root
+in its shard evidence. Before reuse, the consumer roots the
+complete attributed Dev delta, including both sides of every rename, then
+classifies it:
 
 - unchanged semantic roots plus an unrelated fully attributed base delta reuse
   native qualification and run only a cheap Project Cut replay. GitHub's `behind`
@@ -97,8 +111,20 @@ reuse, the consumer classifies the dev delta:
   context roots, and a qualified `project.cut.merge-queue-admission/v1`
   receipt;
 - an overlapping delta reruns affected native shards or the full native plan;
-- an unknown graph or changed source, plan, closure, dependency, or toolchain
-  root fails closed to full native qualification.
+- an unknown or truncated graph, ambiguous rename, missing attribution, or
+  changed source, plan, closure, dependency, toolchain, or environment root
+  fails closed to full native qualification.
+
+Historical Native Qualification Proof v1 and v2 values remain readable, but
+they cannot be reused because their execution receipt did not bind the
+environment root. They fail closed to explicit native revalidation and produce
+a v3 proof.
+
+The reuse decision binds the exact old and current Dev heads, normalized changed
+paths and rename pairs in `baseDeltaRoot`. This makes local and hosted replay of
+the same inputs byte-deterministic. Generated outputs that participate in the
+affected closure must be listed in `affected-paths-json`; a delta touching one
+of those surfaces is overlap, not a documentation-only advance.
 
 Integration Delivery Proof is separate and cannot be cached across candidates.
 It binds the exact current dev base, replay tree, GitHub `merge_group` head and
@@ -117,16 +143,21 @@ buildchain dev warrant submit --repository owner/repository \
   --source-identity-root <root> --source-patch-root <root> \
   --source-proof-root <root> --plan-root <root> --closure-root <root> \
   --dependency-root <root> --toolchain-root <root> \
+  --environment-root <root> \
   --delivery-class native-proof-required
 
 buildchain dev warrant select --repository owner/repository \
   --branch dev/v4/v4.0 --execute
 
 buildchain dev proof native --branch dev/v4/v4.0 \
-  --qualified-base <sha> --affected-paths-json '["packages/native"]' ...
+  --source-head <sha> --qualified-base <sha> \
+  --environment-root <root> \
+  --native-execution-receipt native-heartbeat-run.json \
+  --affected-paths-json '["packages/native"]' ...
 
 buildchain dev proof classify-native --source-proof native-proof.json \
-  --current-base <sha> --graph-known true --changed-paths-json '[]' ...
+  --current-base <sha> --graph-known true --attribution-complete true \
+  --changed-paths-json '[]' --renames-json '[]' ...
 
 buildchain dev warrant qualify --repository owner/repository \
   --branch dev/v4/v4.0 --fencing-token <root> --lease-generation 1 \
@@ -144,6 +175,15 @@ buildchain dev warrant cancel-queued --repository owner/repository \
 Warrant-scoped mutations require the exact fencing token and lease generation.
 `close` also requires a rooted terminal evidence object.
 
+Expensive native commands must run through `dev-delivery-native-run.mjs` (or an
+equivalent exact consumer). It performs an exact fenced heartbeat before spawn,
+renews throughout the complete child lifetime, performs a final renewal before
+accepting success, and terminates the process group on heartbeat or fencing
+failure. Missing, stale, expired, or mismatched Warrant state therefore blocks
+native spawn instead of becoming qualification evidence. The environment root
+is validated and included in the execution binding before the first heartbeat
+or process spawn; it cannot be attached only after a successful run.
+
 Proof commands create, verify, classify, and compose the two proof layers:
 
 ```sh
@@ -157,7 +197,7 @@ buildchain dev proof integration --warrant-result warrant.json ...
 
 ## Bounded-concurrency shadow qualification
 
-The production queue remains single-flight. A separate effect-disabled shadow
+The default production queue remains single-flight. A separate effect-disabled shadow
 planner can replay the same deterministic candidate order with a bound of one
 or two lanes. It does not issue, renew, supersede, close, or persist a Warrant;
 it cannot enqueue a pull request; and its output explicitly carries no
@@ -188,6 +228,62 @@ additional runner cost, ambiguity, and false positives. A `proceed` result is
 only evidence for a separate reviewed rollout decision; it never changes the
 live Warrant schema, queue state, merge-queue policy, or protected branch.
 
+## Opt-in bounded qualification and exclusive landing
+
+Buildchain also defines an explicit production opt-in that turns successful
+shadow evidence into a separate v2 authority state. It does not widen or
+reinterpret the v1 Warrant queue. The accepted
+[`Qualification Lease and Landing Warrant ADR`](dev-delivery-qualification-landing-adr.md)
+and `contracts/dev-delivery-authority-v2.schema.json` are authoritative.
+
+In `bounded-qualification-landing` mode, a configured number of exact
+Qualification Leases may coexist. Each lease carries
+`authority = qualification-only` and `mergeGroupAdmission = false`. Completing
+qualification records evidence and releases that lease. Qualified candidates
+then wait for the one `Landing Warrant`, which alone carries
+`authority = merge-group-admission` and may be checked for `merge_group`
+admission.
+
+Concurrency is granted only across disjoint rooted `qualificationDomains`.
+Overlap and unknown domains are held behind the active safety boundary with an
+explicit content-rooted reason. `maxLandingOvertakes` prevents a slow older
+candidate from being bypassed indefinitely, while `maxQualificationAttempts`
+turns repeated heartbeat loss into a rooted terminal failure. Every release
+returns a deterministic rooted wake instruction; an exact duplicate release or
+recovery is a state-root-preserving no-op.
+
+The public command family is explicit:
+
+```sh
+buildchain dev authority migrate --repository owner/repository \
+  --branch dev/v3/v3.0 --legacy-state v1-queue.json --execute --json
+buildchain dev authority lease-qualification --repository owner/repository \
+  --branch dev/v4/v4.0 --execute
+buildchain dev authority heartbeat-qualification --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> \
+  --authority-token <root> --authority-generation 1 --execute
+buildchain dev authority complete-qualification --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> \
+  --authority-token <root> --authority-generation 1 \
+  --evidence-root <qualification-root> --execute
+buildchain dev authority lease-landing --repository owner/repository \
+  --branch dev/v4/v4.0 --execute
+buildchain dev authority heartbeat-landing --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> \
+  --authority-token <root> --authority-generation 1 --execute
+buildchain dev authority recover --repository owner/repository \
+  --branch dev/v4/v4.0 --execute
+buildchain dev authority admit-merge-group --repository owner/repository \
+  --branch dev/v4/v4.0 --candidate-id <root> \
+  --authority-token <root> --authority-generation 1 \
+  --merge-group-head <sha>
+```
+
+Terminal settlement releases either authority immediately from exact evidence;
+it does not wait for TTL. Exact duplicate settlement is a state-root-preserving
+no-op. The default `buildchain dev warrant` commands, v1 state bytes, and
+single-flight behavior do not change while this mode is off.
+
 ## Workflow rollout and rollback
 
 The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
@@ -209,13 +305,30 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   configured consumer workflow is dispatched immediately for that exact PR,
   head, and source run; the candidate is not left waiting for a patrol cron.
 
+For a required native delivery class, the reusable controller rejects a
+missing or malformed environment root before runtime checkout, candidate
+submission, Warrant selection, or native execution. The input remains
+conditionally optional so `off`, `shadow`, and `non-native-fast` callers keep
+their documented behavior.
+
+The controller persists a completed native proof before its final base
+reclassification. A later exact retry can supply that proof and avoid the
+expensive native command when the rooted delta still proves reuse safe. A
+duplicate dispatch against the same already-qualified Warrant returns the same
+proof and reuse roots without another queue mutation. Both result forms carry
+`landingAuthority: false`: only the live qualified Warrant plus exact-head
+GitHub merge-queue admission can authorize landing.
+
 The required controller checks the protected base again after native work. A
 disjoint attributed delta reuses the proof. Overlap or unknown attribution
 triggers one automatic revalidation on the latest base; continued overlap,
 native failure, cancellation, semantic head movement, or an unrecoverable merge
 conflict closes the exact fence. The next queued candidate is notified through
-the `buildchain-dev-delivery-wake` repository event. If cancellation prevents
-cleanup, lease expiry recovers retained queue age and mints a new fence.
+the `buildchain-dev-delivery-wake` repository event. Its complete semantic
+candidate is carried under the single `client_payload.candidate` envelope so
+GitHub's ten-property top-level limit cannot discard proof bindings. If
+cancellation prevents cleanup, lease expiry recovers retained queue age and
+mints a new fence.
 
 Consumers should deploy `shadow` first, inspect receipts, then change their
 protected caller to `required`. Rollback is a reviewed caller change back to

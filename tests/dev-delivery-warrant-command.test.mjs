@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { GitHubDevDeliveryStore, defaultDevDeliveryStateRef, runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
+import { GitHubDevDeliveryStore, defaultDevDeliveryStateRef, devDeliveryCliOptions, runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
 import { createDevDeliveryQueue, selectDevDeliveryWarrant, submitDevDeliveryCandidate } from "../packages/core/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
@@ -32,6 +32,7 @@ function submitOptions(overrides = {}) {
     closureRoot: ROOT("6"),
     dependencyRoot: ROOT("7"),
     toolchainRoot: ROOT("8"),
+    environmentRoot: ROOT("a"),
     deliveryClass: "native-proof-required",
     priority: "ordinary",
     now: "2026-08-04T00:01:00Z",
@@ -81,6 +82,19 @@ test("state refs are deterministic and remain inside the Buildchain namespace", 
   assert.equal(defaultDevDeliveryStateRef("dev/v4/v4.0"), "buildchain/dev-delivery-warrant/dev-v4-v4.0");
 });
 
+test("CLI preserves the exact source workflow run binding from flags or environment", () => {
+  assert.equal(
+    devDeliveryCliOptions(["submit", "--source-workflow-run-id", "31645483735"], {}).sourceWorkflowRunId,
+    "31645483735",
+  );
+  assert.equal(
+    devDeliveryCliOptions(["submit"], {
+      BUILDCHAIN_DEV_DELIVERY_SOURCE_WORKFLOW_RUN_ID: "31645483735",
+    }).sourceWorkflowRunId,
+    "31645483735",
+  );
+});
+
 test("plan mode emits rooted receipts without writing authority", async () => {
   const store = new MemoryStore();
   const result = await runDevDeliveryCommand(submitOptions(), store);
@@ -101,6 +115,31 @@ test("execute mode persists one expected-old transition and exact readback root"
   assert.equal(store.writes[0].expectedStateRoot, result.before.stateRoot);
   assert.equal(store.writes[0].queue.stateRoot, result.after.stateRoot);
   assert.equal(result.after.commitSha, "b".repeat(40));
+});
+
+test("native execute rejects a missing environment root before authority read or write", async () => {
+  const store = new MemoryStore();
+  let reads = 0;
+  store.read = async () => {
+    reads += 1;
+    return { exists: true, commitSha: store.commitSha, queue: store.queue };
+  };
+  await assert.rejects(
+    runDevDeliveryCommand(
+      submitOptions({ execute: true, environmentRoot: "" }),
+      store,
+    ),
+    /environmentRoot must be a sha256 content root/u,
+  );
+  assert.equal(reads, 0);
+  assert.equal(store.writes.length, 0);
+
+  const shadow = await runDevDeliveryCommand(
+    submitOptions({ environmentRoot: "" }),
+    store,
+  );
+  assert.equal(shadow.mode, "plan");
+  assert.equal(store.writes.length, 0);
 });
 
 test("stale expected-old input fails before any write", async () => {
@@ -138,30 +177,56 @@ test("selection and observation use the same durable state contract", async () =
   assert.equal(observed.observation.activeWarrant.fencingToken, selected.warrant.fencingToken);
 });
 
-test("expired Warrant recovery and reselection persist as one expected-old transition", async () => {
+test("expired Warrant selection remains blocked until exact fenced settlement", async () => {
   const store = new MemoryStore();
   await runDevDeliveryCommand(submitOptions({ execute: true }), store);
-  const selected = await runDevDeliveryCommand({ command: "select", repository: "kungfu-systems/kungfu", branch: "dev/v4/v4.0", now: "2026-08-04T00:02:00Z", leaseSeconds: 60, execute: true }, store);
-  const reselected = await runDevDeliveryCommand({ command: "select", repository: "kungfu-systems/kungfu", branch: "dev/v4/v4.0", now: "2026-08-04T00:04:00Z", leaseSeconds: 60, execute: true }, store);
+  const selected = await runDevDeliveryCommand(
+    {
+      command: "select",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      now: "2026-08-04T00:02:00Z",
+      leaseSeconds: 60,
+      execute: true,
+    },
+    store,
+  );
+  const reselected = await runDevDeliveryCommand(
+    {
+      command: "select",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      now: "2026-08-04T00:04:00Z",
+      leaseSeconds: 60,
+      execute: true,
+    },
+    store,
+  );
   assert.equal(reselected.receipt.expectedOldStateRoot, selected.after.stateRoot);
-  assert.equal(reselected.warrant.generation, selected.warrant.generation + 1);
-  assert.equal(reselected.mutationApplied, true);
-  assert.equal(store.writes.length, 3);
+  assert.equal(reselected.receipt.selected, false);
+  assert.equal(reselected.receipt.reason, "expired-active-warrant-awaits-fenced-settlement");
+  assert.equal(reselected.warrant.generation, selected.warrant.generation);
+  assert.equal(reselected.warrant.fencingToken, selected.warrant.fencingToken);
+  assert.equal(reselected.mutationApplied, false);
+  assert.equal(store.writes.length, 2);
 });
 
 test("terminal settlement records a verified non-applicable no-op without writing", async () => {
   const store = new MemoryStore();
-  const result = await runDevDeliveryCommand({
-    command: "settle",
-    repository: "kungfu-systems/kungfu",
-    branch: "dev/v4/v4.0",
-    pullRequestNumber: 2545,
-    expectedSourceHead: "c".repeat(40),
-    outcome: "merged",
-    reason: "Warrant rollout was off",
-    now: "2026-08-04T00:02:00Z",
-    execute: true,
-  }, store);
+  const result = await runDevDeliveryCommand(
+    {
+      command: "settle",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      pullRequestNumber: 2545,
+      expectedSourceHead: "c".repeat(40),
+      outcome: "merged",
+      reason: "Warrant rollout was off",
+      now: "2026-08-04T00:02:00Z",
+      execute: true,
+    },
+    store,
+  );
   assert.equal(result.mode, "execute");
   assert.equal(result.mutationApplied, false);
   assert.equal(result.receipt.action, "terminal-event-not-applicable");
@@ -171,26 +236,35 @@ test("terminal settlement records a verified non-applicable no-op without writin
 });
 
 test("terminal settlement reconciles a concurrent identical winner as an exact no-op", async () => {
-  const submitted = submitDevDeliveryCandidate(initialQueue(), {
-    ...submitOptions(),
-    pullRequestNumber: 2549,
-  }, { now: "2026-08-04T00:01:00Z" });
-  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:02:00Z" });
+  const submitted = submitDevDeliveryCandidate(
+    initialQueue(),
+    {
+      ...submitOptions(),
+      pullRequestNumber: 2549,
+    },
+    { now: "2026-08-04T00:01:00Z" },
+  );
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:02:00Z",
+  });
   const store = new ConcurrentTerminalStore(selected.queue);
-  const result = await runDevDeliveryCommand({
-    command: "settle",
-    repository: "kungfu-systems/kungfu",
-    branch: "dev/v4/v4.0",
-    pullRequestNumber: 2549,
-    expectedSourceHead: "a".repeat(40),
-    fencingToken: selected.warrant.fencingToken,
-    leaseGeneration: selected.warrant.generation,
-    outcome: "merged",
-    evidenceRoot: ROOT("e"),
-    reason: "protected pull request merged",
-    now: "2026-08-04T00:03:00Z",
-    execute: true,
-  }, store);
+  const result = await runDevDeliveryCommand(
+    {
+      command: "settle",
+      repository: "kungfu-systems/kungfu",
+      branch: "dev/v4/v4.0",
+      pullRequestNumber: 2549,
+      expectedSourceHead: "a".repeat(40),
+      fencingToken: selected.warrant.fencingToken,
+      leaseGeneration: selected.warrant.generation,
+      outcome: "merged",
+      evidenceRoot: ROOT("e"),
+      reason: "protected pull request merged",
+      now: "2026-08-04T00:03:00Z",
+      execute: true,
+    },
+    store,
+  );
   assert.equal(result.mutationApplied, false);
   assert.equal(result.receipt.action, "duplicate-terminal-event-noop");
   assert.equal(result.before.commitSha, "c".repeat(40));
@@ -310,6 +384,7 @@ test("GitHub state store advances a non-forced child commit and verifies its imm
       closureRoot: ROOT("6"),
       dependencyRoot: ROOT("7"),
       toolchainRoot: ROOT("8"),
+    environmentRoot: ROOT("a"),
       deliveryClass: "native-proof-required",
       priority: "ordinary",
     },
@@ -356,7 +431,10 @@ test("GitHub state store advances a non-forced child commit and verifies its imm
   assert.deepEqual(commitCall.body.parents, [beforeCommit]);
   const updateCall = calls.find((call) => call.method === "PATCH");
   assert.equal(updateCall.body.force, false);
-  assert.equal(calls.some((call) => call.method === "GET" && call.url.includes("/git/ref/heads/")), false);
+  assert.equal(
+    calls.some((call) => call.method === "GET" && call.url.includes("/git/ref/heads/")),
+    false,
+  );
 });
 
 test("GitHub state store exposes a concurrent non-fast-forward rejection", async () => {

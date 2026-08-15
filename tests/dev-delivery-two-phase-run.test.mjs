@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createNativeQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import { createNativeExecutionReceipt, createNativeQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 import {
   composeCandidate,
   GitHubTwoPhaseClient,
@@ -15,6 +15,29 @@ import {
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const HEAD = "a".repeat(40);
 const BASE = "b".repeat(40);
+
+function nativeExecutionReceipt({
+  qualifiedBase = BASE,
+  sourceHead = HEAD,
+  toolchainRoot = ROOT("6"),
+  environmentRoot = ROOT("0"),
+} = {}) {
+  return createNativeExecutionReceipt({
+    outcome: "succeeded",
+    commandRoot: ROOT("f"),
+    executionBinding: {
+      repository: "kungfu-systems/buildchain",
+      protectedBase: "dev/v3/v3.0",
+      sourceHead,
+      qualifiedBase,
+      toolchainRoot,
+      environmentRoot,
+    },
+    startedAt: "2026-08-11T00:00:00Z",
+    completedAt: "2026-08-11T00:00:30Z",
+    heartbeatCount: 2,
+  });
+}
 
 test("candidate replay composes a divergent base without ambient Git identity", (t) => {
   const directory = fs.mkdtempSync(
@@ -95,6 +118,7 @@ test("GitHub base delta attributes both sides of a rename", async () => {
           merge_base_commit: { sha: BASE },
           files: [
             {
+              status: "renamed",
               filename: "docs/native.md",
               previous_filename: "packages/native/README.md",
             },
@@ -104,8 +128,34 @@ test("GitHub base delta attributes both sides of a rename", async () => {
   });
   assert.deepEqual(await client.baseDelta(BASE, "c".repeat(40)), {
     graphKnown: true,
+    attributionComplete: true,
     changedPaths: ["docs/native.md", "packages/native/README.md"],
+    renames: [{ from: "packages/native/README.md", to: "docs/native.md" }],
   });
+});
+
+test("GitHub wake preserves the complete candidate under one dispatch property", async () => {
+  const requests = [];
+  const client = new GitHubTwoPhaseClient({
+    repository: "kungfu-systems/buildchain",
+    token: "fixture",
+    apiUrl: "https://example.invalid",
+    fetchImpl: async (url, requestOptions) => {
+      requests.push({ url, requestOptions });
+      return { ok: true, text: async () => "" };
+    },
+  });
+  const candidate = Object.fromEntries(
+    Array.from({ length: 24 }, (_, index) => [`binding${index}`, ROOT("a")]),
+  );
+
+  await client.wake("buildchain-dev-delivery-wake", candidate);
+
+  assert.equal(requests.length, 1);
+  const body = JSON.parse(requests[0].requestOptions.body);
+  assert.equal(body.event_type, "buildchain-dev-delivery-wake");
+  assert.deepEqual(Object.keys(body.client_payload), ["candidate"]);
+  assert.deepEqual(body.client_payload.candidate, candidate);
 });
 
 function options(directory, proofPath) {
@@ -120,6 +170,7 @@ function options(directory, proofPath) {
     closureRoot: ROOT("4"),
     dependencyRoot: ROOT("5"),
     toolchainRoot: ROOT("6"),
+    environmentRoot: ROOT("0"),
     affectedPaths: ["packages/native"],
     shardEvidenceRoots: [],
     nativeCommand: "",
@@ -142,13 +193,16 @@ test("two-phase controller reuses disjoint native proof and qualifies before mer
   const proof = createNativeQualificationProof({
     repository: "kungfu-systems/buildchain",
     protectedBase: "dev/v3/v3.0",
+    sourceHead: HEAD,
     sourceIdentityRoot: ROOT("1"),
     sourcePatchRoot: ROOT("2"),
     planRoot: ROOT("3"),
     closureRoot: ROOT("4"),
     dependencyRoot: ROOT("5"),
     toolchainRoot: ROOT("6"),
+    environmentRoot: ROOT("0"),
     qualifiedBase: BASE,
+    nativeExecutionReceipt: nativeExecutionReceipt(),
     affectedPaths: ["packages/native"],
     shardEvidenceRoots: [ROOT("7")],
     qualifiedAt: "2026-08-11T00:00:00Z",
@@ -176,7 +230,9 @@ test("two-phase controller reuses disjoint native proof and qualifies before mer
         exactPullRequestHead: async () => HEAD,
         baseDelta: async () => ({
           graphKnown: true,
+          attributionComplete: true,
           changedPaths: ["docs/guide.md"],
+          renames: [],
         }),
       },
       runCommand: async (input) => {
@@ -208,13 +264,16 @@ test("two-phase proof reuse rejects a changed exact PR head and releases the lea
   const proof = createNativeQualificationProof({
     repository: "kungfu-systems/buildchain",
     protectedBase: "dev/v3/v3.0",
+    sourceHead: HEAD,
     sourceIdentityRoot: ROOT("1"),
     sourcePatchRoot: ROOT("2"),
     planRoot: ROOT("3"),
     closureRoot: ROOT("4"),
     dependencyRoot: ROOT("5"),
     toolchainRoot: ROOT("6"),
+    environmentRoot: ROOT("0"),
     qualifiedBase: BASE,
+    nativeExecutionReceipt: nativeExecutionReceipt(),
     affectedPaths: ["packages/native"],
     shardEvidenceRoots: [ROOT("7")],
     qualifiedAt: "2026-08-11T00:00:00Z",
@@ -239,7 +298,12 @@ test("two-phase proof reuse rejects a changed exact PR head and releases the lea
       runTwoPhaseDelivery(options(directory, proofPath), {
         client: {
           baseSha: async () => BASE,
-          baseDelta: async () => ({ graphKnown: true, changedPaths: [] }),
+          baseDelta: async () => ({
+            graphKnown: true,
+            attributionComplete: true,
+            changedPaths: [],
+            renames: [],
+          }),
           exactPullRequestHead: async () => {
             throw new Error("semantic source head changed");
           },
@@ -255,6 +319,106 @@ test("two-phase proof reuse rejects a changed exact PR head and releases the lea
       calls.map((entry) => entry.command),
       ["close"],
     );
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("duplicate controller dispatch replays the same qualified Warrant without side effects", async () => {
+  const directory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-two-phase-qualified-replay-"),
+  );
+  const warrant = {
+    schema: "kungfu.buildchain.dev-delivery-warrant/v1",
+    phase: "qualified",
+    pullRequestNumber: 501,
+    sourceHead: HEAD,
+    candidateId: ROOT("8"),
+    fencingToken: ROOT("9"),
+    generation: 1,
+    nativeProofRoot: ROOT("a"),
+    nativeProofReuseRoot: ROOT("b"),
+  };
+  fs.writeFileSync(
+    path.join(directory, "warrant.json"),
+    `${JSON.stringify({ observation: { activeWarrant: warrant } })}\n`,
+  );
+  let commandCalls = 0;
+  try {
+    const result = await runTwoPhaseDelivery(options(directory, ""), {
+      client: { exactPullRequestHead: async () => HEAD },
+      runCommand: async () => {
+        commandCalls += 1;
+        throw new Error("must not mutate on duplicate resume");
+      },
+    });
+    assert.equal(result.outcome, "already-qualified-warrant");
+    assert.equal(result.nativeAttempts, 0);
+    assert.equal(result.landingAuthority, false);
+    assert.equal(result.nativeProofRoot, warrant.nativeProofRoot);
+    assert.equal(commandCalls, 0);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("controller reclassifies a completed proof after concurrent Dev movement", async () => {
+  const directory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-two-phase-base-movement-"),
+  );
+  const proof = createNativeQualificationProof({
+    repository: "kungfu-systems/buildchain",
+    protectedBase: "dev/v3/v3.0",
+    sourceHead: HEAD,
+    sourceIdentityRoot: ROOT("1"),
+    sourcePatchRoot: ROOT("2"),
+    planRoot: ROOT("3"),
+    closureRoot: ROOT("4"),
+    dependencyRoot: ROOT("5"),
+    toolchainRoot: ROOT("6"),
+    environmentRoot: ROOT("0"),
+    qualifiedBase: BASE,
+    nativeExecutionReceipt: nativeExecutionReceipt(),
+    affectedPaths: ["packages/native"],
+    shardEvidenceRoots: [ROOT("7")],
+    qualifiedAt: "2026-08-11T00:00:00Z",
+  });
+  const proofPath = path.join(directory, "proof.json");
+  fs.writeFileSync(proofPath, `${JSON.stringify(proof)}\n`);
+  const warrant = {
+    phase: "provisional",
+    pullRequestNumber: 501,
+    sourceHead: HEAD,
+    candidateId: ROOT("8"),
+    fencingToken: ROOT("9"),
+    generation: 1,
+  };
+  fs.writeFileSync(
+    path.join(directory, "warrant.json"),
+    `${JSON.stringify({ observation: { activeWarrant: warrant } })}\n`,
+  );
+  const bases = ["c".repeat(40), "d".repeat(40)];
+  let baseReads = 0;
+  try {
+    const result = await runTwoPhaseDelivery(options(directory, proofPath), {
+      client: {
+        baseSha: async () => bases[Math.min(baseReads++, bases.length - 1)],
+        exactPullRequestHead: async () => HEAD,
+        baseDelta: async (_previous, currentBase) => ({
+          graphKnown: true,
+          attributionComplete: true,
+          changedPaths: [`docs/${currentBase[0]}.md`],
+          renames: [],
+        }),
+      },
+      runCommand: async () => ({
+        receiptRoot: ROOT("a"),
+        observation: { activeWarrant: { ...warrant, phase: "qualified" } },
+      }),
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.nativeAttempts, 0);
+    assert.equal(baseReads, 2);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }

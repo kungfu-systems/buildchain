@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:eb2fafb181b33002f81102a966f0a801ab1798101446635703ab6acfea51d9aa",
+    "compatibilityDigest": "sha256:57d37609068590238f547a133b6b69ee994b452825030447d20529683ba61fbd",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "cff191a0303188b5424aaaecf429275965adfc0cd185418de71e758e8a2bb05c",
+    "sha256": "e17a790fb24b0dfede66aa8513feae321e47a100b70d850e7edca14870652f81",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 72,
-      "docCommandRefCount": 946,
+      "sitePageCount": 74,
+      "docCommandRefCount": 989,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "cff191a0303188b5424aaaecf429275965adfc0cd185418de71e758e8a2bb05c",
+      "sha256": "e17a790fb24b0dfede66aa8513feae321e47a100b70d850e7edca14870652f81",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 72,
-        "docCommandRefCount": 946,
+        "sitePageCount": 74,
+        "docCommandRefCount": 989,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1425,6 +1425,18 @@
           "packageExport": "./diagnostics"
         },
         {
+          "id": "export:./dev-delivery-authority",
+          "name": "@kungfu-tech/buildchain/dev-delivery-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/dev-delivery-authority.js",
+          "evidencePath": "packages/core/dev-delivery-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./dev-delivery-authority"
+        },
+        {
           "id": "export:./dev-delivery-warrant",
           "name": "@kungfu-tech/buildchain/dev-delivery-warrant",
           "kind": "package-export",
@@ -1495,6 +1507,114 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./kfd-adopter-manifest"
+        },
+        {
+          "id": "export:./adopter-delivery-gate",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-gate",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-gate.js",
+          "evidencePath": "packages/core/adopter-delivery-gate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-gate"
+        },
+        {
+          "id": "export:./kfd-adopter-category-driver",
+          "name": "@kungfu-tech/buildchain/kfd-adopter-category-driver",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-adopter-category-driver.js",
+          "evidencePath": "packages/core/kfd-adopter-category-driver.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-adopter-category-driver"
+        },
+        {
+          "id": "export:./buildchain-delivery-infrastructure",
+          "name": "@kungfu-tech/buildchain/buildchain-delivery-infrastructure",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-delivery-infrastructure.js",
+          "evidencePath": "packages/core/buildchain-delivery-infrastructure.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-delivery-infrastructure"
+        },
+        {
+          "id": "export:./buildchain-delivery-bootstrap",
+          "name": "@kungfu-tech/buildchain/buildchain-delivery-bootstrap",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-delivery-bootstrap.js",
+          "evidencePath": "packages/core/buildchain-delivery-bootstrap.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-delivery-bootstrap"
+        },
+        {
+          "id": "export:./buildchain-delivery-self-dogfood",
+          "name": "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-delivery-self-dogfood.js",
+          "evidencePath": "packages/core/buildchain-delivery-self-dogfood.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-delivery-self-dogfood"
+        },
+        {
+          "id": "export:./published-delivery-authority",
+          "name": "@kungfu-tech/buildchain/published-delivery-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/published-delivery-authority.js",
+          "evidencePath": "packages/core/published-delivery-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./published-delivery-authority"
+        },
+        {
+          "id": "export:./legacy-kfd-adopter-driver",
+          "name": "@kungfu-tech/buildchain/legacy-kfd-adopter-driver",
+          "kind": "package-export",
+          "sourcePath": "packages/core/legacy-kfd-adopter-driver.js",
+          "evidencePath": "packages/core/legacy-kfd-adopter-driver.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./legacy-kfd-adopter-driver"
+        },
+        {
+          "id": "export:./adopter-delivery-passport",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-passport",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-passport.js",
+          "evidencePath": "packages/core/adopter-delivery-passport.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-passport"
+        },
+        {
+          "id": "export:./adopter-delivery-vectors",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-vectors",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-vectors.js",
+          "evidencePath": "packages/core/adopter-delivery-vectors.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-vectors"
         },
         {
           "id": "export:./kfd-adopter-release-binding",
@@ -4768,7 +4888,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 39,
+          "inputCount": 40,
           "inputs": [
             "active-lease-context",
             "affected-paths-json",
@@ -4784,6 +4904,7 @@
             "dependency-root",
             "diagnostic-context",
             "dry-run",
+            "environment-root",
             "expected-head-sha",
             "expected-pr-number",
             "handoff-workflow-id",
@@ -5569,7 +5690,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 82,
+          "inputCount": 83,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -5619,6 +5740,7 @@
             "release-candidate-version",
             "release-material-sha",
             "release-passport",
+            "release-passport-adopter-delivery-json",
             "release-passport-attachment-command",
             "release-passport-build-summary-path",
             "release-passport-buildchain-self-kfd",
@@ -6032,6 +6154,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:adopter-delivery-gate",
+          "name": "site-page:manual:adopter-delivery-gate",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:artifact-verification-envelope",
           "name": "site-page:manual:artifact-verification-envelope",
           "kind": "site-page",
@@ -6142,6 +6276,18 @@
         {
           "id": "site-page:manual:dev-alpha-candidate-patrol",
           "name": "site-page:manual:dev-alpha-candidate-patrol",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:dev-delivery-qualification-landing-adr",
+          "name": "site-page:manual:dev-delivery-qualification-landing-adr",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -6826,6 +6972,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 435
+    "publicSurfaceCount": 447
   }
 }

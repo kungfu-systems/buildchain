@@ -25,8 +25,8 @@ function contractWorld() {
 test("historical compatibility relations are immutable direct proofs", () => {
   const proofs = createHistoricalBuildchainCompatibilityProofs();
 
-  assert.equal(proofs.length, 6);
-  assert.equal(new Set(proofs.map((proof) => proof.proofRoot)).size, 6);
+  assert.equal(proofs.length, 9);
+  assert.equal(new Set(proofs.map((proof) => proof.proofRoot)).size, 9);
   for (const proof of proofs) {
     assert.equal(proof.schema, BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA);
     assert.equal(proof.direction, "source-to-target");
@@ -34,12 +34,13 @@ test("historical compatibility relations are immutable direct proofs", () => {
     assert.notEqual(proof.source.breakingDigest, proof.target.breakingDigest);
     assert.match(proof.evidence.pullRequest, /^https:\/\/github\.com\/kungfu-systems\/buildchain\/pull\/\d+$/);
     assert.equal(proof.authority.protectedBase, "dev/v3/v3.0");
-    assert.equal(
-      proof.cut.commit,
-      proof.source.surfaceId === "controller:build-channel-router"
-        ? "34fad9d3a94c450d75c0d06fd6ed00470c992ff7"
-        : "ff0f9006be1c8f63be40e67789e0cfd28fd69d46",
-    );
+    const historicalCuts = {
+      "controller:build-channel-router": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
+      "reusable-build": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
+      "web-surface": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
+      "controller:release-propagation": "487ee09ca4832ffd15607db00060df4c0839fbae",
+    };
+    assert.equal(proof.cut.commit, historicalCuts[proof.source.surfaceId] || "ff0f9006be1c8f63be40e67789e0cfd28fd69d46");
     assert.equal(verifyBuildchainCompatibilityProof(proof).ok, true);
   }
 
@@ -52,6 +53,21 @@ test("historical compatibility relations are immutable direct proofs", () => {
   assert.equal(routerProof.target.breakingDigest, "sha256:30549aa26cd1e1dd81f10fe3529d3c6e3f8438a6efa0100c47ebae4d2f3d71df");
   assert.equal(routerProof.evidence.pullRequest, "https://github.com/kungfu-systems/buildchain/pull/2549");
   assert.equal(routerProof.cut.commit, "34fad9d3a94c450d75c0d06fd6ed00470c992ff7");
+
+  const tapProofs = proofs.filter((proof) => [
+    "reusable-build",
+    "web-surface",
+    "controller:release-propagation",
+  ].includes(proof.source.surfaceId));
+  assert.equal(tapProofs.length, 3);
+  assert.deepEqual(
+    tapProofs.map((proof) => proof.evidence.pullRequest).sort(),
+    [
+      "https://github.com/kungfu-systems/buildchain/pull/2089",
+      "https://github.com/kungfu-systems/buildchain/pull/2089",
+      "https://github.com/kungfu-systems/buildchain/pull/2143",
+    ],
+  );
 });
 
 test("legacy digest lists are deterministic proof-backed projections", () => {

@@ -239,6 +239,54 @@ test("promotion stages one digest-selected subject, manifest, policy, and Passpo
   assert.deepEqual(JSON.parse(fs.readFileSync(staged.paths.policy, "utf8")), value.policy);
 });
 
+test("promotion stages a policy bound to a tree-equivalent promotion source", () => {
+  const value = fixture();
+  const promotionSourceSha = "5".repeat(40);
+  const policy = createGitHubArtifactAttestationPolicy({
+    ...value.policy,
+    caller: { ...value.policy.caller, sourceSha: promotionSourceSha },
+  });
+  const manifest = JSON.parse(fs.readFileSync(value.manifestPath, "utf8"));
+  manifest.git.sha = promotionSourceSha;
+  writeJson(value.manifestPath, manifest);
+  const manifestDigest = githubArtifactAttestationSha256File(value.manifestPath);
+  const treeEquivalentPolicy = createGitHubArtifactAttestationPolicy({
+    ...policy,
+    build: {
+      ...policy.build,
+      platformManifestDigest: manifestDigest,
+      runnerReceiptRoot: manifestDigest,
+    },
+  });
+  writeJson(value.passportPath, createReleasePassport({
+    repository: "kungfu-systems/kungfu",
+    tag: "v4.0.0-alpha.1",
+    sourceSha: SOURCE_SHA,
+    assets: [{
+      name: treeEquivalentPolicy.subject.name,
+      size: treeEquivalentPolicy.subject.size,
+      sha256: treeEquivalentPolicy.subject.digest.replace(/^sha256:/, ""),
+    }],
+    release: {
+      builtSourceSha: SOURCE_SHA,
+      builtSourceTreeSha: SOURCE_TREE_SHA,
+      promotionChannelSha: promotionSourceSha,
+      promotionChannelTreeSha: SOURCE_TREE_SHA,
+      treeEquivalent: true,
+    },
+    githubArtifactAttestations: [treeEquivalentPolicy],
+  }));
+
+  const staged = stageGitHubArtifactAttestationInputs({
+    policy: treeEquivalentPolicy,
+    subjectRoots: [path.dirname(path.dirname(value.subjectPath))],
+    platformManifestPaths: [value.manifestPath],
+    releasePassportPath: value.passportPath,
+    outputDir: path.join(value.root, "tree-equivalent-staged"),
+  });
+  assert.equal(staged.policy.caller.sourceSha, promotionSourceSha);
+});
+
 test("promotion refuses a digest-identical subject at the wrong declared path", () => {
   const value = fixture();
   const wrongRoot = path.join(value.root, "wrong-subject-root");

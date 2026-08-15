@@ -10,6 +10,7 @@ import {
   installedKfdPackageArtifactRoot,
   validateKfdAdopterReleaseBinding,
 } from "./artifact-verification-envelope.js";
+import { normalizeAdopterDeliveryPassportBinding } from "./adopter-delivery-passport.js";
 
 export const RELEASE_PASSPORT_CONTRACT = "kungfu-buildchain-release-passport";
 export const RELEASE_CHECK_REPORT_CONTRACT = "kungfu-buildchain-release-check-report";
@@ -110,6 +111,7 @@ export const RELEASE_PASSPORT_SCHEMA = {
     "kfd-1": OBJECT,
     "kfd-2": OBJECT,
     "kfd-3": OBJECT,
+    adopterDelivery: OBJECT,
     kfdAdopter: OBJECT,
     kfdSupport: OBJECT,
   },
@@ -134,6 +136,7 @@ const BUILDCHAIN_AGGREGATION_FIELDS = [
   "platformArtifactManifests",
   "distTagPromotion",
   "controllerReceipts",
+  "adopterDelivery",
   "kfdAdopter",
   "kfdSupport",
   "githubArtifactAttestations",
@@ -356,7 +359,7 @@ export function defaultReleaseLlmsText({ tag = "", passportPath = "buildchain.re
   ].join("\n");
 }
 
-export function buildReleaseArtifactEvidence({ normalizedAssets = [], repository = "", tag = "", sourceSha = "", workflow = {}, kfdAdopter } = {}) {
+export function buildReleaseArtifactEvidence({ normalizedAssets = [], repository = "", tag = "", sourceSha = "", workflow = {}, adopterDelivery, kfdAdopter } = {}) {
   return {
     schemaVersion: 1,
     contract: "kungfu-buildchain-artifact-evidence",
@@ -381,6 +384,7 @@ export function buildReleaseArtifactEvidence({ normalizedAssets = [], repository
       sha256: asset.sha256, url: asset.url, githubAssetId: asset.githubAssetId,
       attestation: passportOptional(asset.attestation || ""),
     })),
+    ...(adopterDelivery ? { adopterDelivery: normalizeAdopterDeliveryPassportBinding(adopterDelivery) } : {}),
     ...(kfdAdopter ? { kfdAdopter: structuredClone(kfdAdopter) } : {}),
   };
 }
@@ -405,27 +409,52 @@ export function prepareReleasePassportKfdSections({ kfd1, kfd2Claims, kfd3, kfdA
   };
 }
 
-export function collectKfdAdopterReleaseEvidence({ manifest, gateResults = [], comparisonMatrix, expectedAdopterId = "kungfu-systems/buildchain", expectedSourceRepository = "", sourceSha = "", checkedAt } = {}) {
+export function collectKfdAdopterReleaseEvidence({ manifest, manifestGate, gateResults = [], comparisonMatrix, expectedAdopterId = "kungfu-systems/buildchain", expectedSourceRepository = "", sourceSha = "", checkedAt } = {}) {
   if (!manifest) {
     if (comparisonMatrix || gateResults.length > 0) {
       throw new Error("KFD support and product-gate inputs require --kfd-adopter-manifest-json; --kfd-support-matrix-json is comparison-only");
     }
     return {};
   }
-  const manifestGate = createKfdAdopterManifestGate({
+  let authorityPath = "kfd-adopter-manifest.json";
+  let producerCheckedAt = checkedAt;
+  let maxAgeSeconds = 86400;
+  if (manifestGate || comparisonMatrix) {
+    authorityPath = String(manifestGate?.authority?.path || comparisonMatrix?.authority?.path || "").trim().replaceAll("\\", "/");
+    if (!authorityPath || path.isAbsolute(authorityPath) || authorityPath.split("/").includes("..")) {
+      throw new Error("KFD adopter closure must bind a safe repository-relative manifest authority path");
+    }
+  }
+  if (manifestGate) {
+    producerCheckedAt = String(manifestGate?.checkedAt || "").trim();
+    maxAgeSeconds = manifestGate?.verificationCut?.maxAgeSeconds;
+    if (!Number.isFinite(Date.parse(producerCheckedAt)) || !Number.isSafeInteger(maxAgeSeconds) || maxAgeSeconds < 0) {
+      throw new Error("KFD adopter manifest gate must bind an exact checkedAt and non-negative maxAgeSeconds cut");
+    }
+  } else if (comparisonMatrix) {
+    const gateCheckedAts = [...new Set(gateResults.map((gate) => String(gate?.checkedAt || "").trim()))];
+    if (gateCheckedAts.length !== 1 || !Number.isFinite(Date.parse(gateCheckedAts[0]))) {
+      throw new Error("KFD product gates must bind one exact producer checkedAt cut for legacy projection comparison");
+    }
+    producerCheckedAt = gateCheckedAts[0];
+  }
+  const resolvedManifestGate = createKfdAdopterManifestGate({
     manifest, packageArtifactRoot: installedKfdPackageArtifactRoot(), gateResults,
-    authorityPath: "kfd-adopter-manifest.json", expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha, checkedAt,
+    authorityPath, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha, checkedAt: producerCheckedAt, maxAgeSeconds,
   });
-  const legacyProjection = createKfdLegacySupportMatrixProjection({ manifest, manifestGate });
+  if (manifestGate && passportStableJson(manifestGate) !== passportStableJson(resolvedManifestGate)) {
+    throw new Error("KFD adopter manifest gate drifted from the exact manifest and product-gate closure");
+  }
+  const legacyProjection = createKfdLegacySupportMatrixProjection({ manifest, manifestGate: resolvedManifestGate });
   if (comparisonMatrix) {
-    const comparison = validateKfdLegacySupportMatrixProjection(comparisonMatrix, { manifest, manifestGate });
+    const comparison = validateKfdLegacySupportMatrixProjection(comparisonMatrix, { manifest, manifestGate: resolvedManifestGate });
     if (!comparison.valid) {
       throw new Error(`legacy KFD support matrix drifted from the standard adopter manifest: ${JSON.stringify(comparison.issues)}`);
     }
   }
   return {
-    manifest, manifestGate, legacyProjection,
-    binding: createKfdAdopterReleaseBinding({ manifest, manifestGate, legacyProjection, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha }),
+    manifest, manifestGate: resolvedManifestGate, legacyProjection,
+    binding: createKfdAdopterReleaseBinding({ manifest, manifestGate: resolvedManifestGate, legacyProjection, expectedAdopterId, expectedSourceRepository, expectedSourceSha: sourceSha }),
   };
 }
 

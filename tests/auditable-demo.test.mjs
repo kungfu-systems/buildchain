@@ -648,10 +648,19 @@ test("adapter output requires an explicit bounded long-form scene", (t) => {
   assert.equal(validated.scene.durationClass, "long-form");
   assert.equal(validated.terminalCapture.durationMs, 60_500);
 
-  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", durationMs: 180_001, fps: 1 }));
+  fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", durationMs: 360_001, fps: 1 }));
   assert.throws(() => validateAdapterOutput(root), /scene\.durationMs is out of range/u);
   fs.writeFileSync(scenePath, stableJson({ ...scene, durationClass: "long-form", fps: 11 }));
   assert.throws(() => validateAdapterOutput(root), /scene\.fps is out of range/u);
+
+  const extended = path.join(root, "extended");
+  writeAdapterOutput(extended, 228_751, true);
+  const extendedScenePath = path.join(extended, "scene.json");
+  const extendedScene = JSON.parse(fs.readFileSync(extendedScenePath, "utf8"));
+  fs.writeFileSync(extendedScenePath, stableJson({ ...extendedScene, durationClass: "long-form", fps: 7 }));
+  assert.equal(validateAdapterOutput(extended).scene.durationMs, 228_751);
+  fs.writeFileSync(extendedScenePath, stableJson({ ...extendedScene, durationClass: "long-form", fps: 8 }));
+  assert.throws(() => validateAdapterOutput(extended), /deterministic source-frame bound/u);
 });
 
 test("optional terminal capture is bounded and grants no implicit authority", (t) => {

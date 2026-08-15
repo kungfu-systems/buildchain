@@ -230,10 +230,10 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-candidate-family-evidence-root",
       "release-candidate-family-initiative-id",
       "release-passport-attachment-command",
+      "release-passport-adopter-delivery-json",
       "release-passport-evidence-command",
       "release-passport-evidence-jsons",
       "release-passport-evidence-path",
-      "release-passport-adopter-delivery-json",
       "release-passport-kfd-adopter-manifest-json",
       "release-passport-kfd-adopter-manifest-gate-json",
       "release-passport-kfd-support-matrix-json",
@@ -306,6 +306,7 @@ test("stable route forwards only inputs supported by the current workflow shell"
   assert.doesNotMatch(stableBlock, /^      release-candidate-family-evidence-root:/m);
   assert.doesNotMatch(stableBlock, /^      release-candidate-family-initiative-id:/m);
   assert.doesNotMatch(stableBlock, /^      release-passport-attachment-command:/m);
+  assert.doesNotMatch(stableBlock, /^      release-passport-adopter-delivery-json:/m);
   assert.doesNotMatch(stableBlock, /^      release-passport-evidence-jsons:/m);
   assert.doesNotMatch(stableBlock, /^      publication-gate-command:/m);
   assert.doesNotMatch(stableBlock, /^      publication-gate-controller-sha:/m);

@@ -372,6 +372,10 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /create-github-artifact-attestation-policy\.mjs/);
   assert.match(workflow, /name: Upload GitHub artifact attestation policy/);
   assert.match(workflow, /publish-source-tree-sha:/);
+  assert.match(
+    workflow,
+    /publish-source-consumer-version:[\s\S]*?value: \$\{\{ jobs\.resolve-source\.outputs\.publish-source-consumer-version \|\| jobs\.tail-reseal-plan\.outputs\.target-version \}\}/,
+  );
   assert.match(workflow, /Resolve source tree SHA/);
   assert.match(workflow, /Generate release candidate passport/);
   assert.match(workflow, /BUILDCHAIN_RC_SOURCE_TREE_HASH/);
@@ -535,7 +539,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.match(
     workflow,
-    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.result == 'success' && github\.event_name == 'pull_request' && \(startsWith\(github\.base_ref, 'alpha\/'\) \|\| startsWith\(github\.base_ref, 'release\/'\)\) \}\}/,
+    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.result == 'success' && github\.event_name == 'pull_request' && !startsWith\(github\.head_ref, 'buildchain\/version-state\/'\) && \(startsWith\(github\.base_ref, 'alpha\/'\) \|\| startsWith\(github\.base_ref, 'release\/'\)\) \}\}/,
   );
   assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
   assert.match(workflow, /merge-multiple: true/);
@@ -549,6 +553,23 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /publish-transaction: "true"/);
   assert.match(workflow, /name: Materialize the planned version in the candidate workspace/);
   assert.match(workflow, /node scripts\/materialize-self-release-candidate-version\.mjs/);
+  assert.match(workflow, /name: Self-dogfood exact Buildchain candidate through public N-1 authority/);
+  assert.match(workflow, /buildchain\/dev-delivery-warrant\/dev-v3-v3\.0/);
+  assert.match(workflow, /@kungfu-tech\/buildchain@\$\{BUILDCHAIN_AUTHORITY_VERSION\}/);
+  assert.match(workflow, /@kungfu-tech\/kfd@\$\{KFD_AUTHORITY_VERSION\}/);
+  assert.match(workflow, /createPublishedBuildchainDeliveryInfrastructureCandidateSelfDogfood/);
+  assert.match(
+    workflow,
+    /candidate\.terminal\?\.nativeProofRoot[\s\S]*candidate\.terminal\?\.evidenceRoot/,
+  );
+  assert.match(workflow, /expected one proof-complete terminal Warrant candidate/);
+  assert.match(workflow, /dev-merge-commit\.json/);
+  assert.match(workflow, /devParentShas\.includes\(pull\.head\.sha\)/);
+  assert.match(workflow, /does not contain reviewed source head .* as an exact parent/);
+  assert.doesNotMatch(workflow, /sourceTree !== devTree/);
+  assert.match(workflow, /"adopter-delivery\.json": result\.gateResult/);
+  assert.match(workflow, /"buildchain-delivery-self-dogfood\.json": result/);
+  assert.match(workflow, /manifest\.files\.push/);
   assert.match(workflow, /EXPECTED_VERSION: \$\{\{ steps\.publication-plan\.outputs\.planned-publication-version \}\}/);
   assert.match(workflow, /sealed package version .* differs from planned publication/);
   assert.ok(
@@ -762,6 +783,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-prebuild-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-witness-jsons:/);
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(action, /release-passport-adopter-delivery-json:/);
   assert.match(action, /release-passport-kfd-adopter-manifest-json:/);
   assert.match(action, /release-passport-kfd-adopter-manifest-gate-json:/);
   assert.match(action, /release-passport-kfd-support-matrix-json:/);
@@ -788,6 +810,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(implementation, /releasePassportKfd3PrebuildWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactWitnessJsons/);
   assert.match(implementation, /releasePassportKfd3ArtifactVerifyCommand/);
+  assert.match(implementation, /releasePassportAdopterDeliveryJson/);
   assert.match(implementation, /releasePassportKfdAdopterManifestJson/);
   assert.match(implementation, /releasePassportKfdSupportMatrixJson/);
   assert.match(implementation, /releasePassportKfdProductGateJsons/);
@@ -803,6 +826,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(docs, /release-passport-kfd-1-witness-jsons/);
   assert.match(docs, /release-passport-kfd-2-claim-jsons/);
   assert.match(docs, /release-passport-kfd-3-prebuild-witness-jsons/);
+  assert.match(docs, /release-passport-adopter-delivery-json/);
   assert.match(docs, /release-passport-kfd-adopter-manifest-json/);
   assert.match(docs, /release-passport-kfd-support-matrix-json/);
   assert.match(docs, /release-passport-kfd-product-gate-jsons/);
@@ -824,9 +848,8 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@cc6c32845ab5779009aeb48cc34efe65e229fe30\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
-  assert.doesNotMatch(workflow, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'release\/'\)/);
@@ -834,7 +857,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /buildchain-ref: cc6c32845ab5779009aeb48cc34efe65e229fe30/,
+    /buildchain-ref: \$\{\{ github\.event\.workflow_run\.head_sha/,
   );
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(
@@ -1929,10 +1952,9 @@ test("Buildchain self-dogfoods through the public alpha train without weakening 
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@cc6c32845ab5779009aeb48cc34efe65e229fe30/,
+    /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/,
   );
-  assert.match(promotion, /buildchain-ref: cc6c32845ab5779009aeb48cc34efe65e229fe30/);
-  assert.doesNotMatch(promotion, /uses: \.\/\.github\/workflows\/\.release-candidate-promote\.yml/);
+  assert.match(promotion, /\.buildchain\/alpha-contract-lock\.json/);
 });
 
 test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transition", () => {
@@ -2020,6 +2042,8 @@ test("major self-dogfood bootstrap is bounded to the adjacent 0.0 release transi
   }
   const breakingContract = structuredClone(bootstrapContract);
   breakingContract.surfaces[0].breakingDigest = "sha256:breaking-bootstrap-drift";
+  breakingContract.surfaces[0].compatibleBreakingDigests = [];
+  breakingContract.surfaces[0].compatibilityProofRoots = [];
   const breakingEvaluation = evaluateBuildchainContractLock({
     lock: alphaLock,
     current: breakingContract,

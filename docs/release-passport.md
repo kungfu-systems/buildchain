@@ -404,6 +404,16 @@ inspect `buildchain.release.json` and know whether the released package
 actually exposes no more and no less than the declared collaboration interface,
 instead of trusting docs or release notes.
 
+### Adopter delivery binding
+
+Pass a completed protocol-neutral adopter delivery gate result as JSON or a
+path with `--adopter-delivery-json`. The collector validates the rooted gate
+closure and writes the same non-qualifying `adopterDelivery` binding into both
+`buildchain.release.json` and `artifact-evidence.json`. Release verification
+fails closed if the product identity, artifact root, gate root, or either copy
+is substituted. Reusable promotion callers can forward the same value with
+`release-passport-adopter-delivery-json`.
+
 ### KFD support projection
 
 Pass the standard full-cut declaration with `--kfd-adopter-manifest-json`

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-08-11T15:56:01.342Z",
-  "publishedAt": "2026-08-11T15:56:01.342Z",
+  "generatedAt": "2026-08-13T22:48:31.931Z",
+  "publishedAt": "2026-08-13T22:48:31.931Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "0a7e1af981ceb8bcefdd194b6ed268b570406dbf",
+  "sourceRevision": "1eb154ac642a3eaebd5295466f075455e4585db9",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "3.0.9-alpha.4",
+    "version": "3.0.9-alpha.16",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:a1c408b13658f225113ede0ee4f4309cbae466178e8f248f4290a616ce39194c"
+      "digest": "sha256:81a419036b590cdbb5c927c0324d6e16cf5bdbaf9c7b1d0e206fbaf76ad3fbff"
     },
     {
       "id": "getting-started",
@@ -85,7 +85,7 @@
       "path": "docs/release-passport.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:70bf29e974b190b249fbbcfd9a5de1e33a9b069de5d7811a25e147b860137629"
+      "digest": "sha256:99df84336b7e1cf7a645ea4bc5c0cdfbb6a3495eb01517d65efaca734407c9e7"
     },
     {
       "id": "github-artifact-attestation",
@@ -245,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f77310bb6cbfca2aefbf25c02c5ee01a6c093548e5cc4d1db6b44e742e5d30d8"
+      "digest": "sha256:079a9e3309e7948f7794426ffce2b5922a874464394b5ec9d3a90c37f410a3b7"
     },
     {
       "id": "node-api-reference",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fa1989343b87e717ca26a181f7f5c29bf779030635e2513428af2834753aa46c"
+      "digest": "sha256:306cc5be607ff78b2aa0890c819257ba9e87f1f27fb3a2d9914811a4d98ab485"
     },
     {
       "id": "build-facts",
@@ -357,7 +357,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:0b1485e9e87a5f185041746e6ce8068373b3a6483fa7d1123f60702de471849b"
+      "digest": "sha256:af1be0d4b9f110807534f1111e5003b2454908993183215badcf7a33b9f48461"
     },
     {
       "id": "web-surface-deployments",

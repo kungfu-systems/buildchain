@@ -7,7 +7,16 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { MAX_LONG_FORM_RENDERER_MANIFEST_BYTES, readRendererManifest, validateRendererCompositionInputs, validateRenditionSet, validateTerminalCapture } from "./auditable-demo-renditions.mjs";
+import {
+  LONG_FORM_MAX_DURATION_MS,
+  LONG_FORM_MAX_FPS,
+  MAX_LONG_FORM_RENDERER_MANIFEST_BYTES,
+  MAX_RENDER_FRAMES,
+  readRendererManifest,
+  validateRendererCompositionInputs,
+  validateRenditionSet,
+  validateTerminalCapture,
+} from "./auditable-demo-renditions.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
 const IMAGE_PATTERN = /^[a-z0-9][a-z0-9./_-]*@sha256:[0-9a-f]{64}$/;
@@ -34,9 +43,6 @@ const OPTIONAL_ADAPTER_FILES = [
 const MAX_TERMINAL_CAPTURE_BYTES = 4 * 1024 * 1024;
 const MAX_TERMINAL_CAPTURE_EVENTS = 10_000;
 const STANDARD_MAX_DURATION_MS = 60_000;
-const LONG_FORM_MAX_DURATION_MS = 180_000;
-const LONG_FORM_MAX_FPS = 10;
-const MAX_RENDER_FRAMES = 1_800;
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);

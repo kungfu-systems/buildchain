@@ -247,6 +247,25 @@ function findPassportPolicy(passport, expectedPolicy) {
   return match;
 }
 
+function passportAcceptsPolicySource(passport, policy) {
+  const release = passport.release || {};
+  const policySourceSha = policy.caller.sourceSha;
+  if (String(release.sourceSha || "").toLowerCase() === policySourceSha) {
+    return true;
+  }
+  if (
+    release.treeEquivalent !== true
+    || !release.builtSourceTreeSha
+    || release.builtSourceTreeSha !== release.promotionChannelTreeSha
+    || String(release.builtSourceTreeSha).toLowerCase() !== policy.caller.sourceTreeSha
+  ) {
+    return false;
+  }
+  return [release.builtSourceSha, release.promotionChannelSha]
+    .map((value) => String(value || "").toLowerCase())
+    .includes(policySourceSha);
+}
+
 export function prepareGitHubArtifactAttestation({
   subjectPath,
   platformManifestPath,
@@ -314,11 +333,11 @@ export function prepareGitHubArtifactAttestation({
     throw new Error("release passport contract must be kungfu-buildchain-release-passport");
   }
   findPassportPolicy(passport, normalizedPolicy);
-  assertEqual(
-    String(passport.release?.sourceSha || "").toLowerCase(),
-    normalizedPolicy.caller.sourceSha,
-    "release passport source SHA",
-  );
+  if (!passportAcceptsPolicySource(passport, normalizedPolicy)) {
+    throw new Error(
+      `release passport source SHA mismatch: expected ${normalizedPolicy.caller.sourceSha}, got ${String(passport.release?.sourceSha || "").toLowerCase()}`,
+    );
+  }
   assertEqual(
     String(passport.release?.builtSourceTreeSha || passport.release?.sourceTreeSha || "").toLowerCase(),
     normalizedPolicy.caller.sourceTreeSha,

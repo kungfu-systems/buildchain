@@ -33,6 +33,10 @@ import { normalizeControllerReceiptReferences } from "./controller-evidence.js";
 import {
   normalizeGitHubArtifactAttestationPolicy,
 } from "./github-artifact-attestation.js";
+import {
+  normalizeAdopterDeliveryPassportBinding,
+  validateAdopterDeliveryReleaseEvidence,
+} from "./adopter-delivery-passport.js";
 
 export { RELEASE_CHECK_REPORT_CONTRACT, RELEASE_PASSPORT_CONTRACT };
 export const ARTIFACT_EVIDENCE_CONTRACT = "kungfu-buildchain-artifact-evidence";
@@ -1160,9 +1164,9 @@ function normalizePromotionRouting(value = undefined) {
   return JSON.parse(JSON.stringify(value));
 }
 
-export function createArtifactEvidence({ assets = [], repository = "", tag = "", sourceSha = "", workflow = {}, kfdAdopter = undefined } = {}) {
+export function createArtifactEvidence({ assets = [], repository = "", tag = "", sourceSha = "", workflow = {}, adopterDelivery = undefined, kfdAdopter = undefined } = {}) {
   const normalizedAssets = assets.map((asset, index) => normalizeAsset(asset, index));
-  return buildReleaseArtifactEvidence({ normalizedAssets, repository, tag, sourceSha, workflow, kfdAdopter });
+  return buildReleaseArtifactEvidence({ normalizedAssets, repository, tag, sourceSha, workflow, adopterDelivery, kfdAdopter });
 }
 
 function firstTruthy(...values) {
@@ -1182,16 +1186,18 @@ function optionalSections(entries) {
 
 function acceptedControllerSourceShas(input) {
   const { treeEquivalent, builtSourceSha, promotionChannelSha, sourceSha, recoveryTreeEquivalent } = input;
-  return treeEquivalent && builtSourceSha && (promotionChannelSha === sourceSha || recoveryTreeEquivalent)
-    ? [builtSourceSha]
-    : [];
+  if (!treeEquivalent || !builtSourceSha || !promotionChannelSha) return [];
+  if (promotionChannelSha !== sourceSha && !recoveryTreeEquivalent) return [];
+  return [builtSourceSha, promotionChannelSha];
 }
 
-function prepareReleaseKfdAdopterArtifacts({ kfdAdopter, assets, repository, tag, sourceSha, workflow }) {
-  const normalized = kfdAdopter ? structuredClone(kfdAdopter) : undefined;
+function prepareReleaseAdopterArtifacts({ adopterDelivery, kfdAdopter, assets, repository, tag, sourceSha, workflow }) {
+  const normalizedAdopterDelivery = normalizeAdopterDeliveryPassportBinding(adopterDelivery);
+  const normalizedKfdAdopter = kfdAdopter ? structuredClone(kfdAdopter) : undefined;
   return {
-    normalized,
-    artifactEvidence: createArtifactEvidence({ assets, repository, tag, sourceSha, workflow, kfdAdopter: normalized }),
+    normalizedAdopterDelivery,
+    normalizedKfdAdopter,
+    artifactEvidence: createArtifactEvidence({ assets, repository, tag, sourceSha, workflow, adopterDelivery: normalizedAdopterDelivery, kfdAdopter: normalizedKfdAdopter }),
   };
 }
 
@@ -1229,6 +1235,7 @@ export function createReleasePassport({
   kfd1 = undefined,
   kfd2Claims = [],
   kfd3 = undefined,
+  adopterDelivery = undefined,
   kfdAdopter = undefined,
   kfdAdopterManifestEvidencePath = "",
   kfdAdopterGateEvidencePath = "",
@@ -1244,8 +1251,8 @@ export function createReleasePassport({
   checkedAt = "",
 } = {}) {
   const normalizedTag = nonEmptyString(tag, "tag");
-  const { normalized: normalizedKfdAdopter, artifactEvidence } = prepareReleaseKfdAdopterArtifacts({
-    kfdAdopter, assets, repository, tag: normalizedTag, sourceSha, workflow,
+  const { normalizedAdopterDelivery, normalizedKfdAdopter, artifactEvidence } = prepareReleaseAdopterArtifacts({
+    adopterDelivery, kfdAdopter, assets, repository, tag: normalizedTag, sourceSha, workflow,
   });
   const normalizedPublishEvidence = normalizePublishEvidence(publishEvidence);
   const normalizedPackageSet = normalizePackageSet(packageSet, { packageName, packageVersion, publish });
@@ -1405,6 +1412,7 @@ export function createReleasePassport({
       ["buildFacts", normalizedBuildFacts],
       ["platformArtifactManifests", normalizedPlatformArtifactManifests],
       ["distTagPromotion", normalizedDistTagPromotionEvidence],
+      ["adopterDelivery", normalizedAdopterDelivery],
       ...kfdParts.sectionEntries,
       ["kfdAgentHub", normalizedKfdAgentHub],
       ["invariantPassports", invariantPassports],
@@ -1465,8 +1473,9 @@ export function createReleasePassport({
   };
 }
 
-function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, productGateJsons, repository, sourceSha, checkedAt }) {
+function collectKfdAdopterReleaseInputs({ cwd, manifestJson, manifestGateJson, supportMatrixJson, productGateJsons, repository, sourceSha, checkedAt }) {
   const manifestMeta = parseJsonInputWithMeta(manifestJson, undefined, { cwd, label: "kfdAdopterManifestJson" });
+  const manifestGateMeta = parseJsonInputWithMeta(manifestGateJson, undefined, { cwd, label: "kfdAdopterManifestGateJson" });
   const supportMatrixMeta = parseJsonInputWithMeta(supportMatrixJson, undefined, { cwd, label: "kfdSupportMatrixJson" });
   const productGateMetas = (productGateJsons || [])
     .filter(Boolean)
@@ -1474,6 +1483,7 @@ function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, 
     .filter((meta) => meta.value);
   return collectKfdAdopterReleaseEvidence({
     manifest: manifestMeta.value,
+    manifestGate: manifestGateMeta.value,
     gateResults: productGateMetas.map((meta) => meta.value),
     comparisonMatrix: supportMatrixMeta.value,
     expectedAdopterId: repository || "kungfu-systems/buildchain", expectedSourceRepository: repository, sourceSha,
@@ -1525,8 +1535,9 @@ export function collectGitHubReleasePassport({
   kfd2ClaimJsons = [],
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
-  kfd3ArtifactVerifyCommand = "",
+  kfd3ArtifactVerifyCommand = "", adopterDeliveryJson = "",
   kfdAdopterManifestJson = "",
+  kfdAdopterManifestGateJson = "",
   kfdSupportMatrixJson = "",
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
@@ -1586,6 +1597,11 @@ export function collectGitHubReleasePassport({
     cwd,
     label: "KFD-3 artifact verify command",
   });
+  const adopterDelivery = parseJsonInput(
+    adopterDeliveryJson,
+    undefined,
+    { cwd, label: "adopterDeliveryJson" },
+  );
   const basePassportMeta = parseJsonInputWithMeta(basePassportJson, undefined, { cwd, label: "basePassportJson" });
   const invariantPassportMetas = (invariantPassportJsons || [])
     .filter(Boolean)
@@ -1661,7 +1677,7 @@ export function collectGitHubReleasePassport({
   const resolvedCheckedAt = optionalString(checkedAt) || nowIso();
   const productMechanism = defaultProductMechanism({ repository, productName });
   const kfdAdopterEvidence = collectKfdAdopterReleaseInputs({
-    cwd, manifestJson: kfdAdopterManifestJson, supportMatrixJson: kfdSupportMatrixJson,
+    cwd, manifestJson: kfdAdopterManifestJson, manifestGateJson: kfdAdopterManifestGateJson, supportMatrixJson: kfdSupportMatrixJson,
     productGateJsons: kfdProductGateJsons, repository, sourceSha, checkedAt: resolvedCheckedAt,
   });
   const {
@@ -1676,6 +1692,7 @@ export function collectGitHubReleasePassport({
     tag: resolvedTag,
     sourceSha,
     workflow,
+    adopterDelivery,
     kfdAdopter,
   });
   const bundledPublishEvidencePath = publishEvidenceMeta.value ? "evidence.json" : "";
@@ -1742,6 +1759,7 @@ export function collectGitHubReleasePassport({
     kfd1,
     kfd2Claims: kfd2ClaimMetas.map((meta) => meta.value),
     kfd3,
+    adopterDelivery,
     kfdAdopter,
     kfdAdopterManifestEvidencePath: kfdAdopter ? "kfd-adopter-manifest.json" : "",
     kfdAdopterGateEvidencePath: kfdAdopter ? "kfd-adopter-manifest-gate.json" : "",
@@ -2094,6 +2112,13 @@ function validateReleaseEvidenceContracts({
   validateContract(agentIndex, AGENT_INDEX_CONTRACT, "agentIndex", issues);
   validateContract(productMechanism, PRODUCT_MECHANISM_CONTRACT, "productMechanism", issues);
   validateKfdAgentHubReleaseEvidence(passport?.kfdAgentHub, kfdAgentHubEvidence, issues);
+  for (const entry of validateAdopterDeliveryReleaseEvidence({
+    binding: passport?.adopterDelivery,
+    artifactBinding: artifactEvidence?.adopterDelivery,
+    expectedProjectRepository: optionalString(passport?.product?.repository),
+  })) {
+    issues.push(issue("error", entry.code, entry.message, entry.details));
+  }
   for (const entry of validateKfdAdopterReleaseEvidence({
     binding: passport?.kfdAdopter,
     artifactBinding: artifactEvidence?.kfdAdopter,
@@ -2119,9 +2144,13 @@ function validateReleaseEvidenceContracts({
         release.treeEquivalent === true
         && release.builtSourceTreeSha
         && release.builtSourceTreeSha === release.promotionChannelTreeSha
-        && release.builtSourceSha
       ) {
-        acceptedSourceShas.add(String(release.builtSourceSha).toLowerCase());
+        if (release.builtSourceSha) {
+          acceptedSourceShas.add(String(release.builtSourceSha).toLowerCase());
+        }
+        if (release.promotionChannelSha) {
+          acceptedSourceShas.add(String(release.promotionChannelSha).toLowerCase());
+        }
       }
       if (!acceptedSourceShas.has(policy.caller.sourceSha)) {
         issues.push(issue(
@@ -2137,7 +2166,7 @@ function validateReleaseEvidenceContracts({
           `githubArtifactAttestations[${index}].subject.name`,
           `attestation subject ${policy.subject.name} is absent from the Release Passport artifacts`,
         ));
-      } else if (artifact.sha256 !== policy.subject.digest.sha256) {
+      } else if (`sha256:${artifact.sha256}` !== policy.subject.digest) {
         issues.push(issue(
           "error",
           `githubArtifactAttestations[${index}].subject.digest`,
@@ -2651,6 +2680,7 @@ function buildReleaseCheckReport({
         ? passport.platformArtifactManifests.length
         : 0,
       distTagPromotionEvidencePresent: Boolean(passport?.distTagPromotion),
+      adopterDeliveryPresent: Boolean(passport?.adopterDelivery),
       impactPresent: Boolean(impact),
       agentIndexPresent: Boolean(agentIndex),
       productMechanismPresent: Boolean(productMechanism),

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -85,4 +85,33 @@ test("bundled action runtime resolves KFD adopter profile assets from the instal
     result.outputs["kfd-adopter-gate-root"],
     /^sha256:[0-9a-f]{64}$/,
   );
+});
+
+test("consumer promotion action starts without an installed KFD package tree", () => {
+  const runtimeRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-consumer-action-"),
+  );
+  try {
+    const bundlePath = path.join(runtimeRoot, "index.js");
+    fs.copyFileSync(
+      path.join(root, "actions/promote-buildchain-ref/dist/index.js"),
+      bundlePath,
+    );
+    const result = spawnSync(process.execPath, [bundlePath], {
+      cwd: runtimeRoot,
+      encoding: "utf8",
+      env: {
+        GITHUB_ACTION: "portability-test",
+        GITHUB_REPOSITORY: "example/consumer",
+        GITHUB_WORKSPACE: runtimeRoot,
+        PATH: process.env.PATH,
+      },
+    });
+    assert.doesNotMatch(
+      `${result.stdout || ""}\n${result.stderr || ""}`,
+      /Cannot find module '@kungfu-tech\/kfd\/package\.json'/u,
+    );
+  } finally {
+    fs.rmSync(runtimeRoot, { recursive: true, force: true });
+  }
 });

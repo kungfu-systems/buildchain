@@ -22,6 +22,7 @@
     "schemas/release-tail-provider-bindings-v1.schema.json",
     "schemas/kfd-agent-hub-adoption.schema.json",
     "schemas/kfd-product-gate-input-v1.schema.json",
+    "schemas/dev-delivery-authority-v2.schema.json",
     "buildchain-contract.json",
     "kfd-upstream-aggregate.json",
     "kfd-claims.json",

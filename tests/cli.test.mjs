@@ -305,7 +305,7 @@ test("init native generates a two-phase protected-dev consumer workflow", () => 
   assert.match(workflow, /native-heartbeat-seconds: 300/u);
   assert.match(workflow, /repository_dispatch:/u);
   assert.match(workflow, /buildchain-dev-delivery-wake/u);
-  assert.match(workflow, /github\.event\.client_payload\.pullRequestNumber/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.pullRequestNumber/u);
   assert.match(workflow, /landing-mode: queue/u);
   assert.doesNotMatch(workflow, /delivery-warrant-mode: off/u);
 });

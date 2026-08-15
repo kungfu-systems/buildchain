@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "3.0.9-alpha.4",
+    "version": "3.0.9-alpha.16",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v3",
@@ -120,6 +120,60 @@
     },
     {
       "schema": "kungfu.buildchain.compatibility-proof/v1",
+      "proofId": "web-surface-da569f-to-27f0cb",
+      "predicate": "compatible-breaking-digest",
+      "direction": "source-to-target",
+      "operation": "accept-contract-lock",
+      "source": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "web-surface",
+        "surfaceKind": "workflow",
+        "breakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace"
+      },
+      "target": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "web-surface",
+        "surfaceKind": "workflow",
+        "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960"
+      },
+      "scope": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "web-surface",
+        "surfaceKind": "workflow",
+        "majorLines": [
+          "v2",
+          "v3"
+        ],
+        "operation": "accept-contract-lock"
+      },
+      "scopeRoot": "sha256:0288a1bc232405047630819733074df11cfd86596c0fc95afd4403948399d679",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2089",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "1a6cb874bc6f1611f3eef607e711d3532798e9e7",
+        "mergeCommit": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
+        "contractDigest": "sha256:7c2a7c132a2b2722f70f148b81048147047d4d2c46cf33f7cd2dc158aec092e0",
+        "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436"
+      },
+      "evidenceRoot": "sha256:8e0184e579c42a66851992a79d54b6f8add9eea776a589bc3004fe0e2177b15c",
+      "authority": {
+        "kind": "protected-base-contract-authority",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0"
+      },
+      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "71a75f21159b994241ec7cb2c50f7a150c5d440b"
+      },
+      "cutRoot": "sha256:4a758c2d730bf99a28ae37057e865e9f0cb8a516200b5a0c29851ca414efa556",
+      "proofRoot": "sha256:3ba66a1e8f8d00ddd45f3f448bcccb15469cbd31f5765d36f61e4cfe7fd0dd41"
+    },
+    {
+      "schema": "kungfu.buildchain.compatibility-proof/v1",
       "proofId": "build-lifecycle-307459-to-6b8d38",
       "predicate": "compatible-breaking-digest",
       "direction": "source-to-target",
@@ -174,6 +228,60 @@
     },
     {
       "schema": "kungfu.buildchain.compatibility-proof/v1",
+      "proofId": "release-propagation-d7a1f1-to-b873ce",
+      "predicate": "compatible-breaking-digest",
+      "direction": "source-to-target",
+      "operation": "accept-contract-lock",
+      "source": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "controller:release-propagation",
+        "surfaceKind": "controller",
+        "breakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e"
+      },
+      "target": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "controller:release-propagation",
+        "surfaceKind": "controller",
+        "breakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd"
+      },
+      "scope": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "controller:release-propagation",
+        "surfaceKind": "controller",
+        "majorLines": [
+          "v2",
+          "v3"
+        ],
+        "operation": "accept-contract-lock"
+      },
+      "scopeRoot": "sha256:0ff862e406419464370403011c3bf90d291d85a2c08ae8179d6b8d540c9e70f2",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2143",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "b63aff4dd63ad6017b8f48e1c690f595a9c832a2",
+        "mergeCommit": "487ee09ca4832ffd15607db00060df4c0839fbae",
+        "contractDigest": "sha256:00c37f8a663387831ba4d066056d0b21d4f3c5f3ea5b0cf84456af332cf8d87e",
+        "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691"
+      },
+      "evidenceRoot": "sha256:943908ff0b680d7ae84c68dc90412e4e6292323531b5e449ce4d1433061258c8",
+      "authority": {
+        "kind": "protected-base-contract-authority",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0"
+      },
+      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "487ee09ca4832ffd15607db00060df4c0839fbae"
+      },
+      "cutRoot": "sha256:8bff86e6995cb22ff77eb3ea5a62b843734e9b9688694dc3d6e3e8847fd88499",
+      "proofRoot": "sha256:8b98ff903d3abd8d9a9b6a0b250efd8fdf6fd5d4127aa4d0d0c4a5b3db87f353"
+    },
+    {
+      "schema": "kungfu.buildchain.compatibility-proof/v1",
       "proofId": "build-lifecycle-e264a7-to-6b8d38",
       "predicate": "compatible-breaking-digest",
       "direction": "source-to-target",
@@ -225,6 +333,60 @@
       },
       "cutRoot": "sha256:4fd5ae0cdad01a09e91bbb3f183ac595510a8f25baf7ba865de7633a7eacb3eb",
       "proofRoot": "sha256:9024634cef43a9d695fa224d26be9aeb6370d3c981b003ece3b659dde8e73713"
+    },
+    {
+      "schema": "kungfu.buildchain.compatibility-proof/v1",
+      "proofId": "reusable-build-a6a353-to-dfbedd",
+      "predicate": "compatible-breaking-digest",
+      "direction": "source-to-target",
+      "operation": "accept-contract-lock",
+      "source": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "reusable-build",
+        "surfaceKind": "workflow",
+        "breakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
+      },
+      "target": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "reusable-build",
+        "surfaceKind": "workflow",
+        "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa"
+      },
+      "scope": {
+        "contract": "kungfu-buildchain-runtime-contract-world",
+        "surfaceId": "reusable-build",
+        "surfaceKind": "workflow",
+        "majorLines": [
+          "v2",
+          "v3"
+        ],
+        "operation": "accept-contract-lock"
+      },
+      "scopeRoot": "sha256:b50ae93f868501c8acfc93d93dc2deec916a4fcf12c19f959fbb3893cc11bb6c",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2089",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "1a6cb874bc6f1611f3eef607e711d3532798e9e7",
+        "mergeCommit": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
+        "contractDigest": "sha256:7c2a7c132a2b2722f70f148b81048147047d4d2c46cf33f7cd2dc158aec092e0",
+        "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436"
+      },
+      "evidenceRoot": "sha256:8e0184e579c42a66851992a79d54b6f8add9eea776a589bc3004fe0e2177b15c",
+      "authority": {
+        "kind": "protected-base-contract-authority",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0"
+      },
+      "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "71a75f21159b994241ec7cb2c50f7a150c5d440b"
+      },
+      "cutRoot": "sha256:4a758c2d730bf99a28ae37057e865e9f0cb8a516200b5a0c29851ca414efa556",
+      "proofRoot": "sha256:b99176f414752ffb276f4add6183aa81eeb480598368ca4f57804f024212d0f5"
     },
     {
       "schema": "kungfu.buildchain.compatibility-proof/v1",
@@ -378,7 +540,13 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:57971705256755e31981cdc807b4f83a70a23e7c5e3cb7350fc448e8d74e258e"
+      "auditDigest": "sha256:f78847aee92f1b333f2e8dc4e6c48318324be5dad27d5cee3542293245260f2c",
+      "compatibleBreakingDigests": [
+        "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
+      ],
+      "compatibilityProofRoots": [
+        "sha256:b99176f414752ffb276f4add6183aa81eeb480598368ca4f57804f024212d0f5"
+      ]
     },
     {
       "contractVersion": 1,
@@ -575,7 +743,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:7812605b980b0baa3ab586371ef8afb7f8c04ec22f99702f76d63bc076481d88",
+      "auditDigest": "sha256:e604983a371a4014b03c2f2eaf709e7def72b4db292d46f9c7bfce067d6ad818",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -625,7 +793,13 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960",
-      "auditDigest": "sha256:748e1d69ca28b631e86788de0ff359b11164b3ac1edda1b146ca49f3ac3856dc"
+      "auditDigest": "sha256:748e1d69ca28b631e86788de0ff359b11164b3ac1edda1b146ca49f3ac3856dc",
+      "compatibleBreakingDigests": [
+        "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace"
+      ],
+      "compatibilityProofRoots": [
+        "sha256:3ba66a1e8f8d00ddd45f3f448bcccb15469cbd31f5765d36f61e4cfe7fd0dd41"
+      ]
     },
     {
       "contractVersion": 1,
@@ -805,7 +979,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers"
       ],
       "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-      "auditDigest": "sha256:b8b5334298e895712186902428b1fb4ab51d2bf7bee79dd6cb2b8ef0b70a1297",
+      "auditDigest": "sha256:7c9dc1f094595d4a083f2822403a45e937e7c1c01e3ff42dbc02d959aba5def0",
       "compatibleBreakingDigests": [
         "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
       ],
@@ -926,7 +1100,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:485c55c362476de980eb35c32c1f58b780520f96c924ac316eb515de60696243"
+      "auditDigest": "sha256:b96c2203ce72b4e584c306c428448c30f66b4ae7b68496549b568e1b1cc3bd83"
     },
     {
       "contractVersion": 1,
@@ -975,7 +1149,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:485c55c362476de980eb35c32c1f58b780520f96c924ac316eb515de60696243"
+      "auditDigest": "sha256:b96c2203ce72b4e584c306c428448c30f66b4ae7b68496549b568e1b1cc3bd83"
     },
     {
       "contractVersion": 1,
@@ -1035,7 +1209,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:eb793611ddb1463f4e9414a6d861d9573f737485b4a57ac6e86cc4ed8a928b35"
+      "auditDigest": "sha256:856e79ff668877e0b366850bb0e37fa193206f8dc5a51091bc74dd1c2240f8e2"
     },
     {
       "contractVersion": 1,
@@ -1125,7 +1299,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:dccb59fb352b5f21058fa51f9c5c705b8c259836613f6681dfe877140a3bc19c"
+      "auditDigest": "sha256:5a23a79461f4ea5eaaae3a7d9cfb7cf8e2be2dc46efe8647992000aff38515dd"
     },
     {
       "contractVersion": 1,
@@ -1147,7 +1321,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:d99d3dfa50a63f07bad94be5434b0e9f4febf5db2b3a0a6849412fc9ae14c6a4"
+      "auditDigest": "sha256:0db14f72ee4770cad8f633bb2ba79eab0479c57c20cc5f13b9c50eeee0c51d48"
     },
     {
       "contractVersion": 1,
@@ -1772,7 +1946,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:57971705256755e31981cdc807b4f83a70a23e7c5e3cb7350fc448e8d74e258e",
+      "auditDigest": "sha256:f78847aee92f1b333f2e8dc4e6c48318324be5dad27d5cee3542293245260f2c",
       "compatibleBreakingDigests": [
         "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
         "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
@@ -3879,7 +4053,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:7812605b980b0baa3ab586371ef8afb7f8c04ec22f99702f76d63bc076481d88"
+      "auditDigest": "sha256:e604983a371a4014b03c2f2eaf709e7def72b4db292d46f9c7bfce067d6ad818"
     },
     {
       "contractVersion": 1,
@@ -4035,7 +4209,13 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd",
-      "auditDigest": "sha256:ef845b25978cd63c0fc6cbc83271e30b245f9d8605c2c25ae7e87c13a35b1302"
+      "auditDigest": "sha256:ef845b25978cd63c0fc6cbc83271e30b245f9d8605c2c25ae7e87c13a35b1302",
+      "compatibleBreakingDigests": [
+        "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e"
+      ],
+      "compatibilityProofRoots": [
+        "sha256:8b98ff903d3abd8d9a9b6a0b250efd8fdf6fd5d4127aa4d0d0c4a5b3db87f353"
+      ]
     },
     {
       "contractVersion": 1,
@@ -4092,7 +4272,7 @@
       "auditDigest": "sha256:d07482cd66413a2fb3781a3b76f960b8151b6231841799647fe237820de2fde6"
     }
   ],
-  "compatibilityProofRegistryRoot": "sha256:aec674d174461493e3493b3fe3164d62745a9ce18cb6a560f94bd99f2759eb53",
-  "compatibilityDigest": "sha256:eb2fafb181b33002f81102a966f0a801ab1798101446635703ab6acfea51d9aa",
-  "contractDigest": "sha256:be2ee0907626ca34b65bd3cde92174642e3c804e14d8efa6743bd48f6099d8f3"
+  "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
+  "compatibilityDigest": "sha256:57d37609068590238f547a133b6b69ee994b452825030447d20529683ba61fbd",
+  "contractDigest": "sha256:4a4e83843d26bc619c3aaa6ed5c89af06beada22775f569e68223b379140d1d0"
 }

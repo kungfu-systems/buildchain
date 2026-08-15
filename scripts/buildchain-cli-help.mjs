@@ -67,6 +67,7 @@ export const BUILDCHAIN_USAGE = `Usage:
                                     [--kfd-3-prebuild-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-witness-json <json-or-path>]...
                                     [--kfd-3-artifact-verify-cmd <command>]
+                                    [--adopter-delivery-json <json-or-path>]
                                     [--kfd-adopter-manifest-json <json-or-path>]
                                     [--kfd-support-matrix-json <json-or-path>]
                                     [--kfd-product-gate-json <json-or-path>]...
@@ -130,6 +131,9 @@ export const BUILDCHAIN_USAGE = `Usage:
                              [--check-response-timeout-minutes <n>]
                              [--max-entries-to-build <n>] [--apply]
   buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|cancel-queued|observe>
+                             --repository <owner/repo> --branch <dev/vN/vN.M>
+                             [--execute] [--output <file>] [--json]
+  buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe>
                              --repository <owner/repo> --branch <dev/vN/vN.M>
                              [--execute] [--output <file>] [--json]
   buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration>

@@ -4,11 +4,15 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
-  createNativeProofReuseDecision,
-  createNativeQualificationProof,
   devDeliveryContentRoot,
 } from "../packages/core/dev-delivery-warrant.js";
 import { runNativeWithHeartbeat } from "./dev-delivery-native-run.mjs";
+import {
+  attributedGitHubBaseDelta,
+  classifyNativeProofAgainstCurrent,
+  replayQualifiedNativeWarrant,
+  runNativeQualificationAttempt,
+} from "./dev-delivery-two-phase-resume.mjs";
 import { runDevDeliveryCommand } from "./dev-delivery-warrant.mjs";
 
 function flag(args, name, fallback = "") {
@@ -41,6 +45,16 @@ function exactSha(value, label) {
     .toLowerCase();
   if (!/^[0-9a-f]{40}$/u.test(normalized)) {
     throw new Error(`${label} must be an exact lowercase Git SHA`);
+  }
+  return normalized;
+}
+
+function exactRoot(value, label) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (!/^sha256:[0-9a-f]{64}$/u.test(normalized)) {
+    throw new Error(`${label} must be a sha256 content root`);
   }
   return normalized;
 }
@@ -111,31 +125,17 @@ export class GitHubTwoPhaseClient {
 
   async baseDelta(previousBase, currentBase) {
     if (previousBase === currentBase) {
-      return { graphKnown: true, changedPaths: [] };
+      return {
+        graphKnown: true,
+        attributionComplete: true,
+        changedPaths: [],
+        renames: [],
+      };
     }
     const data = await this.request(
       `/repos/${this.repository}/compare/${previousBase}...${currentBase}`,
     );
-    const files = Array.isArray(data.files) ? data.files : [];
-    const graphKnown =
-      data.status === "ahead" &&
-      data.merge_base_commit?.sha === previousBase &&
-      files.length < 300;
-    return {
-      graphKnown,
-      changedPaths: graphKnown
-        ? [
-            ...new Set(
-              files
-                .flatMap((entry) => [
-                  String(entry.filename || ""),
-                  String(entry.previous_filename || ""),
-                ])
-                .filter(Boolean),
-            ),
-          ].sort()
-        : [],
-    };
+    return attributedGitHubBaseDelta(data, previousBase);
   }
 
   async wake(eventType, candidate) {
@@ -143,24 +143,11 @@ export class GitHubTwoPhaseClient {
       method: "POST",
       body: {
         event_type: eventType,
-        client_payload: candidate,
+        // Preserve every binding in one property under GitHub's ten-property limit.
+        client_payload: { candidate },
       },
     });
   }
-}
-
-function semanticCurrent(options, currentBase, delta) {
-  return {
-    sourceIdentityRoot: options.sourceIdentityRoot,
-    sourcePatchRoot: options.sourcePatchRoot,
-    planRoot: options.planRoot,
-    closureRoot: options.closureRoot,
-    dependencyRoot: options.dependencyRoot,
-    toolchainRoot: options.toolchainRoot,
-    currentBase,
-    graphKnown: delta.graphKnown,
-    changedPaths: delta.changedPaths,
-  };
 }
 
 export function composeCandidate(candidateDirectory, expectedHead, baseSha) {
@@ -191,16 +178,6 @@ export function composeCandidate(candidateDirectory, expectedHead, baseSha) {
       },
     },
   );
-}
-
-async function classifyAgainstCurrent(proof, options, client) {
-  const currentBase = await client.baseSha(options.branch);
-  const delta = await client.baseDelta(proof.qualifiedBase, currentBase);
-  const current = semanticCurrent(options, currentBase, delta);
-  return {
-    current,
-    decision: createNativeProofReuseDecision({ proof, current }),
-  };
 }
 
 async function releaseFailedAttempt({
@@ -278,21 +255,21 @@ async function releaseFailedAttempt({
 }
 
 export async function runTwoPhaseDelivery(options, dependencies = {}) {
+  options.environmentRoot = exactRoot(
+    options.environmentRoot,
+    "environmentRoot",
+  );
   const client =
     dependencies.client ||
-    new GitHubTwoPhaseClient({
-      repository: options.repository,
-      token: options.token,
-      apiUrl: options.apiUrl,
-    });
+    new GitHubTwoPhaseClient(options);
   const runCommand = dependencies.runCommand || runDevDeliveryCommand;
   const runNative = dependencies.runNative || runNativeWithHeartbeat;
   const warrantResult = readJson(options.warrantResultPath, "Warrant result");
   const warrant =
     warrantResult.observation?.activeWarrant || warrantResult.warrant;
-  if (!warrant || warrant.phase !== "provisional") {
+  if (!warrant || !["provisional", "qualified"].includes(warrant.phase)) {
     throw new Error(
-      "two-phase delivery requires an active provisional Warrant",
+      "two-phase delivery requires an active provisional or qualified Warrant",
     );
   }
   if (
@@ -303,11 +280,18 @@ export async function runTwoPhaseDelivery(options, dependencies = {}) {
   }
   const evidenceDirectory = path.resolve(options.evidenceDirectory);
   fs.mkdirSync(evidenceDirectory, { recursive: true });
+  const qualifiedReplay = await replayQualifiedNativeWarrant({
+    warrant,
+    pullRequestNumber: options.pullRequestNumber,
+    expectedHead: options.expectedHead,
+    exactPullRequestHead: (...args) => client.exactPullRequestHead(...args),
+  });
+  if (qualifiedReplay) return qualifiedReplay;
   let proof = options.nativeProofPath
     ? readJson(options.nativeProofPath, "native proof")
     : null;
   let classified = proof
-    ? await classifyAgainstCurrent(proof, options, client)
+    ? await classifyNativeProofAgainstCurrent(proof, options, client)
     : null;
   let nativeAttempts = 0;
 
@@ -318,7 +302,11 @@ export async function runTwoPhaseDelivery(options, dependencies = {}) {
           options.pullRequestNumber,
           options.expectedHead,
         );
-        classified = await classifyAgainstCurrent(proof, options, client);
+        classified = await classifyNativeProofAgainstCurrent(
+          proof,
+          options,
+          client,
+        );
         if (classified.decision.reusable) break;
       }
       if (nativeAttempts >= 2) break;
@@ -327,71 +315,23 @@ export async function runTwoPhaseDelivery(options, dependencies = {}) {
           `native proof cannot be reused (${classified?.decision.reason || "not-supplied"}) and native-command is empty`,
         );
       }
-      await client.exactPullRequestHead(
-        options.pullRequestNumber,
-        options.expectedHead,
-      );
-      const qualifiedBase = await client.baseSha(options.branch);
-      composeCandidate(
-        options.candidateDirectory,
-        options.expectedHead,
-        qualifiedBase,
-      );
       nativeAttempts += 1;
-      const heartbeatReceipt = await runNative({
-        command: options.nativeCommand,
-        cwd: options.candidateDirectory,
-        intervalMs: options.heartbeatSeconds * 1000,
-        executionBinding: {
-          repository: options.repository,
-          protectedBase: options.branch,
-          sourceHead: options.expectedHead,
-          qualifiedBase,
-          toolchainRoot: options.toolchainRoot,
-        },
-        heartbeat: async () => {
-          await runCommand({
-            command: "heartbeat",
-            repository: options.repository,
-            branch: options.branch,
-            fencingToken: warrant.fencingToken,
-            leaseGeneration: warrant.generation,
-            leaseSeconds: options.leaseSeconds,
-            execute: true,
-            token: options.token,
-            apiUrl: options.apiUrl,
-          });
-        },
+      proof = await runNativeQualificationAttempt({
+        options,
+        warrant,
+        attempt: nativeAttempts,
+        client,
+        runCommand,
+        runNative,
+        composeCandidate,
+        writeEvidence: (name, value) =>
+          writeJson(path.join(evidenceDirectory, name), value),
       });
-      writeJson(
-        path.join(
-          evidenceDirectory,
-          `native-heartbeat-attempt-${nativeAttempts}.json`,
-        ),
-        heartbeatReceipt,
+      classified = await classifyNativeProofAgainstCurrent(
+        proof,
+        options,
+        client,
       );
-      await client.exactPullRequestHead(
-        options.pullRequestNumber,
-        options.expectedHead,
-      );
-      proof = createNativeQualificationProof({
-        repository: options.repository,
-        protectedBase: options.branch,
-        sourceIdentityRoot: options.sourceIdentityRoot,
-        sourcePatchRoot: options.sourcePatchRoot,
-        planRoot: options.planRoot,
-        closureRoot: options.closureRoot,
-        dependencyRoot: options.dependencyRoot,
-        toolchainRoot: options.toolchainRoot,
-        qualifiedBase,
-        affectedPaths: options.affectedPaths,
-        shardEvidenceRoots: [
-          ...options.shardEvidenceRoots,
-          heartbeatReceipt.receiptRoot,
-        ],
-        qualifiedAt: new Date().toISOString(),
-      });
-      classified = await classifyAgainstCurrent(proof, options, client);
     }
 
     if (!classified?.decision.reusable) {
@@ -417,7 +357,9 @@ export async function runTwoPhaseDelivery(options, dependencies = {}) {
       ),
       currentBase: classified.current.currentBase,
       graphKnown: classified.current.graphKnown,
+      attributionComplete: classified.current.attributionComplete,
       changedPaths: JSON.stringify(classified.current.changedPaths),
+      renames: JSON.stringify(classified.current.renames),
       execute: true,
       token: options.token,
       apiUrl: options.apiUrl,
@@ -434,6 +376,7 @@ export async function runTwoPhaseDelivery(options, dependencies = {}) {
       nativeProofRoot: proof.proofRoot,
       nativeReuseDecisionRoot: classified.decision.decisionRoot,
       qualificationReceiptRoot: qualified.receiptRoot,
+      landingAuthority: false,
       qualifiedWarrant: qualified.observation.activeWarrant,
     };
   } catch (error) {
@@ -520,6 +463,11 @@ function cliOptions(args, environment = process.env) {
       args,
       "toolchain-root",
       environment.BUILDCHAIN_DEV_DELIVERY_TOOLCHAIN_ROOT,
+    ),
+    environmentRoot: flag(
+      args,
+      "environment-root",
+      environment.BUILDCHAIN_DEV_DELIVERY_ENVIRONMENT_ROOT,
     ),
     affectedPaths: jsonList(
       flag(

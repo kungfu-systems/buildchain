@@ -1138,6 +1138,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(workflow, /release-passport-kfd-adopter-manifest-json:/);
   assert.match(workflow, /release-passport-kfd-adopter-manifest-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-json \}\}/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-gate-json:/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-gate-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-gate-json \}\}/);
   assert.match(workflow, /release-passport-kfd-support-matrix-json:/);
   assert.match(workflow, /release-passport-kfd-support-matrix-json: \$\{\{ inputs\.release-passport-kfd-support-matrix-json \}\}/);
   assert.match(workflow, /release-passport-kfd-product-gate-jsons:/);
@@ -1147,11 +1149,15 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-invariant-passport-command:/);
   assert.match(workflow, /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/);
   assert.match(workflow, /release-passport-evidence-jsons:/);
-  assert.match(workflow, /release-passport-evidence-jsons: \$\{\{ inputs\.release-passport-evidence-jsons \}\}/);
+  assert.match(workflow, /release-passport-evidence-jsons: \$\{\{ steps\.buildchain-delivery-self-dogfood\.outputs\.self-dogfood-path \|\| inputs\.release-passport-evidence-jsons \}\}/);
   assert.match(workflow, /release-passport-attachment-command:/);
   assert.match(workflow, /release-passport-attachment-command: \$\{\{ inputs\.release-passport-attachment-command \}\}/);
   assert.match(workflow, /release-passport-buildchain-self-kfd:/);
   assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
+  assert.match(workflow, /name: Resolve sealed Buildchain delivery self-dogfood evidence/);
+  assert.match(workflow, /adopter-delivery-path=/);
+  assert.match(workflow, /self-dogfood-path=/);
+  assert.match(workflow, /release-passport-adopter-delivery-json: \$\{\{ steps\.buildchain-delivery-self-dogfood\.outputs\.adopter-delivery-path \|\| inputs\.release-passport-adopter-delivery-json \}\}/);
   assert.match(workflow, /github-artifact-attestation-policy-json:/);
   assert.match(workflow, /release-passport-github-artifact-attestation-policy-jsons: \$\{\{ steps\.attestation-policy\.outputs\.path \}\}/);
   assert.match(workflow, /name: Resolve GitHub artifact attestation policy/);
@@ -1584,15 +1590,16 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
   assert.match(workflow, /native-roots-json:/);
-  assert.match(workflow, /github\.event\.client_payload\.pullRequestNumber/u);
-  assert.match(workflow, /github\.event\.client_payload\.assignmentRoot/u);
-  assert.match(workflow, /github\.event\.client_payload\.initiativeRoot/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.pullRequestNumber/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.assignmentRoot/u);
+  assert.match(workflow, /github\.event\.client_payload\.candidate\.initiativeRoot/u);
   assert.match(workflow, /source-identity-root:/);
   assert.match(workflow, /source-patch-root:/);
   assert.match(workflow, /plan-root:/);
   assert.match(workflow, /closure-root:/);
   assert.match(workflow, /dependency-root:/);
   assert.match(workflow, /toolchain-root:/);
+  assert.match(workflow, /environment-root:/);
   assert.match(workflow, /native-proof-json:/);
   assert.match(workflow, /native-command:/);
   assert.match(workflow, /native-heartbeat-seconds:/);
@@ -1600,8 +1607,8 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /permissions:\n  actions: write/);
   assert.match(workflow, /delivery-warrant-mode: required/);
-  assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.deliveryClass \|\| 'native-proof-required' \}\}/u);
-  assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.priority \|\| 'ordinary' \}\}/u);
+  assert.match(workflow, /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| 'native-proof-required' \}\}/u);
+  assert.match(workflow, /delivery-priority: \$\{\{ github\.event\.client_payload\.candidate\.priority \|\| 'ordinary' \}\}/u);
   assert.match(workflow, /required-status-checks: check/);
   assert.match(
     workflow,
@@ -1610,7 +1617,7 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   assert.match(workflow, /landing-mode: queue/);
   assert.match(workflow, /dry-run: false/);
   assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
-  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ github\.event\.client_payload\.pullRequestNumber \|\| inputs\.expected-pr-number \}\} · two-phase Delivery Warrant"/u);
+  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ github\.event\.client_payload\.candidate\.pullRequestNumber \|\| inputs\.expected-pr-number \}\} · two-phase Delivery Warrant"/u);
   assert.match(workflow, /repository_dispatch:/u);
   assert.match(workflow, /buildchain-dev-delivery-wake/u);
   const controller = fs.readFileSync(
@@ -1627,11 +1634,25 @@ test("Buildchain self-delivery requires an exact Warrant before Merge Queue admi
   const dispatchInputs = workflow
     .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
     .match(/^      [a-z][a-z0-9-]+:$/gmu);
-  assert.equal(dispatchInputs?.length, 13);
+  assert.equal(dispatchInputs?.length, 14);
   assert.match(controller, /activeWarrant\.phase == \$phase/);
   assert.match(controller, /provisional\)\s+echo "already-qualified=false"/u);
   assert.match(controller, /dev-delivery-two-phase\.mjs/);
   assert.match(controller, /Run or reuse native proof and atomically qualify Warrant/);
+  assert.match(
+    controller,
+    /Validate native qualification contract before Warrant admission[\s\S]*environment-root must be an exact sha256 content root before required native Warrant admission/u,
+  );
+  assert.ok(
+    controller.indexOf(
+      "Validate native qualification contract before Warrant admission",
+    ) < controller.indexOf("Checkout Buildchain runtime"),
+  );
+  assert.ok(
+    controller.indexOf(
+      "Validate native qualification contract before Warrant admission",
+    ) < controller.indexOf("Submit qualified delivery candidate"),
+  );
   assert.match(controller, /already-qualified=true/);
   assert.match(controller, /activeCandidate\.status == "qualified"/);
   assert.match(controller, /steps\.warrant\.outputs\.already-qualified == 'true'/);

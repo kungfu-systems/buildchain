@@ -116,6 +116,13 @@ on:
           type: string,
           required: false,
         }
+      environment-root:
+        {
+          description: "Exact native execution environment contract root; required for required native qualification",
+          default: "",
+          type: string,
+          required: false,
+        }
       affected-paths-json:
         {
           description: "JSON array of paths covered by source qualification",
@@ -361,6 +368,27 @@ jobs:
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
           DRY_RUN: ${{ inputs.dry-run }}
 
+      - name: Validate native qualification contract before Warrant admission
+        if: inputs.delivery-warrant-mode == 'required'
+        shell: bash
+        run: |
+          case "${DELIVERY_CLASS}" in
+            native-proof-required|cross-platform|release)
+              if [[ ! "${ENVIRONMENT_ROOT}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+                echo "::error::environment-root must be an exact sha256 content root before required native Warrant admission"
+                exit 1
+              fi
+              ;;
+            non-native-fast) ;;
+            *)
+              echo "::error::unsupported delivery-class ${DELIVERY_CLASS}"
+              exit 1
+              ;;
+          esac
+        env:
+          DELIVERY_CLASS: ${{ inputs.delivery-class }}
+          ENVIRONMENT_ROOT: ${{ inputs.environment-root }}
+
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
@@ -513,6 +541,7 @@ jobs:
             --closure-root "${CLOSURE_ROOT}"
             --dependency-root "${DEPENDENCY_ROOT}"
             --toolchain-root "${TOOLCHAIN_ROOT}"
+            --environment-root "${ENVIRONMENT_ROOT}"
             --affected-paths-json "${AFFECTED_PATHS}"
             --delivery-class "${DELIVERY_CLASS}"
             --priority "${DELIVERY_PRIORITY}"
@@ -540,6 +569,7 @@ jobs:
           CLOSURE_ROOT: ${{ inputs.closure-root }}
           DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
           TOOLCHAIN_ROOT: ${{ inputs.toolchain-root }}
+          ENVIRONMENT_ROOT: ${{ inputs.environment-root }}
           AFFECTED_PATHS: ${{ inputs.affected-paths-json }}
           DELIVERY_CLASS: ${{ inputs.delivery-class }}
           DELIVERY_PRIORITY: ${{ inputs.delivery-priority }}
@@ -696,6 +726,7 @@ jobs:
             --closure-root "${CLOSURE_ROOT}"
             --dependency-root "${DEPENDENCY_ROOT}"
             --toolchain-root "${TOOLCHAIN_ROOT}"
+            --environment-root "${ENVIRONMENT_ROOT}"
             --affected-paths-json "${AFFECTED_PATHS}"
             --shard-evidence-roots-json "${SHARD_ROOTS}"
             --native-command "${NATIVE_COMMAND}"
@@ -737,6 +768,7 @@ jobs:
           CLOSURE_ROOT: ${{ inputs.closure-root }}
           DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
           TOOLCHAIN_ROOT: ${{ inputs.toolchain-root }}
+          ENVIRONMENT_ROOT: ${{ inputs.environment-root }}
           AFFECTED_PATHS: ${{ inputs.affected-paths-json }}
           SHARD_ROOTS: ${{ inputs.shard-evidence-roots-json }}
           NATIVE_COMMAND: ${{ inputs.native-command }}

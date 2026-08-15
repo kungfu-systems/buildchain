@@ -425,16 +425,23 @@ test("declared readable playback normalizes latency without changing terminal pa
 test("generic adapter projects an explicit long-form renderer contract", { skip: process.platform === "win32" }, (t) => {
   const { root, output } = capture(t, "independent", (declared) => {
     declared.execution.durationClass = "long-form";
-    declared.execution.totalTimeoutSeconds = 180;
-    declared.demos[1].steps[0].timeoutSeconds = 180;
+    declared.execution.totalTimeoutSeconds = 360;
+    declared.demos[1].steps[0].timeoutSeconds = 360;
+    declared.playback = {
+      schema: "buildchain.declarative-demo-playback/v1",
+      mode: "deterministic-readable",
+      activeDurationMs: 228_000,
+      finalHoldMs: 751,
+    };
   });
   const adapted = path.join(root, "adapted-long-form");
   adaptCapture({ artifactRoot: output, output: adapted });
   for (const name of ["scene.json", "scene-720p.json"]) {
     const projected = JSON.parse(fs.readFileSync(path.join(adapted, name), "utf8"));
     assert.equal(projected.durationClass, "long-form");
-    assert.equal(projected.fps, 10);
-    assert.ok(projected.durationMs <= 180_000);
+    assert.equal(projected.durationMs, 228_751);
+    assert.equal(projected.fps, 7);
+    assert.ok(Math.ceil((projected.durationMs / 1000) * projected.fps) <= 1_800);
   }
   const primary = JSON.parse(fs.readFileSync(path.join(adapted, "terminal-capture.json"), "utf8"));
   const responsive = JSON.parse(fs.readFileSync(path.join(adapted, "terminal-capture-720p.json"), "utf8"));

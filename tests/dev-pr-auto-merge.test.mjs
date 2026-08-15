@@ -739,19 +739,24 @@ test("GitHub client uses enqueuePullRequest with expectedHeadOid", async () => {
   assert.equal(entry.pullRequestHeadSha, "sha-1");
 });
 
-test("GitHub client reads the current Delivery Warrant queue from its protected state ref", async () => {
+test("GitHub client reads the current Delivery Warrant queue through exact Git objects beyond the Contents API limit", async () => {
   const requests = [];
+  const commitSha = "a".repeat(40);
+  const treeSha = "b".repeat(40);
+  const blobSha = "c".repeat(40);
   const queueState = {
     activeWarrant: { candidateId: ROOT },
-    candidates: [{ candidateId: ROOT, status: "selected" }],
+    candidates: [{ candidateId: ROOT, status: "qualified" }],
   };
+  const responses = [
+    { object: { sha: commitSha } },
+    { tree: { sha: treeSha } },
+    { tree: [{ path: "queue.json", type: "blob", sha: blobSha }] },
+    { encoding: "base64", content: Buffer.from(JSON.stringify(queueState)).toString("base64") },
+  ];
   const fakeFetch = async (url, init) => {
     requests.push({ url, init });
-    return new Response(JSON.stringify({
-      type: "file",
-      encoding: "base64",
-      content: Buffer.from(JSON.stringify(queueState)).toString("base64"),
-    }));
+    return new Response(JSON.stringify(responses[requests.length - 1]));
   };
   const github = new GitHubClient({
     token: "test-token",
@@ -767,10 +772,10 @@ test("GitHub client reads the current Delivery Warrant queue from its protected 
     ),
     queueState,
   );
-  assert.match(
-    requests[0].url,
-    /contents\/queue\.json\?ref=buildchain%2Fdev-delivery-warrant%2Fdev-v4-v4\.0$/u,
-  );
+  assert.match(requests[0].url, /git\/ref\/heads\/buildchain\/dev-delivery-warrant\/dev-v4-v4\.0$/u);
+  assert.match(requests[1].url, new RegExp(`/git/commits/${commitSha}$`));
+  assert.match(requests[2].url, new RegExp(`/git/trees/${treeSha}$`));
+  assert.match(requests[3].url, new RegExp(`/git/blobs/${blobSha}$`));
 });
 
 const exactHead = "a".repeat(40);

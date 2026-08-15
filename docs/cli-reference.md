@@ -203,11 +203,11 @@ buildchain collect
 
 - Help: `buildchain collect github-release --help`
 - Canonical id: `collect-github-release`
-- Options: `--anchor-manifest-json`, `--assets-dir`, `--assets-json`, `--base-passport-json`, `--build-facts-json`, `--build-summary-json`, `--dist-tag-evidence-json`, `--github-artifact-attestation-policy-json`, `--impact-json`, `--invariant-passport-cmd`, `--invariant-passport-json`, `--json`, `--kfd-1-witness-json`, `--kfd-2-claim-json`, `--kfd-3-artifact-verify-cmd`, `--kfd-3-artifact-witness-json`, `--kfd-3-prebuild-witness-json`, `--kfd-adopter-manifest-json`, `--kfd-agent-hub-evidence-json`, `--kfd-product-gate-json`, `--kfd-support-matrix-json`, `--output-dir`, `--package-set-json`, `--platform-manifest-json`, `--product-name`, `--publish-evidence-json`, `--publish-json`, `--release-evidence-json`, `--release-extra-json`, `--release-json`, `--repository`, `--require-base-kfd`, `--tag`, `--transaction-json`, `--trusted-publishing-json`
+- Options: `--adopter-delivery-json`, `--anchor-manifest-json`, `--assets-dir`, `--assets-json`, `--base-passport-json`, `--build-facts-json`, `--build-summary-json`, `--dist-tag-evidence-json`, `--github-artifact-attestation-policy-json`, `--impact-json`, `--invariant-passport-cmd`, `--invariant-passport-json`, `--json`, `--kfd-1-witness-json`, `--kfd-2-claim-json`, `--kfd-3-artifact-verify-cmd`, `--kfd-3-artifact-witness-json`, `--kfd-3-prebuild-witness-json`, `--kfd-adopter-manifest-json`, `--kfd-agent-hub-evidence-json`, `--kfd-product-gate-json`, `--kfd-support-matrix-json`, `--output-dir`, `--package-set-json`, `--platform-manifest-json`, `--product-name`, `--publish-evidence-json`, `--publish-json`, `--release-evidence-json`, `--release-extra-json`, `--release-json`, `--repository`, `--require-base-kfd`, `--tag`, `--transaction-json`, `--trusted-publishing-json`
 - Syntax:
 
 ```text
-buildchain collect github-release --tag <tag> [--repository <owner/repo>] [--assets-dir <dir>] [--assets-json <json-or-path>] [--release-json <json-or-path>] [--package-set-json <json-or-path>] [--product-name <name>] [--publish-evidence-json <json-or-path>] [--trusted-publishing-json <json-or-path>] [--transaction-json <json-or-path>] [--anchor-manifest-json <json-or-path>] [--impact-json <json-or-path>] [--build-summary-json <json-or-path>] [--build-facts-json <json-or-path>]... [--platform-manifest-json <json-or-path>]... [--dist-tag-evidence-json <json-or-path>] [--kfd-1-witness-json <json-or-path>]... [--kfd-2-claim-json <json-or-path>]... [--kfd-3-prebuild-witness-json <json-or-path>]... [--kfd-3-artifact-witness-json <json-or-path>]... [--kfd-3-artifact-verify-cmd <command>] [--kfd-adopter-manifest-json <json-or-path>] [--kfd-support-matrix-json <json-or-path>] [--kfd-product-gate-json <json-or-path>]... [--invariant-passport-json <json-or-path>]... [--invariant-passport-cmd <command>] [--release-evidence-json <json-or-path>]... [--github-artifact-attestation-policy-json <json-or-path>]... [--kfd-agent-hub-evidence-json <json-or-path>] [--base-passport-json <json-or-path>] [--require-base-kfd] [--release-extra-json <json-or-path>] [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
+buildchain collect github-release --tag <tag> [--repository <owner/repo>] [--assets-dir <dir>] [--assets-json <json-or-path>] [--release-json <json-or-path>] [--package-set-json <json-or-path>] [--product-name <name>] [--publish-evidence-json <json-or-path>] [--trusted-publishing-json <json-or-path>] [--transaction-json <json-or-path>] [--anchor-manifest-json <json-or-path>] [--impact-json <json-or-path>] [--build-summary-json <json-or-path>] [--build-facts-json <json-or-path>]... [--platform-manifest-json <json-or-path>]... [--dist-tag-evidence-json <json-or-path>] [--kfd-1-witness-json <json-or-path>]... [--kfd-2-claim-json <json-or-path>]... [--kfd-3-prebuild-witness-json <json-or-path>]... [--kfd-3-artifact-witness-json <json-or-path>]... [--kfd-3-artifact-verify-cmd <command>] [--adopter-delivery-json <json-or-path>] [--kfd-adopter-manifest-json <json-or-path>] [--kfd-support-matrix-json <json-or-path>] [--kfd-product-gate-json <json-or-path>]... [--invariant-passport-json <json-or-path>]... [--invariant-passport-cmd <command>] [--release-evidence-json <json-or-path>]... [--github-artifact-attestation-policy-json <json-or-path>]... [--kfd-agent-hub-evidence-json <json-or-path>] [--base-passport-json <json-or-path>] [--require-base-kfd] [--release-extra-json <json-or-path>] [--publish-json <json-or-path>] [--output-dir <dir>] [--json]
 ```
 
 ## `create`
@@ -267,6 +267,127 @@ buildchain create runner-provenance --input-json <file-or-json> [--output <file>
 
 ```text
 buildchain dev
+```
+
+### `buildchain dev authority admit-merge-group`
+
+- Help: `buildchain dev authority admit-merge-group --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority complete-qualification`
+
+- Help: `buildchain dev authority complete-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority heartbeat-landing`
+
+- Help: `buildchain dev authority heartbeat-landing --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority heartbeat-qualification`
+
+- Help: `buildchain dev authority heartbeat-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority lease-landing`
+
+- Help: `buildchain dev authority lease-landing --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority lease-qualification`
+
+- Help: `buildchain dev authority lease-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority migrate`
+
+- Help: `buildchain dev authority migrate --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority observe`
+
+- Help: `buildchain dev authority observe --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority recover`
+
+- Help: `buildchain dev authority recover --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority settle`
+
+- Help: `buildchain dev authority settle --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority submit`
+
+- Help: `buildchain dev authority submit --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev merge-queue`

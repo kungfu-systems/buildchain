@@ -96,7 +96,6 @@ import {
   BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
   BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
 } from "../../packages/core/buildchain-layout.js";
-import { generateBuildchainKfdAdopterRelease } from "../../scripts/generate-buildchain-kfd-witnesses.mjs";
 import { promoteMajorChannel } from "./internal/promote-major-channel.js";
 import { promoteAlphaChannel } from "./internal/promote-alpha-channel.js";
 import { promoteReleaseChannel } from "./internal/promote-release-channel.js";
@@ -1943,7 +1942,9 @@ async function collectAndPersistReleasePassport({
   kfd3PrebuildWitnessJsons = [],
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "",
+  adopterDeliveryJson = "",
   kfdAdopterManifestJson = "",
+  kfdAdopterManifestGateJson = "",
   kfdSupportMatrixJson = "",
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
@@ -2031,7 +2032,7 @@ async function collectAndPersistReleasePassport({
       })
     : undefined;
   const selfAdopter = buildchainSelfKfd && !kfdAdopterManifestJson
-    ? await generateBuildchainKfdAdopterRelease({ cwd, sourceSha: passportSourceSha, checkedAt: passportCheckedAt, emitOutputs: false })
+    ? await (await import("../../scripts/generate-buildchain-kfd-witnesses.mjs")).generateBuildchainKfdAdopterRelease({ cwd, sourceSha: passportSourceSha, checkedAt: passportCheckedAt, emitOutputs: false })
     : undefined;
   const resolvedKfd1WitnessJsons = kfd1WitnessJsons.length > 0
     ? kfd1WitnessJsons
@@ -2078,7 +2079,9 @@ async function collectAndPersistReleasePassport({
     kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
     kfd3ArtifactWitnessJsons: resolvedKfd3ArtifactWitnessJsons,
     kfd3ArtifactVerifyCommand,
+    adopterDeliveryJson,
     kfdAdopterManifestJson: kfdAdopterManifestJson || selfAdopter?.outputs?.["kfd-adopter-manifest-json"],
+    kfdAdopterManifestGateJson: kfdAdopterManifestGateJson || selfAdopter?.outputs?.["kfd-adopter-manifest-gate-json"],
     kfdSupportMatrixJson: kfdSupportMatrixJson || selfAdopter?.outputs?.["kfd-support-matrix-json"],
     kfdProductGateJsons: kfdProductGateJsons.length > 0 ? kfdProductGateJsons : selfAdopter?.outputs?.["kfd-product-gate-jsons"].split(","),
     invariantPassportJsons,
@@ -3419,8 +3422,9 @@ function createRefMutationOperations(context) {
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
-    releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfd3ArtifactVerifyCommand, releasePassportAdopterDeliveryJson,
     releasePassportKfdAdopterManifestJson,
+    releasePassportKfdAdopterManifestGateJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -4051,8 +4055,9 @@ function createReconciliationOperations(context) {
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
-    releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfd3ArtifactVerifyCommand, releasePassportAdopterDeliveryJson,
     releasePassportKfdAdopterManifestJson,
+    releasePassportKfdAdopterManifestGateJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -4764,8 +4769,9 @@ async function promoteBuildchainRefs({
   releasePassportKfd2ClaimJsons = "",
   releasePassportKfd3PrebuildWitnessJsons = "",
   releasePassportKfd3ArtifactWitnessJsons = "",
-  releasePassportKfd3ArtifactVerifyCommand = "",
+  releasePassportKfd3ArtifactVerifyCommand = "", releasePassportAdopterDeliveryJson = "",
   releasePassportKfdAdopterManifestJson = "",
+  releasePassportKfdAdopterManifestGateJson = "",
   releasePassportKfdSupportMatrixJson = "",
   releasePassportKfdProductGateJsons = "",
   releasePassportInvariantPassportJsons = "",
@@ -4998,7 +5004,9 @@ async function promoteBuildchainRefs({
     releasePassportKfd3PrebuildWitnessJsons,
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportAdopterDeliveryJson,
     releasePassportKfdAdopterManifestJson,
+    releasePassportKfdAdopterManifestGateJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,

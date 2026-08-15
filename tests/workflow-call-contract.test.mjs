@@ -276,7 +276,7 @@ test("self-release and external consumers share one public provider-plane route"
   assert.deepEqual(report.self, report.consumer);
 });
 
-test("checkout-relative and internal-only self-release routes fail closed", () => {
+test("internal-only hosted self-release routes fail closed", () => {
   const read = (relative) => fs.readFileSync(relative, "utf8");
   const common = {
     consumerWorkflowText: read(
@@ -296,18 +296,7 @@ test("checkout-relative and internal-only self-release routes fail closed", () =
       assertSelfReleaseRouteParity({
         ...common,
         selfWorkflowText: self.replace(
-          SELF_RELEASE_PUBLIC_WORKFLOW,
           "./.github/workflows/.release-candidate-promote.yml",
-        ),
-      }),
-    /checkout-relative/u,
-  );
-  assert.throws(
-    () =>
-      assertSelfReleaseRouteParity({
-        ...common,
-        selfWorkflowText: self.replace(
-          SELF_RELEASE_PUBLIC_WORKFLOW,
           "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v3-alpha",
         ),
       }),

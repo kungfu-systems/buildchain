@@ -403,6 +403,10 @@ product-owned `release-passport-kfd-3-artifact-verify-command` such as
 `kungfu agent verify --json`. Buildchain compares declared shipped public
 surfaces with artifact-exposed public surfaces and writes the result under the
 KFD-provided `kfd-3` passport section.
+Set `release-passport-adopter-delivery-json` to a passed protocol-neutral
+adopter delivery gate result. Buildchain roots the exact product, artifact,
+driver, profile, and semantic report closure into both the Release Passport and
+artifact evidence; either-copy substitution fails release verification.
 Set `release-passport-kfd-adopter-manifest-json` to the standard full-cut
 adopter manifest and `release-passport-kfd-product-gate-jsons` to the
 newline-separated KFD-4, KFD-5, and KFD-7 gate results. Buildchain binds the

@@ -1003,7 +1003,7 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
-  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@cc6c32845ab5779009aeb48cc34efe65e229fe30\n",
+  "uses: ./.github/workflows/.release-candidate-promote.yml\n",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
@@ -1152,10 +1152,7 @@ for (const requiredSnippet of [
     throw new Error(`promote-buildchain-ref index missing semver GitHub Release implementation: ${requiredSnippet}`);
   }
 }
-for (const forbiddenSnippet of [
-  "uses: ./.github/workflows/.release-candidate-promote.yml",
-  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@",
-]) {
+for (const forbiddenSnippet of ["uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@"]) {
   if (buildchainRefPromotionWorkflow.includes(forbiddenSnippet)) {
     throw new Error(`buildchain ref promotion workflow must use the declarative wrapper, found manual snippet: ${forbiddenSnippet}`);
   }

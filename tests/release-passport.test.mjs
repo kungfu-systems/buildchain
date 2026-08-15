@@ -428,6 +428,37 @@ test("release passport preserves a tree-equivalent RC controller source during d
   );
 });
 
+test("release passport preserves a tree-equivalent promotion controller source during durable recovery", () => {
+  const transactionSourceSha = "f".repeat(40);
+  const builtSourceSha = "a".repeat(40);
+  const promotionChannelSha = "e".repeat(40);
+  const equivalentTreeSha = "1".repeat(40);
+  const reference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"b".repeat(64)}`,
+    receiptDigest: `sha256:${"c".repeat(64)}`,
+    sourceSha: promotionChannelSha,
+    runtimeSha: "d".repeat(40),
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
+  const passport = createReleasePassport({
+    repository: "kungfu-systems/buildchain",
+    tag: "v3.0.1",
+    sourceSha: transactionSourceSha,
+    release: {
+      builtSourceSha,
+      builtSourceTreeSha: equivalentTreeSha,
+      promotionChannelSha,
+      promotionChannelTreeSha: equivalentTreeSha,
+      treeEquivalent: true,
+    },
+    controllerReceiptReferences: [reference],
+  });
+
+  assert.deepEqual(passport.controllerReceipts, [reference]);
+});
+
 test("KFD release gate metadata is statically bundled for action runtimes", () => {
   const source = fs.readFileSync(path.resolve("packages/core/kfd-gate.js"), "utf8");
   assert.match(source, /from "@kungfu-tech\/kfd\/package\.json" with \{ type: "json" \}/);
