@@ -199,6 +199,9 @@ test("caller switch defaults to v3 and affects observe only", async () => {
       closureRoot: ROOT("7"),
       dependencyRoot: ROOT("8"),
       toolchainRoot: ROOT("9"),
+      environmentRoot: ROOT("a"),
+      nativeCommand:
+        "node --test tests/v4-delivery-warrant-read-candidate.test.mjs",
       deliveryClass: "native-proof-required",
       now: OBSERVED_AT,
       execute: true,
