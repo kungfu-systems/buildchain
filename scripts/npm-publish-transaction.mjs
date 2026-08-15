@@ -128,8 +128,8 @@ function parseNpmView(stdout) {
   const parsed = JSON.parse(raw);
   const dist = parsed?.dist || parsed;
   return {
-    integrity: dist?.integrity || "",
-    shasum: dist?.shasum || "",
+    integrity: dist?.integrity || parsed?.["dist.integrity"] || "",
+    shasum: dist?.shasum || parsed?.["dist.shasum"] || "",
   };
 }
 
