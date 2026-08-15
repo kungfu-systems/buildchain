@@ -235,6 +235,8 @@ for (const fixture of fixtures.cases) {
       result.failures.some((failure) => failure.code === fixture.expectedCode),
       JSON.stringify(result.failures),
     );
+    if (fixture.expectedCode?.startsWith("persistent-"))
+      assert.equal(certifyFromExactCaller(result).ok, false);
   });
 }
 
