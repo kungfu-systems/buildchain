@@ -2989,9 +2989,9 @@ jobs:
         run: node .buildchain/recovery-runtime/scripts/release-candidate-tail-reseal.mjs plan
         env:
           GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
           BUILDCHAIN_TAIL_RESEAL_REQUEST_JSON: ${{ vars.BUILDCHAIN_RELEASE_CANDIDATE_TAIL_RESEAL_JSON }}
           BUILDCHAIN_TAIL_RESEAL_REQUEST_PATH: .buildchain/tail-reseal/request.json
-
       - name: Resolve tail reseal request artifact
         id: names
         run: echo "request-artifact=${ARTIFACT_NAME}-tail-reseal-request-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
