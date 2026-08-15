@@ -117,6 +117,8 @@ test("duplicate submission is idempotent and safe head repair retains queue age"
     now: "2026-08-04T00:05:00Z",
   });
   assert.equal(duplicate.receipt.action, "duplicate-noop");
+  assert.equal(duplicate.receipt.expectedOldStateRoot, first.queue.stateRoot);
+  assert.notEqual(duplicate.queue.stateRoot, first.queue.stateRoot);
   assert.equal(duplicate.queue.candidates.length, 1);
   assert.equal(duplicate.queue.candidates[0].enqueuedAt, "2026-08-04T00:00:00.000Z");
 

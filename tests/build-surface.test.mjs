@@ -2375,6 +2375,15 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(legacyHandoff, /\.observation\.stateRoot/);
   assert.match(legacyHandoff, /\.observation\.activeWarrant\.fencingToken/);
   assert.match(legacyHandoff, /\.observation\.activeWarrant\.generation/);
+  assert.match(workflow, /\.receipt\.expectedOldStateRoot/);
+  assert.match(
+    workflow,
+    /\$legacyBinding\.stateRoot == \$legacyOwnerStateRoot/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /\$legacyBinding\.stateRoot == \.observation\.stateRoot/,
+  );
 
   const verify = fs.readFileSync(
     path.join(root, ".github/workflows/verify.yml"),
