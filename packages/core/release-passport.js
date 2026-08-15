@@ -39,6 +39,10 @@ import {
   releasePassportCertificationVerificationOptions,
   requireV4ConsumerPolicyCertification,
 } from "./v4-floating-consumer-release-passport.js";
+import {
+  verifyV4RuntimeAuthorizationReceipt,
+  verifyV4RuntimeResumeLineage,
+} from "./v4-runtime-ref-resume-authority.js";
 
 export { RELEASE_CHECK_REPORT_CONTRACT, RELEASE_PASSPORT_CONTRACT };
 export const ARTIFACT_EVIDENCE_CONTRACT = "kungfu-buildchain-artifact-evidence";
@@ -1120,6 +1124,44 @@ function normalizePromotionEvidence({
   };
 }
 
+function normalizeV4RuntimeResumeEvidence(value, expected = {}) {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("v4RuntimeResumeEvidence must be a JSON object");
+  }
+  const authorizationVerification = verifyV4RuntimeAuthorizationReceipt({
+    receipt: value.authorization,
+    receiptRoot: value.authorizationRoot,
+    repository: expected.repository,
+    sourceSha: expected.sourceSha,
+    runtimeSha: expected.resumeRuntimeSha,
+    consumerPolicyReceiptRoot: expected.consumerPolicyReceiptRoot,
+  });
+  if (!authorizationVerification.ok) {
+    throw new Error(`v4 runtime authorization invalid: ${authorizationVerification.failures.join(", ")}`);
+  }
+  const lineageVerification = verifyV4RuntimeResumeLineage({
+    lineage: value.lineage,
+    lineageRoot: value.lineageRoot,
+    repository: expected.repository,
+    sourceSha: expected.sourceSha,
+    resumeRuntimeSha: expected.resumeRuntimeSha,
+    consumerPolicyReceiptRoot: expected.consumerPolicyReceiptRoot,
+  });
+  if (!lineageVerification.ok) {
+    throw new Error(`v4 runtime resume lineage invalid: ${lineageVerification.failures.join(", ")}`);
+  }
+  if (value.lineage?.authorizationRoot !== value.authorizationRoot) {
+    throw new Error("v4 runtime resume lineage authorization root mismatch");
+  }
+  return {
+    authorizationRoot: value.authorizationRoot,
+    authorization: structuredClone(value.authorization),
+    lineageRoot: value.lineageRoot,
+    lineage: structuredClone(value.lineage),
+  };
+}
+
 function prepareBuildEvidence({
   buildSummary,
   buildFacts,
@@ -1256,6 +1298,7 @@ export function createReleasePassport(options = {}) {
   releaseEvidence = [],
   v4ConsumerPolicyCertification = undefined,
   v4ConsumerPolicyCertificationRoot = "",
+  v4RuntimeResumeEvidence = undefined,
   kfdAgentHubEvidence = undefined,
   kfdAgentHubEvidencePath = "",
   controllerReceipts = [],
@@ -1272,6 +1315,12 @@ export function createReleasePassport(options = {}) {
   const normalizedTrustedPublishing = normalizeTrustedPublishing(trustedPublishing, { workflow, publish });
   const normalizedTransaction = normalizeTransaction(transaction);
   const { promotion, buildEvidence } = preparePromotionBuild(options);
+  const normalizedV4RuntimeResume = normalizeV4RuntimeResumeEvidence(v4RuntimeResumeEvidence, {
+    repository,
+    sourceSha,
+    resumeRuntimeSha: promotion.routing?.runtime?.resolvedSha || "",
+    consumerPolicyReceiptRoot: promotion.consumerPolicy?.certification?.receiptRoot || "",
+  });
   const normalizedImpact = normalizeImpactLedger(impact, { tag: normalizedTag, line });
   const generatedAt = optionalString(checkedAt) || nowIso();
   const kfd1Metadata = resolveKfd1Metadata();
@@ -1417,6 +1466,7 @@ export function createReleasePassport(options = {}) {
       ["invariantPassports", invariantPassports],
       ["releaseEvidence", releaseEvidence],
       ["v4ConsumerPolicy", promotion.consumerPolicy],
+      ["v4RuntimeResume", normalizedV4RuntimeResume],
       ["controllerReceipts", normalizedControllerReceipts],
       ["githubArtifactAttestations", normalizedGitHubArtifactAttestations],
     ]),
@@ -1541,6 +1591,7 @@ export function collectGitHubReleasePassport({
   releaseEvidenceJsons = [],
   v4ConsumerPolicyCertificationJson = "",
   v4ConsumerPolicyCertificationRoot = "",
+  v4RuntimeResumeEvidenceJson = "",
   kfdAgentHubEvidenceJson = "",
   controllerReceiptReferences = [],
   githubArtifactAttestationPolicyJsons = [],
@@ -1618,6 +1669,10 @@ export function collectGitHubReleasePassport({
     .filter((meta) => meta.value);
   const v4ConsumerPolicyCertificationMeta =
     parseV4ConsumerPolicyCertification(v4ConsumerPolicyCertificationJson, cwd);
+  const v4RuntimeResumeEvidence = parseJsonInput(v4RuntimeResumeEvidenceJson, undefined, {
+    cwd,
+    label: "v4RuntimeResumeEvidenceJson",
+  });
   const kfdAgentHubEvidenceMeta = parseJsonInputWithMeta(
     kfdAgentHubEvidenceJson,
     undefined,
@@ -1745,6 +1800,7 @@ export function collectGitHubReleasePassport({
     releaseEvidence: releaseEvidenceAttachments.map(({ reference }) => reference),
     v4ConsumerPolicyCertification: v4ConsumerPolicyCertificationMeta.value,
     v4ConsumerPolicyCertificationRoot,
+    v4RuntimeResumeEvidence,
     kfdAgentHubEvidence: kfdAgentHubEvidenceMeta.value
       ? { ...kfdAgentHubEvidenceMeta, path: "kfd-agent-hub-evidence.json" }
       : undefined,
@@ -2238,6 +2294,41 @@ function validateV4ConsumerPolicyPassportSection({ passport, issues }) {
   }
 }
 
+function validateV4RuntimeResumePassportSection({ passport, issues }) {
+  const evidence = passport?.v4RuntimeResume;
+  if (!evidence) return;
+  const consumerPolicyReceiptRoot = passport?.v4ConsumerPolicy?.certification?.receiptRoot || "";
+  const authorization = verifyV4RuntimeAuthorizationReceipt({
+    receipt: evidence.authorization,
+    receiptRoot: evidence.authorizationRoot,
+    repository: passport?.product?.repository || "",
+    sourceSha: passport?.release?.sourceSha || "",
+    runtimeSha: passport?.promotionRouting?.runtime?.resolvedSha || "",
+    consumerPolicyReceiptRoot,
+  });
+  for (const failure of authorization.failures) {
+    issues.push(issue("error", `v4RuntimeResume.authorization.${failure}`, failure));
+  }
+  const lineage = verifyV4RuntimeResumeLineage({
+    lineage: evidence.lineage,
+    lineageRoot: evidence.lineageRoot,
+    repository: passport?.product?.repository || "",
+    sourceSha: passport?.release?.sourceSha || "",
+    resumeRuntimeSha: passport?.promotionRouting?.runtime?.resolvedSha || "",
+    consumerPolicyReceiptRoot,
+  });
+  for (const failure of lineage.failures) {
+    issues.push(issue("error", `v4RuntimeResume.lineage.${failure}`, failure));
+  }
+  if (evidence.lineage?.authorizationRoot !== evidence.authorizationRoot) {
+    issues.push(issue(
+      "error",
+      "v4RuntimeResume.authorization-root-mismatch",
+      "runtime resume lineage must bind the embedded authorization receipt root",
+    ));
+  }
+}
+
 function validatePublishEvidenceSection({ passport, publishEvidence, normalizedPublishEvidence, issues }) {
   const publishEvidenceSupplied =
     Boolean(passport?.evidence?.publishEvidence) ||
@@ -2711,6 +2802,7 @@ export function createReleaseCheckReport({
     issues,
   });
   validateV4ConsumerPolicyPassportSection({ passport, issues });
+  validateV4RuntimeResumePassportSection({ passport, issues });
   validatePublishEvidenceSection({ passport, publishEvidence, normalizedPublishEvidence, issues });
   const evidenceIndex = indexEvidenceArtifacts(evidenceArtifacts);
   validateReleaseArtifacts({ artifacts, evidenceIndex, issues });

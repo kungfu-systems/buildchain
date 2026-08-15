@@ -38,6 +38,7 @@
       "./readme-badges": "./packages/core/readme-badges.js",
       "./public-surface-audit": "./packages/core/public-surface-audit.js",
       "./v4-floating-consumer-policy": "./packages/core/v4-floating-consumer-policy.js",
+      "./v4-runtime-ref-resume-authority": "./packages/core/v4-runtime-ref-resume-authority.js",
       "./logging": "./packages/core/logging.js",
       "./portable-dev-cache": "./packages/core/portable-dev-cache.js",
       "./publication-artifact": "./packages/core/publication-artifact.js",

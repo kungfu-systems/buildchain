@@ -31,7 +31,6 @@ function parseArgs(argv) {
 function env(name, fallback = "") {
   return process.env[name] || fallback;
 }
-
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
@@ -64,6 +63,9 @@ export function scanCommand(options = {}) {
     sourceSha: options.sourceSha || env("GITHUB_SHA"),
     invokedWorkflow:
       options.invokedWorkflow || env("BUILDCHAIN_INVOKED_WORKFLOW"),
+    invocationSourcePath:
+      options.invocationSourcePath ||
+      env("BUILDCHAIN_INVOCATION_SOURCE_PATH", env("GITHUB_WORKFLOW_REF")),
     resolvedWorkflowSha:
       options.resolvedWorkflowSha || env("BUILDCHAIN_WORKFLOW_SHA"),
     resolvedRuntimeSha:
@@ -149,6 +151,7 @@ export function certifyCommand(options = {}) {
     repository,
     sourceSha,
     invokedWorkflow,
+    invocationSourcePath: receipt?.invocation?.sourcePath,
     resolvedWorkflowSha: selectedLock.buildchain?.resolvedSha,
     resolvedRuntimeSha,
     stableLockPath,

@@ -20,6 +20,8 @@ const internalInputs = new Set([
   "promotion-publication-channel",
   "promotion-target-ref",
   "promotion-override-used",
+  "promotion-runtime-authorization-json",
+  "promotion-runtime-authorization-root",
   "publication-authority-workflow-path",
   "buildchain-expected-channel",
   "buildchain-expected-major",
@@ -122,6 +124,12 @@ function forwardedInputs(inputNames, { includeInternal = true, major = 2, unsupp
       if (name === "promotion-override-used") {
         return `      ${name}: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}`;
       }
+      if (name === "promotion-runtime-authorization-json") {
+        return `      ${name}: \${{ needs.consumer-admission.outputs.runtime-authorization-json }}`;
+      }
+      if (name === "promotion-runtime-authorization-root") {
+        return `      ${name}: \${{ needs.consumer-admission.outputs.runtime-authorization-root }}`;
+      }
       if (name === "buildchain-expected-major") {
         return `      buildchain-expected-major: "${major}"`;
       }
@@ -185,6 +193,9 @@ function consumerAdmissionJob() {
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    outputs:
+      runtime-authorization-json: \${{ steps.runtime-authority.outputs.runtime-authorization-json }}
+      runtime-authorization-root: \${{ steps.runtime-authority.outputs.runtime-authorization-root }}
     steps:
       - name: Checkout exact consumer source
         uses: actions/checkout@v7.0.0
@@ -220,6 +231,46 @@ function consumerAdmissionJob() {
         with:
           name: v4-consumer-policy-release-candidate-promote-\${{ github.sha }}
           path: .buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json
+          if-no-files-found: error
+
+      - name: Authorize transient v4 runtime selection
+        id: runtime-authority
+        if: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH: .buildchain/consumer/.buildchain/evidence/v4-runtime-authorization.json
+        with:
+          script: |
+            const script = require(process.env.GITHUB_WORKSPACE + "/.buildchain/v4-policy-runtime/scripts/authorize-promotion-runtime-override.cjs");
+            const result = await script.authorizePromotionRuntimeOverride({
+              github,
+              context,
+              request: {
+                consumerRoot: process.env.GITHUB_WORKSPACE + "/.buildchain/consumer",
+                runtimeModulePath: process.env.GITHUB_WORKSPACE + "/.buildchain/v4-policy-runtime/packages/core/v4-runtime-ref-resume-authority.js",
+                runtimeRepository: "\${{ inputs.buildchain-repository }}",
+                consumerPolicyReceiptPath: process.env.GITHUB_WORKSPACE + "/.buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json",
+                consumerPolicyReceiptRoot: "\${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}",
+                sourceSha: "\${{ inputs.target-sha || github.sha }}",
+                requestedRef: "\${{ needs.resolve-promotion.outputs.runtime-ref }}",
+                resolvedRuntimeSha: "\${{ needs.resolve-promotion.outputs.runtime-sha }}",
+                reason: "trusted \${{ inputs.resume-candidate-run-id != '' && 'resume' || 'dispatch' }} runtime override \${{ needs.resolve-promotion.outputs.runtime-ref }} for source \${{ inputs.target-sha || github.sha }}",
+                mode: "\${{ inputs.resume-candidate-run-id != '' && 'resume' || 'dispatch' }}",
+                outputPath: process.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH,
+              },
+            });
+            core.setOutput("runtime-authorization-json", JSON.stringify({
+              receipt: result.receipt,
+              receiptRoot: result.receiptRoot,
+            }));
+            core.setOutput("runtime-authorization-root", result.receiptRoot);
+
+      - name: Upload transient runtime authorization receipt
+        if: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-runtime-authorization-release-candidate-promote-\${{ github.run_id }}
+          path: .buildchain/consumer/.buildchain/evidence/v4-runtime-authorization.json
           if-no-files-found: error
 `;
 }

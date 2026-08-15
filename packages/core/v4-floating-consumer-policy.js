@@ -24,6 +24,8 @@ const BUILDCHAIN_REPOSITORY = "kungfu-systems/buildchain";
 const CHANNELS = Object.freeze({ v4: "stable", "v4-alpha": "alpha" });
 const DEFAULT_STABLE_LOCK_PATH = ".buildchain/contract-lock.json";
 const DEFAULT_ALPHA_LOCK_PATH = ".buildchain/alpha-contract-lock.json";
+const TRANSIENT_ACTION =
+  /^\.\/\.buildchain\/(?:runtime|workflow-shell|attester-runtime|release-tail-runtime)\//u;
 const SCANNER_PATHS = Object.freeze([
   "architecture/v4-floating-consumer-policy.json",
   "contracts/v4-floating-consumer-policy-receipt-v1.schema.json",
@@ -56,9 +58,8 @@ function sha256(value) {
 function resolveInside(root, relative, label) {
   const resolvedRoot = path.resolve(root);
   const file = path.resolve(resolvedRoot, relative);
-  if (!file.startsWith(`${resolvedRoot}${path.sep}`)) {
+  if (!file.startsWith(`${resolvedRoot}${path.sep}`))
     throw new Error(`${label} escapes caller root: ${relative}`);
-  }
   return file;
 }
 
@@ -88,9 +89,8 @@ export function resolveV4FloatingConsumerPolicyAuthority({
   ).value;
   const readLock = (relative, label) => {
     const file = resolveInside(callerRoot, relative, `${label} contract lock`);
-    if (!fs.existsSync(file)) {
+    if (!fs.existsSync(file))
       throw new Error(`${label} contract lock is missing: ${relative}`);
-    }
     const value = JSON.parse(fs.readFileSync(file, "utf8"));
     return { path: relative, root: v4FloatingConsumerDocumentRoot(value) };
   };
@@ -139,6 +139,7 @@ function coordinate(value) {
 
 function localActionManifest(root, sourcePath, uses) {
   if (!uses.startsWith("./")) return "";
+  if (TRANSIENT_ACTION.test(uses)) return "";
   const target = path.resolve(root, uses);
   if (!target.startsWith(`${path.resolve(root)}${path.sep}`)) return "";
   const candidates =
@@ -240,35 +241,25 @@ function selectorFailure(record, selector) {
 }
 
 function normalizeWorkflowPath(value) {
-  const text = String(value || "").replace(/^\/+/, "");
-  return text.startsWith(".github/workflows/")
-    ? text
-    : `.github/workflows/${text}`;
+  return `.github/workflows/${String(value || "").replace(/^\/+|^\.github\/workflows\//gu, "")}`;
 }
 
 function validateScanIdentity(
   { repository, sourceSha, runtimeSha, workflowSha },
   failures,
 ) {
-  const coordinates = [
-    [sourceSha, "caller-source-sha-invalid", "caller source SHA"],
-    [runtimeSha, "resolved-runtime-sha-invalid", "resolved runtime SHA"],
-    [
-      workflowSha,
-      "resolved-workflow-sha-invalid",
-      "resolved workflow shell SHA",
-    ],
-  ];
-  for (const [value, code, label] of coordinates) {
+  for (const [value, code] of [
+    [sourceSha, "caller-source-sha-invalid"],
+    [runtimeSha, "resolved-runtime-sha-invalid"],
+    [workflowSha, "resolved-workflow-sha-invalid"],
+  ])
     if (!EXACT_SHA.test(value))
-      failures.push({ code, message: `${label} must be an exact commit` });
-  }
-  if (!repository || !/^[^/]+\/[^/]+$/u.test(repository)) {
+      failures.push({ code, message: `${code} must bind an exact commit` });
+  if (!repository || !/^[^/]+\/[^/]+$/u.test(repository))
     failures.push({
       code: "caller-repository-invalid",
       message: "caller repository must be owner/repo",
     });
-  }
 }
 
 function readContractLock(root, relative, expectedRef, label, failures) {
@@ -278,7 +269,6 @@ function readContractLock(root, relative, expectedRef, label, failures) {
     return lock;
   } catch (error) {
     failures.push({ code: `${label}-lock-missing`, message: error.message });
-    return undefined;
   }
 }
 
@@ -306,10 +296,12 @@ function classifyBuildchainUses(records, failures) {
   return uses;
 }
 
-function selectInvocation(buildchainUses, invokedWorkflow, failures) {
-  const expectedWorkflow = normalizeWorkflowPath(invokedWorkflow);
-  const invocations = buildchainUses.filter(
-    (entry) => normalizeWorkflowPath(entry.path) === expectedWorkflow,
+function selectInvocation(uses, workflow, failures, source = "") {
+  const expectedWorkflow = normalizeWorkflowPath(workflow);
+  const invocations = uses.filter(
+    (entry) =>
+      normalizeWorkflowPath(entry.path) === expectedWorkflow &&
+      (!source || entry.sourcePath === source),
   );
   if (invocations.length !== 1) {
     failures.push({
@@ -327,6 +319,7 @@ export function scanV4FloatingConsumerPolicy({
   repository = "",
   sourceSha = "",
   invokedWorkflow = "",
+  invocationSourcePath = "",
   resolvedWorkflowSha = "",
   resolvedRuntimeSha = "",
   stableLockPath = ".buildchain/contract-lock.json",
@@ -375,10 +368,14 @@ export function scanV4FloatingConsumerPolicy({
     failures.push({ code: "source-scan-failed", message: error.message });
   }
   const buildchainUses = classifyBuildchainUses(scanned.records, failures);
+  const sourcePath = String(invocationSourcePath || "")
+    .split("@")[0]
+    .replace(`${repository}/`, "");
   const { expectedWorkflow, selected } = selectInvocation(
     buildchainUses,
     invokedWorkflow,
     failures,
+    sourcePath,
   );
   const selectedLock = selected?.channel === "alpha" ? alpha : stable;
   if (

@@ -496,6 +496,8 @@
         "promotion-publication-channel",
         "promotion-router-ref",
         "promotion-router-sha",
+        "promotion-runtime-authorization-json",
+        "promotion-runtime-authorization-root",
         "promotion-runtime-ref",
         "promotion-runtime-sha",
         "promotion-shell-ref",
@@ -561,6 +563,7 @@
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
+        "release-passport-v4-runtime-resume-evidence-json",
         "release-propagation-config-path",
         "required-artifact-count",
         "required-status-check",
@@ -579,7 +582,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 115,
+      "inputCount": 118,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2602,6 +2605,7 @@
         "release-passport-output-dir",
         "release-passport-platform-manifest-paths",
         "release-passport-product-name",
+        "release-passport-v4-runtime-resume-evidence-json",
         "release-propagation-config-path",
         "required-artifact-count",
         "required-status-check",
@@ -2620,7 +2624,7 @@
         "target-sha",
         "trusted-publishing"
       ],
-      "inputCount": 102,
+      "inputCount": 103,
       "secrets": [
         "BUILDCHAIN_ISSUE_APP_ID",
         "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3173,6 +3177,7 @@
         "release-passport-promotion-routing-json",
         "release-passport-v4-consumer-policy-certification-json",
         "release-passport-v4-consumer-policy-certification-root",
+        "release-passport-v4-runtime-resume-evidence-json",
         "release-tail-state-path",
         "require-governance",
         "require-publication-qualification",
@@ -3186,7 +3191,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 82,
+      "inputCount": 83,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",

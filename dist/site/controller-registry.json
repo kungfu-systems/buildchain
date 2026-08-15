@@ -1931,6 +1931,14 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "promotion-runtime-authorization-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
+        "promotion-runtime-authorization-root": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "promotion-runtime-ref": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -2191,6 +2199,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "release-passport-v4-runtime-resume-evidence-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "release-propagation-config-path": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -2301,7 +2313,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:89ec9f109deeaa6a1a16e7836baabdc65bbbdd3c18b73b7b6d952a22b1204a68"
+      "digest": "sha256:3c83524f650a4d04004400d3821dbbd081b8802035dc6004464cdcfd0b5cdfc3"
     },
     {
       "schemaVersion": 1,
@@ -2494,5 +2506,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:74ea5bb416c1d592a3b8659a4c560f1fd98e8570d168535cd6f6098bad4265a7"
+  "digest": "sha256:eb9eb918b763f303baf313e153076e9d3158ca28a2e6cc558834a06e49d9d9cf"
 }
