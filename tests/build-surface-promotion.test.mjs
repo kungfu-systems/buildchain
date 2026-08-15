@@ -713,7 +713,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
   assert.match(
     workflow,
-    /publish-rematerialize-on-resume: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'release\/'\) \}\}/,
+    /publish-rematerialize-on-resume: \$\{\{ startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'alpha\/'\) \|\| startsWith\(github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\], 'release\/'\) \}\}/,
   );
   assert.doesNotMatch(
     workflow,
