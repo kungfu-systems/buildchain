@@ -789,6 +789,7 @@ jobs:
             --argjson pr "${EXPECTED_PR}" \
             --arg head "${EXPECTED_HEAD}" \
             --arg phase "$selected_phase" \
+            --arg legacyOwnerStateRoot "$(jq -er '.receipt.expectedOldStateRoot' .buildchain/dev-delivery/submission.json)" \
             --argjson legacyBinding "${LEGACY_ACTIVE_OWNER_BINDING:-null}" \
             '.schema == "kungfu.buildchain.dev-delivery-command-result/v1"
              and .mode == "execute"
@@ -799,7 +800,7 @@ jobs:
                    and .observation.activeCandidate.deliveryClass == "non-native-fast"
                    and (.observation.activeCandidate | has("environmentRoot") | not)
                    and $legacyBinding.schema == "kungfu.buildchain.legacy-active-owner-binding/v1"
-                   and $legacyBinding.stateRoot == .observation.stateRoot
+                   and $legacyBinding.stateRoot == $legacyOwnerStateRoot
                    and $legacyBinding.fencingToken == .observation.activeWarrant.fencingToken
                    and $legacyBinding.generation == .observation.activeWarrant.generation)
                   or .observation.activeWarrant.phase == $phase)

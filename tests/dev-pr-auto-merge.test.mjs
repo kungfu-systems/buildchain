@@ -974,6 +974,34 @@ test("exact active Warrant authorizes only its bound PR head", async () => {
     const fake = client({
       pullRequests: [target],
       branchShas: ["base-1", "base-1", "base-1"],
+      queueStates: Array(3).fill({ enabled: true, id: "MQ_1", entries: [] }),
+      currentDeliveryQueue: {
+        activeWarrant: warrantResult.warrant,
+        candidates: [{ candidateId: warrantResult.warrant.candidateId, sourceHead: warrantResult.warrant.sourceHead, status: "selected" }],
+      },
+    });
+    const result = await runDevPrAdmission(
+      {
+        ...targetedOptions,
+        dryRun: false,
+        warrantMode: "required",
+        warrantResultPath: resultPath,
+      },
+      fake,
+    );
+    assert.equal(result.ok, true);
+    assert.equal(result.receipt.deliveryWarrant.fencingToken, ROOT);
+    assert.equal(result.receipt.deliveryWarrant.stateRoot, ROOT);
+    assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
+  });
+});
+
+test("required Warrant restores the canonical active lease context for a floating v1 caller", async () => {
+  await withWarrantResult({}, async (resultPath, warrantResult) => {
+    const target = pr({ number: 21, headSha: exactHead });
+    const fake = client({
+      pullRequests: [target],
+      branchShas: ["base-1", "base-1", "base-1"],
       queueStates: Array.from({ length: 3 }, () => ({
         enabled: true,
         id: "MQ_1",
@@ -991,6 +1019,7 @@ test("exact active Warrant authorizes only its bound PR head", async () => {
     const result = await runDevPrAdmission(
       {
         ...targetedOptions,
+        activeLeaseContext: "",
         dryRun: false,
         warrantMode: "required",
         warrantResultPath: resultPath,
@@ -998,8 +1027,18 @@ test("exact active Warrant authorizes only its bound PR head", async () => {
       fake,
     );
     assert.equal(result.ok, true);
-    assert.equal(result.receipt.deliveryWarrant.fencingToken, ROOT);
-    assert.equal(result.receipt.deliveryWarrant.stateRoot, ROOT);
+    assert.equal(
+      result.receipt.queue.admissionTransaction.activeLease.context,
+      "Queue family lease/exact",
+    );
+    assert.deepEqual(
+      fake.commitStatuses.map((entry) => [entry.body.context, entry.body.state]),
+      [
+        ["Queue family lease/exact", "pending"],
+        ["Queue admission lease", "success"],
+        ["Buildchain delivery intent", "success"],
+      ],
+    );
     assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
   });
 });

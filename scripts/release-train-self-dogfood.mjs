@@ -6,7 +6,11 @@ import fs from "node:fs";
 import {
   closeDevDeliveryWarrant,
   createDevDeliveryQueue,
+  createNativeCommandContract,
+  createNativeProofReuseDecision,
+  createNativeQualificationProof,
   createReleaseBlockerPriorityClaim,
+  qualifyDevDeliveryWarrant,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
@@ -81,9 +85,12 @@ function branch(value, label) {
   return normalized;
 }
 
-function at(recordedAt, seconds) {
-  return new Date(Date.parse(recordedAt) + seconds * 1000).toISOString();
-}
+const at = (recordedAt, seconds) => new Date(Date.parse(recordedAt) + seconds * 1000).toISOString();
+
+const normalizeFields = (input, fields, normalizer, prefix = "") =>
+  Object.fromEntries(fields.map((field) => [field, normalizer(input?.[field], `${prefix}${field}`)]));
+
+const requireEvidence = (condition, message) => { if (!condition) throw new Error(message); };
 
 function normalizeDelivery(input, expected) {
   const delivery = {
@@ -92,59 +99,44 @@ function normalizeDelivery(input, expected) {
       "delivery.pullRequestNumber",
     ),
     baseBranch: branch(input?.baseBranch, "delivery.baseBranch"),
-    headSha: sha(input?.headSha, "delivery.headSha"),
-    headTreeSha: sha(input?.headTreeSha, "delivery.headTreeSha"),
-    state: text(input?.state, "delivery.state"),
-    reviewState: text(input?.reviewState, "delivery.reviewState"),
-    reviewHeadSha: sha(input?.reviewHeadSha, "delivery.reviewHeadSha"),
-    mergeSha: sha(input?.mergeSha, "delivery.mergeSha"),
-    mergeTreeSha: sha(input?.mergeTreeSha, "delivery.mergeTreeSha"),
-    ciHeadSha: sha(input?.ciHeadSha, "delivery.ciHeadSha"),
-    ciConclusion: text(input?.ciConclusion, "delivery.ciConclusion"),
-    reviewRoot: root(input?.reviewRoot, "delivery.reviewRoot"),
-    ciRoot: root(input?.ciRoot, "delivery.ciRoot"),
-    mergeRoot: root(input?.mergeRoot, "delivery.mergeRoot"),
-    artifactRoot: root(input?.artifactRoot, "delivery.artifactRoot"),
-    installedProductRoot: root(
-      input?.installedProductRoot,
-      "delivery.installedProductRoot",
+    ...normalizeFields(
+      input,
+      ["headSha", "headTreeSha", "reviewHeadSha", "mergeSha", "mergeTreeSha", "ciHeadSha"],
+      sha,
+      "delivery.",
+    ),
+    ...normalizeFields(input, ["state", "reviewState", "ciConclusion"], text, "delivery."),
+    ...normalizeFields(
+      input,
+      ["reviewRoot", "ciRoot", "mergeRoot", "artifactRoot", "installedProductRoot"],
+      root,
+      "delivery.",
     ),
   };
-  if (delivery.baseBranch !== expected.sourceBranch) {
-    throw new Error(
-      "protected delivery base does not match the Release Cut source branch",
-    );
-  }
-  if (
-    delivery.state !== "MERGED" ||
-    delivery.reviewState !== "APPROVED" ||
-    delivery.ciConclusion !== "success"
-  ) {
-    throw new Error(
-      "protected delivery is not merged, approved, and CI-successful",
-    );
-  }
-  if (
-    delivery.headSha !== expected.devLandingSha ||
-    delivery.reviewHeadSha !== delivery.headSha
-  ) {
-    throw new Error(
-      "protected delivery review does not bind the exact repaired head",
-    );
-  }
-  if (
-    delivery.headTreeSha !== expected.cutCandidateTreeSha ||
-    delivery.mergeTreeSha !== delivery.headTreeSha
-  ) {
-    throw new Error(
-      "protected delivery merge tree does not equal the repaired candidate tree",
-    );
-  }
-  if (delivery.ciHeadSha !== delivery.mergeSha) {
-    throw new Error(
-      "protected delivery CI does not bind the merge-group result",
-    );
-  }
+  requireEvidence(
+    delivery.baseBranch === expected.sourceBranch,
+    "protected delivery base does not match the Release Cut source branch",
+  );
+  requireEvidence(
+    delivery.state === "MERGED" &&
+      delivery.reviewState === "APPROVED" &&
+      delivery.ciConclusion === "success",
+    "protected delivery is not merged, approved, and CI-successful",
+  );
+  requireEvidence(
+    delivery.headSha === expected.devLandingSha &&
+      delivery.reviewHeadSha === delivery.headSha,
+    "protected delivery review does not bind the exact repaired head",
+  );
+  requireEvidence(
+    delivery.headTreeSha === expected.cutCandidateTreeSha &&
+      delivery.mergeTreeSha === delivery.headTreeSha,
+    "protected delivery merge tree does not equal the repaired candidate tree",
+  );
+  requireEvidence(
+    delivery.ciHeadSha === delivery.mergeSha,
+    "protected delivery CI does not bind the merge-group result",
+  );
   return delivery;
 }
 
@@ -153,50 +145,32 @@ function normalizeInput(input = {}) {
     repository: repository(input.repository),
     sourceBranch: branch(input.sourceBranch, "sourceBranch"),
     targetBranch: branch(input.targetBranch, "targetBranch"),
-    assignmentRoot: root(input.assignmentRoot, "assignmentRoot"),
-    initiativeRoot: root(input.initiativeRoot, "initiativeRoot"),
-    dependencyProofRoot: root(input.dependencyProofRoot, "dependencyProofRoot"),
-    originDevSha: sha(input.originDevSha, "originDevSha"),
-    candidateSha: sha(input.candidateSha, "candidateSha"),
-    candidateTreeSha: sha(input.candidateTreeSha, "candidateTreeSha"),
-    alphaBaseSha: sha(input.alphaBaseSha, "alphaBaseSha"),
-    buildchainRuntimeSha: sha(
-      input.buildchainRuntimeSha,
-      "buildchainRuntimeSha",
+    ...normalizeFields(
+      input,
+      ["assignmentRoot", "initiativeRoot", "dependencyProofRoot", "environmentRoot", "blockerRoot", "patchRoot", "cutLandingEvidenceRoot", "devConflictEvidenceRoot", "devLandingEvidenceRoot"],
+      root,
     ),
-    observedDevSha: sha(input.observedDevSha, "observedDevSha"),
-    blockerRoot: root(input.blockerRoot, "blockerRoot"),
-    patchRoot: root(input.patchRoot, "patchRoot"),
-    cutCandidateSha: sha(input.cutCandidateSha, "cutCandidateSha"),
-    cutCandidateTreeSha: sha(input.cutCandidateTreeSha, "cutCandidateTreeSha"),
-    cutLandingEvidenceRoot: root(
-      input.cutLandingEvidenceRoot,
-      "cutLandingEvidenceRoot",
+    ...normalizeFields(
+      input,
+      ["originDevSha", "candidateSha", "candidateTreeSha", "alphaBaseSha", "buildchainRuntimeSha", "observedDevSha", "cutCandidateSha", "cutCandidateTreeSha", "devBaseSha", "devLandingSha"],
+      sha,
     ),
-    devBaseSha: sha(input.devBaseSha, "devBaseSha"),
-    devLandingSha: sha(input.devLandingSha, "devLandingSha"),
-    devConflictEvidenceRoot: root(
-      input.devConflictEvidenceRoot,
-      "devConflictEvidenceRoot",
-    ),
-    devLandingEvidenceRoot: root(
-      input.devLandingEvidenceRoot,
-      "devLandingEvidenceRoot",
-    ),
+    nativeCommand: text(input.nativeCommand, "nativeCommand"),
+    nativeExecutionReceipt: structuredClone(input.nativeExecutionReceipt || {}),
     ordinaryPullRequestNumber: positiveInteger(
       input.ordinaryPullRequestNumber,
       "ordinaryPullRequestNumber",
     ),
     recordedAt: timestamp(input.recordedAt, "recordedAt"),
   };
-  if (normalized.observedDevSha === normalized.originDevSha) {
-    throw new Error(
-      "self-dogfood requires dev to advance beyond the frozen origin",
-    );
-  }
-  if (normalized.cutCandidateSha === normalized.candidateSha) {
-    throw new Error("self-dogfood requires a successor repair candidate");
-  }
+  requireEvidence(
+    normalized.observedDevSha !== normalized.originDevSha,
+    "self-dogfood requires dev to advance beyond the frozen origin",
+  );
+  requireEvidence(
+    normalized.cutCandidateSha !== normalized.candidateSha,
+    "self-dogfood requires a successor repair candidate",
+  );
   normalized.delivery = normalizeDelivery(input.delivery, normalized);
   return normalized;
 }
@@ -214,6 +188,10 @@ function deliveryCandidate(input, deliveryClass = "release") {
     closureRoot: input.closureRoot,
     dependencyRoot: input.dependencyRoot,
     toolchainRoot: input.toolchainRoot,
+    ...(input.environmentRoot ? { environmentRoot: input.environmentRoot } : {}),
+    ...(input.nativeCommand
+      ? { nativeCommandContract: createNativeCommandContract(input.nativeCommand) }
+      : {}),
     deliveryClass,
     priority: "ordinary",
     ...(input.releaseBlockerPriority
@@ -366,7 +344,7 @@ function runQueueCampaign(value, repaired, priorityClaim) {
       dependencyRoot: value.dependencyProofRoot,
       toolchainRoot: value.dependencyProofRoot,
     },
-    "native-proof-required",
+    "non-native-fast",
   );
   queue = submitDevDeliveryCandidate(queue, ordinary, {
     now: at(value.recordedAt, 6),
@@ -388,6 +366,8 @@ function runQueueCampaign(value, repaired, priorityClaim) {
     closureRoot: value.delivery.mergeRoot,
     dependencyRoot: value.dependencyProofRoot,
     toolchainRoot: value.delivery.installedProductRoot,
+    environmentRoot: value.environmentRoot,
+    nativeCommand: value.nativeCommand,
     releaseBlockerPriority: priorityClaim,
   });
   const submitted = submitDevDeliveryCandidate(queue, blocker, {
@@ -426,7 +406,29 @@ function runQueueCampaign(value, repaired, priorityClaim) {
       "eligible release blocker did not receive bounded priority",
     );
   }
-  const closed = closeDevDeliveryWarrant(selected.queue, selected.warrant, {
+  const nativeCommandRoot = createNativeCommandContract(value.nativeCommand).commandRoot;
+  const proof = createNativeQualificationProof({
+    ...selected.warrant,
+    repository: value.repository,
+    protectedBase: value.sourceBranch,
+    qualifiedBase: value.devBaseSha,
+    nativeCommandRoot,
+    nativeExecutionReceipt: value.nativeExecutionReceipt,
+    affectedPaths: [], shardEvidenceRoots: [],
+    qualifiedAt: at(value.recordedAt, 12),
+  });
+  const current = {
+    ...selected.warrant,
+    nativeCommandRoot,
+    currentBase: value.devBaseSha,
+    graphKnown: true, attributionComplete: true,
+    changedPaths: [], renames: [],
+  };
+  const reuseDecision = createNativeProofReuseDecision({ proof, current });
+  const qualified = qualifyDevDeliveryWarrant(selected.queue, selected.warrant, {
+    nativeProof: proof, reuseDecision, current, now: at(value.recordedAt, 12),
+  });
+  const closed = closeDevDeliveryWarrant(qualified.queue, qualified.warrant, {
     outcome: "merged",
     evidenceRoot: value.delivery.mergeRoot,
     now: at(value.recordedAt, 13),

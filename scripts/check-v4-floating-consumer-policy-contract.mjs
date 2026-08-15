@@ -6,7 +6,6 @@ import { parseYamlUses } from "../packages/core/workflow-yaml-contract.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
-
 function fail(message) {
   throw new Error(`v4-floating-consumer-policy-contract: ${message}`);
 }
