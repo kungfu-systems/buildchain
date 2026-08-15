@@ -161,6 +161,9 @@ inputs:
   release-passport-v4-consumer-policy-certification-root:
     description: "Exact certification root emitted by the independent v4 consumer policy certification step"
     default: ""
+  release-passport-v4-runtime-resume-evidence-json:
+    description: "Rooted v4 runtime authorization plus fresh-attempt Stage Capsule resume lineage JSON or path"
+    default: ""
   release-passport-kfd-1-witness-jsons:
     description: "Newline- or comma-separated KFD-1 contract-world witness JSON paths to include in the release passport"
     default: ""

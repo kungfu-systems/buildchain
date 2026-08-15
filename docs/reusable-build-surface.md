@@ -120,6 +120,13 @@ lock still bind the visible workflow shell. Release-candidate evidence carries
 the receipt; promotion certifies it independently; final v4 Release Passport
 construction requires the matching certification.
 
+Transient train, authority, and exact-SHA selections additionally produce a
+provider-readback-bound runtime authorization receipt. A resumed failed tail
+uses a fresh attempt and records the original build runtime, the resume runtime,
+the exact sealed Stage Capsules reused per platform, and the platforms rebuilt
+in the final Release Passport. See
+[`v4-runtime-ref-resume-authority.md`](v4-runtime-ref-resume-authority.md).
+
 See the normative
 [`v4 floating consumer policy`](../architecture/v4-floating-consumer-policy.md)
 and its machine declaration for the exact acceptance boundary. This policy does

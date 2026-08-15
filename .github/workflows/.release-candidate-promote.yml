@@ -77,6 +77,16 @@ on:
         default: false
         type: boolean
         required: false
+      promotion-runtime-authorization-json:
+        description: "Rooted transient runtime authorization receipt supplied by the public router"
+        default: ""
+        type: string
+        required: false
+      promotion-runtime-authorization-root:
+        description: "sha256 root of the transient runtime authorization receipt"
+        default: ""
+        type: string
+        required: false
       buildchain-contract-lock-path:
         description: "Consumer-owned Buildchain contract lock path"
         default: ".buildchain/contract-lock.json"
@@ -379,6 +389,11 @@ on:
         required: false
       release-passport-impact-json:
         description: "Surface-aware release impact JSON or path passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
+      release-passport-v4-runtime-resume-evidence-json:
+        description: "Rooted v4 transient runtime authorization and fresh-attempt Stage Capsule resume lineage JSON or path"
         default: ""
         type: string
         required: false
@@ -1483,6 +1498,43 @@ jobs:
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
+      - name: Verify transient runtime authorization handoff
+        if: ${{ inputs.promotion-router-ref != '' }}
+        shell: bash
+        env:
+          BUILDCHAIN_OVERRIDE_USED: ${{ inputs.promotion-override-used }}
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: ${{ inputs.promotion-runtime-authorization-json }}
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: ${{ inputs.promotion-runtime-authorization-root }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { verifyV4RuntimeAuthorizationReceipt } from "./.buildchain/runtime/packages/core/v4-runtime-ref-resume-authority.js";
+          const overrideUsed = process.env.BUILDCHAIN_OVERRIDE_USED === "true";
+          const raw = process.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON || "";
+          const expectedRoot = process.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT || "";
+          if (!overrideUsed) {
+            if (raw || expectedRoot) throw new Error("non-override promotion must not carry runtime authorization evidence");
+            process.exit(0);
+          }
+          if (!raw || !expectedRoot) throw new Error("runtime override requires rooted authorization evidence");
+          const evidence = JSON.parse(raw);
+          if (evidence.receiptRoot !== expectedRoot) throw new Error("runtime authorization handoff root mismatch");
+          const verification = verifyV4RuntimeAuthorizationReceipt({
+            receipt: evidence.receipt,
+            receiptRoot: evidence.receiptRoot,
+            repository: process.env.GITHUB_REPOSITORY,
+            sourceSha: process.env.BUILDCHAIN_EXPECTED_SOURCE_SHA,
+            runtimeSha: process.env.BUILDCHAIN_EXPECTED_RUNTIME_SHA,
+          });
+          if (!verification.ok) throw new Error(`runtime authorization handoff rejected: ${verification.failures.join(", ")}`);
+          const output = ".buildchain/release-candidate/v4-runtime-authorization.json";
+          fs.mkdirSync(".buildchain/release-candidate", { recursive: true });
+          fs.writeFileSync(output, `${JSON.stringify(evidence, null, 2)}\n`);
+          NODE
+
       - name: Bridge Buildchain self-runtime dependencies
         if: ${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository }}
         shell: bash
@@ -1869,6 +1921,7 @@ jobs:
           release-passport-promotion-routing-json: ${{ steps.routing-evidence.outputs.routing-path }}
           release-passport-v4-consumer-policy-certification-json: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-path }}
           release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}
+          release-passport-v4-runtime-resume-evidence-json: ${{ inputs.release-passport-v4-runtime-resume-evidence-json }}
           release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
           release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}

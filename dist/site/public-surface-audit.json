@@ -6,7 +6,7 @@
     "cliCommandCount": 114,
     "workflowCount": 71,
     "actionCount": 7,
-    "sitePageCount": 75,
+    "sitePageCount": 76,
     "docCommandRefCount": 919,
     "failureCount": 0
   },
@@ -1007,6 +1007,8 @@
           "promotion-publication-channel",
           "promotion-router-ref",
           "promotion-router-sha",
+          "promotion-runtime-authorization-json",
+          "promotion-runtime-authorization-root",
           "promotion-runtime-ref",
           "promotion-runtime-sha",
           "promotion-shell-ref",
@@ -1072,6 +1074,7 @@
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
+          "release-passport-v4-runtime-resume-evidence-json",
           "release-propagation-config-path",
           "required-artifact-count",
           "required-status-check",
@@ -1090,7 +1093,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 115,
+        "inputCount": 118,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2603,6 +2606,7 @@
           "release-passport-output-dir",
           "release-passport-platform-manifest-paths",
           "release-passport-product-name",
+          "release-passport-v4-runtime-resume-evidence-json",
           "release-propagation-config-path",
           "required-artifact-count",
           "required-status-check",
@@ -2621,7 +2625,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 102,
+        "inputCount": 103,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3025,6 +3029,7 @@
           "release-passport-promotion-routing-json",
           "release-passport-v4-consumer-policy-certification-json",
           "release-passport-v4-consumer-policy-certification-root",
+          "release-passport-v4-runtime-resume-evidence-json",
           "release-tail-state-path",
           "require-governance",
           "require-publication-qualification",
@@ -3038,7 +3043,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 82
+        "inputCount": 83
       },
       {
         "id": "release-tail",
@@ -3426,6 +3431,10 @@
       },
       {
         "id": "manual:v4-production-release",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-runtime-ref-resume-authority",
         "category": "manual"
       },
       {
@@ -8048,8 +8057,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "031027fdd7688220deb52bfae928be562fa5509bf4a4f5e692ab2a949971d15a",
-    "workflowRegistryDigest": "1f2c0e53b941b9c6e6df26d9614f6d3e6fc37e826ad572ae2a288553d863b839",
-    "pageRegistryDigest": "33d70b4a4e8000ef6bf9ab208a005a6120546bb2750bfd0c414d56feb2e67f18"
+    "workflowRegistryDigest": "c09298a4493db28fa050a35dfcbc673cf0fad52bbd337e9ea8b7b6a199a52865",
+    "pageRegistryDigest": "cdb609de5ba60ea480c1f77c7a0cece8e6b744c2e73d2d95be6bf5a04eabf7d6"
   },
   "comparison": {
     "missingCliRegistry": [],
