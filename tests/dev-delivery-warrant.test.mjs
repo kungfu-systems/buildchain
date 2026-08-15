@@ -86,8 +86,29 @@ test("queue readback accepts legacy terminal native candidates without weakening
   const legacyLive = asLegacyState(submitted.queue);
   assert.throws(
     () => normalizeDevDeliveryQueue(legacyLive),
-    /native candidate requires an exact native command contract/u,
+    /live native candidate requires exact native proof/u,
   );
+});
+
+test("live native delivery classes cannot downgrade to phase-less authority", () => {
+  for (const deliveryClass of ["native-proof-required", "cross-platform", "release"])
+    assert.throws(
+      () =>
+        submit(queue(), 99, "2026-08-04T00:00:00Z", {
+          deliveryClass,
+          environmentRoot: undefined,
+          nativeCommandContract: undefined,
+        }),
+      /live native candidate requires exact native proof/u,
+    );
+
+  const nonNative = submit(queue(), 99, "2026-08-04T00:00:00Z", {
+    deliveryClass: "non-native-fast",
+    environmentRoot: undefined,
+    nativeCommandContract: undefined,
+  });
+  assert.equal(nonNative.queue.candidates[0].deliveryClass, "non-native-fast");
+  assert.equal(nonNative.queue.candidates[0].environmentRoot, undefined);
 });
 
 test("duplicate submission is idempotent and safe head repair retains queue age", () => {

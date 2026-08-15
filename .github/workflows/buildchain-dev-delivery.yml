@@ -104,7 +104,7 @@ on:
           description: "Bounded delivery class",
           type: string,
           required: false,
-          default: "native-proof-required",
+          default: "non-native-fast",
         }
       delivery-priority:
         {
@@ -142,7 +142,7 @@ jobs:
       toolchain-root: ${{ github.event.client_payload.candidate.toolchainRoot || github.event.inputs.toolchain-root }}
       affected-paths-json: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload.candidate.affectedPaths) || github.event.inputs.affected-paths-json }}
       shard-evidence-roots-json: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload.candidate.shardEvidenceRoots) || github.event.inputs.shard-evidence-roots-json || '[]' }}
-      delivery-class: ${{ github.event.client_payload.candidate.deliveryClass || github.event.inputs.delivery-class || 'native-proof-required' }}
+      delivery-class: ${{ github.event.client_payload.candidate.deliveryClass || github.event.inputs.delivery-class || 'non-native-fast' }}
       delivery-priority: ${{ github.event.client_payload.candidate.priority || github.event.inputs.delivery-priority || 'ordinary' }}
       required-status-checks: check
       queue-admission-context: Queue admission lease

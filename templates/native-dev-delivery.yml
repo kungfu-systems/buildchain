@@ -53,7 +53,7 @@ on:
       delivery-class:
         description: "Bounded delivery class"
         required: false
-        default: "native-proof-required"
+        default: "non-native-fast"
       delivery-priority:
         description: "Reviewed delivery priority"
         required: false
@@ -85,8 +85,9 @@ jobs:
       toolchain-root: ${{ github.event.client_payload.candidate.toolchainRoot || inputs.toolchain-root }}
       affected-paths-json: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload.candidate.affectedPaths) || inputs.affected-paths-json }}
       shard-evidence-roots-json: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload.candidate.shardEvidenceRoots) || inputs.shard-evidence-roots-json || '[]' }}
-      delivery-class: ${{ github.event.client_payload.candidate.deliveryClass || inputs.delivery-class || 'native-proof-required' }}
+      delivery-class: ${{ github.event.client_payload.candidate.deliveryClass || inputs.delivery-class || 'non-native-fast' }}
       delivery-priority: ${{ github.event.client_payload.candidate.priority || inputs.delivery-priority || 'ordinary' }}
+      queue-admission-context: Queue admission lease
       landing-mode: queue
       dry-run: false
     secrets:

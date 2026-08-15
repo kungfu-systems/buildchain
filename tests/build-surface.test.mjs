@@ -2479,7 +2479,7 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
   assert.match(workflow, /delivery-warrant-mode: required/);
   assert.match(
     workflow,
-    /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| github\.event\.inputs\.delivery-class \|\| 'native-proof-required' \}\}/,
+    /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| github\.event\.inputs\.delivery-class \|\| 'non-native-fast' \}\}/,
   );
   assert.match(
     workflow,
@@ -2576,6 +2576,8 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/dev-pr-auto-merge\.yml@v4-alpha/u,
   );
   assert.match(template, /default: "v4-alpha"/u);
+  assert.match(template, /default: "non-native-fast"/u);
+  assert.match(template, /queue-admission-context: Queue admission lease/u);
   assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@v3(?:\b|-)/u);
   assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@[0-9a-f]{40}/u);
   const nativeStart = workflow.indexOf("  native-execution:");
@@ -4184,7 +4186,10 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     selfPromotion,
     /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/,
   );
-  assert.match(selfPromotion, /publish-rematerialize-on-resume:.*alpha\/.*\|\|.*release\//);
+  assert.match(
+    selfPromotion,
+    /publish-rematerialize-on-resume:.*alpha\/.*\|\|.*release\//,
+  );
   assert.match(
     selfPromotion,
     /recover-durable-transaction:[\s\S]*?type: boolean/,

@@ -884,6 +884,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     "shard-evidence-roots-json",
     "delivery-class",
     "delivery-priority",
+    "queue-admission-context",
     "landing-mode",
     "dry-run",
   ];
@@ -937,6 +938,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     "shard-evidence-roots-json",
     "delivery-class",
     "delivery-priority",
+    "queue-admission-context",
   ];
   const expectedMapping = {
     "target-branch": queuedCandidate.targetBranch,
@@ -956,6 +958,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     ),
     "delivery-class": queuedCandidate.deliveryClass,
     "delivery-priority": queuedCandidate.priority,
+    "queue-admission-context": "Queue admission lease",
   };
   const dispatchContext = {
     github: {
