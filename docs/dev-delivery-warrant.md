@@ -380,12 +380,9 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   head, source run, Assignment and Initiative, source identity and patch,
   plan, closure, dependency, toolchain, environment, affected paths, delivery
   class, and priority; the candidate is not left waiting for a patrol cron.
-  The floating `v4-alpha` caller and native template forward only inputs
-  declared by their matching contract lock. Until that channel declares the
-  environment and native-command inputs, they default to `non-native-fast`;
-  a live native-required candidate without both inputs fails before Warrant
-  selection instead of becoming a phase-less owner. A historical phase-less
-  owner uses the distinct `legacy-phase-less-active-owner` command path. That path
+  The shipped Buildchain caller and native template configure this handoff path
+  and accept the same complete input contract. A historical phase-less owner
+  uses the distinct `legacy-phase-less-active-owner` command path. That path
   carries the exact queue state root, fencing token, generation, PR, head, and
   source-run binding, omits `environment-root`, `native-command`, and
   `native-command-root`, and rejects readback drift. It therefore resumes the
@@ -463,29 +460,20 @@ cannot close a newer active Warrant generation.
 
 Buildchain uses the same contract for its own protected dev line through
 `buildchain-dev-delivery.yml`. The manual caller requires the exact PR head and
-semantic source roots, keeps both the durable public selector and explicit
-runtime input on `v4-alpha`, selects `delivery-warrant-mode: required`, and
-targets GitHub Merge Queue. Its current locked input surface defaults to
-`non-native-fast`; native-required delivery fails closed until the floating
-channel exposes the environment and native-command contract. It does not offer
-an `off` switch: rollback is a reviewed change to this caller, not an
+semantic source roots, accepts an optional reusable native proof, keeps both
+the durable public selector and explicit runtime input on `v4-alpha`, selects
+`delivery-warrant-mode: required`, and targets GitHub Merge Queue. It does not
+offer an `off` switch: rollback is a reviewed change to this caller, not an
 operator-time weakening of a specific delivery attempt.
 
 `templates/native-dev-delivery.yml` provides the corresponding protected-dev
 consumer workflow. It supports both explicit dispatch and the bounded wake
 event, calls the allowed floating `@v4-alpha` selector, explicitly passes the v4
-runtime ref that locks every delivery job to the same checkout, and forwards
-only inputs declared by the locked floating workflow contract, including the
-queue admission context used for status write/readback. New native and
-bounded-authority inputs remain on the candidate reusable surface until the
-floating channel declares them; the durable caller must not pass them early,
-because GitHub rejects an unsupported reusable-workflow input before creating
-the first job. While the floating v1 caller cannot forward
-`active-lease-context`, required-Warrant execution uses the canonical
-`Queue family lease/exact` context, writes that pending lease status, and reads
-it back before enqueue. An explicit context still overrides the canonical name;
-an absent caller input never skips the active-lease fence. The reusable workflow
-defaults the explicit runtime input to
+runtime ref that locks every delivery job to the same checkout, and keeps the
+native command in the consumer repository rather than inventing
+provider-specific shards. Both callers explicitly bind the queue-admission
+and active-lease status contexts so write/readback fencing uses the same exact
+names. The reusable workflow defaults the explicit runtime input to
 `v4-alpha`; an empty input or any v3 selector fails before the first runtime
 checkout.
 

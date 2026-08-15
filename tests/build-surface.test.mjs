@@ -2463,10 +2463,10 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
   assert.match(workflow, /closure-root:/);
   assert.match(workflow, /dependency-root:/);
   assert.match(workflow, /toolchain-root:/);
-  assert.doesNotMatch(workflow, /environment-root:/);
-  assert.doesNotMatch(workflow, /native-proof-json:/);
-  assert.doesNotMatch(workflow, /native-command:/);
-  assert.doesNotMatch(workflow, /native-heartbeat-seconds:/);
+  assert.match(workflow, /environment-root:/);
+  assert.match(workflow, /native-proof-json:/);
+  assert.match(workflow, /native-command:/);
+  assert.match(workflow, /native-heartbeat-seconds:/);
   assert.match(
     workflow,
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/dev-pr-auto-merge\.yml@v4-alpha/,
@@ -2479,15 +2479,15 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
   assert.match(workflow, /delivery-warrant-mode: required/);
   assert.match(
     workflow,
-    /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| github\.event\.inputs\.delivery-class \|\| 'non-native-fast' \}\}/,
+    /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| github\.event\.inputs\.delivery-class \|\| 'native-proof-required' \}\}/,
   );
   assert.match(
     workflow,
     /delivery-priority: \$\{\{ github\.event\.client_payload\.candidate\.priority \|\| github\.event\.inputs\.delivery-priority \|\| 'ordinary' \}\}/,
   );
-  assert.doesNotMatch(workflow, /handoff-workflow-id:/);
-  assert.doesNotMatch(workflow, /source-workflow-id:/);
-  assert.doesNotMatch(workflow, /legacy-active-owner-binding-json:/);
+  assert.match(workflow, /handoff-workflow-id: buildchain-dev-delivery\.yml/);
+  assert.match(workflow, /source-workflow-id: verify\.yml/);
+  assert.match(workflow, /legacy-active-owner-binding-json:/);
   assert.match(workflow, /required-status-checks: check/);
   assert.match(
     workflow,
@@ -2506,7 +2506,7 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
   assert.doesNotMatch(workflow, /secrets: inherit/);
   assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
   assert.match(workflow, /queue-admission-context: Queue admission lease/);
-  assert.doesNotMatch(workflow, /active-lease-context:/);
+  assert.match(workflow, /active-lease-context: Queue family lease\/exact/);
   assert.doesNotMatch(
     workflow.slice(workflow.indexOf("    with:")),
     /\$\{\{ inputs\./,
@@ -2527,14 +2527,22 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
     "native-roots-json",
     "assignment-root",
     "initiative-root",
+    "source-workflow-run-id",
+    "legacy-active-owner-binding-json",
     "source-identity-root",
     "source-patch-root",
     "plan-root",
     "closure-root",
     "dependency-root",
     "toolchain-root",
+    "environment-root",
     "affected-paths-json",
     "shard-evidence-roots-json",
+    "release-blocker-priority-json",
+    "native-proof-json",
+    "native-command",
+    "native-command-root",
+    "native-heartbeat-seconds",
     "delivery-class",
     "delivery-priority",
   ]);
@@ -2576,8 +2584,9 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/dev-pr-auto-merge\.yml@v4-alpha/u,
   );
   assert.match(template, /default: "v4-alpha"/u);
-  assert.match(template, /default: "non-native-fast"/u);
+  assert.match(template, /default: "native-proof-required"/u);
   assert.match(template, /queue-admission-context: Queue admission lease/u);
+  assert.match(template, /active-lease-context: Queue family lease\/exact/u);
   assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@v3(?:\b|-)/u);
   assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@[0-9a-f]{40}/u);
   const nativeStart = workflow.indexOf("  native-execution:");
