@@ -648,20 +648,30 @@ test("npm publish transaction reuses the exact sealed tarball without repacking"
   const integrity = `sha512-${crypto.createHash("sha512").update(tarballBytes).digest("base64")}`;
   const sha256 = crypto.createHash("sha256").update(tarballBytes).digest("hex");
   const evidencePath = path.join(cwd, ".buildchain/release-evidence/0.1.0-alpha.4/evidence.json");
+  const fakeBin = path.join(cwd, "bin");
+  fs.mkdirSync(fakeBin);
+  materializeCommandShim(path.join(fakeBin, "npm"), `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args[0] === "view") {
+  process.stdout.write(JSON.stringify({ "dist.integrity": "${integrity}", "dist.shasum": "sealed" }));
+  process.exit(0);
+}
+process.stderr.write("unexpected npm command: " + args.join(" ") + "\\n");
+process.exit(2);
+`);
   const run = spawnSync(
     process.execPath,
     [
       path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
       "--cwd",
       cwd,
-      "--dry-run-publish",
-      "--skip-registry-lookup",
     ],
     {
       cwd,
       encoding: "utf8",
       env: {
         ...process.env,
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
         BUILDCHAIN_VERSION: "0.1.0-alpha.4",
         BUILDCHAIN_CHANNEL: "alpha",
         BUILDCHAIN_SOURCE_SHA: SHA,
@@ -683,6 +693,7 @@ test("npm publish transaction reuses the exact sealed tarball without repacking"
   assert.equal(output.pack.sealed, true);
   assert.equal(output.pack.integrity, integrity);
   assert.equal(output.pack.sha256, sha256);
+  assert.equal(output.publishAction, "already-published");
   assert.equal(output.sealedBundleRoot, `sha256:${"c".repeat(64)}`);
   assert.equal(JSON.parse(fs.readFileSync(evidencePath, "utf8")).artifacts[0].digest, integrity);
 });
