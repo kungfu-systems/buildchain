@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 231,
+  "generation": 232,
   "fencingCounter": 71,
   "policy": {
     "agingSeconds": 900,
@@ -2334,24 +2334,26 @@
       "identitySemantics": "chained-attempt-v2",
       "predecessorCandidateId": "sha256:bf3660d32ebd3485faae2306a03c5d2cc943044c6a53acdbc7c0e683ca808647",
       "candidateId": "sha256:87b767b17e2de77e1742768482308780d2ae121876e4c3bb583d8af425260b6a",
-      "sourceHead": "d8004b9eca19da3bfe0adc40e782a7bfbe6c10af",
-      "sourcePatchRoot": "sha256:7bdbb8efac51a1419f17947b75bca4f1d21e3c3afd73b3a138bbc6cc7b39e7b2",
-      "sourceProofRoot": "sha256:cb6cc09da0dd0bb3b765eba479cd0fccce99f3f10f21f966020d6cbcb4600e99",
+      "sourceHead": "29441ffb7ece955ba2764e34533cabc04908d71c",
+      "sourcePatchRoot": "sha256:924ad60e1c5cdda4f4ae8b5958dda5d091f439bee5b78778d2b8237569cea650",
+      "sourceProofRoot": "sha256:bdfd27f1f113b1767b74ad082d193f50f4371e71a770e29d3c5ac8d197b5799d",
       "planRoot": "sha256:8bd0a060814d023f00231d64781af5028b50af2e7c350644e19ef29cdd0e09af",
       "closureRoot": "sha256:1c0cb64137c578234fe09b89d31490b95bb7842da869363290e95394f75804a5",
       "dependencyRoot": "sha256:0c4e349f2149ea7435ae9cd9d8c2a34e49fe53c45af4b83cf1b8bd22307f1c30",
       "toolchainRoot": "sha256:3a9236a8151e66388338fe76e220b5e7aeece1247a1f5edec9964920f19e4824",
-      "sourceWorkflowRunId": 31908834360,
+      "sourceWorkflowRunId": 31911235275,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-15T21:34:49.656Z",
-      "updatedAt": "2026-08-15T22:35:40.751Z",
-      "attempts": 2,
+      "updatedAt": "2026-08-15T22:36:28.703Z",
+      "attempts": 3,
       "recoveries": 1,
       "status": "queued",
       "terminal": null,
       "affectedPaths": [
         ".buildchain/alpha-contract-lock.json",
+        ".github/workflows/dev-pr-auto-merge.yml",
         "architecture/v4-delivery-warrant-shadow-fixtures.json",
+        "dist/site/buildchain-contract.json",
         "dist/site/buildchain-site.json",
         "dist/site/kfd-claims.json",
         "dist/site/page-registry.json",
@@ -2373,6 +2375,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-15T22:35:40.751Z",
-  "stateRoot": "sha256:37c7afb804cfc8c4d987c88e9a6f1fe1a8275ec8e933c7acb922d3128900bca7"
+  "updatedAt": "2026-08-15T22:36:28.703Z",
+  "stateRoot": "sha256:b211d881e0753d8cb933385f9bbc9009ccd7cb01a0d9031005418ebf9de8ec05"
 }
