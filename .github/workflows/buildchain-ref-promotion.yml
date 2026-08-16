@@ -142,8 +142,6 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    # N-1 non-executable compatibility witness; remove after v4-alpha advances:
-    # uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@alpha/v4/v4.0
     uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
