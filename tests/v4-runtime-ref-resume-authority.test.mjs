@@ -13,7 +13,10 @@ import {
   verifyV4RuntimeAuthorizationReceipt,
   verifyV4RuntimeResumeLineage,
 } from "../packages/core/v4-runtime-ref-resume-authority.js";
-import { createReleasePassport } from "../packages/core/release-passport.js";
+import {
+  collectGitHubReleasePassport,
+  createReleasePassport,
+} from "../packages/core/release-passport.js";
 
 const SHA_A = "a".repeat(40);
 const SHA_B = "b".repeat(40);
@@ -345,6 +348,57 @@ test("Release Passport embeds and revalidates runtime A+B Stage Capsule lineage"
     SHA_B,
   );
   assert.equal(passport.v4RuntimeResume.lineageRoot, resume.lineageRoot);
+
+  const promoted = createReleasePassport({
+    repository: "kungfu-systems/consumer",
+    tag: "v1.0.0-alpha.1",
+    sourceSha: SHA_B,
+    release: {
+      builtSourceSha: SOURCE_SHA,
+      promotionChannelSha: SHA_B,
+      treeEquivalent: true,
+    },
+    v4RuntimeResumeEvidence: evidence,
+  });
+  assert.equal(promoted.v4RuntimeResume.lineage.source.sha, SOURCE_SHA);
+  assert.throws(
+    () =>
+      createReleasePassport({
+        repository: "kungfu-systems/consumer",
+        tag: "v1.0.0-alpha.1",
+        sourceSha: SHA_B,
+        release: {
+          builtSourceSha: SOURCE_SHA,
+          promotionChannelSha: SHA_B,
+          treeEquivalent: false,
+        },
+        v4RuntimeResumeEvidence: evidence,
+      }),
+    /source-sha-mismatch/u,
+  );
+
+  const binaryRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-v4-resume-binary-passport-"),
+  );
+  write(path.join(binaryRoot, "base.json"), `${JSON.stringify(passport)}\n`);
+  write(path.join(binaryRoot, "assets", "buildchain.tar.gz"), "binary\n");
+  const binary = collectGitHubReleasePassport({
+    cwd: binaryRoot,
+    repository: "kungfu-systems/consumer",
+    tag: "v1.0.0",
+    sourceSha: SOURCE_SHA,
+    assetsDir: "assets",
+    outputDir: "passport",
+    basePassportJson: "base.json",
+  });
+  const binaryPassport = JSON.parse(
+    fs.readFileSync(
+      path.join(binary.outputDir, "buildchain.release.json"),
+      "utf8",
+    ),
+  );
+  assert.equal(binaryPassport.v4RuntimeResume.lineageRoot, resume.lineageRoot);
+  fs.rmSync(binaryRoot, { recursive: true, force: true });
 
   const tampered = structuredClone(evidence);
   tampered.lineage.attempts.resume.runtimeSha = "e".repeat(40);

@@ -1,72 +1,32 @@
 #!/usr/bin/env node
-import crypto from "node:crypto";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
+import crypto from "node:crypto"; import fs from "node:fs"; import os from "node:os"; import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
-import {
-  generatePublishRequiredArtifacts,
-  githubDownload,
-  githubJson,
-  readNpmPackageArtifact,
-  selectPayloadArtifacts,
-  selectReleaseCandidateArtifacts,
-  unzip,
-  verifyArtifactArchive,
-} from "./release-candidate-resolver.mjs";
-import {
-  recoveryFailure,
-  validateRecoveryTargetRef,
-  verifyReleaseCandidateRecovery,
-} from "../packages/core/release-candidate-recovery.js";
-import {
-  PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
-  publicationArtifactCandidateDigest,
-} from "../packages/core/publication-artifact-candidate.js";
+import { generatePublishRequiredArtifacts, githubDownload, githubJson, readNpmPackageArtifact, selectPayloadArtifacts, selectReleaseCandidateArtifacts, unzip, verifyArtifactArchive } from "./release-candidate-resolver.mjs";
+import { recoveryFailure, validateRecoveryTargetRef, verifyReleaseCandidateRecovery } from "../packages/core/release-candidate-recovery.js";
+import { PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT, publicationArtifactCandidateDigest } from "../packages/core/publication-artifact-candidate.js";
 import { createPublicationSealedBundle } from "../packages/core/publication-sealed-bundle.js";
 import { releaseTransactionStateRef } from "../packages/core/publish-transaction.js";
+import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
+import { validateV4StageCapsule } from "../packages/core/v4-stage-capsule.js";
+import { authorizeV4RuntimeSelection, createV4RuntimeResumeLineage, scanV4RuntimeSelectorPersistence, v4RuntimeResumeDocumentRoot, verifyV4RuntimeAuthorizationReceipt } from "../packages/core/v4-runtime-ref-resume-authority.js";
 
-function env(name, fallback = "") {
-  return process.env[name] || fallback;
-}
+function env(name, fallback = "") { return process.env[name] || fallback; }
+function requiredEnv(name) { const value = env(name).trim(); if (!value) throw new Error(`${name} is required for candidate recovery`); return value; }
+function splitRepository(repository) { const match = String(repository || "").trim().match(/^([^/\s]+)\/([^/\s]+)$/); if (!match) throw new Error(`candidate repository must be owner/repo, got ${repository || "<empty>"}`); return { owner: match[1], repo: match[2], fullName: `${match[1]}/${match[2]}` }; }
+function splitPatterns(value = "") { return String(value || "").split(/\r?\n|,/).map((entry) => entry.trim()).filter(Boolean); }
+function patternMatcher(pattern) { const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*"); return new RegExp(`^${escaped}$`); }
 
-function requiredEnv(name) {
-  const value = env(name).trim();
-  if (!value) throw new Error(`${name} is required for candidate recovery`);
-  return value;
-}
-
-function splitRepository(repository) {
-  const match = String(repository || "").trim().match(/^([^/\s]+)\/([^/\s]+)$/);
-  if (!match) throw new Error(`candidate repository must be owner/repo, got ${repository || "<empty>"}`);
-  return { owner: match[1], repo: match[2], fullName: `${match[1]}/${match[2]}` };
-}
-
-function splitPatterns(value = "") {
-  return String(value || "").split(/\r?\n|,/).map((entry) => entry.trim()).filter(Boolean);
-}
-
-function patternMatcher(pattern) {
-  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*");
-  return new RegExp(`^${escaped}$`);
-}
-
-function safeName(value) {
-  return String(value || "artifact").replace(/[^A-Za-z0-9._-]/g, "_");
-}
+function safeName(value) { return String(value || "artifact").replace(/[^A-Za-z0-9._-]/g, "_"); }
 
 function sha256File(filePath) {
   const hash = crypto.createHash("sha256");
   const descriptor = fs.openSync(filePath, "r");
   const chunk = Buffer.allocUnsafe(8 * 1024 * 1024);
-  try {
-    let bytesRead = 0;
-    while ((bytesRead = fs.readSync(descriptor, chunk, 0, chunk.length, null)) > 0) hash.update(chunk.subarray(0, bytesRead));
-  } finally {
-    fs.closeSync(descriptor);
-  }
+  try { let bytesRead = 0; while ((bytesRead = fs.readSync(descriptor, chunk, 0, chunk.length, null)) > 0) hash.update(chunk.subarray(0, bytesRead)); }
+  finally { fs.closeSync(descriptor); }
   return `sha256:${hash.digest("hex")}`;
 }
 
@@ -79,78 +39,99 @@ function collectFiles(root) {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const fullPath = path.join(current, entry.name);
       if (entry.isDirectory()) pending.push(fullPath);
-      else if (entry.isFile()) files.push({
-        path: path.relative(resolvedRoot, fullPath).split(path.sep).join("/"),
-        size: fs.statSync(fullPath).size,
-        sha256: sha256File(fullPath),
-        absolutePath: fullPath,
-      });
+      else if (entry.isFile()) files.push({ path: path.relative(resolvedRoot, fullPath).split(path.sep).join("/"), size: fs.statSync(fullPath).size, sha256: sha256File(fullPath), absolutePath: fullPath });
     }
   }
   return files.sort((left, right) => left.path.localeCompare(right.path));
 }
 
-function findFiles(root, predicate) {
-  return collectFiles(root).filter((file) => predicate(file.path, file.absolutePath));
-}
+function findFiles(root, predicate) { return collectFiles(root).filter((file) => predicate(file.path, file.absolutePath)); }
 
-function readOnlyJson(files, label) {
-  if (files.length !== 1) throw new Error(`expected exactly one ${label}, found ${files.length}`);
-  return JSON.parse(fs.readFileSync(files[0].absolutePath, "utf8"));
-}
+function readOnlyJson(files, label) { if (files.length !== 1) throw new Error(`expected exactly one ${label}, found ${files.length}`); return JSON.parse(fs.readFileSync(files[0].absolutePath, "utf8")); }
 
-async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version }) {
-  const stateRef = releaseTransactionStateRef(version);
-  const response = await githubJson({
-    apiUrl,
-    token,
-    fetchImpl,
-    allowNotFound: true,
-    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/contents/state.json?ref=${encodeURIComponent(stateRef)}`,
+function trackedRuntimePersistenceScan() { const paths = execFileSync("git", ["ls-files", ".github/workflows", ".github/actions", ".buildchain"], { encoding: "utf8" }).split(/\r?\n/).filter((entry) => /\.(?:json|toml|ya?ml)$/u.test(entry)); return scanV4RuntimeSelectorPersistence({ root: process.cwd(), paths }); }
+
+export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads }) {
+  if (!sidecar || sidecar.contract !== "kungfu-buildchain-v4-release-candidate-stage-capsules/v1" || sidecar.status !== "sealed") throw new Error("cross-runtime recovery requires original sealed release-candidate Stage Capsules");
+  const payload = { ...sidecar }; delete payload.root;
+  if (sidecar.root !== v4RuntimeResumeDocumentRoot(payload) || sidecar.repository !== passport.repository || sidecar.source?.sha !== passport.source.headSha || sidecar.source?.treeSha !== passport.source.treeHash || sidecar.buildAttempt?.id !== `github-run:${passport.workflow.runId}:attempt:${passport.workflow.runAttempt}` || sidecar.buildAttempt?.runtimeSha !== passport.buildchain.sha || sidecar.consumerPolicyReceiptRoot !== passport.consumerPolicy?.receiptRoot) throw new Error("release-candidate Stage Capsule sidecar identity mismatch");
+  const artifactByName = new Map(downloads.map((entry) => [entry.artifact.name, entry]));
+  const required = [...passport.platformMatrix.map((entry) => entry.platformId)].sort();
+  const entries = [...(sidecar.capsules || [])].sort((left, right) => left.platform.localeCompare(right.platform));
+  if (entries.length !== required.length || entries.some((entry, index) => entry.platform !== required[index])) throw new Error("release-candidate Stage Capsule platform set is incomplete");
+  return entries.map((entry) => {
+    validateV4StageCapsule(entry.capsule); const download = artifactByName.get(entry.artifactName); const artifact = entry.artifact;
+    if (!download || artifact?.platformId !== entry.platform || artifact?.id !== String(download.artifact.id) || artifact?.name !== download.artifact.name || artifact?.digest !== entry.artifactDigest || artifact?.digest !== download.artifact.digest || artifact?.digest !== download.record.digest || artifact?.digest !== download.record.downloadedDigest || artifact?.expiresAt !== new Date(download.artifact.expires_at).toISOString() || entry.capsule.identity.policyRoot !== sidecar.consumerPolicyReceiptRoot || entry.capsule.identity.sourceRoot !== v4ContentRoot("candidate-identity", passport.source) || entry.capsule.identity.runtimeRoot !== v4ContentRoot("candidate-identity", { sha: passport.buildchain.sha })) throw new Error(`Stage Capsule ${entry.platform} does not bind the verified provider artifact`);
+    return { platform: entry.platform, capsuleRoot: entry.capsule.capsuleRoot, identityRoot: entry.capsule.identityRoot, artifactDigest: entry.artifactDigest, sourceSha: sidecar.source.sha, sourceTreeSha: sidecar.source.treeSha, policyRoot: sidecar.consumerPolicyReceiptRoot, buildRuntimeSha: sidecar.buildAttempt.runtimeSha, sealed: true };
   });
+}
+
+export function validateV4RuntimeResumePublicReadback({ targetRef, targetSha, alphaSha, exactTagSha, tagLineage, runtimeSha, version, transaction, main, npm }) {
+  if (transaction?.target_ref !== targetRef || transaction?.version !== version || exactTagSha !== transaction?.source_sha || !["ahead", "identical"].includes(tagLineage?.status) || alphaSha !== runtimeSha || !targetSha || npm["dist-tags"]?.alpha !== version || npm.versions?.[version]?.dist?.integrity !== main.digest) throw new Error("cross-runtime final public readback does not match durable publication bytes and runtime"); }
+
+export async function readPublicResumeState({ repoInfo, targetRef, runtimeSha, version, transaction, token, apiUrl, fetchImpl }) {
+  const readRef = async (ref) => (await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/${ref}` })).object?.sha || "";
+  const main = transaction?.artifacts?.find((entry) => entry.kind === "npm" && entry.required !== false);
+  if (!main || main.ref !== version || !main.digest) throw new Error("cross-runtime recovery requires exact durable npm publication evidence");
+  const packageUrl = `https://registry.npmjs.org/${encodeURIComponent(main.name)}`; const exactTag = transaction.exact_tag || `v${version}`;
+  const [targetSha, alphaSha, exactTagSha, npmResponse] = await Promise.all([readRef(`heads/${targetRef}`), readRef("tags/v4-alpha"), readRef(`tags/${exactTag}`), fetchImpl(packageUrl)]);
+  if (!npmResponse.ok) throw new Error(`npm public readback failed with HTTP ${npmResponse.status}`);
+  const npm = await npmResponse.json(); const tagLineage = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${exactTagSha}...${targetSha}` });
+  validateV4RuntimeResumePublicReadback({ targetRef, targetSha, alphaSha, exactTagSha, tagLineage, runtimeSha, version, transaction, main, npm });
+  const body = { schemaVersion: 1, contract: "kungfu-buildchain-v4-runtime-resume-public-readback/v1", observedAt: new Date().toISOString(), repository: repoInfo.fullName, version, refs: { target: { ref: targetRef, sha: targetSha }, floating: { ref: "v4-alpha", sha: alphaSha }, exactTag: { ref: exactTag, sha: exactTagSha } }, npm: { package: main.name, version, distTag: "alpha", integrity: npm.versions[version].dist.integrity } };
+  return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
+}
+
+async function createRuntimeResumeEvidence({ repoInfo, targetRef, runtimeSha, version, transaction, passport, sidecar, stageCapsules, recovery, outputDir, token, apiUrl, fetchImpl }) {
+  const authorizationPath = path.resolve(".buildchain/release-candidate/v4-runtime-authorization.json");
+  if (!fs.existsSync(authorizationPath)) throw new Error("cross-runtime recovery requires a fresh runtime authorization receipt");
+  const delegated = readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization");
+  const delegatedVerification = verifyV4RuntimeAuthorizationReceipt({ receipt: delegated.receipt, receiptRoot: delegated.receiptRoot, repository: repoInfo.fullName, runtimeSha });
+  if (!delegatedVerification.ok) throw new Error(`fresh recovery runtime authorization rejected: ${delegatedVerification.failures.join(", ")}`);
+  const policy = passport.consumerPolicy.receipt;
+  const authorization = authorizeV4RuntimeSelection({ repository: repoInfo.fullName, eventName: "workflow_dispatch", mode: "resume", actor: delegated.receipt.actor.login, actorPermission: delegated.receipt.actor.permission, reason: `resume sealed candidate run ${passport.workflow.runId} from a tree-equivalent protected source`, authorizedAt: new Date().toISOString(), sourceSha: sidecar.source.sha, sourceTreeSha: sidecar.source.treeSha, requestedRef: delegated.receipt.request.ref, resolvedRuntimeSha: runtimeSha, approvedRefReadbacks: delegated.receipt.runtime.reachableFrom, stableContractLockRoot: policy.contractLocks.stable.root, alphaContractLockRoot: policy.contractLocks.alpha.root, consumerPolicyReceiptRoot: sidecar.consumerPolicyReceiptRoot, persistenceScan: trackedRuntimePersistenceScan() });
+  const readback = await readPublicResumeState({ repoInfo, targetRef, runtimeSha, version, transaction, token, apiUrl, fetchImpl });
+  const planBody = { schemaVersion: 1, contract: "kungfu-buildchain-v4-runtime-resume-plan/v1", originalRunId: String(passport.workflow.runId), resumeRunId: String(env("GITHUB_RUN_ID")), recoveryReceiptRoot: recovery.receipt.root, requiredPlatforms: stageCapsules.map((entry) => entry.platform), reusedCapsuleRoots: stageCapsules.map((entry) => entry.capsuleRoot), rebuildPlatforms: [], skippedBuildStages: recovery.receipt.skippedBuildStages };
+  const plan = { ...planBody, root: v4RuntimeResumeDocumentRoot(planBody) };
+  const resumed = createV4RuntimeResumeLineage({ authorization: authorization.receipt, authorizationRoot: authorization.receiptRoot, buildAttempt: sidecar.buildAttempt, resumeAttempt: { id: `github-run:${env("GITHUB_RUN_ID")}:attempt:${env("GITHUB_RUN_ATTEMPT", "1")}`, runtimeSha }, source: sidecar.source, consumerPolicyReceiptRoot: sidecar.consumerPolicyReceiptRoot, requiredPlatforms: stageCapsules.map((entry) => entry.platform), stageCapsules, resumePlanRoot: plan.root, finalPublicReadbackRoot: readback.root, floatingRefBefore: { ref: "v4-alpha", sha: sidecar.buildAttempt.runtimeSha }, floatingRefAfter: { ref: "v4-alpha", sha: runtimeSha } });
+  const evidence = { authorization: authorization.receipt, authorizationRoot: authorization.receiptRoot, lineage: resumed.lineage, lineageRoot: resumed.lineageRoot };
+  for (const [name, value] of [["v4-runtime-resume-plan.json", plan], ["v4-runtime-resume-public-readback.json", readback], ["v4-runtime-resume-evidence.json", evidence]]) fs.writeFileSync(path.join(outputDir, name), `${JSON.stringify(value, null, 2)}\n`);
+  return { evidence, path: path.join(outputDir, "v4-runtime-resume-evidence.json"), plan, readback };
+}
+
+async function readTransactionAtRef({ repoInfo, apiUrl, token, fetchImpl, stateRef }) {
+  const response = await githubJson({ apiUrl, token, fetchImpl, allowNotFound: true, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/contents/state.json?ref=${encodeURIComponent(stateRef)}` });
   if (!response) return undefined;
-  if (response.type !== "file" || response.encoding !== "base64" || !response.content) {
-    throw new Error(`durable transaction ${stateRef} did not expose a base64 state.json file`);
-  }
+  if (response.type !== "file" || response.encoding !== "base64" || !response.content) throw new Error(`durable transaction ${stateRef} did not expose a base64 state.json file`);
   return JSON.parse(Buffer.from(String(response.content).replace(/\s/g, ""), "base64").toString("utf8"));
 }
 
-function outputPath(filePath) {
-  const relative = path.relative(process.cwd(), filePath).split(path.sep).join("/");
-  return relative.startsWith("../") ? filePath : relative;
+async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version }) { return readTransactionAtRef({ repoInfo, apiUrl, token, fetchImpl, stateRef: releaseTransactionStateRef(version) }); }
+
+async function readExistingTransactionById({ repoInfo, apiUrl, token, fetchImpl, transactionId }) {
+  if (!transactionId) return undefined;
+  const statePrefix = "buildchain/release-state/"; const refs = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/matching-refs/heads/${statePrefix}` });
+  for (const ref of refs) {
+    const transaction = await readTransactionAtRef({ repoInfo, apiUrl, token, fetchImpl, stateRef: String(ref.ref).replace(/^refs\/heads\//, "") });
+    if (transaction?.id === transactionId) return transaction;
+  }
+  throw new Error(`durable publication transaction ${transactionId} was not found`);
 }
+
+function outputPath(filePath) { const relative = path.relative(process.cwd(), filePath).split(path.sep).join("/"); return relative.startsWith("../") ? filePath : relative; }
 
 async function downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }) {
   const name = safeName(artifact.name);
   const archivePath = path.join(archiveDir, `${name}.zip`);
   const artifactRoot = path.join(bundleRoot, "artifacts", name);
-  await githubDownload({
-    apiUrl,
-    token,
-    fetchImpl,
-    outputPath: archivePath,
-    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${artifact.id}/zip`,
-  });
+  await githubDownload({ apiUrl, token, fetchImpl, outputPath: archivePath, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/artifacts/${artifact.id}/zip` });
   const archive = verifyArtifactArchive({ artifact, archivePath });
-  try {
-    unzip(archivePath, artifactRoot);
-  } finally {
-    fs.rmSync(archivePath, { force: true });
-  }
+  try { unzip(archivePath, artifactRoot); } finally { fs.rmSync(archivePath, { force: true }); }
   const files = collectFiles(artifactRoot);
   return {
     artifact,
     artifactRoot,
-    record: {
-      name: artifact.name,
-      kind: "candidate",
-      size: Number(artifact.size_in_bytes),
-      downloadedSize: archive.size,
-      digest: artifact.digest,
-      downloadedDigest: archive.digest,
-      expired: artifact.expired === true,
-      files: files.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })),
-    },
+    record: { name: artifact.name, kind: "candidate", size: Number(artifact.size_in_bytes), downloadedSize: archive.size, digest: artifact.digest, downloadedDigest: archive.digest, expired: artifact.expired === true, files: files.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })) },
     files,
   };
 }
@@ -241,17 +222,8 @@ function normalizeProductPayloadManifests(downloads) {
     .map((file) => JSON.parse(fs.readFileSync(file.absolutePath, "utf8"))));
 }
 
-export function createRecoveredPublicationCandidate({
-  allFiles,
-  repository,
-  passport,
-  candidateRuntimeSha,
-}) {
-  if (passport.buildchain?.sha !== candidateRuntimeSha) {
-    throw new Error(
-      `recovered publication candidate runtime mismatch: passport=${passport.buildchain?.sha || "<empty>"} expected=${candidateRuntimeSha || "<empty>"}`,
-    );
-  }
+export function createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha }) {
+  if (passport.buildchain?.sha !== candidateRuntimeSha) throw new Error(`recovered publication candidate runtime mismatch: passport=${passport.buildchain?.sha || "<empty>"} expected=${candidateRuntimeSha || "<empty>"}`);
   const payload = {
     schemaVersion: 1,
     contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
@@ -279,14 +251,7 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
     createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
     const version = String(passport.target?.version || "").trim();
     if (!version) throw new Error("candidate recovery requires a passport publication version");
-    return {
-      manifest: undefined,
-      npmArtifacts: [],
-      allFiles,
-      releaseAssets,
-      version,
-      publishRequiredArtifacts: generatePublishRequiredArtifacts({ manifests: platformManifests, version, kind }),
-    };
+    return { manifest: undefined, npmArtifacts: [], allFiles, releaseAssets, version, publishRequiredArtifacts: generatePublishRequiredArtifacts({ manifests: platformManifests, version, kind }) };
   }
   const tarballs = allFiles.filter((file) => file.path.toLowerCase().endsWith(".tgz"));
   if (tarballs.length === 0) throw new Error("candidate recovery for npm publication requires at least one exact .tgz payload artifact");
@@ -296,12 +261,7 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
   const npmReleaseAssets = allFiles.filter((file) => releaseMatchers.length
     ? releaseMatchers.some((matcher) => matcher.test(path.basename(file.path)))
     : file.path.toLowerCase().endsWith(".tgz"));
-  const candidate = createRecoveredPublicationCandidate({
-    allFiles,
-    repository,
-    passport,
-    candidateRuntimeSha,
-  });
+  const candidate = createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
   const manifest = createPublicationSealedBundle({
     candidate,
     packageName: main.metadata.name,
@@ -310,32 +270,10 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
     npmIntegrity: main.metadata.integrity,
     releaseAssetPaths: npmReleaseAssets.map((file) => file.path),
   });
-  return {
-    manifest,
-    npmArtifacts,
-    allFiles,
-    releaseAssets: npmReleaseAssets,
-    version: manifest.npm.version,
-    publishRequiredArtifacts: generatePublishRequiredArtifacts({
-      kind: "npm",
-      tarballPaths: npmArtifacts.map((entry) => entry.file.absolutePath),
-      mainPackage: publishPackageMain,
-    }),
-  };
+  return { manifest, npmArtifacts, allFiles, releaseAssets: npmReleaseAssets, version: manifest.npm.version, publishRequiredArtifacts: generatePublishRequiredArtifacts({ kind: "npm", tarballPaths: npmArtifacts.map((entry) => entry.file.absolutePath), mainPackage: publishPackageMain }) };
 }
 
-async function recoverCandidateEvidence({
-  repoInfo,
-  runId,
-  artifactName,
-  artifactPatterns,
-  requiredArtifactCount,
-  outputDir,
-  apiUrl,
-  token,
-  fetchImpl,
-  archiveDir,
-}) {
+async function recoverCandidateEvidence({ repoInfo, runId, artifactName, artifactPatterns, requiredArtifactCount, outputDir, apiUrl, token, fetchImpl, archiveDir }) {
   const run = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/runs/${runId}` });
   const workflow = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/workflows/${run.workflow_id}` });
   const artifactResponse = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/actions/runs/${runId}/artifacts?per_page=100` });
@@ -349,6 +287,8 @@ async function recoverCandidateEvidence({
   for (const artifact of [selected.passport, selected.summary]) initialDownloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   const passport = readOnlyJson(initialDownloads[0].files.filter((file) => path.basename(file.path) === "release-candidate-passport.json"), "release-candidate-passport.json");
   const buildSummary = readOnlyJson(initialDownloads[1].files.filter((file) => path.basename(file.path) === "build-summary.json"), "build-summary.json");
+  const sidecarFiles = initialDownloads[0].files.filter((file) => path.basename(file.path) === "release-candidate-stage-capsules.json");
+  const stageCapsuleSidecar = sidecarFiles.length === 1 ? readOnlyJson(sidecarFiles, "release-candidate-stage-capsules.json") : undefined;
   const { names: requiredNames, publicationNames } = candidateArtifactNames({ passport, selected, artifacts, artifactPatterns });
   const chosen = artifacts.filter((artifact) => requiredNames.has(artifact.name));
   if (chosen.length !== requiredNames.size) {
@@ -360,7 +300,7 @@ async function recoverCandidateEvidence({
   for (const artifact of chosen.filter((entry) => ![selected.passport.id, selected.summary.id].includes(entry.id))) downloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   return {
     run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-    passport, buildSummary, chosen, downloads, publicationNames,
+    passport, buildSummary, stageCapsuleSidecar, chosen, downloads, publicationNames,
   };
 }
 
@@ -369,6 +309,18 @@ async function resolveTargetAdvance({ observedTargetSha, targetSha, transactionI
   const comparison = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${targetSha}...${observedTargetSha}` });
   return { status: comparison.status, mergeIsAncestor: ["ahead", "identical"].includes(comparison.status) };
 }
+
+function validateRecoveryInput(candidateRunId, expectedSourceTree, expectedCandidateRoot) {
+  const runId = String(candidateRunId || "").trim(); if (!/^\d+$/.test(runId)) throw new Error("candidate run ID must be numeric");
+  if (!String(expectedSourceTree || "").trim() && !String(expectedCandidateRoot || "").trim()) throw new Error("candidate recovery requires expectedSourceTree or expectedCandidateRoot"); return runId;
+}
+
+async function resolveRecoveryTransaction({ repoInfo, apiUrl, token, fetchImpl, transactionId, publicationVersion }) {
+  const byId = await readExistingTransactionById({ repoInfo, apiUrl, token, fetchImpl, transactionId }); const version = byId?.version || publicationVersion;
+  return { version, transaction: byId || await readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version }) };
+}
+
+function recoverStageCapsules({ candidateRuntimeSha, runtimeSha, stageCapsuleSidecar, passport, downloads }) { return candidateRuntimeSha === runtimeSha ? [] : verifyReleaseCandidateStageCapsules({ sidecar: stageCapsuleSidecar, passport, downloads }); }
 
 export async function resumeFromCandidateRun({
   repository, targetRepository = repository, candidateRunId,
@@ -384,16 +336,12 @@ export async function resumeFromCandidateRun({
   recoveryRunId = env("GITHUB_RUN_ID"), fetchImpl = globalThis.fetch,
 } = {}) {
   const repoInfo = splitRepository(repository);
-  const runId = String(candidateRunId || "").trim();
-  if (!/^\d+$/.test(runId)) throw new Error("candidate run ID must be numeric");
-  if (!String(expectedSourceTree || "").trim() && !String(expectedCandidateRoot || "").trim()) {
-    throw new Error("candidate recovery requires expectedSourceTree or expectedCandidateRoot");
-  }
+  const runId = validateRecoveryInput(candidateRunId, expectedSourceTree, expectedCandidateRoot);
   const archiveDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-resume-"));
   try {
     const {
       run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-      passport, buildSummary, chosen, downloads, publicationNames,
+      passport, buildSummary, stageCapsuleSidecar, chosen, downloads, publicationNames,
     } = await recoverCandidateEvidence({
       repoInfo, runId, artifactName, artifactPatterns, requiredArtifactCount,
       outputDir, apiUrl, token, fetchImpl, archiveDir,
@@ -419,8 +367,8 @@ export async function resumeFromCandidateRun({
       releasePatterns,
       platformManifests: platformManifestEvidence.manifests,
     });
-    const candidateVersion = publication.version;
-    const existingTransaction = await readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version: candidateVersion });
+    const stageCapsules = recoverStageCapsules({ candidateRuntimeSha, runtimeSha, stageCapsuleSidecar, passport, downloads });
+    const { version: candidateVersion, transaction: existingTransaction } = await resolveRecoveryTransaction({ repoInfo, apiUrl, token, fetchImpl, transactionId, publicationVersion: publication.version });
     const targetAdvance = await resolveTargetAdvance({
       observedTargetSha, targetSha, transactionId, existingTransaction,
       repoInfo, apiUrl, token, fetchImpl,
@@ -491,6 +439,7 @@ export async function resumeFromCandidateRun({
     if (publication.manifest) fs.writeFileSync(sealedManifestPath, `${JSON.stringify(publication.manifest, null, 2)}\n`);
     const publishRequiredArtifacts = publication.publishRequiredArtifacts;
     fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(publishRequiredArtifacts, null, 2)}\n`);
+    const runtimeResume = stageCapsules.length ? await createRuntimeResumeEvidence({ repoInfo, targetRef, runtimeSha, version: candidateVersion, transaction: existingTransaction, passport, sidecar: stageCapsuleSidecar, stageCapsules, recovery, outputDir: resolvedOutput, token, apiUrl, fetchImpl }) : undefined;
     const tarballs = publication.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
     return {
       enabled: true,
@@ -514,6 +463,7 @@ export async function resumeFromCandidateRun({
         sealedBundleRoot: publication.manifest ? outputPath(bundleRoot) : "",
         sealedBundleManifest: publication.manifest ? outputPath(sealedManifestPath) : "",
         recoveryReceipt: outputPath(recoveryReceiptPath),
+        runtimeResumeEvidence: runtimeResume ? outputPath(runtimeResume.path) : "",
       },
     };
   } finally {
@@ -565,6 +515,7 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-run-url": result.run.url,
       "release-candidate-recovery-receipt-path": result.paths.recoveryReceipt,
       "release-candidate-recovery-root": result.receipt.root,
+      "v4-runtime-resume-evidence-path": result.paths.runtimeResumeEvidence,
       "release-candidate-root": result.candidateRoot,
       "release-candidate-artifact-root": result.artifactRoot,
       "publish-sealed-bundle-root": result.paths.sealedBundleRoot,

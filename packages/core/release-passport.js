@@ -439,11 +439,8 @@ function mergeAuthoritativePassportBase(passport, basePassport = undefined, { re
       kfd3: basePassport.evidence?.kfd3 || passport.evidence?.kfd3 || "",
     },
   };
-  for (const key of ["versionImpact", "surfaceImpacts"]) {
-    if (basePassport[key] !== undefined) {
-      merged[key] = basePassport[key];
-    }
-  }
+  for (const key of ["versionImpact", "surfaceImpacts", "promotionRouting", "v4ConsumerPolicy", "v4RuntimeResume", "transaction", "trustedPublishing", "distTagPromotion"])
+    if (basePassport[key] !== undefined) merged[key] = basePassport[key];
   if (basePassport.controllerReceipts !== undefined) {
     merged.controllerReceipts = basePassport.controllerReceipts;
   }
@@ -1162,6 +1159,9 @@ function normalizeV4RuntimeResumeEvidence(value, expected = {}) {
   };
 }
 
+function v4RuntimeResumeSourceSha(release, fallback = "") { const builtSourceSha = releaseField(release || {}, "builtSourceSha", "built_source_sha"); return release?.treeEquivalent === true && builtSourceSha ? builtSourceSha : fallback; }
+
+
 function prepareBuildEvidence({
   buildSummary,
   buildFacts,
@@ -1317,7 +1317,7 @@ export function createReleasePassport(options = {}) {
   const { promotion, buildEvidence } = preparePromotionBuild(options);
   const normalizedV4RuntimeResume = normalizeV4RuntimeResumeEvidence(v4RuntimeResumeEvidence, {
     repository,
-    sourceSha,
+    sourceSha: v4RuntimeResumeSourceSha(release, sourceSha),
     resumeRuntimeSha: promotion.routing?.runtime?.resolvedSha || "",
     consumerPolicyReceiptRoot: promotion.consumerPolicy?.certification?.receiptRoot || "",
   });
@@ -2302,7 +2302,7 @@ function validateV4RuntimeResumePassportSection({ passport, issues }) {
     receipt: evidence.authorization,
     receiptRoot: evidence.authorizationRoot,
     repository: passport?.product?.repository || "",
-    sourceSha: passport?.release?.sourceSha || "",
+    sourceSha: v4RuntimeResumeSourceSha(passport?.release, passport?.release?.sourceSha || ""),
     runtimeSha: passport?.promotionRouting?.runtime?.resolvedSha || "",
     consumerPolicyReceiptRoot,
   });
@@ -2313,7 +2313,7 @@ function validateV4RuntimeResumePassportSection({ passport, issues }) {
     lineage: evidence.lineage,
     lineageRoot: evidence.lineageRoot,
     repository: passport?.product?.repository || "",
-    sourceSha: passport?.release?.sourceSha || "",
+    sourceSha: v4RuntimeResumeSourceSha(passport?.release, passport?.release?.sourceSha || ""),
     resumeRuntimeSha: passport?.promotionRouting?.runtime?.resolvedSha || "",
     consumerPolicyReceiptRoot,
   });

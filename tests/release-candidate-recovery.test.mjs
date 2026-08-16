@@ -17,8 +17,10 @@ import {
   candidateArtifactNames,
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
-  normalizePlatformManifests,
+  normalizePlatformManifests, validateV4RuntimeResumePublicReadback,
+  verifyReleaseCandidateStageCapsules,
 } from "../scripts/resume-from-candidate-run.mjs";
+import { createReleaseCandidateStageCapsules } from "../scripts/generate-release-candidate-passport.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -155,6 +157,40 @@ function durableTransaction(input, state = "complete") {
     publication_state: state === "published" ? "package-published" : state,
   };
 }
+
+test("cross-runtime recovery reuses only provider-bound original Stage Capsules", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-candidate-capsule-"));
+  try {
+    const manifestPath = path.join(workspace, "manifest.json");
+    fs.writeFileSync(manifestPath, `${JSON.stringify({ platform: { id: "linux-x64" }, lifecycle: { verify: "pnpm test" } })}\n`);
+    const digest = `sha256:${"9".repeat(64)}`;
+    const passport = {
+      repository: "kungfu-systems/buildchain", source: { headSha: SOURCE_SHA, treeHash: TREE }, buildchain: { sha: RUNTIME_SHA },
+      workflow: { runId: "100", runAttempt: "1" }, candidateHash: "a".repeat(64), consumerPolicy: { receiptRoot: `sha256:${"b".repeat(64)}` },
+      controllerReceipts: [{ receiptDigest: `sha256:${"c".repeat(64)}` }],
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux", manifestPath, summary: { status: "passed" } }],
+    };
+    const expiresAt = "2026-09-01T00:00:00.000Z";
+    const coordinate = { platformId: "linux-x64", id: "17", name: "buildchain-linux", digest, url: "https://github.example/artifacts/17", expiresAt };
+    const coordinates = { repository: passport.repository, runId: passport.workflow.runId, runAttempt: passport.workflow.runAttempt, sourceSha: passport.source.headSha, artifacts: [coordinate] };
+    const sidecar = createReleaseCandidateStageCapsules({ passport, buildSummary: {}, coordinates });
+    const downloads = [{ artifact: { id: 17, name: "buildchain-linux", digest, expires_at: expiresAt }, record: { digest, downloadedDigest: digest } }];
+    const reused = verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads });
+    assert.equal(reused[0].buildRuntimeSha, RUNTIME_SHA);
+    assert.equal(reused[0].sourceTreeSha, TREE);
+    assert.throws(() => verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads: [{ artifact: downloads[0].artifact, record: { digest, downloadedDigest: `sha256:${"d".repeat(64)}` } }] }), /does not bind the verified provider artifact/);
+    assert.throws(() => createReleaseCandidateStageCapsules({ passport, buildSummary: {}, coordinates: { ...coordinates, runId: "101" } }), /does not bind the candidate run/);
+    assert.throws(() => verifyReleaseCandidateStageCapsules({ sidecar: { ...sidecar, buildAttempt: { ...sidecar.buildAttempt, id: "github-run:101:attempt:1" }, root: sidecar.root }, passport, downloads }), /sidecar identity mismatch/);
+    assert.throws(() => verifyReleaseCandidateStageCapsules({ sidecar: createReleaseCandidateStageCapsules({ passport, buildSummary: {}, coordinates: { ...coordinates, artifacts: [{ ...coordinate, digest: `sha256:${"e".repeat(64)}` }] } }), passport, downloads }), /does not bind the verified provider artifact/);
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("resume public readback keeps the target branch distinct from the floating runtime", () => { const version = "4.0.1-alpha.6", targetRef = "alpha/v4/v4.0", exactTagSha = "6".repeat(40), targetSha = "7".repeat(40), runtimeSha = "8".repeat(40), digest = "sha512-public";
+  const transaction = { target_ref: targetRef, source_sha: exactTagSha, version }, main = { digest }, npm = { "dist-tags": { alpha: version }, versions: { [version]: { dist: { integrity: digest } } } };
+  assert.doesNotThrow(() => validateV4RuntimeResumePublicReadback({ targetRef, targetSha, alphaSha: runtimeSha, exactTagSha, tagLineage: { status: "ahead" }, runtimeSha, version, transaction, main, npm }));
+  assert.throws(() => validateV4RuntimeResumePublicReadback({ targetRef, targetSha, alphaSha: runtimeSha, exactTagSha, tagLineage: { status: "diverged" }, runtimeSha, version, transaction, main, npm }), /does not match durable publication/); });
 
 test("recovery accepts the same tree at a different promotion commit and records reuse", () => {
   const { receipt } = verifyReleaseCandidateRecovery(fixture());
@@ -521,6 +557,10 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   );
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
   assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
+  assert.match(advanced, /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\.release-passport-v4-runtime-resume-evidence-json \|\| steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}/);
+  assert.match(advanced, /cp \.buildchain\/release-candidate\/v4-runtime-resume-\*\.json/);
+  assert.match(refPromotion, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/);
+  assert.match(refPromotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| '' \}\}/);
   assert.match(
     refPromotion,
     /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/,

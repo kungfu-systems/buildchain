@@ -1361,7 +1361,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:3ece8acdaf1586998a6afc7315115e732eed7b0ed98bfcefa347cd935bae2026",
+      "auditDigest": "sha256:6cf134f8bc0c0ab488cb159ef2bb9f7a94b454c4f7adee134ce7dee00d84c5d3",
       "compatibleBreakingDigests": [
         "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
       ],
@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:b7532257bb94b8cf5ed401a49caa14a7beda404efa201a89bee928b0fb52a7c9",
+      "auditDigest": "sha256:c4154d5f8f61820a7a23a9c2d197bb7189bac5a12613320feca5802df69f9639",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -2012,7 +2012,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:8276788ccdcfb55fab5a0343ecf9474273e91c99fc5e1630e19ccf6b920cbd90"
+      "auditDigest": "sha256:3d3ffe400100bc3db9659759183715aa71a10c95ce0474164741d1c54bdd7d10"
     },
     {
       "contractVersion": 1,
@@ -2061,7 +2061,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:8276788ccdcfb55fab5a0343ecf9474273e91c99fc5e1630e19ccf6b920cbd90"
+      "auditDigest": "sha256:3d3ffe400100bc3db9659759183715aa71a10c95ce0474164741d1c54bdd7d10"
     },
     {
       "contractVersion": 1,
@@ -2233,7 +2233,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:626f5b9e4c642459a64cf15930b4ab0d52d9fbafa6bf7f6688532831d7da204d"
+      "auditDigest": "sha256:ecb9de7578cbc00a0e193b9f4c8dcd39e6ba7d6fe920d3b65f1bb829e37ff4ca"
     },
     {
       "contractVersion": 1,
@@ -2908,7 +2908,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:3ece8acdaf1586998a6afc7315115e732eed7b0ed98bfcefa347cd935bae2026",
+      "auditDigest": "sha256:6cf134f8bc0c0ab488cb159ef2bb9f7a94b454c4f7adee134ce7dee00d84c5d3",
       "compatibleBreakingDigests": [
         "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
         "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
@@ -5082,7 +5082,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:b7532257bb94b8cf5ed401a49caa14a7beda404efa201a89bee928b0fb52a7c9"
+      "auditDigest": "sha256:c4154d5f8f61820a7a23a9c2d197bb7189bac5a12613320feca5802df69f9639"
     },
     {
       "contractVersion": 1,
@@ -5308,5 +5308,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:5de1c69386510b74b17eb70141b8bdd07063d62c504f91db5e84b67c6d4b64a2",
-  "contractDigest": "sha256:70642c4048d2be8fa6769fc84bb1bd82bb20a1db54fb53f281306a662e210843"
+  "contractDigest": "sha256:8d7114c5568ca4a9edce55cbd8d617fe8c4f74fb8c38a31be702c39ce57e8f0b"
 }
