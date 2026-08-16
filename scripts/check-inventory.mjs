@@ -1021,7 +1021,7 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
-  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@alpha/v4/v4.0",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
@@ -1030,7 +1030,7 @@ for (const requiredSnippet of [
   "resume-buildchain-runtime-sha:",
   "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
   "release-passport-buildchain-self-kfd: true",
-  "node .buildchain/router/scripts/promotion-identity-resolver.mjs",
+  "buildchain-channel: alpha",
   "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
