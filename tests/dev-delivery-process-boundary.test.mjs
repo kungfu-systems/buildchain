@@ -88,7 +88,9 @@ function warrantFixture(directory) {
       repository: warrant.repository,
       protectedBase: warrant.protectedBase,
       stateRoot: ROOT("1"),
-      activeWarrant: warrant,
+      activeWarrant: Object.fromEntries(
+        Object.entries(warrant).filter(([field]) => field !== "qualifiedBase"),
+      ),
     },
   });
   return warrant;

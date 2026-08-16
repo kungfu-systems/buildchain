@@ -13,6 +13,7 @@ import {
   devDeliveryText as text,
   devDeliveryTimestamp as timestamp,
 } from "./dev-delivery-common.js";
+import { verifyNativeProofReuseDecision } from "./dev-delivery-native-proof.js";
 import { verifyNativeQualificationProof } from "./dev-delivery-native-proof.js";
 import { verifyNativeExecutionFailureOutcome } from "./dev-delivery-execution-failure.js";
 
@@ -408,8 +409,28 @@ function verifySuccessOutcome(transfer, directory, warrant) {
     "native proof reuse decision root",
   );
   delete decisionBody.decisionRoot;
+  const reuseVerification = verifyNativeProofReuseDecision(decision, {
+    proof,
+    current: {
+      sourceHead: warrant.sourceHead,
+      sourceIdentityRoot: warrant.sourceIdentityRoot,
+      sourcePatchRoot: warrant.sourcePatchRoot,
+      planRoot: warrant.planRoot,
+      closureRoot: warrant.closureRoot,
+      dependencyRoot: warrant.dependencyRoot,
+      toolchainRoot: warrant.toolchainRoot,
+      environmentRoot: warrant.environmentRoot,
+      nativeCommandRoot: warrant.nativeCommandContract?.commandRoot,
+      currentBase: decision.currentBase,
+      graphKnown: decision.graphKnown,
+      attributionComplete: decision.attributionComplete,
+      changedPaths: decision.changedPaths,
+      renames: decision.renames,
+    },
+  });
   if (
     !proofVerification.ok ||
+    !reuseVerification.ok ||
     result.nativeProofRoot !== transfer.nativeProofRoot ||
     proof.proofRoot !== transfer.nativeProofRoot ||
     result.nativeReuseDecisionRoot !== transfer.nativeReuseDecisionRoot ||
@@ -420,7 +441,6 @@ function verifySuccessOutcome(transfer, directory, warrant) {
     proof.repository !== transfer.warrant.repository ||
     proof.protectedBase !== transfer.warrant.protectedBase ||
     proof.sourceHead !== transfer.warrant.sourceHead ||
-    proof.qualifiedBase !== warrant.qualifiedBase ||
     proof.sourceIdentityRoot !== warrant.sourceIdentityRoot ||
     proof.sourcePatchRoot !== warrant.sourcePatchRoot ||
     proof.planRoot !== warrant.planRoot ||
