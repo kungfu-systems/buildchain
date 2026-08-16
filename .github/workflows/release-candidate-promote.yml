@@ -1121,11 +1121,7 @@ jobs:
       promotion-publication-channel: ${{ needs.resolve-promotion.outputs.publication-channel }}
       promotion-target-ref: ${{ needs.resolve-promotion.outputs.target-ref }}
       promotion-override-used: ${{ needs.resolve-promotion.outputs.override-used == 'true' }}
-      promotion-runtime-authorization-json: ${{ needs.consumer-admission.outputs.runtime-authorization-json }}
-      promotion-runtime-authorization-root: ${{ needs.consumer-admission.outputs.runtime-authorization-root }}
       buildchain-contract-lock-path: ${{ needs.resolve-promotion.outputs.contract-lock-path }}
-      buildchain-alpha-contract-lock-path: ${{ inputs.buildchain-alpha-contract-lock-path }}
-      buildchain-stable-contract-lock-path: ${{ inputs.buildchain-stable-contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       allow-repository: ${{ inputs.allow-repository }}
@@ -1165,7 +1161,6 @@ jobs:
       release-passport-output-dir: ${{ inputs.release-passport-output-dir }}
       release-passport-product-name: ${{ inputs.release-passport-product-name }}
       release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
-      release-passport-v4-runtime-resume-evidence-json: ${{ inputs.release-passport-v4-runtime-resume-evidence-json }}
       release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
       release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
       release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
