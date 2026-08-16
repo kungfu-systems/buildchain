@@ -116,6 +116,7 @@ const PROTECTED_AUTHORITY_PATHS = Object.freeze([
   ".github/CODEOWNERS",
   ".github/workflows/.publication-authority.yml",
   ".github/workflows/.release-candidate-promote.yml",
+  ".github/workflows/buildchain-ref-promotion-recovery.yml",
   ".github/workflows/buildchain-ref-promotion.yml",
   ".github/workflows/github-governance-audit.yml",
   ".github/workflows/paper-release-sealed.yml",

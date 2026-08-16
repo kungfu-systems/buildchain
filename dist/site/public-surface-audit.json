@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 75,
+    "workflowCount": 76,
     "actionCount": 7,
     "sitePageCount": 82,
     "docCommandRefCount": 1049,
@@ -1837,6 +1837,17 @@
           "skipped-count"
         ],
         "outputCount": 5
+      },
+      {
+        "id": "buildchain-ref-promotion-recovery",
+        "path": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
       },
       {
         "id": "buildchain-ref-promotion",
@@ -8835,8 +8846,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ea47a31ce7ef3577f23e22055ab7be7715c3af494bcef63f76b426f2883086aa",
-    "workflowRegistryDigest": "649f47b96ca339d9a8a190a6d31d32fa0787bee4e353defe1092c7b163029488",
-    "pageRegistryDigest": "5b124e74cf384db9c91e0a1738e2cf3f7673ced3ca5020933069dead54858c71"
+    "workflowRegistryDigest": "b14c0782eae0571ebbe7cac33e1355e802498c62435584a081eea25bb7cacf38",
+    "pageRegistryDigest": "e977a50824bd83ae253b8d344fdf291115c81081efa97bd19740e3a800fda0eb"
   },
   "comparison": {
     "missingCliRegistry": [],
