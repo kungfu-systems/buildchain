@@ -1726,7 +1726,7 @@ jobs:
         env:
           BUILDCHAIN_EXPECTED_CALLER_ROOT: ${{ github.workspace }}
           BUILDCHAIN_EXPECTED_CALLER_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: ${{ steps.rc.outputs.release-candidate-source-sha }}
           BUILDCHAIN_EXPECTED_INVOKED_WORKFLOW: .github/workflows/build.yml
           BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
