@@ -722,14 +722,6 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,
-    /release-passport-v4-runtime-resume-evidence-json:\n\s+description: "Verified runtime A\+B Stage Capsule resume evidence JSON"/,
-  );
-  assert.match(
-    workflow,
-    /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\['release-passport-v4-runtime-resume-evidence-json'\] \|\| '' \}\}/,
-  );
-  assert.match(
-    workflow,
     /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
   );
   assert.match(

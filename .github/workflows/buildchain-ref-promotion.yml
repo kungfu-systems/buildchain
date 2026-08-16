@@ -52,10 +52,6 @@ on:
         description: "JSON array of consumed admission nonces"
         required: false
         default: "[]"
-      release-passport-v4-runtime-resume-evidence-json:
-        description: "Verified runtime A+B Stage Capsule resume evidence JSON"
-        required: false
-        default: ""
       resume-candidate-repository:
         description: "Repository that owns the sealed candidate run"
         required: false
@@ -205,7 +201,6 @@ jobs:
       release-passport-product-name: Buildchain
       release-passport-buildchain-self-kfd: true
       release-passport-impact-json: .buildchain/release-impact.json
-      release-passport-v4-runtime-resume-evidence-json: ${{ inputs['release-passport-v4-runtime-resume-evidence-json'] || '' }}
       publication-admission-json: ${{ inputs['publication-admission-json'] || '' }}
       publication-runner-provenance-json: ${{ inputs['publication-runner-provenance-json'] || '' }}
       publication-control-plane-audit-json: ${{ inputs['publication-control-plane-audit-json'] || '' }}
