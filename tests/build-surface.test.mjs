@@ -2731,7 +2731,11 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
   );
   assert.match(
     finalizerJob,
-    /name: Settle the exact independently verified native failure[\s\S]*--expected-old "\$\(jq -er '\.warrantStateRoot'[\s\S]*--evidence-root "\$\(jq -er '\.evidenceRoot'[\s\S]*--transfer-root[\s\S]*--finalizer-boundary-root[\s\S]*--native-job-id[\s\S]*--seal-job-id[\s\S]*--execute/u,
+    /name: Settle the exact independently verified native failure[\s\S]*settlement_state="\$\(jq -er '\.latestStateRoot' \.buildchain\/provider-heartbeat-verification\.json\)"[\s\S]*--expected-old "\$\{settlement_state\}"[\s\S]*--evidence-root "\$\(jq -er '\.evidenceRoot'[\s\S]*--transfer-root[\s\S]*--finalizer-boundary-root[\s\S]*--native-job-id[\s\S]*--seal-job-id[\s\S]*--execute/u,
+  );
+  assert.doesNotMatch(
+    finalizerJob,
+    /name: Settle the exact independently verified native failure[\s\S]*--expected-old "\$\(jq -er '\.warrantStateRoot'/u,
   );
   assert.doesNotMatch(
     finalizerJob,

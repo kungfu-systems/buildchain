@@ -226,6 +226,26 @@ test("hosted Linux ancestry accepts an equivalent relative worker argv zero", ()
   assert.equal(result.boundary.executable, RUNNER_WORKER);
 });
 
+test("hosted Linux ancestry accepts the GitHub-hosted cached versioned worker path", () => {
+  const cachedWorker =
+    "/home/runner/actions-runner/cached/2.336.0/bin/Runner.Worker";
+  const files = hostedAncestryFiles({
+    "/proc/20/cmdline": `${cachedWorker}\u0000spawnclient\u000010\u000011\u0000`,
+  });
+  const result = inspectCredentiallessProcessAncestry(
+    ancestryOptions(files, {
+      readlinkSync(file) {
+        if (file === "/proc/20/exe") return cachedWorker;
+        const error = new Error("unreadable");
+        error.code = "EACCES";
+        throw error;
+      },
+    }),
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.boundary.executable, cachedWorker);
+});
+
 test("hosted Linux ancestry requires the exact versioned Runner.Worker spawnclient argv", () => {
   for (const [label, worker, command] of [
     [
@@ -237,6 +257,11 @@ test("hosted Linux ancestry requires the exact versioned Runner.Worker spawnclie
       "lookalike version directory",
       "/home/runner/runners/current/2.999.0/bin/Runner.Worker",
       "/home/runner/runners/current/2.999.0/bin/Runner.Worker\u0000spawnclient\u000010\u000011\u0000",
+    ],
+    [
+      "lookalike cached version directory",
+      "/home/runner/actions-runner/cached/current/bin/Runner.Worker",
+      "/home/runner/actions-runner/cached/current/bin/Runner.Worker\u0000spawnclient\u000010\u000011\u0000",
     ],
     [
       "lookalike worker name",
