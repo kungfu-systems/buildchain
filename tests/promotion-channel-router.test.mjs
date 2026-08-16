@@ -29,6 +29,7 @@ test("alpha promotion selects the alpha workflow shell, runtime, and target", ()
   }), {
     targetRef: "alpha/v22/v22.22",
     publicationChannel: "alpha",
+    routerRef: "v3", routerSha: "",
     channel: "alpha",
     major: 3,
     shellRef: "v3-alpha",
@@ -100,6 +101,7 @@ test("an exact runtime pin matching the reusable workflow SHA is not an override
   }), {
     targetRef: "alpha/v3/v3.0",
     publicationChannel: "alpha",
+    routerRef: sha, routerSha: sha,
     channel: "alpha",
     major: 3,
     shellRef: "v3-alpha",
