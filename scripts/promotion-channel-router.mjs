@@ -66,8 +66,8 @@ export function resolvePromotionChannel({
   }
   const shellRef = intent.shellChannel === "alpha" ? `v${selected.major}-alpha` : `v${selected.major}`;
   return {
-    targetRef: intent.targetRef,
-    publicationChannel: intent.publicationChannel,
+    targetRef: intent.targetRef, publicationChannel: intent.publicationChannel,
+    routerRef: normalized(routerRef), routerSha: normalized(routerSha).toLowerCase(),
     channel: intent.shellChannel,
     major: selected.major,
     shellRef,
@@ -99,8 +99,8 @@ function readPackageVersion(cwd) {
 
 function writeOutputs(file, result) {
   const outputs = {
-    "target-ref": result.targetRef,
-    "publication-channel": result.publicationChannel,
+    "target-ref": result.targetRef, "publication-channel": result.publicationChannel,
+    "router-ref": result.routerRef, "router-sha": result.routerSha,
     channel: result.channel,
     major: String(result.major),
     "shell-ref": result.shellRef,
