@@ -1721,7 +1721,7 @@ jobs:
 
       - name: Independently certify v4 floating consumer policy evidence
         id: v4-policy-certification
-        if: ${{ startsWith(inputs.promotion-shell-ref, 'v4') }}
+        if: ${{ startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0' }}
         shell: bash
         env:
           BUILDCHAIN_EXPECTED_CALLER_ROOT: ${{ github.workspace }}

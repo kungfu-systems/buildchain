@@ -151,8 +151,8 @@ jobs:
             --repository kungfu-systems/buildchain \
             --router-ref v4-alpha \
             --router-sha "${router_sha}" \
-            --shell-ref v4-alpha \
-            --shell-call-ref v4-alpha \
+            --shell-ref alpha/v4/v4.0 \
+            --shell-call-ref alpha/v4/v4.0 \
             --runtime-ref v4-alpha
           echo "router-sha=${router_sha}" >> "$GITHUB_OUTPUT"
       - name: Checkout exact promotion source
@@ -177,8 +177,8 @@ jobs:
         !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
         !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
       }}
-    # Bounded bootstrap: the old public v4-alpha wrapper cannot be parsed until this promotion moves the tag.
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    # Bounded bootstrap: the old v4-alpha shell cannot carry this protected repair until this promotion moves the tag.
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0
     permissions:
       actions: write
       artifact-metadata: write
@@ -195,7 +195,7 @@ jobs:
       buildchain-expected-major: "4"
       promotion-router-ref: v4-alpha
       promotion-router-sha: ${{ needs.resolve-alpha-bootstrap.outputs.router-sha }}
-      promotion-shell-ref: v4-alpha
+      promotion-shell-ref: alpha/v4/v4.0
       promotion-shell-sha: ${{ needs.resolve-alpha-bootstrap.outputs.shell-sha }}
       promotion-runtime-ref: v4-alpha
       promotion-runtime-sha: ${{ needs.resolve-alpha-bootstrap.outputs.runtime-sha }}
