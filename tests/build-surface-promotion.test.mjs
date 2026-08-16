@@ -644,7 +644,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@alpha\/v4\/v4\.0\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.match(workflow, /promote-stable:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4/);
   assert.doesNotMatch(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/);
@@ -656,11 +656,14 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| '' \}\}/,
   );
-  assert.match(workflow, /buildchain-expected-channel: alpha/);
-  assert.match(workflow, /buildchain-expected-major: "4"/);
+  assert.match(workflow, /promote-alpha:[\s\S]*buildchain-channel: alpha/);
   assert.match(
     workflow,
-    /promote-alpha-bootstrap:[\s\S]*buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/,
+    /promote-alpha:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| 'v4-alpha' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /promote-alpha:[\s\S]*buildchain-alpha-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/,
   );
   assert.match(workflow, /promote-stable:[\s\S]*buildchain-contract-lock-path: \.buildchain\/contract-lock\.json/);
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);
@@ -701,16 +704,21 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
   assert.match(
     workflow,
-    /promote-alpha-bootstrap:[\s\S]*artifact-patterns: buildchain-package-\*/,
+    /promote-alpha:[\s\S]*artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '' \|\| 'buildchain-package-\*' \}\}/,
   );
   assert.match(
     workflow,
-    /promote-alpha-bootstrap:[\s\S]*publish-rematerialize-on-resume: true/,
+    /promote-alpha:[\s\S]*github\.event_name == 'workflow_dispatch'[\s\S]*startsWith\(inputs\['target-ref'\], 'alpha\/'\)[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0/,
   );
-  assert.doesNotMatch(
+  assert.match(
     workflow,
-    /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != ''/,
+    /promote-alpha:[\s\S]*resume-candidate-run-id: \$\{\{ inputs\['resume-candidate-run-id'\] \}\}[\s\S]*resume-expected-source-tree: \$\{\{ inputs\['resume-expected-source-tree'\] \}\}[\s\S]*resume-buildchain-runtime-sha: \$\{\{ inputs\['resume-buildchain-runtime-sha'\] \}\}[\s\S]*publish-rematerialize-on-resume: true/,
   );
+  assert.match(
+    workflow,
+    /promote-alpha:[\s\S]*publish-rematerialize-on-resume: true/,
+  );
+  assert.doesNotMatch(workflow, /resolve-alpha-bootstrap:/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,
@@ -1785,10 +1793,10 @@ test("Buildchain self-dogfoods the current major through floating public promoti
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0/,
   );
-  assert.match(promotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| '' \}\}/);
-  assert.doesNotMatch(promotion, /buildchain-ref: (?:v\d+-alpha|\$\{\{[^\n]*v\d+-alpha)/);
+  assert.match(promotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| 'v4-alpha' \}\}/);
+  assert.doesNotMatch(promotion, /buildchain-ref: [0-9a-f]{40}/);
 });
 
 test("self-dogfood never bridges an adjacent major or bypasses contract compatibility", () => {
