@@ -1364,10 +1364,11 @@ jobs:
         run: |
           set -euo pipefail
           settlement=.buildchain/provider-failure-settlement.json
+          settlement_state="$(jq -er '.latestStateRoot' .buildchain/provider-heartbeat-verification.json)"
           node .buildchain/runtime/scripts/dev-delivery-warrant.mjs settle \
             --repository "${GITHUB_REPOSITORY}" \
             --branch "${TARGET_BRANCH}" \
-            --expected-old "$(jq -er '.warrantStateRoot' "$settlement")" \
+            --expected-old "${settlement_state}" \
             --pull-request "$(jq -er '.pullRequestNumber' "$settlement")" \
             --expected-source-head "$(jq -er '.sourceHead' "$settlement")" \
             --fencing-token "$(jq -er '.fencingToken' "$settlement")" \
@@ -1383,7 +1384,7 @@ jobs:
             --output .buildchain/finalizer-evidence/failure-settlement-result.json
           jq -e \
             --arg evidenceRoot "$(jq -er '.evidenceRoot' "$settlement")" \
-            --arg stateRoot "$(jq -er '.warrantStateRoot' "$settlement")" \
+            --arg stateRoot "${settlement_state}" \
             --arg transferRoot "$(jq -er '.transferRoot' "$settlement")" \
             --arg boundaryRoot "$(jq -er '.finalizerBoundaryRoot' "$settlement")" \
             --argjson nativeJobId "$(jq -er '.nativeJobId' "$settlement")" \

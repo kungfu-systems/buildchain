@@ -107,10 +107,16 @@ function workspace(fixture) {
     path.join(destination, ".buildchain/alpha-contract-lock.json"),
     lock("v4-alpha", ALPHA_SHA),
   );
-  if (fixture.stale === "alpha") {
+  if (fixture.stale === "alpha" || fixture.breaking === "alpha") {
+    const stale = lock("v4-alpha", "f".repeat(40));
+    if (fixture.breaking === "alpha") {
+      stale.buildchain.surfaces = [
+        { id: "removed-public-surface", breakingDigest: ROOT },
+      ];
+    }
     writeJson(
       path.join(destination, ".buildchain/alpha-contract-lock.json"),
-      lock("v4-alpha", "f".repeat(40)),
+      stale,
     );
   }
   if (fixture.remove) fs.rmSync(path.join(destination, fixture.remove));
@@ -152,7 +158,7 @@ function certifyFromExactCaller(result, receipt = result.receipt, receiptRoot) {
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
     invokedWorkflow: "v4-stage-capsule-canary.yml",
-    resolvedRuntimeSha: STABLE_SHA,
+    resolvedRuntimeSha: result.receipt.invocation.resolvedRuntimeSha,
     stableLock: ".buildchain/contract-lock.json",
     alphaLock: ".buildchain/alpha-contract-lock.json",
   });
@@ -361,6 +367,23 @@ test("current external runtime rejects an old runtime fabricated passed receipt"
     certification.verification.failures.some(
       (failure) => failure.code === "receipt-authority-root-mismatch",
     ),
+  );
+});
+
+test("current external runtime certifies compatible floating SHA drift", () => {
+  const result = evaluate(
+    fixtures.cases.find((fixture) => fixture.id === "stale-selected-lock"),
+    { scannerRoot: v4ConsumerPolicyScannerRoot() },
+  );
+  const certification = certifyFromExactCaller(result);
+  assert.equal(
+    certification.ok,
+    true,
+    JSON.stringify(certification.verification),
+  );
+  assert.equal(
+    certification.certification.invocation.resolvedWorkflowSha,
+    ALPHA_SHA,
   );
 });
 

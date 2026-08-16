@@ -215,6 +215,78 @@ test("public reusable caller job names drive heartbeat execution and final verif
   );
 });
 
+test("provider heartbeat keeps the fence live until the seal job materializes", async () => {
+  let stateRoot = ROOT("1");
+  let beat = 0;
+  let currentTime = 0;
+  const result = await runDevDeliveryProviderHeartbeat(
+    {
+      admission: admission(),
+      workflowRunId: 90,
+      workflowRunAttempt: 2,
+      leaseSeconds: 60,
+      heartbeatSeconds: 10,
+    },
+    {
+      now: () =>
+        new Date(
+          Date.parse("2026-08-15T00:00:01.000Z") + currentTime,
+        ).toISOString(),
+      wait: async (milliseconds) => {
+        currentTime += milliseconds;
+      },
+      heartbeat: async ({ expectedOldStateRoot }) => {
+        assert.equal(expectedOldStateRoot, stateRoot);
+        beat += 1;
+        const nextStateRoot = ROOT((beat + 3).toString(16));
+        const heartbeatAt = new Date(
+          Date.parse("2026-08-15T00:00:01.000Z") + currentTime,
+        ).toISOString();
+        const receipt = {
+          schema: "kungfu.buildchain.dev-delivery-lease-receipt/v1",
+          action: "heartbeat",
+          candidateId: ROOT("2"),
+          fencingToken: ROOT("3"),
+          leaseGeneration: 4,
+          expiresAt: new Date(Date.parse(heartbeatAt) + 60_000).toISOString(),
+          expectedOldStateRoot,
+          nextStateRoot,
+          nextAction: "Continue the exact fenced delivery attempt.",
+        };
+        stateRoot = nextStateRoot;
+        return {
+          before: { stateRoot: expectedOldStateRoot },
+          after: { stateRoot: nextStateRoot },
+          receipt,
+          receiptRoot: devDeliveryContentRoot(receipt),
+          observation: {
+            stateRoot: nextStateRoot,
+            activeWarrant: {
+              candidateId: ROOT("2"),
+              fencingToken: ROOT("3"),
+              generation: 4,
+              heartbeatAt,
+              expiresAt: receipt.expiresAt,
+            },
+          },
+        };
+      },
+      readJobs: async () => {
+        const readback = jobs(true);
+        if (beat === 1) {
+          readback.jobs = readback.jobs.filter(
+            ({ name }) => name !== "Credentialless native evidence seal",
+          );
+        }
+        return readback;
+      },
+    },
+  );
+  assert.equal(result.heartbeatCount, 2);
+  assert.equal(result.latestStateRoot, ROOT("5"));
+  assert.equal(result.sealJob.status, "completed");
+});
+
 test("heartbeat execution rejects similar and ambiguous reusable caller job names", async () => {
   for (const variant of ["similar", "ambiguous"]) {
     const readback = jobs(true, "deliver");

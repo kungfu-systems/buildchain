@@ -24,7 +24,10 @@ const RUNNER_WORKER = "/home/runner/runners/2.999.0/bin/Runner.Worker";
 
 function hostedAncestryFiles(overrides = {}) {
   return new Map([
-    ["/proc/40/environ", "PATH=/bin\0"],
+    [
+      "/proc/40/environ",
+      "PATH=/bin\0BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY=github-actions-runner-worker/v1\0",
+    ],
     ["/proc/40/cmdline", "/usr/bin/node\0controller.mjs\0"],
     ["/proc/40/status", "Name:\tnode\nPPid:\t30\n"],
     ["/proc/30/environ", "LANG=C\0"],
@@ -207,6 +210,18 @@ test("hosted Linux ancestry accepts only non-credential runtime variables throug
   });
 });
 
+test("hosted Linux ancestry rejects a forged credential boundary marker", () => {
+  const files = hostedAncestryFiles({
+    "/proc/30/environ":
+      "BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY=provider-secret\0",
+  });
+  const result = inspectCredentiallessProcessAncestry(ancestryOptions(files));
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.exposed, [
+    { pid: 30, names: ["BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY"] },
+  ]);
+});
+
 test("hosted Linux ancestry accepts the kernel-resolved worker with basename argv zero", () => {
   const files = hostedAncestryFiles({
     "/proc/20/cmdline": "Runner.Worker\u0000spawnclient\u000010\u000011\u0000",
@@ -214,6 +229,36 @@ test("hosted Linux ancestry accepts the kernel-resolved worker with basename arg
   const result = inspectCredentiallessProcessAncestry(ancestryOptions(files));
   assert.equal(result.ok, true);
   assert.equal(result.boundary.executable, RUNNER_WORKER);
+});
+
+test("hosted Linux ancestry accepts an equivalent relative worker argv zero", () => {
+  const files = hostedAncestryFiles({
+    "/proc/20/cmdline":
+      "./Runner.Worker\u0000spawnclient\u000010\u000011\u0000",
+  });
+  const result = inspectCredentiallessProcessAncestry(ancestryOptions(files));
+  assert.equal(result.ok, true);
+  assert.equal(result.boundary.executable, RUNNER_WORKER);
+});
+
+test("hosted Linux ancestry accepts the GitHub-hosted cached versioned worker path", () => {
+  const cachedWorker =
+    "/home/runner/actions-runner/cached/2.336.0/bin/Runner.Worker";
+  const files = hostedAncestryFiles({
+    "/proc/20/cmdline": `${cachedWorker}\u0000spawnclient\u000010\u000011\u0000`,
+  });
+  const result = inspectCredentiallessProcessAncestry(
+    ancestryOptions(files, {
+      readlinkSync(file) {
+        if (file === "/proc/20/exe") return cachedWorker;
+        const error = new Error("unreadable");
+        error.code = "EACCES";
+        throw error;
+      },
+    }),
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.boundary.executable, cachedWorker);
 });
 
 test("hosted Linux ancestry requires the exact versioned Runner.Worker spawnclient argv", () => {
@@ -227,6 +272,11 @@ test("hosted Linux ancestry requires the exact versioned Runner.Worker spawnclie
       "lookalike version directory",
       "/home/runner/runners/current/2.999.0/bin/Runner.Worker",
       "/home/runner/runners/current/2.999.0/bin/Runner.Worker\u0000spawnclient\u000010\u000011\u0000",
+    ],
+    [
+      "lookalike cached version directory",
+      "/home/runner/actions-runner/cached/current/bin/Runner.Worker",
+      "/home/runner/actions-runner/cached/current/bin/Runner.Worker\u0000spawnclient\u000010\u000011\u0000",
     ],
     [
       "lookalike worker name",
