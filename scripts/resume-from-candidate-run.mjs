@@ -1079,7 +1079,7 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-recovery-root": result.receipt.root,
       "v4-runtime-resume-evidence-path": result.paths.runtimeResumeEvidence,
       "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence
-        ? "node .buildchain/runtime/scripts/resume-from-candidate-run.mjs finalize"
+        ? "node .buildchain/runtime/promotion-shell/scripts/resume-from-candidate-run.mjs finalize"
         : "",
       "release-candidate-root": result.candidateRoot,
       "release-candidate-artifact-root": result.artifactRoot,
