@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 361,
+  "generation": 362,
   "fencingCounter": 91,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:079a2da6ff0460ce94556fd63766b44bef297261bb886e73b58307b9a4cbfbf8",
@@ -107,8 +107,13 @@
     "issuedAt": "2026-08-16T10:22:06.550Z",
     "expiresAt": "2026-08-16T11:26:24.275Z",
     "fencingToken": "sha256:c52f3ff76646353c300e7f04c951f9891c16eeecae8677c8f52f73c76e58101f",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-16T10:26:24.275Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-16T10:26:24.275Z",
+    "nativeProofRoot": "sha256:8718464ada1e4736b1d2828cc1d6feed60398b9fcd7e3c48ea45312cf17d7a9d",
+    "nativeExecutionReceiptRoot": "sha256:0b16251ae201ed8a2826efc1eb3f7e2d58c7ec6f3a20cbb04a2e403fa850ded8",
+    "nativeProofReuseRoot": "sha256:787eb905d10072919b0b603d5ebeb862d56ce6d88935a7ed6b98c94392d146b8",
+    "qualificationReceiptRoot": "sha256:7d232405402fa6778fd05b69cd6e3cde0e21cc93a1d3cb7de70fe7323e017bc5",
+    "qualifiedAt": "2026-08-16T10:26:50.668Z"
   },
   "candidates": [
     {
@@ -3921,10 +3926,10 @@
       "sourceWorkflowRunId": 31940735141,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-16T10:22:03.568Z",
-      "updatedAt": "2026-08-16T10:26:24.275Z",
+      "updatedAt": "2026-08-16T10:26:50.668Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".buildchain/buildchain.toml",
@@ -3992,6 +3997,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-16T10:26:24.275Z",
-  "stateRoot": "sha256:f18289565791247612f664be66952501ef41e74fed946246db6321ff362f5243"
+  "updatedAt": "2026-08-16T10:26:50.668Z",
+  "stateRoot": "sha256:dbe9bebb3ebcbf87ac25ec194720eedcab4bf2c790b09c93c606411ae6c746ae"
 }
