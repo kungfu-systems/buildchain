@@ -76,6 +76,14 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\['release-passport-v4-runtime-resume-evidence-json'\] \}\}/u,
   );
+  assert.match(
+    workflow,
+    /router-ref: \$\{\{ steps\.route\.outputs\.router-ref \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /router-sha: \$\{\{ steps\.route\.outputs\.router-sha \}\}/u,
+  );
 });
 
 test("v4 floating policy contract rejects certification without caller lock readback", () => {
