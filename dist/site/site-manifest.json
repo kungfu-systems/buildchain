@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:14454849d0c415227ecd4dbfa6c1d9a9a862f9b7c310696849d7fd762c77db7d"
+      "digest": "sha256:fd63caf537bdc0dc2a220688dcb89534f6f84f6223e8c45f399a7d1bb8f8faf8"
     },
     {
       "id": "getting-started",
@@ -245,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f19ae20754e3fc907496061fdbb6cce362b8a62263e06acf25062d1c0a678ef1"
+      "digest": "sha256:157d6259dd8f884833f7065f52bff0d482878eca72623dcc607e4204692e4970"
     },
     {
       "id": "node-api-reference",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:9742c98cdaa5dddc8c73ff33b2bb21df01d06bb965b170ad8267379818bec96e"
+      "digest": "sha256:34a2feafe2f6183afbc0a72fa6362d39db6968c2bac187a1a1dd376d7ca50e50"
     },
     {
       "id": "build-facts",
@@ -326,6 +326,14 @@
       "plane": "why",
       "exists": true,
       "digest": "sha256:6dfe8a9b974040fc1465b0da696519b4e97b0b901e30d852ffacda0d193810af"
+    },
+    {
+      "id": "v4-compatibility-facts",
+      "title": "Buildchain v4 compatibility Facts",
+      "path": "docs/v4-compatibility-facts.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:d29c904a17aca0ca3ad4f48a826f530610d77ffca8bde76ef7e5b4c245c2ca47"
     },
     {
       "id": "release-flow",

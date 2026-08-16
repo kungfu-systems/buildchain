@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:14454849d0c415227ecd4dbfa6c1d9a9a862f9b7c310696849d7fd762c77db7d",
+      "digest": "sha256:fd63caf537bdc0dc2a220688dcb89534f6f84f6223e8c45f399a7d1bb8f8faf8",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -347,7 +347,7 @@
       "title": "Generated CLI reference",
       "path": "docs/cli-reference.md",
       "plane": "use",
-      "digest": "sha256:f19ae20754e3fc907496061fdbb6cce362b8a62263e06acf25062d1c0a678ef1",
+      "digest": "sha256:157d6259dd8f884833f7065f52bff0d482878eca72623dcc607e4204692e4970",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:9742c98cdaa5dddc8c73ff33b2bb21df01d06bb965b170ad8267379818bec96e",
+      "digest": "sha256:34a2feafe2f6183afbc0a72fa6362d39db6968c2bac187a1a1dd376d7ca50e50",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -498,6 +498,21 @@
       ],
       "maturity": "stable",
       "order": 700
+    },
+    {
+      "id": "v4-compatibility-facts",
+      "title": "Buildchain v4 compatibility Facts",
+      "path": "docs/v4-compatibility-facts.md",
+      "plane": "verify",
+      "digest": "sha256:d29c904a17aca0ca3ad4f48a826f530610d77ffca8bde76ef7e5b4c245c2ca47",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "maintainer",
+        "agent"
+      ],
+      "maturity": "preview",
+      "order": 139
     },
     {
       "id": "release-flow",

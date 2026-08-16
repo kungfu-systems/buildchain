@@ -166,6 +166,14 @@ export const BUILDCHAIN_USAGE = `Usage:
                              [--module-fact <file>]... [--artifact <path>]...
                              [--output <file>] [--json]
   buildchain facts verify [--cwd <dir>] --fact <file> [--json]
+  buildchain facts compatibility project [--cwd <dir>] [--registry <json-or-path>]
+                                      [--output <file>] [--json]
+  buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] [--json]
+  buildchain facts compatibility query --query <json-or-path>
+                                      [--registry <json-or-path>] [--cwd <dir>] [--json]
+  buildchain facts compatibility query-template --fact-root <sha256:...>
+                                      [--query-id <id>] [--registry <json-or-path>]
+                                      [--cwd <dir>] [--json]
   buildchain kfd ...
   buildchain kfd hub <init|inspect|test|explain> [--cwd <dir>]
                      [--declaration <path>] [--output-dir <path>]

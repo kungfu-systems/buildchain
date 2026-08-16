@@ -50,6 +50,10 @@ const DEV_DELIVERY_AUTHORITY_SCHEMA =
   "schemas/dev-delivery-authority-v2.schema.json";
 const DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE =
   "contracts/dev-delivery-authority-v2.schema.json";
+const V4_COMPATIBILITY_FACTS_SCHEMA =
+  "schemas/v4-compatibility-facts-v1.schema.json";
+const V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE =
+  "contracts/v4-compatibility-facts-v1.schema.json";
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
 const requireFromHere = createRequire(import.meta.url);
@@ -78,9 +82,9 @@ function stableJson(value) {
 }
 
 function siteFileBytes(name, value) {
-  return name === DEV_DELIVERY_AUTHORITY_SCHEMA
-    ? readText(DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE)
-    : stableJson(value);
+  if (name === DEV_DELIVERY_AUTHORITY_SCHEMA) return readText(DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE);
+  if (name === V4_COMPATIBILITY_FACTS_SCHEMA) return readText(V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE);
+  return stableJson(value);
 }
 
 function writeSiteFile(name, value) {
@@ -388,6 +392,7 @@ const manualMetaById = new Map(Object.entries({
   "dev-qualification-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 136 },
   "dev-alpha-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 137 },
   "v4-canonical-contracts": { capabilityGroup: "governance-versioning", audience: ["developer", "maintainer", "agent"], maturity: "preview", order: 138 },
+  "v4-compatibility-facts": { capabilityGroup: "governance-versioning", audience: ["developer", "maintainer", "agent"], maturity: "preview", order: 139 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
   "engineering-housekeeper": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer", "agent"], maturity: "preview", order: 145 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
@@ -950,6 +955,7 @@ function buildSiteBundle() {
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
+      "schemas/v4-compatibility-facts-v1.schema.json",
       "kfd-support.json",
       "artifact-evidence.json",
       "product-mechanism.json",
@@ -985,6 +991,7 @@ function buildSiteBundle() {
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
+      "schemas/v4-compatibility-facts-v1.schema.json",
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1116,6 +1123,7 @@ function buildSiteBundle() {
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
+      "schemas/v4-compatibility-facts-v1.schema.json",
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1292,6 +1300,9 @@ function buildSiteBundle() {
     "schemas/kfd-product-gate-input-v1.schema.json": KFD_PRODUCT_GATE_INPUT_SCHEMA,
     [DEV_DELIVERY_AUTHORITY_SCHEMA]: readJson(
       DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE,
+    ),
+    [V4_COMPATIBILITY_FACTS_SCHEMA]: readJson(
+      V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE,
     ),
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
