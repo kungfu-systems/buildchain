@@ -3247,7 +3247,7 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
-          path: .buildchain/artifacts/release-candidate-passport.json
+          path: .buildchain/artifacts/release-candidate-*.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 

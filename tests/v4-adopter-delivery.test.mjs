@@ -143,7 +143,7 @@ test("public schema, config and source authority bind the exact v3 and v4 cuts",
     kfdPackage: "@kungfu-tech/kfd@1.0.0-alpha.65",
     targetBranch: "dev/v4/v4.0",
     initialTargetBase: "e5611377efc03178f8687d99968cfdfa3ce2825b",
-    targetBase: "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+    targetBase: "e0342713c7447960c13bd73377282b2e93f4853d",
   });
   const normalized = normalizeBuildchainConfig(packageConfig());
   assert.equal(normalized.adopter_delivery.driverSelector, "json-assertion");

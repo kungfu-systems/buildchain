@@ -25,7 +25,7 @@ export const V4_ADOPTER_DELIVERY_SOURCE = Object.freeze({
   kfdPackage: "@kungfu-tech/kfd@1.0.0-alpha.65",
   targetBranch: "dev/v4/v4.0",
   initialTargetBase: "e5611377efc03178f8687d99968cfdfa3ce2825b",
-  targetBase: "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+  targetBase: "e0342713c7447960c13bd73377282b2e93f4853d",
 });
 export const V4_ADOPTER_DELIVERY_ARCHIVE_AUTHORITY = Object.freeze({
   buildchain: Object.freeze({

@@ -1021,7 +1021,7 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
-  "uses: ./.github/workflows/.release-candidate-promote.yml",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",

@@ -234,7 +234,7 @@ test("v4 parity plan binds the protected v3 vector suite and excludes writer aut
   );
   assert.equal(
     parityPlan.target.baseline,
-    "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+    "e0342713c7447960c13bd73377282b2e93f4853d",
   );
   assert.equal(parityPlan.target.mode, "effect-disabled");
   assert.equal(parityPlan.target.productionWriterAuthority, false);

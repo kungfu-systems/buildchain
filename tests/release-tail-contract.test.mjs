@@ -24,7 +24,7 @@ test("release-tail inventory closes commands, callers, and declarative capabilit
     surfaces: 7,
     managedCallers: 7,
     capabilities: 4,
-    coordinates: 27,
+    coordinates: 28,
     executionSites: 9,
   });
 });

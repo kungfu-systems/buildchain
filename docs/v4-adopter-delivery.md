@@ -30,8 +30,8 @@ The parity source is the read-only protected cut
 `dev/v3/v3.0@6b96bdad8d9f8ccf9275f27d9370a226a9c78465`. Work began from the
 minimal v4 absorption base
 `dev/v4/v4.0@e5611377efc03178f8687d99968cfdfa3ce2825b` and absorbed the
-verified protected-base advance to
-`dev/v4/v4.0@8e9ce32ddd931fb294ab1a9a2a40e89ba743391a` before delivery. These
+verified protected-base advances through
+`dev/v4/v4.0@e0342713c7447960c13bd73377282b2e93f4853d` before delivery. These
 identities, the v3 vector-suite root, and the KFD package cut are committed in
 [`v4-adopter-delivery-parity.json`](../architecture/v4-adopter-delivery-parity.json)
 and exposed by the public Node API.

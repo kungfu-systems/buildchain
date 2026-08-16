@@ -20,7 +20,7 @@
     },
     "candidate": {
       "version": "4.0.1-alpha.4",
-      "sourceCommit": "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+      "sourceCommit": "e0342713c7447960c13bd73377282b2e93f4853d",
       "packageRoot": "sha256:ca25e78191aedb60e999a12100b52caa2b075e29a46f0baa91722f018adb6609",
       "gateRoot": "sha256:cdcb54ea103fe62a94e2f0755fab5b105802f32e569f47e77d7a1f3ff0636cfc",
       "protocol": {
@@ -77,7 +77,7 @@
     },
     "warrant": {
       "outcome": "merged",
-      "sourceHead": "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+      "sourceHead": "e0342713c7447960c13bd73377282b2e93f4853d",
       "sourceProofRoot": "sha256:2aeeaacaa4f2d136155ac2c478a7939772a162c284a3bfd0458dfb00cce872aa",
       "nativeProofRoot": "sha256:d66669fff994b931c9f89f3c313f37ad625f5aae29af0f6528054b8782b607a5",
       "integrationProofRoot": "sha256:e5623b4de65781d68a73401857d000fba970bdad62a94b5cd7b2d39fee176613"
@@ -87,7 +87,7 @@
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-v4-adopter-delivery-bootstrap-lineage/v1",
     "sourceAuthorityCommit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
-    "targetBaseCommit": "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+    "targetBaseCommit": "e0342713c7447960c13bd73377282b2e93f4853d",
     "authorityArchiveRoot": "sha256:3f425e2c77d11f0bee8eb9aa2448566bca7a9d14672a7e528ced3e505b3f14a3"
   }
 }

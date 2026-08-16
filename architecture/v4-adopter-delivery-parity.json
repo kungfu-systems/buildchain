@@ -10,7 +10,7 @@
   "target": {
     "branch": "dev/v4/v4.0",
     "initialBaseline": "e5611377efc03178f8687d99968cfdfa3ce2825b",
-    "baseline": "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+    "baseline": "e0342713c7447960c13bd73377282b2e93f4853d",
     "mode": "effect-disabled",
     "surface": "public-protocol-neutral-adopter-delivery",
     "productionWriterAuthority": false

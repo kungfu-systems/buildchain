@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8b05f5d4351a7d4c1d9c0a58554d280ac95841af8d04cd55f5e148e7f6b3617d",
+    "sha256": "865505f5430cec2d15e77a0e8e924fce5d1581e7b22b0fcab0f2118ab7235a8d",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 75,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8b05f5d4351a7d4c1d9c0a58554d280ac95841af8d04cd55f5e148e7f6b3617d",
+      "sha256": "865505f5430cec2d15e77a0e8e924fce5d1581e7b22b0fcab0f2118ab7235a8d",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 75,
@@ -5928,7 +5928,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 83,
+          "inputCount": 84,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -6000,6 +6000,7 @@
             "release-passport-promotion-routing-json",
             "release-passport-v4-consumer-policy-certification-json",
             "release-passport-v4-consumer-policy-certification-root",
+            "release-passport-v4-runtime-resume-evidence-command",
             "release-passport-v4-runtime-resume-evidence-json",
             "release-tail-state-path",
             "require-governance",

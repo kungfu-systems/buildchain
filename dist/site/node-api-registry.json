@@ -20796,7 +20796,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1557
+        "line": 1575
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20825,7 +20825,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1222
+        "line": 1240
       },
       "example": "import { createArtifactEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20883,7 +20883,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2759
+        "line": 2777
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20912,7 +20912,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1257
+        "line": 1275
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20941,7 +20941,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2915
+        "line": 2933
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21090,7 +21090,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2944
+        "line": 2962
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21151,7 +21151,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2831
+        "line": 2849
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21306,7 +21306,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2956
+        "line": 2974
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21335,7 +21335,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2880
+        "line": 2898
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -28702,7 +28702,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-adopter-delivery",
       "export": "./v4-adopter-delivery",
       "target": "./packages/core/v4-adopter-delivery.js",
-      "digest": "sha256:9b5078b7eaf799d551699695a3d40d6a9c1c0246d25e590f9125c93989dc3fcf",
+      "digest": "sha256:82ca4d9bf6a0efcf01e41762a59aeddc68bb75377fb186fb67248dfe0ade0255",
       "summary": "Public v4 adopter delivery runtime, exact readback, N-1 lineage, and published archive verification APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29440,7 +29440,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:8276788ccdcfb55fab5a0343ecf9474273e91c99fc5e1630e19ccf6b920cbd90",
+      "digest": "sha256:cecdf98c16ecab89baf4089dbd3e0ddf690eb5d8bdb706f42f4a20a50d9c4afc",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29779,7 +29779,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:01316bf1632882e28303ebae5722fb94f6337ec4da301d0a8c1cb5162c0da47f"
+      "digest": "sha256:0732a6888896f492f6543c4c9b32a1aef58f0fe691977b961745e151178188e5"
     },
     {
       "id": "build-facts",

@@ -3300,6 +3300,7 @@
         "release-passport-promotion-routing-json",
         "release-passport-v4-consumer-policy-certification-json",
         "release-passport-v4-consumer-policy-certification-root",
+        "release-passport-v4-runtime-resume-evidence-command",
         "release-passport-v4-runtime-resume-evidence-json",
         "release-tail-state-path",
         "require-governance",
@@ -3314,7 +3315,7 @@
         "transaction-state-path",
         "verification-command"
       ],
-      "inputCount": 83,
+      "inputCount": 84,
       "capabilityGroup": "release-passport-trust",
       "status": "active",
       "owner": "buildchain-actions",
