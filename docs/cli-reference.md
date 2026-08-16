@@ -2261,6 +2261,63 @@ buildchain sample process-tree [--interval-ms <n>] [--label <name>] [--output <j
 buildchain span --event <name> [--phase <phase>] [--component <name>] [--path <jsonl>] -- <command> [args...]
 ```
 
+## `tail-reseal`
+
+### `buildchain tail-reseal`
+
+- Help: `buildchain tail-reseal --help`
+- Canonical id: `tail-reseal`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain tail-reseal
+```
+
+### `buildchain tail-reseal admit`
+
+- Help: `buildchain tail-reseal admit --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal admit --request <request.json> [--output <admission.json>]
+```
+
+### `buildchain tail-reseal plan`
+
+- Help: `buildchain tail-reseal plan --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal plan --request <request.json> [--output <plan.json>]
+```
+
+### `buildchain tail-reseal seal`
+
+- Help: `buildchain tail-reseal seal --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--passport`, `--plan`, `--protected-readback-root`, `--readbacks`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal seal --request <request.json> --plan <plan.json> --readbacks <dir> --passport <passport.json> --protected-readback-root <sha256:...> [--output <receipt.json>]
+```
+
+### `buildchain tail-reseal verify-platform`
+
+- Help: `buildchain tail-reseal verify-platform --help`
+- Canonical id: `tail-reseal`
+- Options: `--artifact-root`, `--mode`, `--output`, `--platform`, `--provider-readback-root`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal verify-platform --request <request.json> --platform <id> [--artifact-root <dir>] [--mode retained|resealed] [--provider-readback-root <sha256:...>] [--output <readback.json>]
+```
+
 ## `transaction`
 
 ### `buildchain transaction`

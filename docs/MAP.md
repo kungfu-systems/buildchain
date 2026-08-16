@@ -114,6 +114,7 @@ replace them.
 | What exact canonical bytes, roots, clocks, event, receipt, and typed-fault contracts do Rust and JavaScript share in v4? | [`v4-canonical-contracts.md`](v4-canonical-contracts.md) | use/verify | preview |
 | How is one per-platform v4 build stage identified, retained, observed, and reused without provider identity or a second writer? | [`v4-stage-capsule.md`](v4-stage-capsule.md) | use/verify | preview |
 | How does a late platform failure deterministically reuse qualified Stage Capsules and rebuild only invalid or missing dependencies? | [`v4-stage-capsule.md`](v4-stage-capsule.md#deterministic-resume-planning) | use/verify | preview |
+| How does a late macOS signing failure reuse an exact retained v4 Alpha candidate and rerun only the fenced release tail? | [`v4-tail-reseal.md`](v4-tail-reseal.md) | use/verify | preview |
 | How do Rust and JavaScript read the same retained Delivery Warrant traces and emit one semantic projection? | [`v4-canonical-contracts.md`](v4-canonical-contracts.md#shared-delivery-warrant-fixture-runner) | use/verify | preview |
 | How does an explicit caller try the qualified v4 read projection and roll back without moving v3 writer authority? | [`v4-delivery-warrant-read-candidate.md`](v4-delivery-warrant-read-candidate.md) | use/verify | preview |
 | How do protected dev branches and scheduled ready-PR merging work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |

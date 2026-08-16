@@ -50,6 +50,12 @@
     "crates/buildchain-v4-bridge/src/main.rs",
     "packages/core/v4-runtime-ref-resume-authority.js",
     "packages/core/v4-runtime-selector-persistence.js",
+    "packages/core/v4-tail-reseal-contract.js",
+    "packages/core/v4-tail-reseal.js",
+    "packages/core/v4-tail-reseal-github.js",
+    "packages/core/v4-tail-reseal-receipt.js",
+    "scripts/v4-tail-reseal.mjs",
+    "scripts/v4-tail-reseal-macos-rehearsal.mjs",
     "packages/core/v4-provider-operation-journal.js",
     "packages/core/v4-stage-capsule.js",
     "packages/core/v4-stage-capsule-store.js",
@@ -529,6 +535,12 @@
         "packages/core/v4-adopter-delivery-parity.js",
         "packages/core/v4-runtime-ref-resume-authority.js",
         "packages/core/v4-runtime-selector-persistence.js",
+        "packages/core/v4-tail-reseal-contract.js",
+        "packages/core/v4-tail-reseal.js",
+        "packages/core/v4-tail-reseal-github.js",
+        "packages/core/v4-tail-reseal-receipt.js",
+        "scripts/v4-tail-reseal.mjs",
+        "scripts/v4-tail-reseal-macos-rehearsal.mjs",
         "packages/core/v4-stage-capsule.js",
         "packages/core/v4-stage-capsule-store.js",
         "packages/core/v4-stage-capsule-local-store.js",
@@ -562,7 +574,9 @@
         "tests/v4-platform-stage-checkpoints.test.mjs",
         "tests/v4-stage-capsule-qualification.test.mjs",
         "tests/v4-adopter-delivery-parity.test.mjs",
-        "tests/v4-runtime-ref-resume-authority.test.mjs"
+        "tests/v4-runtime-ref-resume-authority.test.mjs",
+        "tests/v4-tail-reseal.test.mjs",
+        "tests/v4-tail-reseal-parity.test.mjs"
       ],
       "contracts": [
         "architecture/v4-architecture-constitution.md",
@@ -597,8 +611,13 @@
         "contracts/fixtures/v4-partial-mutation-recovery-v1/shared.json",
         "contracts/v4-runtime-ref-resume-authority-v1.schema.json",
         "contracts/fixtures/v4-runtime-ref-resume-authority-v1/scenario.json",
+        "architecture/v4-tail-reseal-parity.json",
+        "contracts/v4-tail-reseal-v1.schema.json",
+        "contracts/fixtures/v4-tail-reseal-v1/valid.json",
+        ".github/workflows/v4-tail-reseal.yml",
         "docs/v4-stage-capsule.md",
-        "docs/v4-runtime-ref-resume-authority.md"
+        "docs/v4-runtime-ref-resume-authority.md",
+        "docs/v4-tail-reseal.md"
       ]
     }
   ]
