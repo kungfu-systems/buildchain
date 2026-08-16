@@ -1,6 +1,13 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { mkdir, mkdtemp, readFile, realpath, rm } from "node:fs/promises";
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -82,29 +89,43 @@ function safeArchiveEntries(listing, verboseListing, label) {
 
 async function extractPackage(declaration, destination, definition, label) {
   const archivePath = path.resolve(declaration.archivePath);
-  const archiveDirectory = path.dirname(archivePath);
-  const archiveFile = `./${path.basename(archivePath)}`;
   const observedRoot = await sha256File(archivePath);
   if (observedRoot !== declaration.archiveRoot) {
     throw new Error(`${label} archive bytes do not match archiveRoot`);
   }
-  const [{ stdout: listing }, { stdout: verboseListing }] = await Promise.all([
-    execFileAsync("tar", ["-tzf", archiveFile], {
-      cwd: archiveDirectory,
-      maxBuffer: 16 * 1024 * 1024,
-    }),
-    execFileAsync("tar", ["-tvzf", archiveFile], {
-      cwd: archiveDirectory,
-      maxBuffer: 16 * 1024 * 1024,
-    }),
-  ]);
-  safeArchiveEntries(listing, verboseListing, label);
   await mkdir(destination, { recursive: true });
-  await execFileAsync(
-    "tar",
-    ["-xzf", archiveFile, "--strip-components", "1", "-C", destination],
-    { cwd: archiveDirectory, maxBuffer: 16 * 1024 * 1024 },
+  const stagedArchiveName = `.buildchain-${definition.key}-authority.tgz`;
+  const stagedArchivePath = path.join(
+    path.dirname(destination),
+    stagedArchiveName,
   );
+  const stagedArchiveFile = `../${stagedArchiveName}`;
+  await copyFile(archivePath, stagedArchivePath);
+  try {
+    if ((await sha256File(stagedArchivePath)) !== declaration.archiveRoot) {
+      throw new Error(`${label} staged archive bytes do not match archiveRoot`);
+    }
+    const [{ stdout: listing }, { stdout: verboseListing }] = await Promise.all(
+      [
+        execFileAsync("tar", ["-tzf", stagedArchiveFile], {
+          cwd: destination,
+          maxBuffer: 16 * 1024 * 1024,
+        }),
+        execFileAsync("tar", ["-tvzf", stagedArchiveFile], {
+          cwd: destination,
+          maxBuffer: 16 * 1024 * 1024,
+        }),
+      ],
+    );
+    safeArchiveEntries(listing, verboseListing, label);
+    await execFileAsync(
+      "tar",
+      ["-xzf", stagedArchiveFile, "--strip-components", "1"],
+      { cwd: destination, maxBuffer: 16 * 1024 * 1024 },
+    );
+  } finally {
+    await rm(stagedArchivePath, { force: true });
+  }
   const packageJsonPath = path.join(destination, "package.json");
   const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
   if (

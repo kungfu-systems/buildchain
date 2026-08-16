@@ -18931,7 +18931,7 @@
       ],
       "source": {
         "path": "packages/core/published-delivery-authority.js",
-        "line": 176
+        "line": 197
       },
       "example": "import { loadPublishedBuildchainDeliveryAuthority } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
       "maturity": "stable",
@@ -18955,7 +18955,7 @@
       ],
       "source": {
         "path": "packages/core/published-delivery-authority.js",
-        "line": 12
+        "line": 19
       },
       "example": "import { PUBLISHED_DELIVERY_AUTHORITY_CONTRACT } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
       "maturity": "stable",
@@ -18988,7 +18988,7 @@
       ],
       "source": {
         "path": "packages/core/published-delivery-authority.js",
-        "line": 231
+        "line": 252
       },
       "example": "import { withPublishedBuildchainDeliveryAuthority } from \"@kungfu-tech/buildchain/published-delivery-authority\";",
       "maturity": "stable",
@@ -28597,7 +28597,7 @@
       "specifier": "@kungfu-tech/buildchain/published-delivery-authority",
       "export": "./published-delivery-authority",
       "target": "./packages/core/published-delivery-authority.js",
-      "digest": "sha256:76dc7656b8023451ac479e38725f73e0b80f5ac80a1f0f71905d51e133d0b535",
+      "digest": "sha256:8c60373a5bf78decf6b560f800c43b9ced9e0083a4ce36210d2eb7ae8cf1e8cd",
       "summary": "Content-addressed public Buildchain and KFD archive loading and identity verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29779,7 +29779,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:8f59becfe9d89f2dc4d183327c5bf0bfb1d77e4802c9cd61117c50061aa8869f"
+      "digest": "sha256:01316bf1632882e28303ebae5722fb94f6337ec4da301d0a8c1cb5162c0da47f"
     },
     {
       "id": "build-facts",
