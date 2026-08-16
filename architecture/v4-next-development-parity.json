@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-next-development-parity",
+  "sourceAuthority": {
+    "branch": "dev/v3/v3.0",
+    "capturedCommit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
+    "transitionCommit": "d165c2f733859dd2e46a2d1fdb25b242e2fc2567",
+    "controllerCommit": "63f494d4b92c0bd01ffb454c6fce23d0692148fb",
+    "selfDogfoodCommit": "518bb4cb4706db1854e5a5b39bf7198f2aaa1d1d"
+  },
+  "target": {
+    "branch": "dev/v4/v4.0",
+    "implementationBaseline": "36ad1dc03a9d2785aca938a7a369e4b96707fa32",
+    "publicConsumerCaller": ".github/workflows/v4-public-consumer-dogfood.yml",
+    "publicConsumerReusable": "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@v4-alpha"
+  },
+  "earlierContinuityDelta": {
+    "assignment": "2026-08-11-buildchain-next-development-version-continuity",
+    "disposition": "no-current-reusable-implementation-evidence",
+    "requiredDelta": "implement and re-prove the exact v3 semantics against the live protected v4 head"
+  },
+  "allowedDispositions": [
+    "implemented",
+    "superseded-equivalent",
+    "missing-before-closeout"
+  ],
+  "invariants": [
+    {
+      "id": "ND-01",
+      "claim": "The exact v3 planner, controller, projection and recovery authorities are mapped to current v4 files rather than inferred from the earlier continuity family.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "architecture/decisions/0002-next-development-transition.md",
+        "packages/core/next-development-transition.js",
+        "packages/core/next-development-controller.js",
+        "packages/core/next-development-projection.js"
+      ],
+      "verificationEvidence": ["tests/v4-next-development-parity.test.mjs"]
+    },
+    {
+      "id": "ND-02",
+      "claim": "Semver automatic planning deterministically advances only the Alpha sequence on the same patch and rejects operator-selected targets.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/next-development-transition.js",
+        "contracts/next-development-transition-v1.schema.json"
+      ],
+      "verificationEvidence": [
+        "tests/next-development-transition.test.mjs",
+        "contracts/fixtures/next-development-transition-v1/semver-auto-planned.json"
+      ]
+    },
+    {
+      "id": "ND-03",
+      "claim": "Anchored manual planning remains waiting until reviewed target and exact read-only manifest digest authority are both supplied.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/next-development-transition.js",
+        "scripts/next-development-transition.mjs"
+      ],
+      "verificationEvidence": [
+        "tests/next-development-transition.test.mjs",
+        "tests/next-development-controller.test.mjs",
+        "contracts/fixtures/next-development-transition-v1/anchored-manual-waiting.json"
+      ]
+    },
+    {
+      "id": "ND-04",
+      "claim": "Atomic create-if-absent and compare-and-swap checkpoints create one child per completed Alpha and recover idempotent materialization after runner loss.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/next-development-controller.js"
+      ],
+      "verificationEvidence": [
+        "tests/next-development-controller.test.mjs",
+        "tests/next-development-self-dogfood.test.mjs"
+      ]
+    },
+    {
+      "id": "ND-05",
+      "claim": "Protected Dev movement supersedes only stale preparation, retries from current readback and preserves completed Alpha identity without rebuilding it.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/next-development-controller.js",
+        "actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
+        "actions/promote-buildchain-ref/lib.js"
+      ],
+      "verificationEvidence": [
+        "tests/next-development-controller.test.mjs",
+        "tests/promote-buildchain-ref-governance.test.mjs"
+      ]
+    },
+    {
+      "id": "ND-06",
+      "claim": "A protected version pull request and exact source, derived, ancestry and target-version readback are mandatory before verified state.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/next-development-controller.js"
+      ],
+      "verificationEvidence": [
+        "tests/next-development-controller.test.mjs",
+        "tests/next-development-self-dogfood.test.mjs"
+      ]
+    },
+    {
+      "id": "ND-07",
+      "claim": "Completed candidates and Alpha publication remain immutable and terminal; next-development exposes no tag, release, package, candidate or ref-update effect.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/next-development-transition.js",
+        "packages/core/next-development-controller.js"
+      ],
+      "verificationEvidence": [
+        "tests/next-development-transition.test.mjs",
+        "tests/next-development-self-dogfood.test.mjs"
+      ]
+    },
+    {
+      "id": "ND-08",
+      "claim": "Candidate Patrol ignores pure version preparation and requires current exact blob reservation readback before later product candidate settlement.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/next-development-candidate-reservation.js",
+        "packages/core/channel-promotion-baseline.js",
+        "scripts/dev-alpha-candidate-patrol.mjs"
+      ],
+      "verificationEvidence": ["tests/dev-alpha-candidate-patrol.test.mjs"]
+    },
+    {
+      "id": "ND-09",
+      "claim": "The public CLI, Node exports, schemas, init and Paper templates, generated Agent guidance and manual all project one contract source.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "bin/buildchain.mjs",
+        "bin/internal/command-registry.mjs",
+        "scripts/next-development-transition.mjs",
+        "package.json",
+        "contracts/next-development-request-v1.schema.json",
+        "contracts/next-development-transition-v1.schema.json",
+        "scripts/init-repo.mjs",
+        "packages/core/paper.js",
+        "packages/core/paper-agent-entry.js",
+        "packages/core/next-development-projection.js"
+      ],
+      "verificationEvidence": [
+        "tests/next-development-transition.test.mjs",
+        "tests/v4-next-development-parity.test.mjs"
+      ]
+    },
+    {
+      "id": "ND-10",
+      "claim": "V4 recovery proof runs as pure tests through the standard lifecycle.verify reached by the exact thin public consumer caller, while existing hosted dual-channel evidence keeps public v4-alpha and v4 routes.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        ".github/workflows/v4-public-consumer-dogfood.yml",
+        ".github/workflows/buildchain-alpha-self-dogfood.yml",
+        ".buildchain/buildchain.toml",
+        "scripts/next-development-self-dogfood.mjs",
+        "scripts/next-development-self-dogfood-harness.mjs"
+      ],
+      "verificationEvidence": [
+        "tests/next-development-self-dogfood.test.mjs",
+        "tests/v4-public-dogfood-contract.test.mjs"
+      ]
+    },
+    {
+      "id": "ND-11",
+      "claim": "Architecture inventory, capability metadata, generated references and site facts expose the current v4 next-development contract without stale generated output.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "architecture/v3-core-mechanism-inventory.json",
+        "architecture/v4-capability-state-machine-manifest.json",
+        "scripts/check-inventory.mjs",
+        "scripts/site-capability-metadata.mjs",
+        "scripts/generate-site-bundle.mjs"
+      ],
+      "verificationEvidence": [
+        "tests/core-mechanism-inventory.test.mjs",
+        "tests/v4-architecture.test.mjs",
+        "tests/v4-next-development-parity.test.mjs"
+      ]
+    },
+    {
+      "id": "ND-12",
+      "claim": "Independent review, protected merge into dev/v4/v4.0 and exact post-merge containment and readback are required external closeout evidence and cannot be inferred from local green tests.",
+      "disposition": "missing-before-closeout",
+      "implementationEvidence": [],
+      "verificationEvidence": []
+    }
+  ],
+  "matrixRoot": "sha256:0f0d69dd338cad33dc61870675cbedb8664e019e403f73a1ddcf8471d69df405"
+}

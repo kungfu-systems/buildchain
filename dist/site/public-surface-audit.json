@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 114,
+    "cliCommandCount": 115,
     "workflowCount": 71,
     "actionCount": 7,
-    "sitePageCount": 77,
-    "docCommandRefCount": 987,
+    "sitePageCount": 78,
+    "docCommandRefCount": 993,
     "failureCount": 0
   },
   "enumerated": {
@@ -361,6 +361,11 @@
         "id": "mark",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain mark --event <name> [--phase <phase>] [--component <name>]"
+      },
+      {
+        "id": "next-development",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain next-development materialize --input <request.json> [--cwd <dir>]"
       },
       {
         "id": "npm",
@@ -3343,6 +3348,10 @@
       },
       {
         "id": "manual:migration-inventory",
+        "category": "manual"
+      },
+      {
+        "id": "manual:next-development-transition",
         "category": "manual"
       },
       {
@@ -6711,6 +6720,36 @@
         "command": "buildchain mark --event native"
       },
       {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development materialize --input"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development --help"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development materialize"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development materialize --help"
+      },
+      {
         "id": "npm-dry-run",
         "path": "docs/cli-reference.md",
         "command": "buildchain npm dry-run"
@@ -8416,9 +8455,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "3632f0332f9c0e270a522a4af358482833974757d77ac40a2d7e2efe6a56cb28",
+    "cliRegistryDigest": "9644dfc0534de74eecf5989eb4e9ef3a45cb996413afe1a8835db13d78fac7ce",
     "workflowRegistryDigest": "f2c315d3df35fc3067cb98f626dfae8b5f4f400a6ce1d39a62e724072f52ae18",
-    "pageRegistryDigest": "07068ff6f889aaae1bb0def76cc041b2e8c63092eebf728b245f3f9451e1ea24"
+    "pageRegistryDigest": "26e68908b6d83b15bd52c944d147024e7ab4f3c888f1e3cb5c9264e21b236406"
   },
   "comparison": {
     "missingCliRegistry": [],

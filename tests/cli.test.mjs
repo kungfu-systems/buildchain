@@ -173,7 +173,8 @@ test("init package creates .buildchain/buildchain.toml and reusable workflow", (
 
   assert.equal(result.type, "package");
   assert.equal(result.packageManager, "npm");
-  assert.deepEqual(result.written.sort(), [".buildchain/buildchain.toml", ".github/workflows/build.yml"]);
+  assert.deepEqual(result.written.sort(), [".buildchain/buildchain.toml", ".github/workflows/build.yml", "AGENTS.md"]);
+  assert.match(fs.readFileSync(path.join(cwd, "AGENTS.md"), "utf8"), /buildchain:next-development/);
   assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /npm ci/);
   const workflow = fs.readFileSync(path.join(cwd, ".github/workflows/build.yml"), "utf8");
   assert.match(workflow, /workflow_dispatch:/);
@@ -200,6 +201,7 @@ test("init infra-contract creates a directly valid observed contract scaffold", 
   assert.deepEqual(result.written.sort(), [
     ".buildchain/buildchain.toml",
     ".github/workflows/build.yml",
+    "AGENTS.md",
     "infra/desired.json",
     "infra/outputs.json",
   ]);
@@ -261,6 +263,7 @@ test("init publication-artifact creates a paper artifact scaffold", () => {
   assert.deepEqual(result.written.sort(), [
     ".buildchain/buildchain.toml",
     ".github/workflows/build.yml",
+    "AGENTS.md",
   ]);
   const toml = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
   assert.match(toml, /type = "publication-artifact"/);
