@@ -3,15 +3,68 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 251,
-  "fencingCounter": 76,
+  "generation": 252,
+  "fencingCounter": 77,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:de87c22d4120404aabb3ac3e5ef01c09508d7766e851e317872f8162acb24025",
+    "pullRequestNumber": 2862,
+    "sourceHead": "f1028b5ae2832f42ea3ad4e3de3a53f62e5c235c",
+    "assignmentRoot": "sha256:b8cb2aad4416b77e9f53742aa2479c41143c7b1869f7729a52de5077045df9e6",
+    "initiativeRoot": "sha256:0fc567629323a724deea1e21b4156681613164431b97a254b6c68673a6c9c139",
+    "sourceIdentityRoot": "sha256:c6a4badad4357051081e141e0a7158ed24120d4ea38a4035cea1efad2d967dc7",
+    "sourcePatchRoot": "sha256:6c1174b9f79df0997b67f35ecd0e9123d1908f4fe0d9423f8deeddca5badcf02",
+    "sourceProofRoot": "sha256:58ac9dbeb38647c4d7825dc64725d6638a455c1355b8a777a43aa55f29d18ced",
+    "planRoot": "sha256:95b01ad7c8f2d9d5c0153f7854a5f80955e5f80c1c445ae366cad90338a8e7a4",
+    "closureRoot": "sha256:44c92034579bbfbd70d308869207a8e32f7995749ad7d0a8d40c3d32ae36884e",
+    "dependencyRoot": "sha256:3c03612e0ab4c91c2eaae927ed08c26a439fbd4c0ce03ca71f6140a81fcaf7dd",
+    "toolchainRoot": "sha256:ffb24600810aa11aa8a78f1d7db78c40080ea5f5738190acfb2ad37b25fede4c",
+    "environmentRoot": "sha256:9cc495d4cc889468152f3987620af651a352835185bef33b40802088139227e6",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "node scripts/check-v4-floating-consumer-policy-contract.mjs && node --test tests/v4-floating-consumer-policy-contract.test.mjs",
+      "commandRoot": "sha256:3181ccc5bea07980e52881a2de964b6888241374a05d61140d51fb47632aa587"
+    },
+    "affectedPaths": [
+      ".github/workflows/buildchain-ref-promotion.yml",
+      "actions/promote-buildchain-ref/dist/index.js",
+      "architecture/maintainability-policy.json",
+      "contracts/fixtures/v4-floating-consumer-policy-v1/cases.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/kfd-claims.json",
+      "dist/site/manual-registry.json",
+      "dist/site/node-api-registry.json",
+      "dist/site/page-registry.json",
+      "dist/site/public-surface-audit.json",
+      "dist/site/site-manifest.json",
+      "docs/node-api-reference.md",
+      "packages/core/v4-floating-consumer-policy.js",
+      "scripts/v4-consumer-policy.mjs",
+      "tests/build-surface-promotion.test.mjs",
+      "tests/v4-floating-consumer-policy.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 31920538225,
+    "deliveryClass": "native-proof-required",
+    "priority": "ordinary",
+    "generation": 77,
+    "expectedOldStateRoot": "sha256:7fb39bb6c85c963ed2056b110370bd2cd76dc631a2d2a6c1ed58522fae54b0da",
+    "issuedAt": "2026-08-16T02:11:10.223Z",
+    "expiresAt": "2026-08-16T03:11:10.223Z",
+    "fencingToken": "sha256:df464c758edc03e8df919a8bfb8b818893257928bda439966ee396fa10e4d1ba",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -2772,10 +2825,10 @@
       "sourceWorkflowRunId": 31920538225,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-16T02:11:07.279Z",
-      "updatedAt": "2026-08-16T02:11:07.279Z",
+      "updatedAt": "2026-08-16T02:11:10.223Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/buildchain-ref-promotion.yml",
@@ -2799,6 +2852,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-16T02:11:07.279Z",
-  "stateRoot": "sha256:7fb39bb6c85c963ed2056b110370bd2cd76dc631a2d2a6c1ed58522fae54b0da"
+  "updatedAt": "2026-08-16T02:11:10.223Z",
+  "stateRoot": "sha256:8ca19cf4ee49a30541d66f6894b526d7c2830917db0ac7a319a6555e2d76d696"
 }
