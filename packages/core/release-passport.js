@@ -439,7 +439,16 @@ function mergeAuthoritativePassportBase(passport, basePassport = undefined, { re
       kfd3: basePassport.evidence?.kfd3 || passport.evidence?.kfd3 || "",
     },
   };
-  for (const key of ["versionImpact", "surfaceImpacts", "promotionRouting", "v4ConsumerPolicy", "v4RuntimeResume", "transaction", "trustedPublishing", "distTagPromotion"])
+  for (const key of [
+    "versionImpact",
+    "surfaceImpacts",
+    "promotionRouting",
+    "v4ConsumerPolicy",
+    "v4RuntimeResume",
+    "transaction",
+    "trustedPublishing",
+    "distTagPromotion",
+  ])
     if (basePassport[key] !== undefined) merged[key] = basePassport[key];
   if (basePassport.controllerReceipts !== undefined) {
     merged.controllerReceipts = basePassport.controllerReceipts;
@@ -1159,7 +1168,16 @@ function normalizeV4RuntimeResumeEvidence(value, expected = {}) {
   };
 }
 
-function v4RuntimeResumeSourceSha(release, fallback = "") { const builtSourceSha = releaseField(release || {}, "builtSourceSha", "built_source_sha"); return release?.treeEquivalent === true && builtSourceSha ? builtSourceSha : fallback; }
+function v4RuntimeResumeSourceSha(release, fallback = "") {
+  const builtSourceSha = releaseField(
+    release || {},
+    "builtSourceSha",
+    "built_source_sha",
+  );
+  return release?.treeEquivalent === true && builtSourceSha
+    ? builtSourceSha
+    : fallback;
+}
 
 
 function prepareBuildEvidence({

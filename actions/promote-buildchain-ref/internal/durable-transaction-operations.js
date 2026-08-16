@@ -59,7 +59,8 @@ function createDurableTransactionOperations(context) {
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
-    releasePassportV4RuntimeResumeEvidenceJson, releasePassportV4RuntimeResumeEvidenceCommand,
+    releasePassportV4RuntimeResumeEvidenceJson,
+    releasePassportV4RuntimeResumeEvidenceCommand,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
@@ -273,7 +274,10 @@ function createDurableTransactionOperations(context) {
       v4ConsumerPolicyCertificationJson: passportV4ConsumerPolicyCertificationJson,
       v4ConsumerPolicyCertificationRoot:
         context.releasePassportV4ConsumerPolicyCertificationRoot,
-      v4RuntimeResumeEvidenceJson: releasePassportV4RuntimeResumeEvidenceJson, v4RuntimeResumeEvidenceCommand: releasePassportV4RuntimeResumeEvidenceCommand, v4RuntimeResumeEvidenceCommandCwd: cwd,
+      v4RuntimeResumeEvidenceJson: releasePassportV4RuntimeResumeEvidenceJson,
+      v4RuntimeResumeEvidenceCommand:
+        releasePassportV4RuntimeResumeEvidenceCommand,
+      v4RuntimeResumeEvidenceCommandCwd: cwd,
       kfd1WitnessJsons: passportKfd1WitnessJsons,
       kfd2ClaimJsons: passportKfd2ClaimJsons,
       kfd3PrebuildWitnessJsons: passportKfd3PrebuildWitnessJsons,

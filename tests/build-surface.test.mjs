@@ -2973,7 +2973,7 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   );
   assert.match(
     reusable,
-    /fetch-depth: \$\{\{ inputs\.mode == 'source' && '0' \|\| '1' \}\}/,
+    /fetch-depth: \$\{\{ inputs\.mode == 'source' && \(!inputs\.source-proof-reuse \|\| github\.event_name == 'pull_request'\) && '0' \|\| '1' \}\}/,
   );
   assert.match(reusable, /persist-credentials: false/);
   assert.match(reusable, /Run declared install lifecycle/);
@@ -3003,6 +3003,14 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
     /run\.pull_requests.*pullRequest\.number === pullNumber/,
   );
   assert.match(reusable, /steps\.source-proof-download\.outcome == 'success'/);
+  assert.match(
+    reusable,
+    /git fetch --no-tags --no-recurse-submodules --depth=64 origin/,
+  );
+  assert.match(
+    reusable,
+    /\+\$\{qualified_base\}:refs\/buildchain\/source-proof\/qualified-base/,
+  );
   assert.match(reusable, /dev-delivery-source-proof-reuse\.mjs verify/);
   assert.match(
     reusable,

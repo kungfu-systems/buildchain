@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 116,
-    "workflowCount": 72,
+    "workflowCount": 73,
     "actionCount": 7,
-    "sitePageCount": 80,
-    "docCommandRefCount": 1025,
+    "sitePageCount": 81,
+    "docCommandRefCount": 1029,
     "failureCount": 0
   },
   "enumerated": {
@@ -2803,22 +2803,28 @@
         "reusable": true,
         "inputs": [
           "buildchain-ref",
+          "candidate-root",
           "declaration-path",
           "execute",
           "provider-bindings-path",
+          "rehearsal-authority-path",
+          "rehearsal-capsule-path",
+          "rehearsal-evidence-path",
+          "rehearsal-mode",
           "state-path"
         ],
-        "inputCount": 5,
+        "inputCount": 10,
         "secrets": [
           "http-token"
         ],
         "secretCount": 1,
         "outputs": [
+          "rehearsal-evidence-root",
           "state-root",
           "transaction-root",
           "transaction-state"
         ],
-        "outputCount": 3
+        "outputCount": 4
       },
       {
         "id": "release-verify",
@@ -2894,6 +2900,17 @@
       {
         "id": "v4-public-consumer-dogfood",
         "path": ".github/workflows/v4-public-consumer-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "v4-publication-rehearsal-dogfood",
+        "path": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -3077,6 +3094,7 @@
           "release-passport-promotion-routing-json",
           "release-passport-v4-consumer-policy-certification-json",
           "release-passport-v4-consumer-policy-certification-root",
+          "release-passport-v4-runtime-resume-evidence-command",
           "release-passport-v4-runtime-resume-evidence-json",
           "release-tail-state-path",
           "require-governance",
@@ -3091,20 +3109,25 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 83
+        "inputCount": 84
       },
       {
         "id": "release-tail",
         "path": "actions/release-tail/action.yml",
         "inputs": [
+          "candidate-root",
           "declaration",
           "execute",
           "github-token",
           "http-token",
           "provider-bindings",
+          "rehearsal-authority",
+          "rehearsal-capsule",
+          "rehearsal-evidence-path",
+          "rehearsal-mode",
           "state-path"
         ],
-        "inputCount": 6
+        "inputCount": 11
       },
       {
         "id": "report-buildchain-issue",
@@ -3491,6 +3514,10 @@
       },
       {
         "id": "manual:v4-production-release",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-publication-rehearsal",
         "category": "manual"
       },
       {
@@ -7842,6 +7869,11 @@
       {
         "id": "release-tail",
         "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail rehearse --capsule"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
         "command": "buildchain release-tail"
       },
       {
@@ -7892,6 +7924,16 @@
       {
         "id": "release-tail",
         "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail rehearse"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain release-tail rehearse --help"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/cli-reference.md",
         "command": "buildchain release-tail status"
       },
       {
@@ -7928,6 +7970,11 @@
         "id": "release-tail",
         "path": "docs/release-tail-provider-plane.md",
         "command": "buildchain release-tail plan"
+      },
+      {
+        "id": "release-tail",
+        "path": "docs/v4-publication-rehearsal.md",
+        "command": "buildchain release-tail rehearse"
       },
       {
         "id": "release-transaction",
@@ -8650,9 +8697,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "c240837b7885defa68e300e6b6178557824f7bd4dce8f258115b990516bf63c7",
-    "workflowRegistryDigest": "3454db30e0df977d09ecbc5703bf2dffa29c516392b25cb0b1658f5835579667",
-    "pageRegistryDigest": "d0893422eaf356b36a0439e573beaa4da56466293d2a47a5f7769ec82844ffb3"
+    "cliRegistryDigest": "2123dc563b356bfd8157065cd88c189e217dc61b30b9d9a974e0d1709e806429",
+    "workflowRegistryDigest": "e303571373d89b26fc873cbff81381228b5b2ac52acc8ba29788f7602f56ce75",
+    "pageRegistryDigest": "4610f859d2d6891a3e2493304f8015028ee11aac93f704662ab04e2e107a62cb"
   },
   "comparison": {
     "missingCliRegistry": [],

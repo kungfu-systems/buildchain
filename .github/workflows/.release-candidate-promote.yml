@@ -1663,7 +1663,8 @@ jobs:
           set -euo pipefail
           test -f "${RECOVERY_RECEIPT}"
           mkdir -p "${RELEASE_PASSPORT_OUTPUT_DIR}"
-          cp "${RECOVERY_RECEIPT}" "${RELEASE_PASSPORT_OUTPUT_DIR}/release-candidate-recovery-receipt.json"; cp .buildchain/release-candidate/v4-runtime-resume-*.json "${RELEASE_PASSPORT_OUTPUT_DIR}/"
+          cp "${RECOVERY_RECEIPT}" "${RELEASE_PASSPORT_OUTPUT_DIR}/release-candidate-recovery-receipt.json"
+          cp .buildchain/release-candidate/v4-runtime-resume-*.json "${RELEASE_PASSPORT_OUTPUT_DIR}/"
 
       - name: Upload immutable candidate recovery receipt
         id: recovery-receipt

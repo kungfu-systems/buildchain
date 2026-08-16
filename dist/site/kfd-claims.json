@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "a003f3c34e7c818b562bdccd6cf0551c971b1e3325a6cac10f7c1b49abc19582",
+    "sha256": "2250efe9985bdb3f07dd801bd832f62ff240296a634cc0008a4ee30613a5041a",
     "summary": {
       "cliCommandCount": 116,
-      "workflowCount": 72,
+      "workflowCount": 73,
       "actionCount": 7,
-      "sitePageCount": 80,
-      "docCommandRefCount": 1025,
+      "sitePageCount": 81,
+      "docCommandRefCount": 1029,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "a003f3c34e7c818b562bdccd6cf0551c971b1e3325a6cac10f7c1b49abc19582",
+      "sha256": "2250efe9985bdb3f07dd801bd832f62ff240296a634cc0008a4ee30613a5041a",
       "summary": {
         "cliCommandCount": 116,
-        "workflowCount": 72,
+        "workflowCount": 73,
         "actionCount": 7,
-        "sitePageCount": 80,
-        "docCommandRefCount": 1025,
+        "sitePageCount": 81,
+        "docCommandRefCount": 1029,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1639,6 +1639,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./v4-tail-reseal-receipt"
+        },
+        {
+          "id": "export:./v4-publication-rehearsal",
+          "name": "@kungfu-tech/buildchain/v4-publication-rehearsal",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-publication-rehearsal.js",
+          "evidencePath": "packages/core/v4-publication-rehearsal.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-publication-rehearsal"
         },
         {
           "id": "export:./logging",
@@ -5494,12 +5506,17 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 10,
           "inputs": [
             "buildchain-ref",
+            "candidate-root",
             "declaration-path",
             "execute",
             "provider-bindings-path",
+            "rehearsal-authority-path",
+            "rehearsal-capsule-path",
+            "rehearsal-evidence-path",
+            "rehearsal-mode",
             "state-path"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -5583,6 +5600,20 @@
           "kind": "workflow",
           "sourcePath": ".github/workflows/v4-public-consumer-dogfood.yml",
           "evidencePath": ".github/workflows/v4-public-consumer-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:v4-publication-rehearsal-dogfood",
+          "name": "workflow:v4-publication-rehearsal-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
+          "evidencePath": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -5719,7 +5750,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 83,
+          "inputCount": 84,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -5791,6 +5822,7 @@
             "release-passport-promotion-routing-json",
             "release-passport-v4-consumer-policy-certification-json",
             "release-passport-v4-consumer-policy-certification-root",
+            "release-passport-v4-runtime-resume-evidence-command",
             "release-passport-v4-runtime-resume-evidence-json",
             "release-tail-state-path",
             "require-governance",
@@ -5817,13 +5849,18 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 6,
+          "inputCount": 11,
           "inputs": [
+            "candidate-root",
             "declaration",
             "execute",
             "github-token",
             "http-token",
             "provider-bindings",
+            "rehearsal-authority",
+            "rehearsal-capsule",
+            "rehearsal-evidence-path",
+            "rehearsal-mode",
             "state-path"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -6830,6 +6867,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-publication-rehearsal",
+          "name": "site-page:manual:v4-publication-rehearsal",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-runtime-ref-resume-authority",
           "name": "site-page:manual:v4-runtime-ref-resume-authority",
           "kind": "site-page",
@@ -7072,6 +7121,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 452
+    "publicSurfaceCount": 455
   }
 }

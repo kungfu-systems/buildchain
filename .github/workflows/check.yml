@@ -129,7 +129,7 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ inputs.mode == 'source' && inputs.source-proof-reuse && github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: ${{ inputs.mode == 'source' && '0' || '1' }}
+          fetch-depth: ${{ inputs.mode == 'source' && (!inputs.source-proof-reuse || github.event_name == 'pull_request') && '0' || '1' }}
           persist-credentials: false
       - name: Checkout Buildchain runtime
         id: runtime
@@ -269,6 +269,12 @@ jobs:
           DEPENDENCY_PATHS_JSON: ${{ inputs.source-proof-dependency-paths-json }}
           REQUIRED_CONTEXTS_JSON: ${{ inputs.source-proof-required-contexts-json }}
         run: |
+          qualified_base="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(".buildchain/source-proof/source-proof.json","utf8")); if (!/^[0-9a-f]{40}$/u.test(value.qualifiedBase || "")) process.exit(1); process.stdout.write(value.qualifiedBase)')"
+          git fetch --no-tags --no-recurse-submodules --depth=64 origin \
+            "+${MERGE_GROUP_HEAD}:refs/buildchain/source-proof/merge-group-head" \
+            "+${CURRENT_BASE}:refs/buildchain/source-proof/current-base" \
+            "+${SOURCE_HEAD}:refs/buildchain/source-proof/source-head" \
+            "+${qualified_base}:refs/buildchain/source-proof/qualified-base"
           merge_group_tree="$(git rev-parse 'HEAD^{tree}')"
           protected_base="${PROTECTED_BASE#refs/heads/}"
           node .buildchain/runtime/scripts/dev-delivery-source-proof-reuse.mjs verify \

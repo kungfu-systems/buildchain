@@ -3544,6 +3544,7 @@
         "release-tail compat",
         "release-tail init",
         "release-tail plan",
+        "release-tail rehearse",
         "release-tail status",
         "release-tail verify"
       ],
@@ -3552,11 +3553,16 @@
         "buildchain release-tail <status|verify> [--state <path>] [--output <path>]",
         "buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]",
         "buildchain release-tail init --declaration <json-or-path> [--state <path>]",
-        "buildchain release-tail plan --declaration <json-or-path> [--output <path>]"
+        "buildchain release-tail plan --declaration <json-or-path> [--output <path>]",
+        "buildchain release-tail rehearse --capsule <absolute-path> --candidate-root <absolute-path> --mode <simulate|replay> --state <absolute-path> --evidence <absolute-path>"
       ],
       "options": [
+        "--candidate-root",
+        "--capsule",
         "--declaration",
+        "--evidence",
         "--hooks-json",
+        "--mode",
         "--output",
         "--state"
       ],
@@ -3566,6 +3572,7 @@
         "buildchain release-tail compat --help",
         "buildchain release-tail init --help",
         "buildchain release-tail plan --help",
+        "buildchain release-tail rehearse --help",
         "buildchain release-tail status --help",
         "buildchain release-tail verify --help"
       ],

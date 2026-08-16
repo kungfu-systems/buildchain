@@ -11,6 +11,7 @@ import {
   verifySourceQualificationProof,
 } from "../packages/core/dev-delivery-warrant.js";
 import { validateControllerReceipt } from "../packages/core/controller-evidence.js";
+import { exactMergeGroupBinding } from "./dev-delivery-source-proof-replay.mjs";
 
 const REUSE_DECISION_SCHEMA =
   "kungfu.buildchain.source-qualification-reuse-decision/v1";
@@ -111,98 +112,6 @@ function gitPathRoot(ref, paths, label, cwd) {
     label,
     files,
   });
-}
-
-function exactMergeGroupBinding(input = {}) {
-  const cwd = path.resolve(input.cwd || process.cwd());
-  const mergeGroupHead = exactSha(input.mergeGroupHead, "mergeGroupHead");
-  const expectedTree = exactSha(input.mergeGroupTree, "mergeGroupTree");
-  const currentBase = exactSha(input.currentBase, "currentBase");
-  const sourceHead = exactSha(input.sourceHead, "sourceHead");
-  const actualTree = exactSha(
-    git(["rev-parse", `${mergeGroupHead}^{tree}`], { cwd }),
-    "mergeGroupTree",
-  );
-  if (actualTree !== expectedTree)
-    return { ok: false, reason: "merge-group-tree-mismatch" };
-  const [commit, ...parents] = git(
-    ["rev-list", "--parents", "-n", "1", mergeGroupHead],
-    { cwd },
-  ).split(/\s+/u);
-  if (commit !== mergeGroupHead) {
-    return { ok: false, reason: "merge-group-parent-mismatch" };
-  }
-  if (
-    parents.length === 2 &&
-    parents[0] === currentBase &&
-    parents[1] === sourceHead
-  ) {
-    return {
-      ok: true,
-      mergeGroupHead,
-      mergeGroupTree: actualTree,
-      parents,
-      compositionMode: "two-parent-merge",
-      replayedCommitTrees: [],
-    };
-  }
-
-  const linearRange = (head) => {
-    try {
-      git(["merge-base", "--is-ancestor", currentBase, head], { cwd });
-    } catch {
-      return null;
-    }
-    const commits = git(
-      ["rev-list", "--reverse", "--topo-order", `${currentBase}..${head}`],
-      { cwd },
-    )
-      .split(/\s+/u)
-      .filter(Boolean);
-    if (commits.length === 0) return null;
-    let expectedParent = currentBase;
-    const trees = [];
-    for (const rangeCommit of commits) {
-      const [observedCommit, ...rangeParents] = git(
-        ["rev-list", "--parents", "-n", "1", rangeCommit],
-        { cwd },
-      ).split(/\s+/u);
-      if (
-        observedCommit !== rangeCommit ||
-        rangeParents.length !== 1 ||
-        rangeParents[0] !== expectedParent
-      ) {
-        return null;
-      }
-      trees.push(
-        exactSha(
-          git(["rev-parse", `${rangeCommit}^{tree}`], { cwd }),
-          "replayedCommitTree",
-        ),
-      );
-      expectedParent = rangeCommit;
-    }
-    return trees;
-  };
-
-  const sourceTrees = linearRange(sourceHead);
-  const mergeGroupTrees = linearRange(mergeGroupHead);
-  if (
-    !sourceTrees ||
-    !mergeGroupTrees ||
-    sourceTrees.length !== mergeGroupTrees.length ||
-    sourceTrees.some((tree, index) => tree !== mergeGroupTrees[index])
-  ) {
-    return { ok: false, reason: "merge-group-parent-mismatch" };
-  }
-  return {
-    ok: true,
-    mergeGroupHead,
-    mergeGroupTree: actualTree,
-    parents,
-    compositionMode: "linear-replay",
-    replayedCommitTrees: mergeGroupTrees,
-  };
 }
 
 export function sourceQualificationPredicates(input = {}) {
@@ -397,7 +306,8 @@ export function materializeReuseLifecycleEvidence({
       decisionRoot: decision.decisionRoot,
       sourceWorkflowRunId: decision.sourceWorkflowRunId,
       sourceHead: decision.sourceHead,
-      qualifiedBase: decision.currentBase,
+      qualifiedBase: decision.qualifiedBase,
+      currentBase: decision.currentBase,
       mergeGroupHead: decision.mergeGroupHead,
       mergeGroupTree: decision.mergeGroupTree,
     },
@@ -446,7 +356,7 @@ export function verifySourceQualificationReuse(input = {}) {
   const verification = verifySourceQualificationProof(proof, {
     repository: required(input.repository, "repository"),
     protectedBase: required(input.protectedBase, "protectedBase"),
-    qualifiedBase: exactSha(input.currentBase, "currentBase"),
+    qualifiedBase: exactSha(proof.qualifiedBase, "qualifiedBase"),
     sourceHead: exactSha(input.sourceHead, "sourceHead"),
     sourceWorkflowRunId: Number(input.sourceWorkflowRunId),
     controllerReceiptRoot: receipt.digest,
@@ -462,7 +372,7 @@ export function verifySourceQualificationReuse(input = {}) {
   }
   const current = sourceQualificationPredicates({
     ...input,
-    qualifiedBase: input.currentBase,
+    qualifiedBase: proof.qualifiedBase,
   });
   const classification = classifyDevDeliveryDelta({
     proof,
@@ -476,7 +386,11 @@ export function verifySourceQualificationReuse(input = {}) {
       reason: classification.reason,
     });
   }
-  const mergeGroup = exactMergeGroupBinding(input);
+  const mergeGroup = exactMergeGroupBinding({
+    ...input,
+    qualifiedBase: proof.qualifiedBase,
+    sourcePatchRoot: proof.sourcePatchRoot,
+  });
   if (!mergeGroup.ok) {
     return rootedDecision({
       schema: REUSE_DECISION_SCHEMA,
@@ -493,12 +407,14 @@ export function verifySourceQualificationReuse(input = {}) {
     sourceProofRoot: proof.proofRoot,
     sourceWorkflowRunId: proof.sourceWorkflowRunId,
     sourceHead: proof.sourceHead,
-    currentBase: proof.qualifiedBase,
+    qualifiedBase: proof.qualifiedBase,
+    currentBase: exactSha(input.currentBase, "currentBase"),
     mergeGroupHead: mergeGroup.mergeGroupHead,
     mergeGroupTree: mergeGroup.mergeGroupTree,
     mergeGroupParents: mergeGroup.parents,
     mergeGroupCompositionMode: mergeGroup.compositionMode,
     mergeGroupReplayTrees: mergeGroup.replayedCommitTrees,
+    mergeGroupReplayPatchRoots: mergeGroup.replayedCommitPatchRoots,
     predicateRoots: {
       sourceIdentityRoot: proof.sourceIdentityRoot,
       sourcePatchRoot: proof.sourcePatchRoot,

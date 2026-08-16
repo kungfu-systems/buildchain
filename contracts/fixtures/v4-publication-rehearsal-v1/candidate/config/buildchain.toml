@@ -1,0 +1,5 @@
+schema = 1
+
+[publication_rehearsal]
+contract = "buildchain-v4-publication-rehearsal-capsule/v1"
+effect_default = "disabled"

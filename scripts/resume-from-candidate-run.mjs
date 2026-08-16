@@ -779,8 +779,14 @@ async function recoverCandidateEvidence({
   for (const artifact of [selected.passport, selected.summary]) initialDownloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   const passport = readOnlyJson(initialDownloads[0].files.filter((file) => path.basename(file.path) === "release-candidate-passport.json"), "release-candidate-passport.json");
   const buildSummary = readOnlyJson(initialDownloads[1].files.filter((file) => path.basename(file.path) === "build-summary.json"), "build-summary.json");
-  const sidecarFiles = initialDownloads[0].files.filter((file) => path.basename(file.path) === "release-candidate-stage-capsules.json");
-  const stageCapsuleSidecar = sidecarFiles.length === 1 ? readOnlyJson(sidecarFiles, "release-candidate-stage-capsules.json") : undefined;
+  const sidecarFiles = initialDownloads[0].files.filter(
+    (file) =>
+      path.basename(file.path) === "release-candidate-stage-capsules.json",
+  );
+  const stageCapsuleSidecar =
+    sidecarFiles.length === 1
+      ? readOnlyJson(sidecarFiles, "release-candidate-stage-capsules.json")
+      : undefined;
   const { names: requiredNames, publicationNames } = candidateArtifactNames({ passport, selected, artifacts, artifactPatterns });
   const chosen = artifacts.filter((artifact) => requiredNames.has(artifact.name));
   if (chosen.length !== requiredNames.size) {
@@ -828,6 +834,26 @@ async function resolveRecoveryTransaction({
   return { version, transaction };
 }
 
+function resolveRecoveredStageCapsules({
+  candidateRuntimeSha,
+  runtimeSha,
+  sidecar,
+  passport,
+  downloads,
+}) {
+  if (candidateRuntimeSha === runtimeSha) return [];
+  return verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads });
+}
+
+function validateRecoveryCoordinates(candidateRunId, expectedSourceTree, expectedCandidateRoot) {
+  const runId = String(candidateRunId || "").trim();
+  if (!/^\d+$/.test(runId)) throw new Error("candidate run ID must be numeric");
+  if (!String(expectedSourceTree || "").trim() && !String(expectedCandidateRoot || "").trim()) {
+    throw new Error("candidate recovery requires expectedSourceTree or expectedCandidateRoot");
+  }
+  return runId;
+}
+
 export async function resumeFromCandidateRun({
   repository, targetRepository = repository, candidateRunId,
   expectedWorkflowFile, expectedWorkflowName,
@@ -842,11 +868,7 @@ export async function resumeFromCandidateRun({
   recoveryRunId = env("GITHUB_RUN_ID"), fetchImpl = globalThis.fetch,
 } = {}) {
   const repoInfo = splitRepository(repository);
-  const runId = String(candidateRunId || "").trim();
-  if (!/^\d+$/.test(runId)) throw new Error("candidate run ID must be numeric");
-  if (!String(expectedSourceTree || "").trim() && !String(expectedCandidateRoot || "").trim()) {
-    throw new Error("candidate recovery requires expectedSourceTree or expectedCandidateRoot");
-  }
+  const runId = validateRecoveryCoordinates(candidateRunId, expectedSourceTree, expectedCandidateRoot);
   const archiveDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-resume-"));
   try {
     const {
@@ -877,13 +899,13 @@ export async function resumeFromCandidateRun({
       releasePatterns,
       platformManifests: platformManifestEvidence.manifests,
     });
-    const stageCapsules = candidateRuntimeSha === runtimeSha
-      ? []
-      : verifyReleaseCandidateStageCapsules({
-          sidecar: stageCapsuleSidecar,
-          passport,
-          downloads,
-        });
+    const stageCapsules = resolveRecoveredStageCapsules({
+      candidateRuntimeSha,
+      runtimeSha,
+      sidecar: stageCapsuleSidecar,
+      passport,
+      downloads,
+    });
     const {
       version: candidateVersion,
       transaction: existingTransaction,
@@ -1056,7 +1078,9 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-recovery-receipt-path": result.paths.recoveryReceipt,
       "release-candidate-recovery-root": result.receipt.root,
       "v4-runtime-resume-evidence-path": result.paths.runtimeResumeEvidence,
-      "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence ? "node .buildchain/runtime/scripts/resume-from-candidate-run.mjs finalize" : "",
+      "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence
+        ? "node .buildchain/runtime/scripts/resume-from-candidate-run.mjs finalize"
+        : "",
       "release-candidate-root": result.candidateRoot,
       "release-candidate-artifact-root": result.artifactRoot,
       "publish-sealed-bundle-root": result.paths.sealedBundleRoot,

@@ -30,6 +30,9 @@
     "packages/core/release-tail-provider-plane.js",
     "packages/core/release-tail-provider-adapters.js",
     "packages/core/release-tail-compatibility.js",
+    "packages/core/v4-publication-rehearsal-capsule.js",
+    "packages/core/v4-publication-rehearsal-provider-bindings.js",
+    "packages/core/v4-publication-rehearsal.js",
     "actions/release-tail/index.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
@@ -460,6 +463,22 @@
         ".github/workflows/release-tail.yml",
         "actions/release-tail/action.yml",
         "docs/release-tail-provider-plane.md"
+      ]
+    },
+    {
+      "id": "v4-publication-rehearsal",
+      "owner": "Buildchain publication rehearsal maintainers",
+      "implementation": [
+        "packages/core/v4-publication-rehearsal-capsule.js",
+        "packages/core/v4-publication-rehearsal-provider-bindings.js",
+        "packages/core/v4-publication-rehearsal.js"
+      ],
+      "tests": ["tests/v4-publication-rehearsal.test.mjs"],
+      "contracts": [
+        "architecture/v4-publication-rehearsal-parity.json",
+        "contracts/v4-publication-rehearsal-capsule-v1.schema.json",
+        ".github/workflows/v4-publication-rehearsal-dogfood.yml",
+        "docs/v4-publication-rehearsal.md"
       ]
     },
     {

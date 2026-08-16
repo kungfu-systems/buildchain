@@ -41,6 +41,7 @@
       "release-passport-evidence-command",
       "release-passport-invariant-passport-command",
       "release-passport-kfd-3-artifact-verify-command",
+      "release-passport-v4-runtime-resume-evidence-command",
       "verification-command"
     ],
     "configAndCliAliases": [
@@ -286,7 +287,8 @@
       "publicNames": [
         "release-passport-kfd-3-artifact-verify-command",
         "release-passport-invariant-passport-command",
-        "release-passport-attachment-command"
+        "release-passport-attachment-command",
+        "release-passport-v4-runtime-resume-evidence-command"
       ],
       "aliases": [
         {
@@ -306,7 +308,8 @@
         "action:actions/promote-buildchain-ref/action.yml#release-passport-kfd-3-artifact-verify-command",
         "action:actions/promote-buildchain-ref/action.yml#release-passport-invariant-passport-command",
         "action:actions/promote-buildchain-ref/action.yml#release-passport-attachment-command",
-        "action:actions/promote-buildchain-ref/action.yml#release-passport-evidence-command"
+        "action:actions/promote-buildchain-ref/action.yml#release-passport-evidence-command",
+        "action:actions/promote-buildchain-ref/action.yml#release-passport-v4-runtime-resume-evidence-command"
       ],
       "executionSites": [
         {
