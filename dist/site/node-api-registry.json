@@ -21734,7 +21734,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 79
+        "line": 84
       },
       "example": "import { resolveV4FloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21763,7 +21763,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 318
+        "line": 323
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21792,7 +21792,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 66
+        "line": 71
       },
       "example": "import { v4ConsumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24497,7 +24497,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:808816d3d08b35c3139c6587be6c27574248dfdf2c92bef69d6f85027fa424b9",
+      "digest": "sha256:344501cd0a789a587330ae4f7d56776e93a3c97672cc912b2a244d04c550bf6d",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -25504,7 +25504,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:a409b078692ebb18ca7bb817ebd35c416cc6be3842f671c17d019c9aa32d0638"
+      "digest": "sha256:efd452154c29b9572e26a377672678808a8a0de0ea4da1c784a8c2251f0d3eb7"
     },
     {
       "id": "build-facts",

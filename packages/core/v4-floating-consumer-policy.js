@@ -1,6 +1,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  createBuildchainContractWorld,
+  evaluateBuildchainContractLock,
+} from "./buildchain-contract.js";
 import { parseYamlUses } from "./workflow-yaml-contract.js";
 import {
   V4_FLOATING_CONSUMER_POLICY,
@@ -29,6 +33,7 @@ const TRANSIENT_ACTION =
 const SCANNER_PATHS = Object.freeze([
   "architecture/v4-floating-consumer-policy.json",
   "contracts/v4-floating-consumer-policy-receipt-v1.schema.json",
+  "packages/core/buildchain-contract.js",
   "packages/core/v4-floating-consumer-policy.js",
   "packages/core/workflow-yaml-contract.js",
   "scripts/v4-consumer-policy.mjs",
@@ -381,15 +386,30 @@ export function scanV4FloatingConsumerPolicy({
     expectedInvocationChannel,
   );
   const selectedLock = selected?.channel === "alpha" ? alpha : stable;
-  if (
-    selected?.channel &&
-    selectedLock?.buildchain?.resolvedSha?.toLowerCase() !==
-      normalizedWorkflowSha
-  ) {
-    failures.push({
-      code: "selected-lock-runtime-mismatch",
-      message: `${selected.channel} contract lock does not bind resolved workflow shell ${normalizedWorkflowSha}`,
-    });
+  if (selected?.channel && selectedLock) {
+    try {
+      const compatibility = evaluateBuildchainContractLock({
+        lock: selectedLock,
+        current: createBuildchainContractWorld({ root: defaultRuntimeRoot() }),
+        runtimeRef: selected.selector,
+        runtimeSha: normalizedWorkflowSha,
+        runtimeClass: selected.channel,
+        workflowShellRef: selected.selector,
+        expectedChannel: selected.channel,
+        expectedMajor: "v4",
+      });
+      if (!compatibility.ok) {
+        failures.push({
+          code: "selected-lock-runtime-incompatible",
+          message: `${selected.channel} contract lock rejects resolved workflow shell ${normalizedWorkflowSha}: ${compatibility.reasons?.join("; ") || compatibility.status}`,
+        });
+      }
+    } catch (error) {
+      failures.push({
+        code: "selected-lock-contract-world-invalid",
+        message: `cannot evaluate ${selected.channel} contract lock against the resolved workflow shell: ${error.message}`,
+      });
+    }
   }
 
   const policyRoot = sha256(stableJson(policy));
