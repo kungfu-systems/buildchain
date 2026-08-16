@@ -29,6 +29,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/buildchain-patrol-monthly.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-weekly.yml", "governance-write"],
   [".github/workflows/buildchain-patrol.yml", "governance-write"],
+  [".github/workflows/buildchain-ref-promotion-recovery.yml", "governance-write"],
   [".github/workflows/buildchain-ref-promotion.yml", "governance-write"],
   [".github/workflows/buildchain-stable-candidate-patrol.yml", "governance-write"],
   [".github/workflows/dev-qualification-patrol.yml", "governance-write"],

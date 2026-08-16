@@ -43,6 +43,41 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
   assert.equal(result.receipt.invocation.channel, "alpha");
 });
 
+test("bounded alpha recovery admits the floating advanced shell before promotion", () => {
+  const relative =
+    ".github/workflows/buildchain-ref-promotion-recovery.yml";
+  const workflow = fs.readFileSync(path.join(root, relative), "utf8");
+  const authority = resolveV4FloatingConsumerPolicyAuthority({
+    runtimeRoot: root,
+    callerRoot: root,
+  });
+  const result = scanV4FloatingConsumerPolicy({
+    root,
+    repository: "kungfu-systems/buildchain",
+    sourceSha: "a".repeat(40),
+    invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+    invocationSourcePath: relative,
+    expectedInvocationChannel: "alpha",
+    resolvedWorkflowSha: "b".repeat(40),
+    resolvedRuntimeSha: "c".repeat(40),
+    policy: authority.policy,
+    scannerRoot: authority.scannerRoot,
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+  assert.match(workflow, /^  workflow_dispatch:/mu);
+  assert.doesNotMatch(workflow, /^  workflow_run:/mu);
+  assert.match(
+    workflow,
+    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@v4-alpha/u,
+  );
+  assert.match(
+    workflow,
+    /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\['release-passport-v4-runtime-resume-evidence-json'\] \}\}/u,
+  );
+});
+
 test("v4 floating policy contract rejects certification without caller lock readback", () => {
   assert.throws(
     () =>
