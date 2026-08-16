@@ -38,6 +38,36 @@ inspects, verifies, and diagnoses bounded v3 compatibility using the same core
 transaction format. The reusable workflow checks out an exact Buildchain ref
 and invokes the packaged Action; callers cannot inject an execution command.
 
+The reusable workflow is permission-neutral: it inherits the calling job's
+GitHub token permissions and never elevates them. A rehearsal caller can remain
+`contents: read` and must pass `execute: false`. An effectful production caller
+owns and declares its provider authority explicitly:
+
+<!-- release-tail-production-caller-contract -->
+
+```yaml
+name: Production release tail
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release-tail:
+    permissions:
+      contents: write
+    uses: kungfu-systems/buildchain/.github/workflows/release-tail.yml@<exact-buildchain-sha>
+    with:
+      buildchain-ref: <exact-buildchain-sha>
+      declaration-path: .buildchain/release-tail/declaration.json
+      provider-bindings-path: .buildchain/release-tail/provider-bindings.json
+      execute: true
+```
+
+Omitting caller write authority cannot be repaired by the reusable workflow;
+GitHub rejects or constrains the call before provider execution. `execute:
+false` remains a plan/rehearsal boundary and does not authorize production
+mutation even when a caller token has broader ambient permissions.
+
 ## Inputs and secrets
 
 The declaration follows

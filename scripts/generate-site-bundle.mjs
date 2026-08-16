@@ -54,6 +54,18 @@ const V4_COMPATIBILITY_FACTS_SCHEMA =
   "schemas/v4-compatibility-facts-v1.schema.json";
 const V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE =
   "contracts/v4-compatibility-facts-v1.schema.json";
+const V4_PUBLICATION_REHEARSAL_SCHEMA =
+  "schemas/v4-publication-rehearsal-capsule-v1.schema.json";
+const V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE =
+  "contracts/v4-publication-rehearsal-capsule-v1.schema.json";
+const RELEASE_TAIL_CAPABILITIES_SCHEMA =
+  "schemas/release-tail-capabilities-v1.schema.json";
+const RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE =
+  "contracts/release-tail-capabilities-v1.schema.json";
+const PUBLICATION_REHEARSAL_SITE_SCHEMAS = [
+  V4_PUBLICATION_REHEARSAL_SCHEMA,
+  RELEASE_TAIL_CAPABILITIES_SCHEMA,
+];
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
 const requireFromHere = createRequire(import.meta.url);
@@ -84,6 +96,8 @@ function stableJson(value) {
 function siteFileBytes(name, value) {
   if (name === DEV_DELIVERY_AUTHORITY_SCHEMA) return readText(DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE);
   if (name === V4_COMPATIBILITY_FACTS_SCHEMA) return readText(V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE);
+  if (name === V4_PUBLICATION_REHEARSAL_SCHEMA) return readText(V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE);
+  if (name === RELEASE_TAIL_CAPABILITIES_SCHEMA) return readText(RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE);
   return stableJson(value);
 }
 
@@ -956,6 +970,7 @@ function buildSiteBundle() {
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
       "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "kfd-support.json",
       "artifact-evidence.json",
       "product-mechanism.json",
@@ -992,6 +1007,7 @@ function buildSiteBundle() {
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
       "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1124,6 +1140,7 @@ function buildSiteBundle() {
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
       "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1303,6 +1320,12 @@ function buildSiteBundle() {
     ),
     [V4_COMPATIBILITY_FACTS_SCHEMA]: readJson(
       V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE,
+    ),
+    [V4_PUBLICATION_REHEARSAL_SCHEMA]: readJson(
+      V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE,
+    ),
+    [RELEASE_TAIL_CAPABILITIES_SCHEMA]: readJson(
+      RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE,
     ),
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,

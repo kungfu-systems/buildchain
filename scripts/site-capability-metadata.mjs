@@ -223,6 +223,7 @@ export function nodeApiMeta(exportName) {
     "./v4-runtime-ref-resume-authority": { group: "release-passport-trust", summary: "Transient exact-runtime authorization, persisted-selector rejection, fresh-attempt Stage Capsule reuse, and A+B Passport lineage APIs." },
     "./v4-tail-reseal": { group: "release-passport-trust", summary: "Effect-pure retained Stage Capsule validation and explicit Warrant-, credential-, and release-tail-fenced macOS reseal planning APIs." },
     "./v4-tail-reseal-receipt": { group: "release-passport-trust", summary: "Four-platform byte readback, standard candidate Passport binding, and terminal v4 tail-reseal receipt APIs." },
+    "./v4-publication-rehearsal": { group: "release-passport-trust", summary: "Content-addressed v4 publication rehearsal capsules, shared production release-tail execution, replay, provider observation, and fail-closed verification APIs." },
     "./release-candidate-recovery": { group: "release-passport-trust", summary: "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads." },
     "./release-train": { group: "governance-versioning", summary: "Frozen Release Cut identity, rooted Release Train transitions, Dev observations, supersession, replay, and legacy read compatibility APIs." },
     "./next-development-transition": { group: "governance-versioning", summary: "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs." },

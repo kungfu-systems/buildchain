@@ -2246,6 +2246,17 @@ buildchain release-tail init --declaration <json-or-path> [--state <path>]
 buildchain release-tail plan --declaration <json-or-path> [--output <path>]
 ```
 
+### `buildchain release-tail rehearse`
+
+- Help: `buildchain release-tail rehearse --help`
+- Canonical id: `release-tail`
+- Options: `--candidate-root`, `--capsule`, `--evidence`, `--mode`, `--state`
+- Syntax:
+
+```text
+buildchain release-tail rehearse --capsule <absolute-path> --candidate-root <absolute-path> --mode <simulate|replay> --state <absolute-path> --evidence <absolute-path>
+```
+
 ### `buildchain release-tail status`
 
 - Help: `buildchain release-tail status --help`

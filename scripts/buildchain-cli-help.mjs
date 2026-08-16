@@ -44,6 +44,11 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-tail init --declaration <json-or-path> [--state <path>]
   buildchain release-tail <status|verify> [--state <path>] [--output <path>]
   buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
+  buildchain release-tail rehearse --capsule <absolute-path>
+                                      --candidate-root <absolute-path>
+                                      --mode <simulate|replay>
+                                      --state <absolute-path>
+                                      --evidence <absolute-path>
   buildchain tail-reseal plan --request <request.json> [--output <plan.json>]
   buildchain tail-reseal admit --request <request.json> [--output <admission.json>]
   buildchain tail-reseal verify-platform --request <request.json> --platform <id>
