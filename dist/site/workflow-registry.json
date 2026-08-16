@@ -3030,6 +3030,38 @@
       "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
+      "id": "v4-tail-reseal",
+      "path": ".github/workflows/v4-tail-reseal.yml",
+      "reusable": true,
+      "inputs": [
+        "artifact-retention-days",
+        "consumer-policy-receipt-json",
+        "macos-finalization-command",
+        "request-json"
+      ],
+      "inputCount": 4,
+      "secrets": [
+        "BUILDCHAIN_EVIDENCE_READ_TOKEN",
+        "BUILDCHAIN_SIGNING_TOKEN"
+      ],
+      "secretCount": 2,
+      "outputs": [
+        "release-candidate-passport-json",
+        "tail-reseal-receipt-root"
+      ],
+      "outputCount": 2,
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
       "id": "verify",
       "path": ".github/workflows/verify.yml",
       "reusable": false,

@@ -1919,6 +1919,30 @@ Target: `./packages/core/v4-runtime-ref-resume-authority.js`. Public symbols: 9.
 | `verifyV4RuntimeAuthorizationReceipt` | function: function verifyV4RuntimeAuthorizationReceipt({ receipt, receiptRoot, repository = "", sourceSha = "", runtimeSha = "", consumerPolicyReceiptRoot = "", } = {}) | { receipt, receiptRoot, repository = "", sourceSha = "", runtimeSha = "", consumerPolicyReceiptRoot = "", } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { verifyV4RuntimeAuthorizationReceipt } from "@kungfu-tech/buildchain/v4-runtime-ref-resume-authority";` | `packages/core/v4-runtime-ref-resume-authority.js:271` |
 | `verifyV4RuntimeResumeLineage` | function: function verifyV4RuntimeResumeLineage({ lineage, lineageRoot, repository = "", sourceSha = "", buildRuntimeSha = "", resumeRuntimeSha = "", consumerPolicyReceiptRoot = "", } = {}) | { lineage, lineageRoot, repository = "", sourceSha = "", buildRuntimeSha = "", resumeRuntimeSha = "", consumerPolicyReceiptRoot = "", } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { verifyV4RuntimeResumeLineage } from "@kungfu-tech/buildchain/v4-runtime-ref-resume-authority";` | `packages/core/v4-runtime-ref-resume-authority.js:551` |
 
+## `@kungfu-tech/buildchain/v4-tail-reseal`
+
+Target: `./packages/core/v4-tail-reseal.js`. Public symbols: 7.
+
+| Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `normalizeV4TailResealRequest` | function: function normalizeV4TailResealRequest(request) | request | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { normalizeV4TailResealRequest } from "@kungfu-tech/buildchain/v4-tail-reseal";` | `packages/core/v4-tail-reseal.js:460` |
+| `planV4TailReseal` | function: function planV4TailReseal(request) | request | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { planV4TailReseal } from "@kungfu-tech/buildchain/v4-tail-reseal";` | `packages/core/v4-tail-reseal.js:519` |
+| `V4_TAIL_RESEAL_PLAN_CONTRACT` | constant: const V4_TAIL_RESEAL_PLAN_CONTRACT | none | value | Import does not declare a throw contract. | none-on-import | `import { V4_TAIL_RESEAL_PLAN_CONTRACT } from "@kungfu-tech/buildchain/v4-tail-reseal";` | `packages/core/v4-tail-reseal-contract.js:3` |
+| `V4_TAIL_RESEAL_PLATFORMS` | constant: const V4_TAIL_RESEAL_PLATFORMS | none | value | Import does not declare a throw contract. | none-on-import | `import { V4_TAIL_RESEAL_PLATFORMS } from "@kungfu-tech/buildchain/v4-tail-reseal";` | `packages/core/v4-tail-reseal-contract.js:6` |
+| `V4_TAIL_RESEAL_REQUEST_CONTRACT` | constant: const V4_TAIL_RESEAL_REQUEST_CONTRACT | none | value | Import does not declare a throw contract. | none-on-import | `import { V4_TAIL_RESEAL_REQUEST_CONTRACT } from "@kungfu-tech/buildchain/v4-tail-reseal";` | `packages/core/v4-tail-reseal-contract.js:1` |
+| `V4_TAIL_RESEAL_REUSED_STAGE_KEYS` | constant: const V4_TAIL_RESEAL_REUSED_STAGE_KEYS | none | value | Import does not declare a throw contract. | none-on-import | `import { V4_TAIL_RESEAL_REUSED_STAGE_KEYS } from "@kungfu-tech/buildchain/v4-tail-reseal";` | `packages/core/v4-tail-reseal-contract.js:20` |
+| `V4TailResealFault` | class: class V4TailResealFault | none | V4TailResealFault | Construction and method errors follow the linked source implementation. | class-dependent | `import { V4TailResealFault } from "@kungfu-tech/buildchain/v4-tail-reseal";` | `packages/core/v4-tail-reseal.js:23` |
+
+## `@kungfu-tech/buildchain/v4-tail-reseal-receipt`
+
+Target: `./packages/core/v4-tail-reseal-receipt.js`. Public symbols: 3.
+
+| Symbol | Kind and signature | Parameters | Return | Errors | Side effects | Example | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `createV4TailResealReceipt` | function: function createV4TailResealReceipt({ request, plan, readbacks, passport, protectedReadbackRoot, currentRun, } = {}) | { request, plan, readbacks, passport, protectedReadbackRoot, currentRun, } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { createV4TailResealReceipt } from "@kungfu-tech/buildchain/v4-tail-reseal-receipt";` | `packages/core/v4-tail-reseal-receipt.js:119` |
+| `V4_TAIL_RESEAL_RECEIPT_CONTRACT` | constant: const V4_TAIL_RESEAL_RECEIPT_CONTRACT | none | value | Import does not declare a throw contract. | none-on-import | `import { V4_TAIL_RESEAL_RECEIPT_CONTRACT } from "@kungfu-tech/buildchain/v4-tail-reseal-receipt";` | `packages/core/v4-tail-reseal-receipt.js:11` |
+| `verifyV4TailResealReceipt` | function: function verifyV4TailResealReceipt({ receipt, request, passport } = {}) | { receipt, request, passport } = {} | unknown | Errors from called operations may propagate; no narrower throw contract is declared in source. | none-detected-by-static-source-scan | `import { verifyV4TailResealReceipt } from "@kungfu-tech/buildchain/v4-tail-reseal-receipt";` | `packages/core/v4-tail-reseal-receipt.js:200` |
+
 ## `@kungfu-tech/buildchain/logging`
 
 Target: `./packages/core/logging.js`. Public symbols: 13.
