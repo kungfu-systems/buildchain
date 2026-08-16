@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 282,
+  "generation": 283,
   "fencingCounter": 82,
   "policy": {
     "agingSeconds": 900,
@@ -3117,8 +3117,46 @@
         "tests/dev-delivery-native-run.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 2865,
+      "assignmentRoot": "sha256:b8cb2aad4416b77e9f53742aa2479c41143c7b1869f7729a52de5077045df9e6",
+      "initiativeRoot": "sha256:0fc567629323a724deea1e21b4156681613164431b97a254b6c68673a6c9c139",
+      "sourceIdentityRoot": "sha256:560e4e3ddd291a9dcc8e3ea2616bcf35ef4045092af3afb75234151746607afd",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:7bbcb8d9df3edfc52ab03012f2bdcd05dd00abff4f15c3616478a1fdcc0127e7",
+      "sourceHead": "48ea836f31534a3e915152d1c3b07c630ba1b3cb",
+      "sourcePatchRoot": "sha256:286627c27922d5a2b91bd86cf001cc3b42b151aa6c397c804a991ab1a537ce8b",
+      "sourceProofRoot": "sha256:66e1631e588447b7e4688dfd3e3d676017e2c12c3ee7e3a3765bb6f47fa996fd",
+      "planRoot": "sha256:daca06eb32aa7db7a025e75d4edd7304a322aa67f42961b8cbf86f67990a1abe",
+      "closureRoot": "sha256:753c9682dd30daf6488ab78d6d9062f5573165d89f58422395ea54f1d38d04d0",
+      "dependencyRoot": "sha256:d8469b900ab5d719ff05cf2e82624b78e3c4d678d408c3aa6a44dc8d5a021f2e",
+      "toolchainRoot": "sha256:26f4d71543e057578b96b6e7675f78cdf25ebf0861ccb1d2cd478c6c9827b485",
+      "environmentRoot": "sha256:7f80b3b7429cc409b434f971cfa3b885b4dacb46d7ef403e4907bc9eb9d89214",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "node --test tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs",
+        "commandRoot": "sha256:99c7909fa6110fc36a82f8ab8a4ad074e5032be90f3e9f8cd487f4561c69d631"
+      },
+      "sourceWorkflowRunId": 31926005258,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-16T04:20:39.441Z",
+      "updatedAt": "2026-08-16T04:20:39.441Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/maintainability-policy.json",
+        "packages/core/dev-delivery-execution-transfer.js",
+        "tests/dev-delivery-process-boundary.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-16T04:08:08.620Z",
-  "stateRoot": "sha256:3393c509d5733c28481e8d8b4bc0b1a2735ad457c721e4aeb23b93bfa80308ea"
+  "updatedAt": "2026-08-16T04:20:39.441Z",
+  "stateRoot": "sha256:e9480a842e6f4f3f8fa935538beff6c8be6d0b83287ae8014cbb1aeeaacbf638"
 }
