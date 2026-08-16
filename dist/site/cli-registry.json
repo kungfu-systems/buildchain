@@ -239,11 +239,19 @@
       "usage": "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]",
       "paths": [
         "facts aggregate",
+        "facts compatibility project",
+        "facts compatibility query",
+        "facts compatibility query-template",
+        "facts compatibility verify",
         "facts module",
         "facts verify"
       ],
       "syntaxes": [
         "buildchain facts aggregate [--cwd <dir>] [--product <id>] [--module-fact <file>]... [--artifact <path>]... [--output <file>] [--json]",
+        "buildchain facts compatibility project [--cwd <dir>] [--registry <json-or-path>] [--output <file>] [--json]",
+        "buildchain facts compatibility query --query <json-or-path> [--registry <json-or-path>] [--cwd <dir>] [--json]",
+        "buildchain facts compatibility query-template --fact-root <sha256:...> [--query-id <id>] [--registry <json-or-path>] [--cwd <dir>] [--json]",
+        "buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] [--json]",
         "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>] [--version-source <id>] [--output <file>] [--output-path <path>]... [--legacy-kungfu-buildinfo <file>] [--json]",
         "buildchain facts verify [--cwd <dir>] --fact <file> [--json]"
       ],
@@ -251,6 +259,7 @@
         "--artifact",
         "--cwd",
         "--fact",
+        "--fact-root",
         "--json",
         "--legacy-kungfu-buildinfo",
         "--module",
@@ -259,11 +268,18 @@
         "--output",
         "--output-path",
         "--product",
+        "--query",
+        "--query-id",
+        "--registry",
         "--version-source"
       ],
       "aliases": [],
       "helpCommands": [
         "buildchain facts aggregate --help",
+        "buildchain facts compatibility project --help",
+        "buildchain facts compatibility query --help",
+        "buildchain facts compatibility query-template --help",
+        "buildchain facts compatibility verify --help",
         "buildchain facts module --help",
         "buildchain facts verify --help"
       ],

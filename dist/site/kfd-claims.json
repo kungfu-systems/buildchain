@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:c8407195cafe42cb62ac2a4f5ff5b2c3f9b8aa65c27cc678efd46240cb3f0ecc",
+    "compatibilityDigest": "sha256:5de1c69386510b74b17eb70141b8bdd07063d62c504f91db5e84b67c6d4b64a2",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "788e95d53b681927cb84f4c4905c7ebe1c15f213dac1f51c25b77caa15ef9ed3",
+    "sha256": "6c9f1ea928b519c9fa9613e99b8c1e2f7566c2e6feda68d104bf7887cddcf713",
     "summary": {
       "cliCommandCount": 116,
       "workflowCount": 72,
       "actionCount": 7,
-      "sitePageCount": 79,
-      "docCommandRefCount": 1009,
+      "sitePageCount": 80,
+      "docCommandRefCount": 1025,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "788e95d53b681927cb84f4c4905c7ebe1c15f213dac1f51c25b77caa15ef9ed3",
+      "sha256": "6c9f1ea928b519c9fa9613e99b8c1e2f7566c2e6feda68d104bf7887cddcf713",
       "summary": {
         "cliCommandCount": 116,
         "workflowCount": 72,
         "actionCount": 7,
-        "sitePageCount": 79,
-        "docCommandRefCount": 1009,
+        "sitePageCount": 80,
+        "docCommandRefCount": 1025,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -825,6 +825,18 @@
           "plane": "use"
         },
         {
+          "id": "doc:docs/v4-compatibility-facts.md",
+          "name": "Buildchain v4 compatibility Facts",
+          "kind": "documentation",
+          "sourcePath": "docs/v4-compatibility-facts.md",
+          "evidencePath": "docs/v4-compatibility-facts.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
           "id": "doc:docs/versioning.md",
           "name": "Versioning",
           "kind": "documentation",
@@ -1351,6 +1363,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./buildchain-contract"
+        },
+        {
+          "id": "export:./compatibility-fact-authority",
+          "name": "@kungfu-tech/buildchain/compatibility-fact-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-compatibility-proof.js",
+          "evidencePath": "packages/core/buildchain-compatibility-proof.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./compatibility-fact-authority"
         },
         {
           "id": "export:./candidate-timeline",
@@ -6758,6 +6782,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-compatibility-facts",
+          "name": "site-page:manual:v4-compatibility-facts",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-delivery-warrant-read-candidate",
           "name": "site-page:manual:v4-delivery-warrant-read-candidate",
           "kind": "site-page",
@@ -7036,6 +7072,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 449
+    "publicSurfaceCount": 452
   }
 }

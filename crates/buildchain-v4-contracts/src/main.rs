@@ -9,9 +9,9 @@ use buildchain_v4_contracts::{
     plan_partial_mutation_recovery_bytes, plan_stage_capsule_resume_bytes,
     project_adopter_delivery_parity_bytes, project_delivery_warrant_state_bytes,
     project_release_activation_bytes, project_stable_publication_bytes,
-    run_delivery_warrant_trace_fixture, run_provider_operation_journal_fixture,
-    run_provider_readback_fixture, run_stage_capsule_fixture, run_stage_capsule_store_fixture,
-    validate_clock,
+    run_compatibility_facts_fixture, run_delivery_warrant_trace_fixture,
+    run_provider_operation_journal_fixture, run_provider_readback_fixture,
+    run_stage_capsule_fixture, run_stage_capsule_store_fixture, validate_clock,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -259,6 +259,16 @@ fn run_trace_fixture(fixture_path: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn run_compatibility_facts_fixtures(fixture_path: &str) -> Result<(), String> {
+    let bytes = fs::read(fixture_path).map_err(|error| format!("cannot read fixtures: {error}"))?;
+    let projection = run_compatibility_facts_fixture(&bytes)
+        .map_err(|fault| format!("{} at {}: {}", fault.code, fault.path, fault.message))?;
+    serde_json::to_writer(std::io::stdout().lock(), &projection)
+        .map_err(|error| error.to_string())?;
+    println!();
+    Ok(())
+}
+
 fn run_stage_capsule_fixtures(fixture_path: &str) -> Result<(), String> {
     let bytes = fs::read(fixture_path).map_err(|error| format!("cannot read fixtures: {error}"))?;
     let projection = run_stage_capsule_fixture(&bytes)
@@ -475,6 +485,9 @@ fn run() -> Result<(), String> {
         [command] if command == "host" => run_shadow_host(),
         [fixture_path] => run_canonical_fixture(fixture_path),
         [command, fixture_path] if command == "trace" => run_trace_fixture(fixture_path),
+        [command, fixture_path] if command == "compatibility-facts" => {
+            run_compatibility_facts_fixtures(fixture_path)
+        }
         [command, fixture_path] if command == "stage-capsule" => {
             run_stage_capsule_fixtures(fixture_path)
         }
@@ -513,7 +526,7 @@ fn run() -> Result<(), String> {
             println!();
             Ok(())
         }
-        _ => Err("usage: buildchain-v4-contracts [trace|stage-capsule|stage-capsule-store|provider-operation-journal|provider-readback|resume-plan|release-activation|stable-publication|partial-mutation-recovery|adopter-delivery-parity INPUT.json|host]".to_owned()),
+        _ => Err("usage: buildchain-v4-contracts [trace|compatibility-facts|stage-capsule|stage-capsule-store|provider-operation-journal|provider-readback|resume-plan|release-activation|stable-publication|partial-mutation-recovery|adopter-delivery-parity INPUT.json|host]".to_owned()),
     }
 }
 

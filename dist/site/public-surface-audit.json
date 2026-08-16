@@ -6,8 +6,8 @@
     "cliCommandCount": 116,
     "workflowCount": 72,
     "actionCount": 7,
-    "sitePageCount": 79,
-    "docCommandRefCount": 1009,
+    "sitePageCount": 80,
+    "docCommandRefCount": 1025,
     "failureCount": 0
   },
   "enumerated": {
@@ -3478,6 +3478,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:v4-compatibility-facts",
+        "category": "manual"
+      },
+      {
         "id": "manual:v4-delivery-warrant-read-candidate",
         "category": "manual"
       },
@@ -3878,6 +3882,26 @@
       {
         "id": "build-facts",
         "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility project"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query-template"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
         "command": "buildchain facts module"
       },
       {
@@ -3899,6 +3923,46 @@
         "id": "build-facts",
         "path": "docs/cli-reference.md",
         "command": "buildchain facts aggregate --help"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility project"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility project"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query-template"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query-template"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility verify"
       },
       {
         "id": "build-facts",
@@ -3934,6 +3998,26 @@
         "id": "build-facts",
         "path": "docs/cli.md",
         "command": "buildchain facts verify --fact"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/v4-compatibility-facts.md",
+        "command": "buildchain facts compatibility project"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/v4-compatibility-facts.md",
+        "command": "buildchain facts compatibility verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/v4-compatibility-facts.md",
+        "command": "buildchain facts compatibility query-template"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/v4-compatibility-facts.md",
+        "command": "buildchain facts compatibility query"
       },
       {
         "id": "candidate",
@@ -8566,9 +8650,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "b1ea0a458a7cf2daecf789ee89015250cfd0407b3af4fbde165b7ec3494ffbf1",
+    "cliRegistryDigest": "c240837b7885defa68e300e6b6178557824f7bd4dce8f258115b990516bf63c7",
     "workflowRegistryDigest": "52a958e73d626f9de6d13975a56a97dd5fbcc2305fa52b2b8959c82d8002f4e9",
-    "pageRegistryDigest": "7ff40dff61b810271556cecf21742dcff087adef183b650df212817338e19d48"
+    "pageRegistryDigest": "66b75e22e53001362e5e21ea1baf5d07aa4ba817f5cceb913d54e64b6c09c257"
   },
   "comparison": {
     "missingCliRegistry": [],

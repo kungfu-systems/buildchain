@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/v4-compatibility-facts-v1.schema.json",
+  "title": "Buildchain v4 compatibility Facts",
+  "description": "Closed public shapes for directional, Cut-bound compatibility Facts, explicit path queries, and rooted receipts.",
+  "oneOf": [
+    { "$ref": "#/$defs/fact" },
+    { "$ref": "#/$defs/registry" },
+    { "$ref": "#/$defs/query" },
+    { "$ref": "#/$defs/receiptEntry" }
+  ],
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "record"],
+      "properties": {
+        "root": { "$ref": "#/$defs/root" },
+        "record": { "type": "object" }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "required": [
+        "schema",
+        "proofId",
+        "predicate",
+        "direction",
+        "operation",
+        "source",
+        "target",
+        "scope",
+        "scopeRoot",
+        "evidence",
+        "evidenceRoot",
+        "authority",
+        "authorityRoot",
+        "cut",
+        "cutRoot",
+        "proofRoot"
+      ],
+      "properties": {
+        "schema": { "const": "kungfu.buildchain.compatibility-proof/v1" },
+        "proofId": { "type": "string", "minLength": 1 },
+        "predicate": { "const": "compatible-breaking-digest" },
+        "direction": { "const": "source-to-target" },
+        "operation": { "const": "accept-contract-lock" },
+        "source": { "type": "object" },
+        "target": { "type": "object" },
+        "scope": { "type": "object" },
+        "scopeRoot": { "$ref": "#/$defs/root" },
+        "evidence": { "type": "object" },
+        "evidenceRoot": { "$ref": "#/$defs/root" },
+        "authority": { "type": "object" },
+        "authorityRoot": { "$ref": "#/$defs/root" },
+        "cut": { "type": "object" },
+        "cutRoot": { "$ref": "#/$defs/root" },
+        "proofRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "factId",
+        "factRoot",
+        "sourceRoot",
+        "targetRoot",
+        "predicate",
+        "relation",
+        "proof"
+      ],
+      "properties": {
+        "schema": { "const": "kungfu.buildchain.compatibility-fact/v1" },
+        "factId": { "type": "string", "minLength": 1 },
+        "factRoot": { "$ref": "#/$defs/root" },
+        "sourceRoot": { "$ref": "#/$defs/root" },
+        "targetRoot": { "$ref": "#/$defs/root" },
+        "predicate": { "$ref": "#/$defs/entry" },
+        "relation": { "$ref": "#/$defs/entry" },
+        "proof": { "$ref": "#/$defs/proof" }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "rootProtocol",
+        "currentCutRoot",
+        "predicateRoots",
+        "factRoots",
+        "supersessionRoots",
+        "revocationRoots",
+        "legacyProofRoots",
+        "temporalBundleRoot",
+        "facts",
+        "legacyProofs",
+        "currentCut",
+        "temporalBundle",
+        "registryRoot"
+      ],
+      "properties": {
+        "schema": {
+          "const": "kungfu.buildchain.compatibility-fact-registry/v1"
+        },
+        "rootProtocol": { "const": "kungfu.fact-root.canonical/v2" },
+        "currentCutRoot": { "$ref": "#/$defs/root" },
+        "predicateRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/root" },
+          "uniqueItems": true
+        },
+        "factRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/root" },
+          "uniqueItems": true
+        },
+        "supersessionRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/root" },
+          "uniqueItems": true
+        },
+        "revocationRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/root" },
+          "uniqueItems": true
+        },
+        "legacyProofRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/root" },
+          "uniqueItems": true
+        },
+        "temporalBundleRoot": { "$ref": "#/$defs/root" },
+        "facts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fact" },
+          "minItems": 1
+        },
+        "legacyProofs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/proof" }
+        },
+        "currentCut": { "type": "object" },
+        "temporalBundle": { "type": "object" },
+        "registryRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "queryId",
+        "operation",
+        "predicateRoot",
+        "sourceRoot",
+        "targetRoot",
+        "cutRoot",
+        "relationPathRoots",
+        "requiredAuthorityRoot",
+        "maxDepth"
+      ],
+      "properties": {
+        "schema": { "const": "kungfu.fact.temporal-path-query/v1" },
+        "queryId": { "type": "string", "minLength": 1 },
+        "operation": { "const": "accept-contract-lock" },
+        "predicateRoot": { "$ref": "#/$defs/root" },
+        "sourceRoot": { "$ref": "#/$defs/root" },
+        "targetRoot": { "$ref": "#/$defs/root" },
+        "cutRoot": { "$ref": "#/$defs/root" },
+        "relationPathRoots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/root" },
+          "uniqueItems": true
+        },
+        "requiredAuthorityRoot": { "$ref": "#/$defs/root" },
+        "maxDepth": { "type": "integer", "minimum": 1, "maximum": 32 }
+      }
+    },
+    "receiptEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "record"],
+      "properties": {
+        "root": { "$ref": "#/$defs/root" },
+        "record": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "queryRoot",
+            "status",
+            "failureCode",
+            "cutRoot",
+            "relationPathRoots",
+            "authorityProofRoots",
+            "omissionRoots"
+          ],
+          "properties": {
+            "schema": { "const": "kungfu.fact.temporal-path-receipt/v1" },
+            "queryRoot": { "$ref": "#/$defs/root" },
+            "status": { "enum": ["accepted", "rejected"] },
+            "failureCode": { "type": "string" },
+            "cutRoot": { "$ref": "#/$defs/root" },
+            "relationPathRoots": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/root" }
+            },
+            "authorityProofRoots": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/root" },
+              "uniqueItems": true
+            },
+            "omissionRoots": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/root" },
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

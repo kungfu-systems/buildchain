@@ -5,6 +5,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 mod adopter_delivery;
+mod compatibility_facts;
 mod partial_mutation_recovery;
 mod provider_operation_journal;
 mod provider_readback_idempotency;
@@ -20,6 +21,12 @@ pub use adopter_delivery::{
     ADOPTER_DELIVERY_PARITY_INPUT_CONTRACT, ADOPTER_DELIVERY_PARITY_PROJECTION_CONTRACT,
     AdopterDeliveryParityInput, AdopterDeliveryParityProjection, project_adopter_delivery_parity,
     project_adopter_delivery_parity_bytes,
+};
+pub use compatibility_facts::{
+    CompatibilityFactsCaseProjection, CompatibilityFactsFixtureProjection,
+    KUNGFU_FACT_ROOT_PROTOCOL, KUNGFU_TEMPORAL_BUNDLE_SCHEMA, KUNGFU_TEMPORAL_PATH_QUERY_SCHEMA,
+    KUNGFU_TEMPORAL_PATH_RECEIPT_SCHEMA, kungfu_temporal_record_root,
+    run_compatibility_facts_fixture, verify_kungfu_temporal_path,
 };
 pub use partial_mutation_recovery::{
     PARTIAL_MUTATION_RECOVERY_PLAN_CONTRACT, PARTIAL_MUTATION_RECOVERY_REQUEST_CONTRACT,
