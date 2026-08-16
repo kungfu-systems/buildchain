@@ -781,7 +781,7 @@ jobs:
           CHANNEL: ${{ steps.route.outputs.channel }}
           SELECTED_SHELL_REF: ${{ steps.route.outputs.shell-ref }}
           ALPHA_SHELL_REF: v4-alpha
-          ALPHA_SHELL_CALL_REF: alpha/v4/v4.0
+          ALPHA_SHELL_CALL_REF: v4-alpha
           STABLE_SHELL_REF: v4
           STABLE_SHELL_CALL_REF: v4
         run: |
@@ -960,7 +960,7 @@ jobs:
     name: Promote with alpha workflow shell
     needs: [resolve-promotion, consumer-admission]
     if: ${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write
