@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 374,
+  "generation": 375,
   "fencingCounter": 92,
   "policy": {
     "agingSeconds": 900,
@@ -11,59 +11,7 @@
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "qualified",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:7a33a3333f47b8554c8a09335603e16cdd232073324d331b1bc33c924ba9255a",
-    "pullRequestNumber": 2876,
-    "sourceHead": "7119800373b87caa782d72c17cbdb327e6c384d8",
-    "assignmentRoot": "sha256:b8cb2aad4416b77e9f53742aa2479c41143c7b1869f7729a52de5077045df9e6",
-    "initiativeRoot": "sha256:0fc567629323a724deea1e21b4156681613164431b97a254b6c68673a6c9c139",
-    "sourceIdentityRoot": "sha256:3a8f1322034f8c91cf4d084ede418eb0108d43909580acd7a18c9075bfc9ab21",
-    "sourcePatchRoot": "sha256:8d75295a6a339c90b7db0ac6046ccd62489abaf586dd5ccd2e2c942c649bcd69",
-    "sourceProofRoot": "sha256:c01426ea3a193db0d42808277863a30a7c19f2f3346388c5854bf30167859f83",
-    "planRoot": "sha256:64da329de6a0e888a649159df58fe0247d79e2d5f67c76e65b6c427531cbd053",
-    "closureRoot": "sha256:244abea6784d504feec4a806791222452fa2207e120182f46c05924dee5d2ff0",
-    "dependencyRoot": "sha256:02cfae1a8fa14ab51551479bef23f77f682c61b9e8723a382bc72099cc553d77",
-    "toolchainRoot": "sha256:0929b4dbd57075afd5bb81829f205315cf35563ead3df49589819a98578466a3",
-    "environmentRoot": "sha256:aa9dbde328ad21d0d496f109cffba234bb01a9f2b34cbd63aa9987fd5163db89",
-    "nativeCommandContract": {
-      "schema": "kungfu.buildchain.native-command-contract/v1",
-      "runner": "bash-lc",
-      "command": "corepack enable pnpm && pnpm install --frozen-lockfile && pnpm run check",
-      "commandRoot": "sha256:47616511947d49b67643e23d6b3de10290b4a95b86c0600d48d84794887657b9"
-    },
-    "affectedPaths": [
-      ".buildchain/release-impact.json",
-      "dist/site/buildchain-contract.json",
-      "dist/site/buildchain-site.json",
-      "dist/site/kfd-claims.json",
-      "dist/site/kfd-upstream-aggregate.json",
-      "dist/site/public-surface-audit.json",
-      "dist/site/publication-registry.json",
-      "dist/site/site-manifest.json",
-      "dist/site/workflow-registry.json",
-      "package.json"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 31942313810,
-    "deliveryClass": "native-proof-required",
-    "priority": "ordinary",
-    "generation": 92,
-    "expectedOldStateRoot": "sha256:f9bbac3a7ece1d3659c709245bf31eb0150b13df89083eb4c1aaa5dd4f46a740",
-    "issuedAt": "2026-08-16T10:51:43.956Z",
-    "expiresAt": "2026-08-16T11:55:56.871Z",
-    "fencingToken": "sha256:290553bed01d296b4f76ca3f4e34ddeeaf8704d5a14c82b2fa58f5f0c735dcf1",
-    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
-    "heartbeatAt": "2026-08-16T10:55:56.871Z",
-    "nativeProofRoot": "sha256:d558f33714da06b42522800c2607de96c68dab82082a01cfdb0a4b73a6d3fa68",
-    "nativeExecutionReceiptRoot": "sha256:c42ca1da9573f2ffba03d15beb665167eaa54a86fb6578cbaeb6a5b2ad0ad935",
-    "nativeProofReuseRoot": "sha256:8a007c9b74983dcfd611b19752f21d8fbb6ccdf601faa035d7b524613bd11ef0",
-    "qualificationReceiptRoot": "sha256:4da43e16b810bc8422032bb1880102333200817245e7ee10264a36af148d30f2",
-    "qualifiedAt": "2026-08-16T10:56:23.930Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -3980,11 +3928,18 @@
       "sourceWorkflowRunId": 31942313810,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-16T10:51:41.696Z",
-      "updatedAt": "2026-08-16T10:56:23.930Z",
+      "updatedAt": "2026-08-16T11:04:29.558Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "qualified",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "reason": "PR #2876 merged by exact GitHub merge group 4ec28dde85e23d185b350b99658283b9205bf3ca",
+        "evidenceRoot": "sha256:b81bcda2cbe4c1790f840817e7d0f76d3208395aea7a64cb0e016c3c5b3440ae",
+        "closedAt": "2026-08-16T11:04:29.558Z",
+        "fencingToken": "sha256:290553bed01d296b4f76ca3f4e34ddeeaf8704d5a14c82b2fa58f5f0c735dcf1",
+        "leaseGeneration": 92
+      },
       "affectedPaths": [
         ".buildchain/release-impact.json",
         "dist/site/buildchain-contract.json",
@@ -4000,6 +3955,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-16T10:56:23.930Z",
-  "stateRoot": "sha256:c9523ffed801ad660c0beb94bb1ce14f692e14263bb1e242e4f9b3b29312920f"
+  "updatedAt": "2026-08-16T11:04:29.558Z",
+  "stateRoot": "sha256:08361c2bc0d4d4d68d81b4380e62927954eb84ddf178839ccd1d5fdc934c66b6"
 }
