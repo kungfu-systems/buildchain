@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "75ef9be6122a43447d97003d7629062ec2f9a0d3725b14d0b859ed7332d23455",
+    "sha256": "309e0e52901fadc11564054e07ff2a897d9d44c2d234f548cabf1bdc36f0edac",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 75,
+      "workflowCount": 76,
       "actionCount": 7,
       "sitePageCount": 82,
       "docCommandRefCount": 1049,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "75ef9be6122a43447d97003d7629062ec2f9a0d3725b14d0b859ed7332d23455",
+      "sha256": "309e0e52901fadc11564054e07ff2a897d9d44c2d234f548cabf1bdc36f0edac",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 75,
+        "workflowCount": 76,
         "actionCount": 7,
         "sitePageCount": 82,
         "docCommandRefCount": 1049,
@@ -4825,6 +4825,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:buildchain-ref-promotion-recovery",
+          "name": "workflow:buildchain-ref-promotion-recovery",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+          "evidencePath": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:buildchain-ref-promotion",
           "name": "workflow:buildchain-ref-promotion",
           "kind": "workflow",
@@ -7311,6 +7325,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 470
+    "publicSurfaceCount": 471
   }
 }
