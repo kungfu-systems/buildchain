@@ -3,14 +3,16 @@
   "contract": "kungfu-buildchain-v4-adopter-delivery-parity-plan",
   "sourceAuthority": {
     "branch": "dev/v3/v3.0",
-    "commit": "c3f58d76391c1c6ceddfc900a68e91c7ab82a575",
-    "vectorSuiteRoot": "sha256:cf329805d928a9883cbafbdfdf21ef66c6a0889ed8dfe14356b4e0d25d6738f9",
-    "kfdPackage": "@kungfu-tech/kfd@1.0.0-alpha.62"
+    "commit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
+    "vectorSuiteRoot": "sha256:c978707556406ffda4ef4192032332c01c2da1cebb6ad8c4f0edfc65d5cef0c7",
+    "kfdPackage": "@kungfu-tech/kfd@1.0.0-alpha.65"
   },
   "target": {
     "branch": "dev/v4/v4.0",
-    "baseline": "3079091f770ce9fdca950e106259e34e5171f763",
+    "initialBaseline": "e5611377efc03178f8687d99968cfdfa3ce2825b",
+    "baseline": "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
     "mode": "effect-disabled",
+    "surface": "public-protocol-neutral-adopter-delivery",
     "productionWriterAuthority": false
   },
   "vectors": [
@@ -37,11 +39,36 @@
     {
       "id": "fault-driver-throw",
       "mode": "gate-core-parity"
+    },
+    {
+      "id": "positive-n-minus-one-bootstrap",
+      "mode": "public-bootstrap-lineage"
+    },
+    {
+      "id": "positive-published-archive",
+      "mode": "public-archive-authority"
+    },
+    {
+      "id": "negative-archive-identity",
+      "mode": "public-archive-authority"
+    },
+    {
+      "id": "negative-bootstrap-lineage",
+      "mode": "public-bootstrap-lineage"
+    },
+    {
+      "id": "negative-protocol-version",
+      "mode": "public-driver-selection"
+    },
+    {
+      "id": "tamper-readback",
+      "mode": "public-exact-readback"
     }
   ],
   "nonClaims": [
     "The Rust projection has no provider, credential, release, signing or production-writer authority.",
     "KFD semantics are evaluated only by exact published KFD bytes before the effect-disabled carrier projection.",
-    "Release Passport evidence substitution remains on the protected v3 boundary and is not reimplemented as a v4 writer."
+    "Release Passport evidence substitution remains on the protected v3 boundary and is not reimplemented as a v4 writer.",
+    "The public CLI, Node API, schema, configuration and reusable workflow retain provider, signing, publication and release authority as explicit non-claims."
   ]
 }

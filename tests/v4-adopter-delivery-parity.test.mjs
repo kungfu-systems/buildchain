@@ -224,6 +224,18 @@ test("v4 parity plan binds the protected v3 vector suite and excludes writer aut
     kfdPackage: V4_ADOPTER_DELIVERY_PARITY_SOURCE.kfdPackage,
   });
   assert.equal(kfdPackage.version, "1.0.0-alpha.62");
+  assert.equal(
+    parityPlan.sourceAuthority.kfdPackage,
+    "@kungfu-tech/kfd@1.0.0-alpha.65",
+  );
+  assert.equal(
+    parityPlan.target.initialBaseline,
+    "e5611377efc03178f8687d99968cfdfa3ce2825b",
+  );
+  assert.equal(
+    parityPlan.target.baseline,
+    "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+  );
   assert.equal(parityPlan.target.mode, "effect-disabled");
   assert.equal(parityPlan.target.productionWriterAuthority, false);
   assert.deepEqual(
@@ -235,6 +247,12 @@ test("v4 parity plan binds the protected v3 vector suite and excludes writer aut
       "negative-evidence-substitution",
       "negative-stale-package-cut",
       "fault-driver-throw",
+      "positive-n-minus-one-bootstrap",
+      "positive-published-archive",
+      "negative-archive-identity",
+      "negative-bootstrap-lineage",
+      "negative-protocol-version",
+      "tamper-readback",
     ]),
   );
 });

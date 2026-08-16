@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:7054ae86d8d83a6946fbe37ecec95ab78558e3bd72aa913ac511eed86262f578"
+      "digest": "sha256:a04d321dbec562807cb29b748039839d097a97d2c9d2f0e76d6d22f2845055ba"
     },
     {
       "id": "getting-started",
@@ -237,7 +237,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fad47682ed909f7b16f58bb8c24c51a943eb704a0a50ab6e033d745ee16a809a"
+      "digest": "sha256:60208f0862195df44b27ada15e474ff1808dee6d492cd6303402b92fd72f06bc"
     },
     {
       "id": "cli-reference",
@@ -245,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:b9172ba6c58ad4787114fe3aa00a3364c5317171d0981f570fcd0560a6238f71"
+      "digest": "sha256:ec16f350596692989cf5eade945e7bbeee157a661c6d8faa55c8249b14ef5632"
     },
     {
       "id": "node-api-reference",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:30cecf4ac8d39bfdcdab4eac889aa2061c0886605dc5c1db84f5a97829f5fee1"
+      "digest": "sha256:da14b4b6dbce4cc7bc54cc6ec1a95bdf1ab83a12b4bd03d9bb9a5ffbbb7fe1c9"
     },
     {
       "id": "build-facts",
@@ -294,6 +294,14 @@
       "plane": "use",
       "exists": true,
       "digest": "sha256:fc2649d0ae4dc6a08275bc1f2509efd3e9730227eaa8157ef64daf4b9c850264"
+    },
+    {
+      "id": "v4-adopter-delivery",
+      "title": "V4 public adopter delivery",
+      "path": "docs/v4-adopter-delivery.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:b767ce16e77e72454690ab171651cca028180476e282e92fee0893cbc851ce12"
     },
     {
       "id": "publish-transaction",

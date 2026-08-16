@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-adopter-delivery-offline-vectors/v1",
+  "sourceAuthority": {
+    "branch": "dev/v3/v3.0",
+    "commit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
+    "vectorSuiteRoot": "sha256:c978707556406ffda4ef4192032332c01c2da1cebb6ad8c4f0edfc65d5cef0c7"
+  },
+  "initialTargetBase": "e5611377efc03178f8687d99968cfdfa3ce2825b",
+  "targetBase": "8e9ce32ddd931fb294ab1a9a2a40e89ba743391a",
+  "cases": [
+    {
+      "id": "positive-public-driver",
+      "class": "positive",
+      "expected": "passed"
+    },
+    {
+      "id": "positive-n-minus-one-bootstrap",
+      "class": "positive",
+      "expected": "passed"
+    },
+    {
+      "id": "positive-published-archive",
+      "class": "positive",
+      "expected": "loaded"
+    },
+    {
+      "id": "negative-selector",
+      "class": "negative",
+      "expected": "fail-closed"
+    },
+    { "id": "negative-driver", "class": "negative", "expected": "fail-closed" },
+    {
+      "id": "negative-archive-identity",
+      "class": "negative",
+      "expected": "fail-closed"
+    },
+    {
+      "id": "negative-bootstrap-lineage",
+      "class": "negative",
+      "expected": "fail-closed"
+    },
+    {
+      "id": "negative-protocol-version",
+      "class": "negative",
+      "expected": "fail-closed"
+    },
+    { "id": "tamper-readback", "class": "tamper", "expected": "fail-closed" }
+  ]
+}

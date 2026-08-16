@@ -1,0 +1,19 @@
+{
+  "packages": {
+    "buildchain": {
+      "name": "@kungfu-tech/buildchain",
+      "version": "3.0.9-alpha.16",
+      "archivePath": ".buildchain/adopter-delivery-archives/kungfu-tech-buildchain-3.0.9-alpha.16.tgz",
+      "archiveRoot": "sha256:3f425e2c77d11f0bee8eb9aa2448566bca7a9d14672a7e528ced3e505b3f14a3",
+      "artifactRoot": "sha256:3f425e2c77d11f0bee8eb9aa2448566bca7a9d14672a7e528ced3e505b3f14a3"
+    },
+    "kfd": {
+      "name": "@kungfu-tech/kfd",
+      "version": "1.0.0-alpha.65",
+      "archivePath": ".buildchain/adopter-delivery-archives/kungfu-tech-kfd-1.0.0-alpha.65.tgz",
+      "archiveRoot": "sha256:c4dbd3f954910236d7f0823ea6887f4151e43b871df526ccdd599123421bced2",
+      "artifactRoot": "sha256:c0781bcaf191a58561ae32ee2fbedabbb48ed50b5725c356fbd83704089637f8"
+    }
+  },
+  "expectedAuthorityRoot": "sha256:9ba0cc6042b189ce749d01003617b57bcd03ea6ecf40e96d19e8ecbbfa347134"
+}

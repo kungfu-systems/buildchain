@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.kungfu-tech.com/schemas/v4-adopter-delivery-v1.schema.json",
+  "title": "Buildchain v4 adopter delivery gate input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "driverSelector",
+    "artifactProfileSelector",
+    "request",
+    "context"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": { "const": "kungfu-buildchain-v4-adopter-delivery/v1" },
+    "driverSelector": {
+      "enum": ["json-assertion", "kfd-category", "legacy-kfd"]
+    },
+    "artifactProfileSelector": { "enum": ["git-commit", "package"] },
+    "request": { "$ref": "#/$defs/request" },
+    "context": { "type": "object" }
+  },
+  "$defs": {
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*(/[a-z][a-z0-9.-]*)*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*\\.[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "contract",
+        "protocol",
+        "artifactProfile",
+        "project",
+        "artifact",
+        "declaration"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "contract": { "const": "kungfu-buildchain-adopter-delivery-request" },
+        "protocol": { "$ref": "#/$defs/reference" },
+        "artifactProfile": { "$ref": "#/$defs/reference" },
+        "project": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["instanceId", "adopterId"],
+          "properties": {
+            "instanceId": { "type": "string", "minLength": 1 },
+            "adopterId": { "type": "string", "minLength": 1 }
+          }
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "coordinate", "root"],
+          "properties": {
+            "kind": { "type": "string", "minLength": 1 },
+            "coordinate": { "type": "string", "minLength": 1 },
+            "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+          }
+        },
+        "declaration": { "type": "object" }
+      }
+    }
+  }
+}

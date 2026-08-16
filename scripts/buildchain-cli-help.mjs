@@ -8,6 +8,11 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain architecture qualify --authority-revision <git-revision>
                                       [--candidate-revision <git-revision>]
                                       [--cwd <dir>] [--json]
+  buildchain adopter-delivery run --input <json-or-path> [--output <path>]
+  buildchain adopter-delivery verify --input <json-or-path>
+                                      --readback <json-or-path> [--output <path>]
+  buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]
+  buildchain adopter-delivery archive --input <json-or-path> [--output <path>]
   buildchain portable-cache plan --manifest <file-or-json> [--output <file>]
                                  [--github-output <file>] [--json]
   buildchain portable-cache receipt --plan <file-or-json> [--matched-key <key>]
