@@ -31,10 +31,10 @@ const root = path.resolve(
 );
 
 export const V4_ADOPTER_DELIVERY_PARITY_SOURCE = Object.freeze({
-  v3Commit: "c3f58d76391c1c6ceddfc900a68e91c7ab82a575",
+  v3Commit: "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
   vectorSuiteRoot:
-    "sha256:cf329805d928a9883cbafbdfdf21ef66c6a0889ed8dfe14356b4e0d25d6738f9",
-  kfdPackage: "@kungfu-tech/kfd@1.0.0-alpha.62",
+    "sha256:c978707556406ffda4ef4192032332c01c2da1cebb6ad8c4f0edfc65d5cef0c7",
+  kfdPackage: "@kungfu-tech/kfd@1.0.0-alpha.65",
 });
 
 function clone(value) {

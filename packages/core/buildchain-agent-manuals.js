@@ -30,6 +30,7 @@ export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
   { id: "kfd-agent-hub", title: "KFD Agent Hub Builder flow", path: "docs/kfd-agent-hub.md", plane: "use" },
   { id: "lifecycle-protocol", title: "Lifecycle protocol", path: "docs/lifecycle-protocol.md", plane: "use" },
   { id: "reusable-build-surface", title: "Reusable build surface", path: "docs/reusable-build-surface.md", plane: "use" },
+  { id: "v4-adopter-delivery", title: "V4 public adopter delivery", path: "docs/v4-adopter-delivery.md", plane: "verify" },
   { id: "publish-transaction", title: "Publish transaction", path: "docs/publish-transaction.md", plane: "verify" },
   { id: "release-tail-contract", title: "Declarative release-tail contract", path: "docs/release-tail-contract.md", plane: "verify" },
   { id: "release-tail-provider-plane", title: "Declarative release-tail provider plane", path: "docs/release-tail-provider-plane.md", plane: "use" },

@@ -66,6 +66,16 @@ state_path = ".buildchain/publication-rehearsal/state.json"
 evidence_path = ".buildchain/publication-rehearsal/evidence.json"
 effect_default = "disabled"
 
+[adopter_delivery]
+contract = "kungfu-buildchain-v4-adopter-delivery/v1"
+input_path = "contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json"
+readback_path = ".buildchain/adopter-delivery/readback.json"
+bootstrap_path = "contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json"
+archive_path = "contracts/fixtures/v4-adopter-delivery-v1/archive-template.json"
+result_path = ".buildchain/adopter-delivery/result.json"
+driver_selector = "json-assertion"
+artifact_profile_selector = "git-commit"
+
 [governance.dev.merge_queue]
 mode = "enabled"
 required_workflows = [".github/workflows/verify.yml"]

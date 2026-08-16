@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-adopter-delivery/v1",
+  "driverSelector": "json-assertion",
+  "artifactProfileSelector": "git-commit",
+  "request": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-adopter-delivery-request",
+    "protocol": {
+      "id": "buildchain.adopter/json-assertion",
+      "version": "1.0.0"
+    },
+    "artifactProfile": {
+      "id": "buildchain.artifact/git-commit",
+      "version": "1.0.0"
+    },
+    "project": {
+      "instanceId": "example.org/adopter@1.0.0",
+      "adopterId": "example.org/adopter"
+    },
+    "artifact": {
+      "kind": "git-commit",
+      "coordinate": "example.org/adopter@1111111111111111111111111111111111111111",
+      "root": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "declaration": { "valid": true }
+  },
+  "context": {}
+}

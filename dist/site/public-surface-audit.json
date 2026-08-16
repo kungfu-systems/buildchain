@@ -3,15 +3,20 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 116,
-    "workflowCount": 73,
+    "cliCommandCount": 117,
+    "workflowCount": 75,
     "actionCount": 7,
-    "sitePageCount": 81,
-    "docCommandRefCount": 1029,
+    "sitePageCount": 82,
+    "docCommandRefCount": 1049,
     "failureCount": 0
   },
   "enumerated": {
     "cliCommands": [
+      {
+        "id": "adopter-delivery",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain adopter-delivery run --input <json-or-path> [--output <path>]"
+      },
       {
         "id": "architecture",
         "source": "bin/buildchain.mjs",
@@ -2898,6 +2903,34 @@
         "outputCount": 6
       },
       {
+        "id": "v4-adopter-delivery-dogfood",
+        "path": ".github/workflows/v4-adopter-delivery-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "v4-adopter-delivery",
+        "path": ".github/workflows/v4-adopter-delivery.yml",
+        "reusable": true,
+        "inputs": [
+          "archive-path",
+          "bootstrap-path",
+          "consumer",
+          "input-path",
+          "node-version"
+        ],
+        "inputCount": 5,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "v4-public-consumer-dogfood",
         "path": ".github/workflows/v4-public-consumer-dogfood.yml",
         "reusable": false,
@@ -3497,6 +3530,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:v4-adopter-delivery",
+        "category": "manual"
+      },
+      {
         "id": "manual:v4-canonical-contracts",
         "category": "manual"
       },
@@ -3546,6 +3583,106 @@
       }
     ],
     "docCommandRefs": [
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery archive --input"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery bootstrap --input"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery run --input"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery verify --input"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery --help"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery archive"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery archive --help"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery bootstrap"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery bootstrap --help"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery run"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery run --help"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery verify"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain adopter-delivery verify --help"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/cli.md",
+        "command": "buildchain adopter-delivery"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/v4-adopter-delivery.md",
+        "command": "buildchain adopter-delivery run"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/v4-adopter-delivery.md",
+        "command": "buildchain adopter-delivery verify"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/v4-adopter-delivery.md",
+        "command": "buildchain adopter-delivery bootstrap"
+      },
+      {
+        "id": "adopter-delivery",
+        "path": "docs/v4-adopter-delivery.md",
+        "command": "buildchain adopter-delivery archive"
+      },
       {
         "id": "architecture",
         "path": "docs/cli-reference.md",
@@ -8697,9 +8834,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "2123dc563b356bfd8157065cd88c189e217dc61b30b9d9a974e0d1709e806429",
-    "workflowRegistryDigest": "e303571373d89b26fc873cbff81381228b5b2ac52acc8ba29788f7602f56ce75",
-    "pageRegistryDigest": "4610f859d2d6891a3e2493304f8015028ee11aac93f704662ab04e2e107a62cb"
+    "cliRegistryDigest": "ea47a31ce7ef3577f23e22055ab7be7715c3af494bcef63f76b426f2883086aa",
+    "workflowRegistryDigest": "76cff8e0dcf03f39971d0b8092ec1d4f9f2d87d07876b7bd2d3b1459967c755e",
+    "pageRegistryDigest": "5b124e74cf384db9c91e0a1738e2cf3f7673ced3ca5020933069dead54858c71"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -1180,6 +1180,16 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/v4-adopter-delivery-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/v4-adopter-delivery.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/v4-public-consumer-dogfood.yml",
       "signals": [],
       "classified": false
@@ -1205,5 +1215,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "124a3369d72d8078b7f330821d3252a8036ba1eafcb713af76e29202b64b0440"
+  "registryDigest": "2a7f4639a659489a0ef229983fff39d1c7880fb464411761f9debcbbd93bd336"
 }
