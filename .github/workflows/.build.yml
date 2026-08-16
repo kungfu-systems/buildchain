@@ -868,6 +868,7 @@ jobs:
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.buildchain-visible-workflow }}
+          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ inputs.buildchain-expected-channel }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json

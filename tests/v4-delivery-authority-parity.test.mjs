@@ -863,15 +863,19 @@ test("every implemented parity disposition has an executable behavioral proof", 
       "utf8",
     ),
   );
+  const autoMergeRuntime = fs.readFileSync(
+    path.join(repositoryRoot, "scripts/dev-pr-auto-merge.mjs"),
+    "utf8",
+  );
   const authorityInputs = [
     "target-branch",
     "expected-pr-number",
     "expected-head-sha",
     "source-workflow-run-id",
+    "legacy-active-owner-binding-json",
     "delivery-warrant-mode",
     "handoff-workflow-id",
     "source-workflow-id",
-    "legacy-active-owner-binding-json",
     "assignment-root",
     "initiative-root",
     "source-identity-root",
@@ -890,6 +894,8 @@ test("every implemented parity disposition has an executable behavioral proof", 
     "native-heartbeat-seconds",
     "delivery-class",
     "delivery-priority",
+    "queue-admission-context",
+    "active-lease-context",
     "landing-mode",
     "dry-run",
   ];
@@ -935,6 +941,8 @@ test("every implemented parity disposition has an executable behavioral proof", 
     "native-command-root",
     "delivery-class",
     "delivery-priority",
+    "queue-admission-context",
+    "active-lease-context",
   ];
   const expectedMapping = {
     "target-branch": queuedCandidate.targetBranch,
@@ -961,6 +969,8 @@ test("every implemented parity disposition has an executable behavioral proof", 
     "native-command-root": queuedCandidate.nativeCommandContract.commandRoot,
     "delivery-class": queuedCandidate.deliveryClass,
     "delivery-priority": queuedCandidate.priority,
+    "queue-admission-context": "Queue admission lease",
+    "active-lease-context": "Queue family lease/exact",
   };
   const dispatchContext = {
     github: {
@@ -996,6 +1006,9 @@ test("every implemented parity disposition has an executable behavioral proof", 
       ] === "v4-alpha" &&
       authorityInputs.every(
         (input) => input in caller.with && input in template.with,
+      ) &&
+      autoMergeRuntime.includes(
+        'activeLeaseContext: String(options.activeLeaseContext || (choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode") === "required" ? "Queue family lease/exact" : "")).trim(),',
       ) &&
       JSON.stringify(
         executeWorkflowMapping(caller, dispatchContext, mappingNames),

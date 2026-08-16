@@ -2375,6 +2375,17 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(legacyHandoff, /\.observation\.stateRoot/);
   assert.match(legacyHandoff, /\.observation\.activeWarrant\.fencingToken/);
   assert.match(legacyHandoff, /\.observation\.activeWarrant\.generation/);
+  assert.match(workflow, /\.receipt\.expectedOldStateRoot/);
+  assert.match(workflow, /\.buildchain\/dev-delivery\/submission\.json/);
+  assert.doesNotMatch(workflow, /\.buildchain\/dev-delivery\/result\.json/);
+  assert.match(
+    workflow,
+    /\$legacyBinding\.stateRoot == \$legacyOwnerStateRoot/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /\$legacyBinding\.stateRoot == \.observation\.stateRoot/,
+  );
 
   const verify = fs.readFileSync(
     path.join(root, ".github/workflows/verify.yml"),
@@ -2584,6 +2595,9 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/dev-pr-auto-merge\.yml@v4-alpha/u,
   );
   assert.match(template, /default: "v4-alpha"/u);
+  assert.match(template, /default: "native-proof-required"/u);
+  assert.match(template, /queue-admission-context: Queue admission lease/u);
+  assert.match(template, /active-lease-context: Queue family lease\/exact/u);
   assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@v3(?:\b|-)/u);
   assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@[0-9a-f]{40}/u);
   const nativeStart = workflow.indexOf("  native-execution:");
@@ -4192,7 +4206,10 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     selfPromotion,
     /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/,
   );
-  assert.match(selfPromotion, /publish-rematerialize-on-resume:.*alpha\/.*\|\|.*release\//);
+  assert.match(
+    selfPromotion,
+    /publish-rematerialize-on-resume:.*alpha\/.*\|\|.*release\//,
+  );
   assert.match(
     selfPromotion,
     /recover-durable-transaction:[\s\S]*?type: boolean/,

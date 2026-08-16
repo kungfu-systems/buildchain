@@ -6519,7 +6519,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 507
+        "line": 508
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6556,7 +6556,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 383
+        "line": 384
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6890,7 +6890,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 516
+        "line": 517
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6914,7 +6914,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 379
+        "line": 380
       },
       "example": "import { qualifyDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6971,7 +6971,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 300
+        "line": 301
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7028,7 +7028,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 510
+        "line": 511
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -24034,7 +24034,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:5ea817dcbfa54d6dbf69c00e9911304b104659afa2b1e6a5d083504b4b301317",
+      "digest": "sha256:8616bee7fe706dfa0429a48e5834159389a8cc439d5e4e0285a3483493ad3d19",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -25504,7 +25504,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:8f0c42d4453003d9bff861392c890f557a54608662e1cc380ed9aaa6635df016"
+      "digest": "sha256:a409b078692ebb18ca7bb817ebd35c416cc6be3842f671c17d019c9aa32d0638"
     },
     {
       "id": "build-facts",

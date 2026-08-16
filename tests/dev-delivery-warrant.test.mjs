@@ -68,12 +68,57 @@ test("queue readback preserves native qualification metadata", () => {
   assert.equal(normalizeDevDeliveryQueue(submitted.queue).stateRoot, submitted.queue.stateRoot);
 });
 
+test("queue readback accepts legacy terminal native candidates without weakening live authority", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, { outcome: "dequeued", evidenceRoot: ROOTS.evidence, now: "2026-08-04T00:01:00Z" });
+  const asLegacyState = (state) => {
+    const legacy = structuredClone(state);
+    delete legacy.candidates[0].nativeCommandContract;
+    delete legacy.stateRoot;
+    legacy.stateRoot = devDeliveryContentRoot(legacy);
+    return legacy;
+  };
+
+  const legacyTerminal = asLegacyState(terminal.queue);
+  assert.equal(normalizeDevDeliveryQueue(legacyTerminal).stateRoot, legacyTerminal.stateRoot);
+
+  const legacyLive = asLegacyState(submitted.queue);
+  assert.throws(
+    () => normalizeDevDeliveryQueue(legacyLive),
+    /live native candidate requires exact native proof/u,
+  );
+});
+
+test("live native delivery classes cannot downgrade to phase-less authority", () => {
+  for (const deliveryClass of ["native-proof-required", "cross-platform", "release"])
+    assert.throws(
+      () =>
+        submit(queue(), 99, "2026-08-04T00:00:00Z", {
+          deliveryClass,
+          environmentRoot: undefined,
+          nativeCommandContract: undefined,
+        }),
+      /live native candidate requires exact native proof/u,
+    );
+
+  const nonNative = submit(queue(), 99, "2026-08-04T00:00:00Z", {
+    deliveryClass: "non-native-fast",
+    environmentRoot: undefined,
+    nativeCommandContract: undefined,
+  });
+  assert.equal(nonNative.queue.candidates[0].deliveryClass, "non-native-fast");
+  assert.equal(nonNative.queue.candidates[0].environmentRoot, undefined);
+});
+
 test("duplicate submission is idempotent and safe head repair retains queue age", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const duplicate = submitDevDeliveryCandidate(first.queue, candidate(100), {
     now: "2026-08-04T00:05:00Z",
   });
   assert.equal(duplicate.receipt.action, "duplicate-noop");
+  assert.equal(duplicate.receipt.expectedOldStateRoot, first.queue.stateRoot);
+  assert.notEqual(duplicate.queue.stateRoot, first.queue.stateRoot);
   assert.equal(duplicate.queue.candidates.length, 1);
   assert.equal(duplicate.queue.candidates[0].enqueuedAt, "2026-08-04T00:00:00.000Z");
 
@@ -258,6 +303,7 @@ test("heartbeat and terminal failure closeout bind the current fencing generatio
     now: "2026-08-04T00:01:00Z",
   });
   assert.equal(heartbeat.receipt.action, "heartbeat");
+  assert.equal(heartbeat.queue.activeWarrant.heartbeatAt, "2026-08-04T00:01:00.000Z");
   assert.equal(heartbeat.queue.candidates[0].status, "proving");
 
   assert.throws(

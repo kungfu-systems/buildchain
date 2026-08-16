@@ -373,6 +373,8 @@ test("GitHub state store advances a non-forced child commit and verifies its imm
       closureRoot: ROOT("6"),
       dependencyRoot: ROOT("7"),
       toolchainRoot: ROOT("8"),
+      environmentRoot: ROOT("0"),
+      nativeCommandContract: NATIVE_COMMAND_CONTRACT,
       deliveryClass: "native-proof-required",
       priority: "ordinary",
     },

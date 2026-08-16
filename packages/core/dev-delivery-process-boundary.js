@@ -98,7 +98,6 @@ function assertHostedLinuxController(environment) {
 function hostedBoundary(procRoot, pid, command, readlinkSync) {
   if (
     command.length !== 4 ||
-    !GITHUB_HOSTED_LINUX_WORKER.test(command[0] || "") ||
     command[1] !== "spawnclient" ||
     !/^\d+$/u.test(command[2] || "") ||
     !/^\d+$/u.test(command[3] || "")
@@ -109,7 +108,7 @@ function hostedBoundary(procRoot, pid, command, readlinkSync) {
   const executable = ancestryRead(readlinkSync, link);
   if (
     !GITHUB_HOSTED_LINUX_WORKER.test(executable) ||
-    command[0] !== executable
+    !new Set([executable, path.posix.basename(executable)]).has(command[0])
   ) {
     throw new Error("credential ancestry found an untrusted Runner.Worker");
   }

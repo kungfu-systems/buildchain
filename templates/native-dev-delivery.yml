@@ -135,6 +135,8 @@ jobs:
       native-heartbeat-seconds: ${{ inputs.native-heartbeat-seconds || 300 }}
       delivery-class: ${{ github.event.client_payload.candidate.deliveryClass || inputs.delivery-class || 'native-proof-required' }}
       delivery-priority: ${{ github.event.client_payload.candidate.priority || inputs.delivery-priority || 'ordinary' }}
+      queue-admission-context: Queue admission lease
+      active-lease-context: Queue family lease/exact
       landing-mode: queue
       dry-run: false
     secrets:

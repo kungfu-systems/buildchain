@@ -6,7 +6,6 @@ import { parseYamlUses } from "../packages/core/workflow-yaml-contract.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
-
 function fail(message) {
   throw new Error(`v4-floating-consumer-policy-contract: ${message}`);
 }
@@ -113,6 +112,7 @@ export function checkV4FloatingConsumerPolicyContract() {
     "Enforce v4 floating consumer policy",
     "Validate consumer package manager contract",
   ]);
+  if (!read(".github/workflows/.build.yml").includes("BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ inputs.buildchain-expected-channel }}")) fail("channel builds must disambiguate dual-channel caller invocations");
   assertTrustGatedJobs(read(".github/workflows/.build.yml"), [
     "resolve-source",
     "resolve-contract",
