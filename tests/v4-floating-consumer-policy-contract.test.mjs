@@ -44,25 +44,60 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
 });
 
 test("bounded alpha recovery admits the floating advanced shell before promotion", () => {
-  const relative =
-    ".github/workflows/buildchain-ref-promotion-recovery.yml";
+  const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
   const authority = resolveV4FloatingConsumerPolicyAuthority({
     runtimeRoot: root,
     callerRoot: root,
   });
-  const result = scanV4FloatingConsumerPolicy({
-    root,
-    repository: "kungfu-systems/buildchain",
-    sourceSha: "a".repeat(40),
-    invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-    invocationSourcePath: relative,
-    expectedInvocationChannel: "alpha",
-    resolvedWorkflowSha: "b".repeat(40),
-    resolvedRuntimeSha: "c".repeat(40),
-    policy: authority.policy,
-    scannerRoot: authority.scannerRoot,
-  });
+  const consumerRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-v4-recovery-consumer-"),
+  );
+  fs.mkdirSync(path.join(consumerRoot, ".buildchain"), { recursive: true });
+  for (const lock of ["contract-lock.json", "alpha-contract-lock.json"])
+    fs.copyFileSync(
+      path.join(root, ".buildchain", lock),
+      path.join(consumerRoot, ".buildchain", lock),
+    );
+
+  let result;
+  try {
+    const sourceOnly = scanV4FloatingConsumerPolicy({
+      root: consumerRoot,
+      repository: "kungfu-systems/buildchain",
+      sourceSha: "a".repeat(40),
+      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+      invocationSourcePath: relative,
+      expectedInvocationChannel: "alpha",
+      resolvedWorkflowSha: "b".repeat(40),
+      resolvedRuntimeSha: "c".repeat(40),
+      policy: authority.policy,
+      scannerRoot: authority.scannerRoot,
+    });
+    assert.equal(sourceOnly.ok, false);
+    assert.equal(
+      sourceOnly.failures.some(
+        ({ code }) => code === "invoked-workflow-not-found",
+      ),
+      true,
+    );
+
+    result = scanV4FloatingConsumerPolicy({
+      root: consumerRoot,
+      invocationRoot: root,
+      repository: "kungfu-systems/buildchain",
+      sourceSha: "a".repeat(40),
+      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+      invocationSourcePath: relative,
+      expectedInvocationChannel: "alpha",
+      resolvedWorkflowSha: "b".repeat(40),
+      resolvedRuntimeSha: "c".repeat(40),
+      policy: authority.policy,
+      scannerRoot: authority.scannerRoot,
+    });
+  } finally {
+    fs.rmSync(consumerRoot, { recursive: true, force: true });
+  }
 
   assert.equal(result.ok, true, JSON.stringify(result.failures));
   assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
@@ -83,6 +118,10 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   assert.match(
     workflow,
     /router-sha: \$\{\{ steps\.route\.outputs\.router-sha \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/router/u,
   );
 });
 

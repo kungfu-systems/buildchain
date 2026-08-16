@@ -41,6 +41,9 @@ export function scanCommand(options = {}) {
   const root = path.resolve(
     options.root || env("BUILDCHAIN_CONSUMER_ROOT", process.cwd()),
   );
+  const invocationRoot = path.resolve(
+    options.invocationRoot || env("BUILDCHAIN_INVOCATION_SOURCE_ROOT", root),
+  );
   const output = path.resolve(
     root,
     options.output ||
@@ -54,6 +57,7 @@ export function scanCommand(options = {}) {
   );
   const result = scanV4FloatingConsumerPolicy({
     root,
+    invocationRoot,
     repository: options.repository || env("GITHUB_REPOSITORY"),
     sourceSha: options.sourceSha || env("GITHUB_SHA"),
     invokedWorkflow:
