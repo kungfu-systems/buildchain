@@ -160,6 +160,24 @@ function writeAuthorization(outputPath, authorization) {
   fs.writeFileSync(output, `${JSON.stringify(authorization, null, 2)}\n`);
 }
 
+function trackedRuntimePersistencePaths(consumerRoot) {
+  return execFileSync(
+    "git",
+    [
+      "-C",
+      consumerRoot,
+      "ls-files",
+      "--",
+      ".github/workflows",
+      ".github/actions",
+      ".buildchain",
+    ],
+    { encoding: "utf8" },
+  )
+    .split(/\r?\n/u)
+    .filter((entry) => /\.(?:json|toml|ya?ml)$/u.test(entry));
+}
+
 async function authorizePromotionRuntimeOverride({
   github,
   context,
@@ -184,6 +202,7 @@ async function authorizePromotionRuntimeOverride({
   const policyReceipt = policyDocument.receipt || policyDocument;
   const persistenceScan = runtime.scanV4RuntimeSelectorPersistence({
     root: consumerRoot,
+    paths: trackedRuntimePersistencePaths(consumerRoot),
   });
   if (persistenceScan.status !== "passed") {
     throw new Error(
