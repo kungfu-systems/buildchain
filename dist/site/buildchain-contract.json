@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:c4154d5f8f61820a7a23a9c2d197bb7189bac5a12613320feca5802df69f9639",
+      "auditDigest": "sha256:5a79379547de44c5408a8e76f42b448b22505d6f96a187a12b364314f85df8b2",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1888,7 +1888,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers"
       ],
       "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-      "auditDigest": "sha256:c84da8a7e2bf428288e24c7a105dd718a8cc2db1d08d9e8fd0fa374430653fa7",
+      "auditDigest": "sha256:5bd031e879ee067f3502922faf70ea95809e6c4b85ad77ae04ecb7047b494624",
       "compatibleBreakingDigests": [
         "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
       ],
@@ -5082,7 +5082,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:c4154d5f8f61820a7a23a9c2d197bb7189bac5a12613320feca5802df69f9639"
+      "auditDigest": "sha256:5a79379547de44c5408a8e76f42b448b22505d6f96a187a12b364314f85df8b2"
     },
     {
       "contractVersion": 1,
@@ -5308,5 +5308,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:5de1c69386510b74b17eb70141b8bdd07063d62c504f91db5e84b67c6d4b64a2",
-  "contractDigest": "sha256:8d7114c5568ca4a9edce55cbd8d617fe8c4f74fb8c38a31be702c39ce57e8f0b"
+  "contractDigest": "sha256:b048484bee9d426e480327813746f9ddf5be67a87f2af2abcdde25c6fa7a8e9e"
 }

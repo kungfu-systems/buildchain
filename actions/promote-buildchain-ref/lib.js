@@ -1894,7 +1894,7 @@ function generateReleaseEvidenceInputs({
   version,
   deploymentCoordinate,
   targetRef,
-  outputDir,
+  outputDir, extraEnv = {},
 }) {
   if (!command) {
     return [];
@@ -1911,7 +1911,7 @@ function generateReleaseEvidenceInputs({
         BUILDCHAIN_RELEASE_VERSION: version,
         BUILDCHAIN_RELEASE_DEPLOYMENT_COORDINATE: deploymentCoordinate,
         BUILDCHAIN_RELEASE_TARGET_REF: targetRef,
-        BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR: outputDir,
+        BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR: outputDir, ...extraEnv,
       },
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
@@ -1957,7 +1957,7 @@ async function collectAndPersistReleasePassport({
   promotionRoutingJson = "",
   v4ConsumerPolicyCertificationJson = "",
   v4ConsumerPolicyCertificationRoot = "",
-  v4RuntimeResumeEvidenceJson = "",
+  v4RuntimeResumeEvidenceJson = "", v4RuntimeResumeEvidenceCommand = "", v4RuntimeResumeEvidenceCommandCwd = cwd,
   kfd1WitnessJsons = [],
   kfd2ClaimJsons = [],
   kfd3PrebuildWitnessJsons = [],
@@ -2016,6 +2016,7 @@ async function collectAndPersistReleasePassport({
     targetRef,
     outputDir: resolvedOutputDir,
   });
+  const generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs({ command: v4RuntimeResumeEvidenceCommand, cwd: v4RuntimeResumeEvidenceCommandCwd, sourceSha: passportSourceSha, tag: publicReleaseTag, channel, version: publishedVersion, deploymentCoordinate: `github-release:${owner}/${repo}@${publicReleaseTag}`, targetRef, outputDir: resolvedOutputDir, extraEnv: { BUILDCHAIN_V4_RUNTIME_RESUME_MATERIAL: path.resolve(v4RuntimeResumeEvidenceCommandCwd, ".buildchain/release-candidate/v4-runtime-resume-material.json"), BUILDCHAIN_RELEASE_TRANSACTION_JSON: JSON.stringify(result.transaction) } }); if (generatedV4RuntimeResumeEvidence.length > 1) throw new Error("v4 runtime resume finalization must emit exactly one evidence file");
   const inferredImpactJson = createTreeEquivalentReleaseImpact({
     channel,
     version: publishedVersion,
@@ -2097,7 +2098,7 @@ async function collectAndPersistReleasePassport({
     ],
     v4ConsumerPolicyCertificationJson,
     v4ConsumerPolicyCertificationRoot,
-    v4RuntimeResumeEvidenceJson,
+    v4RuntimeResumeEvidenceJson: generatedV4RuntimeResumeEvidence[0] || v4RuntimeResumeEvidenceJson,
     githubArtifactAttestationPolicyJsons,
     buildSummaryJson,
     platformManifestJsons: platformManifests,
@@ -4697,7 +4698,7 @@ async function promoteBuildchainRefs({
   releasePassportPromotionRoutingJson = "",
   releasePassportV4ConsumerPolicyCertificationJson = "",
   releasePassportV4ConsumerPolicyCertificationRoot = "",
-  releasePassportV4RuntimeResumeEvidenceJson = "",
+  releasePassportV4RuntimeResumeEvidenceJson = "", releasePassportV4RuntimeResumeEvidenceCommand = "",
   releasePassportKfd1WitnessJsons = "",
   releasePassportKfd2ClaimJsons = "",
   releasePassportKfd3PrebuildWitnessJsons = "",
@@ -4911,7 +4912,7 @@ async function promoteBuildchainRefs({
     releasePassportPromotionRoutingJson,
     releasePassportV4ConsumerPolicyCertificationJson,
     releasePassportV4ConsumerPolicyCertificationRoot,
-    releasePassportV4RuntimeResumeEvidenceJson,
+    releasePassportV4RuntimeResumeEvidenceJson, releasePassportV4RuntimeResumeEvidenceCommand,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,

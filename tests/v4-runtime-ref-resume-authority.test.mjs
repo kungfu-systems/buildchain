@@ -13,6 +13,7 @@ import {
   verifyV4RuntimeAuthorizationReceipt,
   verifyV4RuntimeResumeLineage,
 } from "../packages/core/v4-runtime-ref-resume-authority.js";
+import { finalizeRuntimeResumeEvidence } from "../scripts/resume-from-candidate-run.mjs";
 import {
   collectGitHubReleasePassport,
   createReleasePassport,
@@ -121,6 +122,103 @@ function capsule(platform) {
     sealed: true,
   };
 }
+
+test("resume finalization reads public effects before producing Passport lineage", async () => {
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-v4-runtime-finalize-"),
+  );
+  try {
+    const authorization = authorize();
+    const version = "4.0.1-alpha.6",
+      targetRef = "alpha/v4/v4.0",
+      integrity = "sha512-public";
+    const body = {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-v4-runtime-resume-material/v1",
+      repository: "kungfu-systems/consumer",
+      targetRef,
+      runtimeSha: SHA_B,
+      version,
+      authorization: authorization.receipt,
+      authorizationRoot: authorization.receiptRoot,
+      buildAttempt: { id: "attempt-build-17", runtimeSha: SHA_A },
+      resumeAttempt: { id: "attempt-resume-18", runtimeSha: SHA_B },
+      source: { sha: SOURCE_SHA, treeSha: TREE_SHA },
+      consumerPolicyReceiptRoot: ROOT_C,
+      requiredPlatforms: ["linux-x64"],
+      stageCapsules: [capsule("linux-x64")],
+      resumePlanRoot: ROOT_A,
+      floatingRefBefore: { ref: "v4-alpha", sha: SHA_A },
+    };
+    const materialPath = path.join(root, "material.json");
+    fs.writeFileSync(
+      materialPath,
+      JSON.stringify({ ...body, root: v4RuntimeResumeDocumentRoot(body) }),
+    );
+    const fetchImpl = async (url) => {
+      const value = String(url).includes("registry.npmjs.org")
+        ? {
+            "dist-tags": { alpha: version },
+            versions: { [version]: { dist: { integrity } } },
+          }
+        : String(url).includes("/compare/")
+          ? { status: "ahead" }
+          : {
+              object: {
+                sha: String(url).includes("tags/v4-alpha")
+                  ? SHA_B
+                  : String(url).includes("tags/v4.0.1-alpha.6")
+                    ? SOURCE_SHA
+                    : "e".repeat(40),
+              },
+            };
+      return {
+        ok: true,
+        status: 200,
+        json: async () => value,
+        text: async () => JSON.stringify(value),
+      };
+    };
+    await assert.rejects(
+      finalizeRuntimeResumeEvidence({
+        materialPath,
+        transaction: { target_ref: targetRef, version, state: "published" },
+        outputDir: root,
+      }),
+      /completed publication transaction/,
+    );
+    const result = await finalizeRuntimeResumeEvidence({
+      materialPath,
+      transaction: {
+        target_ref: targetRef,
+        source_sha: SOURCE_SHA,
+        exact_tag: `v${version}`,
+        version,
+        state: "complete",
+        artifacts: [
+          {
+            kind: "npm",
+            required: true,
+            name: "@kungfu-tech/buildchain",
+            ref: version,
+            digest: integrity,
+          },
+        ],
+      },
+      token: "test",
+      fetchImpl,
+      outputDir: root,
+    });
+    assert.equal(
+      result.evidence.lineage.finalPublicReadbackRoot,
+      result.readback.root,
+    );
+    assert.equal(result.evidence.lineage.attempts.resume.runtimeSha, SHA_B);
+    assert.ok(fs.existsSync(result.path));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
 
 test("source scan records OIDC and rejects selectors persisted outside uses nodes", () => {
   const root = cleanConsumer();

@@ -22,21 +22,15 @@ function patternMatcher(pattern) { const escaped = pattern.replace(/[.+?^${}()|[
 function safeName(value) { return String(value || "artifact").replace(/[^A-Za-z0-9._-]/g, "_"); }
 
 function sha256File(filePath) {
-  const hash = crypto.createHash("sha256");
-  const descriptor = fs.openSync(filePath, "r");
-  const chunk = Buffer.allocUnsafe(8 * 1024 * 1024);
+  const hash = crypto.createHash("sha256"), descriptor = fs.openSync(filePath, "r"), chunk = Buffer.allocUnsafe(8 * 1024 * 1024);
   try { let bytesRead = 0; while ((bytesRead = fs.readSync(descriptor, chunk, 0, chunk.length, null)) > 0) hash.update(chunk.subarray(0, bytesRead)); }
-  finally { fs.closeSync(descriptor); }
-  return `sha256:${hash.digest("hex")}`;
+  finally { fs.closeSync(descriptor); } return `sha256:${hash.digest("hex")}`;
 }
 
 function collectFiles(root) {
-  const resolvedRoot = path.resolve(root);
-  const files = [];
-  const pending = [resolvedRoot];
+  const resolvedRoot = path.resolve(root), files = [], pending = [resolvedRoot];
   while (pending.length) {
-    const current = pending.pop();
-    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+    const current = pending.pop(); for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const fullPath = path.join(current, entry.name);
       if (entry.isDirectory()) pending.push(fullPath);
       else if (entry.isFile()) files.push({ path: path.relative(resolvedRoot, fullPath).split(path.sep).join("/"), size: fs.statSync(fullPath).size, sha256: sha256File(fullPath), absolutePath: fullPath });
@@ -82,7 +76,7 @@ export async function readPublicResumeState({ repoInfo, targetRef, runtimeSha, v
   return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
 }
 
-async function createRuntimeResumeEvidence({ repoInfo, targetRef, runtimeSha, version, transaction, passport, sidecar, stageCapsules, recovery, outputDir, token, apiUrl, fetchImpl }) {
+function prepareRuntimeResumeEvidence({ repoInfo, targetRef, runtimeSha, version, passport, sidecar, stageCapsules, recovery, outputDir }) {
   const authorizationPath = path.resolve(".buildchain/release-candidate/v4-runtime-authorization.json");
   if (!fs.existsSync(authorizationPath)) throw new Error("cross-runtime recovery requires a fresh runtime authorization receipt");
   const delegated = readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization");
@@ -90,13 +84,17 @@ async function createRuntimeResumeEvidence({ repoInfo, targetRef, runtimeSha, ve
   if (!delegatedVerification.ok) throw new Error(`fresh recovery runtime authorization rejected: ${delegatedVerification.failures.join(", ")}`);
   const policy = passport.consumerPolicy.receipt;
   const authorization = authorizeV4RuntimeSelection({ repository: repoInfo.fullName, eventName: "workflow_dispatch", mode: "resume", actor: delegated.receipt.actor.login, actorPermission: delegated.receipt.actor.permission, reason: `resume sealed candidate run ${passport.workflow.runId} from a tree-equivalent protected source`, authorizedAt: new Date().toISOString(), sourceSha: sidecar.source.sha, sourceTreeSha: sidecar.source.treeSha, requestedRef: delegated.receipt.request.ref, resolvedRuntimeSha: runtimeSha, approvedRefReadbacks: delegated.receipt.runtime.reachableFrom, stableContractLockRoot: policy.contractLocks.stable.root, alphaContractLockRoot: policy.contractLocks.alpha.root, consumerPolicyReceiptRoot: sidecar.consumerPolicyReceiptRoot, persistenceScan: trackedRuntimePersistenceScan() });
-  const readback = await readPublicResumeState({ repoInfo, targetRef, runtimeSha, version, transaction, token, apiUrl, fetchImpl });
   const planBody = { schemaVersion: 1, contract: "kungfu-buildchain-v4-runtime-resume-plan/v1", originalRunId: String(passport.workflow.runId), resumeRunId: String(env("GITHUB_RUN_ID")), recoveryReceiptRoot: recovery.receipt.root, requiredPlatforms: stageCapsules.map((entry) => entry.platform), reusedCapsuleRoots: stageCapsules.map((entry) => entry.capsuleRoot), rebuildPlatforms: [], skippedBuildStages: recovery.receipt.skippedBuildStages };
   const plan = { ...planBody, root: v4RuntimeResumeDocumentRoot(planBody) };
-  const resumed = createV4RuntimeResumeLineage({ authorization: authorization.receipt, authorizationRoot: authorization.receiptRoot, buildAttempt: sidecar.buildAttempt, resumeAttempt: { id: `github-run:${env("GITHUB_RUN_ID")}:attempt:${env("GITHUB_RUN_ATTEMPT", "1")}`, runtimeSha }, source: sidecar.source, consumerPolicyReceiptRoot: sidecar.consumerPolicyReceiptRoot, requiredPlatforms: stageCapsules.map((entry) => entry.platform), stageCapsules, resumePlanRoot: plan.root, finalPublicReadbackRoot: readback.root, floatingRefBefore: { ref: "v4-alpha", sha: sidecar.buildAttempt.runtimeSha }, floatingRefAfter: { ref: "v4-alpha", sha: runtimeSha } });
-  const evidence = { authorization: authorization.receipt, authorizationRoot: authorization.receiptRoot, lineage: resumed.lineage, lineageRoot: resumed.lineageRoot };
-  for (const [name, value] of [["v4-runtime-resume-plan.json", plan], ["v4-runtime-resume-public-readback.json", readback], ["v4-runtime-resume-evidence.json", evidence]]) fs.writeFileSync(path.join(outputDir, name), `${JSON.stringify(value, null, 2)}\n`);
-  return { evidence, path: path.join(outputDir, "v4-runtime-resume-evidence.json"), plan, readback };
+  const materialBody = { schemaVersion: 1, contract: "kungfu-buildchain-v4-runtime-resume-material/v1", repository: repoInfo.fullName, targetRef, runtimeSha, version, authorization: authorization.receipt, authorizationRoot: authorization.receiptRoot, buildAttempt: sidecar.buildAttempt, resumeAttempt: { id: `github-run:${env("GITHUB_RUN_ID")}:attempt:${env("GITHUB_RUN_ATTEMPT", "1")}`, runtimeSha }, source: sidecar.source, consumerPolicyReceiptRoot: sidecar.consumerPolicyReceiptRoot, requiredPlatforms: stageCapsules.map((entry) => entry.platform), stageCapsules, resumePlanRoot: plan.root, floatingRefBefore: { ref: "v4-alpha", sha: sidecar.buildAttempt.runtimeSha } }; const material = { ...materialBody, root: v4RuntimeResumeDocumentRoot(materialBody) };
+  for (const [name, value] of [["v4-runtime-resume-plan.json", plan], ["v4-runtime-resume-material.json", material]]) fs.writeFileSync(path.join(outputDir, name), `${JSON.stringify(value, null, 2)}\n`); return { material, materialPath: path.join(outputDir, "v4-runtime-resume-material.json"), path: path.join(outputDir, "v4-runtime-resume-evidence.json"), plan };
+}
+
+export async function finalizeRuntimeResumeEvidence({ materialPath, transaction, token = env("GITHUB_TOKEN", env("INPUT_TOKEN")), apiUrl = env("GITHUB_API_URL", "https://api.github.com"), fetchImpl = globalThis.fetch, outputDir = path.dirname(materialPath) }) {
+  const material = JSON.parse(fs.readFileSync(materialPath, "utf8")); const body = { ...material }; delete body.root; if (material.contract !== "kungfu-buildchain-v4-runtime-resume-material/v1" || material.root !== v4RuntimeResumeDocumentRoot(body)) throw new Error("cross-runtime resume material root mismatch");
+  const repoInfo = splitRepository(material.repository); const version = env("BUILDCHAIN_RELEASE_VERSION", material.version); const targetRef = env("BUILDCHAIN_RELEASE_TARGET_REF", material.targetRef); if (version !== material.version || targetRef !== material.targetRef || transaction?.version !== version || transaction?.state !== "complete") throw new Error("cross-runtime resume finalization does not match the completed publication transaction");
+  const readback = await readPublicResumeState({ repoInfo, targetRef, runtimeSha: material.runtimeSha, version, transaction, token, apiUrl, fetchImpl }); const resumed = createV4RuntimeResumeLineage({ authorization: material.authorization, authorizationRoot: material.authorizationRoot, buildAttempt: material.buildAttempt, resumeAttempt: material.resumeAttempt, source: material.source, consumerPolicyReceiptRoot: material.consumerPolicyReceiptRoot, requiredPlatforms: material.requiredPlatforms, stageCapsules: material.stageCapsules, resumePlanRoot: material.resumePlanRoot, finalPublicReadbackRoot: readback.root, floatingRefBefore: material.floatingRefBefore, floatingRefAfter: { ref: "v4-alpha", sha: material.runtimeSha } });
+  const evidence = { authorization: material.authorization, authorizationRoot: material.authorizationRoot, lineage: resumed.lineage, lineageRoot: resumed.lineageRoot }; const evidencePath = path.join(outputDir, "v4-runtime-resume-evidence.json"); for (const [name, value] of [["v4-runtime-resume-public-readback.json", readback], [path.basename(evidencePath), evidence]]) fs.writeFileSync(path.join(outputDir, name), `${JSON.stringify(value, null, 2)}\n`); return { evidence, path: evidencePath, readback };
 }
 
 async function readTransactionAtRef({ repoInfo, apiUrl, token, fetchImpl, stateRef }) {
@@ -439,7 +437,7 @@ export async function resumeFromCandidateRun({
     if (publication.manifest) fs.writeFileSync(sealedManifestPath, `${JSON.stringify(publication.manifest, null, 2)}\n`);
     const publishRequiredArtifacts = publication.publishRequiredArtifacts;
     fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(publishRequiredArtifacts, null, 2)}\n`);
-    const runtimeResume = stageCapsules.length ? await createRuntimeResumeEvidence({ repoInfo, targetRef, runtimeSha, version: candidateVersion, transaction: existingTransaction, passport, sidecar: stageCapsuleSidecar, stageCapsules, recovery, outputDir: resolvedOutput, token, apiUrl, fetchImpl }) : undefined;
+    const runtimeResume = stageCapsules.length ? prepareRuntimeResumeEvidence({ repoInfo, targetRef, runtimeSha, version: candidateVersion, passport, sidecar: stageCapsuleSidecar, stageCapsules, recovery, outputDir: resolvedOutput }) : undefined;
     const tarballs = publication.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
     return {
       enabled: true,
@@ -516,6 +514,7 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-recovery-receipt-path": result.paths.recoveryReceipt,
       "release-candidate-recovery-root": result.receipt.root,
       "v4-runtime-resume-evidence-path": result.paths.runtimeResumeEvidence,
+      "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence ? "node .buildchain/runtime/scripts/resume-from-candidate-run.mjs finalize" : "",
       "release-candidate-root": result.candidateRoot,
       "release-candidate-artifact-root": result.artifactRoot,
       "publish-sealed-bundle-root": result.paths.sealedBundleRoot,
@@ -537,7 +536,8 @@ export async function resumeFromCandidateRunCli() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  resumeFromCandidateRunCli().catch((error) => {
+  const operation = process.argv[2] === "finalize" ? finalizeRuntimeResumeEvidence({ materialPath: requiredEnv("BUILDCHAIN_V4_RUNTIME_RESUME_MATERIAL"), transaction: JSON.parse(requiredEnv("BUILDCHAIN_RELEASE_TRANSACTION_JSON")), outputDir: env("BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR", path.dirname(requiredEnv("BUILDCHAIN_V4_RUNTIME_RESUME_MATERIAL"))) }).then((result) => console.log(JSON.stringify({ files: [outputPath(result.path)] }))) : resumeFromCandidateRunCli();
+  operation.catch((error) => {
     const failure = error.recoveryFailure || recoveryFailure(error);
     console.error(`candidate recovery rejected [${failure.code}]: ${failure.reason}`);
     console.error(`next action: ${failure.nextAction}`);

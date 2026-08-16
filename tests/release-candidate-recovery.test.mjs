@@ -527,6 +527,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   const publicWorkflow = fs.readFileSync(new URL("../.github/workflows/release-candidate-promote.yml", import.meta.url), "utf8");
   const refPromotion = fs.readFileSync(new URL("../.github/workflows/buildchain-ref-promotion.yml", import.meta.url), "utf8");
   const dogfoodFailure = fs.readFileSync(new URL("../.github/workflows/buildchain-candidate-recovery-dogfood-failure.yml", import.meta.url), "utf8");
+  const alphaPromotion = fs.readFileSync(new URL("../actions/promote-buildchain-ref/internal/promote-alpha-channel.js", import.meta.url), "utf8"), durableOperations = fs.readFileSync(new URL("../actions/promote-buildchain-ref/internal/durable-transaction-operations.js", import.meta.url), "utf8"), promoteLib = fs.readFileSync(new URL("../actions/promote-buildchain-ref/lib.js", import.meta.url), "utf8");
   for (const input of [
     "resume-candidate-repository",
     "resume-candidate-run-id",
@@ -558,6 +559,8 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
   assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
   assert.match(advanced, /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\.release-passport-v4-runtime-resume-evidence-json \|\| steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}/);
+  assert.match(advanced, /release-passport-v4-runtime-resume-evidence-command: \$\{\{ steps\.rc\.outputs\.v4-runtime-resume-finalize-command \}\}/);
+  assert.match(alphaPromotion, /updateTag\(context\.rule\.alphaTag,[\s\S]*?markComplete\(\)/); assert.match(durableOperations, /completeTransactionFinalization\([\s\S]*?collectAndPersistReleasePassport\(/); assert.match(promoteLib, /generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs[\s\S]*?collectGitHubReleasePassport\(/);
   assert.match(advanced, /cp \.buildchain\/release-candidate\/v4-runtime-resume-\*\.json/);
   assert.match(refPromotion, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/);
   assert.match(refPromotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| '' \}\}/);
