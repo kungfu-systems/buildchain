@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 345,
+  "generation": 346,
   "fencingCounter": 89,
   "policy": {
     "agingSeconds": 900,
@@ -3664,11 +3664,20 @@
       "sourceWorkflowRunId": 31939366847,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-16T09:48:32.085Z",
-      "updatedAt": "2026-08-16T09:48:32.085Z",
+      "updatedAt": "2026-08-16T10:04:08.733Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "superseded-by-admitted-protected-base-absorption",
+        "evidenceRoot": "sha256:47f3e41281df23805e18ed6951fe15ae8da411736b8d8c34ab0b73252a1fba86",
+        "authority": "queued-candidate-cancellation",
+        "expectedSourceHead": "e19bdef16f09933d22858edcd2547a371ba175d5",
+        "observedSourceHead": "a5a2e1e2519175fa03b75a186f77c0ef4f5e9c32",
+        "eventAction": "cancelled",
+        "closedAt": "2026-08-16T10:04:08.733Z"
+      },
       "affectedPaths": [
         ".buildchain/buildchain.toml",
         ".github/actionlint.yaml",
@@ -3735,6 +3744,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-16T09:52:57.492Z",
-  "stateRoot": "sha256:bc45a121f1493363a4e4894c11ad60700384b6b0d3d19e272a3e3cecfcee2fc7"
+  "updatedAt": "2026-08-16T10:04:08.733Z",
+  "stateRoot": "sha256:db67eef9662be91abfd6da43bba5acfb4d482b701a4d6c16a0d5bf5bbf6b3df6"
 }
