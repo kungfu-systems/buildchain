@@ -5247,7 +5247,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 62
+        "line": 63
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5276,7 +5276,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 86
+        "line": 87
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10431,7 +10431,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1365
+        "line": 1366
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10455,7 +10455,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1367
+        "line": 1368
       },
       "example": "import { BUILDCHAIN_GITHUB_GOVERNANCE_PROTECTED_PATHS } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10488,7 +10488,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 419
+        "line": 420
       },
       "example": "import { codeownersForPath } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10517,7 +10517,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 313
+        "line": 314
       },
       "example": "import { compileEffectiveGithubGovernancePolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10541,7 +10541,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 452
+        "line": 453
       },
       "example": "import { createBuildchainGithubGovernanceAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10570,7 +10570,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 934
+        "line": 935
       },
       "example": "import { createGithubGovernanceRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10599,7 +10599,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1112
+        "line": 1113
       },
       "example": "import { createGithubRulesetBypassRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10628,7 +10628,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1191
+        "line": 1192
       },
       "example": "import { createGithubRulesetGovernanceRolloutPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10657,7 +10657,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 427
+        "line": 428
       },
       "example": "import { evaluateCodeownersAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10686,7 +10686,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 696
+        "line": 697
       },
       "example": "import { evaluateGithubGovernanceSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10811,7 +10811,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 165
+        "line": 166
       },
       "example": "import { githubGovernanceDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10840,7 +10840,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 542
+        "line": 543
       },
       "example": "import { githubRepositoryIdentityRoot } from \"@kungfu-tech/buildchain/github-governance-authority\";",
       "maturity": "stable",
@@ -10869,7 +10869,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1027
+        "line": 1028
       },
       "example": "import { normalizeGithubBranchProtectionSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10898,7 +10898,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 1097
+        "line": 1098
       },
       "example": "import { normalizeGithubRulesetSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10927,7 +10927,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 403
+        "line": 404
       },
       "example": "import { parseCodeowners } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10956,7 +10956,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 609
+        "line": 610
       },
       "example": "import { resolveGithubGovernanceTargetPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10985,7 +10985,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 632
+        "line": 633
       },
       "example": "import { resolveGithubGovernanceTargetRefs } from \"@kungfu-tech/buildchain/github-governance-authority\";",
       "maturity": "stable",
@@ -11018,7 +11018,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 886
+        "line": 887
       },
       "example": "import { verifyGithubGovernanceReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -29042,7 +29042,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:c340301fb115c81b6cb382b6a563d3d3cc4ed45f070a631699358975db03d1c5",
+      "digest": "sha256:a8fe39184997624ebcbac7f8eaa48cee5182bd56ead0954d4af34853059379e2",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29066,7 +29066,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:228be572fa8b4f373d15facfc7fbc9c18ad43d62c20f298e53b7cf359cc95d3d",
+      "digest": "sha256:2aea877b54d6fc147ce08faf8c49448ecc2e6a1fda14689b41cb107496110b97",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29779,7 +29779,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:0732a6888896f492f6543c4c9b32a1aef58f0fe691977b961745e151178188e5"
+      "digest": "sha256:c421e33c024aa5599bd14ea92c87c2911be3fce8d3ac32e3bdeaa7e2642a1b4a"
     },
     {
       "id": "build-facts",

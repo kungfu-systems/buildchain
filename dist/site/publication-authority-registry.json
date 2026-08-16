@@ -337,6 +337,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/buildchain-ref-promotion.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -945,6 +958,14 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/buildchain-ref-promotion.yml",
       "signals": [
         "write-permission",
@@ -1215,5 +1236,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "2a7f4639a659489a0ef229983fff39d1c7880fb464411761f9debcbbd93bd336"
+  "registryDigest": "206b96be4320152fa23c2b04a72f1ff9bba889c13c7d2225bca71bd70a79939e"
 }
