@@ -81,15 +81,20 @@ function safeArchiveEntries(listing, verboseListing, label) {
 }
 
 async function extractPackage(declaration, destination, definition, label) {
-  const observedRoot = await sha256File(declaration.archivePath);
+  const archivePath = path.resolve(declaration.archivePath);
+  const archiveDirectory = path.dirname(archivePath);
+  const archiveFile = `./${path.basename(archivePath)}`;
+  const observedRoot = await sha256File(archivePath);
   if (observedRoot !== declaration.archiveRoot) {
     throw new Error(`${label} archive bytes do not match archiveRoot`);
   }
   const [{ stdout: listing }, { stdout: verboseListing }] = await Promise.all([
-    execFileAsync("tar", ["-tzf", declaration.archivePath], {
+    execFileAsync("tar", ["-tzf", archiveFile], {
+      cwd: archiveDirectory,
       maxBuffer: 16 * 1024 * 1024,
     }),
-    execFileAsync("tar", ["-tvzf", declaration.archivePath], {
+    execFileAsync("tar", ["-tvzf", archiveFile], {
+      cwd: archiveDirectory,
       maxBuffer: 16 * 1024 * 1024,
     }),
   ]);
@@ -97,15 +102,8 @@ async function extractPackage(declaration, destination, definition, label) {
   await mkdir(destination, { recursive: true });
   await execFileAsync(
     "tar",
-    [
-      "-xzf",
-      declaration.archivePath,
-      "--strip-components",
-      "1",
-      "-C",
-      destination,
-    ],
-    { maxBuffer: 16 * 1024 * 1024 },
+    ["-xzf", archiveFile, "--strip-components", "1", "-C", destination],
+    { cwd: archiveDirectory, maxBuffer: 16 * 1024 * 1024 },
   );
   const packageJsonPath = path.join(destination, "package.json");
   const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
