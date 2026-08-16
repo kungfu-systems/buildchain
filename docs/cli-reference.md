@@ -728,6 +728,50 @@ buildchain facts
 buildchain facts aggregate [--cwd <dir>] [--product <id>] [--module-fact <file>]... [--artifact <path>]... [--output <file>] [--json]
 ```
 
+### `buildchain facts compatibility project`
+
+- Help: `buildchain facts compatibility project --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--output`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility project [--cwd <dir>] [--registry <json-or-path>] [--output <file>] [--json]
+```
+
+### `buildchain facts compatibility query`
+
+- Help: `buildchain facts compatibility query --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--query`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility query --query <json-or-path> [--registry <json-or-path>] [--cwd <dir>] [--json]
+```
+
+### `buildchain facts compatibility query-template`
+
+- Help: `buildchain facts compatibility query-template --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--fact-root`, `--json`, `--query-id`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility query-template --fact-root <sha256:...> [--query-id <id>] [--registry <json-or-path>] [--cwd <dir>] [--json]
+```
+
+### `buildchain facts compatibility verify`
+
+- Help: `buildchain facts compatibility verify --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] [--json]
+```
+
 ### `buildchain facts module`
 
 - Help: `buildchain facts module --help`

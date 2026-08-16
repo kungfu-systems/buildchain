@@ -110,6 +110,7 @@ import {
   dispatchTrustReleaseCommand,
 } from "./internal/trust-release-cli.mjs";
 import { dispatchRegisteredCommand } from "./internal/command-registry.mjs";
+import { runCompatibilityFactsCli } from "./internal/compatibility-facts-cli.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -988,6 +989,9 @@ async function runKfdCli(args = []) {
 async function runBuildFactsCli(args = []) {
   const [subcommand = "", ...factArgs] = args;
   const cwd = path.resolve(readFlag(factArgs, "cwd", process.cwd()));
+  if (subcommand === "compatibility") {
+    return runCompatibilityFactsCli({ args: factArgs, cwd, packageRoot: root });
+  }
   if (subcommand === "module") {
     const fact = collectModuleBuildFacts({
       cwd,
@@ -1061,7 +1065,7 @@ async function runBuildFactsCli(args = []) {
     }
     return;
   }
-  throw new Error("usage: buildchain facts <module|aggregate|verify> ...");
+  throw new Error("usage: buildchain facts <module|aggregate|verify|compatibility> ...");
 }
 
 function appendJsonLine(filePath, value) {

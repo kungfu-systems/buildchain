@@ -252,10 +252,10 @@
       ],
       "maturity": "stable",
       "counts": {
-        "manualCount": 10,
-        "pageCount": 16,
+        "manualCount": 11,
+        "pageCount": 17,
         "cliCommandCount": 13,
-        "nodeApiCount": 14,
+        "nodeApiCount": 15,
         "workflowCount": 20,
         "actionCount": 0
       },
@@ -267,6 +267,7 @@
         "docs/migration-inventory.md",
         "docs/ownership.md",
         "docs/release-governance.md",
+        "docs/v4-compatibility-facts.md",
         "docs/release-flow.md",
         "docs/runtime-train-validation.md",
         "docs/versioning.md"

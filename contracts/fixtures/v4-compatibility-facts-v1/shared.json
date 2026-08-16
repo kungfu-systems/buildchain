@@ -1,0 +1,1129 @@
+{
+  "schema": "buildchain.v4.compatibility-facts-fixture/v1",
+  "cases": [
+    {
+      "id": "positive-direct",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "direct-a-b",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "cutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+        "relationPathRoots": [
+          "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    },
+    {
+      "id": "positive-explicit-bounded-composition",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "explicit-a-c",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+        "cutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+        "relationPathRoots": [
+          "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+          "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 2
+      }
+    },
+    {
+      "id": "negative-wrong-direction",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "wrong-direction",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "targetRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "cutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+        "relationPathRoots": [
+          "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    },
+    {
+      "id": "negative-wrong-cut",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "wrong-cut",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "cutRoot": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "relationPathRoots": [
+          "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    },
+    {
+      "id": "negative-disconnected-path",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "disconnected",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "cutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+        "relationPathRoots": [],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    },
+    {
+      "id": "negative-unscoped-operation",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "wrong-operation",
+        "operation": "publish-release",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "cutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+        "relationPathRoots": [
+          "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    },
+    {
+      "id": "temporal-not-yet-valid",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "not-yet-valid",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+        "cutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+        "relationPathRoots": [
+          "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    },
+    {
+      "id": "temporal-superseded",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [
+          {
+            "root": "sha256:297db996e6323dc00dffdac86453767d3e260c0687d2dfb663f137e40edc1b71",
+            "record": {
+              "schema": "kungfu.fact.temporal-supersession/v1",
+              "priorRelationRoot": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+              "successorRelationRoot": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "effectiveCutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+              "reasonRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "superseded",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "cutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+        "relationPathRoots": [
+          "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    },
+    {
+      "id": "temporal-expired-by-revocation",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [
+          {
+            "root": "sha256:b1dbc0df8c211a048b4599651efbb6820d26d26e73c410e40d1f14180f5bd98e",
+            "record": {
+              "schema": "kungfu.fact.temporal-revocation/v1",
+              "relationRoot": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+              "effectiveCutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+              "reasonRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          }
+        ],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "expired",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "cutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+        "relationPathRoots": [
+          "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    },
+    {
+      "id": "corruption-ambiguous-root",
+      "bundle": {
+        "schema": "kungfu.fact.temporal-bundle/v1",
+        "cuts": [
+          {
+            "root": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+            "parentCutRoots": [],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          },
+          {
+            "root": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+            "parentCutRoots": [
+              "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f"
+            ],
+            "activeRelationRoots": [
+              "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+              "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+            ],
+            "declarationRoots": [
+              "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9"
+            ]
+          }
+        ],
+        "predicates": [
+          {
+            "root": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+            "record": {
+              "schema": "kungfu.fact.temporal-predicate/v1",
+              "predicateId": "kungfu.buildchain.compatibility:accept-contract-lock/v1",
+              "operations": ["accept-contract-lock"],
+              "direction": "source-to-target",
+              "pathPolicy": "explicit-bounded",
+              "cyclePolicy": "forbid",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea"
+            }
+          }
+        ],
+        "relations": [
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          },
+          {
+            "root": "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:a-to-b",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+              "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "validFromCutRoot": "sha256:0e9d39f3e26aa15ea70080e7e3f90f5493154aaa12c94327d35a4e9d1ba56d69",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:2b01191b03fa98e63f80c44ddc91f7ad0cece3c59990b1e02b1a8bf1a5fe63ac"
+              ]
+            }
+          },
+          {
+            "root": "sha256:744c62e5416efa96104d95cfb4f92a862ab9efc475b7db0dc54398067b9cc652",
+            "record": {
+              "schema": "kungfu.fact.temporal-relation/v1",
+              "relationId": "buildchain:compatibility:b-to-c",
+              "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+              "sourceRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+              "targetRoot": "sha256:b2ad75d880decb5d314fd0ae052be4f4f6043462458341ffe1970c745cf69c67",
+              "validFromCutRoot": "sha256:dfeda9c45fcdf11b388e4a578d831e9b2264610242d6d3d2a8d9b10f1744e20f",
+              "scopeRoot": "sha256:17b3f22dd33206584de823a2e1c3a28e0311d310bdd051dc19c7b471eb6d408c",
+              "authorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+              "admissionRoots": [
+                "sha256:6c174a96ab2c9f80cca4b582b86b4e364ad92db9f7129de4419e309266f9dda6"
+              ]
+            }
+          }
+        ],
+        "supersessions": [],
+        "revocations": [],
+        "authorityProofs": [],
+        "provenanceObjects": []
+      },
+      "query": {
+        "schema": "kungfu.fact.temporal-path-query/v1",
+        "queryId": "direct-a-b",
+        "operation": "accept-contract-lock",
+        "predicateRoot": "sha256:2b211f8251b0410b178f1f579d9bda9aa707877cc05c1ee839a3343f0f2307c9",
+        "sourceRoot": "sha256:382917ca73a691e304d223121a6051f45eb81c8f23e9ce94bd0efde0e606317b",
+        "targetRoot": "sha256:862426b0548c1fa90345be926271048d7004d69bc679f323c9ae62fa5923e43c",
+        "cutRoot": "sha256:81ece7d739cf3817ad97a13e281373ffc79a57d470041d4caacbfb6760f362f8",
+        "relationPathRoots": [
+          "sha256:cdfb0c794b30dcd3a2e9bf57d21152d1d7eff2b28a86cb641053bf226f49503a"
+        ],
+        "requiredAuthorityRoot": "sha256:6908bf14a35e1ad7d0b865cb776744b789d1b41a0920d2160ef374febb4e24ea",
+        "maxDepth": 1
+      }
+    }
+  ]
+}
