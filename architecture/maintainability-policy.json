@@ -6,11 +6,11 @@
   "repositoryBudgets": {
     "baselineRevision": "c70e6ac28431888b24fefc218246cc69f8dde85a",
     "maxHandMaintainedSourceFiles": 413,
-    "maxHandMaintainedSourceLines": 155942,
+    "maxHandMaintainedSourceLines": 156678,
     "maxWorkflowFiles": 73,
-    "maxWorkflowLines": 25697,
-    "latestTransition": "Exact source-proof reuse now composes with Publication Rehearsal parity and admits a protected-base advance only through a bounded exact-patch linear replay while avoiding an all-branch merge-group checkout.",
-    "latestTransitionRationale": "The replay graph is isolated in one 153-line module. It requires the qualified base to remain an ancestor of the current protected base, exact source and merge-group patch roots, equal linear commit counts and per-commit patch roots; unknown or deeper-than-bounded history falls back to the full source lifecycle. These explicit 413-file, 155942-source-line, 73-workflow-file and 25697-workflow-line ceilings include the prior Publication Rehearsal cut without widening any existing file or function budget.",
+    "maxWorkflowLines": 25689,
+    "latestTransition": "Cross-runtime candidate recovery now finalizes rooted Stage Capsule resume lineage only after protected publication effects have completed and public refs, tags, and npm bytes have been read back.",
+    "latestTransitionRationale": "The recovery adapter reuses the existing runtime authorization, Stage Capsule validation, candidate resolver, durable publication transaction, and Release Passport authorities. It preserves the original candidate runtime and provider artifact roots, requires a fresh governed resume attempt on a distinct authorized runtime, and creates qualifying lineage only after the completed transaction independently matches the public target ref, v4-alpha ref, exact tag, tag ancestry, npm alpha version, and npm integrity. Publication Rehearsal remains effect-disabled rehearsal authority and is not projected into production resume evidence. The adapter's main function is split below the default function limits; the explicit 1125-line file transition and exact 413-file, 156678-source-line, 73-workflow-file, and 25689-workflow-line repository ceilings record only the reviewed protected-base composition and cannot grow implicitly.",
     "rationale": "Bounded modules separate candidate, evidence, native proof and execution, canonical failure verification, closed-set execution transfer, process-boundary verification, Warrant state and qualification, authority state, qualification, Landing acquisition, verified-attempt admission, Landing settlement and fence validation, provider attempt and heartbeat readback, sealed terminal evidence, hosted heartbeat, resume, store, options, command-specific adapters, and CLI orchestration responsibilities. The protected delivery workflow gives candidate and seal jobs no provider write credential, recursively rejects transfer drift, scopes every transfer artifact to the exact provider run attempt, chains every durable heartbeat state and receipt root on a distinct hosted runner domain, and permits qualification or exact failure settlement only after the finalizer verifies live jobs and the latest durable authority state. Public Landing admission and heartbeat always perform non-injectable fresh exact-attempt provider readback, tolerate only a not-yet-materialized seal job while retaining exact native and duplicate-job rejection, and heartbeat-loss coordination never invokes GitHub's run-scoped cancellation API where a successor rerun could race. The hosted process boundary anchors trust in the kernel-resolved versioned Runner.Worker path while accepting an equivalent argv-zero spelling with the same basename; its public boundary marker is allowed only at the one exact non-secret value, so a forged value under the same credential-like name still fails closed. The credentialless transfer seal validates the rooted native reuse decision against the Warrant-bound source, closure, dependency, toolchain, environment and command inputs; qualifiedBase stays in the proof and decision where it is rooted and later independently rechecked, rather than being assumed on the Warrant schema. V2 mutation cannot initialize a second empty authority beside a legacy ref: migration reads and roots the canonical live v1 ref, rechecks it, applies the explicit configured v2 policy, and atomically replaces its bytes through one expected-old non-force update, so old v1 controllers fail closed while the prior commit remains immutable history. Candidate ancestry classifies the GitHub artifact runtime token as credential authority. Every Landing settlement, including an unexpired fence, requires product-owned terminal readback. Terminal cleanup reads the immutable historical attempt, derives workflow and hosted Landing job identity from live run data, reads the exact protected ref head and compares containment against that immutable SHA, and seals merged only when the admitted merge-group head is contained by that protected base; a later different-head merge settles the old attempt as dequeued. Terminal normalization preserves transfer, finalizer boundary, native and seal job, admitted provider attempt, protected-base head, containment result, and terminal readback coordinates. The public reusable workflow truthfully retains its single-flight v1 authority without advertising v2 migration, while bounded v2 remains a separate opt-in CLI, Node API, and schema contract; the tracked self-caller stays on public v4-alpha with matching stable and alpha locks, and transient train selection is dispatch-only. Next-development parity adds one versioned transition authority, one durable controller, one bounded reservation adapter, and pure public-contract recovery evidence while retaining the existing thin floating-channel callers byte-for-byte. The floating-consumer gate reuses the existing contract-world evaluator so SHA drift passes only under the selected lock's compatibility policy, breaking surface drift still fails closed, and external certification reconstructs the receipt from the observed workflow SHA rather than the lock's historical evidence SHA. Tail reseal adds no Stage Capsule effect or general rebuild authority: it verifies the exact retained four-platform bytes, admits one known macOS tail failure through live provider readback, fences signing and finalization to explicit credentials and Warrant identity, and requires standard candidate Passport plus provider and protected readback. Compatibility Facts parity isolates canonical encoding, temporal verification, lifecycle validation, fixture projection, public authority projection, and CLI adaptation into bounded modules; legacy digest and proof arrays are derived only from exact current Fact lineage. Publication Rehearsal adds no production release authority: the content-addressed capsule contract binds source, candidate, manifest, config, canonical data-only provider bindings, provider policy, observations and core version separately from filesystem, runtime and rehearsal-only provider authority; simulate, replay and explicitly authorized provider rehearsal all reuse the release-tail planner, while same-commit local dogfood resolves the new reusable contract and exact current runtime before external callers remain on floating v4-alpha. These exact 412-file, 155873-source-line, 73-workflow-file and 25691-workflow-line ceilings cannot grow implicitly."
   },
   "sourceBudgets": {
@@ -97,6 +97,10 @@
     "packages/core/v4-runtime-selector-persistence.js": {
       "maxLines": 228,
       "rationale": "The isolated source scanner rejects persisted exact, train, authority, variable, secret, and environment selector authority while inventorying OIDC, IAM, and external authority metadata without reading credentials; this exact ceiling cannot grow implicitly."
+    },
+    "scripts/resume-from-candidate-run.mjs": {
+      "maxLines": 1125,
+      "rationale": "The candidate recovery adapter retains the existing artifact normalization and immutable recovery receipt boundary while adding fresh authorized cross-runtime Stage Capsule resume material, post-publication ref, tag, ancestry, and npm readback, and rooted Release Passport lineage. Its main orchestration remains below the default function length and complexity limits, and this exact file ceiling cannot grow implicitly."
     }
   },
   "approvedExistingDebtTransitions": {
@@ -105,8 +109,8 @@
       "rationale": "The public facade forwards the reviewed runtime-resume authority beside the existing declarative release-tail and v4 governance APIs without adding a second implementation or execution path; this exact post-integration ceiling cannot grow implicitly."
     },
     "actions/promote-buildchain-ref/index.js": {
-      "maxFunctionLines": 276,
-      "rationale": "The existing action entrypoint forwards one optional rooted v4 runtime-resume evidence document into the already audited durable Passport operation; this one-line terminal widening is exact and cannot grow implicitly."
+      "maxFunctionLines": 280,
+      "rationale": "The existing action entrypoint forwards the optional rooted v4 runtime-resume material and its trusted post-publication finalizer into the audited durable Passport operation. The exact readable four-line input widening cannot grow implicitly."
     },
     "actions/promote-buildchain-ref/lib.js": {
       "maxLines": 6952,
@@ -117,9 +121,9 @@
       "rationale": "The runtime entrypoint now binds every compatibility command and alias, including the upstream paper command, through the tested command registry; this exact post-integration wiring ceiling cannot grow implicitly."
     },
     "packages/core/release-passport.js": {
-      "maxLines": 2958,
+      "maxLines": 2976,
       "maxFunctionLines": 304,
-      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, upstream release evidence, consumer-policy certification, and the new rooted runtime A+B resume lineage. The optional attachment is normalized and independently reverified before inclusion; these exact post-integration ceilings cannot grow implicitly."
+      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, upstream release evidence, consumer-policy certification, and rooted runtime A+B resume lineage. Tree-equivalent promotion keeps the original built source identity while the optional attachment is normalized and independently reverified before inclusion; these exact post-integration ceilings cannot grow implicitly."
     },
     "packages/core/buildchain-contract.js": {
       "maxLines": 1096,
@@ -300,6 +304,7 @@
           "release-passport-promotion-routing-json",
           "release-passport-v4-consumer-policy-certification-json",
           "release-passport-v4-consumer-policy-certification-root",
+          "release-passport-v4-runtime-resume-evidence-command",
           "release-passport-v4-runtime-resume-evidence-json",
           "release-tail-state-path",
           "require-governance",
@@ -317,7 +322,7 @@
         "secrets": [],
         "outputs": []
       },
-      "rationale": "The promote action preserves the independently rooted v4 consumer-policy certification and now accepts one optional verified runtime-resume evidence document for final Release Passport construction; v3 behavior remains unchanged."
+      "rationale": "The promote action preserves the independently rooted v4 consumer-policy certification and accepts one optional verified runtime-resume evidence document plus one trusted post-publication finalizer command. The command runs only inside the existing durable Passport finalization boundary after provider effects and public readback; v3 behavior remains unchanged."
     },
     "cli:architecture": {
       "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
@@ -1507,9 +1512,9 @@
       "rationale": "The existing version-state commit transaction remains nested under its extracted operation factory and is independently regression-tested; this exact inherited ceiling cannot grow."
     },
     "actions/promote-buildchain-ref/internal/durable-transaction-operations.js#createDurableTransactionOperations": {
-      "maxLines": 376,
+      "maxLines": 378,
       "maxComplexity": 1,
-      "rationale": "Transplanted legacy durable transaction and Passport operations now live in an independently owned module; one semantic durable-material seam lets already-proven contained finalization restore immutable publication facts without accepting a transient rebuilt candidate or inconsistent per-field overrides, and this exact inherited ceiling cannot grow."
+      "rationale": "Transplanted legacy durable transaction and Passport operations remain in one independently owned module. The exact two-line readable widening forwards rooted runtime-resume material and its post-publication finalizer without accepting a transient rebuilt candidate or inconsistent per-field overrides; this ceiling cannot grow implicitly."
     },
     "packages/core/paper-npm-bootstrap.js#executePaperNpmBootstrap": {
       "maxLines": 490,

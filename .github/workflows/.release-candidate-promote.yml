@@ -1664,6 +1664,7 @@ jobs:
           test -f "${RECOVERY_RECEIPT}"
           mkdir -p "${RELEASE_PASSPORT_OUTPUT_DIR}"
           cp "${RECOVERY_RECEIPT}" "${RELEASE_PASSPORT_OUTPUT_DIR}/release-candidate-recovery-receipt.json"
+          cp .buildchain/release-candidate/v4-runtime-resume-*.json "${RELEASE_PASSPORT_OUTPUT_DIR}/"
 
       - name: Upload immutable candidate recovery receipt
         id: recovery-receipt
@@ -1921,7 +1922,8 @@ jobs:
           release-passport-promotion-routing-json: ${{ steps.routing-evidence.outputs.routing-path }}
           release-passport-v4-consumer-policy-certification-json: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-path }}
           release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}
-          release-passport-v4-runtime-resume-evidence-json: ${{ inputs.release-passport-v4-runtime-resume-evidence-json }}
+          release-passport-v4-runtime-resume-evidence-json: ${{ inputs.release-passport-v4-runtime-resume-evidence-json || steps.rc.outputs.v4-runtime-resume-evidence-path }}
+          release-passport-v4-runtime-resume-evidence-command: ${{ steps.rc.outputs.v4-runtime-resume-finalize-command }}
           release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
           release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}

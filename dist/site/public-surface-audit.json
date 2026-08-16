@@ -3094,6 +3094,7 @@
           "release-passport-promotion-routing-json",
           "release-passport-v4-consumer-policy-certification-json",
           "release-passport-v4-consumer-policy-certification-root",
+          "release-passport-v4-runtime-resume-evidence-command",
           "release-passport-v4-runtime-resume-evidence-json",
           "release-tail-state-path",
           "require-governance",
@@ -3108,7 +3109,7 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 83
+        "inputCount": 84
       },
       {
         "id": "release-tail",
@@ -8697,8 +8698,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2123dc563b356bfd8157065cd88c189e217dc61b30b9d9a974e0d1709e806429",
-    "workflowRegistryDigest": "38634570fa2873b07233fda186779386a00fdb58c870fb4682b16648d3170f38",
-    "pageRegistryDigest": "32ab607ff58bee6dac903965e80dd34cd5e186e67acd3e3623dd136a27402502"
+    "workflowRegistryDigest": "e303571373d89b26fc873cbff81381228b5b2ac52acc8ba29788f7602f56ce75",
+    "pageRegistryDigest": "4610f859d2d6891a3e2493304f8015028ee11aac93f704662ab04e2e107a62cb"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -25,7 +25,6 @@ jobs:
     secrets: inherit
     with:
       buildchain-channel: alpha
-      buildchain-ref: ${{ github.event.pull_request.head.sha || github.sha }}
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify
