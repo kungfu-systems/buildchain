@@ -15,10 +15,10 @@ const REQUEST_CONTRACT: &str = "kungfu-buildchain-adopter-delivery-request";
 const RESULT_CONTRACT: &str = "kungfu-buildchain-adopter-delivery-result";
 const DRIVER_INTERFACE: &str = "kungfu-buildchain-adopter-protocol-driver/v1";
 const PROFILE_INTERFACE: &str = "kungfu-buildchain-adopter-artifact-profile/v1";
-const KFD_PACKAGE: &str = "@kungfu-tech/kfd@1.0.0-alpha.62";
-const V3_COMMIT: &str = "c3f58d76391c1c6ceddfc900a68e91c7ab82a575";
+const KFD_PACKAGE: &str = "@kungfu-tech/kfd@1.0.0-alpha.65";
+const V3_COMMIT: &str = "6b96bdad8d9f8ccf9275f27d9370a226a9c78465";
 const VECTOR_SUITE_ROOT: &str =
-    "sha256:cf329805d928a9883cbafbdfdf21ef66c6a0889ed8dfe14356b4e0d25d6738f9";
+    "sha256:c978707556406ffda4ef4192032332c01c2da1cebb6ad8c4f0edfc65d5cef0c7";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

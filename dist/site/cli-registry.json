@@ -6,6 +6,51 @@
   "commandSource": "bin/internal/command-registry.mjs plus bin/buildchain.mjs help enumeration",
   "commands": [
     {
+      "id": "adopter-delivery",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain adopter-delivery run --input <json-or-path> [--output <path>]",
+      "paths": [
+        "adopter-delivery",
+        "adopter-delivery archive",
+        "adopter-delivery bootstrap",
+        "adopter-delivery run",
+        "adopter-delivery verify"
+      ],
+      "syntaxes": [
+        "buildchain adopter-delivery",
+        "buildchain adopter-delivery archive --input <json-or-path> [--output <path>]",
+        "buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]",
+        "buildchain adopter-delivery run --input <json-or-path> [--output <path>]",
+        "buildchain adopter-delivery verify --input <json-or-path> --readback <json-or-path> [--output <path>]"
+      ],
+      "options": [
+        "--input",
+        "--output",
+        "--readback"
+      ],
+      "aliases": [],
+      "helpCommands": [
+        "buildchain adopter-delivery --help",
+        "buildchain adopter-delivery archive --help",
+        "buildchain adopter-delivery bootstrap --help",
+        "buildchain adopter-delivery run --help",
+        "buildchain adopter-delivery verify --help"
+      ],
+      "purpose": "Run public protocol-neutral adopter delivery, exact readback, N-1 bootstrap, and published archive checks.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
       "id": "architecture",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain architecture validate [--cwd <dir>] [--json]",

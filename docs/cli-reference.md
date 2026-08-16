@@ -22,6 +22,63 @@ ai_provenance:
 
 Every listed help command is intercepted before dispatch, exits zero, and performs no command side effects.
 
+## `adopter-delivery`
+
+### `buildchain adopter-delivery`
+
+- Help: `buildchain adopter-delivery --help`
+- Canonical id: `adopter-delivery`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain adopter-delivery
+```
+
+### `buildchain adopter-delivery archive`
+
+- Help: `buildchain adopter-delivery archive --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery archive --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery bootstrap`
+
+- Help: `buildchain adopter-delivery bootstrap --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery run`
+
+- Help: `buildchain adopter-delivery run --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery run --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery verify`
+
+- Help: `buildchain adopter-delivery verify --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`, `--readback`
+- Syntax:
+
+```text
+buildchain adopter-delivery verify --input <json-or-path> --readback <json-or-path> [--output <path>]
+```
+
 ## `architecture`
 
 ### `buildchain architecture`
