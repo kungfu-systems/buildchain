@@ -74,14 +74,14 @@ async function archiveFixture(
       `${JSON.stringify({ kfdCut: { package: { name, version, artifactRoot } } })}\n`,
     );
   }
-  const archivePath = path.join(rootPath, `${name.replaceAll("/", "-")}.tgz`);
-  execFileSync("tar", [
-    "-czf",
-    archivePath,
-    "-C",
-    path.dirname(packageRoot),
-    "package",
-  ]);
+  const fixtureDirectory = name.replaceAll("/", "-");
+  const archiveName = `${fixtureDirectory}.tgz`;
+  const archivePath = path.join(rootPath, archiveName);
+  execFileSync(
+    "tar",
+    ["-czf", archiveName, "-C", fixtureDirectory, "package"],
+    { cwd: rootPath },
+  );
   const archiveRoot = `sha256:${createHash("sha256")
     .update(await readFile(archivePath))
     .digest("hex")}`;
