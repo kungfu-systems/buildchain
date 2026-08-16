@@ -33,6 +33,7 @@ const BUILDCHAIN_COMMAND_REGISTRY = Object.freeze([
   { id: "release-propagation", aliases: [] },
   { id: "release-governance", aliases: [] },
   { id: "release-tail", aliases: [] },
+  { id: "next-development", aliases: [] },
   { id: "github-governance", aliases: [] },
   { id: "badges", aliases: [] },
   { id: "homebrew", aliases: [] },

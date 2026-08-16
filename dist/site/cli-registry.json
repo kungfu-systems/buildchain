@@ -2531,6 +2531,44 @@
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
+      "id": "next-development",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain next-development materialize --input <request.json> [--cwd <dir>]",
+      "paths": [
+        "next-development",
+        "next-development materialize"
+      ],
+      "syntaxes": [
+        "buildchain next-development",
+        "buildchain next-development materialize --input <request.json> [--cwd <dir>] [--write] [--output <path>] [--json]"
+      ],
+      "options": [
+        "--cwd",
+        "--input",
+        "--json",
+        "--output",
+        "--write"
+      ],
+      "aliases": [],
+      "helpCommands": [
+        "buildchain next-development --help",
+        "buildchain next-development materialize --help"
+      ],
+      "purpose": "Plan or apply one rooted declared-path next-development version transition without release or ref authority.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
       "id": "npm",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain npm",

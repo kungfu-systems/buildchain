@@ -1586,6 +1586,30 @@ buildchain log <info|warn|error> --event <name> [--phase <phase>] [--component <
 buildchain mark --event <name> [--phase <phase>] [--component <name>] [--attribute key=value]... [--path <jsonl>] [--json]
 ```
 
+## `next-development`
+
+### `buildchain next-development`
+
+- Help: `buildchain next-development --help`
+- Canonical id: `next-development`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain next-development
+```
+
+### `buildchain next-development materialize`
+
+- Help: `buildchain next-development materialize --help`
+- Canonical id: `next-development`
+- Options: `--cwd`, `--input`, `--json`, `--output`, `--write`
+- Syntax:
+
+```text
+buildchain next-development materialize --input <request.json> [--cwd <dir>] [--write] [--output <path>] [--json]
+```
+
 ## `npm`
 
 ### `buildchain npm`

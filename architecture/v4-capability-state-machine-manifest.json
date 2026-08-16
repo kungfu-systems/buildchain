@@ -84,6 +84,18 @@
   },
   "capabilities": [
     {
+      "id": "next-development-controller",
+      "owner": "Buildchain protected development version plane",
+      "sourceInventoryId": "next-development-controller",
+      "surfaces": [
+        "cli:next-development",
+        "export:./next-development-transition",
+        "export:./next-development-controller",
+        "export:./next-development-projection"
+      ],
+      "migrationPhase": "legacy-retired"
+    },
+    {
       "id": "dev-delivery-warrant",
       "owner": "Buildchain Dev delivery control plane",
       "sourceInventoryId": "dev-delivery-warrant",
@@ -198,6 +210,67 @@
     }
   ],
   "stateMachines": [
+    {
+      "id": "next-development-controller",
+      "capabilityId": "next-development-controller",
+      "owner": "Buildchain protected development version plane",
+      "writer": {
+        "runtime": "typescript-v4",
+        "authoritative": true,
+        "secondWriterBudget": 0
+      },
+      "schemas": [
+        "kungfu-buildchain-next-development-transition/v1",
+        "kungfu-buildchain-next-development-controller/v1"
+      ],
+      "store": "atomic child store with compare-and-swap rooted checkpoints",
+      "states": [
+        "planned",
+        "waiting-anchor",
+        "materialized",
+        "pr-pending",
+        "merged",
+        "verified"
+      ],
+      "events": [
+        "schedule",
+        "bind-reviewed-anchor",
+        "materialize-current-dev",
+        "open-protected-version-pr",
+        "record-merge",
+        "verify-protected-dev-readback"
+      ],
+      "invariants": [
+        "completed Alpha remains terminal and immutable",
+        "one deterministic child exists per completed-Alpha root",
+        "verified requires exact protected Dev version and root readback"
+      ],
+      "effects": [
+        "write declared version source and derived material",
+        "request one protected Dev version pull request"
+      ],
+      "adapters": [
+        "atomic durable child store",
+        "version-state materialization adapter",
+        "protected Dev pull-request and readback adapter"
+      ],
+      "tests": [
+        "tests/next-development-transition.test.mjs",
+        "tests/next-development-controller.test.mjs",
+        "tests/next-development-self-dogfood.test.mjs",
+        "tests/dev-alpha-candidate-patrol.test.mjs"
+      ],
+      "recovery": [
+        "fresh runners resume the last rooted checkpoint and reuse idempotent materialization operations",
+        "moved protected Dev supersedes only stale preparation and readback mismatch retries observation"
+      ],
+      "migrationPhase": "legacy-retired",
+      "budgets": {
+        "undeclaredStates": 0,
+        "undeclaredEvents": 0,
+        "unboundedRetries": 0
+      }
+    },
     {
       "id": "dev-delivery-warrant",
       "capabilityId": "dev-delivery-warrant",

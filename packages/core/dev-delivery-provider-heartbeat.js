@@ -13,7 +13,7 @@ export const DEV_DELIVERY_PROVIDER_HEARTBEAT_SCHEMA =
   "kungfu.buildchain.provider-heartbeat-receipt/v1";
 
 function selectedWarrant(result = {}) {
-  return result.observation?.activeWarrant || result.warrant || null;
+  return result.warrant || result.observation?.activeWarrant || null;
 }
 
 function exactWarrant(input = {}) {

@@ -276,6 +276,60 @@ test("heartbeat execution rejects similar and ambiguous reusable caller job name
   }
 });
 
+test("heartbeat execution uses the canonical mutation Warrant when public observation omits heartbeat time", async () => {
+  const result = await runDevDeliveryProviderHeartbeat(
+    {
+      admission: admission(),
+      workflowRunId: 90,
+      workflowRunAttempt: 2,
+      leaseSeconds: 60,
+      heartbeatSeconds: 10,
+    },
+    {
+      now: () => "2026-08-15T00:00:01.000Z",
+      heartbeat: async ({ expectedOldStateRoot }) => {
+        const heartbeatAt = "2026-08-15T00:00:01.000Z";
+        const expiresAt = "2026-08-15T00:01:01.000Z";
+        const receipt = {
+          schema: "kungfu.buildchain.dev-delivery-lease-receipt/v1",
+          action: "heartbeat",
+          candidateId: ROOT("2"),
+          fencingToken: ROOT("3"),
+          leaseGeneration: 4,
+          expiresAt,
+          expectedOldStateRoot,
+          nextStateRoot: ROOT("4"),
+          nextAction: "Continue the exact fenced delivery attempt.",
+        };
+        return {
+          before: { stateRoot: expectedOldStateRoot },
+          after: { stateRoot: ROOT("4") },
+          receipt,
+          receiptRoot: devDeliveryContentRoot(receipt),
+          warrant: {
+            candidateId: ROOT("2"),
+            fencingToken: ROOT("3"),
+            generation: 4,
+            heartbeatAt,
+            expiresAt,
+          },
+          observation: {
+            stateRoot: ROOT("4"),
+            activeWarrant: {
+              candidateId: ROOT("2"),
+              fencingToken: ROOT("3"),
+              generation: 4,
+              expiresAt,
+            },
+          },
+        };
+      },
+      readJobs: async () => jobs(true),
+    },
+  );
+  assert.equal(result.latestHeartbeatAt, "2026-08-15T00:00:01.000Z");
+});
+
 test("finalizer fails closed on missing continuity, stale state, or job drift", async () => {
   const base = await runDevDeliveryProviderHeartbeat(
     {
