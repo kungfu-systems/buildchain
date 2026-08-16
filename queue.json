@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 486,
+  "generation": 487,
   "fencingCounter": 102,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:e46cbf4e146a56957dba6d4d2c0ce51913b70cb57d1be690fc64f5a171a1ef22",
@@ -49,8 +49,13 @@
     "issuedAt": "2026-08-16T20:40:17.875Z",
     "expiresAt": "2026-08-16T21:44:36.475Z",
     "fencingToken": "sha256:d07f0091543827a59dbdd4ea8746aefabf9ae2e761eac48c116499e8754dbd77",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-16T20:44:36.475Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-16T20:44:36.475Z",
+    "nativeProofRoot": "sha256:76c28a9f18492466e8367c006c86a9f69320053eea2a7ccd820cad25850692cc",
+    "nativeExecutionReceiptRoot": "sha256:866b8bdcfe60bc8c6f07308df6ef18ea8948f3e90e00b9d26d587fc984065c4a",
+    "nativeProofReuseRoot": "sha256:412b82745f7dd967ef00402943748f460821af1daffa4731563df074c9bd3020",
+    "qualificationReceiptRoot": "sha256:39a38191f52d6f8b3e15ff5166cf3f159596f65d9dc35870fbd7e16dc5a67fa6",
+    "qualifiedAt": "2026-08-16T20:44:55.553Z"
   },
   "candidates": [
     {
@@ -4457,10 +4462,10 @@
       "sourceWorkflowRunId": 31970516437,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-16T20:40:15.100Z",
-      "updatedAt": "2026-08-16T20:44:36.475Z",
+      "updatedAt": "2026-08-16T20:44:55.553Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "scripts/promotion-channel-router.mjs",
@@ -4470,6 +4475,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-16T20:44:36.475Z",
-  "stateRoot": "sha256:bb71e9057ad92ac47a021c7c1f2ea776e3cff286797c4e48b57f77545c2bb363"
+  "updatedAt": "2026-08-16T20:44:55.553Z",
+  "stateRoot": "sha256:44fc00e2bc41cb99175a1bc68b352105723513878a071b973e35b0f28e109d8c"
 }
