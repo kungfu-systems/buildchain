@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 363,
+  "generation": 364,
   "fencingCounter": 91,
   "policy": {
     "agingSeconds": 900,
@@ -3899,8 +3899,55 @@
         "tests/v4-adopter-delivery.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 2876,
+      "assignmentRoot": "sha256:b8cb2aad4416b77e9f53742aa2479c41143c7b1869f7729a52de5077045df9e6",
+      "initiativeRoot": "sha256:0fc567629323a724deea1e21b4156681613164431b97a254b6c68673a6c9c139",
+      "sourceIdentityRoot": "sha256:3a8f1322034f8c91cf4d084ede418eb0108d43909580acd7a18c9075bfc9ab21",
+      "deliveryClass": "native-proof-required",
+      "identitySemantics": "chained-attempt-v2",
+      "predecessorCandidateId": "sha256:875fa0a30975e4c5328a1a8da4f13e64186e0518e03ab9e0a363968f582c1dab",
+      "candidateId": "sha256:7a33a3333f47b8554c8a09335603e16cdd232073324d331b1bc33c924ba9255a",
+      "sourceHead": "7119800373b87caa782d72c17cbdb327e6c384d8",
+      "sourcePatchRoot": "sha256:8d75295a6a339c90b7db0ac6046ccd62489abaf586dd5ccd2e2c942c649bcd69",
+      "sourceProofRoot": "sha256:c01426ea3a193db0d42808277863a30a7c19f2f3346388c5854bf30167859f83",
+      "planRoot": "sha256:64da329de6a0e888a649159df58fe0247d79e2d5f67c76e65b6c427531cbd053",
+      "closureRoot": "sha256:244abea6784d504feec4a806791222452fa2207e120182f46c05924dee5d2ff0",
+      "dependencyRoot": "sha256:02cfae1a8fa14ab51551479bef23f77f682c61b9e8723a382bc72099cc553d77",
+      "toolchainRoot": "sha256:0929b4dbd57075afd5bb81829f205315cf35563ead3df49589819a98578466a3",
+      "environmentRoot": "sha256:aa9dbde328ad21d0d496f109cffba234bb01a9f2b34cbd63aa9987fd5163db89",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "corepack enable pnpm && pnpm install --frozen-lockfile && pnpm run check",
+        "commandRoot": "sha256:47616511947d49b67643e23d6b3de10290b4a95b86c0600d48d84794887657b9"
+      },
+      "sourceWorkflowRunId": 31942313810,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-16T10:51:41.696Z",
+      "updatedAt": "2026-08-16T10:51:41.696Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/release-impact.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/kfd-upstream-aggregate.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/publication-registry.json",
+        "dist/site/site-manifest.json",
+        "dist/site/workflow-registry.json",
+        "package.json"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-16T10:37:22.339Z",
-  "stateRoot": "sha256:30f9c07e2df8fda497ce60b3dd817d4364ef55638546f8262c65f5c6bac89bdc"
+  "updatedAt": "2026-08-16T10:51:41.696Z",
+  "stateRoot": "sha256:f9bbac3a7ece1d3659c709245bf31eb0150b13df89083eb4c1aaa5dd4f46a740"
 }
