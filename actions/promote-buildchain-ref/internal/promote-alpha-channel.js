@@ -537,8 +537,8 @@ async function finalizeAlphaPublication(context, state, publication) {
       {
         title: `Prepare ${selectedAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
-        allowNonFastForwardSkip: true,
-        allowPendingPullRequest: true,
+        allowPendingPullRequest: true, allowMergeCommitOnNonFastForward: true,
+        allowMergeCommitOnNonFastForwardPaths: alpha.commit.files, reconciliationVersion: alpha.version,
       },
     );
     if (devUpdate.pending) {

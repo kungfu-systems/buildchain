@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schemas/next-development-request-v1.schema.json",
+  "title": "Buildchain Next-development Request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "repository", "completedAlpha", "recordedAt"],
+  "properties": {
+    "contract": {
+      "const": "kungfu-buildchain-next-development-request/v1"
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[^/\\s]+/[^/\\s]+$"
+    },
+    "completedAlpha": { "$ref": "#/$defs/completedAlpha" },
+    "targetVersion": { "$ref": "#/$defs/semver" },
+    "anchor": { "$ref": "#/$defs/anchor" },
+    "recordedAt": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "completedAlpha": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "version",
+        "exactTag",
+        "releaseSha",
+        "treeSha",
+        "publicationRoot",
+        "completedAt"
+      ],
+      "properties": {
+        "outcome": { "const": "succeeded" },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-alpha\\.(0|[1-9][0-9]*)$"
+        },
+        "exactTag": { "type": "string", "minLength": 1 },
+        "releaseSha": { "$ref": "#/$defs/gitSha" },
+        "treeSha": { "$ref": "#/$defs/gitSha" },
+        "publicationRoot": { "$ref": "#/$defs/root" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestPath", "manifestRoot"],
+      "properties": {
+        "manifestPath": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\s]+$"
+        },
+        "manifestRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}

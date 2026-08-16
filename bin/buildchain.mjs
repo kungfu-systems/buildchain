@@ -1673,6 +1673,10 @@ async function handleReleaseTailCommand(args) {
   runReleaseTailCli(args);
 }
 
+async function handleNextDevelopmentCommand(args) {
+  runScript("next-development-transition.mjs", args);
+}
+
 async function handleGitHubGovernanceCommand(args) {
     runScript("reconcile-github-governance.mjs", args);
     return;
@@ -1769,6 +1773,7 @@ const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "release-propagation": handleReleasePropagationCommand,
   "release-governance": handleReleaseGovernanceCommand,
   "release-tail": handleReleaseTailCommand,
+  "next-development": handleNextDevelopmentCommand,
   "github-governance": handleGitHubGovernanceCommand,
   "badges": handleBadgesCommand,
   "homebrew": handleHomebrewCommand,

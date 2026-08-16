@@ -5,7 +5,7 @@ import { checkCoreMechanismInventory } from "../scripts/check-core-mechanism-inv
 
 test("v3 core mechanism inventory closes every required evidence dimension", () => {
   const report = checkCoreMechanismInventory();
-  assert.equal(report.mechanisms, 12);
+  assert.equal(report.mechanisms, 13);
   assert.equal(report.dependencyCycles, 0);
   assert(report.sourceCoordinates >= 55);
   assert(report.authorityCoordinates >= 41);
@@ -23,23 +23,28 @@ test("reverse-discovered orphaned or ambiguously owned mechanism coordinates fai
   const inventory = JSON.parse(
     fs.readFileSync("architecture/v3-core-mechanism-inventory.json", "utf8"),
   );
-  inventory.mechanisms[1].sourcePaths.push(
-    inventory.mechanisms[0].sourcePaths[0],
+  const devDelivery = inventory.mechanisms.find(
+    ({ id }) => id === "dev-delivery-warrant",
   );
+  const releaseCandidate = inventory.mechanisms.find(
+    ({ id }) => id === "release-candidate-passport",
+  );
+  releaseCandidate.sourcePaths.push(devDelivery.sourcePaths[0]);
   assert.throws(
     () => checkCoreMechanismInventory({ inventory }),
     /ambiguous mechanism ownership/u,
   );
-  inventory.mechanisms[1].sourcePaths.pop();
+  releaseCandidate.sourcePaths.pop();
   const settlement = "packages/core/dev-delivery-warrant-settlement.js";
-  inventory.mechanisms[0].sourcePaths =
-    inventory.mechanisms[0].sourcePaths.filter((file) => file !== settlement);
+  devDelivery.sourcePaths = devDelivery.sourcePaths.filter(
+    (file) => file !== settlement,
+  );
   assert.throws(
     () => checkCoreMechanismInventory({ inventory }),
     /orphan authority coordinate/u,
   );
-  inventory.mechanisms[0].sourcePaths.push(settlement);
-  inventory.mechanisms[0].testPaths = [];
+  devDelivery.sourcePaths.push(settlement);
+  devDelivery.testPaths = [];
   assert.throws(
     () => checkCoreMechanismInventory({ inventory }),
     /testPaths is empty/u,
