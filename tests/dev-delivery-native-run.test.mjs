@@ -216,6 +216,16 @@ test("hosted Linux ancestry accepts the kernel-resolved worker with basename arg
   assert.equal(result.boundary.executable, RUNNER_WORKER);
 });
 
+test("hosted Linux ancestry accepts an equivalent relative worker argv zero", () => {
+  const files = hostedAncestryFiles({
+    "/proc/20/cmdline":
+      "./Runner.Worker\u0000spawnclient\u000010\u000011\u0000",
+  });
+  const result = inspectCredentiallessProcessAncestry(ancestryOptions(files));
+  assert.equal(result.ok, true);
+  assert.equal(result.boundary.executable, RUNNER_WORKER);
+});
+
 test("hosted Linux ancestry requires the exact versioned Runner.Worker spawnclient argv", () => {
   for (const [label, worker, command] of [
     [

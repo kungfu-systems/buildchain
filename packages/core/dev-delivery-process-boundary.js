@@ -108,9 +108,11 @@ function hostedBoundary(procRoot, pid, command, readlinkSync) {
   const executable = ancestryRead(readlinkSync, link);
   if (
     !GITHUB_HOSTED_LINUX_WORKER.test(executable) ||
-    !new Set([executable, path.posix.basename(executable)]).has(command[0])
+    path.posix.basename(command[0]) !== path.posix.basename(executable)
   ) {
-    throw new Error("credential ancestry found an untrusted Runner.Worker");
+    throw new Error(
+      `credential ancestry found an untrusted Runner.Worker: executable=${JSON.stringify(executable)} argv0=${JSON.stringify(command[0])}`,
+    );
   }
   return { pid, kind: HOSTED_RUNNER_BOUNDARY, executable };
 }
@@ -163,7 +165,11 @@ export function assertCredentiallessProcessAncestry(options = {}) {
   return inspection;
 }
 
-export function devDeliveryProviderJobByName(jobs, expectedName) {
+export function devDeliveryProviderJobByName(
+  jobs,
+  expectedName,
+  { allowMissing = false } = {},
+) {
   const exactName = text(expectedName, "provider job name");
   const suffix = ` / ${exactName}`;
   const matches = jobs.filter((job) => {
@@ -173,6 +179,7 @@ export function devDeliveryProviderJobByName(jobs, expectedName) {
       (actualName.endsWith(suffix) && actualName.length > suffix.length)
     );
   });
+  if (matches.length === 0 && allowMissing) return null;
   if (matches.length !== 1) {
     throw new Error(`expected exactly one provider job named ${exactName}`);
   }
