@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 114,
-    "workflowCount": 71,
+    "cliCommandCount": 116,
+    "workflowCount": 72,
     "actionCount": 7,
-    "sitePageCount": 77,
-    "docCommandRefCount": 987,
+    "sitePageCount": 80,
+    "docCommandRefCount": 1025,
     "failureCount": 0
   },
   "enumerated": {
@@ -363,6 +363,11 @@
         "usage": "buildchain mark --event <name> [--phase <phase>] [--component <name>]"
       },
       {
+        "id": "next-development",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain next-development materialize --input <request.json> [--cwd <dir>]"
+      },
+      {
         "id": "npm",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain npm"
@@ -521,6 +526,11 @@
         "id": "span",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain span --event <name> [--phase <phase>] [--component <name>]"
+      },
+      {
+        "id": "tail-reseal",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain tail-reseal plan --request <request.json> [--output <plan.json>]"
       },
       {
         "id": "transaction-inspect",
@@ -2911,6 +2921,28 @@
         "outputCount": 0
       },
       {
+        "id": "v4-tail-reseal",
+        "path": ".github/workflows/v4-tail-reseal.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-retention-days",
+          "consumer-policy-receipt-json",
+          "macos-finalization-command",
+          "request-json"
+        ],
+        "inputCount": 4,
+        "secrets": [
+          "BUILDCHAIN_EVIDENCE_READ_TOKEN",
+          "BUILDCHAIN_SIGNING_TOKEN"
+        ],
+        "secretCount": 2,
+        "outputs": [
+          "release-candidate-passport-json",
+          "tail-reseal-receipt-root"
+        ],
+        "outputCount": 2
+      },
+      {
         "id": "verify",
         "path": ".github/workflows/verify.yml",
         "reusable": false,
@@ -3346,6 +3378,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:next-development-transition",
+        "category": "manual"
+      },
+      {
         "id": "manual:node-api-reference",
         "category": "manual"
       },
@@ -3442,6 +3478,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:v4-compatibility-facts",
+        "category": "manual"
+      },
+      {
         "id": "manual:v4-delivery-warrant-read-candidate",
         "category": "manual"
       },
@@ -3459,6 +3499,10 @@
       },
       {
         "id": "manual:v4-stage-capsule",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-tail-reseal",
         "category": "manual"
       },
       {
@@ -3838,6 +3882,26 @@
       {
         "id": "build-facts",
         "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility project"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query-template"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
         "command": "buildchain facts module"
       },
       {
@@ -3859,6 +3923,46 @@
         "id": "build-facts",
         "path": "docs/cli-reference.md",
         "command": "buildchain facts aggregate --help"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility project"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility project"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query-template"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility query-template"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain facts compatibility verify"
       },
       {
         "id": "build-facts",
@@ -3894,6 +3998,26 @@
         "id": "build-facts",
         "path": "docs/cli.md",
         "command": "buildchain facts verify --fact"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/v4-compatibility-facts.md",
+        "command": "buildchain facts compatibility project"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/v4-compatibility-facts.md",
+        "command": "buildchain facts compatibility verify"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/v4-compatibility-facts.md",
+        "command": "buildchain facts compatibility query-template"
+      },
+      {
+        "id": "build-facts",
+        "path": "docs/v4-compatibility-facts.md",
+        "command": "buildchain facts compatibility query"
       },
       {
         "id": "candidate",
@@ -6711,6 +6835,36 @@
         "command": "buildchain mark --event native"
       },
       {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development materialize --input"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development --help"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development materialize"
+      },
+      {
+        "id": "next-development",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain next-development materialize --help"
+      },
+      {
         "id": "npm-dry-run",
         "path": "docs/cli-reference.md",
         "command": "buildchain npm dry-run"
@@ -7966,6 +8120,86 @@
         "command": "buildchain span --event native"
       },
       {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal admit --request"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal plan --request"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal seal --request"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal verify-platform --request"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal admit"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal admit --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal plan"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal plan --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal seal"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal seal --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal verify-platform"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal verify-platform --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/v4-tail-reseal.md",
+        "command": "buildchain tail-reseal plan"
+      },
+      {
         "id": "transaction-inspect",
         "path": "docs/cli-reference.md",
         "command": "buildchain transaction"
@@ -8416,9 +8650,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "3632f0332f9c0e270a522a4af358482833974757d77ac40a2d7e2efe6a56cb28",
-    "workflowRegistryDigest": "91b72955489bf4a98fa0c3d3b8ef245e34acb5993e3a59c26caad214b004cfde",
-    "pageRegistryDigest": "07068ff6f889aaae1bb0def76cc041b2e8c63092eebf728b245f3f9451e1ea24"
+    "cliRegistryDigest": "c240837b7885defa68e300e6b6178557824f7bd4dce8f258115b990516bf63c7",
+    "workflowRegistryDigest": "3454db30e0df977d09ecbc5703bf2dffa29c516392b25cb0b1658f5835579667",
+    "pageRegistryDigest": "d0893422eaf356b36a0439e573beaa4da56466293d2a47a5f7769ec82844ffb3"
   },
   "comparison": {
     "missingCliRegistry": [],

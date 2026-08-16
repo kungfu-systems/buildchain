@@ -728,6 +728,50 @@ buildchain facts
 buildchain facts aggregate [--cwd <dir>] [--product <id>] [--module-fact <file>]... [--artifact <path>]... [--output <file>] [--json]
 ```
 
+### `buildchain facts compatibility project`
+
+- Help: `buildchain facts compatibility project --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--output`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility project [--cwd <dir>] [--registry <json-or-path>] [--output <file>] [--json]
+```
+
+### `buildchain facts compatibility query`
+
+- Help: `buildchain facts compatibility query --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--query`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility query --query <json-or-path> [--registry <json-or-path>] [--cwd <dir>] [--json]
+```
+
+### `buildchain facts compatibility query-template`
+
+- Help: `buildchain facts compatibility query-template --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--fact-root`, `--json`, `--query-id`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility query-template --fact-root <sha256:...> [--query-id <id>] [--registry <json-or-path>] [--cwd <dir>] [--json]
+```
+
+### `buildchain facts compatibility verify`
+
+- Help: `buildchain facts compatibility verify --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] [--json]
+```
+
 ### `buildchain facts module`
 
 - Help: `buildchain facts module --help`
@@ -1586,6 +1630,30 @@ buildchain log <info|warn|error> --event <name> [--phase <phase>] [--component <
 buildchain mark --event <name> [--phase <phase>] [--component <name>] [--attribute key=value]... [--path <jsonl>] [--json]
 ```
 
+## `next-development`
+
+### `buildchain next-development`
+
+- Help: `buildchain next-development --help`
+- Canonical id: `next-development`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain next-development
+```
+
+### `buildchain next-development materialize`
+
+- Help: `buildchain next-development materialize --help`
+- Canonical id: `next-development`
+- Options: `--cwd`, `--input`, `--json`, `--output`, `--write`
+- Syntax:
+
+```text
+buildchain next-development materialize --input <request.json> [--cwd <dir>] [--write] [--output <path>] [--json]
+```
+
 ## `npm`
 
 ### `buildchain npm`
@@ -2235,6 +2303,63 @@ buildchain sample process-tree [--interval-ms <n>] [--label <name>] [--output <j
 
 ```text
 buildchain span --event <name> [--phase <phase>] [--component <name>] [--path <jsonl>] -- <command> [args...]
+```
+
+## `tail-reseal`
+
+### `buildchain tail-reseal`
+
+- Help: `buildchain tail-reseal --help`
+- Canonical id: `tail-reseal`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain tail-reseal
+```
+
+### `buildchain tail-reseal admit`
+
+- Help: `buildchain tail-reseal admit --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal admit --request <request.json> [--output <admission.json>]
+```
+
+### `buildchain tail-reseal plan`
+
+- Help: `buildchain tail-reseal plan --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal plan --request <request.json> [--output <plan.json>]
+```
+
+### `buildchain tail-reseal seal`
+
+- Help: `buildchain tail-reseal seal --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--passport`, `--plan`, `--protected-readback-root`, `--readbacks`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal seal --request <request.json> --plan <plan.json> --readbacks <dir> --passport <passport.json> --protected-readback-root <sha256:...> [--output <receipt.json>]
+```
+
+### `buildchain tail-reseal verify-platform`
+
+- Help: `buildchain tail-reseal verify-platform --help`
+- Canonical id: `tail-reseal`
+- Options: `--artifact-root`, `--mode`, `--output`, `--platform`, `--provider-readback-root`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal verify-platform --request <request.json> --platform <id> [--artifact-root <dir>] [--mode retained|resealed] [--provider-readback-root <sha256:...>] [--output <readback.json>]
 ```
 
 ## `transaction`

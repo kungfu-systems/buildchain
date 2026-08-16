@@ -1478,6 +1478,727 @@
       ]
     },
     {
+      "id": "packages/core/buildchain-compatibility-authority.js#assertBuildchainCompatibilityProjection",
+      "name": "assertBuildchainCompatibilityProjection",
+      "kind": "function",
+      "signature": "function assertBuildchainCompatibilityProjection(contractWorld)",
+      "parameters": [
+        {
+          "name": "contractWorld",
+          "signature": "contractWorld"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-authority.js",
+        "line": 120
+      },
+      "example": "import { assertBuildchainCompatibilityProjection } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityPathQuery",
+      "name": "createBuildchainCompatibilityPathQuery",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityPathQuery({ registry, queryId, sourceRoot, targetRoot, relationPathRoots, maxDepth = 1, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ registry, queryId, sourceRoot, targetRoot, relationPathRoots, maxDepth = 1, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-authority.js",
+        "line": 190
+      },
+      "example": "import { createBuildchainCompatibilityPathQuery } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityProofRegistry",
+      "name": "createBuildchainCompatibilityProofRegistry",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityProofRegistry({ proofs = createHistoricalBuildchainCompatibilityProofs(), surfaces = [], majorLine = \"\", } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ proofs = createHistoricalBuildchainCompatibilityProofs(), surfaces = [], majorLine = \"\", } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-authority.js",
+        "line": 70
+      },
+      "example": "import { createBuildchainCompatibilityProofRegistry } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityReleaseEvidence",
+      "name": "createBuildchainCompatibilityReleaseEvidence",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityReleaseEvidence({ contractWorld, release, decisions = [], } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ contractWorld, release, decisions = [], } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-authority.js",
+        "line": 292
+      },
+      "example": "import { createBuildchainCompatibilityReleaseEvidence } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-authority.js#resolveBuildchainCompatibilityProof",
+      "name": "resolveBuildchainCompatibilityProof",
+      "kind": "function",
+      "signature": "function resolveBuildchainCompatibilityProof({ registry, surface, sourceBreakingDigest, majorLine, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ registry, surface, sourceBreakingDigest, majorLine, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-authority.js",
+        "line": 226
+      },
+      "example": "import { resolveBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-authority.js#verifyBuildchainCompatibilityPath",
+      "name": "verifyBuildchainCompatibilityPath",
+      "kind": "function",
+      "signature": "function verifyBuildchainCompatibilityPath({ registry, query } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ registry, query } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-authority.js",
+        "line": 184
+      },
+      "example": "import { verifyBuildchainCompatibilityPath } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+      "name": "BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 23
+      },
+      "example": "import { BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+      "name": "BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 21
+      },
+      "example": "import { BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
+      "name": "BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 19
+      },
+      "example": "import { BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
+      "name": "BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 17
+      },
+      "example": "import { BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_RELEASE_EVIDENCE_SCHEMA",
+      "name": "BUILDCHAIN_COMPATIBILITY_RELEASE_EVIDENCE_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_COMPATIBILITY_RELEASE_EVIDENCE_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 25
+      },
+      "example": "import { BUILDCHAIN_COMPATIBILITY_RELEASE_EVIDENCE_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFact",
+      "name": "createBuildchainCompatibilityFact",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityFact(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 189
+      },
+      "example": "import { createBuildchainCompatibilityFact } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFactRegistry",
+      "name": "createBuildchainCompatibilityFactRegistry",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityFactRegistry({ factInputs = compatibilityFactSource.facts.map((entry) => ({ ...entry, authority: compatibilityFactSource.authority, })), registryCut = compatibilityFactSource.registryCut, supersessions = compatibilityFactSource.supersessions, revocations = compatibilityFactSource.revocations, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ factInputs = compatibilityFactSource.facts.map((entry) => ({ ...entry, authority: compatibilityFactSource.authority, })), registryCut = compatibilityFactSource.registryCut, supersessions = compatibilityFactSource.supersessions, revocations = compatibilityFactSource.revocations, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 248
+      },
+      "example": "import { createBuildchainCompatibilityFactRegistry } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProof",
+      "name": "createBuildchainCompatibilityProof",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityProof(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 88
+      },
+      "example": "import { createBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityFacts",
+      "name": "createHistoricalBuildchainCompatibilityFacts",
+      "kind": "function",
+      "signature": "function createHistoricalBuildchainCompatibilityFacts()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 354
+      },
+      "example": "import { createHistoricalBuildchainCompatibilityFacts } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityProofs",
+      "name": "createHistoricalBuildchainCompatibilityProofs",
+      "kind": "function",
+      "signature": "function createHistoricalBuildchainCompatibilityProofs()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 358
+      },
+      "example": "import { createHistoricalBuildchainCompatibilityProofs } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFact",
+      "name": "verifyBuildchainCompatibilityFact",
+      "kind": "function",
+      "signature": "function verifyBuildchainCompatibilityFact(factInput)",
+      "parameters": [
+        {
+          "name": "factInput",
+          "signature": "factInput"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 225
+      },
+      "example": "import { verifyBuildchainCompatibilityFact } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFactRegistry",
+      "name": "verifyBuildchainCompatibilityFactRegistry",
+      "kind": "function",
+      "signature": "function verifyBuildchainCompatibilityFactRegistry(registryInput)",
+      "parameters": [
+        {
+          "name": "registryInput",
+          "signature": "registryInput"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 362
+      },
+      "example": "import { verifyBuildchainCompatibilityFactRegistry } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityProof",
+      "name": "verifyBuildchainCompatibilityProof",
+      "kind": "function",
+      "signature": "function verifyBuildchainCompatibilityProof(proofInput, expected = {})",
+      "parameters": [
+        {
+          "name": "proofInput",
+          "signature": "proofInput"
+        },
+        {
+          "name": "expected",
+          "signature": "expected = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 142
+      },
+      "example": "import { verifyBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "name": "BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-proof.js",
+        "line": 40
+      },
+      "example": "import { BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "name": "BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-proof.js",
+        "line": 38
+      },
+      "example": "import { BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-proof.js#contractSummary",
+      "name": "contractSummary",
+      "kind": "function",
+      "signature": "function contractSummary(contractWorld, runtimeRef = \"\", runtimeSha = \"\")",
+      "parameters": [
+        {
+          "name": "contractWorld",
+          "signature": "contractWorld"
+        },
+        {
+          "name": "runtimeRef",
+          "signature": "runtimeRef = \"\""
+        },
+        {
+          "name": "runtimeSha",
+          "signature": "runtimeSha = \"\""
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-proof.js",
+        "line": 178
+      },
+      "example": "import { contractSummary } from \"@kungfu-tech/buildchain/compatibility-fact-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityVerificationReceipt",
+      "name": "createBuildchainCompatibilityVerificationReceipt",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityVerificationReceipt(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-proof.js",
+        "line": 53
+      },
+      "example": "import { createBuildchainCompatibilityVerificationReceipt } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-proof.js#evaluateBuildchainContractLock",
+      "name": "evaluateBuildchainContractLock",
+      "kind": "function",
+      "signature": "function evaluateBuildchainContractLock({ lock, current, runtimeRef = \"\", runtimeSha = \"\", runtimeClass = \"\", compatibilityPolicy = \"\", workflowShellRef = \"\", expectedChannel = \"\", expectedMajor = \"\", allowOpaqueRuntime = false, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ lock, current, runtimeRef = \"\", runtimeSha = \"\", runtimeClass = \"\", compatibilityPolicy = \"\", workflowShellRef = \"\", expectedChannel = \"\", expectedMajor = \"\", allowOpaqueRuntime = false, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-proof.js",
+        "line": 329
+      },
+      "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain/compatibility-fact-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-proof.js#renderBuildchainContractDriftIssueBody",
+      "name": "renderBuildchainContractDriftIssueBody",
+      "kind": "function",
+      "signature": "function renderBuildchainContractDriftIssueBody({ repository = \"\", workflow = \"\", runUrl = \"\", lockPath = \"\", evaluation, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ repository = \"\", workflow = \"\", runUrl = \"\", lockPath = \"\", evaluation, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-proof.js",
+        "line": 501
+      },
+      "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain/compatibility-fact-authority\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-proof.js#verifyBuildchainCompatibilityVerificationReceipt",
+      "name": "verifyBuildchainCompatibilityVerificationReceipt",
+      "kind": "function",
+      "signature": "function verifyBuildchainCompatibilityVerificationReceipt(receiptInput)",
+      "parameters": [
+        {
+          "name": "receiptInput",
+          "signature": "receiptInput"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-proof.js",
+        "line": 153
+      },
+      "example": "import { verifyBuildchainCompatibilityVerificationReceipt } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/buildchain-config.js#discoverConfiguredDerivedVersionMaterial",
       "name": "discoverConfiguredDerivedVersionMaterial",
       "kind": "function",
@@ -1954,7 +2675,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 22
+        "line": 61
       },
       "example": "import { BUILDCHAIN_CONTRACT_LOCK } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -1978,7 +2699,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 21
+        "line": 60
       },
       "example": "import { BUILDCHAIN_RUNTIME_CONTRACT_WORLD } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2015,7 +2736,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 1032
+        "line": 981
       },
       "example": "import { contractSummary } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2044,7 +2765,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 831
+        "line": 910
       },
       "example": "import { createBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2073,7 +2794,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 124
+        "line": 169
       },
       "example": "import { createBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2110,23 +2831,23 @@
       "id": "packages/core/buildchain-contract.js#evaluateBuildchainContractLock",
       "name": "evaluateBuildchainContractLock",
       "kind": "function",
-      "signature": "function evaluateBuildchainContractLock({ lock, current, runtimeRef = \"\", runtimeSha = \"\", runtimeClass = \"\", compatibilityPolicy = \"\", workflowShellRef = \"\", expectedChannel = \"\", expectedMajor = \"\", allowOpaqueRuntime = false, } = {})",
+      "signature": "function evaluateBuildchainContractLock(options = {})",
       "parameters": [
         {
-          "name": "parameter1",
-          "signature": "{ lock, current, runtimeRef = \"\", runtimeSha = \"\", runtimeClass = \"\", compatibilityPolicy = \"\", workflowShellRef = \"\", expectedChannel = \"\", expectedMajor = \"\", allowOpaqueRuntime = false, } = {}"
+          "name": "options",
+          "signature": "options = {}"
         }
       ],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 917
+        "line": 977
       },
       "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2148,14 +2869,14 @@
       ],
       "returns": "unknown",
       "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 806
+        "line": 851
       },
       "example": "import { finalizeBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2232,7 +2953,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 882
+        "line": 966
       },
       "example": "import { readBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2261,7 +2982,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 862
+        "line": 946
       },
       "example": "import { readBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2290,7 +3011,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 1044
+        "line": 996
       },
       "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2319,7 +3040,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 44
+        "line": 89
       },
       "example": "import { sha256BuildchainContractJson } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2348,7 +3069,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 48
+        "line": 93
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -2377,7 +3098,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 44
+        "line": 89
       },
       "example": "import { sha256Json } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -12776,6 +13497,888 @@
       ]
     },
     {
+      "id": "packages/core/next-development-controller.js#createNextDevelopmentController",
+      "name": "createNextDevelopmentController",
+      "kind": "function",
+      "signature": "function createNextDevelopmentController({ transition, protectedDevBranch, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ transition, protectedDevBranch, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 118
+      },
+      "example": "import { createNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#NEXT_DEVELOPMENT_CONTROLLER_CONTRACT",
+      "name": "NEXT_DEVELOPMENT_CONTROLLER_CONTRACT",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_CONTROLLER_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 11
+      },
+      "example": "import { NEXT_DEVELOPMENT_CONTROLLER_CONTRACT } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#nextDevelopmentChildKey",
+      "name": "nextDevelopmentChildKey",
+      "kind": "function",
+      "signature": "function nextDevelopmentChildKey(transition)",
+      "parameters": [
+        {
+          "name": "transition",
+          "signature": "transition"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 103
+      },
+      "example": "import { nextDevelopmentChildKey } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#nextDevelopmentControllerRoot",
+      "name": "nextDevelopmentControllerRoot",
+      "kind": "function",
+      "signature": "function nextDevelopmentControllerRoot(record)",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 99
+      },
+      "example": "import { nextDevelopmentControllerRoot } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#reconcileNextDevelopmentController",
+      "name": "reconcileNextDevelopmentController",
+      "kind": "function",
+      "signature": "async function reconcileNextDevelopmentController(record, { store, executor, reviewedInput, recordedAt, fault } = {})",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ store, executor, reviewedInput, recordedAt, fault } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 550
+      },
+      "example": "import { reconcileNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#runNextDevelopmentController",
+      "name": "runNextDevelopmentController",
+      "kind": "function",
+      "signature": "async function runNextDevelopmentController({ transition, protectedDevBranch, reviewedInput, recordedAt, fault } = {}, { store, executor } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ transition, protectedDevBranch, reviewedInput, recordedAt, fault } = {}"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ store, executor } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 712
+      },
+      "example": "import { runNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#scheduleNextDevelopmentController",
+      "name": "scheduleNextDevelopmentController",
+      "kind": "function",
+      "signature": "async function scheduleNextDevelopmentController({ transition, protectedDevBranch } = {}, store)",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ transition, protectedDevBranch } = {}"
+        },
+        {
+          "name": "store",
+          "signature": "store"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 477
+      },
+      "example": "import { scheduleNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-controller.js#validateNextDevelopmentController",
+      "name": "validateNextDevelopmentController",
+      "kind": "function",
+      "signature": "function validateNextDevelopmentController(record)",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-controller.js",
+        "line": 385
+      },
+      "example": "import { validateNextDevelopmentController } from \"@kungfu-tech/buildchain/next-development-controller\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#appendNextDevelopmentToml",
+      "name": "appendNextDevelopmentToml",
+      "kind": "function",
+      "signature": "function appendNextDevelopmentToml(source)",
+      "parameters": [
+        {
+          "name": "source",
+          "signature": "source"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 44
+      },
+      "example": "import { appendNextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#assertNextDevelopmentConfig",
+      "name": "assertNextDevelopmentConfig",
+      "kind": "function",
+      "signature": "function assertNextDevelopmentConfig(config)",
+      "parameters": [
+        {
+          "name": "config",
+          "signature": "config"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 70
+      },
+      "example": "import { assertNextDevelopmentConfig } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#mergeNextDevelopmentAgentInstructions",
+      "name": "mergeNextDevelopmentAgentInstructions",
+      "kind": "function",
+      "signature": "function mergeNextDevelopmentAgentInstructions(current = \"\")",
+      "parameters": [
+        {
+          "name": "current",
+          "signature": "current = \"\""
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 132
+      },
+      "example": "import { mergeNextDevelopmentAgentInstructions } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_AGENT_SECTION_END",
+      "name": "NEXT_DEVELOPMENT_AGENT_SECTION_END",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_AGENT_SECTION_END",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 12
+      },
+      "example": "import { NEXT_DEVELOPMENT_AGENT_SECTION_END } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_AGENT_SECTION_START",
+      "name": "NEXT_DEVELOPMENT_AGENT_SECTION_START",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_AGENT_SECTION_START",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 10
+      },
+      "example": "import { NEXT_DEVELOPMENT_AGENT_SECTION_START } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_LOCAL_COMMAND",
+      "name": "NEXT_DEVELOPMENT_LOCAL_COMMAND",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_LOCAL_COMMAND",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 14
+      },
+      "example": "import { NEXT_DEVELOPMENT_LOCAL_COMMAND } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#nextDevelopmentAgentInstructions",
+      "name": "nextDevelopmentAgentInstructions",
+      "kind": "function",
+      "signature": "function nextDevelopmentAgentInstructions()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 98
+      },
+      "example": "import { nextDevelopmentAgentInstructions } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#nextDevelopmentManual",
+      "name": "nextDevelopmentManual",
+      "kind": "function",
+      "signature": "function nextDevelopmentManual()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 161
+      },
+      "example": "import { nextDevelopmentManual } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#nextDevelopmentToml",
+      "name": "nextDevelopmentToml",
+      "kind": "function",
+      "signature": "function nextDevelopmentToml()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 24
+      },
+      "example": "import { nextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#nextDevelopmentWorkflowHeader",
+      "name": "nextDevelopmentWorkflowHeader",
+      "kind": "function",
+      "signature": "function nextDevelopmentWorkflowHeader()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 17
+      },
+      "example": "import { nextDevelopmentWorkflowHeader } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-projection.js#projectNextDevelopmentToml",
+      "name": "projectNextDevelopmentToml",
+      "kind": "function",
+      "signature": "function projectNextDevelopmentToml(source)",
+      "parameters": [
+        {
+          "name": "source",
+          "signature": "source"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-projection.js",
+        "line": 54
+      },
+      "example": "import { projectNextDevelopmentToml } from \"@kungfu-tech/buildchain/next-development-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#advanceNextDevelopmentTransition",
+      "name": "advanceNextDevelopmentTransition",
+      "kind": "function",
+      "signature": "function advanceNextDevelopmentTransition(record, input = {})",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 344
+      },
+      "example": "import { advanceNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#bindNextDevelopmentAnchor",
+      "name": "bindNextDevelopmentAnchor",
+      "kind": "function",
+      "signature": "function bindNextDevelopmentAnchor(record, input = {})",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        },
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 305
+      },
+      "example": "import { bindNextDevelopmentAnchor } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#createNextDevelopmentTransition",
+      "name": "createNextDevelopmentTransition",
+      "kind": "function",
+      "signature": "function createNextDevelopmentTransition(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 253
+      },
+      "example": "import { createNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#materializeNextDevelopmentTransition",
+      "name": "materializeNextDevelopmentTransition",
+      "kind": "function",
+      "signature": "function materializeNextDevelopmentTransition({ cwd = process.cwd(), request, write = false, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ cwd = process.cwd(), request, write = false, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "local-filesystem-write"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 472
+      },
+      "example": "import { materializeNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_ADR",
+      "name": "NEXT_DEVELOPMENT_ADR",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_ADR",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 20
+      },
+      "example": "import { NEXT_DEVELOPMENT_ADR } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_INVARIANT",
+      "name": "NEXT_DEVELOPMENT_INVARIANT",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_INVARIANT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 22
+      },
+      "example": "import { NEXT_DEVELOPMENT_INVARIANT } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_REQUEST_CONTRACT",
+      "name": "NEXT_DEVELOPMENT_REQUEST_CONTRACT",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_REQUEST_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 18
+      },
+      "example": "import { NEXT_DEVELOPMENT_REQUEST_CONTRACT } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_STATES",
+      "name": "NEXT_DEVELOPMENT_STATES",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_STATES",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 24
+      },
+      "example": "import { NEXT_DEVELOPMENT_STATES } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
+      "name": "NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 16
+      },
+      "example": "import { NEXT_DEVELOPMENT_TRANSITION_CONTRACT } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_VERSION_MODELS",
+      "name": "NEXT_DEVELOPMENT_VERSION_MODELS",
+      "kind": "constant",
+      "signature": "const NEXT_DEVELOPMENT_VERSION_MODELS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 32
+      },
+      "example": "import { NEXT_DEVELOPMENT_VERSION_MODELS } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#nextDevelopmentRoot",
+      "name": "nextDevelopmentRoot",
+      "kind": "function",
+      "signature": "function nextDevelopmentRoot(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 63
+      },
+      "example": "import { nextDevelopmentRoot } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#recordNextDevelopmentMaterialization",
+      "name": "recordNextDevelopmentMaterialization",
+      "kind": "function",
+      "signature": "function recordNextDevelopmentMaterialization(record, { materialization, evidenceRoot, recordedAt } = {})",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ materialization, evidenceRoot, recordedAt } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 416
+      },
+      "example": "import { recordNextDevelopmentMaterialization } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/next-development-transition.js#validateNextDevelopmentTransition",
+      "name": "validateNextDevelopmentTransition",
+      "kind": "function",
+      "signature": "function validateNextDevelopmentTransition(record)",
+      "parameters": [
+        {
+          "name": "record",
+          "signature": "record"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/next-development-transition.js",
+        "line": 729
+      },
+      "example": "import { validateNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/package-manager.js#assertPackageManager",
       "name": "assertPackageManager",
       "kind": "function",
@@ -13072,7 +14675,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 248
+        "line": 254
       },
       "example": "import { collectPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13101,7 +14704,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 93
+        "line": 94
       },
       "example": "import { createPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13134,7 +14737,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 61
+        "line": 62
       },
       "example": "import { mergePaperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13158,7 +14761,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 16
+        "line": 17
       },
       "example": "import { PAPER_AGENT_ENTRY_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13182,7 +14785,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 17
+        "line": 18
       },
       "example": "import { PAPER_AGENT_ENTRY_SCHEMA_VERSION } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13206,7 +14809,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 20
+        "line": 21
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_END } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13230,7 +14833,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 18
+        "line": 19
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_START } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13259,7 +14862,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 150
+        "line": 151
       },
       "example": "import { paperAgentEntryFiles } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13288,7 +14891,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 36
+        "line": 37
       },
       "example": "import { paperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13321,7 +14924,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 177
+        "line": 180
       },
       "example": "import { resolvePaperBuildchainSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13764,7 +15367,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2414
+        "line": 2425
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13793,7 +15396,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1472
+        "line": 1483
       },
       "example": "import { collectPaperStatus } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13822,7 +15425,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2656
+        "line": 2667
       },
       "example": "import { createPaperAlphaPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13851,7 +15454,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2593
+        "line": 2604
       },
       "example": "import { createPaperBuildPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13880,7 +15483,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 519
+        "line": 524
       },
       "example": "import { createPaperProvisioningAuthority } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -13909,7 +15512,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2714
+        "line": 2725
       },
       "example": "import { createPaperResumePlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13938,7 +15541,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2841
+        "line": 2852
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13962,7 +15565,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 90
+        "line": 95
       },
       "example": "import { PAPER_ALPHA_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -13986,7 +15589,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 89
+        "line": 94
       },
       "example": "import { PAPER_BUILD_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14010,7 +15613,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 82
+        "line": 87
       },
       "example": "import { PAPER_MIGRATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14034,7 +15637,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 85
+        "line": 90
       },
       "example": "import { PAPER_NPM_BOOTSTRAP_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14058,7 +15661,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 83
+        "line": 88
       },
       "example": "import { PAPER_PREFLIGHT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14082,7 +15685,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 87
+        "line": 92
       },
       "example": "import { PAPER_PROVISIONING_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -14106,7 +15709,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 91
+        "line": 96
       },
       "example": "import { PAPER_RESUME_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14130,7 +15733,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 81
+        "line": 86
       },
       "example": "import { PAPER_SCAFFOLD_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14154,7 +15757,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 94
+        "line": 99
       },
       "example": "import { PAPER_STATE_ORDER } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14178,7 +15781,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 84
+        "line": 89
       },
       "example": "import { PAPER_STATUS_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14202,7 +15805,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 92
+        "line": 97
       },
       "example": "import { PAPER_VISIBILITY_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14231,7 +15834,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1013
+        "line": 1024
       },
       "example": "import { planPaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14260,7 +15863,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 702
+        "line": 707
       },
       "example": "import { planPaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14293,7 +15896,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 245
+        "line": 250
       },
       "example": "import { resolvePaperRuntimeGitSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -14322,7 +15925,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1130
+        "line": 1141
       },
       "example": "import { writePaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -14351,7 +15954,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 847
+        "line": 852
       },
       "example": "import { writePaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21734,7 +23337,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 79
+        "line": 84
       },
       "example": "import { resolveV4FloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21763,7 +23366,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 318
+        "line": 323
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21792,7 +23395,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 66
+        "line": 71
       },
       "example": "import { v4ConsumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22036,6 +23639,266 @@
         "line": 551
       },
       "example": "import { verifyV4RuntimeResumeLineage } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_PLAN_CONTRACT",
+      "name": "V4_TAIL_RESEAL_PLAN_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_PLAN_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-contract.js",
+        "line": 3
+      },
+      "example": "import { V4_TAIL_RESEAL_PLAN_CONTRACT } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_PLATFORMS",
+      "name": "V4_TAIL_RESEAL_PLATFORMS",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_PLATFORMS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-contract.js",
+        "line": 6
+      },
+      "example": "import { V4_TAIL_RESEAL_PLATFORMS } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_REQUEST_CONTRACT",
+      "name": "V4_TAIL_RESEAL_REQUEST_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_REQUEST_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-contract.js",
+        "line": 1
+      },
+      "example": "import { V4_TAIL_RESEAL_REQUEST_CONTRACT } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_REUSED_STAGE_KEYS",
+      "name": "V4_TAIL_RESEAL_REUSED_STAGE_KEYS",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_REUSED_STAGE_KEYS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-contract.js",
+        "line": 20
+      },
+      "example": "import { V4_TAIL_RESEAL_REUSED_STAGE_KEYS } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-receipt.js#createV4TailResealReceipt",
+      "name": "createV4TailResealReceipt",
+      "kind": "function",
+      "signature": "function createV4TailResealReceipt({ request, plan, readbacks, passport, protectedReadbackRoot, currentRun, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ request, plan, readbacks, passport, protectedReadbackRoot, currentRun, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-receipt.js",
+        "line": 119
+      },
+      "example": "import { createV4TailResealReceipt } from \"@kungfu-tech/buildchain/v4-tail-reseal-receipt\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-receipt.js#V4_TAIL_RESEAL_RECEIPT_CONTRACT",
+      "name": "V4_TAIL_RESEAL_RECEIPT_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_RECEIPT_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-receipt.js",
+        "line": 11
+      },
+      "example": "import { V4_TAIL_RESEAL_RECEIPT_CONTRACT } from \"@kungfu-tech/buildchain/v4-tail-reseal-receipt\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-receipt.js#verifyV4TailResealReceipt",
+      "name": "verifyV4TailResealReceipt",
+      "kind": "function",
+      "signature": "function verifyV4TailResealReceipt({ receipt, request, passport } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ receipt, request, passport } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-receipt.js",
+        "line": 200
+      },
+      "example": "import { verifyV4TailResealReceipt } from \"@kungfu-tech/buildchain/v4-tail-reseal-receipt\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal.js#normalizeV4TailResealRequest",
+      "name": "normalizeV4TailResealRequest",
+      "kind": "function",
+      "signature": "function normalizeV4TailResealRequest(request)",
+      "parameters": [
+        {
+          "name": "request",
+          "signature": "request"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal.js",
+        "line": 460
+      },
+      "example": "import { normalizeV4TailResealRequest } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal.js#planV4TailReseal",
+      "name": "planV4TailReseal",
+      "kind": "function",
+      "signature": "function planV4TailReseal(request)",
+      "parameters": [
+        {
+          "name": "request",
+          "signature": "request"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal.js",
+        "line": 519
+      },
+      "example": "import { planV4TailReseal } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal.js#V4TailResealFault",
+      "name": "V4TailResealFault",
+      "kind": "class",
+      "signature": "class V4TailResealFault",
+      "parameters": [],
+      "returns": "V4TailResealFault",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal.js",
+        "line": 23
+      },
+      "example": "import { V4TailResealFault } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -23770,21 +25633,38 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:413a7c6a150471fa32007a13c676ce2ff4b0fe15b54e492ef5227519aeebafc4",
+      "digest": "sha256:b9f85d83f8bf638fe967a2aef6ac2b5f3efbe0be46c5a176e03e38c9146c35e3",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 16,
+      "symbolCount": 39,
       "symbolIds": [
+        "packages/core/buildchain-compatibility-authority.js#assertBuildchainCompatibilityProjection",
         "packages/core/buildchain-contract.js#BUILDCHAIN_CHANNELS",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_RELEASE_EVIDENCE_SCHEMA",
+        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
         "packages/core/buildchain-contract.js#BUILDCHAIN_CONTRACT_LOCK",
+        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
         "packages/core/buildchain-contract.js#BUILDCHAIN_RUNTIME_CONTRACT_WORLD",
         "packages/core/buildchain-contract.js#contractSummary",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFact",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFactRegistry",
+        "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityPathQuery",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityProofRegistry",
+        "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityReleaseEvidence",
+        "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityVerificationReceipt",
         "packages/core/buildchain-contract.js#createBuildchainContractLock",
         "packages/core/buildchain-contract.js#createBuildchainContractWorld",
+        "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityFacts",
+        "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityProofs",
         "packages/core/buildchain-contract.js#evaluateBuildchainChannelBinding",
         "packages/core/buildchain-contract.js#evaluateBuildchainContractLock",
         "packages/core/buildchain-contract.js#finalizeBuildchainContractWorld",
@@ -23793,8 +25673,62 @@
         "packages/core/buildchain-contract.js#readBuildchainContractLock",
         "packages/core/buildchain-contract.js#readBuildchainContractWorld",
         "packages/core/buildchain-contract.js#renderBuildchainContractDriftIssueBody",
+        "packages/core/buildchain-compatibility-authority.js#resolveBuildchainCompatibilityProof",
         "packages/core/buildchain-contract.js#sha256File",
-        "packages/core/buildchain-contract.js#sha256Json"
+        "packages/core/buildchain-contract.js#sha256Json",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFact",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFactRegistry",
+        "packages/core/buildchain-compatibility-authority.js#verifyBuildchainCompatibilityPath",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-proof.js#verifyBuildchainCompatibilityVerificationReceipt"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/compatibility-fact-authority",
+      "export": "./compatibility-fact-authority",
+      "target": "./packages/core/buildchain-compatibility-proof.js",
+      "digest": "sha256:8107864ac1286157327bcb8689a284e620d6549ff93d3e2fd7772693ed0ef4a7",
+      "summary": "Directional Cut-bound compatibility Fact, lifecycle, explicit path receipt, legacy projection, and Release Passport evidence APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 26,
+      "symbolIds": [
+        "packages/core/buildchain-compatibility-authority.js#assertBuildchainCompatibilityProjection",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_RELEASE_EVIDENCE_SCHEMA",
+        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+        "packages/core/buildchain-compatibility-proof.js#contractSummary",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFact",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFactRegistry",
+        "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityPathQuery",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityProofRegistry",
+        "packages/core/buildchain-compatibility-authority.js#createBuildchainCompatibilityReleaseEvidence",
+        "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityVerificationReceipt",
+        "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityFacts",
+        "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityProofs",
+        "packages/core/buildchain-compatibility-proof.js#evaluateBuildchainContractLock",
+        "packages/core/buildchain-compatibility-proof.js#renderBuildchainContractDriftIssueBody",
+        "packages/core/buildchain-compatibility-authority.js#resolveBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFact",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFactRegistry",
+        "packages/core/buildchain-compatibility-authority.js#verifyBuildchainCompatibilityPath",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-proof.js#verifyBuildchainCompatibilityVerificationReceipt"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -23835,7 +25769,7 @@
       "specifier": "@kungfu-tech/buildchain/channel-candidate",
       "export": "./channel-candidate",
       "target": "./packages/core/channel-candidate.js",
-      "digest": "sha256:2dcd0899d8c0f4bbb7876108529f4bed0e5e82f6536474a1a505e65a322d10a6",
+      "digest": "sha256:37f2d3ef241a713e279dc9f8d5018d0d90e9ae847b2f15aaa12c3776a82faf4f",
       "summary": "Exact-source channel candidate decisions, same-SHA workflow evidence validation, and deterministic source-lock reference APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -24497,7 +26431,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:808816d3d08b35c3139c6587be6c27574248dfdf2c92bef69d6f85027fa424b9",
+      "digest": "sha256:344501cd0a789a587330ae4f7d56776e93a3c97672cc912b2a244d04c550bf6d",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -24547,6 +26481,60 @@
         "packages/core/v4-runtime-ref-resume-authority.js#v4RuntimeResumeDocumentRoot",
         "packages/core/v4-runtime-ref-resume-authority.js#verifyV4RuntimeAuthorizationReceipt",
         "packages/core/v4-runtime-ref-resume-authority.js#verifyV4RuntimeResumeLineage"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/v4-tail-reseal",
+      "export": "./v4-tail-reseal",
+      "target": "./packages/core/v4-tail-reseal.js",
+      "digest": "sha256:2fdd024495c3973033f0522fd66ea12116762ad983e6b4e1bc87467157e919b7",
+      "summary": "Effect-pure retained Stage Capsule validation and explicit Warrant-, credential-, and release-tail-fenced macOS reseal planning APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 7,
+      "symbolIds": [
+        "packages/core/v4-tail-reseal.js#normalizeV4TailResealRequest",
+        "packages/core/v4-tail-reseal.js#planV4TailReseal",
+        "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_PLAN_CONTRACT",
+        "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_PLATFORMS",
+        "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_REQUEST_CONTRACT",
+        "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_REUSED_STAGE_KEYS",
+        "packages/core/v4-tail-reseal.js#V4TailResealFault"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/v4-tail-reseal-receipt",
+      "export": "./v4-tail-reseal-receipt",
+      "target": "./packages/core/v4-tail-reseal-receipt.js",
+      "digest": "sha256:8379c0c181e5c550943d9630529eafbe5291b9ecaf79b9e7bc9f8db384dcfb69",
+      "summary": "Four-platform byte readback, standard candidate Passport binding, and terminal v4 tail-reseal receipt APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 3,
+      "symbolIds": [
+        "packages/core/v4-tail-reseal-receipt.js#createV4TailResealReceipt",
+        "packages/core/v4-tail-reseal-receipt.js#V4_TAIL_RESEAL_RECEIPT_CONTRACT",
+        "packages/core/v4-tail-reseal-receipt.js#verifyV4TailResealReceipt"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -24723,7 +26711,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:a119c4fe3e845a30838ca61307f48b4bb8ff125da4ec9111d22e20697e2b8865",
+      "digest": "sha256:de724d5a0774b98c4a12a1d1f7921c82bcb87102fc622b3ff4505de28cc75001",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -25129,6 +27117,104 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/next-development-transition",
+      "export": "./next-development-transition",
+      "target": "./packages/core/next-development-transition.js",
+      "digest": "sha256:01b47222bb17fc4a36a66bce74ff11bf2d2ac17c935085aeec93684933849fee",
+      "summary": "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 13,
+      "symbolIds": [
+        "packages/core/next-development-transition.js#advanceNextDevelopmentTransition",
+        "packages/core/next-development-transition.js#bindNextDevelopmentAnchor",
+        "packages/core/next-development-transition.js#createNextDevelopmentTransition",
+        "packages/core/next-development-transition.js#materializeNextDevelopmentTransition",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_ADR",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_INVARIANT",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_REQUEST_CONTRACT",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_STATES",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_TRANSITION_CONTRACT",
+        "packages/core/next-development-transition.js#NEXT_DEVELOPMENT_VERSION_MODELS",
+        "packages/core/next-development-transition.js#nextDevelopmentRoot",
+        "packages/core/next-development-transition.js#recordNextDevelopmentMaterialization",
+        "packages/core/next-development-transition.js#validateNextDevelopmentTransition"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/next-development-controller",
+      "export": "./next-development-controller",
+      "target": "./packages/core/next-development-controller.js",
+      "digest": "sha256:3b93e265bd4eaab88eabc185000212988914f1595561a8de3e1878acea9a549a",
+      "summary": "Durable completed-Alpha child scheduling, fresh-runner checkpoint resume, latest protected-Dev reconciliation, and exact version-root readback APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 8,
+      "symbolIds": [
+        "packages/core/next-development-controller.js#createNextDevelopmentController",
+        "packages/core/next-development-controller.js#NEXT_DEVELOPMENT_CONTROLLER_CONTRACT",
+        "packages/core/next-development-controller.js#nextDevelopmentChildKey",
+        "packages/core/next-development-controller.js#nextDevelopmentControllerRoot",
+        "packages/core/next-development-controller.js#reconcileNextDevelopmentController",
+        "packages/core/next-development-controller.js#runNextDevelopmentController",
+        "packages/core/next-development-controller.js#scheduleNextDevelopmentController",
+        "packages/core/next-development-controller.js#validateNextDevelopmentController"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/next-development-projection",
+      "export": "./next-development-projection",
+      "target": "./packages/core/next-development-projection.js",
+      "digest": "sha256:9dbc60f511bfca92fb8160024ec58454212e20b7c17df01345e4a2e65ca86b3f",
+      "summary": "Canonical generated config, Agent, workflow-header, and manual projections for the next-development transition contract.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 11,
+      "symbolIds": [
+        "packages/core/next-development-projection.js#appendNextDevelopmentToml",
+        "packages/core/next-development-projection.js#assertNextDevelopmentConfig",
+        "packages/core/next-development-projection.js#mergeNextDevelopmentAgentInstructions",
+        "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_AGENT_SECTION_END",
+        "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_AGENT_SECTION_START",
+        "packages/core/next-development-projection.js#NEXT_DEVELOPMENT_LOCAL_COMMAND",
+        "packages/core/next-development-projection.js#nextDevelopmentAgentInstructions",
+        "packages/core/next-development-projection.js#nextDevelopmentManual",
+        "packages/core/next-development-projection.js#nextDevelopmentToml",
+        "packages/core/next-development-projection.js#nextDevelopmentWorkflowHeader",
+        "packages/core/next-development-projection.js#projectNextDevelopmentToml"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/stable-candidate-ledger",
       "export": "./stable-candidate-ledger",
       "target": "./packages/core/stable-candidate-ledger.js",
@@ -25504,7 +27590,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:a409b078692ebb18ca7bb817ebd35c416cc6be3842f671c17d019c9aa32d0638"
+      "digest": "sha256:34a2feafe2f6183afbc0a72fa6362d39db6968c2bac187a1a1dd376d7ca50e50"
     },
     {
       "id": "build-facts",

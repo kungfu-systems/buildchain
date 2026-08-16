@@ -12,6 +12,13 @@
   },
   "surfaceImpacts": [
     {
+      "id": "next-development-transition-v4-parity",
+      "impact": "minor",
+      "class": "release-governance",
+      "rationale": "The v4 public CLI, Node APIs, schemas, templates and generated facts expose deterministic semver-auto and anchored-manual next-development transitions with atomic recovery, protected Dev reconciliation, exact reservation readback and no Alpha publication or candidate authority.",
+      "source": "architecture/v4-next-development-parity.json"
+    },
+    {
       "id": "v4-production-authority-cutover",
       "impact": "major",
       "class": "publication-authority",

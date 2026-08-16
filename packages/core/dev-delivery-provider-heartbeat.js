@@ -13,7 +13,7 @@ export const DEV_DELIVERY_PROVIDER_HEARTBEAT_SCHEMA =
   "kungfu.buildchain.provider-heartbeat-receipt/v1";
 
 function selectedWarrant(result = {}) {
-  return result.observation?.activeWarrant || result.warrant || null;
+  return result.warrant || result.observation?.activeWarrant || null;
 }
 
 function exactWarrant(input = {}) {
@@ -40,8 +40,9 @@ function exactWarrant(input = {}) {
   };
 }
 
-function job(entries, name) {
-  const entry = devDeliveryProviderJobByName(entries, name);
+function job(entries, name, options) {
+  const entry = devDeliveryProviderJobByName(entries, name, options);
+  if (!entry) return null;
   const providerJob = {
     id: positiveInteger(entry.id, `${name} job id`),
     name,
@@ -66,13 +67,16 @@ function job(entries, name) {
   return providerJob;
 }
 
-function providerJobs(input, expected) {
+function providerJobs(input, expected, { allowMissingSeal = false } = {}) {
   const entries = Array.isArray(input) ? input : input?.jobs;
   if (!Array.isArray(entries)) {
     throw new Error("provider heartbeat jobs readback must contain jobs");
   }
   const native = job(entries, expected.nativeJobName);
-  const seal = job(entries, expected.sealJobName);
+  const seal = job(entries, expected.sealJobName, {
+    allowMissing: allowMissingSeal,
+  });
+  if (!seal) return null;
   if (native.id === seal.id) {
     throw new Error("provider heartbeat native and seal jobs must be distinct");
   }
@@ -206,7 +210,15 @@ export async function runDevDeliveryProviderHeartbeat(
       const entry = heartbeatEntry(result, previousStateRoot);
       heartbeats.push(entry);
       previousStateRoot = entry.nextStateRoot;
-      jobs = providerJobs(await readJobs(), { nativeJobName, sealJobName });
+      jobs = providerJobs(
+        await readJobs(),
+        { nativeJobName, sealJobName },
+        { allowMissingSeal: true },
+      );
+      if (!jobs) {
+        await wait(cadence * 1000);
+        continue;
+      }
       if (terminal(jobs.native) && terminal(jobs.seal)) break;
       await wait(cadence * 1000);
     }

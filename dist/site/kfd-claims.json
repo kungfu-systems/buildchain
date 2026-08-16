@@ -14,20 +14,20 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:c8407195cafe42cb62ac2a4f5ff5b2c3f9b8aa65c27cc678efd46240cb3f0ecc",
+    "compatibilityDigest": "sha256:5de1c69386510b74b17eb70141b8bdd07063d62c504f91db5e84b67c6d4b64a2",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "a2c1b8ad564c33a7e6c5cc2b245522d3e49c6e0f7cf695dd650a9927e74c0f92",
+    "sha256": "a003f3c34e7c818b562bdccd6cf0551c971b1e3325a6cac10f7c1b49abc19582",
     "summary": {
-      "cliCommandCount": 114,
-      "workflowCount": 71,
+      "cliCommandCount": 116,
+      "workflowCount": 72,
       "actionCount": 7,
-      "sitePageCount": 77,
-      "docCommandRefCount": 987,
+      "sitePageCount": 80,
+      "docCommandRefCount": 1025,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "a2c1b8ad564c33a7e6c5cc2b245522d3e49c6e0f7cf695dd650a9927e74c0f92",
+      "sha256": "a003f3c34e7c818b562bdccd6cf0551c971b1e3325a6cac10f7c1b49abc19582",
       "summary": {
-        "cliCommandCount": 114,
-        "workflowCount": 71,
+        "cliCommandCount": 116,
+        "workflowCount": 72,
         "actionCount": 7,
-        "sitePageCount": 77,
-        "docCommandRefCount": 987,
+        "sitePageCount": 80,
+        "docCommandRefCount": 1025,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -597,6 +597,18 @@
           "plane": "verify"
         },
         {
+          "id": "doc:docs/next-development-transition.md",
+          "name": "Next-development transition",
+          "kind": "documentation",
+          "sourcePath": "docs/next-development-transition.md",
+          "evidencePath": "docs/next-development-transition.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
+        },
+        {
           "id": "doc:docs/node-api-reference.md",
           "name": "Generated Node API reference",
           "kind": "documentation",
@@ -811,6 +823,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/v4-compatibility-facts.md",
+          "name": "Buildchain v4 compatibility Facts",
+          "kind": "documentation",
+          "sourcePath": "docs/v4-compatibility-facts.md",
+          "evidencePath": "docs/v4-compatibility-facts.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/versioning.md",
@@ -1341,6 +1365,18 @@
           "packageExport": "./buildchain-contract"
         },
         {
+          "id": "export:./compatibility-fact-authority",
+          "name": "@kungfu-tech/buildchain/compatibility-fact-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-compatibility-proof.js",
+          "evidencePath": "packages/core/buildchain-compatibility-proof.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./compatibility-fact-authority"
+        },
+        {
           "id": "export:./candidate-timeline",
           "name": "@kungfu-tech/buildchain/candidate-timeline",
           "kind": "package-export",
@@ -1581,6 +1617,30 @@
           "packageExport": "./v4-runtime-ref-resume-authority"
         },
         {
+          "id": "export:./v4-tail-reseal",
+          "name": "@kungfu-tech/buildchain/v4-tail-reseal",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-tail-reseal.js",
+          "evidencePath": "packages/core/v4-tail-reseal.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-tail-reseal"
+        },
+        {
+          "id": "export:./v4-tail-reseal-receipt",
+          "name": "@kungfu-tech/buildchain/v4-tail-reseal-receipt",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-tail-reseal-receipt.js",
+          "evidencePath": "packages/core/v4-tail-reseal-receipt.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-tail-reseal-receipt"
+        },
+        {
           "id": "export:./logging",
           "name": "@kungfu-tech/buildchain/logging",
           "kind": "package-export",
@@ -1783,6 +1843,42 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./release-train"
+        },
+        {
+          "id": "export:./next-development-transition",
+          "name": "@kungfu-tech/buildchain/next-development-transition",
+          "kind": "package-export",
+          "sourcePath": "packages/core/next-development-transition.js",
+          "evidencePath": "packages/core/next-development-transition.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./next-development-transition"
+        },
+        {
+          "id": "export:./next-development-controller",
+          "name": "@kungfu-tech/buildchain/next-development-controller",
+          "kind": "package-export",
+          "sourcePath": "packages/core/next-development-controller.js",
+          "evidencePath": "packages/core/next-development-controller.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./next-development-controller"
+        },
+        {
+          "id": "export:./next-development-projection",
+          "name": "@kungfu-tech/buildchain/next-development-projection",
+          "kind": "package-export",
+          "sourcePath": "packages/core/next-development-projection.js",
+          "evidencePath": "packages/core/next-development-projection.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./next-development-projection"
         },
         {
           "id": "export:./stable-candidate-ledger",
@@ -2969,6 +3065,18 @@
           "reverseAuditSource": "bin/buildchain.mjs"
         },
         {
+          "id": "cli:next-development",
+          "name": "buildchain next-development materialize --input <request.json> [--cwd <dir>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
           "id": "cli:npm",
           "name": "buildchain npm",
           "kind": "cli-command",
@@ -3343,6 +3451,18 @@
         {
           "id": "cli:span",
           "name": "buildchain span --event <name> [--phase <phase>] [--component <name>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:tail-reseal",
+          "name": "buildchain tail-reseal plan --request <request.json> [--output <plan.json>]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -5493,6 +5613,25 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:v4-tail-reseal",
+          "name": "workflow:v4-tail-reseal",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-tail-reseal.yml",
+          "evidencePath": ".github/workflows/v4-tail-reseal.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 4,
+          "inputs": [
+            "artifact-retention-days",
+            "consumer-policy-receipt-json",
+            "macos-finalization-command",
+            "request-json"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:verify",
           "name": "workflow:verify",
           "kind": "workflow",
@@ -6343,6 +6482,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:next-development-transition",
+          "name": "site-page:manual:next-development-transition",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:node-api-reference",
           "name": "site-page:manual:node-api-reference",
           "kind": "site-page",
@@ -6631,6 +6782,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-compatibility-facts",
+          "name": "site-page:manual:v4-compatibility-facts",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-delivery-warrant-read-candidate",
           "name": "site-page:manual:v4-delivery-warrant-read-candidate",
           "kind": "site-page",
@@ -6681,6 +6844,18 @@
         {
           "id": "site-page:manual:v4-stage-capsule",
           "name": "site-page:manual:v4-stage-capsule",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:v4-tail-reseal",
+          "name": "site-page:manual:v4-tail-reseal",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -6897,6 +7072,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 438
+    "publicSurfaceCount": 452
   }
 }

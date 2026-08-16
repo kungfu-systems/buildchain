@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/contracts/v4-tail-reseal-v1.schema.json",
+  "title": "Buildchain v4 retained-candidate tail reseal request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "evaluatedAt",
+    "repository",
+    "source",
+    "target",
+    "runtime",
+    "warrant",
+    "retention",
+    "failure",
+    "stageResume",
+    "signing",
+    "releaseTail",
+    "platforms"
+  ],
+  "properties": {
+    "schema": {
+      "const": "kungfu-buildchain-v4-tail-reseal-request/v1"
+    },
+    "evaluatedAt": { "$ref": "#/$defs/clock" },
+    "repository": { "$ref": "#/$defs/text" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "runAttempt",
+        "sha",
+        "treeSha",
+        "sourceRoot",
+        "workflowFile",
+        "workflowName"
+      ],
+      "properties": {
+        "runId": { "$ref": "#/$defs/positiveInteger" },
+        "runAttempt": { "$ref": "#/$defs/positiveInteger" },
+        "sha": { "$ref": "#/$defs/sha" },
+        "treeSha": { "$ref": "#/$defs/sha" },
+        "sourceRoot": { "$ref": "#/$defs/root" },
+        "workflowFile": { "$ref": "#/$defs/text" },
+        "workflowName": { "$ref": "#/$defs/text" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "ref", "baseSha", "version"],
+      "properties": {
+        "channel": { "const": "alpha" },
+        "ref": { "const": "alpha/v4/v4.0" },
+        "baseSha": { "$ref": "#/$defs/sha" },
+        "version": { "type": "string", "pattern": "^4\\.0\\.0-alpha\\.[0-9]+$" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "ref",
+        "sha",
+        "contractRoot",
+        "consumerPolicyReceiptRoot"
+      ],
+      "properties": {
+        "repository": { "const": "kungfu-systems/buildchain" },
+        "ref": {
+          "type": "string",
+          "pattern": "^(v4-alpha|train/v4/v4\\.0/[A-Za-z0-9._/-]+)$"
+        },
+        "sha": { "$ref": "#/$defs/sha" },
+        "contractRoot": { "$ref": "#/$defs/root" },
+        "consumerPolicyReceiptRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "warrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidateId",
+        "generation",
+        "fencingToken",
+        "status",
+        "lineageRoot",
+        "qualificationRoot",
+        "stateReadbackRoot"
+      ],
+      "properties": {
+        "candidateId": { "$ref": "#/$defs/token" },
+        "generation": { "$ref": "#/$defs/positiveInteger" },
+        "fencingToken": { "$ref": "#/$defs/token" },
+        "status": { "const": "qualified" },
+        "lineageRoot": { "$ref": "#/$defs/root" },
+        "qualificationRoot": { "$ref": "#/$defs/root" },
+        "stateReadbackRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "retainUntil", "policyRoot", "readbackRoot"],
+      "properties": {
+        "status": { "const": "retained" },
+        "retainUntil": { "$ref": "#/$defs/clock" },
+        "policyRoot": { "$ref": "#/$defs/root" },
+        "readbackRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platformId",
+        "stage",
+        "jobId",
+        "jobName",
+        "stepName",
+        "code",
+        "evidenceRoot"
+      ],
+      "properties": {
+        "platformId": { "const": "macos-arm64" },
+        "stage": { "const": "signing-finalization" },
+        "jobId": { "$ref": "#/$defs/positiveInteger" },
+        "jobName": { "const": "build / Finalize signed artifact macOS ARM64" },
+        "stepName": { "const": "Recompute manifest over final signed bytes" },
+        "code": { "$ref": "#/$defs/token" },
+        "evidenceRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "stageResume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planRoot",
+        "qualificationRoot",
+        "zeroEffectReuse",
+        "decisions"
+      ],
+      "properties": {
+        "planRoot": { "$ref": "#/$defs/root" },
+        "qualificationRoot": { "$ref": "#/$defs/root" },
+        "zeroEffectReuse": { "const": true },
+        "decisions": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["stageKey", "decision", "capsuleRoot", "evidenceRoot"],
+            "properties": {
+              "stageKey": { "$ref": "#/$defs/token" },
+              "decision": { "const": "reuse" },
+              "capsuleRoot": { "$ref": "#/$defs/root" },
+              "evidenceRoot": { "$ref": "#/$defs/root" }
+            }
+          }
+        }
+      }
+    },
+    "signing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorityRepository",
+        "authorityRunId",
+        "runtimeSha",
+        "requestRoot",
+        "delegationRoot",
+        "resultArtifact",
+        "resultArtifactRoot",
+        "credentialAuthorityId",
+        "credentialScopeRoot",
+        "credentialLeaseRoot",
+        "credentialExpiresAt",
+        "providerReadbackRoot"
+      ],
+      "properties": {
+        "authorityRepository": { "$ref": "#/$defs/text" },
+        "authorityRunId": { "$ref": "#/$defs/positiveInteger" },
+        "runtimeSha": { "$ref": "#/$defs/sha" },
+        "requestRoot": { "$ref": "#/$defs/root" },
+        "delegationRoot": { "$ref": "#/$defs/root" },
+        "resultArtifact": { "$ref": "#/$defs/text" },
+        "resultArtifactRoot": { "$ref": "#/$defs/root" },
+        "credentialAuthorityId": { "$ref": "#/$defs/token" },
+        "credentialScopeRoot": { "$ref": "#/$defs/root" },
+        "credentialLeaseRoot": { "$ref": "#/$defs/root" },
+        "credentialExpiresAt": { "$ref": "#/$defs/clock" },
+        "providerReadbackRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "releaseTail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "declarationRoot",
+        "transactionRoot",
+        "operationRoot",
+        "idempotencyKey",
+        "providerReadbackRoot"
+      ],
+      "properties": {
+        "declarationRoot": { "$ref": "#/$defs/root" },
+        "transactionRoot": { "$ref": "#/$defs/root" },
+        "operationRoot": { "$ref": "#/$defs/root" },
+        "idempotencyKey": { "$ref": "#/$defs/token" },
+        "providerReadbackRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "platforms": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/platform" }
+    }
+  },
+  "$defs": {
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "clock": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$"
+    },
+    "text": { "type": "string", "minLength": 1 },
+    "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "positiveInteger": { "type": "integer", "minimum": 1 },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "runner",
+        "artifactName",
+        "artifactRoot",
+        "artifactArchiveRoot",
+        "manifestArtifactName",
+        "manifestRoot",
+        "manifestArchiveRoot",
+        "artifactPaths",
+        "capsuleRoot"
+      ],
+      "properties": {
+        "id": {
+          "enum": ["linux-arm64", "linux-x64", "macos-arm64", "windows-x64"]
+        },
+        "name": { "$ref": "#/$defs/text" },
+        "runner": { "$ref": "#/$defs/text" },
+        "artifactName": { "$ref": "#/$defs/text" },
+        "artifactRoot": { "$ref": "#/$defs/root" },
+        "artifactArchiveRoot": { "$ref": "#/$defs/root" },
+        "manifestArtifactName": { "$ref": "#/$defs/text" },
+        "manifestRoot": { "$ref": "#/$defs/root" },
+        "manifestArchiveRoot": { "$ref": "#/$defs/root" },
+        "artifactPaths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/text" },
+          "uniqueItems": true
+        },
+        "capsuleRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}

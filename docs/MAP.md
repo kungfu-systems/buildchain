@@ -66,7 +66,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Publication Artifacts | `publication-registry.json`, `workflow-registry.json`, `node-api-registry.json`, `manual-registry.json`, `kungfu-buildchain-publication-artifact-registry` | [`publication-artifacts.md`](publication-artifacts.md), [`reusable-build-surface.md`](reusable-build-surface.md) |
 | Distribution Indexes and Badges | `badge-endpoint-registry.json`, `node-api-registry.json`, `manual-registry.json` | [`readme-badges.md`](readme-badges.md), [`homebrew.md`](homebrew.md) |
 | Build Facts, Observability, and Diagnostics | `cli-registry.json`, `node-api-registry.json`, lifecycle artifacts | [`build-facts.md`](build-facts.md), [`toolkit-observability.md`](toolkit-observability.md), [`consumer-issue-reporting.md`](consumer-issue-reporting.md) |
-| Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json` | [`github-governance-authority.md`](github-governance-authority.md), [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md), [`cli.md`](cli.md) |
+| Governance, Versioning, and Runtime Drift | `buildchain-contract.json`, `workflow-registry.json`, `release-model.json`, `schemas/v4-compatibility-facts-v1.schema.json` | [`v4-compatibility-facts.md`](v4-compatibility-facts.md), [`github-governance-authority.md`](github-governance-authority.md), [`release-governance.md`](release-governance.md), [`release-flow.md`](release-flow.md), [`next-development-transition.md`](next-development-transition.md), [`versioning.md`](versioning.md), [`runtime-train-validation.md`](runtime-train-validation.md), [`cli.md`](cli.md) |
 | CLI and Node API Reference | `cli-registry.json`, `node-api-registry.json`, `workflow-registry.json`, `manual-registry.json` | [`cli-reference.md`](cli-reference.md), [`node-api-reference.md`](node-api-reference.md), [`cli.md`](cli.md), [`../packages/core/README.md`](../packages/core/README.md) |
 
 | Capability | Machine-readable entry | Manual entry |
@@ -80,6 +80,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | KFD-1 / KFD-2 / KFD-3 first-class CLI and Node API | `.buildchain/kfd/kfd-3/surfaces.json`, `dist/site/kfd-claims.json`, `buildchain.release.json`, KFD schemas from `@kungfu-tech/kfd` | [`kfd-support.md`](kfd-support.md), [`cli.md`](cli.md#commands) |
 | Declarative KFD Agent Hub adapter conformance and Passport evidence | `.buildchain/kfd/agent-hub.json`, `.buildchain/artifacts/kfd-agent-hub/evidence.json`, `buildchain.release.json#kfdAgentHub` | [`kfd-agent-hub.md`](kfd-agent-hub.md) |
 | Floating `@v3` drift detection and compatibility issues | `dist/site/buildchain-contract.json` | [`reusable-build-surface.md`](reusable-build-surface.md#floating-ref-contract-lock) |
+| Directional, Cut-bound v4 contract compatibility and legacy digest projections | `dist/site/buildchain-contract.json`, `dist/site/schemas/v4-compatibility-facts-v1.schema.json` | [`v4-compatibility-facts.md`](v4-compatibility-facts.md) |
 | npm publish transactions, evidence, dist-tags, and recovery | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`publish-transaction.md`](publish-transaction.md) |
 | Git/source/version/module/product build facts | `dist/site/node-api-registry.json`, `dist/site/cli-registry.json`, `kungfu-buildchain-module-build-facts`, `kungfu-buildchain-product-build-facts` | [`build-facts.md`](build-facts.md) |
 | GitHub Release passport/evidence publication | `dist/site/release-model.json`, `dist/site/artifact-schemas.json` | [`release-governance.md`](release-governance.md), [`release-candidate.md`](release-candidate.md) |
@@ -114,6 +115,7 @@ replace them.
 | What exact canonical bytes, roots, clocks, event, receipt, and typed-fault contracts do Rust and JavaScript share in v4? | [`v4-canonical-contracts.md`](v4-canonical-contracts.md) | use/verify | preview |
 | How is one per-platform v4 build stage identified, retained, observed, and reused without provider identity or a second writer? | [`v4-stage-capsule.md`](v4-stage-capsule.md) | use/verify | preview |
 | How does a late platform failure deterministically reuse qualified Stage Capsules and rebuild only invalid or missing dependencies? | [`v4-stage-capsule.md`](v4-stage-capsule.md#deterministic-resume-planning) | use/verify | preview |
+| How does a late macOS signing failure reuse an exact retained v4 Alpha candidate and rerun only the fenced release tail? | [`v4-tail-reseal.md`](v4-tail-reseal.md) | use/verify | preview |
 | How do Rust and JavaScript read the same retained Delivery Warrant traces and emit one semantic projection? | [`v4-canonical-contracts.md`](v4-canonical-contracts.md#shared-delivery-warrant-fixture-runner) | use/verify | preview |
 | How does an explicit caller try the qualified v4 read projection and roll back without moving v3 writer authority? | [`v4-delivery-warrant-read-candidate.md`](v4-delivery-warrant-read-candidate.md) | use/verify | preview |
 | How do protected dev branches and scheduled ready-PR merging work? | [`release-governance.md`](release-governance.md#protected-dev-branches) | use | stable |
@@ -125,6 +127,7 @@ replace them.
 | How do I report or safely apply branch and pull-request engineering hygiene? | [`engineering-housekeeper.md`](engineering-housekeeper.md) | use/verify | preview |
 | How does Buildchain decide patch, minor, and major release lines? | [`versioning.md`](versioning.md) | why | stable |
 | What exact branch/tag state machine runs on alpha, release, and major gate? | [`release-flow.md`](release-flow.md) | verify | stable |
+| How does a completed Alpha remain successful while the following development version is prepared? | [`next-development-transition.md`](next-development-transition.md), [`../architecture/decisions/0002-next-development-transition.md`](../architecture/decisions/0002-next-development-transition.md) | verify/use | preview |
 | What did Buildchain migrate or retire from old action repositories? | [`migration-inventory.md`](migration-inventory.md) | verify | stable |
 | What is the active action and workflow source of truth? | [`ownership.md`](ownership.md) | verify | stable |
 | How do I declare version files and custom lifecycle commands? | [`lifecycle-protocol.md`](lifecycle-protocol.md) | use | stable |

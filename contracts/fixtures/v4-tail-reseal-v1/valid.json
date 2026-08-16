@@ -1,0 +1,229 @@
+{
+  "schema": "kungfu-buildchain-v4-tail-reseal-request/v1",
+  "evaluatedAt": "2026-08-15T04:00:00.000Z",
+  "repository": "kungfu-systems/product",
+  "source": {
+    "runId": 4101,
+    "runAttempt": 1,
+    "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "treeSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "sourceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "workflowFile": "build.yml",
+    "workflowName": "Build"
+  },
+  "target": {
+    "channel": "alpha",
+    "ref": "alpha/v4/v4.0",
+    "baseSha": "cccccccccccccccccccccccccccccccccccccccc",
+    "version": "4.0.0-alpha.2"
+  },
+  "runtime": {
+    "repository": "kungfu-systems/buildchain",
+    "ref": "v4-alpha",
+    "sha": "dddddddddddddddddddddddddddddddddddddddd",
+    "contractRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "consumerPolicyReceiptRoot": "sha256:2c4a55af9d551eb5116894f2b28e38542fa9d45c904147c374784c8eabc70275"
+  },
+  "warrant": {
+    "candidateId": "candidate-alpha-2",
+    "generation": 7,
+    "fencingToken": "warrant-generation-7",
+    "status": "qualified",
+    "lineageRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "qualificationRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "stateReadbackRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+  },
+  "retention": {
+    "status": "retained",
+    "retainUntil": "2026-08-18T04:00:00.000Z",
+    "policyRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+    "readbackRoot": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+  },
+  "failure": {
+    "platformId": "macos-arm64",
+    "stage": "signing-finalization",
+    "jobId": 7104,
+    "jobName": "build / Finalize signed artifact macOS ARM64",
+    "stepName": "Recompute manifest over final signed bytes",
+    "code": "macos-pax-finalization",
+    "evidenceRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+  },
+  "stageResume": {
+    "planRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "qualificationRoot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "zeroEffectReuse": true,
+    "decisions": [
+      {
+        "stageKey": "linux-arm64:build",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "evidenceRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      {
+        "stageKey": "linux-arm64:install",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "evidenceRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      {
+        "stageKey": "linux-arm64:package",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "evidenceRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+      },
+      {
+        "stageKey": "linux-arm64:verify",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "evidenceRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      {
+        "stageKey": "linux-x64:build",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "evidenceRoot": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+      },
+      {
+        "stageKey": "linux-x64:install",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "evidenceRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+      },
+      {
+        "stageKey": "linux-x64:package",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "evidenceRoot": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "stageKey": "linux-x64:verify",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "evidenceRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      {
+        "stageKey": "macos-arm64:build",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "evidenceRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      {
+        "stageKey": "macos-arm64:install",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "evidenceRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      {
+        "stageKey": "macos-arm64:package",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "evidenceRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      {
+        "stageKey": "macos-arm64:verify",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "evidenceRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      {
+        "stageKey": "windows-x64:build",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "evidenceRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+      },
+      {
+        "stageKey": "windows-x64:install",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "evidenceRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      {
+        "stageKey": "windows-x64:package",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "evidenceRoot": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+      },
+      {
+        "stageKey": "windows-x64:verify",
+        "decision": "reuse",
+        "capsuleRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "evidenceRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+      }
+    ]
+  },
+  "signing": {
+    "authorityRepository": "kungfu-systems/buildchain",
+    "authorityRunId": 5102,
+    "runtimeSha": "dddddddddddddddddddddddddddddddddddddddd",
+    "requestRoot": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "delegationRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "resultArtifact": "signed-macos-result",
+    "resultArtifactRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "credentialAuthorityId": "macos-notary-primary",
+    "credentialScopeRoot": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "credentialLeaseRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "credentialExpiresAt": "2026-08-16T04:00:00.000Z",
+    "providerReadbackRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "releaseTail": {
+    "declarationRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "transactionRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "operationRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "idempotencyKey": "tail-reseal-alpha-2-macos",
+    "providerReadbackRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+  },
+  "platforms": [
+    {
+      "id": "linux-arm64",
+      "name": "linux-arm64",
+      "runner": "[\"ubuntu-24.04-arm\"]",
+      "artifactName": "product-linux-arm64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifactRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "artifactArchiveRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "manifestArtifactName": "product-manifest-linux-arm64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "manifestRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "manifestArchiveRoot": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "artifactPaths": [".buildchain/artifacts", "product/release/linux-arm64"],
+      "capsuleRoot": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "id": "linux-x64",
+      "name": "linux-x64",
+      "runner": "[\"ubuntu-24.04\"]",
+      "artifactName": "product-linux-x64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifactRoot": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "artifactArchiveRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "manifestArtifactName": "product-manifest-linux-x64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "manifestRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "manifestArchiveRoot": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "artifactPaths": [".buildchain/artifacts", "product/release/linux-x64"],
+      "capsuleRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "id": "macos-arm64",
+      "name": "macos-arm64",
+      "runner": "[\"macos-15\"]",
+      "artifactName": "product-macos-arm64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifactRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "artifactArchiveRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "manifestArtifactName": "product-manifest-macos-arm64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "manifestRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "manifestArchiveRoot": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "artifactPaths": [".buildchain/artifacts", "product/release/macos-arm64"],
+      "capsuleRoot": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "id": "windows-x64",
+      "name": "windows-x64",
+      "runner": "[\"windows-2025\"]",
+      "artifactName": "product-windows-x64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifactRoot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifactArchiveRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "manifestArtifactName": "product-manifest-windows-x64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "manifestRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "manifestArchiveRoot": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "artifactPaths": [".buildchain/artifacts", "product/release/windows-x64"],
+      "capsuleRoot": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  ]
+}
