@@ -49,11 +49,18 @@ jobs:
         run: >-
           node scripts/v4-stage-capsule-resume-rehearsal.mjs
           --platform ${{ matrix.platform }}
+      - name: Rehearse bounded v4 macOS tail reseal
+        if: matrix.platform == 'macos-arm64'
+        run: >-
+          node scripts/v4-tail-reseal-macos-rehearsal.mjs
+          --output .buildchain/v4-stage-checkpoint/tail-reseal-macos.json
       - name: Upload exact Stage Capsule checkpoint evidence
         uses: actions/upload-artifact@v7.0.1
         with:
           name: v4-stage-checkpoint-${{ matrix.platform }}-${{ github.sha }}
-          path: .buildchain/v4-stage-checkpoint/evidence.json
+          path: |
+            .buildchain/v4-stage-checkpoint/evidence.json
+            .buildchain/v4-stage-checkpoint/tail-reseal-macos.json
           if-no-files-found: error
   check:
     needs: stage-capsule-checkpoints

@@ -22925,6 +22925,266 @@
       ]
     },
     {
+      "id": "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_PLAN_CONTRACT",
+      "name": "V4_TAIL_RESEAL_PLAN_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_PLAN_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-contract.js",
+        "line": 3
+      },
+      "example": "import { V4_TAIL_RESEAL_PLAN_CONTRACT } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_PLATFORMS",
+      "name": "V4_TAIL_RESEAL_PLATFORMS",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_PLATFORMS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-contract.js",
+        "line": 6
+      },
+      "example": "import { V4_TAIL_RESEAL_PLATFORMS } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_REQUEST_CONTRACT",
+      "name": "V4_TAIL_RESEAL_REQUEST_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_REQUEST_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-contract.js",
+        "line": 1
+      },
+      "example": "import { V4_TAIL_RESEAL_REQUEST_CONTRACT } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_REUSED_STAGE_KEYS",
+      "name": "V4_TAIL_RESEAL_REUSED_STAGE_KEYS",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_REUSED_STAGE_KEYS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-contract.js",
+        "line": 20
+      },
+      "example": "import { V4_TAIL_RESEAL_REUSED_STAGE_KEYS } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-receipt.js#createV4TailResealReceipt",
+      "name": "createV4TailResealReceipt",
+      "kind": "function",
+      "signature": "function createV4TailResealReceipt({ request, plan, readbacks, passport, protectedReadbackRoot, currentRun, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ request, plan, readbacks, passport, protectedReadbackRoot, currentRun, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-receipt.js",
+        "line": 119
+      },
+      "example": "import { createV4TailResealReceipt } from \"@kungfu-tech/buildchain/v4-tail-reseal-receipt\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-receipt.js#V4_TAIL_RESEAL_RECEIPT_CONTRACT",
+      "name": "V4_TAIL_RESEAL_RECEIPT_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_TAIL_RESEAL_RECEIPT_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-receipt.js",
+        "line": 11
+      },
+      "example": "import { V4_TAIL_RESEAL_RECEIPT_CONTRACT } from \"@kungfu-tech/buildchain/v4-tail-reseal-receipt\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal-receipt.js#verifyV4TailResealReceipt",
+      "name": "verifyV4TailResealReceipt",
+      "kind": "function",
+      "signature": "function verifyV4TailResealReceipt({ receipt, request, passport } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ receipt, request, passport } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal-receipt.js",
+        "line": 200
+      },
+      "example": "import { verifyV4TailResealReceipt } from \"@kungfu-tech/buildchain/v4-tail-reseal-receipt\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal.js#normalizeV4TailResealRequest",
+      "name": "normalizeV4TailResealRequest",
+      "kind": "function",
+      "signature": "function normalizeV4TailResealRequest(request)",
+      "parameters": [
+        {
+          "name": "request",
+          "signature": "request"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal.js",
+        "line": 460
+      },
+      "example": "import { normalizeV4TailResealRequest } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal.js#planV4TailReseal",
+      "name": "planV4TailReseal",
+      "kind": "function",
+      "signature": "function planV4TailReseal(request)",
+      "parameters": [
+        {
+          "name": "request",
+          "signature": "request"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal.js",
+        "line": 519
+      },
+      "example": "import { planV4TailReseal } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-tail-reseal.js#V4TailResealFault",
+      "name": "V4TailResealFault",
+      "kind": "class",
+      "signature": "class V4TailResealFault",
+      "parameters": [],
+      "returns": "V4TailResealFault",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/v4-tail-reseal.js",
+        "line": 23
+      },
+      "example": "import { V4TailResealFault } from \"@kungfu-tech/buildchain/v4-tail-reseal\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/web-surface-publication-candidate.js#createWebSurfaceProductionDecision",
       "name": "createWebSurfaceProductionDecision",
       "kind": "function",
@@ -25439,6 +25699,60 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/v4-tail-reseal",
+      "export": "./v4-tail-reseal",
+      "target": "./packages/core/v4-tail-reseal.js",
+      "digest": "sha256:2fdd024495c3973033f0522fd66ea12116762ad983e6b4e1bc87467157e919b7",
+      "summary": "Effect-pure retained Stage Capsule validation and explicit Warrant-, credential-, and release-tail-fenced macOS reseal planning APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 7,
+      "symbolIds": [
+        "packages/core/v4-tail-reseal.js#normalizeV4TailResealRequest",
+        "packages/core/v4-tail-reseal.js#planV4TailReseal",
+        "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_PLAN_CONTRACT",
+        "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_PLATFORMS",
+        "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_REQUEST_CONTRACT",
+        "packages/core/v4-tail-reseal-contract.js#V4_TAIL_RESEAL_REUSED_STAGE_KEYS",
+        "packages/core/v4-tail-reseal.js#V4TailResealFault"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/v4-tail-reseal-receipt",
+      "export": "./v4-tail-reseal-receipt",
+      "target": "./packages/core/v4-tail-reseal-receipt.js",
+      "digest": "sha256:8379c0c181e5c550943d9630529eafbe5291b9ecaf79b9e7bc9f8db384dcfb69",
+      "summary": "Four-platform byte readback, standard candidate Passport binding, and terminal v4 tail-reseal receipt APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 3,
+      "symbolIds": [
+        "packages/core/v4-tail-reseal-receipt.js#createV4TailResealReceipt",
+        "packages/core/v4-tail-reseal-receipt.js#V4_TAIL_RESEAL_RECEIPT_CONTRACT",
+        "packages/core/v4-tail-reseal-receipt.js#verifyV4TailResealReceipt"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/logging",
       "export": "./logging",
       "target": "./packages/core/logging.js",
@@ -26484,7 +26798,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:f39be0957b3ca84752701b44a620b5286adb95001b5dd8940ce282d7a0c50612"
+      "digest": "sha256:e7db366627896bc37928e395da949301c94012be7039d3e98bbacbe397caba25"
     },
     {
       "id": "build-facts",

@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "95417b75510c2be916e378eea99083c73a4fa02310ebaddb258d63dcaa80b732",
+    "sha256": "788e95d53b681927cb84f4c4905c7ebe1c15f213dac1f51c25b77caa15ef9ed3",
     "summary": {
-      "cliCommandCount": 115,
-      "workflowCount": 71,
+      "cliCommandCount": 116,
+      "workflowCount": 72,
       "actionCount": 7,
-      "sitePageCount": 78,
-      "docCommandRefCount": 993,
+      "sitePageCount": 79,
+      "docCommandRefCount": 1009,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "95417b75510c2be916e378eea99083c73a4fa02310ebaddb258d63dcaa80b732",
+      "sha256": "788e95d53b681927cb84f4c4905c7ebe1c15f213dac1f51c25b77caa15ef9ed3",
       "summary": {
-        "cliCommandCount": 115,
-        "workflowCount": 71,
+        "cliCommandCount": 116,
+        "workflowCount": 72,
         "actionCount": 7,
-        "sitePageCount": 78,
-        "docCommandRefCount": 993,
+        "sitePageCount": 79,
+        "docCommandRefCount": 1009,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -1591,6 +1591,30 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./v4-runtime-ref-resume-authority"
+        },
+        {
+          "id": "export:./v4-tail-reseal",
+          "name": "@kungfu-tech/buildchain/v4-tail-reseal",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-tail-reseal.js",
+          "evidencePath": "packages/core/v4-tail-reseal.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-tail-reseal"
+        },
+        {
+          "id": "export:./v4-tail-reseal-receipt",
+          "name": "@kungfu-tech/buildchain/v4-tail-reseal-receipt",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-tail-reseal-receipt.js",
+          "evidencePath": "packages/core/v4-tail-reseal-receipt.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-tail-reseal-receipt"
         },
         {
           "id": "export:./logging",
@@ -3403,6 +3427,18 @@
         {
           "id": "cli:span",
           "name": "buildchain span --event <name> [--phase <phase>] [--component <name>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
+        {
+          "id": "cli:tail-reseal",
+          "name": "buildchain tail-reseal plan --request <request.json> [--output <plan.json>]",
           "kind": "cli-command",
           "sourcePath": "bin/buildchain.mjs",
           "evidencePath": "bin/buildchain.mjs",
@@ -5553,6 +5589,25 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:v4-tail-reseal",
+          "name": "workflow:v4-tail-reseal",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-tail-reseal.yml",
+          "evidencePath": ".github/workflows/v4-tail-reseal.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 4,
+          "inputs": [
+            "artifact-retention-days",
+            "consumer-policy-receipt-json",
+            "macos-finalization-command",
+            "request-json"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:verify",
           "name": "workflow:verify",
           "kind": "workflow",
@@ -6763,6 +6818,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-tail-reseal",
+          "name": "site-page:manual:v4-tail-reseal",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:versioning",
           "name": "site-page:manual:versioning",
           "kind": "site-page",
@@ -6969,6 +7036,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 444
+    "publicSurfaceCount": 449
   }
 }

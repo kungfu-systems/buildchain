@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-tail-reseal-parity",
+  "sourceAuthority": {
+    "branch": "dev/v3/v3.0",
+    "capturedCommit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
+    "implementation": "scripts/release-candidate-tail-reseal.mjs",
+    "workflow": ".github/workflows/.build.yml",
+    "tests": "tests/release-candidate-tail-reseal.test.mjs"
+  },
+  "target": {
+    "branch": "dev/v4/v4.0",
+    "publicReusableWorkflow": "kungfu-systems/buildchain/.github/workflows/v4-tail-reseal.yml@v4-alpha",
+    "requestSchema": "contracts/v4-tail-reseal-v1.schema.json",
+    "planner": "packages/core/v4-tail-reseal.js",
+    "admission": "packages/core/v4-tail-reseal-github.js",
+    "receipt": "packages/core/v4-tail-reseal-receipt.js",
+    "cli": "buildchain tail-reseal"
+  },
+  "authority": {
+    "productionAuthority": "v4",
+    "stageCapsuleEffectAuthority": "none",
+    "signingAuthority": "explicit-live-release-tail",
+    "credentialAuthority": "lease-bound-secret-island",
+    "runtimePersistence": "floating-only",
+    "v3BehaviorChange": false
+  },
+  "allowedDispositions": [
+    "implemented",
+    "superseded-equivalent",
+    "missing-before-closeout"
+  ],
+  "invariants": [
+    {
+      "id": "TR-01",
+      "claim": "The exact captured v3 retained-candidate script, workflow and tests are rooted as parity authority.",
+      "disposition": "implemented",
+      "implementationEvidence": ["architecture/v4-tail-reseal-parity.json"],
+      "verificationEvidence": ["tests/v4-tail-reseal-parity.test.mjs"]
+    },
+    {
+      "id": "TR-02",
+      "claim": "One exact failed run binds four byte-addressed platform payloads, manifests, archives and Stage Capsules.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "contracts/v4-tail-reseal-v1.schema.json",
+        "packages/core/v4-tail-reseal-github.js"
+      ],
+      "verificationEvidence": [
+        "contracts/fixtures/v4-tail-reseal-v1/valid.json",
+        "tests/v4-tail-reseal.test.mjs"
+      ]
+    },
+    {
+      "id": "TR-03",
+      "claim": "A fresh runner downloads retained archives and verifies every manifest and payload byte before any tail effect.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "scripts/v4-tail-reseal.mjs",
+        ".github/workflows/v4-tail-reseal.yml"
+      ],
+      "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
+    },
+    {
+      "id": "TR-04",
+      "claim": "Install, build, verify, package and platform-matrix remain explicitly skipped under effect-free Stage Capsule reuse.",
+      "disposition": "implemented",
+      "implementationEvidence": ["packages/core/v4-tail-reseal.js"],
+      "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
+    },
+    {
+      "id": "TR-05",
+      "claim": "Only macOS signing-finalization may change bytes; every other platform stays byte-identical and provider-effect-free.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/v4-tail-reseal-receipt.js",
+        "scripts/v4-tail-reseal.mjs"
+      ],
+      "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
+    },
+    {
+      "id": "TR-06",
+      "claim": "The macOS effect is fenced by exact Warrant lineage, credential authority, release-tail transaction and idempotency key.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/v4-tail-reseal.js",
+        ".github/workflows/v4-tail-reseal.yml"
+      ],
+      "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
+    },
+    {
+      "id": "TR-07",
+      "claim": "Source, platform, archive, manifest, signer, Warrant, credential, retention and prior-failure drift fails closed.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/v4-tail-reseal.js",
+        "packages/core/v4-tail-reseal-github.js"
+      ],
+      "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
+    },
+    {
+      "id": "TR-08",
+      "claim": "Expired retention or credential leases invalidate reuse and require a normal candidate rebuild.",
+      "disposition": "implemented",
+      "implementationEvidence": ["packages/core/v4-tail-reseal.js"],
+      "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
+    },
+    {
+      "id": "TR-09",
+      "claim": "Successful reseal emits the ordinary v4 Release Candidate Passport with its original floating-consumer policy receipt.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "packages/core/v4-tail-reseal-receipt.js",
+        ".github/workflows/v4-tail-reseal.yml"
+      ],
+      "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
+    },
+    {
+      "id": "TR-10",
+      "claim": "The reusable workflow resolves job.workflow_sha as runtime evidence and exposes no persisted SHA, variable indirection or private self-dogfood path.",
+      "disposition": "implemented",
+      "implementationEvidence": [".github/workflows/v4-tail-reseal.yml"],
+      "verificationEvidence": ["tests/v4-tail-reseal-parity.test.mjs"]
+    },
+    {
+      "id": "TR-11",
+      "claim": "Node API, CLI, schema, deterministic fixture, generated references and macOS bounded qualification project one contract.",
+      "disposition": "implemented",
+      "implementationEvidence": [
+        "package.json",
+        "bin/buildchain.mjs",
+        "scripts/v4-tail-reseal.mjs",
+        "docs/v4-tail-reseal.md"
+      ],
+      "verificationEvidence": [
+        "tests/command-registry.test.mjs",
+        "tests/v4-tail-reseal.test.mjs",
+        "tests/v4-tail-reseal-parity.test.mjs"
+      ]
+    },
+    {
+      "id": "TR-12",
+      "claim": "Independent review, protected merge and exact post-merge public readback remain external closeout evidence.",
+      "disposition": "missing-before-closeout",
+      "implementationEvidence": [],
+      "verificationEvidence": []
+    }
+  ],
+  "matrixRoot": "sha256:126ec51c12a9dedeb9b9e187202781e3895856af1927b399ba3902f3940750ad"
+}

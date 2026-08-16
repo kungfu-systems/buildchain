@@ -11,6 +11,7 @@ import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
 import { runReleaseGovernanceCli } from "../scripts/reconcile-release-governance.mjs";
 import { runReleaseTailCli } from "../scripts/release-tail.mjs";
+import { runV4TailResealCli } from "../scripts/v4-tail-reseal.mjs";
 import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
 import { runPublicationReproducibilityCli } from "../scripts/publication-reproducibility.mjs";
@@ -1673,6 +1674,10 @@ async function handleReleaseTailCommand(args) {
   runReleaseTailCli(args);
 }
 
+async function handleTailResealCommand(args) {
+  await runV4TailResealCli(args);
+}
+
 async function handleNextDevelopmentCommand(args) {
   runScript("next-development-transition.mjs", args);
 }
@@ -1773,6 +1778,7 @@ const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "release-propagation": handleReleasePropagationCommand,
   "release-governance": handleReleaseGovernanceCommand,
   "release-tail": handleReleaseTailCommand,
+  "tail-reseal": handleTailResealCommand,
   "next-development": handleNextDevelopmentCommand,
   "github-governance": handleGitHubGovernanceCommand,
   "badges": handleBadgesCommand,

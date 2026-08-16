@@ -3,11 +3,11 @@
   "contract": "kungfu-buildchain-public-surface-reverse-audit",
   "status": "passed",
   "summary": {
-    "cliCommandCount": 115,
-    "workflowCount": 71,
+    "cliCommandCount": 116,
+    "workflowCount": 72,
     "actionCount": 7,
-    "sitePageCount": 78,
-    "docCommandRefCount": 993,
+    "sitePageCount": 79,
+    "docCommandRefCount": 1009,
     "failureCount": 0
   },
   "enumerated": {
@@ -526,6 +526,11 @@
         "id": "span",
         "source": "bin/buildchain.mjs",
         "usage": "buildchain span --event <name> [--phase <phase>] [--component <name>]"
+      },
+      {
+        "id": "tail-reseal",
+        "source": "bin/buildchain.mjs",
+        "usage": "buildchain tail-reseal plan --request <request.json> [--output <plan.json>]"
       },
       {
         "id": "transaction-inspect",
@@ -2916,6 +2921,28 @@
         "outputCount": 0
       },
       {
+        "id": "v4-tail-reseal",
+        "path": ".github/workflows/v4-tail-reseal.yml",
+        "reusable": true,
+        "inputs": [
+          "artifact-retention-days",
+          "consumer-policy-receipt-json",
+          "macos-finalization-command",
+          "request-json"
+        ],
+        "inputCount": 4,
+        "secrets": [
+          "BUILDCHAIN_EVIDENCE_READ_TOKEN",
+          "BUILDCHAIN_SIGNING_TOKEN"
+        ],
+        "secretCount": 2,
+        "outputs": [
+          "release-candidate-passport-json",
+          "tail-reseal-receipt-root"
+        ],
+        "outputCount": 2
+      },
+      {
         "id": "verify",
         "path": ".github/workflows/verify.yml",
         "reusable": false,
@@ -3468,6 +3495,10 @@
       },
       {
         "id": "manual:v4-stage-capsule",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-tail-reseal",
         "category": "manual"
       },
       {
@@ -8005,6 +8036,86 @@
         "command": "buildchain span --event native"
       },
       {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal admit --request"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal plan --request"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal seal --request"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal verify-platform --request"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal admit"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal admit --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal plan"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal plan --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal seal"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal seal --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal verify-platform"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/cli-reference.md",
+        "command": "buildchain tail-reseal verify-platform --help"
+      },
+      {
+        "id": "tail-reseal",
+        "path": "docs/v4-tail-reseal.md",
+        "command": "buildchain tail-reseal plan"
+      },
+      {
         "id": "transaction-inspect",
         "path": "docs/cli-reference.md",
         "command": "buildchain transaction"
@@ -8455,9 +8566,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "9644dfc0534de74eecf5989eb4e9ef3a45cb996413afe1a8835db13d78fac7ce",
-    "workflowRegistryDigest": "f2c315d3df35fc3067cb98f626dfae8b5f4f400a6ce1d39a62e724072f52ae18",
-    "pageRegistryDigest": "26e68908b6d83b15bd52c944d147024e7ab4f3c888f1e3cb5c9264e21b236406"
+    "cliRegistryDigest": "b1ea0a458a7cf2daecf789ee89015250cfd0407b3af4fbde165b7ec3494ffbf1",
+    "workflowRegistryDigest": "52a958e73d626f9de6d13975a56a97dd5fbcc2305fa52b2b8959c82d8002f4e9",
+    "pageRegistryDigest": "7ff40dff61b810271556cecf21742dcff087adef183b650df212817338e19d48"
   },
   "comparison": {
     "missingCliRegistry": [],
