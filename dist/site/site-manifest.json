@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:16120e34c1a178b00309887d7903c2c8acb95815326091cf46a608d375435b99"
+      "digest": "sha256:ea193f36ab9d6dca1e043b8d46ee22053f713e1a3303c8ce893b7a6d6f44d198"
     },
     {
       "id": "getting-started",
@@ -134,6 +134,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:6989ada03d381e68fdec55b26b76b2070fb37969826eadc0a989844a732ba557"
+    },
+    {
+      "id": "next-development-transition",
+      "title": "Next-development transition",
+      "path": "docs/next-development-transition.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:c33c017ae163650b422f7ec294a05f3db8b8e99b87c55ab2d8ac3cce1726448f"
     },
     {
       "id": "release-propagation",
@@ -237,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:82b5d7afa63fc4cfa29ffb813f1830b30eeee3d9b0da821f77240a9ddb25584e"
+      "digest": "sha256:624a71c49181dfd44998e6973814a1b0670a5f7a9e6e428fb16b551fc0bc876b"
     },
     {
       "id": "node-api-reference",
@@ -245,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:efd452154c29b9572e26a377672678808a8a0de0ea4da1c784a8c2251f0d3eb7"
+      "digest": "sha256:1e79fa58650be1f8aeddb9dc4863f52f9e35aff274c7afeafd31d6c7fb1aab5d"
     },
     {
       "id": "build-facts",
@@ -341,7 +349,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:fa094ca11fe51b2f23b2154523414676d6f8c8fa50493c5027a469da9115a414"
+      "digest": "sha256:a2fc36e62ac3adfa0dd499972f22cad22131ccc526e11e890e2cbdc4d3a31341"
     },
     {
       "id": "web-surface-deployments",

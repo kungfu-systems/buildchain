@@ -10,6 +10,7 @@ export const BUILDCHAIN_AGENT_MANUALS = Object.freeze([
   { id: "github-governance-authority", title: "GitHub governance authority", path: "docs/github-governance-authority.md", plane: "verify" },
   { id: "release-candidate", title: "Release Candidate Passport", path: "docs/release-candidate.md", plane: "verify" },
   { id: "release-train", title: "Release Train and Release Cut", path: "docs/release-train.md", plane: "verify" },
+  { id: "next-development-transition", title: "Next-development transition", path: "docs/next-development-transition.md", plane: "verify" },
   { id: "release-propagation", title: "Release propagation", path: "docs/release-propagation.md", plane: "use" },
   { id: "readme-badges", title: "README badge blocks", path: "docs/readme-badges.md", plane: "use" },
   { id: "homebrew", title: "Homebrew distribution indexes", path: "docs/homebrew.md", plane: "use" },
