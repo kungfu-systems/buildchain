@@ -108,12 +108,15 @@ The public reusable
 [`release-tail.yml`](../.github/workflows/release-tail.yml) accepts the same
 capsule, candidate root, mode, state and evidence paths. Before publication,
 Buildchain dogfoods that public surface through a thin same-commit local reusable
-call with the exact PR-head or dispatch SHA as its runtime. Durable external
-consumers remain on the floating `@v4-alpha` contract. Provider mode additionally
-requires the exact authority path. Provider bindings come from the capsule; an
-optional external bindings input is accepted only when its canonical exact
-root and payload equal the capsule binding. Ordinary calls default to
-`simulate`.
+call with the exact PR-head or dispatch SHA as its runtime. The reusable is
+permission-neutral and the self-dogfood caller stays `contents: read`, passes
+`execute: false`, and therefore cannot inherit or synthesize production write
+authority. Effectful production callers must explicitly declare their own
+provider permission. Durable external consumers remain on the floating
+`@v4-alpha` contract. Provider mode additionally requires the exact authority
+path. Provider bindings come from the capsule; an optional external bindings
+input is accepted only when its canonical exact root and payload equal the
+capsule binding. Ordinary calls default to `simulate`.
 
 ## Offline portability vectors
 

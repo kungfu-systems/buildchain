@@ -669,6 +669,9 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
     value: "${{ github.event.pull_request.head.sha || github.sha }}",
   });
   assert.equal(call.with["rehearsal-mode"].value, "simulate");
+  assert.deepEqual(call.with.execute, { kind: "boolean", value: false });
+  assert.equal(call.permissions.contents, "read");
+  assert.deepEqual(callee.interface.permissions, {});
 
   const declared = new Map(
     callee.interface.inputs.map((entry) => [entry.name, entry]),
@@ -708,6 +711,24 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
       ),
     ),
     "external public consumers retain the floating v4-alpha selector",
+  );
+
+  const providerPlaneDoc = fs.readFileSync(
+    path.join(repositoryRoot, "docs/release-tail-provider-plane.md"),
+    "utf8",
+  );
+  const productionExample = providerPlaneDoc
+    .split("<!-- release-tail-production-caller-contract -->")[1]
+    ?.match(/```yaml\n([\s\S]*?)\n```/u)?.[1];
+  assert.ok(productionExample, "production caller contract is documented");
+  const productionCaller = parseWorkflowDocument(productionExample);
+  assert.equal(productionCaller.callJobs.length, 1);
+  const [productionCall] = productionCaller.callJobs;
+  assert.equal(productionCall.permissions.contents, "write");
+  assert.equal(productionCall.with.execute.value, true);
+  assert.match(
+    productionCall.uses,
+    /^kungfu-systems\/buildchain\/\.github\/workflows\/release-tail\.yml@<exact-buildchain-sha>$/u,
   );
 });
 

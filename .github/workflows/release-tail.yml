@@ -68,8 +68,7 @@ on:
         description: "Root of non-authoritative Publication Rehearsal evidence"
         value: ${{ jobs.release-tail.outputs.rehearsal-evidence-root }}
 
-permissions:
-  contents: write
+# Permission-neutral: production callers grant provider authority explicitly.
 
 jobs:
   release-tail:

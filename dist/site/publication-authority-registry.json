@@ -1152,9 +1152,7 @@
     },
     {
       "path": ".github/workflows/release-tail.yml",
-      "signals": [
-        "write-permission"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1207,5 +1205,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "9c29d1560b3ba76736a18a7e9620c271883e5e7aa07f9fd61fe302031969f56c"
+  "registryDigest": "124a3369d72d8078b7f330821d3252a8036ba1eafcb713af76e29202b64b0440"
 }
