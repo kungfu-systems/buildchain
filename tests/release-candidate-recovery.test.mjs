@@ -776,7 +776,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   assert.match(advanced, /cp \.buildchain\/release-candidate\/v4-runtime-resume-\*\.json/);
   assert.match(
     refPromotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
   assert.match(
     refPromotion,
