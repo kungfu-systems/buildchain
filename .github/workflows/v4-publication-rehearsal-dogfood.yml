@@ -1,0 +1,21 @@
+name: V4 Publication Rehearsal Dogfood
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rehearsal:
+    # Prepublication dogfood resolves the reusable contract from this same
+    # immutable workflow commit. External consumers remain floating-only.
+    uses: ./.github/workflows/release-tail.yml
+    with:
+      buildchain-ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      rehearsal-capsule-path: contracts/fixtures/v4-publication-rehearsal-v1/capsule.json
+      candidate-root: contracts/fixtures/v4-publication-rehearsal-v1/candidate
+      rehearsal-mode: simulate
+      state-path: .buildchain/publication-rehearsal/state.json
+      rehearsal-evidence-path: .buildchain/publication-rehearsal/evidence.json

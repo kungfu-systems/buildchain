@@ -1187,6 +1187,11 @@
       "classified": false
     },
     {
+      "path": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/v4-stage-capsule-canary.yml",
       "signals": [],
       "classified": false
@@ -1202,5 +1207,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "95e7d88ca3d3492b7852d715c24d3f4f2cec59f3c3fbb8665aa781d15afd6b63"
+  "registryDigest": "9c29d1560b3ba76736a18a7e9620c271883e5e7aa07f9fd61fe302031969f56c"
 }

@@ -58,6 +58,14 @@ command = "node scripts/npm-publish-transaction.mjs"
 [publish]
 shared_alpha_authority_major = 4
 
+[publication_rehearsal]
+contract = "buildchain-v4-publication-rehearsal-capsule/v1"
+capsule_path = "contracts/fixtures/v4-publication-rehearsal-v1/capsule.json"
+candidate_root = "contracts/fixtures/v4-publication-rehearsal-v1/candidate"
+state_path = ".buildchain/publication-rehearsal/state.json"
+evidence_path = ".buildchain/publication-rehearsal/evidence.json"
+effect_default = "disabled"
+
 [governance.dev.merge_queue]
 mode = "enabled"
 required_workflows = [".github/workflows/verify.yml"]

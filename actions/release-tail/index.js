@@ -20,6 +20,10 @@ import {
   createSignedStaticChannelAdapter,
   createSiteReleaseActivationAdapter,
 } from "../../packages/core/release-tail-provider-adapters.js";
+import {
+  executeV4PublicationRehearsal,
+  resolveV4PublicationRehearsalProviderBindings,
+} from "../../packages/core/v4-publication-rehearsal.js";
 
 const BINDINGS_SCHEMA = "kungfu.buildchain.release-tail.provider-bindings/v1";
 
@@ -304,6 +308,70 @@ export async function executeAction({
 }
 
 async function main() {
+  const rehearsalCapsuleInput = input("rehearsal-capsule");
+  if (rehearsalCapsuleInput) {
+    const capsule = readJson(rehearsalCapsuleInput, "rehearsal-capsule");
+    const candidateRoot = path.resolve(input("candidate-root", true));
+    const rehearsalMode = input("rehearsal-mode") || "simulate";
+    const statePath = path.resolve(
+      input("state-path") || ".buildchain/publication-rehearsal/state.json",
+    );
+    const evidencePath = path.resolve(
+      input("rehearsal-evidence-path") ||
+        ".buildchain/publication-rehearsal/evidence.json",
+    );
+    const bindingsInput = input("provider-bindings");
+    const bindings =
+      rehearsalMode === "provider"
+        ? resolveV4PublicationRehearsalProviderBindings({
+            capsule,
+            candidateRoot,
+            providerBindings: bindingsInput
+              ? readJson(bindingsInput, "provider-bindings")
+              : capsule.providerBindings,
+          })
+        : null;
+    const authorityInput = input("rehearsal-authority");
+    const result = await executeV4PublicationRehearsal({
+      capsule,
+      candidateRoot,
+      mode: rehearsalMode,
+      authority: authorityInput
+        ? readJson(authorityInput, "rehearsal-authority")
+        : null,
+      adapters:
+        rehearsalMode === "provider"
+          ? createAdapters(capsule.declaration, bindings, {
+              githubToken: input("github-token"),
+              httpToken: input("http-token"),
+            })
+          : {},
+      checkpoint: (checkpoint) =>
+        writeReleaseTailTransaction(statePath, checkpoint),
+    });
+    writeReleaseTailTransaction(statePath, result.transaction);
+    fs.mkdirSync(path.dirname(evidencePath), { recursive: true });
+    fs.writeFileSync(
+      evidencePath,
+      `${JSON.stringify(result.evidence, null, 2)}\n`,
+    );
+    core.setOutput("transaction-state", result.transaction.state);
+    core.setOutput("transaction-root", result.transaction.transactionRoot);
+    core.setOutput("state-root", result.transaction.stateRoot);
+    core.setOutput("state-path", statePath);
+    core.setOutput("rehearsal-evidence-root", result.evidence.evidenceRoot);
+    core.setOutput(
+      "receipt-roots-json",
+      JSON.stringify(
+        result.transaction.receipts.map((receipt) => receipt.receiptRoot),
+      ),
+    );
+    if (result.transaction.state !== "complete")
+      throw new Error(
+        `publication rehearsal stopped in ${result.transaction.state}`,
+      );
+    return;
+  }
   const declaration = readJson(input("declaration", true), "declaration");
   const bindings = normalizeBindings(
     readJson(input("provider-bindings", true), "provider-bindings"),

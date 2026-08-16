@@ -236,6 +236,11 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.publication !== undefined) {
     normalized.publication = normalizePublicationSection(normalized.publication);
   }
+  if (normalized.publication_rehearsal !== undefined) {
+    normalized.publication_rehearsal = normalizePublicationRehearsalSection(
+      normalized.publication_rehearsal,
+    );
+  }
   if (normalized.consumers !== undefined) {
     normalized.consumers = normalizeConsumersSection(normalized.consumers);
   }
@@ -698,6 +703,40 @@ function normalizePublicationSection(publication) {
       : posixPath(assertString(publication.source_bundle_path, "publication.source_bundle_path")),
     archive: normalizePublicationArchive(publication.archive),
   };
+}
+
+function normalizePublicationRehearsalSection(rehearsal) {
+  assertPlainObject(rehearsal, "publication_rehearsal");
+  const allowed = ["contract", "capsule_path", "candidate_root", "state_path", "evidence_path", "effect_default"];
+  const unknown = Object.keys(rehearsal).filter((key) => !allowed.includes(key));
+  if (unknown.length > 0) {
+    throw new Error(`publication_rehearsal contains unsupported fields: ${unknown.join(", ")}`);
+  }
+  const normalized = {
+    contract: assertString(rehearsal.contract, "publication_rehearsal.contract"),
+    capsulePath: posixPath(assertString(rehearsal.capsule_path, "publication_rehearsal.capsule_path")),
+    candidateRoot: posixPath(assertString(rehearsal.candidate_root, "publication_rehearsal.candidate_root")),
+    statePath: posixPath(assertString(rehearsal.state_path, "publication_rehearsal.state_path")),
+    evidencePath: posixPath(assertString(rehearsal.evidence_path, "publication_rehearsal.evidence_path")),
+    effectDefault: assertString(rehearsal.effect_default, "publication_rehearsal.effect_default"),
+  };
+  if (
+    normalized.contract !== "buildchain-v4-publication-rehearsal-capsule/v1" ||
+    normalized.effectDefault !== "disabled"
+  ) {
+    throw new Error("publication_rehearsal must use the v4 capsule contract with effect_default = disabled");
+  }
+  for (const [key, value] of Object.entries({
+    capsule_path: normalized.capsulePath,
+    candidate_root: normalized.candidateRoot,
+    state_path: normalized.statePath,
+    evidence_path: normalized.evidencePath,
+  })) {
+    if (value.startsWith("/") || value.includes("\\") || value.split("/").includes("..")) {
+      throw new Error(`publication_rehearsal.${key} must be repository-relative`);
+    }
+  }
+  return normalized;
 }
 
 function normalizePublicationArchive(archive = undefined) {

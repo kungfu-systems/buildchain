@@ -1,0 +1,84 @@
+{
+  "schema": "buildchain.v4.publication-rehearsal-parity/v1",
+  "source": {
+    "branch": "dev/v3/v3.0",
+    "commit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
+    "runtime": "packages/core/publication-rehearsal-runtime.js"
+  },
+  "target": {
+    "branch": "dev/v4/v4.0",
+    "commit": "bc12cd0ff18a7e1d918777ea093c169349952d34",
+    "capsuleContract": "packages/core/v4-publication-rehearsal-capsule.js",
+    "runtime": "packages/core/v4-publication-rehearsal.js",
+    "providerBindings": "packages/core/v4-publication-rehearsal-provider-bindings.js"
+  },
+  "sharedProductionCore": {
+    "planner": "compileReleaseTailDeclaration",
+    "initializer": "createReleaseTailTransaction",
+    "executor": "executeReleaseTailTransaction",
+    "version": "buildchain.release-tail/v1"
+  },
+  "stageCapsuleBoundary": {
+    "contract": "buildchain-v4-stage-capsule/v1",
+    "purpose": "pure platform-stage build checkpoint reuse",
+    "publicationEffects": false,
+    "publicationAuthority": false
+  },
+  "matrix": [
+    {
+      "invariant": "capsule-purpose",
+      "v3": "publication rehearsal",
+      "v4": "publication rehearsal distinct from Stage Capsule",
+      "parity": "safety-strengthened"
+    },
+    {
+      "invariant": "content-addressed-inputs",
+      "v3": "capsule, declaration, transaction, files, data-only provider bindings, policy and observations",
+      "v4": "capsule, source, candidate, manifest, config, provider bindings, provider policy, expected observations and core version",
+      "parity": "safety-strengthened"
+    },
+    {
+      "invariant": "provider-request-binding",
+      "v3": "provider binding payload is capsule-rooted and every input path is in files",
+      "v4": "providerBindingsRoot covers canonical bindings and every request byte is inventory-rooted before adapters",
+      "parity": "exact"
+    },
+    {
+      "invariant": "shared-release-tail-core",
+      "v3": "shared planner and executor",
+      "v4": "same production planner, initializer and executor",
+      "parity": "exact"
+    },
+    {
+      "invariant": "effect-default",
+      "v3": "simulate and replay local defaults",
+      "v4": "provider policy is rooted and effect-disabled by default",
+      "parity": "safety-strengthened"
+    },
+    {
+      "invariant": "authorized-provider-rehearsal",
+      "v3": "provider observations are recorded without authority",
+      "v4": "exact capsule-bound rehearsal-only authority plus request and readback transcript",
+      "parity": "safety-strengthened"
+    },
+    {
+      "invariant": "release-authority",
+      "v3": "externalPublicationClaimed false",
+      "v4": "productionAuthority false and releasePassport null",
+      "parity": "exact"
+    },
+    {
+      "invariant": "tamper-response",
+      "v3": "capsule and file mismatch fail closed",
+      "v4": "every named identity root and core version mismatch fails closed",
+      "parity": "safety-strengthened"
+    },
+    {
+      "invariant": "portability",
+      "v3": "platform-independent local capsule root",
+      "v4": "byte-identical offline linux, macos and windows vector",
+      "parity": "exact"
+    }
+  ],
+  "matrixRoot": "sha256:521694ce2cc1d5b383eaa6b84f1b6926ef8ce8f33085e02507e611e9f9b6e784"
+}
