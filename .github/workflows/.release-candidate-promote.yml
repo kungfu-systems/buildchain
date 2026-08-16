@@ -1468,7 +1468,7 @@ jobs:
         id: buildchain-runtime
         shell: bash
         run: |
-          runtime_ref="${INPUT_PROMOTION_RUNTIME_REF:-${INPUT_BUILDCHAIN_REF:-v3}}"
+          runtime_ref="${INPUT_PROMOTION_RUNTIME_REF:-${INPUT_BUILDCHAIN_REF:-v3}}"; test ! -d .buildchain/runtime/promotion-shell/actions/promote-buildchain-ref || cp -R .buildchain/runtime/promotion-shell/actions/promote-buildchain-ref/. .buildchain/runtime/actions/promote-buildchain-ref/
           runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
           runtime_class="development"
           if [[ "${runtime_ref}" =~ ^[0-9a-fA-F]{40}$ ]]; then

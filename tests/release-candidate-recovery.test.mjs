@@ -743,6 +743,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     /name: Bridge Buildchain self-runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' && github\.repository == inputs\.buildchain-repository \}\}/,
   );
   assert.match(advanced, /ln -s \.buildchain\/runtime\/node_modules node_modules/);
+  assert.match(advanced, /test ! -d \.buildchain\/runtime\/promotion-shell\/actions\/promote-buildchain-ref \|\| cp -R \.buildchain\/runtime\/promotion-shell\/actions\/promote-buildchain-ref\/\. \.buildchain\/runtime\/actions\/promote-buildchain-ref\//);
   assert.match(advanced, /name: Install exact publication planning dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Resolve exact publication transaction version\n\s+id: plan\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Reuse sealed candidate publication version/);
