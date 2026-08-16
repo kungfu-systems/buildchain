@@ -4220,8 +4220,9 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
   );
   assert.match(
     selfPromotion,
-    /publish-rematerialize-on-resume:.*alpha\/.*\|\|.*release\//,
+    /promote-alpha-bootstrap:[\s\S]*publish-rematerialize-on-resume: true/,
   );
+  assert.match(selfPromotion, /promote-stable:[\s\S]*publish-rematerialize-on-resume:.*release\//);
   assert.match(
     selfPromotion,
     /recover-durable-transaction:[\s\S]*?type: boolean/,
