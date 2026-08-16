@@ -22,7 +22,7 @@
     "ref": "v4-alpha",
     "sha": "dddddddddddddddddddddddddddddddddddddddd",
     "contractRoot": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-    "consumerPolicyReceiptRoot": "sha256:30c53c36de076f5c3d17fec1127f8c5c4cd8ee123213bc304360af91745f1a97"
+    "consumerPolicyReceiptRoot": "sha256:2ddc177f1fcd0da2cd57195483e923146207898a8022474835e65f6509f8f2e2"
   },
   "warrant": {
     "candidateId": "candidate-alpha-2",

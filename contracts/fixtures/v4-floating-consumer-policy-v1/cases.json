@@ -42,7 +42,13 @@
       "id": "stale-selected-lock",
       "selector": "v4-alpha",
       "stale": "alpha",
-      "expectedCode": "selected-lock-runtime-mismatch"
+      "expected": "passed"
+    },
+    {
+      "id": "breaking-selected-lock",
+      "selector": "v4-alpha",
+      "breaking": "alpha",
+      "expectedCode": "selected-lock-runtime-incompatible"
     },
     {
       "id": "nested-composite-exact-sha",

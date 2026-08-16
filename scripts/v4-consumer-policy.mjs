@@ -139,10 +139,6 @@ export function certifyCommand(options = {}) {
     stableLockPath,
     alphaLockPath,
   });
-  const selectedLock =
-    receipt?.invocation?.visibleSelector === "v4-alpha"
-      ? readJson(path.join(callerRoot, alphaLockPath))
-      : readJson(path.join(callerRoot, stableLockPath));
   const authorityScan = scanV4FloatingConsumerPolicy({
     root: callerRoot,
     repository,
@@ -150,7 +146,7 @@ export function certifyCommand(options = {}) {
     invokedWorkflow,
     invocationSourcePath: receipt?.invocation?.sourcePath,
     expectedInvocationChannel: receipt?.invocation?.channel,
-    resolvedWorkflowSha: selectedLock.buildchain?.resolvedSha,
+    resolvedWorkflowSha: receipt?.invocation?.resolvedWorkflowSha,
     resolvedRuntimeSha,
     stableLockPath,
     alphaLockPath,

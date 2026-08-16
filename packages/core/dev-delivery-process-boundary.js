@@ -30,7 +30,7 @@ const PROVIDER_CREDENTIAL_NAME =
   /(?:^(?:ACTIONS_ID_TOKEN_REQUEST_TOKEN|ACTIONS_RUNTIME_TOKEN|AWS_SESSION_TOKEN|AWS_WEB_IDENTITY_TOKEN_FILE|AZURE_FEDERATED_TOKEN_FILE|GH_TOKEN|GITHUB_TOKEN|GOOGLE_GHA_CREDS_PATH|KUNGFU_GITHUB_TOKEN|NPM_TOKEN|SSH_AUTH_SOCK)$|(?:^|_)(?:(?:api|access|auth|publish|release|provider|promotion|governance|approval|mutation|write)_?(?:key|token)|authorization|credentials?|password|secret|private_key|client_secret|signing_key)(?:_|$))/iu;
 const HOSTED_RUNNER_BOUNDARY = "github-actions-runner-worker/v1";
 const GITHUB_HOSTED_LINUX_WORKER =
-  /^\/home\/runner\/runners\/(\d+\.\d+\.\d+)\/bin\/Runner\.Worker$/u;
+  /^\/home\/runner\/(?:runners|actions-runner\/cached)\/(\d+\.\d+\.\d+)\/bin\/Runner\.Worker$/u;
 function text(value, label) {
   const normalized = normalizedText(value);
   if (!normalized) throw new Error(`${label} is required`);
@@ -108,9 +108,11 @@ function hostedBoundary(procRoot, pid, command, readlinkSync) {
   const executable = ancestryRead(readlinkSync, link);
   if (
     !GITHUB_HOSTED_LINUX_WORKER.test(executable) ||
-    !new Set([executable, path.posix.basename(executable)]).has(command[0])
+    path.posix.basename(command[0]) !== path.posix.basename(executable)
   ) {
-    throw new Error("credential ancestry found an untrusted Runner.Worker");
+    throw new Error(
+      `credential ancestry found an untrusted Runner.Worker: executable=${JSON.stringify(executable)} argv0=${JSON.stringify(command[0])}`,
+    );
   }
   return { pid, kind: HOSTED_RUNNER_BOUNDARY, executable };
 }
@@ -163,7 +165,11 @@ export function assertCredentiallessProcessAncestry(options = {}) {
   return inspection;
 }
 
-export function devDeliveryProviderJobByName(jobs, expectedName) {
+export function devDeliveryProviderJobByName(
+  jobs,
+  expectedName,
+  { allowMissing = false } = {},
+) {
   const exactName = text(expectedName, "provider job name");
   const suffix = ` / ${exactName}`;
   const matches = jobs.filter((job) => {
@@ -173,6 +179,7 @@ export function devDeliveryProviderJobByName(jobs, expectedName) {
       (actualName.endsWith(suffix) && actualName.length > suffix.length)
     );
   });
+  if (matches.length === 0 && allowMissing) return null;
   if (matches.length !== 1) {
     throw new Error(`expected exactly one provider job named ${exactName}`);
   }
