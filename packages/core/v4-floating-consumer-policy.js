@@ -320,8 +320,56 @@ function selectInvocation(uses, workflow, failures, source = "", channel = "") {
   return { expectedWorkflow, selected: invocations[0] };
 }
 
+function scanInvocationSource({
+  sourceRoot,
+  invocationRoot,
+  sourceScan,
+  sourceUses,
+  failures,
+}) {
+  if (invocationRoot === sourceRoot)
+    return { invocationScan: sourceScan, invocationUses: sourceUses };
+  try {
+    const invocationScan = enumerateUses(invocationRoot);
+    return {
+      invocationScan,
+      invocationUses: classifyBuildchainUses(invocationScan.records, failures),
+    };
+  } catch (error) {
+    failures.push({
+      code: "invocation-source-scan-failed",
+      message: error.message,
+    });
+    return {
+      invocationScan: { files: [], records: [] },
+      invocationUses: [],
+    };
+  }
+}
+
+function sourceScanRoot({
+  sourceRoot,
+  invocationRoot,
+  sourceScan,
+  invocationScan,
+  invocationUses,
+}) {
+  const material =
+    invocationRoot === sourceRoot
+      ? sourceScan
+      : {
+          source: sourceScan,
+          invocation: {
+            files: invocationScan.files,
+            invocations: invocationUses,
+          },
+        };
+  return sha256(stableJson(material));
+}
+
 export function scanV4FloatingConsumerPolicy({
   root = process.cwd(),
+  invocationRoot = root,
   repository = "",
   sourceSha = "",
   invokedWorkflow = "",
@@ -335,6 +383,7 @@ export function scanV4FloatingConsumerPolicy({
   scannerRoot = "",
 } = {}) {
   const resolvedRoot = path.resolve(root);
+  const resolvedInvocationRoot = path.resolve(invocationRoot);
   if (!policy || policy.contract !== V4_FLOATING_CONSUMER_POLICY) {
     throw new Error(`policy must use ${V4_FLOATING_CONSUMER_POLICY}`);
   }
@@ -375,11 +424,18 @@ export function scanV4FloatingConsumerPolicy({
     failures.push({ code: "source-scan-failed", message: error.message });
   }
   const buildchainUses = classifyBuildchainUses(scanned.records, failures);
+  const { invocationScan, invocationUses } = scanInvocationSource({
+    sourceRoot: resolvedRoot,
+    invocationRoot: resolvedInvocationRoot,
+    sourceScan: scanned,
+    sourceUses: buildchainUses,
+    failures,
+  });
   const sourcePath = String(invocationSourcePath || "")
     .split("@")[0]
     .replace(`${repository}/`, "");
   const { expectedWorkflow, selected } = selectInvocation(
-    buildchainUses,
+    invocationUses,
     invokedWorkflow,
     failures,
     sourcePath,
@@ -424,9 +480,14 @@ export function scanV4FloatingConsumerPolicy({
     stable: stable ? sha256(stableJson(stable)) : "",
     alpha: alpha ? sha256(stableJson(alpha)) : "",
   };
-  const scanRoot = sha256(
-    stableJson({ files: scanned.files, invocations: buildchainUses }),
-  );
+  const sourceScan = { files: scanned.files, invocations: buildchainUses };
+  const scanRoot = sourceScanRoot({
+    sourceRoot: resolvedRoot,
+    invocationRoot: resolvedInvocationRoot,
+    sourceScan,
+    invocationScan,
+    invocationUses,
+  });
   const receipt = {
     schema: V4_FLOATING_CONSUMER_RECEIPT,
     status: failures.length ? "failed" : "passed",
@@ -459,7 +520,7 @@ export function scanV4FloatingConsumerPolicy({
     ok: failures.length === 0,
     failures,
     scannedFiles: scanned.files,
-    invocations: buildchainUses,
+    invocations: invocationUses,
     receipt,
     receiptRoot,
   };
