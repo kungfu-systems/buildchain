@@ -24,7 +24,10 @@ const RUNNER_WORKER = "/home/runner/runners/2.999.0/bin/Runner.Worker";
 
 function hostedAncestryFiles(overrides = {}) {
   return new Map([
-    ["/proc/40/environ", "PATH=/bin\0"],
+    [
+      "/proc/40/environ",
+      "PATH=/bin\0BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY=github-actions-runner-worker/v1\0",
+    ],
     ["/proc/40/cmdline", "/usr/bin/node\0controller.mjs\0"],
     ["/proc/40/status", "Name:\tnode\nPPid:\t30\n"],
     ["/proc/30/environ", "LANG=C\0"],
@@ -205,6 +208,18 @@ test("hosted Linux ancestry accepts only non-credential runtime variables throug
     kind: "github-actions-runner-worker/v1",
     executable: RUNNER_WORKER,
   });
+});
+
+test("hosted Linux ancestry rejects a forged credential boundary marker", () => {
+  const files = hostedAncestryFiles({
+    "/proc/30/environ":
+      "BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY=provider-secret\0",
+  });
+  const result = inspectCredentiallessProcessAncestry(ancestryOptions(files));
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.exposed, [
+    { pid: 30, names: ["BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY"] },
+  ]);
 });
 
 test("hosted Linux ancestry accepts the kernel-resolved worker with basename argv zero", () => {

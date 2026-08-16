@@ -61,10 +61,16 @@ function processCredentialNames(procRoot, pid, readFileSync) {
     .split("\0")
     .filter((entry) => {
       const separator = entry.indexOf("=");
+      const name = entry.slice(0, separator);
+      const value = entry.slice(separator + 1);
       return (
         separator > 0 &&
-        Boolean(entry.slice(separator + 1)) &&
-        isCredentialVariableName(entry.slice(0, separator))
+        Boolean(value) &&
+        !(
+          name === "BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY" &&
+          value === HOSTED_RUNNER_BOUNDARY
+        ) &&
+        isCredentialVariableName(name)
       );
     })
     .map((entry) => entry.slice(0, entry.indexOf("=")));
