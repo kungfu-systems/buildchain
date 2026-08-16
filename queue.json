@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 303,
+  "generation": 304,
   "fencingCounter": 85,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:f1be1b8886dad510cac2e510d7725ca607710eee5415a16064cf96931b413b35",
@@ -98,8 +98,13 @@
     "issuedAt": "2026-08-16T04:53:19.496Z",
     "expiresAt": "2026-08-16T05:57:35.778Z",
     "fencingToken": "sha256:6c6bcb318bfdba7719e20531697daf659e038b6063e320689a0e6a99de737d40",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-16T04:57:35.778Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-16T04:57:35.778Z",
+    "nativeProofRoot": "sha256:36b9b84acdb2eefca2f8d12dbfc3880a90d6b7414ae47f02a83cfcd28d25ff83",
+    "nativeExecutionReceiptRoot": "sha256:a2b7a85ec46066da591e9f97a76835eea693864066780eb8117bae19e6f20e44",
+    "nativeProofReuseRoot": "sha256:52d5f569a439cfe89538c45543c864663e0223dd6701d0d92a1f2d22f93deac7",
+    "qualificationReceiptRoot": "sha256:5cc7df17e8ffde2b7d389d255e72515af052c8f1d350dec0a645d854d522833b",
+    "qualifiedAt": "2026-08-16T04:58:02.380Z"
   },
   "candidates": [
     {
@@ -3374,10 +3379,10 @@
       "sourceWorkflowRunId": 31926984668,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-16T04:53:15.535Z",
-      "updatedAt": "2026-08-16T04:57:35.778Z",
+      "updatedAt": "2026-08-16T04:58:02.380Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "actions/promote-buildchain-ref/dist/index.js",
@@ -3436,6 +3441,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-16T04:57:35.778Z",
-  "stateRoot": "sha256:8aefbc3d28110b5c712608d9d6cc72ccb047e4495699e9399e4223f9fd7ae51d"
+  "updatedAt": "2026-08-16T04:58:02.380Z",
+  "stateRoot": "sha256:db3e319584b45057bf9e3b1af20f6b1b4cbac1968b679e188afa8bab85266e0e"
 }
