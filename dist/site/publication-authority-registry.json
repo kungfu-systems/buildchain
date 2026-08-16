@@ -1152,9 +1152,7 @@
     },
     {
       "path": ".github/workflows/release-tail.yml",
-      "signals": [
-        "write-permission"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1182,7 +1180,22 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/v4-adopter-delivery-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/v4-adopter-delivery.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/v4-public-consumer-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
       "signals": [],
       "classified": false
     },
@@ -1202,5 +1215,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "95e7d88ca3d3492b7852d715c24d3f4f2cec59f3c3fbb8665aa781d15afd6b63"
+  "registryDigest": "2a7f4639a659489a0ef229983fff39d1c7880fb464411761f9debcbbd93bd336"
 }

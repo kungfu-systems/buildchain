@@ -236,6 +236,16 @@ export function normalizeBuildchainConfig(config) {
   if (normalized.publication !== undefined) {
     normalized.publication = normalizePublicationSection(normalized.publication);
   }
+  if (normalized.publication_rehearsal !== undefined) {
+    normalized.publication_rehearsal = normalizePublicationRehearsalSection(
+      normalized.publication_rehearsal,
+    );
+  }
+  if (normalized.adopter_delivery !== undefined) {
+    normalized.adopter_delivery = normalizeAdopterDeliverySection(
+      normalized.adopter_delivery,
+    );
+  }
   if (normalized.consumers !== undefined) {
     normalized.consumers = normalizeConsumersSection(normalized.consumers);
   }
@@ -698,6 +708,80 @@ function normalizePublicationSection(publication) {
       : posixPath(assertString(publication.source_bundle_path, "publication.source_bundle_path")),
     archive: normalizePublicationArchive(publication.archive),
   };
+}
+
+function normalizePublicationRehearsalSection(rehearsal) {
+  assertPlainObject(rehearsal, "publication_rehearsal");
+  const allowed = ["contract", "capsule_path", "candidate_root", "state_path", "evidence_path", "effect_default"];
+  const unknown = Object.keys(rehearsal).filter((key) => !allowed.includes(key));
+  if (unknown.length > 0) {
+    throw new Error(`publication_rehearsal contains unsupported fields: ${unknown.join(", ")}`);
+  }
+  const normalized = {
+    contract: assertString(rehearsal.contract, "publication_rehearsal.contract"),
+    capsulePath: posixPath(assertString(rehearsal.capsule_path, "publication_rehearsal.capsule_path")),
+    candidateRoot: posixPath(assertString(rehearsal.candidate_root, "publication_rehearsal.candidate_root")),
+    statePath: posixPath(assertString(rehearsal.state_path, "publication_rehearsal.state_path")),
+    evidencePath: posixPath(assertString(rehearsal.evidence_path, "publication_rehearsal.evidence_path")),
+    effectDefault: assertString(rehearsal.effect_default, "publication_rehearsal.effect_default"),
+  };
+  if (
+    normalized.contract !== "buildchain-v4-publication-rehearsal-capsule/v1" ||
+    normalized.effectDefault !== "disabled"
+  ) {
+    throw new Error("publication_rehearsal must use the v4 capsule contract with effect_default = disabled");
+  }
+  for (const [key, value] of Object.entries({
+    capsule_path: normalized.capsulePath,
+    candidate_root: normalized.candidateRoot,
+    state_path: normalized.statePath,
+    evidence_path: normalized.evidencePath,
+  })) {
+    if (value.startsWith("/") || value.includes("\\") || value.split("/").includes("..")) {
+      throw new Error(`publication_rehearsal.${key} must be repository-relative`);
+    }
+  }
+  return normalized;
+}
+
+function normalizeAdopterDeliverySection(delivery) {
+  assertPlainObject(delivery, "adopter_delivery");
+  const allowed = ["contract", "input_path", "readback_path", "bootstrap_path", "archive_path", "result_path", "driver_selector", "artifact_profile_selector"];
+  const unknown = Object.keys(delivery).filter((key) => !allowed.includes(key));
+  if (unknown.length > 0) {
+    throw new Error(`adopter_delivery contains unsupported fields: ${unknown.join(", ")}`);
+  }
+  const normalized = {
+    contract: assertString(delivery.contract, "adopter_delivery.contract"),
+    inputPath: posixPath(assertString(delivery.input_path, "adopter_delivery.input_path")),
+    readbackPath: posixPath(assertString(delivery.readback_path, "adopter_delivery.readback_path")),
+    bootstrapPath: posixPath(assertString(delivery.bootstrap_path, "adopter_delivery.bootstrap_path")),
+    archivePath: posixPath(assertString(delivery.archive_path, "adopter_delivery.archive_path")),
+    resultPath: posixPath(assertString(delivery.result_path, "adopter_delivery.result_path")),
+    driverSelector: assertString(delivery.driver_selector, "adopter_delivery.driver_selector"),
+    artifactProfileSelector: assertString(delivery.artifact_profile_selector, "adopter_delivery.artifact_profile_selector"),
+  };
+  if (normalized.contract !== "kungfu-buildchain-v4-adopter-delivery/v1") {
+    throw new Error("adopter_delivery contract is unsupported");
+  }
+  if (
+    !["json-assertion", "kfd-category", "legacy-kfd"].includes(normalized.driverSelector) ||
+    !["git-commit", "package"].includes(normalized.artifactProfileSelector)
+  ) {
+    throw new Error("adopter_delivery selector is unsupported");
+  }
+  for (const [key, value] of Object.entries({
+    input_path: normalized.inputPath,
+    readback_path: normalized.readbackPath,
+    bootstrap_path: normalized.bootstrapPath,
+    archive_path: normalized.archivePath,
+    result_path: normalized.resultPath,
+  })) {
+    if (value.startsWith("/") || value.includes("\\") || value.split("/").includes("..")) {
+      throw new Error(`adopter_delivery.${key} must be repository-relative`);
+    }
+  }
+  return normalized;
 }
 
 function normalizePublicationArchive(archive = undefined) {

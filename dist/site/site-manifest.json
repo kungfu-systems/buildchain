@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fd63caf537bdc0dc2a220688dcb89534f6f84f6223e8c45f399a7d1bb8f8faf8"
+      "digest": "sha256:a04d321dbec562807cb29b748039839d097a97d2c9d2f0e76d6d22f2845055ba"
     },
     {
       "id": "getting-started",
@@ -237,7 +237,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fad47682ed909f7b16f58bb8c24c51a943eb704a0a50ab6e033d745ee16a809a"
+      "digest": "sha256:60208f0862195df44b27ada15e474ff1808dee6d492cd6303402b92fd72f06bc"
     },
     {
       "id": "cli-reference",
@@ -245,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:157d6259dd8f884833f7065f52bff0d482878eca72623dcc607e4204692e4970"
+      "digest": "sha256:ec16f350596692989cf5eade945e7bbeee157a661c6d8faa55c8249b14ef5632"
     },
     {
       "id": "node-api-reference",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:34a2feafe2f6183afbc0a72fa6362d39db6968c2bac187a1a1dd376d7ca50e50"
+      "digest": "sha256:0732a6888896f492f6543c4c9b32a1aef58f0fe691977b961745e151178188e5"
     },
     {
       "id": "build-facts",
@@ -296,6 +296,14 @@
       "digest": "sha256:fc2649d0ae4dc6a08275bc1f2509efd3e9730227eaa8157ef64daf4b9c850264"
     },
     {
+      "id": "v4-adopter-delivery",
+      "title": "V4 public adopter delivery",
+      "path": "docs/v4-adopter-delivery.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:c74a004657f64d29ba2a47f599223e5ab132daf2881cf0564c85c04b22a69e6e"
+    },
+    {
       "id": "publish-transaction",
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
@@ -317,7 +325,7 @@
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:80b39ba4f0a8ed723e2a03e7efff0fee1e891245f7d1bf343edc75011aded801"
+      "digest": "sha256:72dd8231f51003c8a0d6532991b908b39de02deb11300e8c63113cd3a9e5cd8e"
     },
     {
       "id": "release-governance",

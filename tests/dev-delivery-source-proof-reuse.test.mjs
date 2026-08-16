@@ -214,6 +214,56 @@ test("source proof reuse accepts GitHub's exact linear merge-group replay", () =
   }
 });
 
+test("source proof reuse accepts an exact linear replay after the protected base advances", () => {
+  const value = fixture();
+  try {
+    const sourceCommits = git(
+      value.cwd,
+      "rev-list",
+      "--reverse",
+      `${value.base}..${value.head}`,
+    ).split(/\s+/u);
+    git(value.cwd, "checkout", "-q", "--detach", value.base);
+    write(value.cwd, "docs/unrelated.md", "protected base advance\n");
+    git(value.cwd, "add", "docs/unrelated.md");
+    git(value.cwd, "commit", "-qm", "unrelated protected base advance");
+    const currentBase = git(value.cwd, "rev-parse", "HEAD");
+    git(value.cwd, "cherry-pick", ...sourceCommits);
+    const replayedHead = git(value.cwd, "rev-parse", "HEAD");
+    const replayedTree = git(value.cwd, "rev-parse", `${replayedHead}^{tree}`);
+
+    const decision = verifySourceQualificationReuse({
+      ...value.common,
+      currentBase,
+      mergeGroupHead: replayedHead,
+      mergeGroupTree: replayedTree,
+    });
+    assert.equal(decision.reusable, true);
+    assert.equal(decision.qualifiedBase, value.base);
+    assert.equal(decision.currentBase, currentBase);
+    assert.equal(decision.mergeGroupCompositionMode, "linear-replay");
+    assert.equal(decision.mergeGroupReplayPatchRoots.length, 2);
+
+    write(value.cwd, "src/extra.mjs", "export const extra = false;\n");
+    git(value.cwd, "add", "src/extra.mjs");
+    git(value.cwd, "commit", "-qm", "tamper with replay result");
+    const tamperedHead = git(value.cwd, "rev-parse", "HEAD");
+    const tamperedDecision = verifySourceQualificationReuse({
+      ...value.common,
+      currentBase,
+      mergeGroupHead: tamperedHead,
+      mergeGroupTree: git(value.cwd, "rev-parse", `${tamperedHead}^{tree}`),
+    });
+    assert.equal(tamperedDecision.reusable, false);
+    assert.equal(
+      tamperedDecision.reason,
+      "merge-group-source-patch-mismatch",
+    );
+  } finally {
+    fs.rmSync(value.cwd, { recursive: true, force: true });
+  }
+});
+
 test("source proof reuse rejects an inexact merge-group composition", () => {
   const value = fixture();
   try {
@@ -261,7 +311,10 @@ test("source proof reuse fails closed for base, source, toolchain, policy, depen
   const value = fixture();
   try {
     const cases = [
-      [{ currentBase: "f".repeat(40) }, "qualifiedBase-mismatch"],
+      [
+        { currentBase: "f".repeat(40) },
+        "current-base-not-descendant-of-qualified-base",
+      ],
       [
         { sourceHead: value.base },
         "producer-controller-receipt-not-qualifying",

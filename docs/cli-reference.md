@@ -22,6 +22,63 @@ ai_provenance:
 
 Every listed help command is intercepted before dispatch, exits zero, and performs no command side effects.
 
+## `adopter-delivery`
+
+### `buildchain adopter-delivery`
+
+- Help: `buildchain adopter-delivery --help`
+- Canonical id: `adopter-delivery`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain adopter-delivery
+```
+
+### `buildchain adopter-delivery archive`
+
+- Help: `buildchain adopter-delivery archive --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery archive --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery bootstrap`
+
+- Help: `buildchain adopter-delivery bootstrap --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery run`
+
+- Help: `buildchain adopter-delivery run --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery run --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery verify`
+
+- Help: `buildchain adopter-delivery verify --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`, `--readback`
+- Syntax:
+
+```text
+buildchain adopter-delivery verify --input <json-or-path> --readback <json-or-path> [--output <path>]
+```
+
 ## `architecture`
 
 ### `buildchain architecture`
@@ -2244,6 +2301,17 @@ buildchain release-tail init --declaration <json-or-path> [--state <path>]
 
 ```text
 buildchain release-tail plan --declaration <json-or-path> [--output <path>]
+```
+
+### `buildchain release-tail rehearse`
+
+- Help: `buildchain release-tail rehearse --help`
+- Canonical id: `release-tail`
+- Options: `--candidate-root`, `--capsule`, `--evidence`, `--mode`, `--state`
+- Syntax:
+
+```text
+buildchain release-tail rehearse --capsule <absolute-path> --candidate-root <absolute-path> --mode <simulate|replay> --state <absolute-path> --evidence <absolute-path>
 ```
 
 ### `buildchain release-tail status`

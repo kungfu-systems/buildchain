@@ -274,6 +274,9 @@ async function main() {
   const releasePassportV4RuntimeResumeEvidenceJson = core.getInput(
     "release-passport-v4-runtime-resume-evidence-json",
   );
+  const releasePassportV4RuntimeResumeEvidenceCommand = core.getInput(
+    "release-passport-v4-runtime-resume-evidence-command",
+  );
   const releasePassportKfd1WitnessJsons = core.getInput("release-passport-kfd-1-witness-jsons");
   const releasePassportKfd2ClaimJsons = core.getInput("release-passport-kfd-2-claim-jsons");
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
@@ -389,6 +392,7 @@ async function main() {
     releasePassportV4ConsumerPolicyCertificationJson,
     releasePassportV4ConsumerPolicyCertificationRoot,
     releasePassportV4RuntimeResumeEvidenceJson,
+    releasePassportV4RuntimeResumeEvidenceCommand,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,

@@ -1033,6 +1033,14 @@ The command validates `package.json`, infers the exact release tag
 `npm publish --dry-run --access public --tag <alpha|latest>` unless
 `--skip-npm-publish-dry-run` is passed. It never performs a real publish.
 
+## V4 Adopter Delivery
+
+`buildchain adopter-delivery` exposes the public v4 driver gate, exact
+readback, N-1 bootstrap lineage, and published archive loader. `run` emits a
+rooted non-authoritative readback, `verify` recomputes it, `bootstrap` binds the
+exact v3 authority and v4 base, and `archive` verifies public npm archive bytes
+and package identity. See [`v4-adopter-delivery.md`](v4-adopter-delivery.md).
+
 ## npm Publish Gate
 
 Buildchain's own npm package is published from

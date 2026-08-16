@@ -8,6 +8,11 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain architecture qualify --authority-revision <git-revision>
                                       [--candidate-revision <git-revision>]
                                       [--cwd <dir>] [--json]
+  buildchain adopter-delivery run --input <json-or-path> [--output <path>]
+  buildchain adopter-delivery verify --input <json-or-path>
+                                      --readback <json-or-path> [--output <path>]
+  buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]
+  buildchain adopter-delivery archive --input <json-or-path> [--output <path>]
   buildchain portable-cache plan --manifest <file-or-json> [--output <file>]
                                  [--github-output <file>] [--json]
   buildchain portable-cache receipt --plan <file-or-json> [--matched-key <key>]
@@ -44,6 +49,11 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-tail init --declaration <json-or-path> [--state <path>]
   buildchain release-tail <status|verify> [--state <path>] [--output <path>]
   buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
+  buildchain release-tail rehearse --capsule <absolute-path>
+                                      --candidate-root <absolute-path>
+                                      --mode <simulate|replay>
+                                      --state <absolute-path>
+                                      --evidence <absolute-path>
   buildchain tail-reseal plan --request <request.json> [--output <plan.json>]
   buildchain tail-reseal admit --request <request.json> [--output <admission.json>]
   buildchain tail-reseal verify-platform --request <request.json> --platform <id>

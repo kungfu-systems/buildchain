@@ -111,6 +111,7 @@ import {
 } from "./internal/trust-release-cli.mjs";
 import { dispatchRegisteredCommand } from "./internal/command-registry.mjs";
 import { runCompatibilityFactsCli } from "./internal/compatibility-facts-cli.mjs";
+import { runAdopterDeliveryCli } from "./internal/adopter-delivery-cli.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -1675,7 +1676,7 @@ async function handleReleaseGovernanceCommand(args) {
 }
 
 async function handleReleaseTailCommand(args) {
-  runReleaseTailCli(args);
+  await runReleaseTailCli(args);
 }
 
 async function handleTailResealCommand(args) {
@@ -1750,6 +1751,10 @@ async function handleArchitectureCommand(args) {
   runScript("v4-architecture.mjs", args);
 }
 
+async function handleAdopterDeliveryCommand(args) {
+  await runAdopterDeliveryCli(args);
+}
+
 const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "help": handleHelpCommand,
   "version": handleVersionCommand,
@@ -1790,6 +1795,7 @@ const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "build-contract": handleBuildContractCommand,
   "publish-source": handlePublishSourceCommand,
   "architecture": handleArchitectureCommand,
+  "adopter-delivery": handleAdopterDeliveryCommand,
 });
 
 async function main(argv = process.argv.slice(2)) {

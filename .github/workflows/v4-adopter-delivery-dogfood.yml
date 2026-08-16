@@ -1,0 +1,17 @@
+name: V4 Adopter Delivery Dogfood
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dogfood:
+    uses: kungfu-systems/buildchain/.github/workflows/v4-adopter-delivery.yml@v4-alpha
+    with:
+      consumer: buildchain
+      node-version: "24"
+      input-path: contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json
+      bootstrap-path: contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json
+      archive-path: contracts/fixtures/v4-adopter-delivery-v1/archive-template.json

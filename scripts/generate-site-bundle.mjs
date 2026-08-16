@@ -54,6 +54,23 @@ const V4_COMPATIBILITY_FACTS_SCHEMA =
   "schemas/v4-compatibility-facts-v1.schema.json";
 const V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE =
   "contracts/v4-compatibility-facts-v1.schema.json";
+const V4_PUBLICATION_REHEARSAL_SCHEMA =
+  "schemas/v4-publication-rehearsal-capsule-v1.schema.json";
+const V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE =
+  "contracts/v4-publication-rehearsal-capsule-v1.schema.json";
+const V4_ADOPTER_DELIVERY_SCHEMA =
+  "schemas/v4-adopter-delivery-v1.schema.json";
+const V4_ADOPTER_DELIVERY_SCHEMA_SOURCE =
+  "contracts/v4-adopter-delivery-v1.schema.json";
+const RELEASE_TAIL_CAPABILITIES_SCHEMA =
+  "schemas/release-tail-capabilities-v1.schema.json";
+const RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE =
+  "contracts/release-tail-capabilities-v1.schema.json";
+const PUBLICATION_REHEARSAL_SITE_SCHEMAS = [
+  V4_PUBLICATION_REHEARSAL_SCHEMA,
+  V4_ADOPTER_DELIVERY_SCHEMA,
+  RELEASE_TAIL_CAPABILITIES_SCHEMA,
+];
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
 const requireFromHere = createRequire(import.meta.url);
@@ -84,6 +101,9 @@ function stableJson(value) {
 function siteFileBytes(name, value) {
   if (name === DEV_DELIVERY_AUTHORITY_SCHEMA) return readText(DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE);
   if (name === V4_COMPATIBILITY_FACTS_SCHEMA) return readText(V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE);
+  if (name === V4_PUBLICATION_REHEARSAL_SCHEMA) return readText(V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE);
+  if (name === V4_ADOPTER_DELIVERY_SCHEMA) return readText(V4_ADOPTER_DELIVERY_SCHEMA_SOURCE);
+  if (name === RELEASE_TAIL_CAPABILITIES_SCHEMA) return readText(RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE);
   return stableJson(value);
 }
 
@@ -396,6 +416,7 @@ const manualMetaById = new Map(Object.entries({
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
   "engineering-housekeeper": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer", "agent"], maturity: "preview", order: 145 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
+  "v4-adopter-delivery": { capabilityGroup: "reusable-build", audience: ["consumer", "developer", "agent"], maturity: "preview", order: 205 },
   "lifecycle-protocol": { capabilityGroup: "reusable-build", audience: ["consumer", "developer"], maturity: "stable", order: 210 },
   "runtime-train-validation": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer"], maturity: "stable", order: 220 },
   "kfd-support": { capabilityGroup: "kfd-trust", audience: ["agent", "maintainer"], maturity: "stable", order: 300 },
@@ -956,6 +977,7 @@ function buildSiteBundle() {
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
       "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "kfd-support.json",
       "artifact-evidence.json",
       "product-mechanism.json",
@@ -992,6 +1014,7 @@ function buildSiteBundle() {
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
       "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1124,6 +1147,7 @@ function buildSiteBundle() {
       "schemas/kfd-product-gate-input-v1.schema.json",
       "schemas/dev-delivery-authority-v2.schema.json",
       "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1303,6 +1327,12 @@ function buildSiteBundle() {
     ),
     [V4_COMPATIBILITY_FACTS_SCHEMA]: readJson(
       V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE,
+    ),
+    ...Object.fromEntries(
+      PUBLICATION_REHEARSAL_SITE_SCHEMAS.map((name) => [
+        name,
+        JSON.parse(siteFileBytes(name)),
+      ]),
     ),
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,

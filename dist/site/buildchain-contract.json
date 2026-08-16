@@ -1361,7 +1361,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:3ece8acdaf1586998a6afc7315115e732eed7b0ed98bfcefa347cd935bae2026",
+      "auditDigest": "sha256:6cf134f8bc0c0ab488cb159ef2bb9f7a94b454c4f7adee134ce7dee00d84c5d3",
       "compatibleBreakingDigests": [
         "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
       ],
@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:b7532257bb94b8cf5ed401a49caa14a7beda404efa201a89bee928b0fb52a7c9",
+      "auditDigest": "sha256:ef12d416d8478bb3b7fa4e4264bf0318cd742eeaac4e25c9691d098ffdc57dbf",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1888,7 +1888,7 @@
         "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers"
       ],
       "breakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
-      "auditDigest": "sha256:c84da8a7e2bf428288e24c7a105dd718a8cc2db1d08d9e8fd0fa374430653fa7",
+      "auditDigest": "sha256:3c34606573df2ff29c4bc9b959f0b842ca7653427139c4bf8d600f152d5fe1a4",
       "compatibleBreakingDigests": [
         "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874"
       ],
@@ -2012,7 +2012,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:8276788ccdcfb55fab5a0343ecf9474273e91c99fc5e1630e19ccf6b920cbd90"
+      "auditDigest": "sha256:cecdf98c16ecab89baf4089dbd3e0ddf690eb5d8bdb706f42f4a20a50d9c4afc"
     },
     {
       "contractVersion": 1,
@@ -2061,7 +2061,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:8276788ccdcfb55fab5a0343ecf9474273e91c99fc5e1630e19ccf6b920cbd90"
+      "auditDigest": "sha256:cecdf98c16ecab89baf4089dbd3e0ddf690eb5d8bdb706f42f4a20a50d9c4afc"
     },
     {
       "contractVersion": 1,
@@ -2121,7 +2121,7 @@
         "README badge block checks and writes are generated from machine-readable repository facts"
       ],
       "breakingDigest": "sha256:90a73892b2d6c214048448d5f45df75639bdf7b7e8fefd9c596e04b087407bcc",
-      "auditDigest": "sha256:9fde507760f431abcb6549c313566246a6aade0de2f0354afb0d6cfa320a17ac"
+      "auditDigest": "sha256:b3ca92bdcfc8415867ebfd504883ac05982ee9116056141e0bdf10b400fe4d9a"
     },
     {
       "contractVersion": 1,
@@ -2211,7 +2211,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:9100c7325aa64af980577a7780801491784c00014d492143e044cba2a4a958f8"
+      "auditDigest": "sha256:2aeb9ec26ef27957d7c4fcebc5ff18729aa60df68a24a43205ceac190d327547"
     },
     {
       "contractVersion": 1,
@@ -2233,7 +2233,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:626f5b9e4c642459a64cf15930b4ab0d52d9fbafa6bf7f6688532831d7da204d"
+      "auditDigest": "sha256:c71d41614a96fa54f73c678ef9b5cec0a650239a76dfc58cf51fe597d7254226"
     },
     {
       "contractVersion": 1,
@@ -2348,7 +2348,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d4bd0f2a1921bfed71a4d9104d45934555bde74a5c189f93ad79f37074c02b87",
-      "auditDigest": "sha256:d85f695dd506fba489dab99d7c37f3ebf6ac7efed32d887288286b9496108209"
+      "auditDigest": "sha256:10de885b75d3d3d952bbff10bd987d1f14cdb3278fcff33f4143b005e4b0b47a"
     },
     {
       "contractVersion": 1,
@@ -2908,7 +2908,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:3ece8acdaf1586998a6afc7315115e732eed7b0ed98bfcefa347cd935bae2026",
+      "auditDigest": "sha256:6cf134f8bc0c0ab488cb159ef2bb9f7a94b454c4f7adee134ce7dee00d84c5d3",
       "compatibleBreakingDigests": [
         "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
         "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
@@ -5082,7 +5082,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:b7532257bb94b8cf5ed401a49caa14a7beda404efa201a89bee928b0fb52a7c9"
+      "auditDigest": "sha256:ef12d416d8478bb3b7fa4e4264bf0318cd742eeaac4e25c9691d098ffdc57dbf"
     },
     {
       "contractVersion": 1,
@@ -5308,5 +5308,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:5de1c69386510b74b17eb70141b8bdd07063d62c504f91db5e84b67c6d4b64a2",
-  "contractDigest": "sha256:7915ddbcf204534e2862eca9de8cc940ff100aaf65e3bb2fb4d4e84a842cb994"
+  "contractDigest": "sha256:f01e03f8271a4c5818d4fb41c039bb35b8bb5e38228a3f19f6433b914b557316"
 }

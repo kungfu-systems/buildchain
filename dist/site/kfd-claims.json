@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "992ca2b4be3a3e80177648fee1f8c4e46a7859ad41bddf0ac54316f9d2c2752d",
+    "sha256": "75ef9be6122a43447d97003d7629062ec2f9a0d3725b14d0b859ed7332d23455",
     "summary": {
-      "cliCommandCount": 116,
-      "workflowCount": 72,
+      "cliCommandCount": 117,
+      "workflowCount": 75,
       "actionCount": 7,
-      "sitePageCount": 80,
-      "docCommandRefCount": 1025,
+      "sitePageCount": 82,
+      "docCommandRefCount": 1049,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "992ca2b4be3a3e80177648fee1f8c4e46a7859ad41bddf0ac54316f9d2c2752d",
+      "sha256": "75ef9be6122a43447d97003d7629062ec2f9a0d3725b14d0b859ed7332d23455",
       "summary": {
-        "cliCommandCount": 116,
-        "workflowCount": 72,
+        "cliCommandCount": 117,
+        "workflowCount": 75,
         "actionCount": 7,
-        "sitePageCount": 80,
-        "docCommandRefCount": 1025,
+        "sitePageCount": 82,
+        "docCommandRefCount": 1049,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -823,6 +823,18 @@
           "participantFacing": true,
           "public": true,
           "plane": "use"
+        },
+        {
+          "id": "doc:docs/v4-adopter-delivery.md",
+          "name": "V4 public adopter delivery",
+          "kind": "documentation",
+          "sourcePath": "docs/v4-adopter-delivery.md",
+          "evidencePath": "docs/v4-adopter-delivery.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "verify"
         },
         {
           "id": "doc:docs/v4-compatibility-facts.md",
@@ -1641,6 +1653,138 @@
           "packageExport": "./v4-tail-reseal-receipt"
         },
         {
+          "id": "export:./v4-publication-rehearsal",
+          "name": "@kungfu-tech/buildchain/v4-publication-rehearsal",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-publication-rehearsal.js",
+          "evidencePath": "packages/core/v4-publication-rehearsal.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-publication-rehearsal"
+        },
+        {
+          "id": "export:./adopter-delivery-gate",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-gate",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-gate.js",
+          "evidencePath": "packages/core/adopter-delivery-gate.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-gate"
+        },
+        {
+          "id": "export:./kfd-adopter-category-driver",
+          "name": "@kungfu-tech/buildchain/kfd-adopter-category-driver",
+          "kind": "package-export",
+          "sourcePath": "packages/core/kfd-adopter-category-driver.js",
+          "evidencePath": "packages/core/kfd-adopter-category-driver.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./kfd-adopter-category-driver"
+        },
+        {
+          "id": "export:./buildchain-delivery-infrastructure",
+          "name": "@kungfu-tech/buildchain/buildchain-delivery-infrastructure",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-delivery-infrastructure.js",
+          "evidencePath": "packages/core/buildchain-delivery-infrastructure.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-delivery-infrastructure"
+        },
+        {
+          "id": "export:./buildchain-delivery-bootstrap",
+          "name": "@kungfu-tech/buildchain/buildchain-delivery-bootstrap",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-delivery-bootstrap.js",
+          "evidencePath": "packages/core/buildchain-delivery-bootstrap.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-delivery-bootstrap"
+        },
+        {
+          "id": "export:./buildchain-delivery-self-dogfood",
+          "name": "@kungfu-tech/buildchain/buildchain-delivery-self-dogfood",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-delivery-self-dogfood.js",
+          "evidencePath": "packages/core/buildchain-delivery-self-dogfood.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./buildchain-delivery-self-dogfood"
+        },
+        {
+          "id": "export:./published-delivery-authority",
+          "name": "@kungfu-tech/buildchain/published-delivery-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/published-delivery-authority.js",
+          "evidencePath": "packages/core/published-delivery-authority.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./published-delivery-authority"
+        },
+        {
+          "id": "export:./legacy-kfd-adopter-driver",
+          "name": "@kungfu-tech/buildchain/legacy-kfd-adopter-driver",
+          "kind": "package-export",
+          "sourcePath": "packages/core/legacy-kfd-adopter-driver.js",
+          "evidencePath": "packages/core/legacy-kfd-adopter-driver.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./legacy-kfd-adopter-driver"
+        },
+        {
+          "id": "export:./adopter-delivery-passport",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-passport",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-passport.js",
+          "evidencePath": "packages/core/adopter-delivery-passport.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-passport"
+        },
+        {
+          "id": "export:./adopter-delivery-vectors",
+          "name": "@kungfu-tech/buildchain/adopter-delivery-vectors",
+          "kind": "package-export",
+          "sourcePath": "packages/core/adopter-delivery-vectors.js",
+          "evidencePath": "packages/core/adopter-delivery-vectors.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./adopter-delivery-vectors"
+        },
+        {
+          "id": "export:./v4-adopter-delivery",
+          "name": "@kungfu-tech/buildchain/v4-adopter-delivery",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-adopter-delivery.js",
+          "evidencePath": "packages/core/v4-adopter-delivery.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-adopter-delivery"
+        },
+        {
           "id": "export:./logging",
           "name": "@kungfu-tech/buildchain/logging",
           "kind": "package-export",
@@ -2224,6 +2368,18 @@
         }
       ],
       "reverseEnumeratedSurfaces": [
+        {
+          "id": "cli:adopter-delivery",
+          "name": "buildchain adopter-delivery run --input <json-or-path> [--output <path>]",
+          "kind": "cli-command",
+          "sourcePath": "bin/buildchain.mjs",
+          "evidencePath": "bin/buildchain.mjs",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "bin/buildchain.mjs"
+        },
         {
           "id": "cli:architecture",
           "name": "buildchain architecture validate [--cwd <dir>] [--json]",
@@ -5494,12 +5650,17 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 10,
           "inputs": [
             "buildchain-ref",
+            "candidate-root",
             "declaration-path",
             "execute",
             "provider-bindings-path",
+            "rehearsal-authority-path",
+            "rehearsal-capsule-path",
+            "rehearsal-evidence-path",
+            "rehearsal-mode",
             "state-path"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -5578,11 +5739,59 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:v4-adopter-delivery-dogfood",
+          "name": "workflow:v4-adopter-delivery-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-adopter-delivery-dogfood.yml",
+          "evidencePath": ".github/workflows/v4-adopter-delivery-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:v4-adopter-delivery",
+          "name": "workflow:v4-adopter-delivery",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-adopter-delivery.yml",
+          "evidencePath": ".github/workflows/v4-adopter-delivery.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 5,
+          "inputs": [
+            "archive-path",
+            "bootstrap-path",
+            "consumer",
+            "input-path",
+            "node-version"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:v4-public-consumer-dogfood",
           "name": "workflow:v4-public-consumer-dogfood",
           "kind": "workflow",
           "sourcePath": ".github/workflows/v4-public-consumer-dogfood.yml",
           "evidencePath": ".github/workflows/v4-public-consumer-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:v4-publication-rehearsal-dogfood",
+          "name": "workflow:v4-publication-rehearsal-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
+          "evidencePath": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -5719,7 +5928,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 83,
+          "inputCount": 84,
           "inputs": [
             "allow-repository",
             "branch-protection-bypass-apps",
@@ -5791,6 +6000,7 @@
             "release-passport-promotion-routing-json",
             "release-passport-v4-consumer-policy-certification-json",
             "release-passport-v4-consumer-policy-certification-root",
+            "release-passport-v4-runtime-resume-evidence-command",
             "release-passport-v4-runtime-resume-evidence-json",
             "release-tail-state-path",
             "require-governance",
@@ -5817,13 +6027,18 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 6,
+          "inputCount": 11,
           "inputs": [
+            "candidate-root",
             "declaration",
             "execute",
             "github-token",
             "http-token",
             "provider-bindings",
+            "rehearsal-authority",
+            "rehearsal-capsule",
+            "rehearsal-evidence-path",
+            "rehearsal-mode",
             "state-path"
           ],
           "reverseAuditSource": "actions/*/action.yml"
@@ -6770,6 +6985,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-adopter-delivery",
+          "name": "site-page:manual:v4-adopter-delivery",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-canonical-contracts",
           "name": "site-page:manual:v4-canonical-contracts",
           "kind": "site-page",
@@ -6820,6 +7047,18 @@
         {
           "id": "site-page:manual:v4-production-release",
           "name": "site-page:manual:v4-production-release",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:manual:v4-publication-rehearsal",
+          "name": "site-page:manual:v4-publication-rehearsal",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -7072,6 +7311,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 452
+    "publicSurfaceCount": 470
   }
 }
