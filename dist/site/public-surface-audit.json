@@ -8698,7 +8698,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "2123dc563b356bfd8157065cd88c189e217dc61b30b9d9a974e0d1709e806429",
-    "workflowRegistryDigest": "e303571373d89b26fc873cbff81381228b5b2ac52acc8ba29788f7602f56ce75",
+    "workflowRegistryDigest": "9119cbb227ce3f666387894422f1ccf654c43b45f9d149735c707ee8c4e4d927",
     "pageRegistryDigest": "4610f859d2d6891a3e2493304f8015028ee11aac93f704662ab04e2e107a62cb"
   },
   "comparison": {
