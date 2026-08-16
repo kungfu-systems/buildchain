@@ -644,10 +644,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.match(workflow, /promote-stable:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4/);
-  assert.doesNotMatch(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/);
+  assert.doesNotMatch(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): prepare v'\)/);
@@ -708,7 +708,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
   assert.match(
     workflow,
-    /promote-alpha:[\s\S]*github\.event_name == 'workflow_dispatch'[\s\S]*startsWith\(inputs\['target-ref'\], 'alpha\/'\)[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0/,
+    /promote-alpha:[\s\S]*github\.event_name == 'workflow_dispatch'[\s\S]*startsWith\(inputs\['target-ref'\], 'alpha\/'\)[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
   );
   assert.match(
     workflow,
@@ -1793,7 +1793,7 @@ test("Buildchain self-dogfoods the current major through floating public promoti
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
   );
   assert.match(promotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| 'v4-alpha' \}\}/);
   assert.doesNotMatch(promotion, /buildchain-ref: [0-9a-f]{40}/);
