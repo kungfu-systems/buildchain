@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 591,
+  "generation": 592,
   "fencingCounter": 112,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:62a997eff46bf5b0fcbef0ef340af51e35ec5b18fc210d6fcd95c2db7b38a3e1",
@@ -49,8 +49,13 @@
     "issuedAt": "2026-08-17T09:57:48.375Z",
     "expiresAt": "2026-08-17T11:02:04.483Z",
     "fencingToken": "sha256:fa7c102dcf464ecaaa6048066cd6e71e15288bab8f73b419c0db979f6e2a7469",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-17T10:02:04.483Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-17T10:02:04.483Z",
+    "nativeProofRoot": "sha256:6999c15f71f1e029442eee7cb72c0881238dc8370f22c16a6844a940665865b6",
+    "nativeExecutionReceiptRoot": "sha256:07f9a86737d0cd16b6480db41712fc26c97fc766ea6050bc6d28f4d83ca7b284",
+    "nativeProofReuseRoot": "sha256:9d42b2e2a9ff8281f8286a64c6ae879c66b7a6fe13d2a8ba08e6e406022be95e",
+    "qualificationReceiptRoot": "sha256:7d8139ada3fee4972ebe7afebb4c65b4feffc6f7f434057edd835ce5d17c091b",
+    "qualifiedAt": "2026-08-17T10:02:26.769Z"
   },
   "candidates": [
     {
@@ -5021,10 +5026,10 @@
       "sourceWorkflowRunId": 32017128323,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-17T09:57:45.055Z",
-      "updatedAt": "2026-08-17T10:02:04.483Z",
+      "updatedAt": "2026-08-17T10:02:26.769Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/buildchain-ref-promotion-recovery.yml",
@@ -5034,6 +5039,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-17T10:02:04.483Z",
-  "stateRoot": "sha256:eadac16fbc967bdb1c57c081dc338b1c8ff339aa6965511183c05be540f269a6"
+  "updatedAt": "2026-08-17T10:02:26.769Z",
+  "stateRoot": "sha256:efcc3a355f23a80a65a6b44716489bc62fd8af2b1e59c23510f35c2c0d890002"
 }
