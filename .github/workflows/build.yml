@@ -38,16 +38,6 @@ on:
         default: "major-compatible"
         type: string
         required: false
-      buildchain-contract-expected-channel:
-        description: "Stable or alpha channel identity for an immutable workflow-shell SHA."
-        default: ""
-        type: string
-        required: false
-      buildchain-contract-expected-major:
-        description: "Buildchain major identity for an immutable workflow-shell SHA."
-        default: ""
-        type: string
-        required: false
       buildchain-contract-drift-issue-mode:
         description: "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking"
         default: "compatible-and-breaking"
@@ -780,8 +770,6 @@ jobs:
       buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
       buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
-      buildchain-contract-expected-channel: ${{ inputs.buildchain-contract-expected-channel }}
-      buildchain-contract-expected-major: ${{ inputs.buildchain-contract-expected-major }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
@@ -883,8 +871,6 @@ jobs:
       buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
       buildchain-contract-lock-path: ${{ needs.resolve-channel.outputs.contract-lock-path }}
       buildchain-contract-compatibility-policy: ${{ inputs.buildchain-contract-compatibility-policy }}
-      buildchain-contract-expected-channel: ${{ inputs.buildchain-contract-expected-channel }}
-      buildchain-contract-expected-major: ${{ inputs.buildchain-contract-expected-major }}
       buildchain-contract-drift-issue-mode: ${{ inputs.buildchain-contract-drift-issue-mode }}
       working-directory: ${{ inputs.working-directory }}
       runner-preset: ${{ inputs.runner-preset }}
