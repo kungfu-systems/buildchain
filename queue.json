@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 543,
+  "generation": 544,
   "fencingCounter": 108,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:60a746815634150c9744a24d6573095b43ba125d164c3c4f83b07a52eb0b80a4",
@@ -80,8 +80,13 @@
     "issuedAt": "2026-08-17T06:18:02.995Z",
     "expiresAt": "2026-08-17T07:21:15.479Z",
     "fencingToken": "sha256:713c6d939a9b7d8a186b6cd4aa60feab653da2202cbd91f51bd3e083a1ee2bd9",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-17T06:21:15.479Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-17T06:21:15.479Z",
+    "nativeProofRoot": "sha256:550468974d806344297acc2963855f060ee8bf3efeb3699a3aeb244167205540",
+    "nativeExecutionReceiptRoot": "sha256:8c6295cd06124fff2bfe7b5881144f8e4ea324d7b17836c2dd6217691a988fb4",
+    "nativeProofReuseRoot": "sha256:fc42a26e9d9588086b247b11e704d145124b0f434063532211990d59495bd481",
+    "qualificationReceiptRoot": "sha256:f389f266c198f1e33556773a78fc01a5df92620e7c45ae1e152509256f2a7200",
+    "qualifiedAt": "2026-08-17T06:21:39.133Z"
   },
   "candidates": [
     {
@@ -4828,10 +4833,10 @@
       "sourceWorkflowRunId": 31999925062,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-17T06:18:00.521Z",
-      "updatedAt": "2026-08-17T06:21:15.479Z",
+      "updatedAt": "2026-08-17T06:21:39.133Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/.release-candidate-promote.yml",
@@ -4872,6 +4877,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-17T06:21:15.479Z",
-  "stateRoot": "sha256:fc3eca83295f345cd45393bca4f4e18dee9aca0b062b011a11645d1c2a1d02f8"
+  "updatedAt": "2026-08-17T06:21:39.133Z",
+  "stateRoot": "sha256:6b88855acee159d13a8034ed84f65ac8cbb09f6feec305ba772399e5e210cb2e"
 }
