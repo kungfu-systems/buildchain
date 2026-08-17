@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "95fc04d3d57cf7b098b9968f53ecda4e41c1451fd3dd6bd0dff84ae49f5dc5e4",
+    "sha256": "12ac35f16c3b1f1029af99382c74ab23fc0e7a20184392a0eff92b54b877afc8",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "95fc04d3d57cf7b098b9968f53ecda4e41c1451fd3dd6bd0dff84ae49f5dc5e4",
+      "sha256": "12ac35f16c3b1f1029af99382c74ab23fc0e7a20184392a0eff92b54b877afc8",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -3742,7 +3742,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 86,
+          "inputCount": 88,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3764,6 +3764,8 @@
             "build-command",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
+            "buildchain-contract-expected-channel",
+            "buildchain-contract-expected-major",
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
@@ -4505,7 +4507,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 89,
+          "inputCount": 91,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -4529,6 +4531,8 @@
             "buildchain-channel",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
+            "buildchain-contract-expected-channel",
+            "buildchain-contract-expected-major",
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
