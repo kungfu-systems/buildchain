@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 791,
+  "generation": 792,
   "fencingCounter": 170,
   "policy": {
     "agingSeconds": 900,
@@ -58,7 +58,7 @@
     "phase": "provisional",
     "expectedOldStateRoot": "sha256:9e599a476314ac76bffe8b2e152b2add09c3b23f6f289db0a006a389c2c7a45a",
     "issuedAt": "2026-08-17T03:57:47.449Z",
-    "expiresAt": "2026-08-17T04:57:47.449Z",
+    "expiresAt": "2026-08-17T04:58:03.633Z",
     "fencingToken": "sha256:988a64c5b33009e86465e74d1374f0fe10eedb999180549e534f74102fc7fd66",
     "nextAction": "Run or reuse the exact semantic native proof, then atomically qualify this fenced Warrant."
   },
@@ -6437,10 +6437,10 @@
       "sourceWorkflowRunId": 31992812006,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-17T03:57:43.843Z",
-      "updatedAt": "2026-08-17T03:57:47.449Z",
+      "updatedAt": "2026-08-17T03:58:03.633Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
+      "status": "proving",
       "terminal": null,
       "affectedPaths": [
         "architecture/ci-lane-change-budget.json",
@@ -6468,6 +6468,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-17T03:57:47.449Z",
-  "stateRoot": "sha256:1db5179297f1a2fc285cb6163ff51252b69b4da9c8c227f155ee5e13caa82d48"
+  "updatedAt": "2026-08-17T03:58:03.633Z",
+  "stateRoot": "sha256:8b4c4c525941d9a48a1461de381d193790c95ba17612af8096e54d8dd81d7827"
 }
