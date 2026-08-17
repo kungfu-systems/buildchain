@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 528,
+  "generation": 529,
   "fencingCounter": 106,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:3053d375de07d77c65db1c76876d0bb8c74b4592178d2bb9d96bc9afbd518565",
@@ -69,8 +69,13 @@
     "issuedAt": "2026-08-17T04:56:22.615Z",
     "expiresAt": "2026-08-17T05:57:11.607Z",
     "fencingToken": "sha256:0fa21f53cfc99a17531d969654ec756ff557145df5a2e23151bcf2e1f13a45d5",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-17T04:57:11.607Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-17T04:57:11.607Z",
+    "nativeProofRoot": "sha256:5c6eb41583cf9fa7325032ea088d555d5e9b4997aeb7202de3c1807316c418bc",
+    "nativeExecutionReceiptRoot": "sha256:dcc1daf4fe0cf64a0117040946f0be62e885e759dd190a4e30f0e8aaeec3c9ee",
+    "nativeProofReuseRoot": "sha256:71199e05f75ffeb56cd6866c93c5c5dafac5a251109734073ae53560507a701b",
+    "qualificationReceiptRoot": "sha256:19b9ff878ddcc457882f9aaa6751374b1eb3671ad050531cea3fe493d873c6f9",
+    "qualifiedAt": "2026-08-17T04:57:31.675Z"
   },
   "candidates": [
     {
@@ -4670,10 +4675,10 @@
       "sourceWorkflowRunId": 31994646897,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-17T04:56:19.566Z",
-      "updatedAt": "2026-08-17T04:57:11.607Z",
+      "updatedAt": "2026-08-17T04:57:31.675Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "architecture/ci-lane-change-budget.json",
@@ -4703,6 +4708,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-17T04:57:11.607Z",
-  "stateRoot": "sha256:b32b637b245ebdda79511d9eee16ce317615ebdfe81cf8556a9ca3d487dc941c"
+  "updatedAt": "2026-08-17T04:57:31.675Z",
+  "stateRoot": "sha256:88d7400bc0e7e051bcb6a09a9bdb0a4da2f1901d331f66e6bdf95e5dc042e8b9"
 }
