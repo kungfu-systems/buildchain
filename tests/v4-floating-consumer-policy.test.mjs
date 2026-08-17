@@ -484,10 +484,20 @@ test("v4 release candidate passports require and hash the source/runtime-bound r
     },
   });
   assert.equal(sourceLocked.source.headSha, "9".repeat(40));
-  assert.equal(sourceLocked.consumerPolicy.receipt.caller.sourceSha, SOURCE_SHA);
-  assert.equal(validateReleaseCandidatePassport({ passport: sourceLocked }).ok, true);
+  assert.equal(
+    sourceLocked.consumerPolicy.receipt.caller.sourceSha,
+    SOURCE_SHA,
+  );
+  assert.equal(
+    validateReleaseCandidatePassport({ passport: sourceLocked }).ok,
+    true,
+  );
   assert.throws(
-    () => createReleaseCandidatePassport({ ...input, sourceHeadSha: "9".repeat(40) }),
+    () =>
+      createReleaseCandidatePassport({
+        ...input,
+        sourceHeadSha: "9".repeat(40),
+      }),
     /caller-source-mismatch/u,
   );
   passport.consumerPolicy.receipt.invocation.resolvedRuntimeSha = "f".repeat(
