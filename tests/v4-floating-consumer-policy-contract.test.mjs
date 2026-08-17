@@ -123,6 +123,15 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/router/u,
   );
+  assert.match(workflow, /resume-buildchain-runtime-ref:/u);
+  assert.match(
+    workflow,
+    /--buildchain-ref "\$\{\{ inputs\['resume-buildchain-runtime-ref'\] \}\}"/u,
+  );
+  assert.match(
+    workflow,
+    /run: test "\$\{\{ steps\.identities\.outputs\.runtime-sha \}\}" = "\$\{\{ inputs\['resume-buildchain-runtime-sha'\] \}\}"/u,
+  );
 });
 
 test("v4 floating policy contract rejects certification without caller lock readback", () => {

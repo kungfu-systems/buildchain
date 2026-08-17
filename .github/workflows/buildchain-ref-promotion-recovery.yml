@@ -32,8 +32,11 @@ on:
       resume-expected-candidate-runtime-sha:
         description: "Exact Buildchain runtime SHA recorded by the candidate"
         required: true
+      resume-buildchain-runtime-ref:
+        description: "Approved v4 channel, train, or authority ref containing the fresh recovery runtime"
+        required: true
       resume-buildchain-runtime-sha:
-        description: "Exact fresh Buildchain runtime SHA used for recovery"
+        description: "Exact commit resolved from the fresh recovery runtime ref"
         required: true
       resume-transaction-id:
         description: "Exact durable publication transaction identity"
@@ -72,6 +75,7 @@ jobs:
           CANDIDATE_RUN_ID: ${{ inputs['resume-candidate-run-id'] }}
           CANDIDATE_TREE: ${{ inputs['resume-expected-source-tree'] }}
           CANDIDATE_RUNTIME_SHA: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
+          RECOVERY_RUNTIME_REF: ${{ inputs['resume-buildchain-runtime-ref'] }}
           RECOVERY_RUNTIME_SHA: ${{ inputs['resume-buildchain-runtime-sha'] }}
           TRANSACTION_ID: ${{ inputs['resume-transaction-id'] }}
           RESUME_EVIDENCE_JSON: ${{ inputs['release-passport-v4-runtime-resume-evidence-json'] }}
@@ -82,6 +86,7 @@ jobs:
           [[ "${CANDIDATE_RUN_ID}" =~ ^[0-9]+$ ]] || { echo "::error::candidate run ID must be exact"; exit 1; }
           [[ "${CANDIDATE_TREE}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate tree must be exact"; exit 1; }
           [[ "${CANDIDATE_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate runtime must be exact"; exit 1; }
+          [[ -n "${RECOVERY_RUNTIME_REF}" ]] || { echo "::error::recovery runtime ref is required"; exit 1; }
           [[ "${RECOVERY_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::recovery runtime must be exact"; exit 1; }
           [[ -n "${TRANSACTION_ID}" ]] || { echo "::error::transaction identity is required"; exit 1; }
           [[ -n "${RESUME_EVIDENCE_JSON}" ]] || { echo "::error::runtime A+B evidence is required"; exit 1; }
@@ -108,19 +113,11 @@ jobs:
           node .buildchain/router/scripts/promotion-channel-router.mjs
           --cwd .buildchain/router
           --channel alpha
-          --buildchain-ref "${{ inputs['resume-buildchain-runtime-sha'] }}"
+          --buildchain-ref "${{ inputs['resume-buildchain-runtime-ref'] }}"
           --publication-channel alpha
           --target-ref "${{ inputs['target-ref'] }}"
-          --router-ref "${{ inputs['resume-buildchain-runtime-sha'] }}"
+          --router-ref "${{ inputs['resume-buildchain-runtime-ref'] }}"
           --router-sha "${{ inputs['resume-buildchain-runtime-sha'] }}"
-
-      - name: Authorize trusted recovery runtime
-        if: ${{ steps.route.outputs.override-used == 'true' }}
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const script = require(process.env.GITHUB_WORKSPACE + "/.buildchain/router/scripts/authorize-promotion-runtime-override.cjs");
-            await script.authorizePromotionRuntimeOverride({ github, context });
 
       - name: Resolve immutable shell and runtime identities
         id: identities
@@ -135,6 +132,9 @@ jobs:
           --shell-ref v4-alpha
           --shell-call-ref v4-alpha
           --runtime-ref "${{ steps.route.outputs.runtime-ref }}"
+
+      - name: Bind governed recovery ref to exact runtime B
+        run: test "${{ steps.identities.outputs.runtime-sha }}" = "${{ inputs['resume-buildchain-runtime-sha'] }}"
 
       - name: Bind protected alpha contract lock
         id: lock
