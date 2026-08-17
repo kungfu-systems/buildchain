@@ -1967,7 +1967,18 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
   assert.match(workflow, /name: Bind consumer publication predicate/);
-  assert.match(workflow, /name: Run consumer publication predicate[\s\S]*BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: \$\{\{ steps\.rc\.outputs\.release-candidate-source-sha \}\}/);
+  assert.match(
+    workflow,
+    /name: Resolve exact v4 policy caller source[\s\S]*passport\.consumerPolicy\?\.receipt\?\.caller\?\.sourceSha/,
+  );
+  assert.match(
+    workflow,
+    /name: Checkout exact v4 policy caller source[\s\S]*ref: \$\{\{ steps\.v4-policy-caller\.outputs\.source-sha \}\}[\s\S]*path: \.buildchain\/policy-caller/,
+  );
+  assert.match(
+    workflow,
+    /name: Run consumer publication predicate[\s\S]*BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: \$\{\{ steps\.v4-policy-caller\.outputs\.source-sha \}\}/,
+  );
   assert.match(
     workflow,
     /BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/,

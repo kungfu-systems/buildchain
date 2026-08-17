@@ -182,7 +182,7 @@ jobs:
       required-status-check: check
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       required-artifact-count: 0
-      publish-transaction-override: ${{ github.event_name == 'workflow_dispatch' }}
+      publish-transaction-override: ${{ inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '' }}
       publish-required-artifacts-json: '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]'
       publish-package-main: "@kungfu-tech/buildchain"
       trusted-publishing: true

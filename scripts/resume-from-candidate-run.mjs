@@ -7,6 +7,8 @@ import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
+import { normalizeAnchorProvenance, normalizeCandidateRun, recoverCandidateProvenance } from "./release-candidate-anchor-provenance.mjs";
+export { resolveAnchorRecoveryRequest } from "./release-candidate-anchor-provenance.mjs";
 import {
   generatePublishRequiredArtifacts,
   githubDownload,
@@ -878,7 +880,13 @@ export async function resumeFromCandidateRun({
       repoInfo, runId, artifactName, artifactPatterns, requiredArtifactCount,
       outputDir, apiUrl, token, fetchImpl, archiveDir,
     });
-    const prNumber = Number(passport.pullRequest?.number || 0);
+    const { anchorProvenance, provenancePassport } = await recoverCandidateProvenance({
+      passport, buildSummary, transactionId, repoInfo, artifactName,
+      expectedWorkflowFile, expectedWorkflowName, channel, apiUrl, token,
+      fetchImpl, archiveDir, bundleRoot, githubJson, selectReleaseCandidateArtifacts,
+      downloadArtifact, readOnlyJson,
+    });
+    const prNumber = Number(provenancePassport.pullRequest?.number || 0);
     if (!prNumber) throw new Error("Release Candidate Passport has no PR identity");
     const pullRequest = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/pulls/${prNumber}` });
     const targetCommit = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/commits/${targetSha}` });
@@ -944,20 +952,9 @@ export async function resumeFromCandidateRun({
       expectedRuntimeSha: candidateRuntimeSha,
       expectedTransactionId: transactionId,
       existingTransaction,
-      run: {
-        id: String(run.id),
-        repository: repoInfo.fullName,
-        headRepository: run.head_repository?.full_name || "",
-        status: run.status,
-        conclusion: run.conclusion,
-        event: run.event,
-        path: run.path,
-        name: run.name,
-        headSha: run.head_sha || "",
-        headBranch: run.head_branch || "",
-        pullRequestNumbers: (run.pull_requests || []).map((entry) => Number(entry.number)),
-      },
+      run: normalizeCandidateRun(run, repoInfo.fullName),
       workflow: { path: workflow.path, name: workflow.name, state: workflow.state },
+      anchorProvenance: normalizeAnchorProvenance(anchorProvenance, repoInfo.fullName),
       pullRequest: {
         number: pullRequest.number,
         merged: pullRequest.merged === true,

@@ -206,7 +206,7 @@ function validateConsumerPolicyEvidence(passport, check) {
     receipt: passport.consumerPolicy.receipt,
     receiptRoot: passport.consumerPolicy.receiptRoot,
     repository: passport.repository,
-    sourceSha: passport.source?.headSha,
+    sourceSha: passport.target?.ref === "publish-gate/anchor" ? passport.consumerPolicy.receipt?.caller?.sourceSha : passport.source?.headSha,
     resolvedRuntimeSha: passport.buildchain?.sha,
   });
   for (const failure of verification.failures) {
@@ -403,7 +403,7 @@ export function createReleaseCandidatePassport({
   };
   const normalizedConsumerPolicy = normalizeConsumerPolicyEvidence(consumerPolicyReceipt, {
     repository: repository || normalizedSummary.git?.repository || "",
-    sourceSha,
+    sourceSha: normalizedSummary.publishSource?.ref === "publish-gate/anchor" ? (consumerPolicyReceipt?.receipt || consumerPolicyReceipt)?.caller?.sourceSha : sourceSha,
     runtimeSha: resolvedBuildchain.sha,
   });
   if (isV4BuildchainRuntime(resolvedBuildchain) && !normalizedConsumerPolicy) {

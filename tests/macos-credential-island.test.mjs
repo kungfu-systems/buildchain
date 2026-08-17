@@ -811,9 +811,13 @@ test("public action and workflow keep credentials outside the build matrix", () 
     /assembleDmgWithRetry\([\s\S]*?signAndVerifyDmg\(assembly\.imagePath,[\s\S]*?const notarization = submitNotary\([\s\S]*?staple\(assembly\.imagePath\)[\s\S]*?COPYFILE_EXCL/,
   );
   assert.match(implementation, /dmgCodesign: true/);
-  for (const caller of [workflow, publicWorkflow, fixtureWorkflow]) {
+  for (const caller of [workflow, publicWorkflow]) {
     assert.match(caller, /permissions:\n  actions: read\n  contents: read/);
   }
+  assert.match(
+    fixtureWorkflow,
+    /permissions: \{ actions: read, contents: read, issues: write, id-token: write \}/,
+  );
   assert.match(
     publicWorkflow,
     /credential-island-macos-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.override\.outputs\.credential-island-macos-artifact \|\| jobs\.alpha\.outputs\.credential-island-macos-artifact \|\| jobs\.stable\.outputs\.credential-island-macos-artifact \}\}/,

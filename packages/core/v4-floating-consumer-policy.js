@@ -26,6 +26,11 @@ const EXACT_SHA = /^[0-9a-f]{40}$/u;
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
 const BUILDCHAIN_REPOSITORY = "kungfu-systems/buildchain";
 const CHANNELS = Object.freeze({ v4: "stable", "v4-alpha": "alpha" });
+const ALPHA_RECOVERY_BOOTSTRAP = Object.freeze({
+  selector: "alpha/v4/v4.0",
+  sourcePath: ".github/workflows/buildchain-ref-promotion-recovery.yml",
+  workflow: ".github/workflows/.release-candidate-promote.yml",
+});
 const DEFAULT_STABLE_LOCK_PATH = ".buildchain/contract-lock.json";
 const DEFAULT_ALPHA_LOCK_PATH = ".buildchain/alpha-contract-lock.json";
 const TRANSIENT_ACTION =
@@ -277,7 +282,7 @@ function readContractLock(root, relative, expectedRef, label, failures) {
   }
 }
 
-function classifyBuildchainUses(records, failures) {
+function classifyBuildchainUses(records, failures, { repository } = {}) {
   const uses = [];
   for (const record of records) {
     const parsed = coordinate(record.uses);
@@ -286,15 +291,27 @@ function classifyBuildchainUses(records, failures) {
       parsed.selector === "v4" ||
       parsed.selector === "v4-alpha" ||
       /^v4(?:[./-]|$)/u.test(parsed.selector) ||
+      parsed.selector === ALPHA_RECOVERY_BOOTSTRAP.selector ||
       EXACT_SHA.test(parsed.selector.toLowerCase()) ||
       parsed.selector.includes("${{");
     if (!v4Candidate) continue;
-    const channel = CHANNELS[parsed.selector] || "";
+    const protectedBootstrap =
+      repository === BUILDCHAIN_REPOSITORY &&
+      normalizeWorkflowPath(parsed.path) ===
+        ALPHA_RECOVERY_BOOTSTRAP.workflow &&
+      record.sourcePath === ALPHA_RECOVERY_BOOTSTRAP.sourcePath &&
+      parsed.selector === ALPHA_RECOVERY_BOOTSTRAP.selector;
+    const channel =
+      CHANNELS[parsed.selector] || (protectedBootstrap ? "alpha" : "");
     uses.push({
       ...record,
       ...parsed,
       channel,
-      selectorClass: channel ? "floating" : "rejected",
+      selectorClass: protectedBootstrap
+        ? "protected-bootstrap"
+        : channel
+          ? "floating"
+          : "rejected",
     });
     if (!channel) failures.push(selectorFailure(record, parsed.selector));
   }
@@ -326,6 +343,7 @@ function scanInvocationSource({
   sourceScan,
   sourceUses,
   failures,
+  repository,
 }) {
   if (invocationRoot === sourceRoot)
     return { invocationScan: sourceScan, invocationUses: sourceUses };
@@ -333,7 +351,9 @@ function scanInvocationSource({
     const invocationScan = enumerateUses(invocationRoot);
     return {
       invocationScan,
-      invocationUses: classifyBuildchainUses(invocationScan.records, failures),
+      invocationUses: classifyBuildchainUses(invocationScan.records, failures, {
+        repository,
+      }),
     };
   } catch (error) {
     failures.push({
@@ -365,6 +385,44 @@ function sourceScanRoot({
           },
         };
   return sha256(stableJson(material));
+}
+
+function verifySelectedLock({
+  selected,
+  stable,
+  alpha,
+  workflowSha,
+  failures,
+}) {
+  const selectedLock = selected?.channel === "alpha" ? alpha : stable;
+  if (!selected?.channel || !selectedLock) return;
+  const authorityRef =
+    selected.selectorClass === "protected-bootstrap"
+      ? "v4-alpha"
+      : selected.selector;
+  try {
+    const compatibility = evaluateBuildchainContractLock({
+      lock: selectedLock,
+      current: createBuildchainContractWorld({ root: defaultRuntimeRoot() }),
+      runtimeRef: authorityRef,
+      runtimeSha: workflowSha,
+      runtimeClass: selected.channel,
+      workflowShellRef: authorityRef,
+      expectedChannel: selected.channel,
+      expectedMajor: "v4",
+    });
+    if (!compatibility.ok) {
+      failures.push({
+        code: "selected-lock-runtime-incompatible",
+        message: `${selected.channel} contract lock rejects resolved workflow shell ${workflowSha}: ${compatibility.reasons?.join("; ") || compatibility.status}`,
+      });
+    }
+  } catch (error) {
+    failures.push({
+      code: "selected-lock-contract-world-invalid",
+      message: `cannot evaluate ${selected.channel} contract lock against the resolved workflow shell: ${error.message}`,
+    });
+  }
 }
 
 export function scanV4FloatingConsumerPolicy({
@@ -423,13 +481,16 @@ export function scanV4FloatingConsumerPolicy({
   } catch (error) {
     failures.push({ code: "source-scan-failed", message: error.message });
   }
-  const buildchainUses = classifyBuildchainUses(scanned.records, failures);
+  const buildchainUses = classifyBuildchainUses(scanned.records, failures, {
+    repository,
+  });
   const { invocationScan, invocationUses } = scanInvocationSource({
     sourceRoot: resolvedRoot,
     invocationRoot: resolvedInvocationRoot,
     sourceScan: scanned,
     sourceUses: buildchainUses,
     failures,
+    repository,
   });
   const sourcePath = String(invocationSourcePath || "")
     .split("@")[0]
@@ -441,32 +502,13 @@ export function scanV4FloatingConsumerPolicy({
     sourcePath,
     expectedInvocationChannel,
   );
-  const selectedLock = selected?.channel === "alpha" ? alpha : stable;
-  if (selected?.channel && selectedLock) {
-    try {
-      const compatibility = evaluateBuildchainContractLock({
-        lock: selectedLock,
-        current: createBuildchainContractWorld({ root: defaultRuntimeRoot() }),
-        runtimeRef: selected.selector,
-        runtimeSha: normalizedWorkflowSha,
-        runtimeClass: selected.channel,
-        workflowShellRef: selected.selector,
-        expectedChannel: selected.channel,
-        expectedMajor: "v4",
-      });
-      if (!compatibility.ok) {
-        failures.push({
-          code: "selected-lock-runtime-incompatible",
-          message: `${selected.channel} contract lock rejects resolved workflow shell ${normalizedWorkflowSha}: ${compatibility.reasons?.join("; ") || compatibility.status}`,
-        });
-      }
-    } catch (error) {
-      failures.push({
-        code: "selected-lock-contract-world-invalid",
-        message: `cannot evaluate ${selected.channel} contract lock against the resolved workflow shell: ${error.message}`,
-      });
-    }
-  }
+  verifySelectedLock({
+    selected,
+    stable,
+    alpha,
+    workflowSha: normalizedWorkflowSha,
+    failures,
+  });
 
   const policyRoot = sha256(stableJson(policy));
   const resolvedScannerRoot = scannerRoot || policyRoot;
