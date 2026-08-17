@@ -40,6 +40,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
 
   assert.equal(result.ok, true, JSON.stringify(result.failures));
   assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+  assert.equal(result.receipt.invocation.selectorClass, "floating");
   assert.equal(result.receipt.invocation.channel, "alpha");
 });
 
@@ -82,6 +83,27 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
       true,
     );
 
+    const foreignRepository = scanV4FloatingConsumerPolicy({
+      root: consumerRoot,
+      invocationRoot: root,
+      repository: "kungfu-systems/consumer",
+      sourceSha: "a".repeat(40),
+      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+      invocationSourcePath: relative,
+      expectedInvocationChannel: "alpha",
+      resolvedWorkflowSha: "b".repeat(40),
+      resolvedRuntimeSha: "c".repeat(40),
+      policy: authority.policy,
+      scannerRoot: authority.scannerRoot,
+    });
+    assert.equal(foreignRepository.ok, false);
+    assert.equal(
+      foreignRepository.failures.some(
+        ({ code }) => code === "unapproved-v4-selector",
+      ),
+      true,
+    );
+
     result = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
       invocationRoot: root,
@@ -100,12 +122,13 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   }
 
   assert.equal(result.ok, true, JSON.stringify(result.failures));
-  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+  assert.equal(result.receipt.invocation.visibleSelector, "alpha/v4/v4.0");
+  assert.equal(result.receipt.invocation.selectorClass, "protected-bootstrap");
   assert.match(workflow, /^  workflow_dispatch:/mu);
   assert.doesNotMatch(workflow, /^  workflow_run:/mu);
   assert.match(
     workflow,
-    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@v4-alpha/u,
+    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
   );
   assert.match(
     workflow,
@@ -137,6 +160,8 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/router/u,
   );
+  assert.match(workflow, /--shell-ref alpha\/v4\/v4\.0/u);
+  assert.match(workflow, /--shell-call-ref alpha\/v4\/v4\.0/u);
   assert.match(workflow, /resume-buildchain-runtime-ref:/u);
   assert.match(
     workflow,

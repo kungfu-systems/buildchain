@@ -126,8 +126,8 @@ jobs:
           --repository kungfu-systems/buildchain
           --router-ref "${{ steps.route.outputs.router-ref }}"
           --router-sha "${{ steps.route.outputs.router-sha }}"
-          --shell-ref v4-alpha
-          --shell-call-ref v4-alpha
+          --shell-ref alpha/v4/v4.0
+          --shell-call-ref alpha/v4/v4.0
           --runtime-ref "${{ steps.route.outputs.runtime-ref }}"
 
       - name: Bind governed recovery ref to exact runtime B
@@ -204,7 +204,8 @@ jobs:
   promote-alpha-recovery:
     name: Resume sealed alpha candidate through floating shell
     needs: consumer-admission
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    # Bounded bootstrap: the public v4-alpha shell cannot certify a policy scanner that has not reached the tag yet.
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0
     permissions:
       actions: write
       artifact-metadata: write

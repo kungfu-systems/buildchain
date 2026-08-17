@@ -19894,7 +19894,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 529
+        "line": 584
       },
       "example": "import { recoveryFailure } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20013,11 +20013,11 @@
       "id": "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
       "name": "verifyReleaseCandidateRecovery",
       "kind": "function",
-      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
+      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, anchorProvenance = undefined, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
+          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, anchorProvenance = undefined, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
         }
       ],
       "returns": "unknown",
@@ -20029,7 +20029,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 398
+        "line": 443
       },
       "example": "import { verifyReleaseCandidateRecovery } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24666,7 +24666,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 188
+        "line": 202
       },
       "example": "import { certifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24767,7 +24767,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 124
+        "line": 138
       },
       "example": "import { v4FloatingConsumerDocumentRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24796,7 +24796,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 273
+        "line": 287
       },
       "example": "import { verifyV4FloatingConsumerPolicyCertification } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24825,7 +24825,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 128
+        "line": 142
       },
       "example": "import { verifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24854,7 +24854,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 84
+        "line": 89
       },
       "example": "import { resolveV4FloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24883,7 +24883,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 370
+        "line": 428
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24912,7 +24912,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 71
+        "line": 76
       },
       "example": "import { v4ConsumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -28308,7 +28308,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:8029a33c13b7b3998f06824e549cc99d17fff399ac654b73f1ff81d1e9aa2d99",
+      "digest": "sha256:63025628454a130404894dd3a08906098c6cdd57ed33aff85264da6548348e42",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29212,7 +29212,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release-candidate.js",
-      "digest": "sha256:c6295a97291d13129865508e64e8a2b92bf8bc0a89dc850c84084669d76e1105",
+      "digest": "sha256:3d4bd066233257461738699248ecddeacc47c895fbb534d0691c00793fa330a8",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29239,7 +29239,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
       "export": "./release-candidate-recovery",
       "target": "./packages/core/release-candidate-recovery.js",
-      "digest": "sha256:d863601bcd5be9cfbf4455961d1183486e6d191ce34dc7c6a14f2ad71146b175",
+      "digest": "sha256:c180e84ab83bc79ef5f4f558cfd6585f34c1505f4b4051ff161528fb7dec9177",
       "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29779,7 +29779,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:da67dda844284984f54dec23c4ccef83e4a928aef7daaf2cf4d6d3c9e1315e6a"
+      "digest": "sha256:d2ef88b48d2253477f5ad003f5eeb9f3ca85d706bb866faec34affcd064b8d02"
     },
     {
       "id": "build-facts",
