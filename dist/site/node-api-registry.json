@@ -20796,7 +20796,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 50
+        "line": 51
       },
       "example": "import { AGENT_INDEX_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20820,7 +20820,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 48
+        "line": 49
       },
       "example": "import { ARTIFACT_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20849,7 +20849,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1575
+        "line": 1584
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20878,7 +20878,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1240
+        "line": 1249
       },
       "example": "import { createArtifactEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20907,7 +20907,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 219
+        "line": 220
       },
       "example": "import { createInvariantPassportGate } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -20936,7 +20936,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2777
+        "line": 2786
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20965,7 +20965,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1275
+        "line": 1284
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20994,7 +20994,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2933
+        "line": 2942
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21018,7 +21018,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 49
+        "line": 50
       },
       "example": "import { IMPACT_LEDGER_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21042,7 +21042,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 55
+        "line": 56
       },
       "example": "import { INVARIANT_PASSPORT_GATE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -21066,7 +21066,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 56
+        "line": 57
       },
       "example": "import { KFD_AGENT_HUB_RELEASE_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -21090,7 +21090,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 53
+        "line": 54
       },
       "example": "import { KFD2_RELEASE_TRUST_PASSPORT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21114,7 +21114,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 54
+        "line": 55
       },
       "example": "import { KFD2_TRUST_PROOF_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21143,7 +21143,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2962
+        "line": 2971
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21167,7 +21167,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 51
+        "line": 52
       },
       "example": "import { PRODUCT_MECHANISM_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21204,7 +21204,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2849
+        "line": 2858
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21252,7 +21252,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 52
+        "line": 53
       },
       "example": "import { RELEASE_EVIDENCE_ATTACHMENT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21306,7 +21306,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 234
+        "line": 235
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21335,7 +21335,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 156
+        "line": 157
       },
       "example": "import { sha256Text } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21359,7 +21359,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2974
+        "line": 2983
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21388,7 +21388,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2898
+        "line": 2907
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -29521,7 +29521,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:cecdf98c16ecab89baf4089dbd3e0ddf690eb5d8bdb706f42f4a20a50d9c4afc",
+      "digest": "sha256:7b433d34f87651d8fb187d06b83113e93cbc0243a0f93ce33f375a4737f144f6",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29860,7 +29860,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:4dfa3b4f5e7096add1ebb822e16782c48a13d4c556b3bdee12fc99c863fbec4f"
+      "digest": "sha256:ea8e8c79beeb31fab07cc7b3277072f1acee3bfcacca0c5816ce7dce80e1417b"
     },
     {
       "id": "build-facts",
