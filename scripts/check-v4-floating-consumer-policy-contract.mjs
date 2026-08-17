@@ -52,7 +52,9 @@ function assertOrdered(relative, markers) {
 
 export function assertPromotionCertificationWiring(source) {
   for (const marker of [
-    ".buildchain/runtime/promotion-shell/scripts/v4-consumer-policy.mjs certify",
+    "path: .buildchain/candidate-policy-runtime",
+    "BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ inputs.resume-expected-candidate-runtime-sha || steps.buildchain-runtime.outputs.sha }}",
+    'node "${policy_runtime}/scripts/v4-consumer-policy.mjs" certify',
     "passport.consumerPolicy?.receipt?.caller?.sourceSha",
     "path: .buildchain/policy-caller",
     '--caller-root "${{ github.workspace }}/.buildchain/policy-caller"',

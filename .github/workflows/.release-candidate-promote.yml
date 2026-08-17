@@ -1726,6 +1726,21 @@ jobs:
           clean: true
           persist-credentials: false
 
+      - name: Checkout exact candidate policy runtime
+        if: >-
+          ${{
+            inputs.resume-candidate-run-id != '' &&
+            inputs.resume-expected-candidate-runtime-sha != '' &&
+            inputs.resume-expected-candidate-runtime-sha != steps.buildchain-runtime.outputs.sha
+          }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.resume-expected-candidate-runtime-sha }}
+          path: .buildchain/candidate-policy-runtime
+          clean: true
+          persist-credentials: false
+
       - name: Record promotion routing evidence
         id: routing-evidence
         if: ${{ inputs.promotion-router-ref != '' }}
@@ -1755,16 +1770,24 @@ jobs:
           BUILDCHAIN_EXPECTED_CALLER_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: ${{ steps.v4-policy-caller.outputs.source-sha }}
           BUILDCHAIN_EXPECTED_INVOKED_WORKFLOW: .github/workflows/build.yml
-          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ inputs.resume-expected-candidate-runtime-sha || steps.buildchain-runtime.outputs.sha }}
+          BUILDCHAIN_CURRENT_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
+          BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA: ${{ inputs.resume-expected-candidate-runtime-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
           BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-alpha-contract-lock-path }}
           BUILDCHAIN_V4_POLICY_CERTIFICATION_PATH: .buildchain/release-candidate/v4-consumer-policy-certification.json
-        run: >-
-          node .buildchain/runtime/promotion-shell/scripts/v4-consumer-policy.mjs certify
-          --input "${{ steps.rc.outputs.release-candidate-passport-path }}"
-          --caller-root "${{ github.workspace }}/.buildchain/policy-caller"
-          --stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}"
-          --alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"
+        run: |
+          set -euo pipefail
+          policy_runtime=.buildchain/runtime/promotion-shell
+          if [[ -n "${BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA}" && "${BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA}" != "${BUILDCHAIN_CURRENT_RUNTIME_SHA}" ]]; then
+            policy_runtime=.buildchain/candidate-policy-runtime
+          fi
+          test -f "${policy_runtime}/scripts/v4-consumer-policy.mjs"
+          node "${policy_runtime}/scripts/v4-consumer-policy.mjs" certify \
+            --input "${{ steps.rc.outputs.release-candidate-passport-path }}" \
+            --caller-root "${{ github.workspace }}/.buildchain/policy-caller" \
+            --stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}" \
+            --alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"
 
       - name: Resolve Buildchain stable candidate alpha
         id: buildchain-stable-candidate

@@ -38,6 +38,7 @@ import {
   isV4PromotionRouting,
   releasePassportCertificationVerificationOptions,
   requireV4ConsumerPolicyCertification,
+  resolveV4ConsumerPolicyCertificationIdentity,
 } from "./v4-floating-consumer-release-passport.js";
 import {
   verifyV4RuntimeAuthorizationReceipt,
@@ -1112,17 +1113,25 @@ function normalizePromotionEvidence({
   release = {},
   v4ConsumerPolicyCertification: certification,
   v4ConsumerPolicyCertificationRoot: certificationRoot,
+  v4RuntimeResumeEvidence,
   repository,
   sourceSha,
   cwd,
 }) {
   const routing = normalizePromotionRouting(release.promotionRouting);
+  const identity = resolveV4ConsumerPolicyCertificationIdentity({
+    release,
+    routing,
+    runtimeResume: v4RuntimeResumeEvidence,
+    sourceSha,
+  });
   return {
     routing,
     consumerPolicy: requireV4ConsumerPolicyCertification({
       value: certification,
       repository,
-      sourceSha,
+      sourceSha: identity.sourceSha,
+      runtimeSha: identity.runtimeSha,
       routing,
       cwd,
       certificationRoot,

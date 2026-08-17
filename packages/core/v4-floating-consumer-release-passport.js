@@ -77,10 +77,31 @@ function normalizeCertification(value, expected) {
   return { certificationRoot: verification.certificationRoot, certification };
 }
 
+export function resolveV4ConsumerPolicyCertificationIdentity({
+  release = {},
+  routing = {},
+  runtimeResume = undefined,
+  sourceSha = "",
+} = {}) {
+  const builtSourceSha =
+    release?.builtSourceSha || release?.built_source_sha || "";
+  return {
+    sourceSha:
+      release?.treeEquivalent === true && builtSourceSha
+        ? builtSourceSha
+        : sourceSha,
+    runtimeSha:
+      runtimeResume?.lineage?.attempts?.build?.runtimeSha ||
+      routing?.runtime?.resolvedSha ||
+      "",
+  };
+}
+
 export function requireV4ConsumerPolicyCertification({
   value,
   repository,
   sourceSha,
+  runtimeSha = "",
   routing,
   cwd,
   certificationRoot,
@@ -100,7 +121,7 @@ export function requireV4ConsumerPolicyCertification({
   return normalizeCertification(value, {
     repository,
     sourceSha,
-    runtimeSha: routing?.runtime?.resolvedSha || "",
+    runtimeSha: runtimeSha || routing?.runtime?.resolvedSha || "",
     certificationRoot,
     ...(v4Routing ? resolveV4FloatingConsumerCallerLocks(value, cwd) : {}),
   });
@@ -112,12 +133,18 @@ export function releasePassportCertificationVerificationOptions({
   routing,
 }) {
   const authority = evidence?.certification?.authority || {};
+  const identity = resolveV4ConsumerPolicyCertificationIdentity({
+    release: passport?.release,
+    routing,
+    runtimeResume: passport?.v4RuntimeResume,
+    sourceSha: passport?.release?.sourceSha || "",
+  });
   return {
     certification: evidence?.certification,
     certificationRoot: evidence?.certificationRoot,
     repository: passport?.product?.repository || "",
-    sourceSha: passport?.release?.sourceSha || "",
-    resolvedRuntimeSha: routing?.runtime?.resolvedSha || "",
+    sourceSha: identity.sourceSha,
+    resolvedRuntimeSha: identity.runtimeSha,
     stableLockRoot: authority.contractLocks?.stable?.root || "",
     alphaLockRoot: authority.contractLocks?.alpha?.root || "",
     stableLockPath: authority.contractLocks?.stable?.path || "",
