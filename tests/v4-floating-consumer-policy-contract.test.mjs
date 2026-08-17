@@ -180,6 +180,14 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   );
   assert.match(
     workflow,
+    /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u,
+  );
+  assert.match(
+    workflow,
     /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/router/u,
   );
   assert.match(workflow, /--shell-ref alpha\/v4\/v4\.0/u);
