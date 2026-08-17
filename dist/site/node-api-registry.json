@@ -5700,6 +5700,59 @@
       ]
     },
     {
+      "id": "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "name": "CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "kind": "constant",
+      "signature": "const CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/ci-lane-change-budget.js",
+        "line": 4
+      },
+      "example": "import { CI_LANE_CHANGE_BUDGET_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
+      "name": "evaluateCiLaneChangeBudget",
+      "kind": "function",
+      "signature": "function evaluateCiLaneChangeBudget({ policy, workflows, baselineWorkflows = null, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ policy, workflows, baselineWorkflows = null, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/ci-lane-change-budget.js",
+        "line": 180
+      },
+      "example": "import { evaluateCiLaneChangeBudget } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/controller-evidence.js#aggregateControllerReceipts",
       "name": "aggregateControllerReceipts",
       "kind": "function",
@@ -25923,14 +25976,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:2135e4ca7315ff96d11e53ac12fe27f399f6b77b6de1fe25782861f76b06f9b4",
+      "digest": "sha256:133da9d5574d655a6ea618522aae12a3138c7ea647fda85fb0204373d55d4201",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 627,
+      "symbolCount": 629,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -26031,6 +26084,7 @@
         "packages/core/homebrew.js#checkHomebrewTap",
         "packages/core/kfd2-product-claims.js#checkKfd2ProductClaimOutputs",
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
@@ -26188,6 +26242,7 @@
         "packages/core/public-surface-audit.js#enumerateSitePages",
         "packages/core/public-surface-audit.js#enumerateWorkflowInputs",
         "packages/core/buildchain-contract.js#evaluateBuildchainContractLock",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
         "packages/core/github-governance-authority.js#evaluateCodeownersAuthority",
         "packages/core/github-governance-authority.js#evaluateGithubGovernanceSnapshot",
         "packages/core/kfd-product-gates.js#evaluateKfdProductGate",
@@ -26648,14 +26703,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:2135e4ca7315ff96d11e53ac12fe27f399f6b77b6de1fe25782861f76b06f9b4",
+      "digest": "sha256:133da9d5574d655a6ea618522aae12a3138c7ea647fda85fb0204373d55d4201",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 627,
+      "symbolCount": 629,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -26756,6 +26811,7 @@
         "packages/core/homebrew.js#checkHomebrewTap",
         "packages/core/kfd2-product-claims.js#checkKfd2ProductClaimOutputs",
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
@@ -26913,6 +26969,7 @@
         "packages/core/public-surface-audit.js#enumerateSitePages",
         "packages/core/public-surface-audit.js#enumerateWorkflowInputs",
         "packages/core/buildchain-contract.js#evaluateBuildchainContractLock",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
         "packages/core/github-governance-authority.js#evaluateCodeownersAuthority",
         "packages/core/github-governance-authority.js#evaluateGithubGovernanceSnapshot",
         "packages/core/kfd-product-gates.js#evaluateKfdProductGate",
@@ -27633,6 +27690,30 @@
         "packages/core/candidate-timeline.js#createCandidateTimeline",
         "packages/core/candidate-timeline.js#formatCandidateTimelineReport",
         "packages/core/candidate-timeline.js#normalizeCandidateTimelineEvent"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/ci-lane-change-budget",
+      "export": "./ci-lane-change-budget",
+      "target": "./packages/core/ci-lane-change-budget.js",
+      "digest": "sha256:0cabfc98dedfeeb37a49461e7fbb480e8bb1b5b22cf2ac4ae5bae31305977033",
+      "summary": "Exact-baseline CI lane admission requiring authority, trigger, concurrency, runner, cancellation, and merge-critical SLO budgets.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 2,
+      "symbolIds": [
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -29779,7 +29860,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:da67dda844284984f54dec23c4ccef83e4a928aef7daaf2cf4d6d3c9e1315e6a"
+      "digest": "sha256:59feef55e97d1db58471cc172ed352d8af0a11fa8f8434b68a0f359afe49186c"
     },
     {
       "id": "build-facts",

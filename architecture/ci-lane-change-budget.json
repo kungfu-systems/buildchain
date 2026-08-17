@@ -1,0 +1,9 @@
+{
+  "schema": "buildchain.ci-lane-change-budget/v1",
+  "authorityClassification": "repository-policy-enforcement",
+  "baseline": {
+    "gitRevision": "7fdf0b560670df65929ab2ee833c3d6339372d8a",
+    "source": "protected dev/v4/v4.0 before CI lane change-budget enforcement"
+  },
+  "declarations": []
+}
