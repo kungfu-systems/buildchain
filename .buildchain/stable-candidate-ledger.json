@@ -6,7 +6,7 @@
   "hold": {
     "enabled": false,
     "reason": "",
-    "updatedAt": "2026-08-16T19:16:44.222Z"
+    "updatedAt": "2026-08-17T19:22:32.278Z"
   },
   "candidates": [
     {
@@ -98,7 +98,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-16T19:16:44.222Z",
+        "observedAt": "2026-08-17T19:22:32.278Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -125,7 +125,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-16T19:16:44.222Z",
+        "updatedAt": "2026-08-17T19:22:32.278Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -138,7 +138,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-16T19:16:44.222Z",
+        "observedAt": "2026-08-17T19:22:32.278Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -165,7 +165,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-16T19:16:44.222Z",
+        "updatedAt": "2026-08-17T19:22:32.278Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -178,7 +178,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-16T19:16:44.222Z",
+        "observedAt": "2026-08-17T19:22:32.278Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -205,7 +205,7 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-16T19:16:44.222Z",
+        "updatedAt": "2026-08-17T19:22:32.278Z",
         "actor": "buildchain-patrol"
       }
     },
@@ -218,7 +218,7 @@
       "state": "soaking",
       "qualification": {
         "ok": false,
-        "observedAt": "2026-08-16T19:16:44.222Z",
+        "observedAt": "2026-08-17T19:22:32.278Z",
         "soakStartedAt": "",
         "soakElapsedSeconds": 0,
         "requiredSeconds": 3600,
@@ -245,12 +245,12 @@
       },
       "decision": {
         "reason": "checks-incomplete",
-        "updatedAt": "2026-08-16T19:16:44.222Z",
+        "updatedAt": "2026-08-17T19:22:32.278Z",
         "actor": "buildchain-patrol"
       }
     }
   ],
-  "updatedAt": "2026-08-16T19:16:44.222Z",
+  "updatedAt": "2026-08-17T19:22:32.278Z",
   "stableReleases": [
     {
       "version": "4.0.0",
