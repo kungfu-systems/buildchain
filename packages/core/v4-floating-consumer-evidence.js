@@ -8,6 +8,12 @@ export const V4_FLOATING_CONSUMER_CERTIFICATION =
   "kungfu-buildchain-v4-floating-consumer-certification/v1";
 
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
+const ALPHA_RECOVERY_BOOTSTRAP = Object.freeze({
+  repository: "kungfu-systems/buildchain",
+  sourcePath: ".github/workflows/buildchain-ref-promotion-recovery.yml",
+  workflow: ".github/workflows/.release-candidate-promote.yml",
+  selector: "alpha/v4/v4.0",
+});
 
 function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
@@ -109,15 +115,23 @@ function verifyAuthorityFields(value, expected, check, label) {
 }
 
 function verifyFloatingSelector(value, check, label) {
+  const bootstrap =
+    value?.caller?.repository === ALPHA_RECOVERY_BOOTSTRAP.repository &&
+    value?.invocation?.sourcePath === ALPHA_RECOVERY_BOOTSTRAP.sourcePath &&
+    value?.invocation?.workflow === ALPHA_RECOVERY_BOOTSTRAP.workflow &&
+    value?.invocation?.visibleSelector === ALPHA_RECOVERY_BOOTSTRAP.selector &&
+    value?.invocation?.selectorClass === "protected-bootstrap" &&
+    value?.invocation?.channel === "alpha";
   check(
-    value?.invocation?.selectorClass === "floating",
+    value?.invocation?.selectorClass === "floating" || bootstrap,
     "selector-class-invalid",
-    `${label} must bind a floating selector`,
+    `${label} must bind a floating selector or the bounded protected alpha recovery bootstrap`,
   );
   check(
-    ["v4", "v4-alpha"].includes(value?.invocation?.visibleSelector),
+    ["v4", "v4-alpha"].includes(value?.invocation?.visibleSelector) ||
+      bootstrap,
     "selector-invalid",
-    `${label} selector must be v4 or v4-alpha`,
+    `${label} selector must be v4, v4-alpha, or the bounded protected alpha recovery bootstrap`,
   );
 }
 

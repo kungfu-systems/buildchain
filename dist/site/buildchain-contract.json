@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:0e0d6a1a89bf8f8312562fe943ae4b8b312b63eb98772b8d7b9ee7428bfc0060",
+      "auditDigest": "sha256:db4518551165b953fd3cd9225648d6d27b874cade07f8b4831b834f95b76cbb5",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -2211,7 +2211,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:d38a9e9acfdc0d38dc53cdc8fc0ee4642986935c917ba7073cbcdb387e594359"
+      "auditDigest": "sha256:9c534fb11e2021c0bd5c75b40859e692fa79574f366a9eb73491342711006b04"
     },
     {
       "contractVersion": 1,
@@ -2233,7 +2233,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:8097d778827915c68efe9560c78a273d9dccd6b4f4857e5e08d4a2f93a7c52da"
+      "auditDigest": "sha256:918e28cac4baad503a119217f36963c91c12a1a0d3c0e88c776ff7d87e5f7150"
     },
     {
       "contractVersion": 1,
@@ -5082,7 +5082,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:0e0d6a1a89bf8f8312562fe943ae4b8b312b63eb98772b8d7b9ee7428bfc0060"
+      "auditDigest": "sha256:db4518551165b953fd3cd9225648d6d27b874cade07f8b4831b834f95b76cbb5"
     },
     {
       "contractVersion": 1,
@@ -5308,5 +5308,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:5de1c69386510b74b17eb70141b8bdd07063d62c504f91db5e84b67c6d4b64a2",
-  "contractDigest": "sha256:01cf0baf76739782fc78013e57b61995a1b554080625e86900b81f263512142c"
+  "contractDigest": "sha256:722a8e23c44e5e730e50ecec91b94ffe02eb665b2abaf31df57b4a7629c9faaf"
 }

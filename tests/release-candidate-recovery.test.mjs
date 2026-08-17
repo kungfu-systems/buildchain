@@ -21,6 +21,7 @@ import {
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
   normalizePlatformManifests,
+  resolveAnchorRecoveryRequest,
   validateV4RuntimeResumePublicReadback,
   verifyReleaseCandidateStageCapsules,
 } from "../scripts/resume-from-candidate-run.mjs";
@@ -642,6 +643,136 @@ test("recovery requires successful trusted PR workflow and permission evidence",
   const untrusted = fixture();
   untrusted.pullRequest.authorAssociation = "NONE";
   expectCode("permission-evidence-insufficient", untrusted);
+});
+
+test("anchored rematerialization inherits only the exact superseded PR provenance", () => {
+  const input = fixture();
+  const originalPassport = structuredClone(input.passport);
+  originalPassport.workflow.runId = "99";
+  const originalBuildSummary = structuredClone(input.buildSummary);
+  const originalRoot = `sha256:${originalPassport.candidateHash}`;
+  const transactionId = releaseTransactionId({
+    repository: input.candidateRepository,
+    version: input.passport.target.version,
+    sourceSha: input.targetSha,
+    targetRef: input.targetRef,
+  });
+  const request = {
+    schema: 1,
+    contract: "kungfu-buildchain-explicit-publish-anchor-request/v1",
+    assignmentId: "release-assignment",
+    attemptId: "native:123e4567-e89b-12d3-a456-426614174000",
+    transactionId,
+    source: { sha: input.targetSha, tree: TREE },
+    supersededCandidate: {
+      workflowRunId: "99",
+      sha: originalPassport.source.headSha,
+      root: originalRoot,
+    },
+    runtime: { ref: "train/v3/v3.0/resume-candidate-run", sha: RUNTIME_SHA },
+  };
+  input.buildSummary = structuredClone(input.buildSummary);
+  input.buildSummary.git.sha = input.targetSha;
+  input.buildSummary.publishSource = {
+    channel: "anchor",
+    ref: "publish-gate/anchor",
+    sha: input.targetSha,
+    releaseManifest: JSON.stringify({
+      sourceRef: "publish-gate/anchor",
+      sourceSha: input.targetSha,
+      anchorRequest: request,
+    }),
+  };
+  input.passport = structuredClone(input.passport);
+  input.passport.pullRequest = { number: "", url: "", headRef: "", baseRef: "" };
+  input.passport.target = { ...input.passport.target, channel: "anchor", ref: "publish-gate/anchor" };
+  input.passport.source = {
+    ...input.passport.source,
+    headSha: input.targetSha,
+    mergeRefSha: RUNTIME_SHA,
+    builtSourceSha: RUNTIME_SHA,
+  };
+  input.passport.diagnostics.buildSummaryHash = sha256Json(input.buildSummary);
+  input.passport.candidateHash = sha256Json({
+    repository: input.passport.repository,
+    target: input.passport.target,
+    source: input.passport.source,
+    platformMatrix: input.passport.platformMatrix,
+    buildchain: input.passport.buildchain,
+  });
+  input.expectedCandidateRoot = `sha256:${input.passport.candidateHash}`;
+  input.run = {
+    ...input.run,
+    event: "workflow_dispatch",
+    headSha: RUNTIME_SHA,
+    headBranch: "fix/anchored-recovery",
+    pullRequestNumbers: [],
+  };
+  input.anchorProvenance = {
+    request,
+    run: { ...fixture().run, id: "99", pullRequestNumbers: [42] },
+    workflow: structuredClone(input.workflow),
+    passport: originalPassport,
+    buildSummary: originalBuildSummary,
+  };
+  input.expectedTransactionId = transactionId;
+  input.existingTransaction = {
+    ...durableTransaction(input, "finalizing"),
+    id: transactionId,
+    channel: "alpha",
+  };
+  const receipt = verifyReleaseCandidateRecovery(input).receipt;
+  assert.equal(receipt.originalCandidate.provenance, "anchored-rematerialization");
+  assert.equal(receipt.originalCandidate.supersededCandidate.candidateRoot, originalRoot);
+  assert.equal(receipt.target.channel, "alpha");
+
+  const drifted = structuredClone(input);
+  drifted.anchorProvenance.request.supersededCandidate.root = `sha256:${"9".repeat(64)}`;
+  expectCode("anchored-provenance-invalid", drifted);
+});
+
+test("anchor request parser rejects unbound workflow-dispatch candidates", () => {
+  const input = fixture();
+  input.passport.pullRequest.number = "";
+  input.passport.target = { channel: "anchor", ref: "publish-gate/anchor", version: "3.1.0-alpha.1" };
+  const request = {
+    schema: 1,
+    contract: "kungfu-buildchain-explicit-publish-anchor-request/v1",
+    assignmentId: "release-assignment",
+    attemptId: "native:123e4567-e89b-12d3-a456-426614174000",
+    transactionId: "transaction-1",
+    source: { sha: SOURCE_SHA, tree: TREE },
+    supersededCandidate: {
+      workflowRunId: "99",
+      sha: TARGET_SHA,
+      root: `sha256:${"8".repeat(64)}`,
+    },
+    runtime: { ref: "train/v3/v3.0/resume-candidate-run", sha: RUNTIME_SHA },
+  };
+  const buildSummary = {
+    publishSource: {
+      releaseManifest: JSON.stringify({
+        sourceRef: "publish-gate/anchor",
+        sourceSha: SOURCE_SHA,
+        anchorRequest: request,
+      }),
+    },
+  };
+  assert.deepEqual(resolveAnchorRecoveryRequest({ passport: input.passport, buildSummary, transactionId: "transaction-1" }), request);
+  request.runtime.sha = TARGET_SHA;
+  assert.throws(() => resolveAnchorRecoveryRequest({
+    passport: input.passport,
+    buildSummary: {
+      publishSource: {
+        releaseManifest: JSON.stringify({
+          sourceRef: "publish-gate/anchor",
+          sourceSha: SOURCE_SHA,
+          anchorRequest: request,
+        }),
+      },
+    },
+    transactionId: "transaction-1",
+  }), /does not bind/u);
 });
 
 test("recovery binds an additional product payload manifest to candidate, summary, tree, and bytes", () => {

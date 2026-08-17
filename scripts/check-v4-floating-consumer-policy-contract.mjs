@@ -53,7 +53,9 @@ function assertOrdered(relative, markers) {
 export function assertPromotionCertificationWiring(source) {
   for (const marker of [
     ".buildchain/runtime/promotion-shell/scripts/v4-consumer-policy.mjs certify",
-    '--caller-root "${{ github.workspace }}"',
+    "passport.consumerPolicy?.receipt?.caller?.sourceSha",
+    "path: .buildchain/policy-caller",
+    '--caller-root "${{ github.workspace }}/.buildchain/policy-caller"',
     '--stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}"',
     '--alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"',
     "release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}",
@@ -78,13 +80,22 @@ function assertPersistedSelectors() {
       );
       if (!match) continue;
       const selector = match[2];
+      const protectedBootstrap =
+        relative ===
+          ".github/workflows/buildchain-ref-promotion-recovery.yml" &&
+        match[1] === ".github/workflows/.release-candidate-promote.yml" &&
+        selector === "alpha/v4/v4.0";
       const isV4 =
         selector === "v4" ||
         selector === "v4-alpha" ||
         /^v4(?:[./-]|$)/u.test(selector) ||
         /^[0-9a-f]{40}$/iu.test(selector) ||
         selector.includes("${{");
-      if (isV4 && !["v4", "v4-alpha"].includes(selector)) {
+      if (
+        (isV4 || protectedBootstrap) &&
+        !["v4", "v4-alpha"].includes(selector) &&
+        !protectedBootstrap
+      ) {
         offenders.push(`${relative}:${node.line} @${selector}`);
       }
     }

@@ -308,6 +308,42 @@ function validateProductPayloads({ passport, artifacts, productPayloadManifests,
   }
 }
 
+function assertAnchorEqual(actual, expected, label) {
+  assertEqual(actual, expected, "anchored-provenance-invalid", label, "Preserve both candidate runs and repair the explicit anchor provenance before retrying.");
+}
+
+function validateAnchorProvenance({ run, passport, anchorProvenance, expectedTransactionId, workflowFile, expectedWorkflowName, repository, targetRef }) {
+  const request = anchorProvenance.request;
+  const provenanceRun = anchorProvenance.run;
+  const provenanceWorkflow = anchorProvenance.workflow;
+  const provenancePassport = anchorProvenance.passport;
+  assertAnchorEqual(run?.status, "completed", "anchored candidate run status");
+  assertAnchorEqual(run?.conclusion, "success", "anchored candidate run conclusion");
+  assertAnchorEqual(run?.event, "workflow_dispatch", "anchored candidate run event");
+  assertAnchorEqual(passport?.target?.channel, "anchor", "anchored candidate channel");
+  assertAnchorEqual(passport?.target?.ref, "publish-gate/anchor", "anchored candidate ref");
+  assertAnchorEqual(run?.headSha, passport?.buildchain?.sha, "anchored candidate runtime");
+  assertAnchorEqual(request?.schema, 1, "anchor request schema");
+  assertAnchorEqual(request?.contract, "kungfu-buildchain-explicit-publish-anchor-request/v1", "anchor request contract");
+  assertAnchorEqual(Boolean(request?.assignmentId), true, "anchor request Assignment");
+  assertAnchorEqual(/^native:[0-9a-f-]+$/u.test(String(request?.attemptId || "")), true, "anchor request Attempt");
+  assertAnchorEqual(request?.transactionId, expectedTransactionId, "anchor request transaction");
+  assertAnchorEqual(String(provenanceRun?.id || ""), String(request?.supersededCandidate?.workflowRunId || ""), "superseded candidate run");
+  assertAnchorEqual(provenancePassport?.workflow?.runId, String(request?.supersededCandidate?.workflowRunId || ""), "superseded candidate Passport run");
+  assertAnchorEqual(request?.source?.sha, passport?.source?.headSha, "anchor request source SHA");
+  assertAnchorEqual(request?.source?.tree, passport?.source?.treeHash, "anchor request source tree");
+  assertAnchorEqual(request?.supersededCandidate?.sha, provenancePassport?.source?.headSha, "superseded candidate source SHA");
+  assertAnchorEqual(request?.supersededCandidate?.root, `sha256:${provenancePassport?.candidateHash || ""}`, "superseded candidate root");
+  assertAnchorEqual(request?.runtime?.sha, passport?.buildchain?.sha, "anchor request runtime");
+  const provenanceWorkflowPath = String(provenanceWorkflow?.path || provenanceRun?.path || "").split("@")[0].replace(/^\.github\/workflows\//, "");
+  assertEqual(provenanceWorkflowPath, workflowFile, "workflow-mismatch", "superseded candidate workflow file", "Use the exact trusted original candidate workflow.");
+  assertEqual(String(provenanceWorkflow?.name || provenanceRun?.name || ""), expectedWorkflowName, "workflow-mismatch", "superseded candidate workflow name", "Use the exact trusted original candidate workflow.");
+  if (provenanceWorkflow?.state && provenanceWorkflow.state !== "active") fail("untrusted-build-run", `superseded candidate workflow is not active: ${provenanceWorkflow.state}`, "Restore or select an allowed active Build workflow.");
+  const validation = validateReleaseCandidatePassport({ passport: provenancePassport, repository, targetChannel: normalizedRef(targetRef).split("/")[0], buildSummary: anchorProvenance.buildSummary });
+  if (!validation.ok) fail("anchored-provenance-invalid", `superseded candidate Passport validation failed: ${validation.errors.join("; ")}`, "Preserve both candidate runs and repair the explicit anchor provenance before retrying.");
+  return { provenanceRun, provenanceWorkflow, provenancePassport };
+}
+
 function validateCandidateProvenance({
   candidateRepository,
   targetRepository,
@@ -319,26 +355,33 @@ function validateCandidateProvenance({
   workflow,
   pullRequest,
   ancestry,
+  passport,
+  anchorProvenance,
+  expectedTransactionId,
 }) {
   const repository = required(candidateRepository, "candidateRepository");
   assertEqual(repository, required(targetRepository, "targetRepository"), "repository-mismatch", "candidate repository", "Dispatch recovery in the repository that created the candidate.");
   assertEqual(String(run?.id || ""), required(expectedRunId, "expectedRunId"), "run-mismatch", "candidate run ID", "Select the exact successful candidate run.");
   assertEqual(run?.repository, repository, "repository-mismatch", "run repository", "Use a candidate run from the target repository.");
   assertEqual(run?.headRepository, repository, "provenance-insufficient", "run head repository", "Fork candidates are not recoverable; create a same-repository candidate.");
-  if (run?.status !== "completed" || run?.conclusion !== "success" || run?.event !== "pull_request") {
-    fail("untrusted-build-run", "candidate run must be a successful completed pull_request build", "Choose a successful allowed Build workflow run.");
-  }
   const workflowFile = required(expectedWorkflowFile, "expectedWorkflowFile").replace(/^\.github\/workflows\//, "");
   const actualWorkflowPath = String(workflow?.path || run?.path || "").split("@")[0].replace(/^\.github\/workflows\//, "");
   assertEqual(actualWorkflowPath, workflowFile, "workflow-mismatch", "candidate workflow file", "Select a run from the documented trusted Build workflow.");
   assertEqual(String(workflow?.name || run?.name || ""), required(expectedWorkflowName, "expectedWorkflowName"), "workflow-mismatch", "candidate workflow name", "Select a run from the documented trusted Build workflow.");
   if (workflow?.state && workflow.state !== "active") fail("untrusted-build-run", `candidate workflow is not active: ${workflow.state}`, "Restore or select an allowed active Build workflow.");
+  const anchor = anchorProvenance ? validateAnchorProvenance({ run, passport, anchorProvenance, expectedTransactionId, workflowFile, expectedWorkflowName: required(expectedWorkflowName, "expectedWorkflowName"), repository, targetRef }) : undefined;
+  const provenanceRun = anchor?.provenanceRun || run;
+  if (provenanceRun?.status !== "completed" || provenanceRun?.conclusion !== "success" || provenanceRun?.event !== "pull_request") {
+    fail("untrusted-build-run", "candidate provenance run must be a successful completed pull_request build", "Choose a successful allowed Build workflow run.");
+  }
+  assertEqual(provenanceRun?.repository, repository, "repository-mismatch", "provenance run repository", "Use a candidate run from the target repository.");
+  assertEqual(provenanceRun?.headRepository, repository, "provenance-insufficient", "provenance run head repository", "Fork candidates are not recoverable; create a same-repository candidate.");
   if (!TRUSTED_ASSOCIATIONS.has(String(pullRequest?.authorAssociation || ""))) fail("permission-evidence-insufficient", "candidate PR author lacks trusted repository association evidence", "Have a repository member create or approve a same-repository candidate PR.");
   assertEqual(pullRequest?.headRepository, repository, "provenance-insufficient", "candidate PR head repository", "Fork candidates are outside the recovery permission boundary.");
   if (!pullRequest?.merged) fail("pr-identity-invalid", "candidate PR is not merged", "Use a merged channel candidate PR.");
   assertEqual(normalizedRef(pullRequest?.baseRef), normalizedRef(targetRef), "target-mismatch", "candidate PR target ref", "Use the original release channel target.");
-  const boundByNumber = Array.isArray(run?.pullRequestNumbers) && run.pullRequestNumbers.includes(Number(pullRequest?.number));
-  const boundByHead = run?.headSha === pullRequest?.headSha && normalizedRef(run?.headBranch) === normalizedRef(pullRequest?.headRef);
+  const boundByNumber = Array.isArray(provenanceRun?.pullRequestNumbers) && provenanceRun.pullRequestNumbers.includes(Number(pullRequest?.number));
+  const boundByHead = provenanceRun?.headSha === pullRequest?.headSha && normalizedRef(provenanceRun?.headBranch) === normalizedRef(pullRequest?.headRef);
   if (!boundByNumber && !boundByHead) fail("pr-identity-invalid", "candidate run is not bound to the merged candidate PR", "Select the exact PR-stage Build run.");
   if (!ancestry?.mergeIsAncestor && ancestry?.status !== "identical") fail("ancestry-invalid", "candidate merge is not an ancestor of the promotion SHA", "Promote a descendant of the verified merged candidate identity.");
   return { repository, workflowFile };
@@ -354,12 +397,13 @@ function validateCandidateIdentity({
   currentToolingSha,
   passport,
   buildSummary,
+  anchorProvenance,
 }) {
   const sha = exactSha(targetSha, "targetSha");
   const tree = exactSha(targetTree, "targetTree");
   const runtimeSha = exactSha(expectedRuntimeSha, "expectedRuntimeSha");
   const toolingSha = exactSha(currentToolingSha, "currentToolingSha");
-  const validation = validateReleaseCandidatePassport({ passport, repository, targetChannel: channel, buildSummary });
+  const validation = validateReleaseCandidatePassport({ passport, repository, targetChannel: anchorProvenance ? "" : channel, buildSummary });
   if (!validation.ok) fail("passport-invalid", `Release Candidate Passport validation failed: ${validation.errors.join("; ")}`, "Preserve the candidate evidence and explicitly create a new candidate after fixing the producer.");
   const expectedPassportHash = sha256Json({
     repository: passport.repository,
@@ -369,6 +413,7 @@ function validateCandidateIdentity({
     buildchain: passport.buildchain,
     ...(passport.gateProfileEvidence ? { gateProfileEvidence: passport.gateProfileEvidence } : {}),
     ...(passport.familyEvidence ? { familyEvidence: passport.familyEvidence } : {}),
+    ...(passport.consumerPolicy ? { consumerPolicy: passport.consumerPolicy } : {}),
     ...(passport.controllerReceipts ? { controllerReceipts: passport.controllerReceipts } : {}),
   });
   if (passport.candidateHash !== expectedPassportHash) fail("candidate-root-mismatch", "Release Candidate Passport candidate hash does not match its content", "Preserve the run evidence and explicitly create a new candidate after fixing the producer.");
@@ -378,7 +423,7 @@ function validateCandidateIdentity({
   return { sha, tree, runtimeSha, toolingSha };
 }
 
-function validateRecoveryTransaction({ existingTransaction, expectedTransactionId, repository, version, passport, sha, targetRef, candidateRoot }) {
+function validateRecoveryTransaction({ existingTransaction, expectedTransactionId, repository, version, passport, channel, sha, targetRef, candidateRoot }) {
   const actualTransactionId = String(existingTransaction?.id || "");
   if (expectedTransactionId && !actualTransactionId) fail("transaction-identity-conflict", `expected transaction ${expectedTransactionId} does not exist`, "Remove the stale transaction identity only if no durable transaction was ever sealed; otherwise preserve evidence and enter repair_required.");
   if (expectedTransactionId && expectedTransactionId !== actualTransactionId) fail("transaction-identity-conflict", `existing transaction ${actualTransactionId} conflicts with expected ${expectedTransactionId}`, "Enter repair_required and inspect the durable transaction before any retry.");
@@ -389,7 +434,7 @@ function validateRecoveryTransaction({ existingTransaction, expectedTransactionI
     assertEqual(normalizedRef(existingTransaction.target_ref), normalizedRef(targetRef), "transaction-identity-conflict", "durable transaction target ref", "Enter repair_required; never retarget a sealed transaction.");
     assertEqual(existingTransaction.source_sha, sha, "transaction-identity-conflict", "durable transaction source SHA", "Resume with the transaction's exact promotion SHA or enter repair_required.");
     assertEqual(existingTransaction.version, version, "transaction-identity-conflict", "durable transaction version", "Enter repair_required; never change a sealed publication version.");
-    assertEqual(existingTransaction.channel, passport.target.channel, "transaction-identity-conflict", "durable transaction channel", "Enter repair_required; never move a transaction between channels.");
+    assertEqual(existingTransaction.channel, channel || passport.target.channel, "transaction-identity-conflict", "durable transaction channel", "Enter repair_required; never move a transaction between channels.");
   }
   if (existingTransaction?.candidateRoot && existingTransaction.candidateRoot !== candidateRoot) fail("transaction-identity-conflict", "existing transaction is sealed to a different candidate root", "Enter repair_required; never reuse the conflicting transaction.");
   return actualTransactionId;
@@ -415,6 +460,7 @@ export function verifyReleaseCandidateRecovery({
   workflow,
   pullRequest,
   ancestry,
+  anchorProvenance = undefined,
   passport,
   buildSummary,
   controllerReceipts = [],
@@ -430,10 +476,11 @@ export function verifyReleaseCandidateRecovery({
   const { repository, workflowFile } = validateCandidateProvenance({
     candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile,
     expectedWorkflowName, targetRef, run, workflow, pullRequest, ancestry,
+    passport, anchorProvenance, expectedTransactionId,
   });
   const { sha, tree, runtimeSha, toolingSha } = validateCandidateIdentity({
     repository, channel, targetSha, targetTree, expectedSourceTree,
-    expectedRuntimeSha, currentToolingSha, passport, buildSummary,
+    expectedRuntimeSha, currentToolingSha, passport, buildSummary, anchorProvenance,
   });
 
   const recoveredArtifacts = artifacts.map(normalizeArtifact).sort((left, right) => left.name.localeCompare(right.name));
@@ -478,7 +525,7 @@ export function verifyReleaseCandidateRecovery({
 
   const version = required(publicationVersion || passport.target?.version, "publicationVersion");
   const actualTransactionId = validateRecoveryTransaction({
-    existingTransaction, expectedTransactionId, repository, version, passport, sha, targetRef, candidateRoot,
+    existingTransaction, expectedTransactionId, repository, version, passport, channel, sha, targetRef, candidateRoot,
   });
 
   const receipt = {
@@ -496,9 +543,17 @@ export function verifyReleaseCandidateRecovery({
       sourceSha: passport.source.headSha,
       mergeSha: String(pullRequest.mergeSha || ""),
       tree: passport.source.treeHash,
+      ...(anchorProvenance ? {
+        provenance: "anchored-rematerialization",
+        supersededCandidate: {
+          runId: String(anchorProvenance.run.id),
+          candidateRoot: String(anchorProvenance.request.supersededCandidate.root),
+          sourceSha: String(anchorProvenance.request.supersededCandidate.sha),
+        },
+      } : {}),
     },
     target: {
-      channel: passport.target.channel,
+      channel,
       ref: normalizedRef(targetRef),
       sha,
       observedRefSha: exactSha(targetRefSha, "targetRefSha"),

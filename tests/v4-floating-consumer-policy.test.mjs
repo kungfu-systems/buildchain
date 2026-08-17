@@ -475,6 +475,31 @@ test("v4 release candidate passports require and hash the source/runtime-bound r
   );
   const passport = createReleaseCandidatePassport(input);
   assert.equal(validateReleaseCandidatePassport({ passport }).ok, true);
+  const sourceLocked = createReleaseCandidatePassport({
+    ...input,
+    sourceHeadSha: "9".repeat(40),
+    buildSummary: {
+      ...input.buildSummary,
+      publishSource: { ref: "publish-gate/anchor" },
+    },
+  });
+  assert.equal(sourceLocked.source.headSha, "9".repeat(40));
+  assert.equal(
+    sourceLocked.consumerPolicy.receipt.caller.sourceSha,
+    SOURCE_SHA,
+  );
+  assert.equal(
+    validateReleaseCandidatePassport({ passport: sourceLocked }).ok,
+    true,
+  );
+  assert.throws(
+    () =>
+      createReleaseCandidatePassport({
+        ...input,
+        sourceHeadSha: "9".repeat(40),
+      }),
+    /caller-source-mismatch/u,
+  );
   passport.consumerPolicy.receipt.invocation.resolvedRuntimeSha = "f".repeat(
     40,
   );

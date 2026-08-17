@@ -895,10 +895,7 @@
     },
     {
       "path": ".github/workflows/build-surface-fixture.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1236,5 +1233,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "206b96be4320152fa23c2b04a72f1ff9bba889c13c7d2225bca71bd70a79939e"
+  "registryDigest": "9c930540ed2366db36802ce03cac597657e45ff402c14ef13099c788ed4e2501"
 }

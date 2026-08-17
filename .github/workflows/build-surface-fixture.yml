@@ -9,28 +9,28 @@ on:
       - release/v*/v*
   workflow_dispatch:
     inputs:
-      artifact-transfer-mode:
-        description: "Artifact transfer mode for dogfood validation"
-        required: false
-        default: "github-artifacts"
+      artifact-transfer-mode: { description: "Artifact transfer mode for dogfood validation", default: "github-artifacts" }
+      buildchain-ref: { default: "v4-alpha" }
+      publish-source-ref: { default: "" }
+      publish-anchor-request-json: { default: "" }
 
-permissions:
-  actions: read
-  contents: read
-  issues: write
-  id-token: write
+permissions: { actions: read, contents: read, issues: write, id-token: write }
 jobs:
   libnode-shaped:
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
     secrets: inherit
     with:
       buildchain-channel: alpha
+      buildchain-ref: ${{ github.event.inputs['buildchain-ref'] || 'v4-alpha' }}
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify
       artifact-transfer-mode: ${{ github.event.inputs['artifact-transfer-mode'] || 'github-artifacts' }}
       buildchain-contract-drift-issue-mode: "off"
       buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
+      publish-channel: ${{ github.event.inputs['publish-source-ref'] != '' && 'alpha' || 'none' }}
+      publish-source-ref: ${{ github.event.inputs['publish-source-ref'] }}
+      publish-anchor-request-json: ${{ github.event.inputs['publish-anchor-request-json'] }}
       checkout-cache-fallback: github
       artifact-name: libnode-shaped
       artifact-name-template: "{artifact}-{platform}-{shortSha}"
@@ -44,7 +44,7 @@ jobs:
   buildchain-package-candidate:
     name: Seal Buildchain npm product payload
     needs: [libnode-shaped]
-    if: ${{ needs.libnode-shaped.result == 'success' && github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/')) }}
+    if: ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || (github.event_name == 'workflow_dispatch' && inputs['publish-source-ref'] != '')) }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -53,6 +53,7 @@ jobs:
       - name: Checkout exact candidate source
         uses: actions/checkout@v7.0.0
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs['publish-source-ref'] || github.sha }}
           persist-credentials: false
 
       - uses: actions/setup-node@v6.4.0
@@ -83,9 +84,7 @@ jobs:
 
           const passportPath = ".buildchain/buildchain-package-candidate/passport/release-candidate-passport.json";
           const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
-          const tree = process.env.GITHUB_SHA
-            ? String((await import("node:child_process")).execFileSync("git", ["show", "-s", "--format=%T", process.env.GITHUB_SHA], { encoding: "utf8" })).trim()
-            : "";
+          const tree = String((await import("node:child_process")).execFileSync("git", ["show", "-s", "--format=%T", "HEAD"], { encoding: "utf8" })).trim();
           if (tree !== passport.source.treeHash) {
             throw new Error(`package candidate tree ${tree} differs from Passport ${passport.source.treeHash}`);
           }

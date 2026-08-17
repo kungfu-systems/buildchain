@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-17
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -74,6 +74,27 @@ The supported priority classes are `ordinary`, `expedited`, and `emergency`.
 The queue does not infer an emergency: callers must choose it explicitly under
 their reviewed policy. Delivery classes are `non-native-fast`,
 `native-proof-required`, `cross-platform`, and `release`.
+
+## CI lane change budget
+
+`architecture/ci-lane-change-budget.json` pins the exact protected-Dev cut
+that predates lane-budget enforcement. `scripts/check-ci-lane-change-budget.mjs`
+compares the current workflow job set with that cut on every repository check.
+Legacy jobs remain readable without invented metadata, while every newly added
+job fails closed until its exact `<workflow>#<job>` lane declares:
+
+- merge or non-merge authority class;
+- trigger class;
+- concurrency scope and `cancel-in-progress` behavior;
+- expected runner-minutes per run;
+- cancellation/settlement behavior; and
+- merge-critical SLO impact, expected contribution, metric, and rationale.
+
+The guard is repository policy only. It does not become another required
+GitHub status, acquire merge-queue authority, or relax Delivery Warrant,
+exact-head, approval, required-check, and protected-ref enforcement. A removed
+lane must also remove its declaration, so stale budget records cannot conceal
+workflow drift.
 
 A release-blocker candidate may additionally carry a rooted priority claim
 created from a settled Release Train dual landing. The claim binds the exact

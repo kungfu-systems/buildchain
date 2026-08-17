@@ -5700,6 +5700,59 @@
       ]
     },
     {
+      "id": "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "name": "CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "kind": "constant",
+      "signature": "const CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/ci-lane-change-budget.js",
+        "line": 4
+      },
+      "example": "import { CI_LANE_CHANGE_BUDGET_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
+      "name": "evaluateCiLaneChangeBudget",
+      "kind": "function",
+      "signature": "function evaluateCiLaneChangeBudget({ policy, workflows, baselineWorkflows = null, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ policy, workflows, baselineWorkflows = null, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/ci-lane-change-budget.js",
+        "line": 180
+      },
+      "example": "import { evaluateCiLaneChangeBudget } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/controller-evidence.js#aggregateControllerReceipts",
       "name": "aggregateControllerReceipts",
       "kind": "function",
@@ -19894,7 +19947,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 529
+        "line": 584
       },
       "example": "import { recoveryFailure } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20013,11 +20066,11 @@
       "id": "packages/core/release-candidate-recovery.js#verifyReleaseCandidateRecovery",
       "name": "verifyReleaseCandidateRecovery",
       "kind": "function",
-      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
+      "signature": "function verifyReleaseCandidateRecovery({ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, anchorProvenance = undefined, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
+          "signature": "{ candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile, expectedWorkflowName, channel, targetRef, targetSha, targetRefSha = targetSha, targetTree, expectedSourceTree = \"\", expectedCandidateRoot = \"\", expectedRuntimeSha, expectedTransactionId = \"\", existingTransaction = undefined, run, workflow, pullRequest, ancestry, anchorProvenance = undefined, passport, buildSummary, controllerReceipts = [], platformManifests = [], platformManifestEvidence = [], productPayloadManifests = [], artifacts = [], publicationVersion = \"\", currentToolingSha, recoveryRunId = \"\", createdAt = new Date().toISOString(), } = {}"
         }
       ],
       "returns": "unknown",
@@ -20029,7 +20082,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 398
+        "line": 443
       },
       "example": "import { verifyReleaseCandidateRecovery } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24666,7 +24719,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 188
+        "line": 202
       },
       "example": "import { certifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24767,7 +24820,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 124
+        "line": 138
       },
       "example": "import { v4FloatingConsumerDocumentRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24796,7 +24849,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 273
+        "line": 287
       },
       "example": "import { verifyV4FloatingConsumerPolicyCertification } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24825,7 +24878,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 128
+        "line": 142
       },
       "example": "import { verifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24854,7 +24907,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 84
+        "line": 89
       },
       "example": "import { resolveV4FloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24883,7 +24936,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 370
+        "line": 428
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24912,7 +24965,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 71
+        "line": 76
       },
       "example": "import { v4ConsumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25923,14 +25976,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:2135e4ca7315ff96d11e53ac12fe27f399f6b77b6de1fe25782861f76b06f9b4",
+      "digest": "sha256:133da9d5574d655a6ea618522aae12a3138c7ea647fda85fb0204373d55d4201",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 627,
+      "symbolCount": 629,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -26031,6 +26084,7 @@
         "packages/core/homebrew.js#checkHomebrewTap",
         "packages/core/kfd2-product-claims.js#checkKfd2ProductClaimOutputs",
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
@@ -26188,6 +26242,7 @@
         "packages/core/public-surface-audit.js#enumerateSitePages",
         "packages/core/public-surface-audit.js#enumerateWorkflowInputs",
         "packages/core/buildchain-contract.js#evaluateBuildchainContractLock",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
         "packages/core/github-governance-authority.js#evaluateCodeownersAuthority",
         "packages/core/github-governance-authority.js#evaluateGithubGovernanceSnapshot",
         "packages/core/kfd-product-gates.js#evaluateKfdProductGate",
@@ -26648,14 +26703,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:2135e4ca7315ff96d11e53ac12fe27f399f6b77b6de1fe25782861f76b06f9b4",
+      "digest": "sha256:133da9d5574d655a6ea618522aae12a3138c7ea647fda85fb0204373d55d4201",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 627,
+      "symbolCount": 629,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -26756,6 +26811,7 @@
         "packages/core/homebrew.js#checkHomebrewTap",
         "packages/core/kfd2-product-claims.js#checkKfd2ProductClaimOutputs",
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
@@ -26913,6 +26969,7 @@
         "packages/core/public-surface-audit.js#enumerateSitePages",
         "packages/core/public-surface-audit.js#enumerateWorkflowInputs",
         "packages/core/buildchain-contract.js#evaluateBuildchainContractLock",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
         "packages/core/github-governance-authority.js#evaluateCodeownersAuthority",
         "packages/core/github-governance-authority.js#evaluateGithubGovernanceSnapshot",
         "packages/core/kfd-product-gates.js#evaluateKfdProductGate",
@@ -27643,6 +27700,30 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/ci-lane-change-budget",
+      "export": "./ci-lane-change-budget",
+      "target": "./packages/core/ci-lane-change-budget.js",
+      "digest": "sha256:0cabfc98dedfeeb37a49461e7fbb480e8bb1b5b22cf2ac4ae5bae31305977033",
+      "summary": "Exact-baseline CI lane admission requiring authority, trigger, concurrency, runner, cancellation, and merge-critical SLO budgets.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 2,
+      "symbolIds": [
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/channel-candidate",
       "export": "./channel-candidate",
       "target": "./packages/core/channel-candidate.js",
@@ -28308,7 +28389,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:8029a33c13b7b3998f06824e549cc99d17fff399ac654b73f1ff81d1e9aa2d99",
+      "digest": "sha256:63025628454a130404894dd3a08906098c6cdd57ed33aff85264da6548348e42",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29212,7 +29293,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate",
       "export": "./release-candidate",
       "target": "./packages/core/release-candidate.js",
-      "digest": "sha256:c6295a97291d13129865508e64e8a2b92bf8bc0a89dc850c84084669d76e1105",
+      "digest": "sha256:3d4bd066233257461738699248ecddeacc47c895fbb534d0691c00793fa330a8",
       "summary": "PR-stage release-candidate artifact, passport, and promote-only resolver APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29239,7 +29320,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
       "export": "./release-candidate-recovery",
       "target": "./packages/core/release-candidate-recovery.js",
-      "digest": "sha256:d863601bcd5be9cfbf4455961d1183486e6d191ce34dc7c6a14f2ad71146b175",
+      "digest": "sha256:c180e84ab83bc79ef5f4f558cfd6585f34c1505f4b4051ff161528fb7dec9177",
       "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29779,7 +29860,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:da67dda844284984f54dec23c4ccef83e4a928aef7daaf2cf4d6d3c9e1315e6a"
+      "digest": "sha256:4dfa3b4f5e7096add1ebb822e16782c48a13d4c556b3bdee12fc99c863fbec4f"
     },
     {
       "id": "build-facts",

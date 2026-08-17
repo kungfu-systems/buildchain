@@ -47,8 +47,10 @@
         },
         "sourcePath": { "type": "string" },
         "sourceLine": { "type": "integer", "minimum": 0 },
-        "visibleSelector": { "enum": ["", "v4", "v4-alpha"] },
-        "selectorClass": { "enum": ["", "floating", "rejected"] },
+        "visibleSelector": { "enum": ["", "v4", "v4-alpha", "alpha/v4/v4.0"] },
+        "selectorClass": {
+          "enum": ["", "floating", "protected-bootstrap", "rejected"]
+        },
         "channel": { "enum": ["", "stable", "alpha"] },
         "resolvedWorkflowSha": {
           "type": "string",
