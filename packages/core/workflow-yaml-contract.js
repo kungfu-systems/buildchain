@@ -263,10 +263,33 @@ export function parseWorkflowCallJobs(text) {
     .filter((job) => job.uses);
 }
 
+export function parseWorkflowJobs(text) {
+  const lines = String(text || "").split(/\r?\n/);
+  const jobs = topLevelEntry(lines, "jobs");
+  if (!jobs) return [];
+  return directEntries(lines, jobs.line)
+    .map((job) => {
+      const properties = directEntries(lines, job.line);
+      const property = (name) =>
+        properties.find((entry) => entry.key === name) || null;
+      return {
+        id: job.key,
+        name: unquote(property("name")?.value || job.key),
+        uses: unquote(property("uses")?.value || ""),
+        runsOn: unquote(property("runs-on")?.value || ""),
+        timeoutMinutes: property("timeout-minutes")
+          ? scalar(property("timeout-minutes").value)
+          : null,
+      };
+    })
+    .sort((left, right) => compareCodeUnits(left.id, right.id));
+}
+
 export function parseWorkflowDocument(text) {
   return {
     triggers: parseTriggers(String(text || "").split(/\r?\n/)),
     interface: parseReusableWorkflowInterface(text),
+    jobs: parseWorkflowJobs(text),
     callJobs: parseWorkflowCallJobs(text),
   };
 }

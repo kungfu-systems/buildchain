@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "95fc04d3d57cf7b098b9968f53ecda4e41c1451fd3dd6bd0dff84ae49f5dc5e4",
+    "sha256": "a500d696f4b9c4bfb0c354dc28d9bcc33963e2bb7ebdd999598efbf78fa533af",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "95fc04d3d57cf7b098b9968f53ecda4e41c1451fd3dd6bd0dff84ae49f5dc5e4",
+      "sha256": "a500d696f4b9c4bfb0c354dc28d9bcc33963e2bb7ebdd999598efbf78fa533af",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
@@ -1387,6 +1387,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./candidate-timeline"
+        },
+        {
+          "id": "export:./ci-lane-change-budget",
+          "name": "@kungfu-tech/buildchain/ci-lane-change-budget",
+          "kind": "package-export",
+          "sourcePath": "packages/core/ci-lane-change-budget.js",
+          "evidencePath": "packages/core/ci-lane-change-budget.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./ci-lane-change-budget"
         },
         {
           "id": "export:./channel-candidate",
@@ -7000,6 +7012,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 449
+    "publicSurfaceCount": 450
   }
 }
