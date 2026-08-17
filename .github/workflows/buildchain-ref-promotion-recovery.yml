@@ -16,22 +16,17 @@ on:
         default: true
         type: boolean
       resume-candidate-repository:
-        description: "Repository that owns the sealed candidate run"
-        required: true
-        default: "kungfu-systems/buildchain"
+        description: "Repository that owns the sealed candidate run; empty rematerializes a fresh candidate"
       resume-candidate-run-id:
-        description: "Exact successful Build Surface Fixture run ID"
-        required: true
+        description: "Exact successful Build Surface Fixture run ID; empty rematerializes a fresh candidate"
       resume-expected-source-tree:
         description: "Exact Git tree recorded for the sealed candidate"
-        required: true
       resume-expected-candidate-root:
         description: "Optional exact sha256 Release Candidate root"
         required: false
         default: ""
       resume-expected-candidate-runtime-sha:
         description: "Exact Buildchain runtime SHA recorded by the candidate"
-        required: true
       resume-buildchain-runtime-ref:
         description: "Approved v4 channel, train, or authority ref containing the fresh recovery runtime"
         required: true
@@ -42,8 +37,7 @@ on:
         description: "Exact durable publication transaction identity"
         required: true
       release-passport-v4-runtime-resume-evidence-json:
-        description: "Verified runtime A+B Stage Capsule resume evidence JSON"
-        required: true
+        description: "Verified runtime A+B Stage Capsule resume evidence JSON; required when resuming a candidate"
 
 permissions:
   contents: read
@@ -72,8 +66,10 @@ jobs:
         env:
           SOURCE_SHA: ${{ inputs.sha }}
           TARGET_REF: ${{ inputs['target-ref'] }}
+          CANDIDATE_REPOSITORY: ${{ inputs['resume-candidate-repository'] }}
           CANDIDATE_RUN_ID: ${{ inputs['resume-candidate-run-id'] }}
           CANDIDATE_TREE: ${{ inputs['resume-expected-source-tree'] }}
+          CANDIDATE_ROOT: ${{ inputs['resume-expected-candidate-root'] }}
           CANDIDATE_RUNTIME_SHA: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
           RECOVERY_RUNTIME_REF: ${{ inputs['resume-buildchain-runtime-ref'] }}
           RECOVERY_RUNTIME_SHA: ${{ inputs['resume-buildchain-runtime-sha'] }}
@@ -83,13 +79,17 @@ jobs:
           set -euo pipefail
           [[ "${SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::sha must be exact"; exit 1; }
           [[ "${TARGET_REF}" = "alpha/v4/v4.0" ]] || { echo "::error::recovery is restricted to alpha/v4/v4.0"; exit 1; }
-          [[ "${CANDIDATE_RUN_ID}" =~ ^[0-9]+$ ]] || { echo "::error::candidate run ID must be exact"; exit 1; }
-          [[ "${CANDIDATE_TREE}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate tree must be exact"; exit 1; }
-          [[ "${CANDIDATE_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate runtime must be exact"; exit 1; }
           [[ -n "${RECOVERY_RUNTIME_REF}" ]] || { echo "::error::recovery runtime ref is required"; exit 1; }
           [[ "${RECOVERY_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::recovery runtime must be exact"; exit 1; }
           [[ -n "${TRANSACTION_ID}" ]] || { echo "::error::transaction identity is required"; exit 1; }
-          [[ -n "${RESUME_EVIDENCE_JSON}" ]] || { echo "::error::runtime A+B evidence is required"; exit 1; }
+          if [[ -n "${CANDIDATE_RUN_ID}" ]]; then
+            [[ "${CANDIDATE_RUN_ID}" =~ ^[0-9]+$ && -n "${CANDIDATE_REPOSITORY}" ]] || { echo "::error::candidate run ID and repository must be exact"; exit 1; }
+            [[ "${CANDIDATE_TREE}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate tree must be exact"; exit 1; }
+            [[ "${CANDIDATE_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate runtime must be exact"; exit 1; }
+            [[ -n "${RESUME_EVIDENCE_JSON}" ]] || { echo "::error::runtime A+B evidence is required when resuming a candidate"; exit 1; }
+          elif [[ -n "${CANDIDATE_REPOSITORY}" || -n "${CANDIDATE_TREE}" || -n "${CANDIDATE_ROOT}" || -n "${CANDIDATE_RUNTIME_SHA}" || -n "${RESUME_EVIDENCE_JSON}" ]]; then
+            { echo "::error::candidate recovery inputs must be supplied together or omitted together"; exit 1; }
+          fi
 
       - name: Checkout exact protected recovery source
         uses: actions/checkout@v7.0.0
@@ -258,8 +258,8 @@ jobs:
       artifact-patterns: "buildchain-package-*"
       publish-rematerialize-on-resume: true
       github-release: true
-      github-release-payload-patterns: "*.tgz"
-      standalone-binary-distribution: false
+      github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
+      standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
       required-status-check: check
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       required-artifact-count: 0

@@ -113,20 +113,25 @@ jobs:
           exit 1
 
   reject-invalid-candidate-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && (inputs['recover-durable-transaction'] != true || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || (inputs['resume-expected-source-tree'] == '' && inputs['resume-expected-candidate-root'] == '')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && (inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || (inputs['resume-expected-source-tree'] == '' && inputs['resume-expected-candidate-root'] == '')) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
       - name: Require exact candidate recovery identity
         run: |
-          echo "::error::Candidate recovery requires recover-durable-transaction=true, sha, repository, current runtime SHA, candidate runtime SHA, and expected tree or candidate root."
+          echo "::error::Candidate recovery requires sha, repository, current runtime SHA, candidate runtime SHA, and expected tree or candidate root."
           exit 1
 
   promote-alpha:
     if: >-
       ${{
-        (github.event_name == 'workflow_dispatch' && startsWith(inputs['target-ref'], 'alpha/') && inputs['recover-durable-transaction'] == true && inputs.sha != '') ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          startsWith(inputs['target-ref'], 'alpha/') &&
+          (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
+          inputs.sha != ''
+        ) ||
         (
           github.event_name == 'workflow_run' &&
           github.event.workflow_run.conclusion == 'success' &&
@@ -177,7 +182,7 @@ jobs:
       required-status-check: check
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       required-artifact-count: 0
-      publish-transaction-override: ${{ inputs['recover-durable-transaction'] }}
+      publish-transaction-override: ${{ inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '' }}
       publish-required-artifacts-json: '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]'
       publish-package-main: "@kungfu-tech/buildchain"
       trusted-publishing: true

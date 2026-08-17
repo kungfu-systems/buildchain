@@ -111,6 +111,18 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\['release-passport-v4-runtime-resume-evidence-json'\] \}\}/u,
   );
+  assert.match(
+    workflow,
+    /candidate recovery inputs must be supplied together or omitted together/u,
+  );
+  assert.match(
+    workflow,
+    /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/u,
+  );
   assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/u);
   assert.match(
     workflow,
