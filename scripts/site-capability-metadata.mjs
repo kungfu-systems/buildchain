@@ -195,6 +195,7 @@ export function nodeApiMeta(exportName) {
     "./homebrew": { group: "distribution-indexes", summary: "Homebrew tap fact collection, Formula rendering, update, and check APIs." },
     "./build-facts": { group: "observability-diagnostics", summary: "Git source, version, module output, product artifact, and legacy Kungfu build fact APIs." },
     "./candidate-timeline": { group: "observability-diagnostics", summary: "Source-bound candidate event normalization, per-attempt critical-path-safe aggregation, and compact reporting APIs." },
+    "./ci-lane-change-budget": { group: "governance-versioning", summary: "Exact-baseline CI lane admission requiring authority, trigger, concurrency, runner, cancellation, and merge-critical SLO budgets." },
     "./channel-candidate": { group: "governance-versioning", summary: "Exact-source channel candidate decisions, same-SHA workflow evidence validation, and deterministic source-lock reference APIs." },
     "./dev-delivery-authority": { group: "governance-versioning", summary: "Opt-in bounded Qualification Lease, exclusive Landing Warrant, provider-attempt admission and heartbeat readback, terminal sealing, and expired-Landing verification APIs." },
     "./dev-delivery-warrant": { group: "governance-versioning", summary: "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs." },
