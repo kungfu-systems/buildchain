@@ -111,6 +111,7 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\['release-passport-v4-runtime-resume-evidence-json'\] \}\}/u,
   );
+  assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/u);
   assert.match(
     workflow,
     /router-ref: \$\{\{ steps\.route\.outputs\.router-ref \}\}/u,
