@@ -216,6 +216,14 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_RUNTIME_REF: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-ref \}\}/);
   assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_RUNTIME_SHA: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-sha \}\}/);
   assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: \$\{\{ needs\.trust-gate\.outputs\.buildchain-contract-digest \}\}/);
+  assert.match(reusableBuild, /buildchain-contract-expected-channel:/);
+  assert.match(reusableBuild, /buildchain-contract-expected-major:/);
+  assert.match(reusableBuild, /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-contract-expected-channel \}\}/);
+  assert.match(reusableBuild, /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-contract-expected-major \}\}/);
+  assert.match(
+    reusableBuild,
+    /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: \$\{\{ steps\.runtime\.outputs\.runtime-override == 'true' \|\| steps\.runtime\.outputs\.runtime-class == 'exact-sha' \}\}/,
+  );
   assert.doesNotMatch(reusableBuild, /BUILDCHAIN_CONTROLLER_RUNTIME_(?:REF|SHA): \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-/);
   assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
 
