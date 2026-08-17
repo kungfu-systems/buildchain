@@ -16,6 +16,7 @@ import {
   validateReleaseCandidatePassport,
 } from "../packages/core/release-candidate.js";
 import { createReleasePassport } from "../packages/core/release-passport.js";
+import { resolveV4ConsumerPolicyCertificationIdentity } from "../packages/core/v4-floating-consumer-release-passport.js";
 import { parseYamlUses } from "../packages/core/workflow-yaml-contract.js";
 import { resolveLegacyConsumerPolicyReceipt } from "../scripts/generate-release-candidate-passport.mjs";
 import { certifyCommand } from "../scripts/v4-consumer-policy.mjs";
@@ -551,6 +552,20 @@ test("final v4 Release Passport construction requires fresh external certificati
     v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
   });
   assert.equal(passport.v4ConsumerPolicy.certification.status, "certified");
+  const promotionSourceSha = "9".repeat(40);
+  const treeEquivalent = createReleasePassport({
+    ...input,
+    sourceSha: promotionSourceSha,
+    release: {
+      promotionRouting,
+      builtSourceSha: SOURCE_SHA,
+      promotionChannelSha: promotionSourceSha,
+      treeEquivalent: true,
+    },
+    v4ConsumerPolicyCertification: certification,
+    v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
+  });
+  assert.equal(treeEquivalent.release.builtSourceSha, SOURCE_SHA);
   assert.throws(
     () =>
       createReleasePassport({
@@ -621,4 +636,27 @@ test("final v4 Release Passport construction requires fresh external certificati
       }),
     /stable-lock-root-mismatch/u,
   );
+});
+
+test("cross-runtime certification keeps candidate source and build runtime identity", () => {
+  const identity = resolveV4ConsumerPolicyCertificationIdentity({
+    release: {
+      builtSourceSha: SOURCE_SHA,
+      treeEquivalent: true,
+    },
+    routing: { runtime: { resolvedSha: ALPHA_SHA } },
+    runtimeResume: {
+      lineage: {
+        attempts: {
+          build: { runtimeSha: STABLE_SHA },
+          resume: { runtimeSha: ALPHA_SHA },
+        },
+      },
+    },
+    sourceSha: "9".repeat(40),
+  });
+  assert.deepEqual(identity, {
+    sourceSha: SOURCE_SHA,
+    runtimeSha: STABLE_SHA,
+  });
 });

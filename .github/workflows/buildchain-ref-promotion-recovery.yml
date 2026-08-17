@@ -87,12 +87,23 @@ jobs:
             { echo "::error::candidate recovery inputs must be supplied together or omitted together"; exit 1; }
           fi
 
-      - name: Checkout exact protected recovery source
+      - name: Checkout exact recovered publication source
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ inputs.sha }}
-          path: .buildchain/consumer
+          path: .buildchain/recovered-source
           persist-credentials: false
+
+      - name: Project immutable consumer policy locks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/consumer/.buildchain
+          for lock in contract-lock.json alpha-contract-lock.json; do
+            source_path=".buildchain/recovered-source/.buildchain/${lock}"
+            test -f "${source_path}"
+            cp "${source_path}" ".buildchain/consumer/.buildchain/${lock}"
+          done
 
       - name: Checkout exact recovery router and policy runtime
         uses: actions/checkout@v7.0.0

@@ -138,6 +138,12 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /candidate recovery inputs must be supplied together or omitted together/u,
   );
+  assert.match(workflow, /path: \.buildchain\/recovered-source/u);
+  assert.match(
+    workflow,
+    /cp "\$\{source_path\}" "\.buildchain\/consumer\/\.buildchain\/\$\{lock\}"/u,
+  );
+  assert.doesNotMatch(workflow, /path: \.buildchain\/consumer\s*$/mu);
   assert.doesNotMatch(
     workflow,
     /runtime A\+B evidence is required for cross-runtime candidate resume/u,
@@ -184,7 +190,7 @@ test("v4 floating policy contract rejects certification without caller lock read
   assert.throws(
     () =>
       assertPromotionCertificationWiring(
-        "node .buildchain/runtime/scripts/v4-consumer-policy.mjs certify",
+        'node "${policy_runtime}/scripts/v4-consumer-policy.mjs" certify',
       ),
     /promotion certification is missing/u,
   );
