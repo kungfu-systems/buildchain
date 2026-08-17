@@ -12,12 +12,9 @@ on:
       artifact-transfer-mode: { description: "Artifact transfer mode for dogfood validation", default: "github-artifacts" }
       buildchain-ref: { default: "v4-alpha" }
       publish-source-ref: { default: "" }
+      publish-anchor-request-json: { default: "" }
 
-permissions:
-  actions: read
-  contents: read
-  issues: write
-  id-token: write
+permissions: { actions: read, contents: read, issues: write, id-token: write }
 jobs:
   libnode-shaped:
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
@@ -33,6 +30,7 @@ jobs:
       buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
       publish-channel: ${{ github.event.inputs['publish-source-ref'] != '' && 'alpha' || 'none' }}
       publish-source-ref: ${{ github.event.inputs['publish-source-ref'] }}
+      publish-anchor-request-json: ${{ github.event.inputs['publish-anchor-request-json'] }}
       checkout-cache-fallback: github
       artifact-name: libnode-shaped
       artifact-name-template: "{artifact}-{platform}-{shortSha}"

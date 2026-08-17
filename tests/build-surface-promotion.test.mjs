@@ -471,6 +471,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /default: "github-artifacts"/);
   assert.match(workflow, /buildchain-ref: \{ default: "v4-alpha" \}/);
   assert.match(workflow, /publish-source-ref: \{ default: "" \}/);
+  assert.match(workflow, /publish-anchor-request-json: \{ default: "" \}/);
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
@@ -478,6 +479,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /buildchain-channel: alpha/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.inputs\['buildchain-ref'\] \|\| 'v4-alpha' \}\}/);
   assert.match(workflow, /publish-channel: \$\{\{ github\.event\.inputs\['publish-source-ref'\] != '' && 'alpha' \|\| 'none' \}\}/);
+  assert.match(workflow, /publish-anchor-request-json: \$\{\{ github\.event\.inputs\['publish-anchor-request-json'\] \}\}/);
   assert.doesNotMatch(workflow, /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
   assert.match(
     workflow,
