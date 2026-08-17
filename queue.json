@@ -3,15 +3,52 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 796,
-  "fencingCounter": 170,
+  "generation": 797,
+  "fencingCounter": 171,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v3/v3.0",
+    "candidateId": "sha256:43954452ed2d743b315aad8f8f39a64ed173fb77841bc2ff22261ad5a95e6f7c",
+    "pullRequestNumber": 2933,
+    "sourceHead": "b939f701cea54962449d7390cceee2ccd92b8dec",
+    "assignmentRoot": "sha256:b3a27b636e88c3610c20d2ff0f7fa80be9d48d5475d3d239c50385d896f91c4e",
+    "initiativeRoot": "sha256:5198aa5b135f0a6f32766945f0b3ba72a0ea69749df70255a24460bcd3e804b1",
+    "sourceIdentityRoot": "sha256:911da77a6ca7acec7f9506a319a7568971ef52e95e5f2e899ea4a793f76d0621",
+    "sourcePatchRoot": "sha256:bfd0af28386e7c2ee82e653b91b7e54ecaab84983f8d69378ea5c70c3d74e557",
+    "sourceProofRoot": "sha256:4a3df1e0e67b7f100def661b97a0dad3c7509611d01b0771f3dc947b5378111b",
+    "planRoot": "sha256:4727cd74096c68ad0847bcbb9c0a449a7933726240d3bc7a8e26dcf50b031753",
+    "closureRoot": "sha256:2b0023040ea092d086bb6c708dcab98110217b7a2186bd4b9923eb73192b1303",
+    "dependencyRoot": "sha256:d6bb868e719b52f38f7d5b702fe94cf9303eb416cba5249c5d249f8c4eeeece7",
+    "toolchainRoot": "sha256:8dadba6bad60c63f3dd75a89936ed74f3d3747a75177a41b7e0813d80130177f",
+    "environmentRoot": "sha256:10d4d45cec1fc54fa0d2b35e0faba58775e2369c0be42ea403a6277691e071b5",
+    "affectedPaths": [
+      "architecture/maintainability-policy.json",
+      "fixtures/ledger-specification-driver/BOUNDARIES.md",
+      "fixtures/ledger-specification-driver/authority.json",
+      "fixtures/ledger-specification-driver/driver.js",
+      "fixtures/ledger-specification-driver/package.json",
+      "fixtures/ledger-specification-driver/vectors.json",
+      "fixtures/ledger-specification-driver/verifier.js",
+      "tests/internal-architecture.test.mjs",
+      "tests/non-kfd-specification-driver-clean-room.test.mjs"
+    ],
+    "sourceWorkflowRunId": 32031045528,
+    "deliveryClass": "native-proof-required",
+    "generation": 171,
+    "phase": "provisional",
+    "expectedOldStateRoot": "sha256:c0a88df538eee6ddb65c0307710e6b759dde772be6e58be952d1fd64cfc962a5",
+    "issuedAt": "2026-08-17T12:41:04.309Z",
+    "expiresAt": "2026-08-17T13:41:04.309Z",
+    "fencingToken": "sha256:6aedfe42c152193f895df7b08f9af3cf011c9cdd4540d77cfac1b7012d9f5bc2",
+    "nextAction": "Run or reuse the exact semantic native proof, then atomically qualify this fenced Warrant."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -6446,10 +6483,10 @@
       "sourceWorkflowRunId": 32031045528,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-17T12:41:00.974Z",
-      "updatedAt": "2026-08-17T12:41:00.974Z",
+      "updatedAt": "2026-08-17T12:41:04.309Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         "architecture/maintainability-policy.json",
@@ -6464,6 +6501,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-17T12:41:00.974Z",
-  "stateRoot": "sha256:c0a88df538eee6ddb65c0307710e6b759dde772be6e58be952d1fd64cfc962a5"
+  "updatedAt": "2026-08-17T12:41:04.309Z",
+  "stateRoot": "sha256:81e31c0522b69146733db1add75113274ea02d7b1c58467c1802f01bd39a02e8"
 }
