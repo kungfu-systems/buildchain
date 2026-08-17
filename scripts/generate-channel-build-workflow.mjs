@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(root, ".github/workflows/.build.yml");
 const targetPath = path.join(root, ".github/workflows/build.yml");
+const ADVANCED_ONLY_INPUTS = new Set(["buildchain-contract-expected-channel", "buildchain-contract-expected-major"]);
 
 function blockBetween(source, start, end) {
   const startIndex = source.indexOf(start);
@@ -20,10 +21,12 @@ function inputNames(inputBlock) {
 }
 
 function routerInputs(inputBlock) {
-  const adjusted = inputBlock.replace(
-    /(      buildchain-contract-lock-path:\n(?:        .*\n)*?        default:) "buildchain\.contract-lock\.json"/,
-    '$1 ""',
-  );
+  const adjusted = inputBlock
+    .replace(/^      buildchain-contract-expected-(?:channel|major):\n(?:        .*\n)+/gm, "")
+    .replace(
+      /(      buildchain-contract-lock-path:\n(?:        .*\n)*?        default:) "buildchain\.contract-lock\.json"/,
+      '$1 ""',
+    );
   return [
     "      buildchain-channel:",
     '        description: "Buildchain runtime channel: auto, alpha, or stable"',
@@ -347,7 +350,7 @@ function bindRouterCheckoutToWorkflowSha(workflow) {
 
 export function generateChannelBuildWorkflow(source) {
   const inputBlock = blockBetween(source, "    inputs:\n", "    secrets:\n");
-  const names = inputNames(inputBlock);
+  const names = inputNames(inputBlock).filter((name) => !ADVANCED_ONLY_INPUTS.has(name));
   const packageVersion = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version || "";
   const major = Number(String(packageVersion).split(".")[0]);
   if (!Number.isInteger(major) || major < 1) throw new Error("package.json version must declare a positive major");

@@ -673,6 +673,8 @@
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-expected-channel",
+          "buildchain-contract-expected-major",
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
@@ -740,7 +742,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 86,
+        "inputCount": 88,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -8367,7 +8369,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "613ca42d3fe36e953603221d1cf16478ba84e6cf27dd6d11ddb2c1caea42ec3b",
-    "workflowRegistryDigest": "7f5f1b3d6025684767590484fa317e03152b4d3d58784782ca991ced6b9c18ae",
+    "workflowRegistryDigest": "5597034740b72f61dc593406b5af2394cafccb57099851b2db615b3e7935b2e4",
     "pageRegistryDigest": "b1d9711067220840e4ff0055ceee18142e14ce431efc300e22d42fa3fb47dcca"
   },
   "comparison": {

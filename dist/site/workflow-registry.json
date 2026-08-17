@@ -112,6 +112,8 @@
         "build-command",
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-expected-channel",
+        "buildchain-contract-expected-major",
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
@@ -179,7 +181,7 @@
         "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 86,
+      "inputCount": 88,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
