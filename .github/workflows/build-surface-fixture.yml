@@ -84,9 +84,7 @@ jobs:
 
           const passportPath = ".buildchain/buildchain-package-candidate/passport/release-candidate-passport.json";
           const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
-          const tree = process.env.GITHUB_SHA
-            ? String((await import("node:child_process")).execFileSync("git", ["show", "-s", "--format=%T", process.env.GITHUB_SHA], { encoding: "utf8" })).trim()
-            : "";
+          const tree = String((await import("node:child_process")).execFileSync("git", ["show", "-s", "--format=%T", "HEAD"], { encoding: "utf8" })).trim();
           if (tree !== passport.source.treeHash) {
             throw new Error(`package candidate tree ${tree} differs from Passport ${passport.source.treeHash}`);
           }

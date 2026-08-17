@@ -495,6 +495,8 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   );
   assert.match(workflow, /ref: \$\{\{ github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] \|\| github\.sha \}\}/);
   assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
+  assert.match(workflow, /\["show", "-s", "--format=%T", "HEAD"\]/);
+  assert.doesNotMatch(workflow, /"--format=%T", process\.env\.GITHUB_SHA/);
   assert.match(workflow, /merge-multiple: true/);
   assert.doesNotMatch(
     workflow,
