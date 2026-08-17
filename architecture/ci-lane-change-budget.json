@@ -183,5 +183,23 @@
       ".github/workflows/verify.yml#stage-capsule-checkpoints"
     ]
   },
-  "declarations": []
+  "declarations": [
+    {
+      "laneId": ".github/workflows/build-surface-fixture.yml#libnode-shaped-anchor-recovery",
+      "authorityClass": "evidence",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 90,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "anchored recovery evidence availability",
+        "expectedContributionSeconds": 0,
+        "rationale": "The lane is skipped on pull requests and runs only for explicit rooted publish-gate/anchor recovery dispatches."
+      }
+    }
+  ]
 }
