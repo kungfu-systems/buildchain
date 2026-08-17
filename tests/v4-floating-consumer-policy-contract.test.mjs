@@ -138,7 +138,14 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /candidate recovery inputs must be supplied together or omitted together/u,
   );
-  assert.match(workflow, /runtime A\+B evidence is required for cross-runtime candidate resume/u);
+  assert.doesNotMatch(
+    workflow,
+    /runtime A\+B evidence is required for cross-runtime candidate resume/u,
+  );
+  assert.match(
+    workflow,
+    /release-passport-v4-runtime-resume-evidence-json:\s+\$\{\{ inputs\['release-passport-v4-runtime-resume-evidence-json'\] \}\}/u,
+  );
   assert.match(
     workflow,
     /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/u,
