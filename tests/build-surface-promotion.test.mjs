@@ -469,11 +469,15 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.doesNotMatch(workflow, /v\*\.\*/);
   assert.match(workflow, /artifact-transfer-mode:/);
   assert.match(workflow, /default: "github-artifacts"/);
+  assert.match(workflow, /buildchain-ref: \{ default: "v4-alpha" \}/);
+  assert.match(workflow, /publish-source-ref: \{ default: "" \}/);
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
   assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4-alpha/);
   assert.match(workflow, /buildchain-channel: alpha/);
+  assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.inputs\['buildchain-ref'\] \|\| 'v4-alpha' \}\}/);
+  assert.match(workflow, /publish-channel: \$\{\{ github\.event\.inputs\['publish-source-ref'\] != '' && 'alpha' \|\| 'none' \}\}/);
   assert.doesNotMatch(workflow, /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
   assert.match(
     workflow,
@@ -485,8 +489,9 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.match(
     workflow,
-    /buildchain-package-candidate:[\s\S]*?if: \$\{\{ needs\.libnode-shaped\.result == 'success' && github\.event_name == 'pull_request' && \(startsWith\(github\.base_ref, 'alpha\/'\) \|\| startsWith\(github\.base_ref, 'release\/'\)\) \}\}/,
+    /buildchain-package-candidate:[\s\S]*?github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] != ''/,
   );
+  assert.match(workflow, /ref: \$\{\{ github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] \|\| github\.sha \}\}/);
   assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
   assert.match(workflow, /merge-multiple: true/);
   assert.doesNotMatch(

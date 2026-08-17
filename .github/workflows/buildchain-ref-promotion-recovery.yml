@@ -21,10 +21,7 @@ on:
         description: "Exact successful Build Surface Fixture run ID; empty rematerializes a fresh candidate"
       resume-expected-source-tree:
         description: "Exact Git tree recorded for the sealed candidate"
-      resume-expected-candidate-root:
-        description: "Optional exact sha256 Release Candidate root"
-        required: false
-        default: ""
+      resume-expected-candidate-root: { description: "Optional exact sha256 Release Candidate root" }
       resume-expected-candidate-runtime-sha:
         description: "Exact Buildchain runtime SHA recorded by the candidate"
       resume-buildchain-runtime-ref:
@@ -86,7 +83,7 @@ jobs:
             [[ "${CANDIDATE_RUN_ID}" =~ ^[0-9]+$ && -n "${CANDIDATE_REPOSITORY}" ]] || { echo "::error::candidate run ID and repository must be exact"; exit 1; }
             [[ "${CANDIDATE_TREE}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate tree must be exact"; exit 1; }
             [[ "${CANDIDATE_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate runtime must be exact"; exit 1; }
-            [[ -n "${RESUME_EVIDENCE_JSON}" ]] || { echo "::error::runtime A+B evidence is required when resuming a candidate"; exit 1; }
+            [[ "${CANDIDATE_RUNTIME_SHA}" = "${RECOVERY_RUNTIME_SHA}" || -n "${RESUME_EVIDENCE_JSON}" ]] || { echo "::error::runtime A+B evidence is required for cross-runtime candidate resume"; exit 1; }
           elif [[ -n "${CANDIDATE_REPOSITORY}" || -n "${CANDIDATE_TREE}" || -n "${CANDIDATE_ROOT}" || -n "${CANDIDATE_RUNTIME_SHA}" || -n "${RESUME_EVIDENCE_JSON}" ]]; then
             { echo "::error::candidate recovery inputs must be supplied together or omitted together"; exit 1; }
           fi
