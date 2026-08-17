@@ -17,6 +17,7 @@ on:
 permissions: { actions: read, contents: read, issues: write, id-token: write }
 jobs:
   libnode-shaped:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs['publish-source-ref'] != 'publish-gate/anchor' }}
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
     secrets: inherit
     with:
@@ -41,10 +42,36 @@ jobs:
       expected-artifacts-json: >-
         {"minFiles":2,"requiredPaths":["fixtures/libnode-shaped/dist/install.txt","fixtures/libnode-shaped/dist/libnode-shaped.txt"]}
 
+  libnode-shaped-anchor-recovery:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['publish-source-ref'] == 'publish-gate/anchor' }}
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@alpha/v4/v4.0
+    secrets: inherit
+    with:
+      buildchain-channel: alpha
+      buildchain-ref: ${{ github.event.inputs['buildchain-ref'] || 'v4-alpha' }}
+      working-directory: fixtures/libnode-shaped
+      runner-preset: github-hosted
+      linux-container-preset: kungfu-verify
+      artifact-transfer-mode: ${{ github.event.inputs['artifact-transfer-mode'] || 'github-artifacts' }}
+      buildchain-contract-drift-issue-mode: "off"
+      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
+      publish-channel: alpha
+      publish-source-ref: publish-gate/anchor
+      publish-anchor-request-json: ${{ github.event.inputs['publish-anchor-request-json'] }}
+      checkout-cache-fallback: github
+      artifact-name: libnode-shaped
+      artifact-name-template: "{artifact}-{platform}-{shortSha}"
+      artifact-paths: |
+        fixtures/libnode-shaped/dist
+        .buildchain/artifacts
+      release-candidate: true
+      expected-artifacts-json: >-
+        {"minFiles":2,"requiredPaths":["fixtures/libnode-shaped/dist/install.txt","fixtures/libnode-shaped/dist/libnode-shaped.txt"]}
+
   buildchain-package-candidate:
     name: Seal Buildchain npm product payload
-    needs: [libnode-shaped]
-    if: ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || (github.event_name == 'workflow_dispatch' && inputs['publish-source-ref'] != '')) }}
+    needs: [libnode-shaped, libnode-shaped-anchor-recovery]
+    if: ${{ always() && (needs.libnode-shaped.result == 'success' || needs.libnode-shaped-anchor-recovery.result == 'success') && ((github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || (github.event_name == 'workflow_dispatch' && inputs['publish-source-ref'] != '')) }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read

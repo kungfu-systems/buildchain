@@ -476,6 +476,14 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
   assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4-alpha/);
+  assert.match(
+    workflow,
+    /libnode-shaped-anchor-recovery:[\s\S]*?uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@alpha\/v4\/v4\.0/,
+  );
+  assert.match(
+    workflow,
+    /libnode-shaped-anchor-recovery:[\s\S]*?inputs\['publish-source-ref'\] == 'publish-gate\/anchor'/,
+  );
   assert.match(workflow, /buildchain-channel: alpha/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.inputs\['buildchain-ref'\] \|\| 'v4-alpha' \}\}/);
   assert.match(workflow, /publish-channel: \$\{\{ github\.event\.inputs\['publish-source-ref'\] != '' && 'alpha' \|\| 'none' \}\}/);
@@ -491,7 +499,7 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /checkout-cache-fallback: github/);
   assert.match(
     workflow,
-    /buildchain-package-candidate:[\s\S]*?github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] != ''/,
+    /buildchain-package-candidate:[\s\S]*?needs: \[libnode-shaped, libnode-shaped-anchor-recovery\][\s\S]*?github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] != ''/,
   );
   assert.match(workflow, /ref: \$\{\{ github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] \|\| github\.sha \}\}/);
   assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
