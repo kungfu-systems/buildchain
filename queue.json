@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 794,
+  "generation": 795,
   "fencingCounter": 170,
   "policy": {
     "agingSeconds": 900,
@@ -11,60 +11,7 @@
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v3/v3.0",
-    "candidateId": "sha256:60c31d9db1778ebf242eac046ac63ff714f507e8cf0fed533f74f095401ebf40",
-    "pullRequestNumber": 2917,
-    "sourceHead": "d69be6b67c603093255d1540d21411f4ca66937f",
-    "assignmentRoot": "sha256:fad542f0ae92f73a7062b94a21181528ea805bfa5f6a649a17d96af71d822728",
-    "initiativeRoot": "sha256:6e5a2043c9327cb731b2cf8fb540f2f46fbe2870d9640402ba8371cfbc8d8dfd",
-    "sourceIdentityRoot": "sha256:7527a8c7afd7f5e4939a84339f7662d54f4ae389537f6a798264e38b9823e3d2",
-    "sourcePatchRoot": "sha256:9d994c2352d2df44e075320a01ec1272d9d2ce65d792e8644ff833f57c0b99ee",
-    "sourceProofRoot": "sha256:695b15e880b5da38986416107c41c15953dd1b44291fddebf098e2763ef8db96",
-    "planRoot": "sha256:6143412f1cdcd1385c1344c6538db852226280ed789918aac675efaad44dbbc2",
-    "closureRoot": "sha256:aa1577652ef36c4689d212aacd3f88a260ed26fdea3496b1f84375768e34184a",
-    "dependencyRoot": "sha256:7f3afd93b648e4302dcc1a7a96190bc7a020ac697cdc4a54a932dc9eb5c74aa7",
-    "toolchainRoot": "sha256:46b28e5f564365d172204a1873e569de0c1a46793ccef19b5d3596de072f1d13",
-    "environmentRoot": "sha256:7707a56f9caefee3d02a4a113653a23feb745a51f0f7adcb63e953326d986509",
-    "affectedPaths": [
-      "architecture/ci-lane-change-budget.json",
-      "architecture/maintainability-policy.json",
-      "dist/site/buildchain-contract.json",
-      "dist/site/buildchain-site.json",
-      "dist/site/capability-registry.json",
-      "dist/site/kfd-claims.json",
-      "dist/site/manual-registry.json",
-      "dist/site/node-api-registry.json",
-      "dist/site/page-registry.json",
-      "dist/site/public-surface-audit.json",
-      "dist/site/release-provenance.json",
-      "dist/site/site-manifest.json",
-      "docs/dev-delivery-warrant.md",
-      "docs/node-api-reference.md",
-      "package.json",
-      "packages/core/ci-lane-change-budget.js",
-      "packages/core/index.js",
-      "packages/core/workflow-yaml-contract.js",
-      "scripts/check-ci-lane-change-budget.mjs",
-      "scripts/site-capability-metadata.mjs",
-      "tests/ci-lane-change-budget.test.mjs",
-      "tests/internal-architecture.test.mjs"
-    ],
-    "sourceWorkflowRunId": 31992812006,
-    "deliveryClass": "native-proof-required",
-    "generation": 170,
-    "phase": "qualified",
-    "expectedOldStateRoot": "sha256:9e599a476314ac76bffe8b2e152b2add09c3b23f6f289db0a006a389c2c7a45a",
-    "issuedAt": "2026-08-17T03:57:47.449Z",
-    "expiresAt": "2026-08-17T04:58:06.624Z",
-    "fencingToken": "sha256:988a64c5b33009e86465e74d1374f0fe10eedb999180549e534f74102fc7fd66",
-    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
-    "nativeProofRoot": "sha256:419c045f2cb1ce513be8f5e2b6b479d13e1ace48abe21b28b118f00ea761f537",
-    "nativeProofReuseRoot": "sha256:39ab6d16ccc0573a3924ec560a39162322019c81c623c75bd08da9ef9f05a430",
-    "qualifiedAt": "2026-08-17T03:58:10.758Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -6440,11 +6387,20 @@
       "sourceWorkflowRunId": 31992812006,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-17T03:57:43.843Z",
-      "updatedAt": "2026-08-17T03:58:10.758Z",
+      "updatedAt": "2026-08-17T04:05:09.690Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "qualified",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "terminalClass": "authoritative-completion",
+        "reason": "authoritative GitHub readback proves PR #2917 merged at exact head",
+        "evidenceRoot": "sha256:2d11ff0468fda8e9f98d199d57a9b48c5d0aa44220e0e5464372d4b5a3580792",
+        "closedAt": "2026-08-17T04:05:09.690Z",
+        "fencingToken": "sha256:988a64c5b33009e86465e74d1374f0fe10eedb999180549e534f74102fc7fd66",
+        "leaseGeneration": 170,
+        "nativeProofRoot": "sha256:419c045f2cb1ce513be8f5e2b6b479d13e1ace48abe21b28b118f00ea761f537"
+      },
       "affectedPaths": [
         "architecture/ci-lane-change-budget.json",
         "architecture/maintainability-policy.json",
@@ -6471,6 +6427,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-17T03:58:10.758Z",
-  "stateRoot": "sha256:33e702e39a5b0aeba843a18b44b3c42fcb98ad8238ada4206aad6cad631fc880"
+  "updatedAt": "2026-08-17T04:05:09.690Z",
+  "stateRoot": "sha256:4d05e53597c2d5866e874d4f4760381e43cb3ace972fe764efc02b4507d7077b"
 }
