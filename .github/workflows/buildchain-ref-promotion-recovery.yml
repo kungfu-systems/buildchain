@@ -91,12 +91,31 @@ jobs:
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ inputs.sha }}
-          path: .buildchain/consumer
+          path: .buildchain/recovered-source
           persist-credentials: false
           sparse-checkout: |
             .buildchain/contract-lock.json
             .buildchain/alpha-contract-lock.json
           sparse-checkout-cone-mode: false
+
+      - name: Project immutable consumer policy locks as exact Git evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .buildchain/consumer/.buildchain
+          for lock in contract-lock.json alpha-contract-lock.json; do
+            source_path=".buildchain/recovered-source/.buildchain/${lock}"
+            test -f "${source_path}"
+            cp "${source_path}" ".buildchain/consumer/.buildchain/${lock}"
+          done
+          git -C .buildchain/consumer init --quiet
+          git -C .buildchain/consumer add -- .buildchain
+          git -C .buildchain/consumer \
+            -c user.name=buildchain-recovery \
+            -c user.email=buildchain-recovery@users.noreply.github.com \
+            commit --quiet --message='Project immutable recovery policy locks'
+          test "$(git -C .buildchain/consumer ls-files -- .github/workflows .github/actions .buildchain)" = \
+            $'.buildchain/alpha-contract-lock.json\n.buildchain/contract-lock.json'
 
       - name: Checkout exact recovery router and policy runtime
         uses: actions/checkout@v7.0.0
