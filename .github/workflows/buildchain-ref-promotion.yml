@@ -126,12 +126,8 @@ jobs:
   promote-alpha:
     if: >-
       ${{
-        (
-          github.event_name == 'workflow_dispatch' &&
-          startsWith(inputs['target-ref'], 'alpha/') &&
-          (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
-          inputs.sha != ''
-        ) ||
+        (github.event_name == 'workflow_dispatch' && startsWith(inputs['target-ref'], 'alpha/') && inputs['resume-candidate-run-id'] != '' && inputs.sha != '') ||
+        (github.event_name == 'workflow_dispatch' && startsWith(inputs['target-ref'], 'alpha/') && inputs['recover-durable-transaction'] == true && inputs.sha != '') ||
         (
           github.event_name == 'workflow_run' &&
           github.event.workflow_run.conclusion == 'success' &&
