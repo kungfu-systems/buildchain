@@ -49,7 +49,7 @@ jobs:
     outputs:
       router-ref: ${{ steps.route.outputs.router-ref }}
       router-sha: ${{ steps.route.outputs.router-sha }}
-      shell-ref: ${{ steps.route.outputs.shell-ref }}
+      shell-call-ref: ${{ steps.identities.outputs.shell-call-ref }}
       shell-sha: ${{ steps.identities.outputs.shell-sha }}
       runtime-ref: ${{ steps.route.outputs.runtime-ref }}
       runtime-sha: ${{ steps.identities.outputs.runtime-sha }}
@@ -245,7 +245,7 @@ jobs:
       buildchain-expected-major: "4"
       promotion-router-ref: ${{ needs.consumer-admission.outputs.router-ref }}
       promotion-router-sha: ${{ needs.consumer-admission.outputs.router-sha }}
-      promotion-shell-ref: ${{ needs.consumer-admission.outputs.shell-ref }}
+      promotion-shell-ref: ${{ needs.consumer-admission.outputs.shell-call-ref }}
       promotion-shell-sha: ${{ needs.consumer-admission.outputs.shell-sha }}
       promotion-runtime-ref: ${{ needs.consumer-admission.outputs.runtime-ref }}
       promotion-runtime-sha: ${{ needs.consumer-admission.outputs.runtime-sha }}
