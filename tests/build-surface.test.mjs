@@ -2502,7 +2502,7 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
   assert.match(workflow, /required-status-checks: check/);
   assert.match(
     workflow,
-    /allowed-head-prefixes: feature\/,fix\/,chore\/,docs\/,ci\/,refactor\/,automation\/auditable-demo-/,
+    /allowed-head-prefixes: feature\/,fix\/,chore\/,docs\/,ci\/,refactor\/,automation\/auditable-demo-,buildchain\/version-state\//,
   );
   assert.match(workflow, /landing-mode: queue/);
   assert.match(workflow, /dry-run: false/);
