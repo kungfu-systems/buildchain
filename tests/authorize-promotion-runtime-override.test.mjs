@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -104,6 +105,10 @@ test("promotion runtime override roots provider reachability and source persiste
     path.join(consumerRoot, ".github/workflows/release.yml"),
     "on:\n  workflow_dispatch:\n    inputs:\n      buildchain-ref:\n        default: v4-alpha\n",
   );
+  execFileSync("git", ["init", "--quiet"], { cwd: consumerRoot });
+  execFileSync("git", ["add", "--", ".github/workflows/release.yml"], {
+    cwd: consumerRoot,
+  });
   const policyPath = path.join(
     consumerRoot,
     ".buildchain/evidence/v4-consumer-policy-receipt.json",
@@ -117,6 +122,7 @@ test("promotion runtime override roots provider reachability and source persiste
           stable: { root: ROOT_A },
           alpha: { root: ROOT_B },
         },
+        invocation: { resolvedRuntimeSha: SHA_B },
       },
     })}\n`,
   );
@@ -150,32 +156,55 @@ test("promotion runtime override roots provider reachability and source persiste
     consumerRoot,
     ".buildchain/evidence/runtime.json",
   );
+  const request = {
+    consumerRoot,
+    runtimeModulePath: path.resolve(
+      "packages/core/v4-runtime-ref-resume-authority.js",
+    ),
+    consumerPolicyReceiptPath: policyPath,
+    consumerPolicyReceiptRoot: ROOT_A,
+    sourceSha: SHA_A,
+    sourceTreeSha: SHA_B,
+    requestedRef: SHA_B,
+    resolvedRuntimeSha: SHA_B,
+    reason: "resume the failed platform tail",
+    mode: "resume",
+    authorizedAt: "2026-08-14T02:00:00.000Z",
+    outputPath,
+  };
   const result = await authorization.authorizePromotionRuntimeOverride({
     github,
     context,
-    request: {
-      consumerRoot,
-      runtimeModulePath: path.resolve(
-        "packages/core/v4-runtime-ref-resume-authority.js",
-      ),
-      consumerPolicyReceiptPath: policyPath,
-      consumerPolicyReceiptRoot: ROOT_A,
-      sourceSha: SHA_A,
-      sourceTreeSha: SHA_B,
-      requestedRef: SHA_B,
-      resolvedRuntimeSha: SHA_B,
-      reason: "resume the failed platform tail",
-      mode: "resume",
-      authorizedAt: "2026-08-14T02:00:00.000Z",
-      outputPath,
-    },
+    request,
   });
   assert.equal(result.receipt.status, "authorized");
   assert.equal(result.receipt.runtime.sha, SHA_B);
   assert.equal(result.persistenceScan.status, "passed");
+  assert.ok(
+    !result.persistenceScan.files.some(
+      (entry) =>
+        entry.path === ".buildchain/evidence/v4-consumer-policy-receipt.json",
+    ),
+  );
   assert.ok(requests.includes("heads/v4-alpha"));
   assert.equal(
     JSON.parse(fs.readFileSync(outputPath, "utf8")).receiptRoot,
     result.receiptRoot,
+  );
+
+  fs.writeFileSync(
+    path.join(consumerRoot, ".github/workflows/release.yml"),
+    `on:\n  workflow_dispatch:\n    inputs:\n      buildchain-ref:\n        default: ${SHA_B}\n`,
+  );
+  execFileSync("git", ["add", "--", ".github/workflows/release.yml"], {
+    cwd: consumerRoot,
+  });
+  await assert.rejects(
+    authorization.authorizePromotionRuntimeOverride({
+      github,
+      context,
+      request,
+    }),
+    /runtime selector persistence scan rejected the consumer source/u,
   );
 });
