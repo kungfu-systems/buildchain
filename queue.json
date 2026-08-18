@@ -3,15 +3,68 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 623,
-  "fencingCounter": 116,
+  "generation": 624,
+  "fencingCounter": 117,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:8053d4937424d8591247690084776a2b7e4468c25c0fe59c5ef836dd0aea3eb6",
+    "pullRequestNumber": 2938,
+    "sourceHead": "ca191f61231228c97e1a561aa06f3619158e0a05",
+    "assignmentRoot": "sha256:fad542f0ae92f73a7062b94a21181528ea805bfa5f6a649a17d96af71d822728",
+    "initiativeRoot": "sha256:6e5a2043c9327cb731b2cf8fb540f2f46fbe2870d9640402ba8371cfbc8d8dfd",
+    "sourceIdentityRoot": "sha256:3689d19c70891e43779be09327c6f303abfa934ccf18b9689700909e861f297c",
+    "sourcePatchRoot": "sha256:4c6003ba8e042c76f74a5a51f106b232a3df82de7e26171951e6098784d5b4e4",
+    "sourceProofRoot": "sha256:dfe21d2921ff53a8baadfaadd0a013cd666d2bd55edb0fc3600c95ec8497b863",
+    "planRoot": "sha256:b66baa43cbfb6700e45a1eb149386267566a89fa178fd1a0e5b548931388fa5b",
+    "closureRoot": "sha256:1831961f16e3c108487a04119e8fb00af11f3aaec696e3be1836014a04604cba",
+    "dependencyRoot": "sha256:830594efe79033dd6a1f101cd8d9568d4511dd4bea7a0716d95e6abc0a14c740",
+    "toolchainRoot": "sha256:63f7161bf3ad606fa86194132c91c92340cf74b22f5be7b7f5b73b44cfeec44f",
+    "environmentRoot": "sha256:0fe669616c0c44c876f112acfc9825fd96f6e01d48cfb30f95bd4a9735dea9dc",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "node --test --test-skip-pattern='the real Rust host validates and projects the candidate state without effects' tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/v4-delivery-warrant-read-candidate.test.mjs",
+      "commandRoot": "sha256:b27e36b3e95fae8ed76ccb2ea9b75fe7a9a5eca28619cf2025a2d596be19d66e"
+    },
+    "affectedPaths": [
+      "architecture/maintainability-policy.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/kfd-claims.json",
+      "dist/site/manual-registry.json",
+      "dist/site/node-api-registry.json",
+      "dist/site/page-registry.json",
+      "dist/site/public-surface-audit.json",
+      "dist/site/site-manifest.json",
+      "docs/node-api-reference.md",
+      "packages/core/dev-delivery-native-proof.js",
+      "packages/core/dev-delivery-warrant-state.js",
+      "packages/core/dev-delivery-warrant.js",
+      "packages/core/v4-delivery-warrant-read-candidate.js",
+      "scripts/dev-delivery-warrant-store.mjs",
+      "scripts/dev-delivery-warrant.mjs",
+      "tests/dev-delivery-warrant.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 32144582707,
+    "deliveryClass": "native-proof-required",
+    "priority": "ordinary",
+    "generation": 117,
+    "expectedOldStateRoot": "sha256:840699eca22abf80457874ba96cea84654980f175d7096d332e99f873006130d",
+    "issuedAt": "2026-08-18T14:13:11.487Z",
+    "expiresAt": "2026-08-18T15:13:11.487Z",
+    "fencingToken": "sha256:6114bede00cb258ba5d2933fc1842d8ac4e48222f032c0a6c9d81166e1b3bb0f",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -5234,10 +5287,10 @@
       "sourceWorkflowRunId": 32144582707,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-18T14:13:08.917Z",
-      "updatedAt": "2026-08-18T14:13:08.917Z",
+      "updatedAt": "2026-08-18T14:13:11.487Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         "architecture/maintainability-policy.json",
@@ -5261,6 +5314,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-18T14:13:08.917Z",
-  "stateRoot": "sha256:840699eca22abf80457874ba96cea84654980f175d7096d332e99f873006130d"
+  "updatedAt": "2026-08-18T14:13:11.487Z",
+  "stateRoot": "sha256:95124886a5b93d5eeafa8a178f32e4980cd60d1c317e9c9de4c52413b478d0e0"
 }
