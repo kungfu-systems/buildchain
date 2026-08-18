@@ -37,10 +37,11 @@ function pack(cwd, destination, environment) {
 
 function extractPackage(tarball, destination) {
   fs.mkdirSync(destination, { recursive: true });
+  const archive = path.relative(destination, tarball).split(path.sep).join("/");
   run(
     "tar",
-    ["-xzf", path.basename(tarball), "--strip-components=1", "-C", destination],
-    { cwd: path.dirname(tarball) },
+    ["-xzf", archive, "--strip-components=1"],
+    { cwd: destination },
   );
 }
 
