@@ -51,8 +51,8 @@ export const TERMINAL_STATES = new Set([
   "terminal-failure",
   "dequeued",
   "cancelled",
+  "superseded",
 ]);
-
 export function issueDevDeliveryWarrant(
   queue,
   before,

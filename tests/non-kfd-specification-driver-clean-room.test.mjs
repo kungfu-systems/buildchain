@@ -20,7 +20,7 @@ function run(command, args, options = {}) {
   assert.equal(
     result.status,
     0,
-    `${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`,
+    `${command} ${args.join(" ")} failed\n${result.error || ""}\n${result.stdout}\n${result.stderr}`,
   );
   return result.stdout;
 }
@@ -29,7 +29,7 @@ function pack(cwd, destination, environment) {
   const output = run(
     "npm",
     ["pack", "--json", "--ignore-scripts", "--pack-destination", destination],
-    { cwd, env: environment },
+    { cwd, env: environment, shell: process.platform === "win32" },
   );
   const [{ filename }] = JSON.parse(output);
   return path.join(destination, filename);
@@ -37,7 +37,12 @@ function pack(cwd, destination, environment) {
 
 function extractPackage(tarball, destination) {
   fs.mkdirSync(destination, { recursive: true });
-  run("tar", ["-xzf", tarball, "--strip-components=1", "-C", destination]);
+  const archive = path.relative(destination, tarball).split(path.sep).join("/");
+  run(
+    "tar",
+    ["-xzf", archive, "--strip-components=1"],
+    { cwd: destination },
+  );
 }
 
 function replacePointer(target, pointer, value) {
@@ -60,6 +65,13 @@ test("an independent non-KFD specification package replays through the common ga
     const packageOnlyEnvironment = {
       PATH: process.env.PATH,
       HOME: emptyHome,
+      ...(process.platform === "win32"
+        ? {
+            ComSpec: process.env.ComSpec,
+            PATHEXT: process.env.PATHEXT,
+            SystemRoot: process.env.SystemRoot,
+          }
+        : {}),
       npm_config_audit: "false",
       npm_config_cache: npmCache,
       npm_config_fund: "false",

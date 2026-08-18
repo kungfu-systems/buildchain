@@ -3011,7 +3011,7 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(reusable, /github\.rest\.actions\.listWorkflowRunArtifacts/);
   assert.match(
     reusable,
-    /run\.pull_requests.*pullRequest\.number === pullNumber/,
+    /\(run\.pull_requests \|\| \[\]\)\.length === 0 \|\| \(run\.pull_requests \|\| \[\]\)\.some\(\(pullRequest\) => pullRequest\.number === pullNumber\)/,
   );
   assert.match(reusable, /steps\.source-proof-download\.outcome == 'success'/);
   assert.match(
