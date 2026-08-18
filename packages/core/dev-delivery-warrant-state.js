@@ -248,7 +248,11 @@ function normalizeCandidate(input, expected) {
   }
   const { environmentRoot: env, nativeCommandContract: cmd } = candidate;
   const native = candidate.deliveryClass !== "non-native-fast" || env || cmd;
-  if (native && (!env || !cmd) && !TERMINAL_STATES.has(status))
+  if (
+    native &&
+    (!env || (!cmd && expected.allowLegacyV3Readback !== true)) &&
+    !TERMINAL_STATES.has(status)
+  )
     throw new Error("live native candidate requires exact native proof");
   if (Object.hasOwn(input, "releaseBlockerPriority"))
     candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(
@@ -318,13 +322,21 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
     "queue fencingCounter",
   );
   queue.policy = normalizePolicy(queue.policy);
+  const allowLegacyV3Readback =
+    expected.allowLegacyV3Readback === true &&
+    !(queue.candidates || []).some(
+      (candidate) => candidate?.nativeCommandContract,
+    ) &&
+    !queue.activeWarrant?.nativeCommandContract &&
+    !queue.activeWarrant?.nativeExecutionReceiptRoot &&
+    !queue.activeWarrant?.qualificationReceiptRoot;
   queue.candidates = (queue.candidates || []).map((candidate) =>
-    normalizeCandidate(candidate, queue),
+    normalizeCandidate(candidate, { ...queue, allowLegacyV3Readback }),
   );
   validateDevDeliveryCandidateChain(queue.candidates, TERMINAL_STATES);
   queue.updatedAt = timestamp(queue.updatedAt, "queue updatedAt");
   if (queue.activeWarrant) {
-    validateActiveDevDeliveryWarrant(queue);
+    validateActiveDevDeliveryWarrant(queue, { allowLegacyV3Readback });
   } else if (
     queue.candidates.some((candidate) =>
       ["selected", "proving", "waiting", "blocked", "qualified"].includes(
@@ -544,9 +556,11 @@ function effectivePriority(candidate, policy, now) {
 }
 export function rankDevDeliveryCandidates(
   queueInput,
-  { now = new Date().toISOString() } = {},
+  { now = new Date().toISOString(), allowLegacyV3Readback = false } = {},
 ) {
-  const queue = normalizeDevDeliveryQueue(queueInput);
+  const queue = normalizeDevDeliveryQueue(queueInput, {
+    allowLegacyV3Readback,
+  });
   const currentTime = timestamp(now, "now");
   return queue.candidates
     .filter((candidate) => candidate.status === "queued")

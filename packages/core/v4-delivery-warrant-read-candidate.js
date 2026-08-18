@@ -100,7 +100,9 @@ export function validateV4DeliveryWarrantReadQualification(
 }
 
 export function projectV3QueueToV4ReadState(queueInput) {
-  const queue = normalizeDevDeliveryQueue(queueInput);
+  const queue = normalizeDevDeliveryQueue(queueInput, {
+    allowLegacyV3Readback: true,
+  });
   return {
     schema: STATE_CONTRACT,
     generation: queue.generation,
@@ -219,7 +221,9 @@ export async function runV4DeliveryWarrantReadCandidate(
   });
   if (typeof retain !== "function")
     fail("retention-required", "v4 read evidence retention is required");
-  const queue = normalizeDevDeliveryQueue(queueInput);
+  const queue = normalizeDevDeliveryQueue(queueInput, {
+    allowLegacyV3Readback: true,
+  });
   const state = projectV3QueueToV4ReadState(queue);
   const request = createV4DeliveryWarrantReadRequest(state, {
     requestId,
@@ -235,7 +239,10 @@ export async function runV4DeliveryWarrantReadCandidate(
     );
   }
   const projection = validateProjection(response, request, state);
-  const observation = observeDevDeliveryQueue(queue, { now: observedAt });
+  const observation = observeDevDeliveryQueue(queue, {
+    now: observedAt,
+    allowLegacyV3Readback: true,
+  });
   const evidence = {
     schema: V4_DELIVERY_WARRANT_READ_EVIDENCE_CONTRACT,
     authority: "typescript-v3",

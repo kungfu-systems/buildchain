@@ -43,7 +43,10 @@ export const DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA =
 export const NATIVE_PROOF_BASE_DELTA_SCHEMA =
   "kungfu.buildchain.native-proof-base-delta/v1";
 const NATIVE_QUALIFICATION_ROOT_SEMANTICS = "semantic-native-identity-v1";
-export function validateActiveDevDeliveryWarrant(queue) {
+export function validateActiveDevDeliveryWarrant(
+  queue,
+  { allowLegacyV3Readback = false } = {},
+) {
   const warrant = queue.activeWarrant;
   if (warrant.schema !== "kungfu.buildchain.dev-delivery-warrant/v1")
     throw new Error("active Warrant schema is unsupported");
@@ -68,6 +71,22 @@ export function validateActiveDevDeliveryWarrant(queue) {
   const phase = historicalPhaseLess ? "legacy-active" : warrant.phase;
   if (!["legacy-active", "provisional", "qualified"].includes(phase))
     throw new Error("active Warrant phase is unsupported");
+  const active = queue.candidates.filter((candidate) =>
+    ["selected", "proving", "waiting", "blocked", "qualified"].includes(
+      candidate.status,
+    ),
+  );
+  if (active.length !== 1 || active[0].candidateId !== warrant.candidateId)
+    throw new Error(
+      "exactly one active candidate must match the active Warrant",
+    );
+  const qualifiedV3Readback =
+    allowLegacyV3Readback &&
+    warrant.phase === "qualified" &&
+    !warrant.nativeCommandContract &&
+    !active[0].nativeCommandContract &&
+    !warrant.nativeExecutionReceiptRoot &&
+    !warrant.qualificationReceiptRoot;
   if (warrant.phase === "qualified") {
     warrant.nativeProofRoot = exactRoot(
       warrant.nativeProofRoot,
@@ -77,14 +96,16 @@ export function validateActiveDevDeliveryWarrant(queue) {
       warrant.nativeProofReuseRoot,
       "Warrant nativeProofReuseRoot",
     );
-    warrant.nativeExecutionReceiptRoot = exactRoot(
-      warrant.nativeExecutionReceiptRoot,
-      "Warrant nativeExecutionReceiptRoot",
-    );
-    warrant.qualificationReceiptRoot = exactRoot(
-      warrant.qualificationReceiptRoot,
-      "Warrant qualificationReceiptRoot",
-    );
+    if (!qualifiedV3Readback) {
+      warrant.nativeExecutionReceiptRoot = exactRoot(
+        warrant.nativeExecutionReceiptRoot,
+        "Warrant nativeExecutionReceiptRoot",
+      );
+      warrant.qualificationReceiptRoot = exactRoot(
+        warrant.qualificationReceiptRoot,
+        "Warrant qualificationReceiptRoot",
+      );
+    }
     warrant.qualifiedAt = timestamp(warrant.qualifiedAt, "Warrant qualifiedAt");
   } else if (
     warrant.phase === "provisional" &&
@@ -98,15 +119,6 @@ export function validateActiveDevDeliveryWarrant(queue) {
       "provisional Warrant cannot carry qualified native evidence",
     );
   }
-  const active = queue.candidates.filter((candidate) =>
-    ["selected", "proving", "waiting", "blocked", "qualified"].includes(
-      candidate.status,
-    ),
-  );
-  if (active.length !== 1 || active[0].candidateId !== warrant.candidateId)
-    throw new Error(
-      "exactly one active candidate must match the active Warrant",
-    );
   if (
     historicalPhaseLess &&
     (active[0].environmentRoot ||

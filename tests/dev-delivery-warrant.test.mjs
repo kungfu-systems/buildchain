@@ -102,6 +102,74 @@ test("queue readback accepts a v3 superseded terminal candidate", () => {
   assert.equal(normalized.candidates[0].status, "superseded");
 });
 
+test("read-only v3 compatibility accepts provisional and exact qualified native Warrants", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+  const withFollower = submit(selected.queue, 100, "2026-08-04T00:00:02Z");
+  const provisional = structuredClone(withFollower.queue);
+  for (const entry of provisional.candidates) delete entry.nativeCommandContract;
+  delete provisional.activeWarrant.nativeCommandContract;
+  delete provisional.stateRoot;
+  provisional.stateRoot = devDeliveryContentRoot(provisional);
+
+  assert.throws(
+    () => normalizeDevDeliveryQueue(provisional),
+    /live native candidate requires exact native proof/u,
+  );
+  assert.equal(
+    normalizeDevDeliveryQueue(provisional, { allowLegacyV3Readback: true }).stateRoot,
+    provisional.stateRoot,
+  );
+
+  const legacy = structuredClone(provisional);
+  const candidate = legacy.candidates.find(
+    (entry) => entry.candidateId === legacy.activeWarrant.candidateId,
+  );
+  const warrant = legacy.activeWarrant;
+  candidate.status = "qualified";
+  candidate.updatedAt = "2026-08-04T00:05:00.000Z";
+  warrant.phase = "qualified";
+  warrant.nativeProofRoot = ROOTS.evidence;
+  warrant.nativeProofReuseRoot = ROOTS.shard;
+  warrant.qualifiedAt = "2026-08-04T00:05:00.000Z";
+  delete warrant.nativeExecutionReceiptRoot;
+  delete warrant.qualificationReceiptRoot;
+  delete legacy.stateRoot;
+  legacy.stateRoot = devDeliveryContentRoot(legacy);
+
+  assert.equal(
+    normalizeDevDeliveryQueue(legacy, { allowLegacyV3Readback: true }).stateRoot,
+    legacy.stateRoot,
+  );
+  assert.equal(
+    observeDevDeliveryQueue(legacy, {
+      now: "2026-08-04T00:05:01Z",
+      allowLegacyV3Readback: true,
+    }).queued[0].pullRequestNumber,
+    100,
+  );
+
+  const missingProof = structuredClone(legacy);
+  delete missingProof.activeWarrant.nativeProofRoot;
+  delete missingProof.stateRoot;
+  missingProof.stateRoot = devDeliveryContentRoot(missingProof);
+  assert.throws(
+    () => normalizeDevDeliveryQueue(missingProof, { allowLegacyV3Readback: true }),
+    /Warrant nativeProofRoot/u,
+  );
+
+  const partialV4 = structuredClone(legacy);
+  partialV4.activeWarrant.nativeExecutionReceiptRoot = ROOTS.context;
+  delete partialV4.stateRoot;
+  partialV4.stateRoot = devDeliveryContentRoot(partialV4);
+  assert.throws(
+    () => normalizeDevDeliveryQueue(partialV4, { allowLegacyV3Readback: true }),
+    /live native candidate requires exact native proof/u,
+  );
+});
+
 test("live native delivery classes cannot downgrade to phase-less authority", () => {
   for (const deliveryClass of ["native-proof-required", "cross-platform", "release"])
     assert.throws(
