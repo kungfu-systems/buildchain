@@ -37,7 +37,11 @@ function pack(cwd, destination, environment) {
 
 function extractPackage(tarball, destination) {
   fs.mkdirSync(destination, { recursive: true });
-  run("tar", ["-xzf", tarball, "--strip-components=1", "-C", destination]);
+  run(
+    "tar",
+    ["-xzf", path.basename(tarball), "--strip-components=1", "-C", destination],
+    { cwd: path.dirname(tarball) },
+  );
 }
 
 function replacePointer(target, pointer, value) {
