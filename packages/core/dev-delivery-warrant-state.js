@@ -158,6 +158,21 @@ function normalizePolicy(policy = {}) {
     emergencyPolicy: text(policy.emergencyPolicy || "reviewed-explicit-only"),
   };
 }
+
+function lacksLiveNativeProof(candidate, status, allowLegacyV3Readback) {
+  const { environmentRoot, nativeCommandContract } = candidate;
+  const native =
+    candidate.deliveryClass !== "non-native-fast" ||
+    environmentRoot ||
+    nativeCommandContract;
+  return (
+    native &&
+    (!environmentRoot ||
+      (!nativeCommandContract && allowLegacyV3Readback !== true)) &&
+    !TERMINAL_STATES.has(status)
+  );
+}
+
 function normalizeCandidate(input, expected) {
   const identity = createDevDeliveryCandidateIdentity(
     input,
@@ -246,9 +261,7 @@ function normalizeCandidate(input, expected) {
       "candidate shardEvidenceRoots",
     );
   }
-  const { environmentRoot: env, nativeCommandContract: cmd } = candidate;
-  const native = candidate.deliveryClass !== "non-native-fast" || env || cmd;
-  if (native && (!env || !cmd) && !TERMINAL_STATES.has(status))
+  if (lacksLiveNativeProof(candidate, status, expected.allowLegacyV3Readback))
     throw new Error("live native candidate requires exact native proof");
   if (Object.hasOwn(input, "releaseBlockerPriority"))
     candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(
@@ -318,13 +331,21 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
     "queue fencingCounter",
   );
   queue.policy = normalizePolicy(queue.policy);
+  const allowLegacyV3Readback =
+    expected.allowLegacyV3Readback === true &&
+    !(queue.candidates || []).some(
+      (candidate) => candidate?.nativeCommandContract,
+    ) &&
+    !queue.activeWarrant?.nativeCommandContract &&
+    !queue.activeWarrant?.nativeExecutionReceiptRoot &&
+    !queue.activeWarrant?.qualificationReceiptRoot;
   queue.candidates = (queue.candidates || []).map((candidate) =>
-    normalizeCandidate(candidate, queue),
+    normalizeCandidate(candidate, { ...queue, allowLegacyV3Readback }),
   );
   validateDevDeliveryCandidateChain(queue.candidates, TERMINAL_STATES);
   queue.updatedAt = timestamp(queue.updatedAt, "queue updatedAt");
   if (queue.activeWarrant) {
-    validateActiveDevDeliveryWarrant(queue);
+    validateActiveDevDeliveryWarrant(queue, { allowLegacyV3Readback });
   } else if (
     queue.candidates.some((candidate) =>
       ["selected", "proving", "waiting", "blocked", "qualified"].includes(
@@ -544,9 +565,11 @@ function effectivePriority(candidate, policy, now) {
 }
 export function rankDevDeliveryCandidates(
   queueInput,
-  { now = new Date().toISOString() } = {},
+  { now = new Date().toISOString(), allowLegacyV3Readback = false } = {},
 ) {
-  const queue = normalizeDevDeliveryQueue(queueInput);
+  const queue = normalizeDevDeliveryQueue(queueInput, {
+    allowLegacyV3Readback,
+  });
   const currentTime = timestamp(now, "now");
   return queue.candidates
     .filter((candidate) => candidate.status === "queued")
