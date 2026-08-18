@@ -60,6 +60,13 @@ test("an independent non-KFD specification package replays through the common ga
     const packageOnlyEnvironment = {
       PATH: process.env.PATH,
       HOME: emptyHome,
+      ...(process.platform === "win32"
+        ? {
+            ComSpec: process.env.ComSpec,
+            PATHEXT: process.env.PATHEXT,
+            SystemRoot: process.env.SystemRoot,
+          }
+        : {}),
       npm_config_audit: "false",
       npm_config_cache: npmCache,
       npm_config_fund: "false",
