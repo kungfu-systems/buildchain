@@ -90,6 +90,18 @@ test("queue readback accepts legacy terminal native candidates without weakening
   );
 });
 
+test("queue readback accepts a v3 superseded terminal candidate", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
+  const superseded = structuredClone(submitted.queue);
+  superseded.candidates[0].status = "superseded";
+  delete superseded.candidates[0].nativeCommandContract;
+  delete superseded.stateRoot;
+  superseded.stateRoot = devDeliveryContentRoot(superseded);
+
+  const normalized = normalizeDevDeliveryQueue(superseded);
+  assert.equal(normalized.candidates[0].status, "superseded");
+});
+
 test("live native delivery classes cannot downgrade to phase-less authority", () => {
   for (const deliveryClass of ["native-proof-required", "cross-platform", "release"])
     assert.throws(
