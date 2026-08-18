@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 801,
+  "generation": 802,
   "fencingCounter": 171,
   "policy": {
     "agingSeconds": 900,
@@ -6471,8 +6471,39 @@
         "tests/internal-architecture.test.mjs",
         "tests/non-kfd-specification-driver-clean-room.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2935,
+      "assignmentRoot": "sha256:fad542f0ae92f73a7062b94a21181528ea805bfa5f6a649a17d96af71d822728",
+      "initiativeRoot": "sha256:6e5a2043c9327cb731b2cf8fb540f2f46fbe2870d9640402ba8371cfbc8d8dfd",
+      "sourceIdentityRoot": "sha256:c9222f4237e81c4f8289925e9cc73f10bb133fd10f6307fe1ab8a508be82612d",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:ceaf0fcbb258ab44f6d13400b20a905fa3e01441449a51d6c0b1eb869044a8cc",
+      "sourceHead": "8c33c342cc021904f1af6a1c11bfea2187b1b098",
+      "sourcePatchRoot": "sha256:f7ee5e484fcaf5059b78ead362d5bf94eaa0d9938d2da2367189665db85ccd63",
+      "sourceProofRoot": "sha256:363f934703bf735359f823f545b96a3173fbd468be5de5071d71f1ffd04db694",
+      "planRoot": "sha256:1eb16f22082322ffc715f24263a999ec1229c0a9244fca4317f5fbe919652d87",
+      "closureRoot": "sha256:989417439cbaf2888f27cdc13a0fe4cffd7fb6088732fe76a7a0a9735e3c68b8",
+      "dependencyRoot": "sha256:9ccec5a595f6c3e6526ab10f2b7a7ec7640f32467ca7221db1474fa9aaa64f9f",
+      "toolchainRoot": "sha256:de9e85643f9106eef786305b9b6f2ea7092a125f04cfed0b7512271e2a580397",
+      "environmentRoot": "sha256:f98be646fff2433c9a5284fed272aa88bf23bfe2b037b8b897d6c7af10055764",
+      "sourceWorkflowRunId": 32114116439,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-18T08:00:01.510Z",
+      "updatedAt": "2026-08-18T08:00:01.510Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/check.yml",
+        "dist/site/buildchain-contract.json",
+        "tests/build-surface.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-17T12:48:39.557Z",
-  "stateRoot": "sha256:ad962b6a802a718c933ba31b40ab72021e3a28096dd57bdee75d85333743be34"
+  "updatedAt": "2026-08-18T08:00:01.510Z",
+  "stateRoot": "sha256:02126a0b6c731b9c04db9eeff84ba851aecd021c013c70be92ec6f384bfc5751"
 }
