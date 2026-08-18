@@ -20,7 +20,7 @@ function run(command, args, options = {}) {
   assert.equal(
     result.status,
     0,
-    `${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`,
+    `${command} ${args.join(" ")} failed\n${result.error || ""}\n${result.stdout}\n${result.stderr}`,
   );
   return result.stdout;
 }
@@ -29,7 +29,7 @@ function pack(cwd, destination, environment) {
   const output = run(
     "npm",
     ["pack", "--json", "--ignore-scripts", "--pack-destination", destination],
-    { cwd, env: environment },
+    { cwd, env: environment, shell: process.platform === "win32" },
   );
   const [{ filename }] = JSON.parse(output);
   return path.join(destination, filename);
