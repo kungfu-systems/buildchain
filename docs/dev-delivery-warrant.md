@@ -347,6 +347,15 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   GitHub reports the pull request as behind, so it is diagnostic rather than a
   substitute for the separately read protected ref and rooted Project Cut.
 
+  A required-mode caller may set `defer-landing: true` to stop after the exact
+  Warrant is qualified and its evidence artifact is published. This is not a
+  dry run: source qualification, candidate submission, Warrant selection, and
+  fresh-or-reused native proof remain mandatory. The controller and queue
+  mutation are skipped, and a handoff to a different active Warrant fails the
+  deferred call. A later exact-contract call with `defer-landing: false` must
+  perform the protected landing; changing the source head invalidates the
+  qualified Warrant.
+
 For a required native delivery class, the reusable controller rejects a
 missing or malformed environment root before runtime checkout, candidate
 submission, Warrant selection, or native execution. The input remains

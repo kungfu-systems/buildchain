@@ -2020,6 +2020,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "closure-root",
+          "defer-landing",
           "delivery-class",
           "delivery-priority",
           "delivery-warrant-mode",
@@ -2053,7 +2054,7 @@
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 40,
+        "inputCount": 41,
         "secrets": [
           "github-token"
         ],
@@ -8369,8 +8370,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "613ca42d3fe36e953603221d1cf16478ba84e6cf27dd6d11ddb2c1caea42ec3b",
-    "workflowRegistryDigest": "5597034740b72f61dc593406b5af2394cafccb57099851b2db615b3e7935b2e4",
-    "pageRegistryDigest": "b1d9711067220840e4ff0055ceee18142e14ce431efc300e22d42fa3fb47dcca"
+    "workflowRegistryDigest": "0e98b56dca08fcaf974dfb81700c1e4f63329582a1312df379b8cf2303b8aa32",
+    "pageRegistryDigest": "d72bf44b0c5bf038b71abdae35080a89d1964fa4b6f85a3ae62fa4e1cf8ec6a6"
   },
   "comparison": {
     "missingCliRegistry": [],
