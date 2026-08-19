@@ -1859,6 +1859,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "closure-root",
+        "defer-landing",
         "delivery-class",
         "delivery-priority",
         "delivery-warrant-mode",
@@ -1892,7 +1893,7 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 40,
+      "inputCount": 41,
       "secrets": [
         "github-token"
       ],

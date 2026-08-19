@@ -1532,6 +1532,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /max-merges:/);
   assert.match(workflow, /landing-mode:/);
   assert.match(workflow, /default: "auto"/);
+  assert.match(workflow, /defer-landing:/);
+  assert.match(workflow, /defer-landing requires delivery-warrant-mode required/);
   assert.match(workflow, /enqueued-count:/);
   assert.match(workflow, /action-count:/);
   assert.match(workflow, /admission-state:/);
@@ -1549,6 +1551,22 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /continue-on-error: true/);
   assert.match(workflow, /Qualify exact source before scheduling[\s\S]*--landing-mode queue[\s\S]*--qualification-only/);
   assert.match(workflow, /Enforce targeted admission result/);
+  assert.match(
+    workflow,
+    /if: inputs\.defer-landing != true && steps\.warrant\.outputs\.handoff-required != 'true'/,
+  );
+  assert.match(
+    workflow,
+    /Upload dev PR auto-merge plan[\s\S]*if: always\(\) && inputs\.defer-landing != true/,
+  );
+  assert.match(
+    workflow,
+    /defer-landing cannot succeed by handing off a different active Warrant/,
+  );
+  assert.match(
+    workflow,
+    /\[ "\$\{DEFER_LANDING\}" = "true" \][\s\S]*\[ "\$\{WARRANT_MODE\}" != "required" \][\s\S]*Exact required Warrant qualified; landing is explicitly deferred\./,
+  );
   assert.match(workflow, /buildchain-dev-pr-admission-/);
   assert.match(workflow, /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/);
   assert.match(workflow, /BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT:/);
