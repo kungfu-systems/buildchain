@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 632,
+  "generation": 633,
   "fencingCounter": 118,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:d8320a42ea92b8635b3e5d54c70d39e6b4ee6253d1b444f04e5d2c7f5ec7e9bc",
@@ -51,8 +51,13 @@
     "issuedAt": "2026-08-19T11:18:07.664Z",
     "expiresAt": "2026-08-19T12:19:00.821Z",
     "fencingToken": "sha256:3a0d1a004edd5ca1de23a4becc6e8a303906292c63c3e08fcfbf81e50796b702",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-19T11:19:00.821Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-19T11:19:00.821Z",
+    "nativeProofRoot": "sha256:f099246a758cc6f309086f5449848ba22d5fe7f67ad6bfff785731c1ae17b1ae",
+    "nativeExecutionReceiptRoot": "sha256:7a6737cb53c4c9bcbce78074199b82ecf4d28fc697346a87c849d677e6364646",
+    "nativeProofReuseRoot": "sha256:d229b8fedbc69d98b149d31eac6ae2bc8921c882b7a0140b55552f8027e55a67",
+    "qualificationReceiptRoot": "sha256:8cdb2794c6ded42c942dc20b6a3008cbc9a2ff32bed9781060a4228a509c410d",
+    "qualifiedAt": "2026-08-19T11:19:29.958Z"
   },
   "candidates": [
     {
@@ -5335,10 +5340,10 @@
       "sourceWorkflowRunId": 32246082089,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-19T11:18:04.765Z",
-      "updatedAt": "2026-08-19T11:19:00.821Z",
+      "updatedAt": "2026-08-19T11:19:29.958Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "scripts/dev-qualification-patrol.mjs",
@@ -5350,6 +5355,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-19T11:19:00.821Z",
-  "stateRoot": "sha256:2d335db5a766df06fab308a17934aba6e59dbe8aef5b9beaf75b43f78d7cc600"
+  "updatedAt": "2026-08-19T11:19:29.958Z",
+  "stateRoot": "sha256:c6c4d95a472adc78544ff339310238c44f6c36a75663c5293354b44920ec5ee6"
 }
