@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v3/v3.0",
-  "generation": 807,
+  "generation": 808,
   "fencingCounter": 172,
   "policy": {
     "agingSeconds": 900,
@@ -6511,8 +6511,45 @@
         "dist/site/buildchain-contract.json",
         "tests/build-surface.test.mjs"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v3/v3.0",
+      "pullRequestNumber": 2940,
+      "assignmentRoot": "sha256:79155730dc6e038ab877f8099dd458ade36350c7d254665d4e359bf0735e5afa",
+      "initiativeRoot": "sha256:396f2499e11e61db1feda55c39aede7f11c92dfcb32f2c1de8172f46a043cbf6",
+      "sourceIdentityRoot": "sha256:ef17322d37cc444c195d59d31949c87df941d21154409f4f12ca9d9ea62c27e7",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:0dd76be8a62022f89cf3e11033c200cee4f74b50c1190539adf51447fb33a20b",
+      "sourceHead": "43982a3a14615a999fc63e91a8c8e736b29f71a0",
+      "sourcePatchRoot": "sha256:de6035038462fead53f59320b37d8ef6f2f20385999e8baaf949f9c0f3b63dea",
+      "sourceProofRoot": "sha256:3ec40af474a6e5347d233d20515f19bf0df1805ba7b546051118f2133cd6b45d",
+      "planRoot": "sha256:95fab9dd77839a4259af61288a3f94595c6c4b445feddda4f6df77977636c020",
+      "closureRoot": "sha256:882492427a4923a87cbdc8be00c60eba47080f45ac350a08088567921ae2e35c",
+      "dependencyRoot": "sha256:9ccec5a595f6c3e6526ab10f2b7a7ec7640f32467ca7221db1474fa9aaa64f9f",
+      "toolchainRoot": "sha256:e70425b5f898806b43a2d1d516a99e8178b3d8b43af4e8df307714afb4f357e5",
+      "environmentRoot": "sha256:f98be646fff2433c9a5284fed272aa88bf23bfe2b037b8b897d6c7af10055764",
+      "sourceWorkflowRunId": 32306808133,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-19T22:01:39.699Z",
+      "updatedAt": "2026-08-19T22:01:39.699Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/dev-pr-auto-merge.yml",
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/workflow-registry.json",
+        "docs/dev-delivery-warrant.md",
+        "tests/build-surface.test.mjs"
+      ]
     }
   ],
-  "updatedAt": "2026-08-19T21:59:21.994Z",
-  "stateRoot": "sha256:50b8f83723357459049aefa974154c9eddfe5c872220cd90faede538d8300b52"
+  "updatedAt": "2026-08-19T22:01:39.699Z",
+  "stateRoot": "sha256:f936b2e8c7b9db8d571e5a9846cae610298f409b29ca30c57ee1eb2818fde60a"
 }
