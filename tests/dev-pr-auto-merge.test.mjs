@@ -3,7 +3,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createDevDeliveryQueue, createProjectCutReplayProof, createSourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import {
+  createDevDeliveryQueue,
+  createNativeCommandContract,
+  createProjectCutReplayProof,
+  createSourceQualificationProof,
+  devDeliveryContentRoot,
+  submitDevDeliveryCandidate,
+} from "../packages/core/dev-delivery-warrant.js";
 import {
   cliOptions,
   evaluatePullRequest,
@@ -850,6 +857,56 @@ test("gh CLI client preserves authenticated REST fallback for current Warrant re
   const github = new GhCliClient({ repository: { owner: "kungfu-systems", repo: "buildchain" }, token: "test-token", fetchImpl });
   assert.deepEqual(await readCurrentDeliveryQueueState(github, github.repository, "dev/v4/v4.0"), queue);
   assert.equal(requests[0].headers.authorization, "Bearer test-token");
+});
+
+test("current Warrant readback accepts the production v3 queue during the v4 reader transition", async () => {
+  const root = `sha256:${"2".repeat(64)}`;
+  const submitted = submitDevDeliveryCandidate(createDevDeliveryQueue({
+    repository: "kungfu-systems/buildchain",
+    protectedBase: "dev/v4/v4.0",
+    now: "2026-08-15T00:00:00Z",
+  }), {
+    pullRequestNumber: 21,
+    sourceHead: exactHead,
+    assignmentRoot: root,
+    initiativeRoot: root,
+    sourceIdentityRoot: root,
+    sourcePatchRoot: root,
+    sourceProofRoot: root,
+    planRoot: root,
+    closureRoot: root,
+    dependencyRoot: root,
+    toolchainRoot: root,
+    environmentRoot: root,
+    nativeCommandContract: createNativeCommandContract("node --test"),
+    deliveryClass: "native-proof-required",
+    priority: "ordinary",
+  }, { now: "2026-08-15T00:00:01Z" });
+  const legacyQueue = structuredClone(submitted.queue);
+  delete legacyQueue.candidates[0].nativeCommandContract;
+  delete legacyQueue.stateRoot;
+  legacyQueue.stateRoot = devDeliveryContentRoot(legacyQueue);
+  const responses = [
+    { object: { sha: "c".repeat(40) } },
+    { tree: { sha: "tree-sha" } },
+    { tree: [{ path: "queue.json", type: "blob", sha: "blob-sha" }] },
+    { encoding: "base64", content: Buffer.from(JSON.stringify(legacyQueue)).toString("base64") },
+  ];
+  const fetchImpl = async () => ({
+    ok: true,
+    status: 200,
+    text: async () => JSON.stringify(responses.shift()),
+  });
+  const github = new GhCliClient({
+    repository: { owner: "kungfu-systems", repo: "buildchain" },
+    token: "test-token",
+    fetchImpl,
+  });
+
+  assert.deepEqual(
+    await readCurrentDeliveryQueueState(github, github.repository, "dev/v4/v4.0"),
+    legacyQueue,
+  );
 });
 
 async function withWarrantResult(overrides, callback) {
