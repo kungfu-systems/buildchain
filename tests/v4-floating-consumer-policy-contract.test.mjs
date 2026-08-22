@@ -107,8 +107,14 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
       true,
       JSON.stringify(legacyCompatible.failures),
     );
-    assert.equal(legacyCompatible.receipt.invocation.visibleSelector, "v4-alpha");
-    assert.equal(legacyCompatible.receipt.invocation.sourcePath, legacyRelative);
+    assert.equal(
+      legacyCompatible.receipt.invocation.visibleSelector,
+      "v4-alpha",
+    );
+    assert.equal(
+      legacyCompatible.receipt.invocation.sourcePath,
+      legacyRelative,
+    );
 
     const foreignRepository = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
@@ -277,10 +283,7 @@ test("fresh promotion certifies with the runtime sealed into the candidate Passp
     workflow,
     /const runtimeSha = passport\.buildchain\?\.sha \|\| "";/u,
   );
-  assert.match(
-    workflow,
-    /runtime-sha=\$\{runtimeSha\}/u,
-  );
+  assert.match(workflow, /runtime-sha=\$\{runtimeSha\}/u);
   assert.match(
     workflow,
     /ref: \$\{\{ steps\.v4-policy-caller\.outputs\.runtime-sha \}\}/u,
@@ -288,6 +291,11 @@ test("fresh promotion certifies with the runtime sealed into the candidate Passp
   assert.match(
     workflow,
     /BUILDCHAIN_EXPECTED_RUNTIME_SHA: \$\{\{ steps\.v4-policy-caller\.outputs\.runtime-sha \}\}/u,
+  );
+  assert.match(workflow, /policy_runtime=\.buildchain\/runtime$/mu);
+  assert.doesNotMatch(
+    workflow,
+    /policy_runtime=\.buildchain\/runtime\/promotion-shell/u,
   );
   assert.doesNotMatch(
     workflow,
