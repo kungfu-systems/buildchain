@@ -428,11 +428,11 @@ function validateRecoveryTransaction({ existingTransaction, expectedTransactionI
   if (expectedTransactionId && !actualTransactionId) fail("transaction-identity-conflict", `expected transaction ${expectedTransactionId} does not exist`, "Remove the stale transaction identity only if no durable transaction was ever sealed; otherwise preserve evidence and enter repair_required.");
   if (expectedTransactionId && expectedTransactionId !== actualTransactionId) fail("transaction-identity-conflict", `existing transaction ${actualTransactionId} conflicts with expected ${expectedTransactionId}`, "Enter repair_required and inspect the durable transaction before any retry.");
   if (existingTransaction) {
-    const expectedIdentity = releaseTransactionId({ repository, version, sourceSha: sha, targetRef: normalizedRef(targetRef) });
+    const expectedIdentity = releaseTransactionId({ repository, version, sourceSha: exactSha(existingTransaction.source_sha, "existingTransaction.source_sha"), targetRef: normalizedRef(targetRef) });
     assertEqual(existingTransaction.id, expectedIdentity, "transaction-identity-conflict", "durable transaction identity", "Enter repair_required; the durable transaction does not belong to this exact publication target.");
     assertEqual(existingTransaction.repository, repository, "transaction-identity-conflict", "durable transaction repository", "Enter repair_required; never cross repository transaction boundaries.");
     assertEqual(normalizedRef(existingTransaction.target_ref), normalizedRef(targetRef), "transaction-identity-conflict", "durable transaction target ref", "Enter repair_required; never retarget a sealed transaction.");
-    assertEqual(existingTransaction.source_sha, sha, "transaction-identity-conflict", "durable transaction source SHA", "Resume with the transaction's exact promotion SHA or enter repair_required.");
+    if (![existingTransaction.source_sha, existingTransaction.release_sha, existingTransaction.release_material_sha].filter(Boolean).includes(sha)) fail("transaction-identity-conflict", "recovery promotion SHA is not bound to the durable transaction", "Resume with the transaction's exact source, release, or release material SHA, or enter repair_required.");
     assertEqual(existingTransaction.version, version, "transaction-identity-conflict", "durable transaction version", "Enter repair_required; never change a sealed publication version.");
     assertEqual(existingTransaction.channel, channel || passport.target.channel, "transaction-identity-conflict", "durable transaction channel", "Enter repair_required; never move a transaction between channels.");
   }
