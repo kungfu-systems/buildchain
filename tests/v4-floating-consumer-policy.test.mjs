@@ -638,13 +638,13 @@ test("final v4 Release Passport construction requires fresh external certificati
   );
 });
 
-test("cross-runtime certification keeps candidate source and build runtime identity", () => {
+test("tree-equivalent finalization keeps transaction source and build runtime identity", () => {
   const identity = resolveV4ConsumerPolicyCertificationIdentity({
     release: {
+      certification: { caller: { sourceSha: ALPHA_SHA } },
       builtSourceSha: SOURCE_SHA,
       treeEquivalent: true,
     },
-    routing: { runtime: { resolvedSha: ALPHA_SHA } },
     runtimeResume: {
       lineage: {
         attempts: {
@@ -653,10 +653,10 @@ test("cross-runtime certification keeps candidate source and build runtime ident
         },
       },
     },
-    sourceSha: "9".repeat(40),
+    sourceSha: ALPHA_SHA,
   });
   assert.deepEqual(identity, {
-    sourceSha: SOURCE_SHA,
+    sourceSha: ALPHA_SHA,
     runtimeSha: STABLE_SHA,
   });
 });
