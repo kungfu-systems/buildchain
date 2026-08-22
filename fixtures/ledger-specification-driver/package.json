@@ -1,0 +1,22 @@
+{
+  "name": "@buildchain-fixtures/ledger-specification-driver",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./driver.js",
+    "./authority.json": "./authority.json",
+    "./vectors.json": "./vectors.json",
+    "./verifier": "./verifier.js"
+  },
+  "files": [
+    "authority.json",
+    "driver.js",
+    "BOUNDARIES.md",
+    "vectors.json",
+    "verifier.js"
+  ],
+  "peerDependencies": {
+    "@kungfu-tech/buildchain": ">=3.0.0-0 <5"
+  }
+}

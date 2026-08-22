@@ -7374,7 +7374,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 183
+        "line": 199
       },
       "example": "import { createNativeProofBaseDelta } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7403,7 +7403,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 516
+        "line": 532
       },
       "example": "import { createNativeProofReuseDecision } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7432,7 +7432,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 209
+        "line": 225
       },
       "example": "import { createNativeQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7681,7 +7681,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 519
+        "line": 535
       },
       "example": "import { verifyNativeProofReuseDecision } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7714,7 +7714,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-native-proof.js",
-        "line": 269
+        "line": 285
       },
       "example": "import { verifyNativeQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8471,7 +8471,7 @@
       "id": "packages/core/dev-delivery-warrant.js#observeDevDeliveryQueue",
       "name": "observeDevDeliveryQueue",
       "kind": "function",
-      "signature": "function observeDevDeliveryQueue(queueInput, { now = new Date().toISOString() } = {})",
+      "signature": "function observeDevDeliveryQueue(queueInput, { now = new Date().toISOString(), allowLegacyV3Readback = false } = {})",
       "parameters": [
         {
           "name": "queueInput",
@@ -8479,7 +8479,7 @@
         },
         {
           "name": "parameter2",
-          "signature": "{ now = new Date().toISOString() } = {}"
+          "signature": "{ now = new Date().toISOString(), allowLegacyV3Readback = false } = {}"
         }
       ],
       "returns": "unknown",
@@ -27926,7 +27926,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:8616bee7fe706dfa0429a48e5834159389a8cc439d5e4e0285a3483493ad3d19",
+      "digest": "sha256:621dac9c40b6e9aab15ea9340a5d7b8d05639c4bee497ddb64470cd2141f38a1",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29860,7 +29860,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:ea8e8c79beeb31fab07cc7b3277072f1acee3bfcacca0c5816ce7dce80e1417b"
+      "digest": "sha256:da744d2071ab7871eccbf6b3049a4d8a44b21daa477598fa9327a28b7d89ae67"
     },
     {
       "id": "build-facts",

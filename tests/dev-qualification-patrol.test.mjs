@@ -5,6 +5,7 @@ import { test } from "node:test";
 
 import {
   classifyRetryableFailure,
+  createGitHubDevQualificationClient,
   runDevQualificationPatrol,
 } from "../scripts/dev-qualification-patrol.mjs";
 
@@ -13,6 +14,13 @@ const OLD_SHA = "b".repeat(40);
 const DEV = ".github/workflows/dev-verify-patrol.yml";
 const PREFLIGHT = ".github/workflows/alpha-promotion-preflight.yml";
 const BUILD = ".github/workflows/build.yml";
+const ACTIVE_RUN_STATUSES = [
+  "in_progress",
+  "pending",
+  "queued",
+  "requested",
+  "waiting",
+];
 
 function run(overrides = {}) {
   return {
@@ -117,6 +125,44 @@ test("release-priority work defers dispatch", async () => {
   );
   assert.equal(result.state, "waiting-priority");
   assert.equal(result.pendingSha, SHA);
+});
+
+test("active workflow lookup filters each status before pagination", async () => {
+  const requests = [];
+  const client = createGitHubDevQualificationClient({
+    repository: "kungfu-systems/kungfu",
+    fetchImpl: async (url) => {
+      requests.push(url);
+      const status = new URL(url).searchParams.get("status");
+      const workflowRuns =
+        status === "queued"
+          ? [run({ id: 700, path: BUILD, status, conclusion: null })]
+          : [];
+      return {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ workflow_runs: workflowRuns }),
+      };
+    },
+  });
+
+  const runs = await client.listWorkflowRuns(BUILD, "dev/v4/v4.0", {
+    activeOnly: true,
+  });
+
+  assert.deepEqual(
+    runs.map((item) => item.id),
+    [700],
+  );
+  const queries = requests.map((request) => new URL(request).searchParams);
+  assert.deepEqual(
+    queries.map((query) => query.get("status")).sort(),
+    ACTIVE_RUN_STATUSES,
+  );
+  assert.deepEqual(
+    [...new Set(queries.map((query) => query.get("branch")))],
+    ["dev/v4/v4.0"],
+  );
 });
 
 test("missing exact-source preflight fails closed", async () => {

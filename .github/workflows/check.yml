@@ -213,7 +213,7 @@ jobs:
             const candidates = runs.data.workflow_runs
               .filter((run) => run.conclusion === "success")
               .filter((run) => !callerPath || String(run.path || "").replace(/@.*$/u, "") === callerPath)
-              .filter((run) => (run.pull_requests || []).some((pullRequest) => pullRequest.number === pullNumber))
+              .filter((run) => (run.pull_requests || []).length === 0 || (run.pull_requests || []).some((pullRequest) => pullRequest.number === pullNumber))
               .slice(0, 5);
             const artifactName = `buildchain-source-qualification-proof-${sourceHead}`;
             for (const run of candidates) {
