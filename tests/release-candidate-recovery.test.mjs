@@ -703,6 +703,15 @@ test("recovery requires successful trusted PR workflow and permission evidence",
   expectCode("permission-evidence-insufficient", untrusted);
 });
 
+test("recovery accepts an exact tree-equivalent protected merge when the PR merge SHA is ephemeral", () => {
+  const input = fixture({ ancestry: { mergeIsAncestor: false, status: "diverged" } });
+  const receipt = verifyReleaseCandidateRecovery(input).receipt;
+  assert.equal(receipt.target.tree, TREE);
+
+  input.targetTree = "a".repeat(40);
+  expectCode("ancestry-invalid", input);
+});
+
 test("anchored rematerialization inherits only the exact superseded PR provenance", () => {
   const input = fixture();
   const originalPassport = structuredClone(input.passport);
