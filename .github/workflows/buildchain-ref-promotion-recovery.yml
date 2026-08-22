@@ -179,7 +179,7 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
           BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
-          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: ../recovery-admission/v4-consumer-policy-receipt.json
         run: >-
           node .buildchain/router/scripts/v4-consumer-policy.mjs scan
           --source-sha "${{ inputs.sha }}"
@@ -188,7 +188,7 @@ jobs:
         id: runtime-authority
         uses: actions/github-script@v8
         env:
-          BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH: .buildchain/consumer/.buildchain/evidence/v4-runtime-authorization.json
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH: .buildchain/recovery-admission/v4-runtime-authorization.json
         with:
           script: |
             const script = require(process.env.GITHUB_WORKSPACE + "/.buildchain/router/scripts/authorize-promotion-runtime-override.cjs");
@@ -199,7 +199,7 @@ jobs:
                 consumerRoot: process.env.GITHUB_WORKSPACE + "/.buildchain/consumer",
                 runtimeModulePath: process.env.GITHUB_WORKSPACE + "/.buildchain/router/packages/core/v4-runtime-ref-resume-authority.js",
                 runtimeRepository: "kungfu-systems/buildchain",
-                consumerPolicyReceiptPath: process.env.GITHUB_WORKSPACE + "/.buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json",
+                consumerPolicyReceiptPath: process.env.GITHUB_WORKSPACE + "/.buildchain/recovery-admission/v4-consumer-policy-receipt.json",
                 consumerPolicyReceiptRoot: "${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}",
                 sourceSha: "${{ inputs.sha }}",
                 requestedRef: "${{ steps.route.outputs.runtime-ref }}",
@@ -220,8 +220,8 @@ jobs:
         with:
           name: v4-consumer-policy-buildchain-alpha-recovery-${{ github.run_id }}
           path: |
-            .buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json
-            .buildchain/consumer/.buildchain/evidence/v4-runtime-authorization.json
+            .buildchain/recovery-admission/v4-consumer-policy-receipt.json
+            .buildchain/recovery-admission/v4-runtime-authorization.json
           if-no-files-found: error
 
   promote-alpha-recovery:

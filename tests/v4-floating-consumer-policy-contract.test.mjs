@@ -14,6 +14,7 @@ import {
   resolveV4FloatingConsumerPolicyAuthority,
   scanV4FloatingConsumerPolicy,
 } from "../packages/core/v4-floating-consumer-policy.js";
+import { scanV4RuntimeSelectorPersistence } from "../packages/core/v4-runtime-selector-persistence.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -54,6 +55,10 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   });
   const consumerRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-v4-recovery-consumer-"),
+  );
+  const externalReceipt = path.join(
+    os.tmpdir(),
+    `${path.basename(consumerRoot)}-policy-receipt.json`,
   );
   fs.mkdirSync(path.join(consumerRoot, ".buildchain"), { recursive: true });
   for (const lock of ["contract-lock.json", "alpha-contract-lock.json"])
@@ -110,6 +115,33 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     assert.equal(legacyCompatible.receipt.invocation.visibleSelector, "v4-alpha");
     assert.equal(legacyCompatible.receipt.invocation.sourcePath, legacyRelative);
 
+    const internalReceipt = path.join(
+      consumerRoot,
+      ".buildchain/evidence/v4-consumer-policy-receipt.json",
+    );
+    fs.mkdirSync(path.dirname(internalReceipt), { recursive: true });
+    fs.writeFileSync(internalReceipt, `${JSON.stringify(legacyCompatible)}\n`);
+    const selfScanningPersistence = scanV4RuntimeSelectorPersistence({
+      root: consumerRoot,
+    });
+    assert.equal(selfScanningPersistence.status, "rejected");
+    assert.equal(
+      selfScanningPersistence.failures.some(
+        ({ code }) => code === "persistent-runtime-json-value",
+      ),
+      true,
+    );
+    fs.rmSync(internalReceipt);
+    fs.writeFileSync(externalReceipt, `${JSON.stringify(legacyCompatible)}\n`);
+    const externalEvidencePersistence = scanV4RuntimeSelectorPersistence({
+      root: consumerRoot,
+    });
+    assert.equal(
+      externalEvidencePersistence.status,
+      "passed",
+      JSON.stringify(externalEvidencePersistence.failures),
+    );
+
     const foreignRepository = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
       invocationRoot: root,
@@ -146,6 +178,7 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     });
   } finally {
     fs.rmSync(consumerRoot, { recursive: true, force: true });
+    fs.rmSync(externalReceipt, { force: true });
   }
 
   assert.equal(result.ok, true, JSON.stringify(result.failures));
@@ -194,6 +227,18 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   assert.match(
     workflow,
     /BUILDCHAIN_INVOCATION_SOURCE_PATH: \.github\/workflows\/release-candidate-promote\.yml/u,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_V4_POLICY_RECEIPT_PATH: \.\.\/recovery-admission\/v4-consumer-policy-receipt\.json/u,
+  );
+  assert.match(
+    workflow,
+    /consumerPolicyReceiptPath: process\.env\.GITHUB_WORKSPACE \+ "\/\.buildchain\/recovery-admission\/v4-consumer-policy-receipt\.json"/u,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /consumer\/\.buildchain\/evidence\/v4-consumer-policy-receipt\.json/u,
   );
   assert.match(workflow, /git -C \.buildchain\/consumer init --quiet/u);
   assert.match(
