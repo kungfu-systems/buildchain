@@ -1973,7 +1973,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(
     workflow,
-    /name: Checkout exact v4 policy caller source[\s\S]*ref: \$\{\{ steps\.v4-policy-caller\.outputs\.source-sha \}\}[\s\S]*path: \.buildchain\/policy-caller/,
+    /name: Checkout exact v4 policy caller source[\s\S]*ref: \$\{\{ steps\.v4-policy-caller\.outputs\.source-sha \}\}[\s\S]*path: \.buildchain\/runtime\/policy-caller/,
   );
   assert.match(
     workflow,
