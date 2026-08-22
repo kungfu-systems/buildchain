@@ -109,6 +109,9 @@ jobs:
             test -f "${source_path}"
             cp "${source_path}" ".buildchain/consumer/.buildchain/${lock}"
           done
+          mkdir -p .buildchain/consumer/.github/workflows
+          cp ".buildchain/recovered-source/.github/workflows/buildchain-ref-promotion-recovery.yml" \
+            ".buildchain/consumer/.github/workflows/buildchain-ref-promotion-recovery.yml"
           git -C .buildchain/consumer init --quiet
           git -C .buildchain/consumer add -- .buildchain
           git -C .buildchain/consumer \
@@ -117,7 +120,6 @@ jobs:
             commit --quiet --message='Project immutable recovery policy locks'
           test "$(git -C .buildchain/consumer ls-files -- .github/workflows .github/actions .buildchain)" = \
             $'.buildchain/alpha-contract-lock.json\n.buildchain/contract-lock.json'
-
       - name: Checkout exact recovery router and policy runtime
         uses: actions/checkout@v7.0.0
         with:
@@ -125,7 +127,6 @@ jobs:
           ref: ${{ inputs['resume-buildchain-runtime-sha'] }}
           path: .buildchain/router
           persist-credentials: false
-
       - name: Resolve alpha recovery route
         id: route
         shell: bash
@@ -138,7 +139,6 @@ jobs:
           --target-ref "${{ inputs['target-ref'] }}"
           --router-ref "${{ inputs['resume-buildchain-runtime-ref'] }}"
           --router-sha "${{ inputs['resume-buildchain-runtime-sha'] }}"
-
       - name: Resolve immutable shell and runtime identities
         id: identities
         shell: bash

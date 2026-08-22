@@ -82,6 +82,27 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
       ),
       true,
     );
+    fs.mkdirSync(path.dirname(path.join(consumerRoot, relative)), {
+      recursive: true,
+    });
+    fs.copyFileSync(path.join(root, relative), path.join(consumerRoot, relative));
+    const legacyCompatible = scanV4FloatingConsumerPolicy({
+      root: consumerRoot,
+      repository: "kungfu-systems/buildchain",
+      sourceSha: "a".repeat(40),
+      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+      invocationSourcePath: relative,
+      expectedInvocationChannel: "alpha",
+      resolvedWorkflowSha: "b".repeat(40),
+      resolvedRuntimeSha: "c".repeat(40),
+      policy: authority.policy,
+      scannerRoot: authority.scannerRoot,
+    });
+    assert.equal(
+      legacyCompatible.ok,
+      true,
+      JSON.stringify(legacyCompatible.failures),
+    );
 
     const foreignRepository = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
@@ -159,6 +180,10 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   assert.match(
     workflow,
     /cp "\$\{source_path\}" "\.buildchain\/consumer\/\.buildchain\/\$\{lock\}"/u,
+  );
+  assert.match(
+    workflow,
+    /cp "\.buildchain\/recovered-source\/\.github\/workflows\/buildchain-ref-promotion-recovery\.yml" \\\s+"\.buildchain\/consumer\/\.github\/workflows\/buildchain-ref-promotion-recovery\.yml"/u,
   );
   assert.match(workflow, /git -C \.buildchain\/consumer init --quiet/u);
   assert.match(
