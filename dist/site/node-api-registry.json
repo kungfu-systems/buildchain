@@ -29320,7 +29320,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
       "export": "./release-candidate-recovery",
       "target": "./packages/core/release-candidate-recovery.js",
-      "digest": "sha256:cfe4cf1b045c503ba55b98c491c26a878dd23aaec78e7562251f077937c43bd5",
+      "digest": "sha256:6034a75aeb4e3e14330f43b4d8c72f3a0a9823a20ce03a578ea6eac33000d31e",
       "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

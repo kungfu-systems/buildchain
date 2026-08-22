@@ -354,7 +354,7 @@ function validateCandidateProvenance({
   run,
   workflow,
   pullRequest,
-  ancestry,
+  ancestry, targetTree,
   passport,
   anchorProvenance,
   expectedTransactionId,
@@ -383,7 +383,7 @@ function validateCandidateProvenance({
   const boundByNumber = Array.isArray(provenanceRun?.pullRequestNumbers) && provenanceRun.pullRequestNumbers.includes(Number(pullRequest?.number));
   const boundByHead = provenanceRun?.headSha === pullRequest?.headSha && normalizedRef(provenanceRun?.headBranch) === normalizedRef(pullRequest?.headRef);
   if (!boundByNumber && !boundByHead) fail("pr-identity-invalid", "candidate run is not bound to the merged candidate PR", "Select the exact PR-stage Build run.");
-  if (!ancestry?.mergeIsAncestor && ancestry?.status !== "identical") fail("ancestry-invalid", "candidate merge is not an ancestor of the promotion SHA", "Promote a descendant of the verified merged candidate identity.");
+  if (!ancestry?.mergeIsAncestor && ancestry?.status !== "identical" && exactSha(targetTree, "targetTree") !== exactSha(passport?.source?.treeHash, "passport.source.treeHash")) fail("ancestry-invalid", "candidate merge is neither an ancestor nor tree-equivalent to the promotion SHA", "Promote a descendant of the verified merged candidate identity or its exact tree-equivalent protected merge result.");
   return { repository, workflowFile };
 }
 
@@ -476,7 +476,7 @@ export function verifyReleaseCandidateRecovery({
   const { repository, workflowFile } = validateCandidateProvenance({
     candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile,
     expectedWorkflowName, targetRef, run, workflow, pullRequest, ancestry,
-    passport, anchorProvenance, expectedTransactionId,
+    targetTree, passport, anchorProvenance, expectedTransactionId,
   });
   const { sha, tree, runtimeSha, toolingSha } = validateCandidateIdentity({
     repository, channel, targetSha, targetTree, expectedSourceTree,
