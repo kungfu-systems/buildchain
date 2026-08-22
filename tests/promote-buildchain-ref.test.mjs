@@ -1479,6 +1479,10 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/controller/plan.json"),
     "{}\n",
   );
+  fs.mkdirSync(path.join(cwd, ".buildchain/policy-caller"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, ".buildchain/policy-caller/workflow.yml"), "name: caller\n");
+  fs.mkdirSync(path.join(cwd, ".buildchain/candidate-policy-runtime"), { recursive: true });
+  fs.writeFileSync(path.join(cwd, ".buildchain/candidate-policy-runtime/check.mjs"), "export {};\n");
 
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
 
