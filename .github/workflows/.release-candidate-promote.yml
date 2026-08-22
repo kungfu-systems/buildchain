@@ -1710,10 +1710,10 @@ jobs:
           import fs from "node:fs";
           const passport = JSON.parse(fs.readFileSync(process.env.RELEASE_CANDIDATE_PASSPORT, "utf8"));
           const sourceSha = passport.consumerPolicy?.receipt?.caller?.sourceSha || "";
-          if (!/^[0-9a-f]{40}$/u.test(sourceSha)) {
-            throw new Error("release candidate policy receipt must bind an exact caller source SHA");
-          }
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `source-sha=${sourceSha}\n`);
+          const runtimeSha = passport.buildchain?.sha || "";
+          if (!/^[0-9a-f]{40}$/u.test(sourceSha)) throw new Error("release candidate policy receipt must bind an exact caller source SHA");
+          if (!/^[0-9a-f]{40}$/u.test(runtimeSha)) throw new Error("release candidate Passport must bind an exact Buildchain runtime SHA");
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `source-sha=${sourceSha}\nruntime-sha=${runtimeSha}\n`);
           NODE
 
       - name: Checkout exact v4 policy caller source
@@ -1729,14 +1729,13 @@ jobs:
       - name: Checkout exact candidate policy runtime
         if: >-
           ${{
-            inputs.resume-candidate-run-id != '' &&
-            inputs.resume-expected-candidate-runtime-sha != '' &&
-            inputs.resume-expected-candidate-runtime-sha != steps.buildchain-runtime.outputs.sha
+            steps.v4-policy-caller.outputs.runtime-sha != '' &&
+            steps.v4-policy-caller.outputs.runtime-sha != steps.buildchain-runtime.outputs.sha
           }}
         uses: actions/checkout@v7.0.0
         with:
           repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.resume-expected-candidate-runtime-sha }}
+          ref: ${{ steps.v4-policy-caller.outputs.runtime-sha }}
           path: .buildchain/candidate-policy-runtime
           clean: true
           persist-credentials: false
@@ -1770,9 +1769,9 @@ jobs:
           BUILDCHAIN_EXPECTED_CALLER_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: ${{ steps.v4-policy-caller.outputs.source-sha }}
           BUILDCHAIN_EXPECTED_INVOKED_WORKFLOW: .github/workflows/build.yml
-          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ inputs.resume-expected-candidate-runtime-sha || steps.buildchain-runtime.outputs.sha }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.v4-policy-caller.outputs.runtime-sha }}
           BUILDCHAIN_CURRENT_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
-          BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA: ${{ inputs.resume-expected-candidate-runtime-sha }}
+          BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA: ${{ steps.v4-policy-caller.outputs.runtime-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
           BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-alpha-contract-lock-path }}
           BUILDCHAIN_V4_POLICY_CERTIFICATION_PATH: .buildchain/release-candidate/v4-consumer-policy-certification.json
