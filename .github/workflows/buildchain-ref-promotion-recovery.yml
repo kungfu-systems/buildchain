@@ -98,7 +98,6 @@ jobs:
             .buildchain/alpha-contract-lock.json
             .github/workflows/buildchain-ref-promotion-recovery.yml
           sparse-checkout-cone-mode: false
-
       - name: Project immutable consumer policy locks as exact Git evidence
         shell: bash
         run: |
