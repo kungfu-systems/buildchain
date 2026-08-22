@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 705,
+  "generation": 706,
   "fencingCounter": 124,
   "policy": {
     "agingSeconds": 900,
@@ -5579,8 +5579,59 @@
         "tests/v4-floating-consumer-policy-contract.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 2967,
+      "assignmentRoot": "sha256:3972499a9f69af7db7877536a28ad466bfff75fe592e885f7083de76c9742486",
+      "initiativeRoot": "sha256:d2e5308667a8401fd917fc6519f862621b20cedf68d35d466ec34ad0316d967d",
+      "sourceIdentityRoot": "sha256:0724ea075a1b1575fe2c6946d0b52e2cb7087e06b571314ebb66e325b48e2c90",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:ad2752ccd06ce018a33d427141e870ae17c527d7d045bb60d11c11228257a862",
+      "sourceHead": "432d49b215f3d2c3615a611868c17aa2e2e9c13c",
+      "sourcePatchRoot": "sha256:35601f45d704bc0cac1849a5e431f9a2876a4d5035fdd1c29541513935350487",
+      "sourceProofRoot": "sha256:74136d65a2bfec70d1d9f461e36c74663f476ab59e45080d8dfe044d383e2a7d",
+      "planRoot": "sha256:ee378d16344f3c408ded44cbd4127b518d43d661ecfab99f34934414d80990a7",
+      "closureRoot": "sha256:5c9dbb49f74788098d7ee2a053f80695f9c312f1f6481417f7cfc08fba49eae6",
+      "dependencyRoot": "sha256:1638079b377f5bcb1fcc80c7b308eed2f477f5deb5cdb6520f44c1db1e872f8e",
+      "toolchainRoot": "sha256:29b8fd05c69ff2ea3e945aa0876adaa79559ef86dff6df74b4cf0c507deda8dc",
+      "environmentRoot": "sha256:730fa5be9bdb2cc22c8799ce5fc702bcfd79307692a5259b74098594c6b7f8cb",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "corepack prepare pnpm@11.7.0 --activate && corepack enable && pnpm --version && pnpm install --frozen-lockfile && pnpm run check",
+        "commandRoot": "sha256:d0c014631f0785ed2ce01b5d5b62dcca5fbc82387621dc36d759552bdb394656"
+      },
+      "sourceWorkflowRunId": 32568909600,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-22T11:09:12.666Z",
+      "updatedAt": "2026-08-22T11:09:12.666Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/release-impact.json",
+        ".github/workflows/v4-adopter-delivery.yml",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/kfd-upstream-aggregate.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/publication-registry.json",
+        "dist/site/site-manifest.json",
+        "dist/site/workflow-registry.json",
+        "package.json",
+        "scripts/dispatch-artifact-signing-authority.mjs",
+        "scripts/stable-candidate-qualification.mjs",
+        "tests/native-artifact-signing-authority.test.mjs",
+        "tests/stable-candidate-qualification.test.mjs",
+        "tests/v4-floating-consumer-policy-contract.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-22T09:40:44.551Z",
-  "stateRoot": "sha256:af0ed7356556fb50a1a47d10e8d80008786d39ae7e5ad9c5266d5572b04a52c2"
+  "updatedAt": "2026-08-22T11:09:12.666Z",
+  "stateRoot": "sha256:65cd114f977b00c66ab641d1c3ae9b10e889d65a4176f6051cc54dcf63baf4cc"
 }
