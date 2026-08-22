@@ -24,7 +24,7 @@ const AUTHORITY_WORKFLOW = "artifact-signing-authority.yml";
 
 export function resolveAuthorityDispatchRef(value) {
   const ref = required(value, "authority ref");
-  return /^[0-9a-f]{40}$/u.test(ref)
+  return /^[0-9a-f]{40}$/u.test(ref) || /^v\d+(?:\.\d+)?(?:-alpha)?$/u.test(ref)
     ? DEFAULT_ARTIFACT_SIGNING_AUTHORITY_REF
     : ref;
 }

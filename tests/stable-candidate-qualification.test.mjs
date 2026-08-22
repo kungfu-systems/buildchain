@@ -9,7 +9,6 @@ import {
 } from "../scripts/stable-candidate-qualification.mjs";
 
 const SHA = "a".repeat(40);
-
 test("binds automatic qualification to the exact alpha proved by self-dogfood", () => {
   assert.equal(resolveStableCandidateQualificationCandidate({
     eventName: "workflow_run",
@@ -86,6 +85,17 @@ test("attests only after both exact candidate workflows succeed", async () => {
     targetUrl: "https://example.test/canary",
     description: "No-apply kungfu-systems/site-libkungfu-dev canary passed",
   }]]);
+});
+
+test("binds workflow and status evidence to the immutable alpha ancestor", async () => {
+  const exactSha = "b".repeat(40);
+  const client = fakeClient({
+    async resolveExactAlpha() { return { version: "4.0.1-alpha.8", tag: "v4.0.1-alpha.8", sha: exactSha }; },
+    async findWorkflowRun({ headSha }) { assert.equal(headSha, exactSha); return { status: "completed", conclusion: "success" }; },
+    async findCommitStatus(_repository, sha) { assert.equal(sha, exactSha); return { state: "success" }; },
+  });
+  const result = await runStableCandidateQualification({ repository: "kungfu-systems/buildchain", candidateSha: SHA }, client);
+  assert.equal(result.candidate.sha, exactSha);
 });
 
 test("reuses an existing success attestation without dispatching canary", async () => {
@@ -215,6 +225,33 @@ test("cross-repository canary matching binds the candidate through the exact run
     sourceSha: "b".repeat(40),
   });
   assert.equal(run.id, 42);
+});
+
+test("GitHub resolution selects the newest exact alpha ancestor and stops", async () => {
+  const releaseSha = "b".repeat(40);
+  const runtimeSha = "c".repeat(40);
+  const paths = [];
+  const releases = [
+    { prerelease: true, tag_name: "v4.0.1-alpha.7" },
+    { prerelease: true, tag_name: "v4.0.1-alpha.8", html_url: "https://example.test/8" },
+  ];
+  const client = createGitHubQualificationClient({
+    token: "dispatch",
+    fetchImpl: async (url) => {
+      const parsed = new URL(url);
+      const path = parsed.pathname + parsed.search;
+      paths.push(path);
+      const payload = path.endsWith("/releases?per_page=100") ? releases
+        : path.endsWith("/git/ref/tags/v4.0.1-alpha.8") ? { object: { type: "commit", sha: releaseSha } }
+          : path.endsWith(`/compare/${releaseSha}...${runtimeSha}`) ? { status: "ahead", ahead_by: 2 }
+            : assert.fail(`unexpected request ${path}`);
+      return { ok: true, status: 200, async text() { return JSON.stringify(payload); } };
+    },
+  });
+
+  const result = await client.resolveExactAlpha("kungfu-systems/buildchain", runtimeSha);
+  assert.deepEqual(result, { version: "4.0.1-alpha.8", tag: "v4.0.1-alpha.8", sha: releaseSha, releaseUrl: "https://example.test/8" });
+  assert.equal(paths.some((path) => path.includes("alpha.7")), false);
 });
 
 test("GitHub polling ignores stale completed runs until the dispatched run is visible", async () => {
