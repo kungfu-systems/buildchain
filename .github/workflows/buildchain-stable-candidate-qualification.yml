@@ -63,7 +63,6 @@ jobs:
         id: candidate
         run: node scripts/stable-candidate-qualification.mjs
         env:
-          GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_QUALIFICATION_RESOLVE_CANDIDATE: "true"
           BUILDCHAIN_QUALIFICATION_EVENT_NAME: ${{ github.event_name }}
           BUILDCHAIN_QUALIFICATION_INPUT_CANDIDATE_SHA: ${{ inputs.candidate-sha || '' }}

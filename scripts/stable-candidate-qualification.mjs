@@ -64,22 +64,6 @@ export function resolveStableCandidateQualificationCandidate({ eventName, inputC
   return observedSha;
 }
 
-export async function resolveStableCandidateQualificationRelease({
-  eventName,
-  inputCandidateSha = "",
-  selfDogfoodEvidence,
-  repository: repositoryName,
-  client,
-} = {}) {
-  const runtimeSha = resolveStableCandidateQualificationCandidate({ eventName, inputCandidateSha, selfDogfoodEvidence });
-  if (text(eventName) === "workflow_dispatch") return runtimeSha;
-  const exactAlpha = await client.resolveNearestExactAlphaAncestor(repository(repositoryName), runtimeSha);
-  if (!exactAlpha) {
-    throw new Error(`v4-alpha runtime ${runtimeSha} has no unambiguous exact alpha release ancestor`);
-  }
-  return exactAlpha.sha;
-}
-
 function optionalRef(value, label) {
   const normalized = text(value);
   if (
@@ -162,9 +146,7 @@ export async function runStableCandidateQualification(optionsInput = {}, clientI
   const options = normalizeStableCandidateQualificationOptions(optionsInput);
   const client = clientInput || createGitHubQualificationClient({ token: process.env.GITHUB_TOKEN });
   const candidate = await client.resolveExactAlpha(options.repository, options.candidateSha);
-  if (!candidate) {
-    return { schemaVersion: 1, contract: "kungfu-buildchain-stable-candidate-qualification", status: "skipped", reason: "exact-alpha-release-not-found", candidateSha: options.candidateSha };
-  }
+  if (!candidate) return { schemaVersion: 1, contract: "kungfu-buildchain-stable-candidate-qualification", status: "skipped", reason: "exact-alpha-release-not-found", candidateSha: options.candidateSha };
 
   const build = await ensureWorkflowEvidence({
     client,
@@ -172,12 +154,12 @@ export async function runStableCandidateQualification(optionsInput = {}, clientI
     workflowFile: options.buildWorkflowFile,
     workflowName: options.buildWorkflowName,
     ref: candidate.tag,
-    headSha: options.candidateSha,
+    headSha: candidate.sha,
     runName: "",
     options,
   });
 
-  let status = await client.findCommitStatus(options.repository, options.candidateSha, options.canaryStatusContext);
+  let status = await client.findCommitStatus(options.repository, candidate.sha, options.canaryStatusContext);
   let canary = { state: status?.state === "success" ? "existing" : "pending", run: undefined };
   if (status?.state !== "success") {
     const canaryRef = options.canaryRef || await client.defaultBranch(options.canaryRepository);
@@ -193,15 +175,15 @@ export async function runStableCandidateQualification(optionsInput = {}, clientI
       workflowFile: options.canaryWorkflowFile,
       workflowName: options.canaryWorkflowName,
       ref: canaryRef,
-      headSha: options.candidateSha,
-      runName: `${options.canaryWorkflowName} / ${options.candidateSha}`,
+      headSha: candidate.sha,
+      runName: `${options.canaryWorkflowName} / ${candidate.sha}`,
       sourceSha: options.canarySha,
       options,
     });
     if (!options.dryRun) {
       status = await client.createCommitStatus({
         repository: options.repository,
-        sha: options.candidateSha,
+        sha: candidate.sha,
         context: options.canaryStatusContext,
         targetUrl: canary.run.html_url,
         description: `No-apply ${options.canaryRepository} canary passed`,
@@ -271,31 +253,13 @@ export function createGitHubQualificationClient({
       .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0];
   }
   return {
-    async resolveNearestExactAlphaAncestor(repositoryName, runtimeSha) {
-      const releases = await api(`/repos/${repositoryName}/releases?per_page=100`);
-      const candidates = releases
-        .filter((release) => release.prerelease && /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(release.tag_name || ""))
-        .sort((left, right) => right.tag_name.localeCompare(left.tag_name, "en", { numeric: true }));
-      for (const release of candidates) {
-        const sha = await resolveTagSha(repositoryName, release.tag_name);
-        const comparison = await api(`/repos/${repositoryName}/compare/${sha}...${runtimeSha}`);
-        if (!["ahead", "identical"].includes(comparison.status)) continue;
-        return {
-          version: release.tag_name.slice(1),
-          tag: release.tag_name,
-          sha,
-          releaseUrl: release.html_url,
-          distance: Number(comparison.ahead_by || 0),
-        };
-      }
-      return undefined;
-    },
     async resolveExactAlpha(repositoryName, candidateSha) {
-      const releases = await api(`/repos/${repositoryName}/releases?per_page=100`);
+      const releases = (await api(`/repos/${repositoryName}/releases?per_page=100`)).sort((left, right) => right.tag_name.localeCompare(left.tag_name, "en", { numeric: true }));
       for (const release of releases) {
         if (!release.prerelease || !/^v\d+\.\d+\.\d+-alpha\.\d+$/.test(release.tag_name || "")) continue;
         const sha = await resolveTagSha(repositoryName, release.tag_name);
-        if (sha === candidateSha) return { version: release.tag_name.slice(1), tag: release.tag_name, sha, releaseUrl: release.html_url };
+        if (sha !== candidateSha && !["ahead", "identical"].includes((await api(`/repos/${repositoryName}/compare/${sha}...${candidateSha}`)).status)) continue;
+        return { version: release.tag_name.slice(1), tag: release.tag_name, sha, releaseUrl: release.html_url };
       }
       return undefined;
     },
@@ -340,13 +304,10 @@ async function main() {
       const evidencePath = text(process.env.BUILDCHAIN_QUALIFICATION_SELF_DOGFOOD_EVIDENCE);
       selfDogfoodEvidence = JSON.parse(fs.readFileSync(evidencePath, "utf8"));
     }
-    const client = createGitHubQualificationClient({ token: process.env.GITHUB_TOKEN });
-    const sha = await resolveStableCandidateQualificationRelease({
+    const sha = resolveStableCandidateQualificationCandidate({
       eventName: process.env.BUILDCHAIN_QUALIFICATION_EVENT_NAME,
       inputCandidateSha: process.env.BUILDCHAIN_QUALIFICATION_INPUT_CANDIDATE_SHA,
       selfDogfoodEvidence,
-      repository: process.env.GITHUB_REPOSITORY,
-      client,
     });
     process.stdout.write(`${sha}\n`);
     if (process.env.GITHUB_OUTPUT) {

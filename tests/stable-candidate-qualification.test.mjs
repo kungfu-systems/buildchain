@@ -5,12 +5,10 @@ import {
   createGitHubQualificationClient,
   normalizeStableCandidateQualificationOptions,
   resolveStableCandidateQualificationCandidate,
-  resolveStableCandidateQualificationRelease,
   runStableCandidateQualification,
 } from "../scripts/stable-candidate-qualification.mjs";
 
 const SHA = "a".repeat(40);
-
 test("binds automatic qualification to the exact alpha proved by self-dogfood", () => {
   assert.equal(resolveStableCandidateQualificationCandidate({
     eventName: "workflow_run",
@@ -35,44 +33,6 @@ test("keeps manual qualification bound to its explicit immutable candidate", () 
     eventName: "workflow_dispatch",
     inputCandidateSha: SHA,
   }), SHA);
-});
-
-test("maps a floating alpha tail to its nearest immutable alpha release", async () => {
-  const releaseSha = "b".repeat(40);
-  const client = {
-    async resolveNearestExactAlphaAncestor(repository, runtimeSha) {
-      assert.equal(repository, "kungfu-systems/buildchain");
-      assert.equal(runtimeSha, SHA);
-      return { sha: releaseSha, tag: "v4.0.1-alpha.8", distance: 2 };
-    },
-  };
-  const result = await resolveStableCandidateQualificationRelease({
-    eventName: "workflow_run",
-    repository: "kungfu-systems/buildchain",
-    selfDogfoodEvidence: {
-      contract: "kungfu-buildchain-alpha-self-dogfood",
-      status: "passed",
-      observed: { alpha: { ref: "v4-alpha", sha: SHA, expectedSha: SHA } },
-    },
-    client,
-  });
-  assert.equal(result, releaseSha);
-});
-
-test("fails closed when a floating alpha tail has no exact release ancestor", async () => {
-  await assert.rejects(
-    resolveStableCandidateQualificationRelease({
-      eventName: "workflow_run",
-      repository: "kungfu-systems/buildchain",
-      selfDogfoodEvidence: {
-        contract: "kungfu-buildchain-alpha-self-dogfood",
-        status: "passed",
-        observed: { alpha: { ref: "v4-alpha", sha: SHA, expectedSha: SHA } },
-      },
-      client: { async resolveNearestExactAlphaAncestor() { return undefined; } },
-    }),
-    /has no unambiguous exact alpha release ancestor/,
-  );
 });
 
 function fakeClient(overrides = {}) {
@@ -125,6 +85,17 @@ test("attests only after both exact candidate workflows succeed", async () => {
     targetUrl: "https://example.test/canary",
     description: "No-apply kungfu-systems/site-libkungfu-dev canary passed",
   }]]);
+});
+
+test("binds workflow and status evidence to the immutable alpha ancestor", async () => {
+  const exactSha = "b".repeat(40);
+  const client = fakeClient({
+    async resolveExactAlpha() { return { version: "4.0.1-alpha.8", tag: "v4.0.1-alpha.8", sha: exactSha }; },
+    async findWorkflowRun({ headSha }) { assert.equal(headSha, exactSha); return { status: "completed", conclusion: "success" }; },
+    async findCommitStatus(_repository, sha) { assert.equal(sha, exactSha); return { state: "success" }; },
+  });
+  const result = await runStableCandidateQualification({ repository: "kungfu-systems/buildchain", candidateSha: SHA }, client);
+  assert.equal(result.candidate.sha, exactSha);
 });
 
 test("reuses an existing success attestation without dispatching canary", async () => {
@@ -260,39 +231,26 @@ test("GitHub resolution selects the newest exact alpha ancestor and stops", asyn
   const releaseSha = "b".repeat(40);
   const runtimeSha = "c".repeat(40);
   const paths = [];
+  const releases = [
+    { prerelease: true, tag_name: "v4.0.1-alpha.7" },
+    { prerelease: true, tag_name: "v4.0.1-alpha.8", html_url: "https://example.test/8" },
+  ];
   const client = createGitHubQualificationClient({
     token: "dispatch",
     fetchImpl: async (url) => {
       const parsed = new URL(url);
       const path = parsed.pathname + parsed.search;
       paths.push(path);
-      let payload;
-      if (path.endsWith("/releases?per_page=100")) {
-        payload = [
-          { prerelease: true, tag_name: "v4.0.1-alpha.7", html_url: "https://example.test/7" },
-          { prerelease: false, tag_name: "v4.0.1", html_url: "https://example.test/stable" },
-          { prerelease: true, tag_name: "v4.0.1-alpha.8", html_url: "https://example.test/8" },
-        ];
-      } else if (path.endsWith("/git/ref/tags/v4.0.1-alpha.8")) {
-        payload = { object: { type: "commit", sha: releaseSha } };
-      } else if (path.endsWith(`/compare/${releaseSha}...${runtimeSha}`)) {
-        payload = { status: "ahead", ahead_by: 2 };
-      } else {
-        throw new Error(`unexpected request ${path}`);
-      }
+      const payload = path.endsWith("/releases?per_page=100") ? releases
+        : path.endsWith("/git/ref/tags/v4.0.1-alpha.8") ? { object: { type: "commit", sha: releaseSha } }
+          : path.endsWith(`/compare/${releaseSha}...${runtimeSha}`) ? { status: "ahead", ahead_by: 2 }
+            : assert.fail(`unexpected request ${path}`);
       return { ok: true, status: 200, async text() { return JSON.stringify(payload); } };
     },
   });
 
-  const result = await client.resolveNearestExactAlphaAncestor("kungfu-systems/buildchain", runtimeSha);
-
-  assert.deepEqual(result, {
-    version: "4.0.1-alpha.8",
-    tag: "v4.0.1-alpha.8",
-    sha: releaseSha,
-    releaseUrl: "https://example.test/8",
-    distance: 2,
-  });
+  const result = await client.resolveExactAlpha("kungfu-systems/buildchain", runtimeSha);
+  assert.deepEqual(result, { version: "4.0.1-alpha.8", tag: "v4.0.1-alpha.8", sha: releaseSha, releaseUrl: "https://example.test/8" });
   assert.equal(paths.some((path) => path.includes("alpha.7")), false);
 });
 
