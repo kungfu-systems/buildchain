@@ -123,70 +123,26 @@ jobs:
           echo "::error::Candidate recovery requires sha, repository, current runtime SHA, candidate runtime SHA, and expected tree or candidate root."
           exit 1
 
-  resolve-alpha-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && startsWith(inputs['target-ref'], 'alpha/') && inputs.sha != '' }}
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    outputs:
-      sha: ${{ steps.source.outputs.sha }}
-      head-sha: ${{ steps.source.outputs.head-sha }}
-      runtime-sha: ${{ steps.runtime.outputs.sha }}
-      contract-lock-digest: ${{ steps.lock.outputs.digest }}
-    steps:
-      - name: Checkout floating alpha runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: kungfu-systems/buildchain
-          ref: v4-alpha
-          path: .buildchain/runtime
-          persist-credentials: false
-      - name: Bind floating alpha runtime
-        id: runtime
-        run: echo "sha=$(git -C .buildchain/runtime rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
-      - name: Checkout exact protected alpha source
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ inputs.sha }}
-          path: .buildchain/source
-          persist-credentials: false
-      - name: Bind exact protected alpha source ancestry
-        id: source
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          SOURCE_SHA: ${{ inputs.sha }}
-          TARGET_REF: ${{ inputs['target-ref'] }}
-        run: |
-          set -euo pipefail
-          [[ "${SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::sha must be exact"; exit 1; }
-          [[ "${TARGET_REF}" = "alpha/v4/v4.0" ]] || { echo "::error::recovery is restricted to alpha/v4/v4.0"; exit 1; }
-          remote_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${TARGET_REF}" --jq .object.sha)"
-          comparison="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${SOURCE_SHA}...${remote_sha}" --jq '[.status, .merge_base_commit.sha] | join(" ")')"
-          read -r comparison_status merge_base_sha <<<"${comparison}"
-          if [[ "${comparison_status}" = "identical" ]]; then
-            :
-          elif [[ "${comparison_status}" = "ahead" && "${merge_base_sha}" = "${SOURCE_SHA}" ]]; then
-            :
-          else
-            echo "::error::original source is not an ancestor of the protected alpha head"
-            exit 1
-          fi
-          [[ "$(git -C .buildchain/source rev-parse HEAD)" = "${SOURCE_SHA}" ]] || { echo "::error::checked out alpha source moved"; exit 1; }
-          echo "sha=${SOURCE_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "head-sha=${remote_sha}" >> "${GITHUB_OUTPUT}"
-      - name: Bind alpha contract lock
-        id: lock
-        run: echo "digest=sha256:$(shasum -a 256 .buildchain/source/.buildchain/alpha-contract-lock.json | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-
-  promote-alpha-recovery:
-    needs: resolve-alpha-recovery
+  promote-alpha:
     if: >-
       ${{
-        github.event_name == 'workflow_dispatch' &&
-        startsWith(inputs['target-ref'], 'alpha/') &&
-        inputs.sha != ''
+        (
+          github.event_name == 'workflow_dispatch' &&
+          startsWith(inputs['target-ref'], 'alpha/') &&
+          (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
+          inputs.sha != ''
+        ) ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          startsWith(github.event.workflow_run.head_branch, 'alpha/') &&
+          !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
+        )
       }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write
@@ -198,39 +154,35 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
+      buildchain-channel: alpha
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ needs.resolve-alpha-recovery.outputs.runtime-sha }}
-      buildchain-expected-channel: alpha
-      buildchain-expected-major: "4"
-      promotion-router-ref: v4-alpha
-      promotion-router-sha: ${{ needs.resolve-alpha-recovery.outputs.runtime-sha }}
-      promotion-shell-ref: alpha/v4/v4.0
-      promotion-shell-sha: ${{ needs.resolve-alpha-recovery.outputs.head-sha }}
-      promotion-runtime-ref: v4-alpha
-      promotion-runtime-sha: ${{ needs.resolve-alpha-recovery.outputs.runtime-sha }}
-      promotion-contract-lock-path: .buildchain/alpha-contract-lock.json
-      promotion-contract-lock-digest: ${{ needs.resolve-alpha-recovery.outputs.contract-lock-digest }}
-      promotion-publication-channel: alpha
-      promotion-target-ref: ${{ inputs['target-ref'] }}
-      promotion-override-used: false
-      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
+      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-sha'] || 'v4-alpha' }}
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
-      channel: alpha
-      target-ref: ${{ inputs['target-ref'] }}
-      target-sha: ${{ needs.resolve-alpha-recovery.outputs.sha }}
+      target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
+      target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       package-manager: pnpm
       artifact-name: libnode-shaped
       release-candidate-workflow-file: build-surface-fixture.yml
       release-candidate-workflow-name: Build Surface Fixture
-      artifact-patterns: "buildchain-package-*"
+      resume-candidate-repository: ${{ inputs['resume-candidate-repository'] }}
+      resume-candidate-run-id: ${{ inputs['resume-candidate-run-id'] }}
+      resume-expected-workflow-file: build-surface-fixture.yml
+      resume-expected-workflow-name: Build Surface Fixture
+      resume-expected-source-tree: ${{ inputs['resume-expected-source-tree'] }}
+      resume-expected-candidate-root: ${{ inputs['resume-expected-candidate-root'] }}
+      resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
+      resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
+      resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
+      artifact-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '' || 'buildchain-package-*' }}
       publish-rematerialize-on-resume: true
       github-release: true
-      standalone-binary-distribution: true
+      github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
+      standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
       required-status-check: check
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       required-artifact-count: 0
-      publish-transaction-override: true
+      publish-transaction-override: ${{ inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '' }}
       publish-required-artifacts-json: '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]'
       publish-package-main: "@kungfu-tech/buildchain"
       trusted-publishing: true
