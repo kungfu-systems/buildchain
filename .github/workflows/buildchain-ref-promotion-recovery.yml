@@ -31,8 +31,7 @@ on:
         description: "Exact commit resolved from the fresh recovery runtime ref"
         required: true
       resume-transaction-id:
-        description: "Exact durable publication transaction identity"
-        required: true
+        description: "Exact durable publication transaction identity; required only when resuming a sealed candidate"
       release-passport-v4-runtime-resume-evidence-json:
         description: "Optional precomputed runtime A+B Stage Capsule resume evidence JSON"
 
@@ -78,13 +77,15 @@ jobs:
           [[ "${TARGET_REF}" = "alpha/v4/v4.0" ]] || { echo "::error::recovery is restricted to alpha/v4/v4.0"; exit 1; }
           [[ -n "${RECOVERY_RUNTIME_REF}" ]] || { echo "::error::recovery runtime ref is required"; exit 1; }
           [[ "${RECOVERY_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::recovery runtime must be exact"; exit 1; }
-          [[ -n "${TRANSACTION_ID}" ]] || { echo "::error::transaction identity is required"; exit 1; }
           if [[ -n "${CANDIDATE_RUN_ID}" ]]; then
             [[ "${CANDIDATE_RUN_ID}" =~ ^[0-9]+$ && -n "${CANDIDATE_REPOSITORY}" ]] || { echo "::error::candidate run ID and repository must be exact"; exit 1; }
             [[ "${CANDIDATE_TREE}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate tree must be exact"; exit 1; }
             [[ "${CANDIDATE_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate runtime must be exact"; exit 1; }
+            [[ -n "${TRANSACTION_ID}" ]] || { echo "::error::transaction identity is required when resuming a sealed candidate"; exit 1; }
           elif [[ -n "${CANDIDATE_REPOSITORY}" || -n "${CANDIDATE_TREE}" || -n "${CANDIDATE_ROOT}" || -n "${CANDIDATE_RUNTIME_SHA}" || -n "${RESUME_EVIDENCE_JSON}" ]]; then
             { echo "::error::candidate recovery inputs must be supplied together or omitted together"; exit 1; }
+          elif [[ -n "${TRANSACTION_ID}" ]]; then
+            { echo "::error::fresh candidate recovery must not claim a pre-existing transaction identity"; exit 1; }
           fi
 
       - name: Checkout exact recovered publication policy locks
