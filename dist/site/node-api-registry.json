@@ -29521,7 +29521,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:7b433d34f87651d8fb187d06b83113e93cbc0243a0f93ce33f375a4737f144f6",
+      "digest": "sha256:2988f713a00099a83b76302bff589c355502c90854c53f608d004e64e9ee7302",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
