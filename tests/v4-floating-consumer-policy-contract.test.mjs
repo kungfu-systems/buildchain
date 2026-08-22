@@ -22,6 +22,21 @@ test("v4 floating policy contract check accepts the repository wiring", () => {
   assert.equal(checkV4FloatingConsumerPolicyContract().ok, true);
 });
 
+test("public adopter delivery uploads the receipt resolved under the consumer root", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/v4-adopter-delivery.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /path: \$\{\{ steps\.policy\.outputs\.v4-consumer-policy-receipt-path \}\}/u,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /path: \.buildchain\/evidence\/v4-adopter-delivery-policy-receipt\.json/u,
+  );
+});
+
 test("alpha promotion caller passes the same runtime admission used in GitHub", () => {
   const authority = resolveV4FloatingConsumerPolicyAuthority({
     runtimeRoot: root,
