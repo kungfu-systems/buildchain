@@ -76,7 +76,6 @@ function normalizeCertification(value, expected) {
   }
   return { certificationRoot: verification.certificationRoot, certification };
 }
-
 export function resolveV4ConsumerPolicyCertificationIdentity({
   release = {},
   routing = {},
@@ -85,9 +84,10 @@ export function resolveV4ConsumerPolicyCertificationIdentity({
 } = {}) {
   const builtSourceSha =
     release?.builtSourceSha || release?.built_source_sha || "";
+  const retainsCaller = release?.certification?.caller?.sourceSha === sourceSha;
   return {
     sourceSha:
-      release?.treeEquivalent === true && builtSourceSha
+      release?.treeEquivalent === true && builtSourceSha && !retainsCaller
         ? builtSourceSha
         : sourceSha,
     runtimeSha:
@@ -134,7 +134,7 @@ export function releasePassportCertificationVerificationOptions({
 }) {
   const authority = evidence?.certification?.authority || {};
   const identity = resolveV4ConsumerPolicyCertificationIdentity({
-    release: passport?.release,
+    release: { ...passport?.release, certification: evidence?.certification },
     routing,
     runtimeResume: passport?.v4RuntimeResume,
     sourceSha: passport?.release?.sourceSha || "",
