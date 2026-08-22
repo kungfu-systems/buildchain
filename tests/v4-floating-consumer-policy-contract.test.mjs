@@ -172,11 +172,11 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/u);
   assert.match(
     workflow,
-    /router-ref: \$\{\{ steps\.route\.outputs\.router-ref \}\}/u,
+    /router-ref: \$\{\{ inputs\['resume-buildchain-runtime-ref'\] \}\}/u,
   );
   assert.match(
     workflow,
-    /router-sha: \$\{\{ steps\.route\.outputs\.router-sha \}\}/u,
+    /router-sha: \$\{\{ inputs\['resume-buildchain-runtime-sha'\] \}\}/u,
   );
   assert.match(
     workflow,
@@ -196,6 +196,14 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   assert.match(
     workflow,
     /--buildchain-ref "\$\{\{ inputs\['resume-buildchain-runtime-ref'\] \}\}"/u,
+  );
+  assert.match(
+    workflow,
+    /--router-ref "\$\{\{ inputs\['resume-buildchain-runtime-ref'\] \}\}"/u,
+  );
+  assert.match(
+    workflow,
+    /--router-sha "\$\{\{ inputs\['resume-buildchain-runtime-sha'\] \}\}"/u,
   );
   assert.match(
     workflow,
