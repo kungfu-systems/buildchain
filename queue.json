@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 739,
+  "generation": 740,
   "fencingCounter": 127,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:9a715f349eafe93ebbb117f1f36f5f784625addec1cfb9a8e406ab021cfa37d9",
@@ -53,8 +53,13 @@
     "issuedAt": "2026-08-22T12:53:02.109Z",
     "expiresAt": "2026-08-22T13:57:16.676Z",
     "fencingToken": "sha256:8a3a388055e9fa3e6b3642225e89b01d16943ae0dd4030f631da5756156afeb8",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-22T12:57:16.676Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-22T12:57:16.676Z",
+    "nativeProofRoot": "sha256:811c3677e23588abedfaba665e1b0d43051b0623b32bcc467416641764a24b30",
+    "nativeExecutionReceiptRoot": "sha256:8e60fdf2ef5a6ae42134fc91d1bb78f611faf2a2998dcbd46c48de2b554e15b6",
+    "nativeProofReuseRoot": "sha256:0e4687e5f95a987fa8bbbc8469af3e403cc1504bdd4f6abc4d322cab7dd69173",
+    "qualificationReceiptRoot": "sha256:4a7891da401176f55590b330e22389f0956f96ce46da816f20f1812cade3b31c",
+    "qualifiedAt": "2026-08-22T12:57:38.994Z"
   },
   "candidates": [
     {
@@ -5759,10 +5764,10 @@
       "sourceWorkflowRunId": 32573552646,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-22T12:52:59.736Z",
-      "updatedAt": "2026-08-22T12:57:16.676Z",
+      "updatedAt": "2026-08-22T12:57:38.994Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/v4-adopter-delivery.yml",
@@ -5776,6 +5781,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-22T12:57:16.676Z",
-  "stateRoot": "sha256:44d22cf0cf55e18b21177b071dc6ab7cd4ad6712bf6fa5d2179520735997b668"
+  "updatedAt": "2026-08-22T12:57:38.994Z",
+  "stateRoot": "sha256:f1bf024b117ff93bd72996bfd9054684885724c5f516dfc4d5b87a29f77118eb"
 }
