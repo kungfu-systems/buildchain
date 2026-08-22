@@ -221,6 +221,33 @@ test("v4 floating policy contract rejects certification without caller lock read
   );
 });
 
+test("fresh promotion certifies with the runtime sealed into the candidate Passport", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /const runtimeSha = passport\.buildchain\?\.sha \|\| "";/u,
+  );
+  assert.match(
+    workflow,
+    /runtime-sha=\$\{runtimeSha\}/u,
+  );
+  assert.match(
+    workflow,
+    /ref: \$\{\{ steps\.v4-policy-caller\.outputs\.runtime-sha \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_EXPECTED_RUNTIME_SHA: \$\{\{ steps\.v4-policy-caller\.outputs\.runtime-sha \}\}/u,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /BUILDCHAIN_EXPECTED_RUNTIME_SHA: \$\{\{ inputs\.resume-expected-candidate-runtime-sha/u,
+  );
+});
+
 test("v4 floating policy contract rejects an unbound certification root", () => {
   const workflow = fs
     .readFileSync(
