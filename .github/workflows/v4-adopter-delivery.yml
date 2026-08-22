@@ -103,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: v4-adopter-delivery-policy-${{ inputs.consumer }}-${{ github.sha }}
-          path: .buildchain/evidence/v4-adopter-delivery-policy-receipt.json
+          path: ${{ steps.policy.outputs.v4-consumer-policy-receipt-path }}
           if-no-files-found: error
 
   conformance:

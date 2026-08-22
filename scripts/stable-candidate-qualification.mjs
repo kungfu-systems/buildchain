@@ -146,9 +146,7 @@ export async function runStableCandidateQualification(optionsInput = {}, clientI
   const options = normalizeStableCandidateQualificationOptions(optionsInput);
   const client = clientInput || createGitHubQualificationClient({ token: process.env.GITHUB_TOKEN });
   const candidate = await client.resolveExactAlpha(options.repository, options.candidateSha);
-  if (!candidate) {
-    return { schemaVersion: 1, contract: "kungfu-buildchain-stable-candidate-qualification", status: "skipped", reason: "exact-alpha-release-not-found", candidateSha: options.candidateSha };
-  }
+  if (!candidate) return { schemaVersion: 1, contract: "kungfu-buildchain-stable-candidate-qualification", status: "skipped", reason: "exact-alpha-release-not-found", candidateSha: options.candidateSha };
 
   const build = await ensureWorkflowEvidence({
     client,
@@ -156,12 +154,12 @@ export async function runStableCandidateQualification(optionsInput = {}, clientI
     workflowFile: options.buildWorkflowFile,
     workflowName: options.buildWorkflowName,
     ref: candidate.tag,
-    headSha: options.candidateSha,
+    headSha: candidate.sha,
     runName: "",
     options,
   });
 
-  let status = await client.findCommitStatus(options.repository, options.candidateSha, options.canaryStatusContext);
+  let status = await client.findCommitStatus(options.repository, candidate.sha, options.canaryStatusContext);
   let canary = { state: status?.state === "success" ? "existing" : "pending", run: undefined };
   if (status?.state !== "success") {
     const canaryRef = options.canaryRef || await client.defaultBranch(options.canaryRepository);
@@ -177,15 +175,15 @@ export async function runStableCandidateQualification(optionsInput = {}, clientI
       workflowFile: options.canaryWorkflowFile,
       workflowName: options.canaryWorkflowName,
       ref: canaryRef,
-      headSha: options.candidateSha,
-      runName: `${options.canaryWorkflowName} / ${options.candidateSha}`,
+      headSha: candidate.sha,
+      runName: `${options.canaryWorkflowName} / ${candidate.sha}`,
       sourceSha: options.canarySha,
       options,
     });
     if (!options.dryRun) {
       status = await client.createCommitStatus({
         repository: options.repository,
-        sha: options.candidateSha,
+        sha: candidate.sha,
         context: options.canaryStatusContext,
         targetUrl: canary.run.html_url,
         description: `No-apply ${options.canaryRepository} canary passed`,
@@ -256,11 +254,12 @@ export function createGitHubQualificationClient({
   }
   return {
     async resolveExactAlpha(repositoryName, candidateSha) {
-      const releases = await api(`/repos/${repositoryName}/releases?per_page=100`);
+      const releases = (await api(`/repos/${repositoryName}/releases?per_page=100`)).sort((left, right) => right.tag_name.localeCompare(left.tag_name, "en", { numeric: true }));
       for (const release of releases) {
         if (!release.prerelease || !/^v\d+\.\d+\.\d+-alpha\.\d+$/.test(release.tag_name || "")) continue;
         const sha = await resolveTagSha(repositoryName, release.tag_name);
-        if (sha === candidateSha) return { version: release.tag_name.slice(1), tag: release.tag_name, sha, releaseUrl: release.html_url };
+        if (sha !== candidateSha && !["ahead", "identical"].includes((await api(`/repos/${repositoryName}/compare/${sha}...${candidateSha}`)).status)) continue;
+        return { version: release.tag_name.slice(1), tag: release.tag_name, sha, releaseUrl: release.html_url };
       }
       return undefined;
     },
