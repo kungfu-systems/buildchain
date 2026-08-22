@@ -5,13 +5,13 @@ import path from "node:path";
 import test from "node:test";
 
 import {
-  V4_PUBLIC_DOGFOOD_TRAIN_REF,
+  V4_PUBLIC_DOGFOOD_ALPHA_REF,
   checkV4PublicDogfoodContract,
   expectedV4PublicDogfoodWorkflow,
 } from "../scripts/check-v4-public-dogfood-contract.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
-const protectedDogfoodRef = "4178776bf635d0738cb1917e449076d64883218c";
+const protectedDogfoodRef = V4_PUBLIC_DOGFOOD_ALPHA_REF;
 const fixturePaths = [
   ".buildchain/buildchain.toml",
   ".gitattributes",
@@ -92,55 +92,14 @@ test("the gate rejects a second private workflow or direct qualification job", (
   );
 });
 
-test("the gate permits only the public train or an exact protected SHA", () => {
+test("the gate permits only the floating v4-alpha source selector", () => {
   const feature = mutate(
     "architecture/v4-stage-capsule-qualification.json",
     (text) => text.replace(protectedDogfoodRef, "feature/private-candidate"),
   );
   assert.throws(
     () => checkV4PublicDogfoodContract(feature),
-    /exact public train or a protected commit SHA/u,
-  );
-
-  const exactRoot = fixture();
-  const protectedSha = "a".repeat(40);
-  const architecturePath = path.join(
-    exactRoot,
-    "architecture/v4-stage-capsule-qualification.json",
-  );
-  fs.writeFileSync(
-    architecturePath,
-    fs
-      .readFileSync(architecturePath, "utf8")
-      .replace(protectedDogfoodRef, protectedSha),
-  );
-  fs.writeFileSync(
-    path.join(exactRoot, ".github/workflows/v4-public-consumer-dogfood.yml"),
-    expectedV4PublicDogfoodWorkflow(protectedSha),
-  );
-  assert.equal(
-    checkV4PublicDogfoodContract(exactRoot).validationRef,
-    protectedSha,
-  );
-
-  const trainRoot = fixture();
-  const trainArchitecturePath = path.join(
-    trainRoot,
-    "architecture/v4-stage-capsule-qualification.json",
-  );
-  fs.writeFileSync(
-    trainArchitecturePath,
-    fs
-      .readFileSync(trainArchitecturePath, "utf8")
-      .replace(protectedDogfoodRef, V4_PUBLIC_DOGFOOD_TRAIN_REF),
-  );
-  fs.writeFileSync(
-    path.join(trainRoot, ".github/workflows/v4-public-consumer-dogfood.yml"),
-    expectedV4PublicDogfoodWorkflow(V4_PUBLIC_DOGFOOD_TRAIN_REF),
-  );
-  assert.equal(
-    checkV4PublicDogfoodContract(trainRoot).validationRef,
-    V4_PUBLIC_DOGFOOD_TRAIN_REF,
+    /floating v4-alpha channel/u,
   );
 });
 

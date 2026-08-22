@@ -3,16 +3,18 @@
   "major": 4,
   "alpha": {
     "logicalRef": "v4-alpha",
-    "callRef": "b2f0d35424a38123b4c71612be27bebeeec1104d",
+    "callRef": "v4-alpha",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true
   },
   "stable": {
     "logicalRef": "v4",
-    "callRef": "b2f0d35424a38123b4c71612be27bebeeec1104d",
+    "callRef": "v4",
     "workflowPath": ".github/workflows/.release-candidate-promote.yml",
     "forwardInternalInputs": true,
     "unsupportedInputs": [
+      "buildchain-alpha-contract-lock-path",
+      "buildchain-stable-contract-lock-path",
       "github-artifact-attestation-environment",
       "github-artifact-attestation-policy-json",
       "github-artifact-attestation-retention-days",
@@ -20,6 +22,8 @@
       "publication-gate-controller-sha",
       "publication-authority-workflow-path",
       "publication-consumer-qualification-controller-sha",
+      "promotion-runtime-authorization-json",
+      "promotion-runtime-authorization-root",
       "release-activation-command",
       "release-activation-receipt-set-path",
       "release-candidate-wait-seconds",
@@ -34,6 +38,7 @@
       "release-passport-kfd-adopter-manifest-json",
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
+      "release-passport-v4-runtime-resume-evidence-json",
       "release-propagation-config-path",
       "resume-buildchain-runtime-sha",
       "resume-candidate-repository",

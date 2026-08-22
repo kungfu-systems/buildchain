@@ -50,6 +50,7 @@ function createVersionStateOperations(context) {
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
+    releasePassportV4ConsumerPolicyCertificationJson,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
@@ -120,6 +121,7 @@ function createVersionStateOperations(context) {
     workspaceCwd = cwd,
     parents = [baseSha],
     preserveExistingLifecycleIdentity = false,
+    recoveredCandidate = releaseCandidateValidation?.recoveredCandidate === true,
   }) => {
     if (!versionState) {
       return {
@@ -209,8 +211,6 @@ function createVersionStateOperations(context) {
         version,
       });
     }
-    const recoveredCandidate =
-      releaseCandidateValidation?.recoveredCandidate === true;
     if (recoveredCandidate && changedFiles.length) {
       throw new Error(
         `Candidate recovery cannot rewrite version state for ${version}: ${changedFiles.map((file) => file.path).join(", ")}. Create a new candidate explicitly; recovery never rebuilds or rematerializes product state.`,
@@ -287,6 +287,7 @@ function createVersionStateOperations(context) {
         version,
         action: "created",
         publishVersion,
+        versionFiles: discoveredPaths,
         files: verifiedChangedFiles.map((file) => file.path),
         releaseTreeAllowedPaths: verifiedChangedFiles.map((file) => file.path),
         hasVersionVerification,
@@ -329,6 +330,7 @@ function createVersionStateOperations(context) {
         version,
         action: "anchored-manual",
         publishVersion,
+        versionFiles: discoveredPaths,
         files: discoveredPaths,
         releaseTreeAllowedPaths: anchoredReleaseTreePaths,
         hasVersionVerification,

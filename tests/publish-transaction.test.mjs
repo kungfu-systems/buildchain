@@ -648,20 +648,30 @@ test("npm publish transaction reuses the exact sealed tarball without repacking"
   const integrity = `sha512-${crypto.createHash("sha512").update(tarballBytes).digest("base64")}`;
   const sha256 = crypto.createHash("sha256").update(tarballBytes).digest("hex");
   const evidencePath = path.join(cwd, ".buildchain/release-evidence/0.1.0-alpha.4/evidence.json");
+  const fakeBin = path.join(cwd, "bin");
+  fs.mkdirSync(fakeBin);
+  materializeCommandShim(path.join(fakeBin, "npm"), `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args[0] === "view") {
+  process.stdout.write(JSON.stringify({ "dist.integrity": "${integrity}", "dist.shasum": "sealed" }));
+  process.exit(0);
+}
+process.stderr.write("unexpected npm command: " + args.join(" ") + "\\n");
+process.exit(2);
+`);
   const run = spawnSync(
     process.execPath,
     [
       path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
       "--cwd",
       cwd,
-      "--dry-run-publish",
-      "--skip-registry-lookup",
     ],
     {
       cwd,
       encoding: "utf8",
       env: {
         ...process.env,
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
         BUILDCHAIN_VERSION: "0.1.0-alpha.4",
         BUILDCHAIN_CHANNEL: "alpha",
         BUILDCHAIN_SOURCE_SHA: SHA,
@@ -683,6 +693,7 @@ test("npm publish transaction reuses the exact sealed tarball without repacking"
   assert.equal(output.pack.sealed, true);
   assert.equal(output.pack.integrity, integrity);
   assert.equal(output.pack.sha256, sha256);
+  assert.equal(output.publishAction, "already-published");
   assert.equal(output.sealedBundleRoot, `sha256:${"c".repeat(64)}`);
   assert.equal(JSON.parse(fs.readFileSync(evidencePath, "utf8")).artifacts[0].digest, integrity);
 });
@@ -725,6 +736,55 @@ test("npm publish transaction honors explicit dist tag for libnode-style final v
   const output = JSON.parse(run.stdout);
   assert.equal(output.distTag, "latest");
   assert.equal(output.package.version, "22.22.3-kf.3");
+});
+
+test("npm publish transaction publishes the exact materialized tarball when the workspace changes", () => {
+  const cwd = tempDir();
+  fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({
+    name: "buildchain-npm-materialized-fixture", version: "1.2.3", private: false, license: "Apache-2.0",
+  }, null, 2));
+  const fakeBin = path.join(cwd, "bin");
+  fs.mkdirSync(fakeBin);
+  const fakeNpm = path.join(fakeBin, "npm");
+  materializeCommandShim(fakeNpm, `#!/usr/bin/env node
+const fs = require("node:fs");
+const path = require("node:path");
+const args = process.argv.slice(2);
+if (args[0] === "pack") {
+  const destination = args[args.indexOf("--pack-destination") + 1];
+  const filename = "buildchain-npm-materialized-fixture-1.2.3.tgz";
+  fs.writeFileSync(path.join(destination, filename), "exact stable bytes");
+  const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+  fs.writeFileSync("package.json", JSON.stringify({ ...pkg, version: "1.2.3-alpha.0" }, null, 2));
+  process.stdout.write(JSON.stringify([{ name: "buildchain-npm-materialized-fixture", version: "1.2.3", filename, integrity: "sha512-stable", shasum: "stable", files: [{ path: "package.json" }] }]));
+  process.exit(0);
+}
+if (args[0] === "publish") {
+  fs.writeFileSync("publish-argv.json", JSON.stringify(args));
+  process.exit(0);
+}
+process.stderr.write("unexpected npm command: " + args.join(" ") + "\\n");
+process.exit(2);
+`);
+  const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.2.3/evidence.json");
+  const run = spawnSync(process.execPath, [
+    path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"), "--cwd", cwd, "--skip-registry-lookup",
+  ], { cwd, encoding: "utf8", env: {
+    ...process.env, PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+    BUILDCHAIN_VERSION: "1.2.3", BUILDCHAIN_CHANNEL: "release", BUILDCHAIN_SOURCE_SHA: SHA,
+    BUILDCHAIN_RELEASE_SHA: RELEASE_SHA, BUILDCHAIN_RELEASE_MATERIAL_SHA: RELEASE_SHA,
+    BUILDCHAIN_PUBLISH_TOOLING_SHA: RELEASE_SHA, BUILDCHAIN_TARGET_REF: "release/v1/v1.2",
+    BUILDCHAIN_EVIDENCE_DIR: path.dirname(evidencePath), BUILDCHAIN_PUBLISH_EVIDENCE: evidencePath,
+    BUILDCHAIN_NPM_DIST_TAG: "latest",
+  } });
+  assert.equal(run.status, 0, run.stderr);
+  const output = JSON.parse(run.stdout);
+  const publishArgs = JSON.parse(fs.readFileSync(path.join(cwd, "publish-argv.json"), "utf8"));
+  assert.equal(output.publishAction, "published");
+  assert.equal(output.package.version, "1.2.3");
+  assert.equal(path.basename(publishArgs[1]), "buildchain-npm-materialized-fixture-1.2.3.tgz");
+  assert.equal(fs.existsSync(publishArgs[1]), false);
+  assert.equal(JSON.parse(fs.readFileSync(evidencePath, "utf8")).artifacts[0].ref, "1.2.3");
 });
 
 test("npm publish transaction fails closed on non-404 registry lookup errors", () => {

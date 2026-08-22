@@ -1,0 +1,27 @@
+{
+  "schema": "buildchain-v4-publication-rehearsal-offline-vectors/v1",
+  "vectors": [
+    {
+      "platform": "linux",
+      "capsuleRoot": "sha256:29a870ce850c7d6bde848fd77d7f382acf1f743d627c6265a913be51a8c05edf",
+      "transactionRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "stateRoot": "sha256:8e138381ff578bce96ea3934c74b927287a9d53c8b29b4a2e7b2d92cf5ab272d",
+      "evidenceRoot": "sha256:0c20fcb7aac8c420e98e63d1968ee8321b9938227e3ae77cfaf194db9588010e"
+    },
+    {
+      "platform": "macos",
+      "capsuleRoot": "sha256:29a870ce850c7d6bde848fd77d7f382acf1f743d627c6265a913be51a8c05edf",
+      "transactionRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "stateRoot": "sha256:8e138381ff578bce96ea3934c74b927287a9d53c8b29b4a2e7b2d92cf5ab272d",
+      "evidenceRoot": "sha256:0c20fcb7aac8c420e98e63d1968ee8321b9938227e3ae77cfaf194db9588010e"
+    },
+    {
+      "platform": "windows",
+      "capsuleRoot": "sha256:29a870ce850c7d6bde848fd77d7f382acf1f743d627c6265a913be51a8c05edf",
+      "transactionRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "stateRoot": "sha256:8e138381ff578bce96ea3934c74b927287a9d53c8b29b4a2e7b2d92cf5ab272d",
+      "evidenceRoot": "sha256:0c20fcb7aac8c420e98e63d1968ee8321b9938227e3ae77cfaf194db9588010e"
+    }
+  ],
+  "vectorRoot": "sha256:3e968de4060d0fea4cbff82409541f9b6fa903212e18921f2606390eb24993ed"
+}

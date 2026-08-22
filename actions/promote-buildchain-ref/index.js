@@ -9,7 +9,6 @@ import {
   publishSelectedGitHubRelease,
   recoveryCompletedBeforeThisRun,
 } from "./github-release.js";
-
 export { reuseCompleteGitHubReleaseEvidence } from "./reuse-complete-release.js";
 export {
   collectGitHubReleaseEvidenceAssets,
@@ -159,6 +158,10 @@ async function publishReleaseTail({
       : artifactPaths,
     reuseExistingCompleteEvidence: recoveryCompletedBeforeThisRun(
       releaseCandidateRecoveryReceiptPath,
+    ) || result.updates.some(
+      (update) =>
+        update.action === "resumed-advanced-publication" &&
+        update.transactionState === "complete",
     ),
     targetRef,
   };
@@ -221,6 +224,7 @@ async function main() {
   const generatedStatusCheckToken = core.getInput("generated-status-check-token") || token;
   const generatedPullRequestToken = core.getInput("generated-pull-request-token") || token;
   const generatedRefUpdateToken = core.getInput("generated-ref-update-token") || token;
+  const tagUpdateToken = process.env.BUILDCHAIN_TAG_UPDATE_TOKEN || token;
   const branchProtectionBypassApps = core.getInput("branch-protection-bypass-apps");
   const branchProtectionBypassUsers = core.getInput("branch-protection-bypass-users");
   const branchProtectionBypassTeams = core.getInput("branch-protection-bypass-teams");
@@ -261,6 +265,18 @@ async function main() {
   const releasePassportPlatformManifestPaths = core.getInput("release-passport-platform-manifest-paths");
   const releasePassportImpactJson = core.getInput("release-passport-impact-json");
   const releasePassportPromotionRoutingJson = core.getInput("release-passport-promotion-routing-json");
+  const releasePassportV4ConsumerPolicyCertificationJson = core.getInput(
+    "release-passport-v4-consumer-policy-certification-json",
+  );
+  const releasePassportV4ConsumerPolicyCertificationRoot = core.getInput(
+    "release-passport-v4-consumer-policy-certification-root",
+  );
+  const releasePassportV4RuntimeResumeEvidenceJson = core.getInput(
+    "release-passport-v4-runtime-resume-evidence-json",
+  );
+  const releasePassportV4RuntimeResumeEvidenceCommand = core.getInput(
+    "release-passport-v4-runtime-resume-evidence-command",
+  );
   const releasePassportKfd1WitnessJsons = core.getInput("release-passport-kfd-1-witness-jsons");
   const releasePassportKfd2ClaimJsons = core.getInput("release-passport-kfd-2-claim-jsons");
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
@@ -302,6 +318,7 @@ async function main() {
     generatedPullRequestToken === token ? octokit : github.getOctokit(generatedPullRequestToken);
   const refUpdateOctokit =
     generatedRefUpdateToken === token ? octokit : github.getOctokit(generatedRefUpdateToken);
+  const tagUpdateOctokit = tagUpdateToken === token ? octokit : github.getOctokit(tagUpdateToken);
   if (requirePublishSourceLock) {
     const sourceLockReport = validateRequiredPublishSourceLock({
       sha,
@@ -339,6 +356,7 @@ async function main() {
     statusCheckOctokit,
     pullRequestOctokit,
     refUpdateOctokit,
+    tagUpdateOctokit,
     branchProtectionBypassApps,
     branchProtectionBypassUsers,
     branchProtectionBypassTeams,
@@ -371,6 +389,10 @@ async function main() {
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
+    releasePassportV4ConsumerPolicyCertificationJson,
+    releasePassportV4ConsumerPolicyCertificationRoot,
+    releasePassportV4RuntimeResumeEvidenceJson,
+    releasePassportV4RuntimeResumeEvidenceCommand,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
@@ -403,7 +425,8 @@ async function main() {
       update.ref ||
       (update.version ? `version-state ${update.version}` : "promotion");
     const detail = update.files?.length ? ` (${update.files.join(", ")})` : "";
-    console.log(`${update.action}: ${target} -> ${update.sha}${detail}`);
+    const reason = update.reason ? `: ${update.reason}` : "";
+    console.log(`${update.action}: ${target} -> ${update.sha}${detail}${reason}`);
   }
   core.setOutput("sha", result.sha);
   core.setOutput("next-anchor-required", String(result.nextAlphaRequired === true));

@@ -59,6 +59,14 @@ controller then compares the selected SHA to the exact Alpha head before it can
 be eligible, so a bounded scan cannot turn a commit outside the promotion
 ancestry into a candidate.
 
+Generated next-development version preparation is not a product candidate. The
+observer skips both the signed `chore(release): prepare ...` commit and its
+two-parent integration commit. When later product work becomes qualified, the
+nearest preparation becomes a reservation: Patrol reads every path changed by
+that preparation at both exact SHAs and requires identical Git blob identities.
+A missing or stale reserved path blocks selection before the Release Cut and
+therefore before any heavy candidate build.
+
 The decision is `kungfu-buildchain-channel-candidate-decision/v1`. It records the
 source and target branches and SHAs, comparison distance, workflow paths, run
 identities and attempts, completion times, URLs, policy, and a canonical decision

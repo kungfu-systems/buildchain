@@ -6,6 +6,51 @@
   "commandSource": "bin/internal/command-registry.mjs plus bin/buildchain.mjs help enumeration",
   "commands": [
     {
+      "id": "adopter-delivery",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain adopter-delivery run --input <json-or-path> [--output <path>]",
+      "paths": [
+        "adopter-delivery",
+        "adopter-delivery archive",
+        "adopter-delivery bootstrap",
+        "adopter-delivery run",
+        "adopter-delivery verify"
+      ],
+      "syntaxes": [
+        "buildchain adopter-delivery",
+        "buildchain adopter-delivery archive --input <json-or-path> [--output <path>]",
+        "buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]",
+        "buildchain adopter-delivery run --input <json-or-path> [--output <path>]",
+        "buildchain adopter-delivery verify --input <json-or-path> --readback <json-or-path> [--output <path>]"
+      ],
+      "options": [
+        "--input",
+        "--output",
+        "--readback"
+      ],
+      "aliases": [],
+      "helpCommands": [
+        "buildchain adopter-delivery --help",
+        "buildchain adopter-delivery archive --help",
+        "buildchain adopter-delivery bootstrap --help",
+        "buildchain adopter-delivery run --help",
+        "buildchain adopter-delivery verify --help"
+      ],
+      "purpose": "Run public protocol-neutral adopter delivery, exact readback, N-1 bootstrap, and published archive checks.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
       "id": "architecture",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain architecture validate [--cwd <dir>] [--json]",
@@ -239,11 +284,19 @@
       "usage": "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>]",
       "paths": [
         "facts aggregate",
+        "facts compatibility project",
+        "facts compatibility query",
+        "facts compatibility query-template",
+        "facts compatibility verify",
         "facts module",
         "facts verify"
       ],
       "syntaxes": [
         "buildchain facts aggregate [--cwd <dir>] [--product <id>] [--module-fact <file>]... [--artifact <path>]... [--output <file>] [--json]",
+        "buildchain facts compatibility project [--cwd <dir>] [--registry <json-or-path>] [--output <file>] [--json]",
+        "buildchain facts compatibility query --query <json-or-path> [--registry <json-or-path>] [--cwd <dir>] [--json]",
+        "buildchain facts compatibility query-template --fact-root <sha256:...> [--query-id <id>] [--registry <json-or-path>] [--cwd <dir>] [--json]",
+        "buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] [--json]",
         "buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>] [--version-source <id>] [--output <file>] [--output-path <path>]... [--legacy-kungfu-buildinfo <file>] [--json]",
         "buildchain facts verify [--cwd <dir>] --fact <file> [--json]"
       ],
@@ -251,6 +304,7 @@
         "--artifact",
         "--cwd",
         "--fact",
+        "--fact-root",
         "--json",
         "--legacy-kungfu-buildinfo",
         "--module",
@@ -259,11 +313,18 @@
         "--output",
         "--output-path",
         "--product",
+        "--query",
+        "--query-id",
+        "--registry",
         "--version-source"
       ],
       "aliases": [],
       "helpCommands": [
         "buildchain facts aggregate --help",
+        "buildchain facts compatibility project --help",
+        "buildchain facts compatibility query --help",
+        "buildchain facts compatibility query-template --help",
+        "buildchain facts compatibility verify --help",
         "buildchain facts module --help",
         "buildchain facts verify --help"
       ],
@@ -459,61 +520,105 @@
       "usage": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>",
       "paths": [
         "dev",
+        "dev authority admit-merge-group",
+        "dev authority complete-qualification",
+        "dev authority heartbeat-landing",
+        "dev authority heartbeat-qualification",
+        "dev authority lease-landing",
+        "dev authority lease-qualification",
+        "dev authority migrate",
+        "dev authority observe",
+        "dev authority recover",
+        "dev authority settle",
+        "dev authority submit",
         "dev merge-queue",
         "dev pr-admit",
         "dev proof classify",
+        "dev proof classify-native",
         "dev proof integration",
+        "dev proof native",
         "dev proof replay",
         "dev proof source",
         "dev proof verify-integration",
+        "dev proof verify-native",
+        "dev proof verify-native-reuse",
         "dev proof verify-source",
+        "dev two-phase",
         "dev warrant cancel-queued",
         "dev warrant close",
         "dev warrant heartbeat",
         "dev warrant observe",
+        "dev warrant qualify",
         "dev warrant recover",
         "dev warrant select",
+        "dev warrant settle",
         "dev warrant submit"
       ],
       "syntaxes": [
         "buildchain dev",
+        "buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]",
         "buildchain dev merge-queue --repository <owner/repo> --branch <dev/vN/vN.M> [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>] [--check-response-timeout-minutes <n>] [--max-entries-to-build <n>] [--apply]",
         "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> [--execute] [--output <file>] [--json]",
-        "buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]",
-        "buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]"
+        "buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]",
+        "buildchain dev two-phase --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> --warrant-result <file> --native-command <command> [--native-proof <file>] [--output <file>] [--json]",
+        "buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]"
       ],
       "options": [
         "--apply",
         "--branch",
         "--check-response-timeout-minutes",
         "--cwd",
+        "--environment-root",
         "--execute",
         "--expected-head",
         "--from-config",
         "--json",
         "--max-entries-to-build",
+        "--native-command",
+        "--native-proof",
         "--output",
+        "--provider-attempt",
         "--pull-request",
+        "--qualification-domains",
         "--repository",
+        "--warrant-result",
         "--workflow"
       ],
       "aliases": [],
       "helpCommands": [
         "buildchain dev --help",
+        "buildchain dev authority admit-merge-group --help",
+        "buildchain dev authority complete-qualification --help",
+        "buildchain dev authority heartbeat-landing --help",
+        "buildchain dev authority heartbeat-qualification --help",
+        "buildchain dev authority lease-landing --help",
+        "buildchain dev authority lease-qualification --help",
+        "buildchain dev authority migrate --help",
+        "buildchain dev authority observe --help",
+        "buildchain dev authority recover --help",
+        "buildchain dev authority settle --help",
+        "buildchain dev authority submit --help",
         "buildchain dev merge-queue --help",
         "buildchain dev pr-admit --help",
         "buildchain dev proof classify --help",
+        "buildchain dev proof classify-native --help",
         "buildchain dev proof integration --help",
+        "buildchain dev proof native --help",
         "buildchain dev proof replay --help",
         "buildchain dev proof source --help",
         "buildchain dev proof verify-integration --help",
+        "buildchain dev proof verify-native --help",
+        "buildchain dev proof verify-native-reuse --help",
         "buildchain dev proof verify-source --help",
+        "buildchain dev two-phase --help",
         "buildchain dev warrant cancel-queued --help",
         "buildchain dev warrant close --help",
         "buildchain dev warrant heartbeat --help",
         "buildchain dev warrant observe --help",
+        "buildchain dev warrant qualify --help",
         "buildchain dev warrant recover --help",
         "buildchain dev warrant select --help",
+        "buildchain dev warrant settle --help",
         "buildchain dev warrant submit --help"
       ],
       "purpose": "Inspect protected development-channel governance command families.",
@@ -2487,6 +2592,44 @@
       "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
     },
     {
+      "id": "next-development",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain next-development materialize --input <request.json> [--cwd <dir>]",
+      "paths": [
+        "next-development",
+        "next-development materialize"
+      ],
+      "syntaxes": [
+        "buildchain next-development",
+        "buildchain next-development materialize --input <request.json> [--cwd <dir>] [--write] [--output <path>] [--json]"
+      ],
+      "options": [
+        "--cwd",
+        "--input",
+        "--json",
+        "--output",
+        "--write"
+      ],
+      "aliases": [],
+      "helpCommands": [
+        "buildchain next-development --help",
+        "buildchain next-development materialize --help"
+      ],
+      "purpose": "Plan or apply one rooted declared-path next-development version transition without release or ref authority.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
       "id": "npm",
       "source": "bin/buildchain.mjs",
       "usage": "buildchain npm",
@@ -3446,6 +3589,7 @@
         "release-tail compat",
         "release-tail init",
         "release-tail plan",
+        "release-tail rehearse",
         "release-tail status",
         "release-tail verify"
       ],
@@ -3454,11 +3598,16 @@
         "buildchain release-tail <status|verify> [--state <path>] [--output <path>]",
         "buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]",
         "buildchain release-tail init --declaration <json-or-path> [--state <path>]",
-        "buildchain release-tail plan --declaration <json-or-path> [--output <path>]"
+        "buildchain release-tail plan --declaration <json-or-path> [--output <path>]",
+        "buildchain release-tail rehearse --capsule <absolute-path> --candidate-root <absolute-path> --mode <simulate|replay> --state <absolute-path> --evidence <absolute-path>"
       ],
       "options": [
+        "--candidate-root",
+        "--capsule",
         "--declaration",
+        "--evidence",
         "--hooks-json",
+        "--mode",
         "--output",
         "--state"
       ],
@@ -3468,6 +3617,7 @@
         "buildchain release-tail compat --help",
         "buildchain release-tail init --help",
         "buildchain release-tail plan --help",
+        "buildchain release-tail rehearse --help",
         "buildchain release-tail status --help",
         "buildchain release-tail verify --help"
       ],
@@ -3610,6 +3760,58 @@
       ],
       "purpose": "Run a command inside a Buildchain log span.",
       "capabilityGroup": "observability-diagnostics",
+      "audience": [
+        "agent",
+        "operator"
+      ],
+      "owner": "buildchain-cli",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing command identity retained for CLI compatibility and discoverability."
+    },
+    {
+      "id": "tail-reseal",
+      "source": "bin/buildchain.mjs",
+      "usage": "buildchain tail-reseal plan --request <request.json> [--output <plan.json>]",
+      "paths": [
+        "tail-reseal",
+        "tail-reseal admit",
+        "tail-reseal plan",
+        "tail-reseal seal",
+        "tail-reseal verify-platform"
+      ],
+      "syntaxes": [
+        "buildchain tail-reseal",
+        "buildchain tail-reseal admit --request <request.json> [--output <admission.json>]",
+        "buildchain tail-reseal plan --request <request.json> [--output <plan.json>]",
+        "buildchain tail-reseal seal --request <request.json> --plan <plan.json> --readbacks <dir> --passport <passport.json> --protected-readback-root <sha256:...> [--output <receipt.json>]",
+        "buildchain tail-reseal verify-platform --request <request.json> --platform <id> [--artifact-root <dir>] [--mode retained|resealed] [--provider-readback-root <sha256:...>] [--output <readback.json>]"
+      ],
+      "options": [
+        "--artifact-root",
+        "--mode",
+        "--output",
+        "--passport",
+        "--plan",
+        "--platform",
+        "--protected-readback-root",
+        "--provider-readback-root",
+        "--readbacks",
+        "--request"
+      ],
+      "aliases": [],
+      "helpCommands": [
+        "buildchain tail-reseal --help",
+        "buildchain tail-reseal admit --help",
+        "buildchain tail-reseal plan --help",
+        "buildchain tail-reseal seal --help",
+        "buildchain tail-reseal verify-platform --help"
+      ],
+      "purpose": "Plan, admit, byte-verify, and seal one exact retained v4 Alpha candidate signing-finalization tail.",
+      "capabilityGroup": "release-passport-trust",
       "audience": [
         "agent",
         "operator"

@@ -3,8 +3,8 @@ import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { verifyProjectCutReplayProof } from "../packages/core/dev-delivery-warrant.js";
-import { admitExistingQueueEntry, createDevPrAdmissionReceipt, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission } from "./dev-pr-delivery-warrant.mjs";
+import { admitExistingQueueEntry, createDevPrAdmissionReceipt, qualifyAtomicQueueAdmission, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission, setActiveLeaseStatus, verifyCurrentDeliveryWarrant } from "./dev-pr-delivery-warrant.mjs";
+import { projectCutQualification } from "./dev-pr-prequeue-guard.mjs";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
 const DEFAULT_REQUIRED_CHECKS = ["check"];
@@ -70,6 +70,7 @@ function normalizeOptions(options = {}) {
     allowedHeadPrefixes: splitList(options.allowedHeadPrefixes, DEFAULT_ALLOWED_HEAD_PREFIXES),
     requiredChecks: splitList(options.requiredChecks, DEFAULT_REQUIRED_CHECKS),
     queueAdmissionContext: String(options.queueAdmissionContext || "").trim(),
+    activeLeaseContext: String(options.activeLeaseContext || (choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode") === "required" ? "Queue family lease/exact" : "")).trim(),
     requireApproval: boolOption(options.requireApproval, true),
     sameRepositoryOnly: boolOption(options.sameRepositoryOnly, true),
     maxMerges: intOption(options.maxMerges, 1),
@@ -85,8 +86,10 @@ function normalizeOptions(options = {}) {
     warrantMode: choiceOption(options.warrantMode, VALID_WARRANT_MODES, "off", "delivery Warrant mode"),
     warrantResultPath: String(options.warrantResultPath || "").trim(),
     projectCutProofPath: String(options.projectCutProofPath || "").trim(),
+    sourceProofPath: String(options.sourceProofPath || ".buildchain/dev-delivery/source-proof.json").trim(),
     sourcePatchRoot: String(options.sourcePatchRoot || "").trim().toLowerCase(),
     qualificationOnly: boolOption(options.qualificationOnly, false),
+    verifiedDeliveryWarrant: options.verifiedDeliveryWarrant || null,
   };
 }
 
@@ -191,26 +194,8 @@ function mergeableAccepted(pr, landingMode = "direct", projectCutQualified = fal
   return state ? ["clean", "has_hooks", "unstable", "unknown", ...(landingMode === "queue" && pr.mergeable === true ? ["blocked", ...(projectCutQualified ? ["behind"] : [])] : [])].includes(state) : pr.mergeable === true;
 }
 
-async function projectCutQualification(pr, options, client) {
-  if (!options.projectCutProofPath) return { ok: false, reason: "project-cut-proof-required" };
-  let proof;
-  try {
-    proof = JSON.parse(fs.readFileSync(options.projectCutProofPath, "utf8"));
-  } catch {
-    return { ok: false, reason: "project-cut-proof-invalid" };
-  }
-  const currentBase = await client.getBranchSha(options.targetBranch).catch(() => "");
-  const verification = verifyProjectCutReplayProof(proof, {
-    repository: options.repository.fullName,
-    protectedBase: options.targetBranch,
-    pullRequestNumber: Number(pr.number),
-    sourceHead: String(pr.head?.sha || "").toLowerCase(),
-    ...(options.sourcePatchRoot ? { sourcePatchRoot: options.sourcePatchRoot } : {}),
-    currentBase,
-  });
-  return verification.ok
-    ? { ok: true, reason: verification.reason, proofRoot: verification.proofRoot, currentBase }
-    : { ok: false, reason: `project-cut-${verification.reason}`, currentBase };
+function rejectBaseMoveBeforeAtomicReplay(options, initialBaseSha, observedBaseSha) {
+  return observedBaseSha !== initialBaseSha && options.warrantMode !== "required";
 }
 async function setQueueAdmissionStatus(client, repository, sha, context, state) {
   if (!context) return null;
@@ -253,6 +238,7 @@ export async function evaluatePullRequest(pr, options, client) {
     ? await projectCutQualification(detailed, options, client)
     : null;
   if (projectCut && !projectCut.ok) return skip(projectCut.reason, { projectCut });
+  if (options.landingMode === "queue" && detailed.mergeable === false) return skip("pre-enqueue-merge-conflict", { mergeable: false, mergeableState });
   if (!mergeableAccepted(detailed, options.landingMode, projectCut?.ok === true)) {
     return skip("not-mergeable", {
       mergeable: detailed.mergeable,
@@ -493,11 +479,9 @@ export class GitHubClient {
     );
     return data;
   }
-
   async listIssueComments(number) {
     return this.paginate(`/repos/${this.repository.owner}/${this.repository.repo}/issues/${number}/comments?per_page=100`);
   }
-
   async createIssueComment(number, body) {
     const { data } = await this.request(
       "POST",
@@ -506,7 +490,6 @@ export class GitHubClient {
     );
     return data;
   }
-
   async updateIssueComment(commentId, body) {
     const { data } = await this.request(
       "PATCH",
@@ -515,7 +498,6 @@ export class GitHubClient {
     );
     return data;
   }
-
   async setCommitStatus(sha, { state, context, description, targetUrl = "" }) {
     const { data } = await this.request(
       "POST",
@@ -525,12 +507,20 @@ export class GitHubClient {
     return data;
   }
 }
-
+function ghEnvironment() {
+  const environment = { ...process.env };
+  delete environment.GITHUB_TOKEN;
+  delete environment.GH_TOKEN;
+  return environment;
+}
+function ghAuthToken() {
+  const result = spawnSync("gh", ["auth", "token"], { encoding: "utf8", env: ghEnvironment() });
+  if (result.error) throw result.error;
+  if (result.status !== 0 || !result.stdout.trim()) throw new Error((result.stderr || "gh auth token failed").trim());
+  return result.stdout.trim();
+}
 function ghJson(args, { input } = {}) {
-  const ghEnvironment = { ...process.env };
-  delete ghEnvironment.GITHUB_TOKEN;
-  delete ghEnvironment.GH_TOKEN;
-  const result = spawnSync("gh", args, { encoding: "utf8", input, env: ghEnvironment });
+  const result = spawnSync("gh", args, { encoding: "utf8", input, env: ghEnvironment() });
   if (result.error) throw result.error;
   if (result.status !== 0) {
     const error = new Error((result.stderr || result.stdout || "gh command failed").trim());
@@ -539,12 +529,10 @@ function ghJson(args, { input } = {}) {
   }
   return result.stdout.trim() ? JSON.parse(result.stdout) : null;
 }
-
 export class GhCliClient extends GitHubClient {
-  constructor({ repository } = {}) {
-    super({ token: "gh-cli", repository, fetchImpl: async () => { throw new Error("unexpected fetch"); } });
+  constructor({ repository, token = "", fetchImpl = globalThis.fetch } = {}) {
+    super({ token: token || ghAuthToken(), repository, fetchImpl });
   }
-
   async request(method, requestPath, { body } = {}) {
     const endpoint = requestPath.replace(/^https:\/\/api\.github\.com/, "");
     const args = ["api", "--method", method, endpoint];
@@ -554,11 +542,9 @@ export class GhCliClient extends GitHubClient {
       response: { headers: { get: () => "" } },
     };
   }
-
   async paginate(requestPath) {
     return ghJson(["api", "--paginate", requestPath, "--slurp"]).flatMap((page) => page);
   }
-
   async getMergeQueueState(branch) {
     const query = `query($owner:String!,$repo:String!,$branch:String!){repository(owner:$owner,name:$repo){mergeQueue(branch:$branch){id entries(first:100){nodes{id position state baseCommit{oid} headCommit{oid} pullRequest{number headRefOid}}}}}}`;
     const data = ghJson([
@@ -852,7 +838,7 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   const initialQueue = await client.getMergeQueueState(options.targetBranch);
   let warrant = null;
   try {
-    warrant = readDeliveryWarrantResult(options, pr);
+    warrant = readDeliveryWarrantResult(options, pr); await verifyCurrentDeliveryWarrant(client, options, pr, warrant);
   } catch (error) {
     return reject("blocked", error.code || "invalid-delivery-warrant");
   }
@@ -890,9 +876,9 @@ function finalizePatrolResult(result) {
 
 async function reconcileEnqueueError({ client, options, pr, expectedHeadSha, entry, result, error }) {
   const queueReadback = await client.getMergeQueueState(options.targetBranch).catch(() => null);
-  const exactEntry = queueReadback?.entries?.find((candidate) =>
-    candidate.pullRequestNumber === pr.number && candidate.pullRequestHeadSha === expectedHeadSha);
+  const exactEntry = queueReadback?.entries?.find((candidate) => candidate.pullRequestNumber === pr.number && candidate.pullRequestHeadSha === expectedHeadSha);
   if (exactEntry) {
+    entry.activeLeaseStatus = await setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, "pending");
     entry.action = "enqueued";
     entry.reason = "already-enqueued-exact-head";
     entry.queueEntry = exactEntry;
@@ -902,9 +888,11 @@ async function reconcileEnqueueError({ client, options, pr, expectedHeadSha, ent
     return;
   }
   entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "failure");
+  entry.activeLeaseStatus = await setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, "failure");
   entry.action = "skip";
-  entry.reason = "enqueue-rejected";
+  entry.reason = error.preEnqueue ? (error.code || "pre-enqueue-qualification-failed") : "enqueue-rejected";
   entry.enqueueError = {
+    phase: error.preEnqueue ? "pre-enqueue" : "enqueue",
     status: error.status || null,
     message: error.message || "GitHub rejected merge queue admission",
   };
@@ -1027,7 +1015,7 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
         admissionDecision = "blocked";
         admissionReason = "blocked-by-predecessor";
         predecessor = queuePredecessor(observedQueueState);
-      } else if (observedBaseSha !== initialBaseSha) {
+      } else if (rejectBaseMoveBeforeAtomicReplay(options, initialBaseSha, observedBaseSha)) {
         admissionDecision = "rejected";
         admissionReason = "base-sha-drift";
       } else if (observedHeadSha !== expectedHeadSha) {
@@ -1067,13 +1055,12 @@ export async function runDevPrAutoMerge(optionsInput = {}, clientInput) {
           result.skipped.push(entry);
         } else {
           try {
-            entry.queueAdmissionStatus = await setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, "success");
-            const queueEntry = await client.enqueuePullRequest({
-              pullRequestId: decision.pullRequestId,
-              expectedHeadOid: expectedHeadSha,
-            });
+            const atomicAdmission = await qualifyAtomicQueueAdmission({ client, options, pullRequest: pr, expectedBaseSha: initialBaseSha, expectedHeadSha, projectCut: decision.projectCut, sleep: delay, mergeableAccepted, root: contentRoot,
+              setActiveLeaseStatus: (state) => setActiveLeaseStatus(client, options.repository, expectedHeadSha, options.activeLeaseContext, state), setQueueAdmissionStatus: (state) => setQueueAdmissionStatus(client, options.repository, expectedHeadSha, options.queueAdmissionContext, state) });
+            Object.assign(entry, atomicAdmission.entryFields);
+            const queueEntry = atomicAdmission.exactEntry || await client.enqueuePullRequest({ pullRequestId: decision.pullRequestId, expectedHeadOid: expectedHeadSha });
             entry.action = "enqueued";
-            entry.reason = "enqueued-with-expected-head";
+            entry.reason = atomicAdmission.exactEntry ? "already-enqueued-exact-head" : "enqueued-with-expected-head";
             entry.queueEntry = queueEntry;
             entry.admissionReceipt.reason = entry.reason;
             result.actions.push(entry);
@@ -1155,10 +1142,12 @@ export function cliOptions(args = [], environment = process.env) {
     allowedHeadPrefixes: cliValue(args, "allowed-head-prefixes", environment.BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES),
     requiredChecks: cliValue(args, "required-checks", environment.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS),
     queueAdmissionContext: cliValue(args, "queue-admission-context", environment.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT),
+    activeLeaseContext: cliValue(args, "active-lease-context", environment.BUILDCHAIN_DEV_PR_ACTIVE_LEASE_CONTEXT),
     diagnosticContext: cliValue(args, "diagnostic-context", environment.BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT),
     warrantMode: cliValue(args, "warrant-mode", environment.BUILDCHAIN_DEV_PR_WARRANT_MODE),
     warrantResultPath: cliValue(args, "warrant-result", environment.BUILDCHAIN_DEV_PR_WARRANT_RESULT_PATH),
     projectCutProofPath: cliValue(args, "project-cut-proof", environment.BUILDCHAIN_DEV_PR_PROJECT_CUT_PROOF_PATH),
+    sourceProofPath: cliValue(args, "source-proof", environment.BUILDCHAIN_DEV_PR_SOURCE_PROOF_PATH),
     sourcePatchRoot: cliValue(args, "source-patch-root", environment.BUILDCHAIN_DEV_PR_SOURCE_PATCH_ROOT),
     qualificationOnly: cliFlag(args, "qualification-only"),
     requireApproval: environment.BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL,

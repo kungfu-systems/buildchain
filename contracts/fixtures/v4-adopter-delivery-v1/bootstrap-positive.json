@@ -1,0 +1,93 @@
+{
+  "input": {
+    "authority": {
+      "version": "3.0.9-alpha.16",
+      "sourceCommit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
+      "packageRoot": "sha256:3f425e2c77d11f0bee8eb9aa2448566bca7a9d14672a7e528ced3e505b3f14a3",
+      "gateRoot": "sha256:cdcb54ea103fe62a94e2f0755fab5b105802f32e569f47e77d7a1f3ff0636cfc",
+      "protocol": {
+        "id": "buildchain.adopter/json-assertion",
+        "version": "1.0.0",
+        "root": "sha256:bcc9fc43402c50e11c68dfec5bba63ecc5b10f2f304921dec2ba95b44c43ad13"
+      },
+      "profile": {
+        "id": "buildchain.adopter/delivery-infrastructure",
+        "version": "1.0.0",
+        "root": "sha256:94dc2f34f76be8f4627fb84b753ad855492555111b37cbf3edcee68e2f30e126"
+      },
+      "protected": true,
+      "published": true
+    },
+    "candidate": {
+      "version": "4.0.1-alpha.4",
+      "sourceCommit": "e0342713c7447960c13bd73377282b2e93f4853d",
+      "packageRoot": "sha256:ca25e78191aedb60e999a12100b52caa2b075e29a46f0baa91722f018adb6609",
+      "gateRoot": "sha256:cdcb54ea103fe62a94e2f0755fab5b105802f32e569f47e77d7a1f3ff0636cfc",
+      "protocol": {
+        "id": "buildchain.adopter/json-assertion",
+        "version": "1.0.0",
+        "root": "sha256:bcc9fc43402c50e11c68dfec5bba63ecc5b10f2f304921dec2ba95b44c43ad13"
+      },
+      "profile": {
+        "id": "buildchain.adopter/delivery-infrastructure",
+        "version": "1.0.0",
+        "root": "sha256:94dc2f34f76be8f4627fb84b753ad855492555111b37cbf3edcee68e2f30e126"
+      },
+      "authorityVersion": "3.0.9-alpha.16"
+    },
+    "gateResult": {
+      "schemaVersion": 1,
+      "contract": "kungfu-buildchain-adopter-delivery-result",
+      "status": "passed",
+      "qualifying": false,
+      "selfCertified": false,
+      "project": {
+        "instanceId": "kungfu-systems/buildchain@4.0.1-alpha.4",
+        "adopterId": "kungfu-systems/buildchain"
+      },
+      "artifact": {
+        "kind": "package",
+        "coordinate": "@kungfu-tech/buildchain@4.0.1-alpha.4",
+        "root": "sha256:ca25e78191aedb60e999a12100b52caa2b075e29a46f0baa91722f018adb6609"
+      },
+      "protocol": {
+        "id": "buildchain.adopter/json-assertion",
+        "version": "1.0.0",
+        "loaded": true,
+        "reportRoot": "sha256:01b903f7315a51d0d26d8759194a82d7d45d0d05ad10480dbb6ebf7398445d5c"
+      },
+      "artifactProfile": {
+        "id": "buildchain.artifact/package",
+        "version": "1.0.0",
+        "loaded": true,
+        "valid": true
+      },
+      "semanticReport": {
+        "valid": true,
+        "qualifying": false,
+        "selfCertified": false,
+        "releaseAuthorized": false
+      },
+      "nonClaims": [
+        "A passing delivery gate does not grant runtime permission, release authorization, or independent certification.",
+        "Protocol semantics remain owned by the selected protocol driver and its published authority."
+      ],
+      "issues": [],
+      "gateRoot": "sha256:8f74b438d1b581c02704d3ff677b2be4dcb5a6d0dc4d9435ef42a368ff834ceb"
+    },
+    "warrant": {
+      "outcome": "merged",
+      "sourceHead": "e0342713c7447960c13bd73377282b2e93f4853d",
+      "sourceProofRoot": "sha256:2aeeaacaa4f2d136155ac2c478a7939772a162c284a3bfd0458dfb00cce872aa",
+      "nativeProofRoot": "sha256:d66669fff994b931c9f89f3c313f37ad625f5aae29af0f6528054b8782b607a5",
+      "integrationProofRoot": "sha256:e5623b4de65781d68a73401857d000fba970bdad62a94b5cd7b2d39fee176613"
+    }
+  },
+  "lineage": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-v4-adopter-delivery-bootstrap-lineage/v1",
+    "sourceAuthorityCommit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
+    "targetBaseCommit": "e0342713c7447960c13bd73377282b2e93f4853d",
+    "authorityArchiveRoot": "sha256:3f425e2c77d11f0bee8eb9aa2448566bca7a9d14672a7e528ced3e505b3f14a3"
+  }
+}

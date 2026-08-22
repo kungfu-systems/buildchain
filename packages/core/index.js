@@ -140,6 +140,11 @@ export {
 } from "./candidate-timeline.js";
 
 export {
+  CI_LANE_CHANGE_BUDGET_CONTRACT,
+  evaluateCiLaneChangeBudget,
+} from "./ci-lane-change-budget.js";
+
+export {
   CHANNEL_CANDIDATE_DECISION_SCHEMA,
   channelCandidateSourceLockRef,
   decideChannelCandidate,
@@ -639,6 +644,8 @@ export {
 } from "./kfd3-surface-register.js";
 
 export * from "./release-propagation.js";
+export * from "./v4-floating-consumer-policy.js";
+export * from "./v4-runtime-ref-resume-authority.js";
 
 export {
   RELEASE_ACTIVATION_CONTRACT,

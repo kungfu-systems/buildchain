@@ -1,6 +1,7 @@
 import { devDeliveryClone as clone, devDeliveryContentRoot, devDeliveryExactRoot as exactRoot, devDeliveryExactSha as exactSha, devDeliveryPositiveInteger as positiveInteger, devDeliveryProtectedBase as protectedBase, devDeliveryRepository as repository, devDeliveryText as text, devDeliveryTimestamp as timestamp } from "./dev-delivery-common.js";
 
 export const SOURCE_QUALIFICATION_PROOF_SCHEMA = "kungfu.buildchain.source-qualification-proof/v1";
+export const SOURCE_QUALIFICATION_PROOF_V2_SCHEMA = "kungfu.buildchain.source-qualification-proof/v2";
 export const PROJECT_CUT_REPLAY_PROOF_SCHEMA = "kungfu.buildchain.project-cut-replay-proof/v1";
 export const INTEGRATION_DELIVERY_PROOF_SCHEMA = "kungfu.buildchain.integration-delivery-proof/v1";
 
@@ -49,10 +50,38 @@ export function createSourceQualificationProof(input = {}) {
   return { ...body, proofRoot: devDeliveryContentRoot(sourceQualificationIdentity(body)) };
 }
 
+export function createSourceQualificationProofV2(input = {}) {
+  const body = {
+    schema: SOURCE_QUALIFICATION_PROOF_V2_SCHEMA,
+    rootSemantics: SOURCE_QUALIFICATION_ROOT_SEMANTICS,
+    authority: "exact-source-qualification",
+    repository: repository(input.repository),
+    protectedBase: protectedBase(input.protectedBase),
+    qualifiedBase: exactSha(input.qualifiedBase, "qualifiedBase"),
+    sourceIdentityRoot: exactRoot(input.sourceIdentityRoot, "sourceIdentityRoot"),
+    sourceHead: exactSha(input.sourceHead, "sourceHead"),
+    sourceTree: exactSha(input.sourceTree, "sourceTree"),
+    sourcePatchRoot: exactRoot(input.sourcePatchRoot, "sourcePatchRoot"),
+    planRoot: exactRoot(input.planRoot, "planRoot"),
+    closureRoot: exactRoot(input.closureRoot, "closureRoot"),
+    dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
+    toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
+    policyRoot: exactRoot(input.policyRoot, "policyRoot"),
+    requiredContextRoot: exactRoot(input.requiredContextRoot, "requiredContextRoot"),
+    controllerReceiptRoot: exactRoot(input.controllerReceiptRoot, "controllerReceiptRoot"),
+    sourceWorkflowRunId: positiveInteger(input.sourceWorkflowRunId, "sourceWorkflowRunId"),
+    affectedPaths: [...new Set((input.affectedPaths || []).map(text).filter(Boolean))].sort(),
+    shardEvidenceRoots: exactRoots(input.shardEvidenceRoots, "shardEvidenceRoots"),
+    qualifiedAt: timestamp(input.qualifiedAt, "qualifiedAt"),
+  };
+  body.observationRoot = devDeliveryContentRoot(sourceQualificationObservation(body));
+  return { ...body, proofRoot: devDeliveryContentRoot(sourceQualificationIdentity(body)) };
+}
+
 export function verifySourceQualificationProof(proofInput, expected = {}) {
   try {
     const proof = clone(proofInput || {});
-    if (proof.schema !== SOURCE_QUALIFICATION_PROOF_SCHEMA) return { ok: false, reason: "unsupported-schema" };
+    if (![SOURCE_QUALIFICATION_PROOF_SCHEMA, SOURCE_QUALIFICATION_PROOF_V2_SCHEMA].includes(proof.schema)) return { ok: false, reason: "unsupported-schema" };
     const proofRoot = proof.proofRoot;
     delete proof.proofRoot;
     if (proof.rootSemantics === undefined) {
@@ -65,7 +94,12 @@ export function verifySourceQualificationProof(proofInput, expected = {}) {
     for (const [field, value] of Object.entries(expected)) {
       if (value !== undefined && proof[field] !== value) return { ok: false, reason: `${field}-mismatch` };
     }
-    createSourceQualificationProof(proof);
+    if (proof.schema === SOURCE_QUALIFICATION_PROOF_V2_SCHEMA) {
+      if (proof.authority !== "exact-source-qualification") return { ok: false, reason: "non-exact-authority" };
+      createSourceQualificationProofV2(proof);
+    } else {
+      createSourceQualificationProof(proof);
+    }
     return { ok: true, reason: "exact-source-proof", proofRoot };
   } catch (error) {
     return { ok: false, reason: "invalid-proof", error: error.message };
@@ -80,7 +114,7 @@ export function classifyDevDeliveryDelta({ proof, current = {} } = {}) {
       reason: verification.reason,
       reusable: false,
     };
-  const exactPredicates = ["sourceIdentityRoot", "sourcePatchRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot"];
+  const exactPredicates = ["sourceIdentityRoot", "sourcePatchRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot", ...(proof.schema === SOURCE_QUALIFICATION_PROOF_V2_SCHEMA ? ["qualifiedBase", "sourceHead", "sourceTree", "policyRoot", "requiredContextRoot"] : [])];
   for (const field of exactPredicates) {
     if (!current[field] || current[field] !== proof[field]) {
       return {

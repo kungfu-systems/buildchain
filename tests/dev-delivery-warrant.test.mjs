@@ -1,27 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  classifyDevDeliveryDelta,
-  cancelQueuedDevDeliveryCandidate,
-  closeDevDeliveryWarrant,
-  createDevDeliveryQueue,
-  devDeliveryContentRoot,
-  createIntegrationDeliveryProof,
-  createProjectCutReplayPlan,
-  createProjectCutReplayProof,
-  createSourceQualificationProof,
-  heartbeatDevDeliveryWarrant,
-  normalizeDevDeliveryQueue,
-  observeDevDeliveryQueue,
-  rankDevDeliveryCandidates,
-  recoverExpiredDevDeliveryWarrant,
-  selectDevDeliveryWarrant,
-  settleDevDeliveryTerminalEvent,
-  submitDevDeliveryCandidate,
-  verifyIntegrationDeliveryProof,
-  verifyProjectCutReplayProof,
-  verifySourceQualificationProof,
-} from "../packages/core/dev-delivery-warrant.js";
+import { classifyDevDeliveryDelta, cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, createNativeCommandContract, devDeliveryContentRoot, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, heartbeatDevDeliveryWarrant, normalizeDevDeliveryQueue, observeDevDeliveryQueue, rankDevDeliveryCandidates, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 
 const ROOTS = Object.fromEntries(["assignment", "initiative", "source", "patch", "proof", "plan", "closure", "dependency", "toolchain", "shard", "context", "evidence"].map((name, index) => [name, `sha256:${(index + 1).toString(16).repeat(64)}`]));
 
@@ -48,6 +27,8 @@ function candidate(number, overrides = {}) {
     closureRoot: ROOTS.closure,
     dependencyRoot: ROOTS.dependency,
     toolchainRoot: ROOTS.toolchain,
+    environmentRoot: ROOTS.context,
+    nativeCommandContract: createNativeCommandContract("node --test tests/dev-delivery-warrant.test.mjs"),
     deliveryClass: "native-proof-required",
     priority: "ordinary",
     ...overrides,
@@ -73,12 +54,151 @@ test("queue identity and state roots fail closed on drift", () => {
   );
 });
 
+test("queue readback preserves native qualification metadata", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z", {
+    environmentRoot: ROOTS.context,
+    sourceWorkflowRunId: 31665171177,
+    affectedPaths: ["tests/dev-delivery-warrant.test.mjs", "packages/core/dev-delivery-warrant.js"],
+  });
+  const candidate = submitted.queue.candidates[0];
+
+  assert.equal(candidate.environmentRoot, ROOTS.context);
+  assert.equal(candidate.sourceWorkflowRunId, 31665171177);
+  assert.deepEqual(candidate.affectedPaths, ["packages/core/dev-delivery-warrant.js", "tests/dev-delivery-warrant.test.mjs"]);
+  assert.equal(normalizeDevDeliveryQueue(submitted.queue).stateRoot, submitted.queue.stateRoot);
+});
+
+test("queue readback accepts legacy terminal native candidates without weakening live authority", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, { outcome: "dequeued", evidenceRoot: ROOTS.evidence, now: "2026-08-04T00:01:00Z" });
+  const asLegacyState = (state) => {
+    const legacy = structuredClone(state);
+    delete legacy.candidates[0].nativeCommandContract;
+    delete legacy.stateRoot;
+    legacy.stateRoot = devDeliveryContentRoot(legacy);
+    return legacy;
+  };
+
+  const legacyTerminal = asLegacyState(terminal.queue);
+  assert.equal(normalizeDevDeliveryQueue(legacyTerminal).stateRoot, legacyTerminal.stateRoot);
+
+  const legacyLive = asLegacyState(submitted.queue);
+  assert.throws(
+    () => normalizeDevDeliveryQueue(legacyLive),
+    /live native candidate requires exact native proof/u,
+  );
+});
+
+test("queue readback accepts a v3 superseded terminal candidate", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
+  const superseded = structuredClone(submitted.queue);
+  superseded.candidates[0].status = "superseded";
+  delete superseded.candidates[0].nativeCommandContract;
+  delete superseded.stateRoot;
+  superseded.stateRoot = devDeliveryContentRoot(superseded);
+
+  const normalized = normalizeDevDeliveryQueue(superseded);
+  assert.equal(normalized.candidates[0].status, "superseded");
+});
+
+test("read-only v3 compatibility accepts provisional and exact qualified native Warrants", () => {
+  const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+  const withFollower = submit(selected.queue, 100, "2026-08-04T00:00:02Z");
+  const provisional = structuredClone(withFollower.queue);
+  for (const entry of provisional.candidates) delete entry.nativeCommandContract;
+  delete provisional.activeWarrant.nativeCommandContract;
+  delete provisional.stateRoot;
+  provisional.stateRoot = devDeliveryContentRoot(provisional);
+
+  assert.throws(
+    () => normalizeDevDeliveryQueue(provisional),
+    /live native candidate requires exact native proof/u,
+  );
+  assert.equal(
+    normalizeDevDeliveryQueue(provisional, { allowLegacyV3Readback: true }).stateRoot,
+    provisional.stateRoot,
+  );
+
+  const legacy = structuredClone(provisional);
+  const candidate = legacy.candidates.find(
+    (entry) => entry.candidateId === legacy.activeWarrant.candidateId,
+  );
+  const warrant = legacy.activeWarrant;
+  candidate.status = "qualified";
+  candidate.updatedAt = "2026-08-04T00:05:00.000Z";
+  warrant.phase = "qualified";
+  warrant.nativeProofRoot = ROOTS.evidence;
+  warrant.nativeProofReuseRoot = ROOTS.shard;
+  warrant.qualifiedAt = "2026-08-04T00:05:00.000Z";
+  delete warrant.nativeExecutionReceiptRoot;
+  delete warrant.qualificationReceiptRoot;
+  delete legacy.stateRoot;
+  legacy.stateRoot = devDeliveryContentRoot(legacy);
+
+  assert.equal(
+    normalizeDevDeliveryQueue(legacy, { allowLegacyV3Readback: true }).stateRoot,
+    legacy.stateRoot,
+  );
+  assert.equal(
+    observeDevDeliveryQueue(legacy, {
+      now: "2026-08-04T00:05:01Z",
+      allowLegacyV3Readback: true,
+    }).queued[0].pullRequestNumber,
+    100,
+  );
+
+  const missingProof = structuredClone(legacy);
+  delete missingProof.activeWarrant.nativeProofRoot;
+  delete missingProof.stateRoot;
+  missingProof.stateRoot = devDeliveryContentRoot(missingProof);
+  assert.throws(
+    () => normalizeDevDeliveryQueue(missingProof, { allowLegacyV3Readback: true }),
+    /Warrant nativeProofRoot/u,
+  );
+
+  const partialV4 = structuredClone(legacy);
+  partialV4.activeWarrant.nativeExecutionReceiptRoot = ROOTS.context;
+  delete partialV4.stateRoot;
+  partialV4.stateRoot = devDeliveryContentRoot(partialV4);
+  assert.throws(
+    () => normalizeDevDeliveryQueue(partialV4, { allowLegacyV3Readback: true }),
+    /live native candidate requires exact native proof/u,
+  );
+});
+
+test("live native delivery classes cannot downgrade to phase-less authority", () => {
+  for (const deliveryClass of ["native-proof-required", "cross-platform", "release"])
+    assert.throws(
+      () =>
+        submit(queue(), 99, "2026-08-04T00:00:00Z", {
+          deliveryClass,
+          environmentRoot: undefined,
+          nativeCommandContract: undefined,
+        }),
+      /live native candidate requires exact native proof/u,
+    );
+
+  const nonNative = submit(queue(), 99, "2026-08-04T00:00:00Z", {
+    deliveryClass: "non-native-fast",
+    environmentRoot: undefined,
+    nativeCommandContract: undefined,
+  });
+  assert.equal(nonNative.queue.candidates[0].deliveryClass, "non-native-fast");
+  assert.equal(nonNative.queue.candidates[0].environmentRoot, undefined);
+});
+
 test("duplicate submission is idempotent and safe head repair retains queue age", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const duplicate = submitDevDeliveryCandidate(first.queue, candidate(100), {
     now: "2026-08-04T00:05:00Z",
   });
   assert.equal(duplicate.receipt.action, "duplicate-noop");
+  assert.equal(duplicate.receipt.expectedOldStateRoot, first.queue.stateRoot);
+  assert.notEqual(duplicate.queue.stateRoot, first.queue.stateRoot);
   assert.equal(duplicate.queue.candidates.length, 1);
   assert.equal(duplicate.queue.candidates[0].enqueuedAt, "2026-08-04T00:00:00.000Z");
 
@@ -93,7 +213,9 @@ test("duplicate submission is idempotent and safe head repair retains queue age"
 
 test("a terminal semantic candidate opens a chained delivery attempt without rewriting history", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
-  const selected = selectDevDeliveryWarrant(first.queue, { now: "2026-08-04T00:00:01Z" });
+  const selected = selectDevDeliveryWarrant(first.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
   const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, {
     outcome: "dequeued",
     evidenceRoot: ROOTS.evidence,
@@ -120,7 +242,9 @@ test("a terminal semantic candidate opens a chained delivery attempt without rew
 
 test("chained attempt identity rejects missing, reordered, and cross-PR predecessors", () => {
   const first = submit(queue(), 100, "2026-08-04T00:00:00Z");
-  const selected = selectDevDeliveryWarrant(first.queue, { now: "2026-08-04T00:00:01Z" });
+  const selected = selectDevDeliveryWarrant(first.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
   const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, {
     outcome: "cancelled",
     evidenceRoot: ROOTS.evidence,
@@ -128,7 +252,12 @@ test("chained attempt identity rejects missing, reordered, and cross-PR predeces
   });
   const retried = submitDevDeliveryCandidate(terminal.queue, candidate(100, { sourceHead: "f".repeat(40) }), { now: "2026-08-04T00:02:00Z" });
   const [predecessor, chained] = retried.queue.candidates;
-  const normalize = (candidates) => normalizeDevDeliveryQueue({ ...retried.queue, candidates, stateRoot: undefined });
+  const normalize = (candidates) =>
+    normalizeDevDeliveryQueue({
+      ...retried.queue,
+      candidates,
+      stateRoot: undefined,
+    });
 
   assert.throws(() => normalize([chained]), /predecessor must appear earlier/u);
   assert.throws(() => normalize([chained, predecessor]), /predecessor must appear earlier/u);
@@ -184,7 +313,7 @@ test("selected heavy candidate is non-preemptive under an unbounded stream of la
   assert.equal(observation.states.queued, 8);
 });
 
-test("lease expiry recovers retained age and stale controllers are fenced", () => {
+test("provisional lease expiry retains authority until fenced worker stop is proven", () => {
   const submitted = submit(queue(), 120, "2026-08-04T00:00:00Z");
   const selected = selectDevDeliveryWarrant(submitted.queue, {
     now: "2026-08-04T00:00:01Z",
@@ -194,22 +323,24 @@ test("lease expiry recovers retained age and stale controllers are fenced", () =
   const recovered = recoverExpiredDevDeliveryWarrant(selected.queue, {
     now: "2026-08-04T00:02:00Z",
   });
-  assert.equal(recovered.receipt.action, "recovered-expired-lease");
+  assert.equal(recovered.receipt.action, "expired-lease-fenced-stop-required");
   assert.equal(recovered.queue.candidates[0].enqueuedAt, "2026-08-04T00:00:00.000Z");
-  assert.equal(recovered.queue.candidates[0].recoveries, 1);
+  assert.equal(recovered.queue.candidates[0].recoveries, 0);
+  assert.equal(recovered.queue.stateRoot, selected.queue.stateRoot);
 
   const reselection = selectDevDeliveryWarrant(recovered.queue, {
     now: "2026-08-04T00:02:01Z",
     leaseSeconds: 60,
   });
-  assert.notEqual(reselection.warrant.fencingToken, oldWarrant.fencingToken);
-  assert.equal(reselection.warrant.generation, oldWarrant.generation + 1);
+  assert.equal(reselection.receipt.selected, false);
+  assert.equal(reselection.warrant.fencingToken, oldWarrant.fencingToken);
+  assert.equal(reselection.warrant.generation, oldWarrant.generation);
   assert.throws(
     () =>
       heartbeatDevDeliveryWarrant(reselection.queue, oldWarrant, {
         now: "2026-08-04T00:02:02Z",
       }),
-    /stale fencing token/,
+    /lease expired/,
   );
 });
 
@@ -237,35 +368,78 @@ test("two controllers cannot commit transitions from the same expected-old state
   );
 });
 
-test("heartbeat and terminal closeout bind the current fencing generation", () => {
+test("heartbeat and terminal failure closeout bind the current fencing generation", () => {
   const submitted = submit(queue(), 140, "2026-08-04T00:00:00Z");
-  const selected = selectDevDeliveryWarrant(submitted.queue, {
+  const successor = submit(
+    submitted.queue,
+    141,
+    "2026-08-04T00:00:00.500Z",
+    { affectedPaths: ["packages/native"], sourceWorkflowRunId: 4242 },
+  );
+  const selected = selectDevDeliveryWarrant(successor.queue, {
     now: "2026-08-04T00:00:01Z",
   });
   const heartbeat = heartbeatDevDeliveryWarrant(selected.queue, selected.warrant, {
     now: "2026-08-04T00:01:00Z",
   });
   assert.equal(heartbeat.receipt.action, "heartbeat");
+  assert.equal(heartbeat.queue.activeWarrant.heartbeatAt, "2026-08-04T00:01:00.000Z");
   assert.equal(heartbeat.queue.candidates[0].status, "proving");
 
+  assert.throws(
+    () =>
+      closeDevDeliveryWarrant(heartbeat.queue, selected.warrant, {
+        outcome: "merged",
+        evidenceRoot: ROOTS.evidence,
+        now: "2026-08-04T00:02:00Z",
+      }),
+    /cannot settle as merged before native qualification/u,
+  );
+
   const closed = closeDevDeliveryWarrant(heartbeat.queue, selected.warrant, {
-    outcome: "merged",
+    outcome: "terminal-failure",
     evidenceRoot: ROOTS.evidence,
     now: "2026-08-04T00:02:00Z",
   });
   assert.equal(closed.queue.activeWarrant, null);
-  assert.equal(closed.queue.candidates[0].status, "merged");
+  assert.equal(closed.queue.candidates[0].status, "terminal-failure");
   assert.equal(closed.queue.candidates[0].terminal.fencingToken, selected.warrant.fencingToken);
   assert.equal(closed.receipt.nextAction, "Select the next queued candidate, if any.");
+  assert.deepEqual(closed.receipt.successorWake, {
+    schema: "kungfu.buildchain.dev-delivery-wake/v1",
+    targetBranch: "dev/v4/v4.0",
+    candidateId: successor.receipt.candidateId,
+    pullRequestNumber: 141,
+    sourceHead: candidate(141).sourceHead,
+    assignmentRoot: ROOTS.assignment,
+    initiativeRoot: ROOTS.initiative,
+    sourceIdentityRoot: candidate(141).sourceIdentityRoot,
+    sourcePatchRoot: ROOTS.patch,
+    sourceProofRoot: ROOTS.proof,
+    planRoot: ROOTS.plan,
+    closureRoot: ROOTS.closure,
+    dependencyRoot: ROOTS.dependency,
+    toolchainRoot: ROOTS.toolchain,
+    nativeCommandContract: candidate(141).nativeCommandContract,
+    environmentRoot: ROOTS.context,
+    affectedPaths: ["packages/native"],
+    sourceWorkflowRunId: 4242,
+    deliveryClass: "native-proof-required",
+    priority: "ordinary",
+  });
 });
 
 test("terminal settlement is an explicit no-op when the PR never entered Warrant authority", () => {
-  const settled = settleDevDeliveryTerminalEvent(queue(), {
-    pullRequestNumber: 149,
-    sourceHead: "a".repeat(40),
-    outcome: "merged",
-    reason: "protected pull request merged while Warrant rollout was off",
-  }, { now: "2026-08-04T00:02:00Z" });
+  const settled = settleDevDeliveryTerminalEvent(
+    queue(),
+    {
+      pullRequestNumber: 149,
+      sourceHead: "a".repeat(40),
+      outcome: "merged",
+      reason: "protected pull request merged while Warrant rollout was off",
+    },
+    { now: "2026-08-04T00:02:00Z" },
+  );
   assert.equal(settled.receipt.action, "terminal-event-not-applicable");
   assert.equal(settled.receipt.applicable, false);
   assert.equal(settled.receipt.candidateId, null);
@@ -274,46 +448,66 @@ test("terminal settlement is an explicit no-op when the PR never entered Warrant
   assert.match(settled.receiptRoot, /^sha256:[0-9a-f]{64}$/u);
 });
 
-test("terminal settlement closes the exact active Warrant and repeats idempotently", () => {
+test("terminal failure settlement closes the exact active Warrant and repeats idempotently", () => {
   const submitted = submit(queue(), 149, "2026-08-04T00:00:00Z");
-  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
   const input = {
     pullRequestNumber: 149,
     sourceHead: selected.warrant.sourceHead,
     fencingToken: selected.warrant.fencingToken,
     leaseGeneration: selected.warrant.generation,
-    outcome: "merged",
+    outcome: "terminal-failure",
     evidenceRoot: ROOTS.evidence,
     reason: "exact merge group passed",
   };
-  const closed = settleDevDeliveryTerminalEvent(selected.queue, input, { now: "2026-08-04T00:02:00Z" });
+  const closed = settleDevDeliveryTerminalEvent(selected.queue, input, {
+    now: "2026-08-04T00:02:00Z",
+  });
   assert.equal(closed.receipt.action, "terminal-closeout");
   assert.equal(closed.queue.activeWarrant, null);
-  const duplicate = settleDevDeliveryTerminalEvent(closed.queue, input, { now: "2026-08-04T00:03:00Z" });
+  const duplicate = settleDevDeliveryTerminalEvent(closed.queue, input, {
+    now: "2026-08-04T00:03:00Z",
+  });
   assert.equal(duplicate.receipt.action, "duplicate-terminal-event-noop");
   assert.equal(duplicate.queue.stateRoot, closed.queue.stateRoot);
   assert.throws(
-    () => settleDevDeliveryTerminalEvent(closed.queue, { ...input, outcome: "cancelled" }),
+    () =>
+      settleDevDeliveryTerminalEvent(closed.queue, {
+        ...input,
+        outcome: "cancelled",
+      }),
     /outcome does not match/u,
   );
 });
 
-test("duplicate terminal settlement remains a no-op after the next Warrant is selected", () => {
+test("duplicate terminal failure settlement remains a no-op after the next Warrant is selected", () => {
   let state = submit(queue(), 149, "2026-08-04T00:00:00Z").queue;
-  state = submitDevDeliveryCandidate(state, candidate(150), { now: "2026-08-04T00:00:01Z" }).queue;
-  const first = selectDevDeliveryWarrant(state, { now: "2026-08-04T00:00:02Z" });
+  state = submitDevDeliveryCandidate(state, candidate(150), {
+    now: "2026-08-04T00:00:01Z",
+  }).queue;
+  const first = selectDevDeliveryWarrant(state, {
+    now: "2026-08-04T00:00:02Z",
+  });
   const input = {
     pullRequestNumber: 149,
     sourceHead: first.warrant.sourceHead,
     fencingToken: first.warrant.fencingToken,
     leaseGeneration: first.warrant.generation,
-    outcome: "merged",
+    outcome: "terminal-failure",
     evidenceRoot: ROOTS.evidence,
     reason: "exact merge group passed",
   };
-  const closed = settleDevDeliveryTerminalEvent(first.queue, input, { now: "2026-08-04T00:01:00Z" });
-  const second = selectDevDeliveryWarrant(closed.queue, { now: "2026-08-04T00:01:01Z" });
-  const duplicate = settleDevDeliveryTerminalEvent(second.queue, input, { now: "2026-08-04T00:01:02Z" });
+  const closed = settleDevDeliveryTerminalEvent(first.queue, input, {
+    now: "2026-08-04T00:01:00Z",
+  });
+  const second = selectDevDeliveryWarrant(closed.queue, {
+    now: "2026-08-04T00:01:01Z",
+  });
+  const duplicate = settleDevDeliveryTerminalEvent(second.queue, input, {
+    now: "2026-08-04T00:01:02Z",
+  });
   assert.equal(duplicate.receipt.action, "duplicate-terminal-event-noop");
   assert.equal(duplicate.queue.stateRoot, second.queue.stateRoot);
   assert.equal(duplicate.queue.activeWarrant.candidateId, second.warrant.candidateId);
@@ -368,19 +562,35 @@ test("queued cancellation fails closed on identity, evidence, state, and event d
     reason: "pull request closed",
   };
   assert.throws(
-    () => cancelQueuedDevDeliveryCandidate(submitted.queue, { ...input, expectedSourceHead: "e".repeat(40) }),
+    () =>
+      cancelQueuedDevDeliveryCandidate(submitted.queue, {
+        ...input,
+        expectedSourceHead: "e".repeat(40),
+      }),
     /recorded sourceHead mismatch/,
   );
   assert.throws(
-    () => cancelQueuedDevDeliveryCandidate(submitted.queue, { ...input, pullRequestNumber: 999 }),
+    () =>
+      cancelQueuedDevDeliveryCandidate(submitted.queue, {
+        ...input,
+        pullRequestNumber: 999,
+      }),
     /PR mismatch/,
   );
   assert.throws(
-    () => cancelQueuedDevDeliveryCandidate(submitted.queue, { ...input, candidateId: ROOTS.context }),
+    () =>
+      cancelQueuedDevDeliveryCandidate(submitted.queue, {
+        ...input,
+        candidateId: ROOTS.context,
+      }),
     /does not exist/,
   );
   assert.throws(
-    () => cancelQueuedDevDeliveryCandidate(submitted.queue, { ...input, outcome: "dequeued" }),
+    () =>
+      cancelQueuedDevDeliveryCandidate(submitted.queue, {
+        ...input,
+        outcome: "dequeued",
+      }),
     /requires outcome cancelled/,
   );
 
@@ -388,7 +598,10 @@ test("queued cancellation fails closed on identity, evidence, state, and event d
     now: "2026-08-04T00:00:01Z",
   });
   assert.throws(
-    () => cancelQueuedDevDeliveryCandidate(selected.queue, input, { now: "2026-08-04T00:00:02Z" }),
+    () =>
+      cancelQueuedDevDeliveryCandidate(selected.queue, input, {
+        now: "2026-08-04T00:00:02Z",
+      }),
     /active candidate requires fenced Warrant closeout/,
   );
 
@@ -396,7 +609,11 @@ test("queued cancellation fails closed on identity, evidence, state, and event d
     now: "2026-08-04T00:00:03Z",
   });
   assert.throws(
-    () => cancelQueuedDevDeliveryCandidate(cancelled.queue, { ...input, evidenceRoot: ROOTS.context }),
+    () =>
+      cancelQueuedDevDeliveryCandidate(cancelled.queue, {
+        ...input,
+        evidenceRoot: ROOTS.context,
+      }),
     /terminal candidate does not match/,
   );
 });
@@ -422,12 +639,18 @@ test("source proof reuse is exact and unknown or overlapping deltas fail closed"
     reason: "exact-source-proof",
     proofRoot: proof.proofRoot,
   });
-  const retry = createSourceQualificationProof({ ...input, qualifiedAt: "2026-08-04T00:05:00Z" });
+  const retry = createSourceQualificationProof({
+    ...input,
+    qualifiedAt: "2026-08-04T00:05:00Z",
+  });
   assert.equal(retry.proofRoot, proof.proofRoot, "observation time must not change qualification identity");
   assert.notEqual(retry.observationRoot, proof.observationRoot, "the observation remains independently content-addressed");
   assert.equal(verifySourceQualificationProof(retry).ok, true);
 
-  const changedEvidence = createSourceQualificationProof({ ...input, shardEvidenceRoots: [ROOTS.evidence] });
+  const changedEvidence = createSourceQualificationProof({
+    ...input,
+    shardEvidenceRoots: [ROOTS.evidence],
+  });
   assert.notEqual(changedEvidence.proofRoot, proof.proofRoot, "evidence changes must change qualification identity");
 
   const tamperedObservation = { ...proof, qualifiedAt: "2026-08-04T00:05:00Z" };
@@ -437,7 +660,10 @@ test("source proof reuse is exact and unknown or overlapping deltas fail closed"
   });
 
   const { rootSemantics: _rootSemantics, observationRoot: _observationRoot, proofRoot: _proofRoot, ...legacyBody } = proof;
-  const legacyProof = { ...legacyBody, proofRoot: devDeliveryContentRoot(legacyBody) };
+  const legacyProof = {
+    ...legacyBody,
+    proofRoot: devDeliveryContentRoot(legacyBody),
+  };
   assert.deepEqual(verifySourceQualificationProof(legacyProof), {
     ok: true,
     reason: "exact-source-proof",
@@ -528,21 +754,22 @@ test("Project Cut replay proof binds the unchanged source to the exact current b
     reason: "exact-project-cut-replay",
     proofRoot: proof.proofRoot,
   });
-  assert.equal(
-    verifyProjectCutReplayProof(proof, { currentBase: "e".repeat(40) }).reason,
-    "currentBase-mismatch",
-  );
-  assert.equal(
-    verifyProjectCutReplayProof({ ...proof, replayTree: "f".repeat(40) }).reason,
-    "proof-root-drift",
-  );
+  assert.equal(verifyProjectCutReplayProof(proof, { currentBase: "e".repeat(40) }).reason, "currentBase-mismatch");
+  assert.equal(verifyProjectCutReplayProof({ ...proof, replayTree: "f".repeat(40) }).reason, "proof-root-drift");
   assert.equal(proof.qualificationRoot, devDeliveryContentRoot(proof.qualification));
   const qualificationDrift = { ...proof, qualificationRoot: ROOTS.evidence };
   delete qualificationDrift.proofRoot;
   qualificationDrift.proofRoot = devDeliveryContentRoot(qualificationDrift);
   assert.equal(verifyProjectCutReplayProof(qualificationDrift).reason, "qualification-root-drift");
   assert.throws(
-    () => createProjectCutReplayProof({ ...proof, qualificationReceipt: { ...proof.qualification, decision: "repair-required" } }),
+    () =>
+      createProjectCutReplayProof({
+        ...proof,
+        qualificationReceipt: {
+          ...proof.qualification,
+          decision: "repair-required",
+        },
+      }),
     /not qualified/u,
   );
 });

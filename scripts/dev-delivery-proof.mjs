@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { classifyDevDeliveryDelta, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import { classifyDevDeliveryDelta, createIntegrationDeliveryProof, createNativeProofReuseDecision, createNativeQualificationProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, verifyIntegrationDeliveryProof, verifyNativeProofReuseDecision, verifyNativeQualificationProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);
@@ -49,9 +49,12 @@ export function devDeliveryProofCliOptions(args = [], environment = process.env)
     closureRoot: flag(rest, "closure-root", environment.BUILDCHAIN_DEV_DELIVERY_CLOSURE_ROOT),
     dependencyRoot: flag(rest, "dependency-root", environment.BUILDCHAIN_DEV_DELIVERY_DEPENDENCY_ROOT),
     toolchainRoot: flag(rest, "toolchain-root", environment.BUILDCHAIN_DEV_DELIVERY_TOOLCHAIN_ROOT),
+    environmentRoot: flag(rest, "environment-root", environment.BUILDCHAIN_DEV_DELIVERY_ENVIRONMENT_ROOT),
     affectedPaths: flag(rest, "affected-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_AFFECTED_PATHS || "[]"),
     shardEvidenceRoots: flag(rest, "shard-evidence-roots-json", environment.BUILDCHAIN_DEV_DELIVERY_SHARD_EVIDENCE_ROOTS || "[]"),
     qualifiedAt: flag(rest, "qualified-at", environment.BUILDCHAIN_DEV_DELIVERY_QUALIFIED_AT),
+    qualifiedBase: flag(rest, "qualified-base", environment.BUILDCHAIN_DEV_DELIVERY_QUALIFIED_BASE),
+    nativeExecutionReceiptPath: flag(rest, "native-execution-receipt", environment.BUILDCHAIN_DEV_DELIVERY_NATIVE_EXECUTION_RECEIPT),
     sourceProofPath: flag(rest, "source-proof", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PROOF),
     sourceProofRoot: flag(rest, "source-proof-root", environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PROOF_ROOT),
     warrantResultPath: flag(rest, "warrant-result", environment.BUILDCHAIN_DEV_DELIVERY_WARRANT_RESULT),
@@ -66,6 +69,8 @@ export function devDeliveryProofCliOptions(args = [], environment = process.env)
     pullRequestNumber: flag(rest, "pull-request", environment.BUILDCHAIN_DEV_DELIVERY_PR_NUMBER),
     changedPaths: flag(rest, "changed-paths-json", environment.BUILDCHAIN_DEV_DELIVERY_CHANGED_PATHS || "[]"),
     graphKnown: boolean(flag(rest, "graph-known", environment.BUILDCHAIN_DEV_DELIVERY_GRAPH_KNOWN), false),
+    attributionComplete: boolean(flag(rest, "attribution-complete", environment.BUILDCHAIN_DEV_DELIVERY_ATTRIBUTION_COMPLETE), false),
+    renames: flag(rest, "renames-json", environment.BUILDCHAIN_DEV_DELIVERY_RENAMES || "[]"),
     outputPath: flag(rest, "output", environment.BUILDCHAIN_DEV_DELIVERY_PROOF_OUTPUT || ".buildchain/dev-delivery/proof.json"),
     json: hasFlag(rest, "json"),
   };
@@ -114,6 +119,66 @@ export function runDevDeliveryProofCommand(options) {
         toolchainRoot: options.toolchainRoot,
         graphKnown: options.graphKnown,
         changedPaths: jsonList(options.changedPaths, "changed paths"),
+      },
+    });
+  }
+  if (options.command === "native") {
+    return createNativeQualificationProof({
+      repository: options.repository,
+      protectedBase: options.protectedBase,
+      sourceIdentityRoot: options.sourceIdentityRoot,
+      sourcePatchRoot: options.sourcePatchRoot,
+      planRoot: options.planRoot,
+      closureRoot: options.closureRoot,
+      dependencyRoot: options.dependencyRoot,
+      toolchainRoot: options.toolchainRoot,
+      environmentRoot: options.environmentRoot,
+      sourceHead: options.sourceHead,
+      qualifiedBase: options.qualifiedBase,
+      nativeExecutionReceipt: jsonFile(options.nativeExecutionReceiptPath, "native execution receipt"),
+      affectedPaths: jsonList(options.affectedPaths, "affected paths"),
+      shardEvidenceRoots: jsonList(options.shardEvidenceRoots, "shard evidence roots", { required: true }),
+      qualifiedAt: options.qualifiedAt,
+    });
+  }
+  if (options.command === "verify-native") {
+    return verifyNativeQualificationProof(jsonFile(options.sourceProofPath, "native proof"));
+  }
+  if (options.command === "classify-native") {
+    return createNativeProofReuseDecision({
+      proof: jsonFile(options.sourceProofPath, "native proof"),
+      current: {
+        sourceIdentityRoot: options.sourceIdentityRoot,
+        sourcePatchRoot: options.sourcePatchRoot,
+        planRoot: options.planRoot,
+        closureRoot: options.closureRoot,
+        dependencyRoot: options.dependencyRoot,
+        toolchainRoot: options.toolchainRoot,
+        environmentRoot: options.environmentRoot,
+        currentBase: options.currentBase,
+        graphKnown: options.graphKnown,
+        attributionComplete: options.attributionComplete,
+        changedPaths: jsonList(options.changedPaths, "changed paths"),
+        renames: jsonList(options.renames, "renames"),
+      },
+    });
+  }
+  if (options.command === "verify-native-reuse") {
+    return verifyNativeProofReuseDecision(jsonFile(options.qualificationReceiptPath, "native reuse decision"), {
+      proof: jsonFile(options.sourceProofPath, "native proof"),
+      current: {
+        sourceIdentityRoot: options.sourceIdentityRoot,
+        sourcePatchRoot: options.sourcePatchRoot,
+        planRoot: options.planRoot,
+        closureRoot: options.closureRoot,
+        dependencyRoot: options.dependencyRoot,
+        toolchainRoot: options.toolchainRoot,
+        environmentRoot: options.environmentRoot,
+        currentBase: options.currentBase,
+        graphKnown: options.graphKnown,
+        attributionComplete: options.attributionComplete,
+        changedPaths: jsonList(options.changedPaths, "changed paths"),
+        renames: jsonList(options.renames, "renames"),
       },
     });
   }
@@ -168,7 +233,7 @@ export function runDevDeliveryProofCommand(options) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev proof <source|verify-source|classify|replay|replay-proof|verify-replay|integration|verify-integration> [options] [--output FILE] [--json]\n";
+  return "Usage:\n  buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|replay-proof|verify-replay|integration|verify-integration> [options] [--output FILE] [--json]\n";
 }
 
 async function main() {

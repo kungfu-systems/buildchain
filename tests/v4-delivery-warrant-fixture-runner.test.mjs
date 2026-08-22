@@ -295,6 +295,7 @@ test("the default Rust shadow host emits an effect-disabled projection", async (
     enabled: true,
     recordedAt: "2026-08-08T00:00:00.000Z",
     sources,
+    timeoutMs: 30_000,
   });
   assert.equal(result.shadow.status, "observed");
   assert.equal(result.shadow.diagnostics.length, 0);

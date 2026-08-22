@@ -3,17 +3,19 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
+import { normalizeAnchorProvenance, normalizeCandidateRun, recoverCandidateProvenance } from "./release-candidate-anchor-provenance.mjs";
+export { resolveAnchorRecoveryRequest } from "./release-candidate-anchor-provenance.mjs";
 import {
   generatePublishRequiredArtifacts,
-  readNpmPackageArtifact,
-  selectReleaseCandidateArtifacts,
-} from "./release-candidate-resolver.mjs";
-import {
   githubDownload,
   githubJson,
+  readNpmPackageArtifact,
+  selectPayloadArtifacts,
+  selectReleaseCandidateArtifacts,
   unzip,
   verifyArtifactArchive,
 } from "./release-candidate-resolver.mjs";
@@ -28,6 +30,15 @@ import {
 } from "../packages/core/publication-artifact-candidate.js";
 import { createPublicationSealedBundle } from "../packages/core/publication-sealed-bundle.js";
 import { releaseTransactionStateRef } from "../packages/core/publish-transaction.js";
+import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
+import { validateV4StageCapsule } from "../packages/core/v4-stage-capsule.js";
+import {
+  authorizeV4RuntimeSelection,
+  createV4RuntimeResumeLineage,
+  scanV4RuntimeSelectorPersistence,
+  v4RuntimeResumeDocumentRoot,
+  verifyV4RuntimeAuthorizationReceipt,
+} from "../packages/core/v4-runtime-ref-resume-authority.js";
 
 function env(name, fallback = "") {
   return process.env[name] || fallback;
@@ -100,8 +111,373 @@ function readOnlyJson(files, label) {
   return JSON.parse(fs.readFileSync(files[0].absolutePath, "utf8"));
 }
 
-async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version }) {
-  const stateRef = releaseTransactionStateRef(version);
+function trackedRuntimePersistenceScan() {
+  const paths = execFileSync(
+    "git",
+    ["ls-files", ".github/workflows", ".github/actions", ".buildchain"],
+    { encoding: "utf8" },
+  )
+    .split(/\r?\n/)
+    .filter((entry) => /\.(?:json|toml|ya?ml)$/u.test(entry));
+  return scanV4RuntimeSelectorPersistence({ root: process.cwd(), paths });
+}
+
+export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads }) {
+  if (
+    !sidecar ||
+    sidecar.contract !==
+      "kungfu-buildchain-v4-release-candidate-stage-capsules/v1" ||
+    sidecar.status !== "sealed"
+  ) {
+    throw new Error(
+      "cross-runtime recovery requires original sealed release-candidate Stage Capsules",
+    );
+  }
+  const payload = { ...sidecar };
+  delete payload.root;
+  const expectedAttempt =
+    `github-run:${passport.workflow.runId}:attempt:${passport.workflow.runAttempt}`;
+  if (
+    sidecar.root !== v4RuntimeResumeDocumentRoot(payload) ||
+    sidecar.repository !== passport.repository ||
+    sidecar.source?.sha !== passport.source.headSha ||
+    sidecar.source?.treeSha !== passport.source.treeHash ||
+    sidecar.buildAttempt?.id !== expectedAttempt ||
+    sidecar.buildAttempt?.runtimeSha !== passport.buildchain.sha ||
+    sidecar.consumerPolicyReceiptRoot !== passport.consumerPolicy?.receiptRoot
+  ) {
+    throw new Error("release-candidate Stage Capsule sidecar identity mismatch");
+  }
+  const artifactByName = new Map(downloads.map((entry) => [entry.artifact.name, entry]));
+  const required = [...passport.platformMatrix.map((entry) => entry.platformId)].sort();
+  const entries = [...(sidecar.capsules || [])].sort((left, right) =>
+    left.platform.localeCompare(right.platform),
+  );
+  if (
+    entries.length !== required.length ||
+    entries.some((entry, index) => entry.platform !== required[index])
+  ) {
+    throw new Error("release-candidate Stage Capsule platform set is incomplete");
+  }
+  return entries.map((entry) => {
+    validateV4StageCapsule(entry.capsule);
+    const download = artifactByName.get(entry.artifactName);
+    const artifact = entry.artifact;
+    if (
+      !download ||
+      artifact?.platformId !== entry.platform ||
+      artifact?.id !== String(download.artifact.id) ||
+      artifact?.name !== download.artifact.name ||
+      artifact?.digest !== entry.artifactDigest ||
+      artifact?.digest !== download.artifact.digest ||
+      artifact?.digest !== download.record.digest ||
+      artifact?.digest !== download.record.downloadedDigest ||
+      artifact?.expiresAt !==
+        new Date(download.artifact.expires_at).toISOString() ||
+      entry.capsule.identity.policyRoot !== sidecar.consumerPolicyReceiptRoot ||
+      entry.capsule.identity.sourceRoot !==
+        v4ContentRoot("candidate-identity", passport.source) ||
+      entry.capsule.identity.runtimeRoot !==
+        v4ContentRoot("candidate-identity", { sha: passport.buildchain.sha })
+    ) {
+      throw new Error(
+        `Stage Capsule ${entry.platform} does not bind the verified provider artifact`,
+      );
+    }
+    return {
+      platform: entry.platform,
+      capsuleRoot: entry.capsule.capsuleRoot,
+      identityRoot: entry.capsule.identityRoot,
+      artifactDigest: entry.artifactDigest,
+      sourceSha: sidecar.source.sha,
+      sourceTreeSha: sidecar.source.treeSha,
+      policyRoot: sidecar.consumerPolicyReceiptRoot,
+      buildRuntimeSha: sidecar.buildAttempt.runtimeSha,
+      sealed: true,
+    };
+  });
+}
+
+export function validateV4RuntimeResumePublicReadback({
+  targetRef,
+  targetSha,
+  alphaSha,
+  exactTagSha,
+  tagLineage,
+  runtimeSha,
+  version,
+  transaction,
+  main,
+  npm,
+}) {
+  if (
+    transaction?.target_ref !== targetRef ||
+    transaction?.version !== version ||
+    exactTagSha !== transaction?.source_sha ||
+    !["ahead", "identical"].includes(tagLineage?.status) ||
+    alphaSha !== runtimeSha ||
+    !targetSha ||
+    npm["dist-tags"]?.alpha !== version ||
+    npm.versions?.[version]?.dist?.integrity !== main.digest
+  ) {
+    throw new Error(
+      "cross-runtime final public readback does not match durable publication bytes and runtime",
+    );
+  }
+}
+
+export async function readPublicResumeState({
+  repoInfo,
+  targetRef,
+  runtimeSha,
+  version,
+  transaction,
+  token,
+  apiUrl,
+  fetchImpl,
+}) {
+  const readRef = async (ref) =>
+    (await githubJson({
+      apiUrl,
+      token,
+      fetchImpl,
+      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/${ref}`,
+    })).object?.sha || "";
+  const main = transaction?.artifacts?.find((entry) => entry.kind === "npm" && entry.required !== false);
+  if (!main || main.ref !== version || !main.digest) {
+    throw new Error(
+      "cross-runtime recovery requires exact durable npm publication evidence",
+    );
+  }
+  const packageUrl =
+    `https://registry.npmjs.org/${encodeURIComponent(main.name)}`;
+  const exactTag = transaction.exact_tag || `v${version}`;
+  const [targetSha, alphaSha, exactTagSha, npmResponse] = await Promise.all([
+    readRef(`heads/${targetRef}`),
+    readRef("tags/v4-alpha"),
+    readRef(`tags/${exactTag}`),
+    fetchImpl(packageUrl),
+  ]);
+  if (!npmResponse.ok) {
+    throw new Error(`npm public readback failed with HTTP ${npmResponse.status}`);
+  }
+  const npm = await npmResponse.json();
+  const tagLineage = await githubJson({
+    apiUrl,
+    token,
+    fetchImpl,
+    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${exactTagSha}...${targetSha}`,
+  });
+  validateV4RuntimeResumePublicReadback({
+    targetRef,
+    targetSha,
+    alphaSha,
+    exactTagSha,
+    tagLineage,
+    runtimeSha,
+    version,
+    transaction,
+    main,
+    npm,
+  });
+  const body = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-v4-runtime-resume-public-readback/v1",
+    observedAt: new Date().toISOString(),
+    repository: repoInfo.fullName,
+    version,
+    refs: {
+      target: { ref: targetRef, sha: targetSha },
+      floating: { ref: "v4-alpha", sha: alphaSha },
+      exactTag: { ref: exactTag, sha: exactTagSha },
+    },
+    npm: {
+      package: main.name,
+      version,
+      distTag: "alpha",
+      integrity: npm.versions[version].dist.integrity,
+    },
+  };
+  return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
+}
+
+function prepareRuntimeResumeEvidence({
+  repoInfo,
+  targetRef,
+  runtimeSha,
+  version,
+  passport,
+  sidecar,
+  stageCapsules,
+  recovery,
+  outputDir,
+}) {
+  const authorizationPath = path.resolve(
+    ".buildchain/release-candidate/v4-runtime-authorization.json",
+  );
+  if (!fs.existsSync(authorizationPath)) {
+    throw new Error(
+      "cross-runtime recovery requires a fresh runtime authorization receipt",
+    );
+  }
+  const delegated = readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization");
+  const delegatedVerification = verifyV4RuntimeAuthorizationReceipt({
+    receipt: delegated.receipt,
+    receiptRoot: delegated.receiptRoot,
+    repository: repoInfo.fullName,
+    runtimeSha,
+  });
+  if (!delegatedVerification.ok) {
+    throw new Error(
+      `fresh recovery runtime authorization rejected: ${delegatedVerification.failures.join(", ")}`,
+    );
+  }
+  const policy = passport.consumerPolicy.receipt;
+  const authorization = authorizeV4RuntimeSelection({
+    repository: repoInfo.fullName,
+    eventName: "workflow_dispatch",
+    mode: "resume",
+    actor: delegated.receipt.actor.login,
+    actorPermission: delegated.receipt.actor.permission,
+    reason:
+      `resume sealed candidate run ${passport.workflow.runId} from a tree-equivalent protected source`,
+    authorizedAt: new Date().toISOString(),
+    sourceSha: sidecar.source.sha,
+    sourceTreeSha: sidecar.source.treeSha,
+    requestedRef: delegated.receipt.request.ref,
+    resolvedRuntimeSha: runtimeSha,
+    approvedRefReadbacks: delegated.receipt.runtime.reachableFrom,
+    stableContractLockRoot: policy.contractLocks.stable.root,
+    alphaContractLockRoot: policy.contractLocks.alpha.root,
+    consumerPolicyReceiptRoot: sidecar.consumerPolicyReceiptRoot,
+    persistenceScan: trackedRuntimePersistenceScan(),
+  });
+  const planBody = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-v4-runtime-resume-plan/v1",
+    originalRunId: String(passport.workflow.runId),
+    resumeRunId: String(env("GITHUB_RUN_ID")),
+    recoveryReceiptRoot: recovery.receipt.root,
+    requiredPlatforms: stageCapsules.map((entry) => entry.platform),
+    reusedCapsuleRoots: stageCapsules.map((entry) => entry.capsuleRoot),
+    rebuildPlatforms: [],
+    skippedBuildStages: recovery.receipt.skippedBuildStages,
+  };
+  const plan = { ...planBody, root: v4RuntimeResumeDocumentRoot(planBody) };
+  const materialBody = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-v4-runtime-resume-material/v1",
+    repository: repoInfo.fullName,
+    targetRef,
+    runtimeSha,
+    version,
+    authorization: authorization.receipt,
+    authorizationRoot: authorization.receiptRoot,
+    buildAttempt: sidecar.buildAttempt,
+    resumeAttempt: {
+      id: `github-run:${env("GITHUB_RUN_ID")}:attempt:${env("GITHUB_RUN_ATTEMPT", "1")}`,
+      runtimeSha,
+    },
+    source: sidecar.source,
+    consumerPolicyReceiptRoot: sidecar.consumerPolicyReceiptRoot,
+    requiredPlatforms: stageCapsules.map((entry) => entry.platform),
+    stageCapsules,
+    resumePlanRoot: plan.root,
+    floatingRefBefore: {
+      ref: "v4-alpha",
+      sha: sidecar.buildAttempt.runtimeSha,
+    },
+  };
+  const material = {
+    ...materialBody,
+    root: v4RuntimeResumeDocumentRoot(materialBody),
+  };
+  for (const [name, value] of [
+    ["v4-runtime-resume-plan.json", plan],
+    ["v4-runtime-resume-material.json", material],
+  ]) {
+    fs.writeFileSync(
+      path.join(outputDir, name),
+      `${JSON.stringify(value, null, 2)}\n`,
+    );
+  }
+  return path.join(outputDir, "v4-runtime-resume-evidence.json");
+}
+
+export async function finalizeRuntimeResumeEvidence({
+  materialPath,
+  transaction,
+  token = env("GITHUB_TOKEN", env("INPUT_TOKEN")),
+  apiUrl = env("GITHUB_API_URL", "https://api.github.com"),
+  fetchImpl = globalThis.fetch,
+  outputDir = path.dirname(materialPath),
+}) {
+  const material = JSON.parse(fs.readFileSync(materialPath, "utf8"));
+  const body = { ...material };
+  delete body.root;
+  if (
+    material.contract !== "kungfu-buildchain-v4-runtime-resume-material/v1" ||
+    material.root !== v4RuntimeResumeDocumentRoot(body)
+  ) {
+    throw new Error("cross-runtime resume material root mismatch");
+  }
+  const repoInfo = splitRepository(material.repository);
+  const version = env("BUILDCHAIN_RELEASE_VERSION", material.version);
+  const targetRef = env("BUILDCHAIN_RELEASE_TARGET_REF", material.targetRef);
+  if (
+    version !== material.version ||
+    targetRef !== material.targetRef ||
+    transaction?.version !== version ||
+    transaction?.state !== "complete"
+  ) {
+    throw new Error(
+      "cross-runtime resume finalization does not match the completed publication transaction",
+    );
+  }
+  const readback = await readPublicResumeState({
+    repoInfo,
+    targetRef,
+    runtimeSha: material.runtimeSha,
+    version,
+    transaction,
+    token,
+    apiUrl,
+    fetchImpl,
+  });
+  const resumed = createV4RuntimeResumeLineage({
+    authorization: material.authorization,
+    authorizationRoot: material.authorizationRoot,
+    buildAttempt: material.buildAttempt,
+    resumeAttempt: material.resumeAttempt,
+    source: material.source,
+    consumerPolicyReceiptRoot: material.consumerPolicyReceiptRoot,
+    requiredPlatforms: material.requiredPlatforms,
+    stageCapsules: material.stageCapsules,
+    resumePlanRoot: material.resumePlanRoot,
+    finalPublicReadbackRoot: readback.root,
+    floatingRefBefore: material.floatingRefBefore,
+    floatingRefAfter: { ref: "v4-alpha", sha: material.runtimeSha },
+  });
+  const evidence = {
+    authorization: material.authorization,
+    authorizationRoot: material.authorizationRoot,
+    lineage: resumed.lineage,
+    lineageRoot: resumed.lineageRoot,
+  };
+  const evidencePath = path.join(outputDir, "v4-runtime-resume-evidence.json");
+  for (const [name, value] of [
+    ["v4-runtime-resume-public-readback.json", readback],
+    [path.basename(evidencePath), evidence],
+  ]) {
+    fs.writeFileSync(
+      path.join(outputDir, name),
+      `${JSON.stringify(value, null, 2)}\n`,
+    );
+  }
+  return { evidence, path: evidencePath, readback };
+}
+
+async function readTransactionAtRef({ repoInfo, apiUrl, token, fetchImpl, stateRef }) {
   const response = await githubJson({
     apiUrl,
     token,
@@ -110,10 +486,65 @@ async function readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, ver
     path: `/repos/${repoInfo.owner}/${repoInfo.repo}/contents/state.json?ref=${encodeURIComponent(stateRef)}`,
   });
   if (!response) return undefined;
-  if (response.type !== "file" || response.encoding !== "base64" || !response.content) {
-    throw new Error(`durable transaction ${stateRef} did not expose a base64 state.json file`);
+  if (
+    response.type !== "file" ||
+    response.encoding !== "base64" ||
+    !response.content
+  ) {
+    throw new Error(
+      `durable transaction ${stateRef} did not expose a base64 state.json file`,
+    );
   }
-  return JSON.parse(Buffer.from(String(response.content).replace(/\s/g, ""), "base64").toString("utf8"));
+  return JSON.parse(
+    Buffer.from(
+      String(response.content).replace(/\s/g, ""),
+      "base64",
+    ).toString("utf8"),
+  );
+}
+
+async function readExistingTransaction({
+  repoInfo,
+  apiUrl,
+  token,
+  fetchImpl,
+  version,
+}) {
+  return readTransactionAtRef({
+    repoInfo,
+    apiUrl,
+    token,
+    fetchImpl,
+    stateRef: releaseTransactionStateRef(version),
+  });
+}
+
+async function readExistingTransactionById({
+  repoInfo,
+  apiUrl,
+  token,
+  fetchImpl,
+  transactionId,
+}) {
+  if (!transactionId) return undefined;
+  const statePrefix = "buildchain/release-state/";
+  const refs = await githubJson({
+    apiUrl,
+    token,
+    fetchImpl,
+    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/matching-refs/heads/${statePrefix}`,
+  });
+  for (const ref of refs) {
+    const transaction = await readTransactionAtRef({
+      repoInfo,
+      apiUrl,
+      token,
+      fetchImpl,
+      stateRef: String(ref.ref).replace(/^refs\/heads\//, ""),
+    });
+    if (transaction?.id === transactionId) return transaction;
+  }
+  throw new Error(`durable publication transaction ${transactionId} was not found`);
 }
 
 function outputPath(filePath) {
@@ -156,7 +587,7 @@ async function downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir,
   };
 }
 
-function candidateArtifactNames({ passport, selected, artifacts, artifactPatterns }) {
+export function candidateArtifactNames({ passport, selected, artifacts, artifactPatterns }) {
   const names = new Set([selected.passport.name, selected.summary.name]);
   for (const reference of passport.controllerReceipts || []) {
     if (!reference.artifact) throw new Error(`Passport controller receipt ${reference.controllerId} has no artifact identity`);
@@ -171,11 +602,9 @@ function candidateArtifactNames({ passport, selected, artifacts, artifactPattern
   for (const artifact of artifacts) {
     if (manifestPattern.test(String(artifact.name || ""))) names.add(artifact.name);
   }
-  const matchers = splitPatterns(artifactPatterns).map(patternMatcher);
-  for (const artifact of artifacts) {
-    if (matchers.some((matcher) => matcher.test(String(artifact.name || "")))) names.add(artifact.name);
-  }
-  return names;
+  const publicationNames = new Set(selectPayloadArtifacts({ artifacts, artifactName: selected.prefix, sourceSha: selected.sourceSha, patterns: artifactPatterns }).map((artifact) => artifact.name));
+  for (const name of publicationNames) names.add(name);
+  return { names, publicationNames };
 }
 
 export function normalizePlatformManifests(downloads, passport) {
@@ -352,7 +781,15 @@ async function recoverCandidateEvidence({
   for (const artifact of [selected.passport, selected.summary]) initialDownloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   const passport = readOnlyJson(initialDownloads[0].files.filter((file) => path.basename(file.path) === "release-candidate-passport.json"), "release-candidate-passport.json");
   const buildSummary = readOnlyJson(initialDownloads[1].files.filter((file) => path.basename(file.path) === "build-summary.json"), "build-summary.json");
-  const requiredNames = candidateArtifactNames({ passport, selected, artifacts, artifactPatterns });
+  const sidecarFiles = initialDownloads[0].files.filter(
+    (file) =>
+      path.basename(file.path) === "release-candidate-stage-capsules.json",
+  );
+  const stageCapsuleSidecar =
+    sidecarFiles.length === 1
+      ? readOnlyJson(sidecarFiles, "release-candidate-stage-capsules.json")
+      : undefined;
+  const { names: requiredNames, publicationNames } = candidateArtifactNames({ passport, selected, artifacts, artifactPatterns });
   const chosen = artifacts.filter((artifact) => requiredNames.has(artifact.name));
   if (chosen.length !== requiredNames.size) {
     const found = new Set(chosen.map((artifact) => artifact.name));
@@ -363,7 +800,7 @@ async function recoverCandidateEvidence({
   for (const artifact of chosen.filter((entry) => ![selected.passport.id, selected.summary.id].includes(entry.id))) downloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   return {
     run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-    passport, buildSummary, chosen, downloads,
+    passport, buildSummary, stageCapsuleSidecar, chosen, downloads, publicationNames,
   };
 }
 
@@ -371,6 +808,52 @@ async function resolveTargetAdvance({ observedTargetSha, targetSha, transactionI
   if (observedTargetSha === targetSha || !transactionId || existingTransaction?.id !== transactionId) return undefined;
   const comparison = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${targetSha}...${observedTargetSha}` });
   return { status: comparison.status, mergeIsAncestor: ["ahead", "identical"].includes(comparison.status) };
+}
+
+async function resolveRecoveryTransaction({
+  repoInfo,
+  apiUrl,
+  token,
+  fetchImpl,
+  transactionId,
+  publicationVersion,
+}) {
+  const byId = await readExistingTransactionById({
+    repoInfo,
+    apiUrl,
+    token,
+    fetchImpl,
+    transactionId,
+  });
+  const version = byId?.version || publicationVersion;
+  const transaction = byId || await readExistingTransaction({
+    repoInfo,
+    apiUrl,
+    token,
+    fetchImpl,
+    version,
+  });
+  return { version, transaction };
+}
+
+function resolveRecoveredStageCapsules({
+  candidateRuntimeSha,
+  runtimeSha,
+  sidecar,
+  passport,
+  downloads,
+}) {
+  if (candidateRuntimeSha === runtimeSha) return [];
+  return verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads });
+}
+
+function validateRecoveryCoordinates(candidateRunId, expectedSourceTree, expectedCandidateRoot) {
+  const runId = String(candidateRunId || "").trim();
+  if (!/^\d+$/.test(runId)) throw new Error("candidate run ID must be numeric");
+  if (!String(expectedSourceTree || "").trim() && !String(expectedCandidateRoot || "").trim()) {
+    throw new Error("candidate recovery requires expectedSourceTree or expectedCandidateRoot");
+  }
+  return runId;
 }
 
 export async function resumeFromCandidateRun({
@@ -387,21 +870,23 @@ export async function resumeFromCandidateRun({
   recoveryRunId = env("GITHUB_RUN_ID"), fetchImpl = globalThis.fetch,
 } = {}) {
   const repoInfo = splitRepository(repository);
-  const runId = String(candidateRunId || "").trim();
-  if (!/^\d+$/.test(runId)) throw new Error("candidate run ID must be numeric");
-  if (!String(expectedSourceTree || "").trim() && !String(expectedCandidateRoot || "").trim()) {
-    throw new Error("candidate recovery requires expectedSourceTree or expectedCandidateRoot");
-  }
+  const runId = validateRecoveryCoordinates(candidateRunId, expectedSourceTree, expectedCandidateRoot);
   const archiveDir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-resume-"));
   try {
     const {
       run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-      passport, buildSummary, chosen, downloads,
+      passport, buildSummary, stageCapsuleSidecar, chosen, downloads, publicationNames,
     } = await recoverCandidateEvidence({
       repoInfo, runId, artifactName, artifactPatterns, requiredArtifactCount,
       outputDir, apiUrl, token, fetchImpl, archiveDir,
     });
-    const prNumber = Number(passport.pullRequest?.number || 0);
+    const { anchorProvenance, provenancePassport } = await recoverCandidateProvenance({
+      passport, buildSummary, transactionId, repoInfo, artifactName,
+      expectedWorkflowFile, expectedWorkflowName, channel, apiUrl, token,
+      fetchImpl, archiveDir, bundleRoot, githubJson, selectReleaseCandidateArtifacts,
+      downloadArtifact, readOnlyJson,
+    });
+    const prNumber = Number(provenancePassport.pullRequest?.number || 0);
     if (!prNumber) throw new Error("Release Candidate Passport has no PR identity");
     const pullRequest = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/pulls/${prNumber}` });
     const targetCommit = await githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/commits/${targetSha}` });
@@ -412,7 +897,7 @@ export async function resumeFromCandidateRun({
     const controllerReceipts = normalizeControllerReceipts(downloads, passport);
     const productPayloadManifests = normalizeProductPayloadManifests(downloads);
     const publication = createRecoveredPublication({
-      downloads,
+      downloads: downloads.filter(({ artifact }) => publicationNames.has(artifact.name)),
       bundleRoot,
       repository: repoInfo.fullName,
       passport,
@@ -422,8 +907,24 @@ export async function resumeFromCandidateRun({
       releasePatterns,
       platformManifests: platformManifestEvidence.manifests,
     });
-    const candidateVersion = publication.version;
-    const existingTransaction = await readExistingTransaction({ repoInfo, apiUrl, token, fetchImpl, version: candidateVersion });
+    const stageCapsules = resolveRecoveredStageCapsules({
+      candidateRuntimeSha,
+      runtimeSha,
+      sidecar: stageCapsuleSidecar,
+      passport,
+      downloads,
+    });
+    const {
+      version: candidateVersion,
+      transaction: existingTransaction,
+    } = await resolveRecoveryTransaction({
+      repoInfo,
+      apiUrl,
+      token,
+      fetchImpl,
+      transactionId,
+      publicationVersion: publication.version,
+    });
     const targetAdvance = await resolveTargetAdvance({
       observedTargetSha, targetSha, transactionId, existingTransaction,
       repoInfo, apiUrl, token, fetchImpl,
@@ -451,20 +952,9 @@ export async function resumeFromCandidateRun({
       expectedRuntimeSha: candidateRuntimeSha,
       expectedTransactionId: transactionId,
       existingTransaction,
-      run: {
-        id: String(run.id),
-        repository: repoInfo.fullName,
-        headRepository: run.head_repository?.full_name || "",
-        status: run.status,
-        conclusion: run.conclusion,
-        event: run.event,
-        path: run.path,
-        name: run.name,
-        headSha: run.head_sha || "",
-        headBranch: run.head_branch || "",
-        pullRequestNumbers: (run.pull_requests || []).map((entry) => Number(entry.number)),
-      },
+      run: normalizeCandidateRun(run, repoInfo.fullName),
       workflow: { path: workflow.path, name: workflow.name, state: workflow.state },
+      anchorProvenance: normalizeAnchorProvenance(anchorProvenance, repoInfo.fullName),
       pullRequest: {
         number: pullRequest.number,
         merged: pullRequest.merged === true,
@@ -494,6 +984,19 @@ export async function resumeFromCandidateRun({
     if (publication.manifest) fs.writeFileSync(sealedManifestPath, `${JSON.stringify(publication.manifest, null, 2)}\n`);
     const publishRequiredArtifacts = publication.publishRequiredArtifacts;
     fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(publishRequiredArtifacts, null, 2)}\n`);
+    const runtimeResumeEvidencePath = stageCapsules.length
+      ? prepareRuntimeResumeEvidence({
+          repoInfo,
+          targetRef,
+          runtimeSha,
+          version: candidateVersion,
+          passport,
+          sidecar: stageCapsuleSidecar,
+          stageCapsules,
+          recovery,
+          outputDir: resolvedOutput,
+        })
+      : "";
     const tarballs = publication.npmArtifacts.map((entry) => outputPath(entry.file.absolutePath));
     return {
       enabled: true,
@@ -517,6 +1020,9 @@ export async function resumeFromCandidateRun({
         sealedBundleRoot: publication.manifest ? outputPath(bundleRoot) : "",
         sealedBundleManifest: publication.manifest ? outputPath(sealedManifestPath) : "",
         recoveryReceipt: outputPath(recoveryReceiptPath),
+        runtimeResumeEvidence: runtimeResumeEvidencePath
+          ? outputPath(runtimeResumeEvidencePath)
+          : "",
       },
     };
   } finally {
@@ -568,6 +1074,10 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-run-url": result.run.url,
       "release-candidate-recovery-receipt-path": result.paths.recoveryReceipt,
       "release-candidate-recovery-root": result.receipt.root,
+      "v4-runtime-resume-evidence-path": result.paths.runtimeResumeEvidence,
+      "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence
+        ? "node .buildchain/runtime/promotion-shell/scripts/resume-from-candidate-run.mjs finalize"
+        : "",
       "release-candidate-root": result.candidateRoot,
       "release-candidate-artifact-root": result.artifactRoot,
       "publish-sealed-bundle-root": result.paths.sealedBundleRoot,
@@ -589,7 +1099,21 @@ export async function resumeFromCandidateRunCli() {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  resumeFromCandidateRunCli().catch((error) => {
+  const operation = process.argv[2] === "finalize"
+    ? finalizeRuntimeResumeEvidence({
+        materialPath: requiredEnv("BUILDCHAIN_V4_RUNTIME_RESUME_MATERIAL"),
+        transaction: JSON.parse(
+          requiredEnv("BUILDCHAIN_RELEASE_TRANSACTION_JSON"),
+        ),
+        outputDir: env(
+          "BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR",
+          path.dirname(requiredEnv("BUILDCHAIN_V4_RUNTIME_RESUME_MATERIAL")),
+        ),
+      }).then((result) =>
+        console.log(JSON.stringify({ files: [outputPath(result.path)] })),
+      )
+    : resumeFromCandidateRunCli();
+  operation.catch((error) => {
     const failure = error.recoveryFailure || recoveryFailure(error);
     console.error(`candidate recovery rejected [${failure.code}]: ${failure.reason}`);
     console.error(`next action: ${failure.nextAction}`);

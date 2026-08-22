@@ -90,14 +90,14 @@ import {
   BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
 } from "../packages/core/diagnostics.js";
 
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 test("every workflow v2 token is explicitly governed and no ungoverned runtime default remains", () => {
   const inventory = JSON.parse(
-    fs.readFileSync(path.join(root, "contracts/buildchain-v2-residuals-v1.json"), "utf8"),
+    fs.readFileSync(
+      path.join(root, "contracts/buildchain-v2-residuals-v1.json"),
+      "utf8",
+    ),
   );
   assert.equal(inventory.contract, "buildchain.v2-residual-inventory/v1");
   assert.equal(inventory.policy.runtimeDefault, "v4");
@@ -112,13 +112,28 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
     "third-party-action-version",
   ]);
   for (const entry of inventory.entries) {
-    assert.ok(entry.path.startsWith(".github/workflows/"), `${entry.path} must be a workflow`);
-    assert.ok(entry.token.toLowerCase().includes("v2"), `${entry.path} token must identify v2`);
-    assert.ok(Number.isInteger(entry.expectedOccurrences) && entry.expectedOccurrences > 0);
-    assert.ok(allowedClassifications.has(entry.classification), `${entry.path} classification must be governed`);
+    assert.ok(
+      entry.path.startsWith(".github/workflows/"),
+      `${entry.path} must be a workflow`,
+    );
+    assert.ok(
+      entry.token.toLowerCase().includes("v2"),
+      `${entry.path} token must identify v2`,
+    );
+    assert.ok(
+      Number.isInteger(entry.expectedOccurrences) &&
+        entry.expectedOccurrences > 0,
+    );
+    assert.ok(
+      allowedClassifications.has(entry.classification),
+      `${entry.path} classification must be governed`,
+    );
     assert.ok(entry.callerStatus, `${entry.path} must declare caller status`);
     assert.ok(entry.owner, `${entry.path} must declare an owner`);
-    assert.ok(entry.sunsetCondition, `${entry.path} must declare a sunset condition`);
+    assert.ok(
+      entry.sunsetCondition,
+      `${entry.path} must declare a sunset condition`,
+    );
 
     const source = fs.readFileSync(path.join(root, entry.path), "utf8");
     assert.equal(
@@ -129,7 +144,9 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
   }
 
   const workflowDir = path.join(root, ".github/workflows");
-  for (const name of fs.readdirSync(workflowDir).filter((entry) => /\.ya?ml$/.test(entry))) {
+  for (const name of fs
+    .readdirSync(workflowDir)
+    .filter((entry) => /\.ya?ml$/.test(entry))) {
     const workflowPath = `.github/workflows/${name}`;
     const source = fs.readFileSync(path.join(workflowDir, name), "utf8");
     for (const [index, line] of source.split("\n").entries()) {
@@ -160,32 +177,104 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   ];
   for (const workflow of workflows) {
     const source = fs.readFileSync(path.join(root, workflow), "utf8");
-    assert.match(source, /controller-plan-artifact:/, `${workflow} must expose its plan artifact`);
-    assert.match(source, /controller-plan-digest:/, `${workflow} must expose its plan digest`);
-    assert.match(source, /controller-receipt-artifact:/, `${workflow} must expose its receipt artifact`);
-    assert.match(source, /controller-receipt-digest:/, `${workflow} must expose its receipt digest`);
-    assert.match(source, /controller-receipt-status:/, `${workflow} must expose its receipt status`);
-    assert.match(source, /BUILDCHAIN_CONTROLLER_SOURCE_SHA:/, `${workflow} must bind the consumer source SHA`);
-    assert.match(source, /BUILDCHAIN_CONTROLLER_RUNTIME_SHA:/, `${workflow} must bind the Buildchain runtime SHA`);
-    assert.match(source, /BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST:/, `${workflow} must bind the runtime contract digest`);
-    if (source.includes("BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}")) {
-      assert.match(source, /BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call/, `${workflow} must isolate caller ambient inputs`);
+    assert.match(
+      source,
+      /controller-plan-artifact:/,
+      `${workflow} must expose its plan artifact`,
+    );
+    assert.match(
+      source,
+      /controller-plan-digest:/,
+      `${workflow} must expose its plan digest`,
+    );
+    assert.match(
+      source,
+      /controller-receipt-artifact:/,
+      `${workflow} must expose its receipt artifact`,
+    );
+    assert.match(
+      source,
+      /controller-receipt-digest:/,
+      `${workflow} must expose its receipt digest`,
+    );
+    assert.match(
+      source,
+      /controller-receipt-status:/,
+      `${workflow} must expose its receipt status`,
+    );
+    assert.match(
+      source,
+      /BUILDCHAIN_CONTROLLER_SOURCE_SHA:/,
+      `${workflow} must bind the consumer source SHA`,
+    );
+    assert.match(
+      source,
+      /BUILDCHAIN_CONTROLLER_RUNTIME_SHA:/,
+      `${workflow} must bind the Buildchain runtime SHA`,
+    );
+    assert.match(
+      source,
+      /BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST:/,
+      `${workflow} must bind the runtime contract digest`,
+    );
+    if (
+      source.includes(
+        "BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(inputs) }}",
+      )
+    ) {
+      assert.match(
+        source,
+        /BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call/,
+        `${workflow} must isolate caller ambient inputs`,
+      );
     }
-    assert.match(source, /if: \$\{\{ always\(\)/, `${workflow} must aggregate controller outcomes with always()`);
-    assert.match(source, /controller-receipt-qualifying != 'true'/, `${workflow} must fail closed on a nonqualifying receipt`);
+    assert.match(
+      source,
+      /if: \$\{\{ always\(\)/,
+      `${workflow} must aggregate controller outcomes with always()`,
+    );
+    assert.match(
+      source,
+      /controller-receipt-qualifying != 'true'/,
+      `${workflow} must fail closed on a nonqualifying receipt`,
+    );
   }
 
-  const gateEnvelope = fs.readFileSync(path.join(root, ".github/workflows/.gate-profile.yml"), "utf8");
+  const gateEnvelope = fs.readFileSync(
+    path.join(root, ".github/workflows/.gate-profile.yml"),
+    "utf8",
+  );
   assert.match(gateEnvelope, /shifu-gate-aggregate/);
-  assert.doesNotMatch(gateEnvelope, /BUILDCHAIN_CONTROLLER_(?:GATE_IDS|GATE_RESULTS)/);
+  assert.doesNotMatch(
+    gateEnvelope,
+    /BUILDCHAIN_CONTROLLER_(?:GATE_IDS|GATE_RESULTS)/,
+  );
 
-  const channelRouter = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
-  assert.match(channelRouter, /router-repository: \$\{\{ steps\.router\.outputs\.repository \}\}/);
-  assert.match(channelRouter, /router-ref: \$\{\{ steps\.router\.outputs\.ref \}\}/);
+  const channelRouter = fs.readFileSync(
+    path.join(root, ".github/workflows/build.yml"),
+    "utf8",
+  );
+  assert.match(
+    channelRouter,
+    /router-repository: \$\{\{ steps\.router\.outputs\.repository \}\}/,
+  );
+  assert.match(
+    channelRouter,
+    /router-ref: \$\{\{ steps\.router\.outputs\.ref \}\}/,
+  );
   assert.match(channelRouter, /Checkout Buildchain controller workflow shell/);
-  assert.match(channelRouter, /\.buildchain\/controller-runtime\/scripts\/controller-evidence\.mjs/);
-  assert.match(channelRouter, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
-  assert.doesNotMatch(channelRouter, /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/);
+  assert.match(
+    channelRouter,
+    /\.buildchain\/controller-runtime\/scripts\/controller-evidence\.mjs/,
+  );
+  assert.match(
+    channelRouter,
+    /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/,
+  );
+  assert.doesNotMatch(
+    channelRouter,
+    /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/,
+  );
   assert.match(
     channelRouter,
     /needs:\n      - resolve-channel\n      - override\n      - alpha\n      - stable\n      - controller-receipt/,
@@ -199,7 +288,10 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(governanceReconciliation, /workflow_call:/);
   assert.match(governanceReconciliation, /workflow_dispatch:/);
-  assert.match(governanceReconciliation, /--candidate-sha "\$\{BUILDCHAIN_CANDIDATE_SHA\}"/);
+  assert.match(
+    governanceReconciliation,
+    /--candidate-sha "\$\{BUILDCHAIN_CANDIDATE_SHA\}"/,
+  );
   assert.match(governanceReconciliation, /args\+\=\(--apply\)/);
   assert.match(governanceReconciliation, /persist-credentials: false/);
 
@@ -212,19 +304,46 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/,
   );
 
-  const reusableBuild = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const reusableBuild = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
   assert.match(reusableBuild, /Checkout build controller workflow shell/);
-  assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_RUNTIME_REF: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-ref \}\}/);
-  assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_RUNTIME_SHA: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-sha \}\}/);
-  assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: \$\{\{ needs\.trust-gate\.outputs\.buildchain-contract-digest \}\}/);
-  assert.doesNotMatch(reusableBuild, /BUILDCHAIN_CONTROLLER_RUNTIME_(?:REF|SHA): \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-/);
-  assert.match(reusableBuild, /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/);
+  assert.match(
+    reusableBuild,
+    /BUILDCHAIN_CONTROLLER_RUNTIME_REF: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-ref \}\}/,
+  );
+  assert.match(
+    reusableBuild,
+    /BUILDCHAIN_CONTROLLER_RUNTIME_SHA: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-sha \}\}/,
+  );
+  assert.match(
+    reusableBuild,
+    /BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: \$\{\{ needs\.trust-gate\.outputs\.buildchain-contract-digest \}\}/,
+  );
+  assert.doesNotMatch(
+    reusableBuild,
+    /BUILDCHAIN_CONTROLLER_RUNTIME_(?:REF|SHA): \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-/,
+  );
+  assert.match(
+    reusableBuild,
+    /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/,
+  );
 
-  const paperRelease = fs.readFileSync(path.join(root, ".github/workflows/paper-release.yml"), "utf8");
-  const promotion = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
+  const paperRelease = fs.readFileSync(
+    path.join(root, ".github/workflows/paper-release.yml"),
+    "utf8",
+  );
+  const promotion = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
   const promotionAuthority = promotion.slice(
     promotion.indexOf("  publication-authority:"),
-    promotion.indexOf("\n  promote:", promotion.indexOf("  publication-authority:")),
+    promotion.indexOf(
+      "\n  promote:",
+      promotion.indexOf("  publication-authority:"),
+    ),
   );
   assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
@@ -266,7 +385,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   const summarizeJob = workflow.slice(
     workflow.indexOf("  summarize:"),
-    workflow.indexOf("\n  controller-receipt:", workflow.indexOf("  summarize:")),
+    workflow.indexOf(
+      "\n  controller-receipt:",
+      workflow.indexOf("  summarize:"),
+    ),
   );
   const artifactDownloads =
     workflow.match(/uses: actions\/download-artifact@v7\.0\.0/g) || [];
@@ -293,7 +415,11 @@ test("reusable build workflow exposes the required surface contract", () => {
     /artifact-finalization-on-platform:\n\s+description: "Run trusted artifact finalization on each GitHub-hosted platform runner instead of the control runner"[\s\S]*?default: false[\s\S]*?type: boolean/,
   );
   assert.equal(
-    (workflow.match(/runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g) || []).length,
+    (
+      workflow.match(
+        /runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g,
+      ) || []
+    ).length,
     9,
   );
   assert.match(
@@ -308,11 +434,23 @@ test("reusable build workflow exposes the required surface contract", () => {
     ).length,
     4,
   );
-  assert.match(workflow, /kfd-agent-hub:\n\s+description: "Agent Hub conformance mode: off or auto/);
-  assert.equal((workflow.match(/name: Run KFD Agent Hub conformance/g) || []).length, 2);
-  assert.equal((workflow.match(/name: Upload KFD Agent Hub evidence/g) || []).length, 2);
+  assert.match(
+    workflow,
+    /kfd-agent-hub:\n\s+description: "Agent Hub conformance mode: off or auto/,
+  );
+  assert.equal(
+    (workflow.match(/name: Run KFD Agent Hub conformance/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/name: Upload KFD Agent Hub evidence/g) || []).length,
+    2,
+  );
   assert.match(workflow, /buildchain\.mjs kfd hub test/);
-  assert.match(workflow, /artifact-name \}\}-kfd-agent-hub-\$\{\{ matrix\.platform\.id \}\}/);
+  assert.match(
+    workflow,
+    /artifact-name \}\}-kfd-agent-hub-\$\{\{ matrix\.platform\.id \}\}/,
+  );
   assert.match(
     workflow,
     /name: Resolve source-bound application identity[\s\S]*?loadCredentialInput[\s\S]*?sourceTreeSha: process\.env\.BUILDCHAIN_SOURCE_TREE_SHA/,
@@ -363,7 +501,10 @@ test("reusable build workflow exposes the required surface contract", () => {
     workflow,
     /install --dir \.buildchain\/workflow-shell --prod --frozen-lockfile --ignore-scripts/,
   );
-  assert.match(workflow, /node "\$\{\{ steps\.anchored-verifier\.outputs\.path \}\}"/);
+  assert.match(
+    workflow,
+    /node "\$\{\{ steps\.anchored-verifier\.outputs\.path \}\}"/,
+  );
   assert.match(
     summarizeJob,
     /name: Checkout Buildchain workflow shell for aggregate compatibility[\s\S]*?ref: \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-sha \}\}[\s\S]*?path: \.buildchain\/workflow-shell/,
@@ -421,7 +562,10 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.equal((workflow.match(/RUSTUP_UPDATE_ROOT:/g) || []).length, 2);
   assert.match(workflow, /https:\/\/static\.rust-lang\.org\/rustup/);
   assert.match(workflow, /Setup Rust toolchain on Windows/);
-  assert.match(workflow, /if: \$\{\{ inputs\.setup-rust && runner\.os == 'Windows' \}\}/);
+  assert.match(
+    workflow,
+    /if: \$\{\{ inputs\.setup-rust && runner\.os == 'Windows' \}\}/,
+  );
   assert.match(workflow, /shell: cmd/);
   assert.match(workflow, /curl\.exe --proto "=https"/);
   assert.match(workflow, /https:\/\/win\.rustup\.rs\/x86_64/);
@@ -429,8 +573,14 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /buildchain-cargo/);
   assert.match(workflow, /buildchain-rustup/);
   assert.match(workflow, /Setup Rust toolchain/);
-  assert.match(workflow, /if: \$\{\{ inputs\.setup-rust && runner\.os != 'Windows' \}\}/);
-  assert.match(workflow, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
+  assert.match(
+    workflow,
+    /if: \$\{\{ inputs\.setup-rust && runner\.os != 'Windows' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/,
+  );
   assert.match(workflow, /toolchain: \$\{\{ inputs\.rust-toolchain \}\}/);
   assert.match(
     workflow,
@@ -448,13 +598,22 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /Checkout consumer contract lock/);
   assert.match(workflow, /buildchain-contract-lock\.mjs check/);
   assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
-  assert.match(workflow, /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/);
-  assert.match(workflow, /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/,
+  );
   assert.match(workflow, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME:/);
   assert.doesNotMatch(workflow, /contract-lock-compatible=true/);
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /contract-lock-status=/);
-  assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
+  assert.match(
+    workflow,
+    /buildchain-ref override is only allowed for trusted workflow_dispatch runs/,
+  );
   assert.match(workflow, /refs\/heads\/train\/vN\/vN\.M\/<capability>/);
   assert.match(workflow, /publish-channel:/);
   assert.match(workflow, /publish-refs-json:/);
@@ -491,7 +650,11 @@ test("reusable build workflow exposes the required surface contract", () => {
     7,
   );
   assert.equal(
-    (workflow.match(/pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g) || []).length,
+    (
+      workflow.match(
+        /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g,
+      ) || []
+    ).length,
     7,
   );
   assert.match(workflow, /install-command:/);
@@ -500,16 +663,52 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /artifact-name:/);
   assert.match(workflow, /artifact-name-template:/);
   assert.match(workflow, /expected-artifacts-json:/);
-  assert.equal((workflow.match(/Seal declared artifact signing requests/g) || []).length, 2);
-  assert.equal((workflow.match(/Publish Buildchain-owned artifact signing request/g) || []).length, 2);
-  assert.equal((workflow.match(/Seal detached signing control request/g) || []).length, 2);
-  assert.equal((workflow.match(/Publish detached signing control request/g) || []).length, 2);
-  assert.equal((workflow.match(/Dispatch and await exact Buildchain signing authority/g) || []).length, 1);
-  assert.equal((workflow.match(/Verify and import final signed bytes on GitHub-hosted infrastructure/g) || []).length, 1);
+  assert.equal(
+    (workflow.match(/Seal declared artifact signing requests/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/Publish Buildchain-owned artifact signing request/g) || [])
+      .length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/Seal detached signing control request/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/Publish detached signing control request/g) || []).length,
+    2,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /Dispatch and await exact Buildchain signing authority/g,
+      ) || []
+    ).length,
+    1,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /Verify and import final signed bytes on GitHub-hosted infrastructure/g,
+      ) || []
+    ).length,
+    1,
+  );
   assert.doesNotMatch(workflow, /Download immutable signed result\n/);
-  assert.equal((workflow.match(/Publish signing finalization delegation/g) || []).length, 1);
-  assert.match(workflow, /artifact-signing-control:[\s\S]*?runs-on: ubuntu-24\.04/);
-  assert.match(workflow, /artifact-signing-control:[\s\S]*?needs:[\s\S]*?- build-native[\s\S]*?- build-linux-container/);
+  assert.equal(
+    (workflow.match(/Publish signing finalization delegation/g) || []).length,
+    1,
+  );
+  assert.match(
+    workflow,
+    /artifact-signing-control:[\s\S]*?runs-on: ubuntu-24\.04/,
+  );
+  assert.match(
+    workflow,
+    /artifact-signing-control:[\s\S]*?needs:[\s\S]*?- build-native[\s\S]*?- build-linux-container/,
+  );
   assert.match(
     workflow,
     /finalize-artifact-signing:[\s\S]*?runs-on: \$\{\{ fromJSON\(inputs\.artifact-finalization-on-platform && matrix\.platform\.runner \|\| inputs\.control-runner-json\) \}\}/,
@@ -520,27 +719,45 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   const finalizationJob = workflow.slice(
     workflow.indexOf("  finalize-artifact-signing:"),
-    workflow.indexOf("\n  credential-island-macos:", workflow.indexOf("  finalize-artifact-signing:")),
+    workflow.indexOf(
+      "\n  credential-island-macos:",
+      workflow.indexOf("  finalize-artifact-signing:"),
+    ),
   );
-  assert.match(finalizationJob, /Download pre-signing deterministic artifact\n\s+uses:/);
-  assert.doesNotMatch(finalizationJob, /Download pre-signing deterministic artifact\n\s+if:/);
-  assert.match(finalizationJob, /Verify final artifact bytes with consumer policy/);
+  assert.match(
+    finalizationJob,
+    /Download pre-signing deterministic artifact\n\s+uses:/,
+  );
+  assert.doesNotMatch(
+    finalizationJob,
+    /Download pre-signing deterministic artifact\n\s+if:/,
+  );
+  assert.match(
+    finalizationJob,
+    /Verify final artifact bytes with consumer policy/,
+  );
   assert.match(finalizationJob, /BUILDCHAIN_ARTIFACT_SIGNING_STATE:/);
   assert.ok(
     finalizationJob.indexOf("Verify and import final signed bytes") <
-      finalizationJob.indexOf("Verify final artifact bytes with consumer policy") &&
-      finalizationJob.indexOf("Verify final artifact bytes with consumer policy") <
-        finalizationJob.indexOf("Recompute manifest over final signed bytes"),
+      finalizationJob.indexOf(
+        "Verify final artifact bytes with consumer policy",
+      ) &&
+      finalizationJob.indexOf(
+        "Verify final artifact bytes with consumer policy",
+      ) < finalizationJob.indexOf("Recompute manifest over final signed bytes"),
     "consumer final-byte verification must run after signed-byte import and before manifest resealing",
   );
-  assert.match(workflow, /needs\.artifact-signing-control\.result == 'success'/);
-  assert.match(workflow, /needs\.finalize-artifact-signing\.result == 'success'/);
+  assert.match(
+    workflow,
+    /needs\.artifact-signing-control\.result == 'success'/,
+  );
+  assert.match(
+    workflow,
+    /needs\.finalize-artifact-signing\.result == 'success'/,
+  );
   assert.equal(
-    (
-      workflow.match(
-        /if \[ ! -f "\$\{signing_sealer\}" \]; then/g,
-      ) || []
-    ).length,
+    (workflow.match(/if \[ ! -f "\$\{signing_sealer\}" \]; then/g) || [])
+      .length,
     2,
   );
   assert.equal(
@@ -560,26 +777,52 @@ test("reusable build workflow exposes the required surface contract", () => {
     2,
   );
   const firstBuild = workflow.indexOf("      - name: Run build lifecycle");
-  const firstSeal = workflow.indexOf("      - name: Seal declared artifact signing requests");
+  const firstSeal = workflow.indexOf(
+    "      - name: Seal declared artifact signing requests",
+  );
   const firstVerify = workflow.indexOf("      - name: Run verify lifecycle");
   const signingControl = workflow.indexOf("  artifact-signing-control:");
-  assert.ok(firstBuild < firstSeal && firstSeal < firstVerify, "unsigned requests must be sealed between build and verify");
-  assert.ok(firstVerify < signingControl, "the detached controller must be scheduled after the caller build jobs");
+  assert.ok(
+    firstBuild < firstSeal && firstSeal < firstVerify,
+    "unsigned requests must be sealed between build and verify",
+  );
+  assert.ok(
+    firstVerify < signingControl,
+    "the detached controller must be scheduled after the caller build jobs",
+  );
   assert.doesNotMatch(
     workflow.slice(workflow.indexOf("  build-native:"), signingControl),
     /Dispatch and await exact Buildchain signing authority/u,
   );
-  assert.match(workflow, /signing-request-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
+  assert.match(
+    workflow,
+    /signing-request-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
+  );
   assert.match(workflow, /process-summary-path:/);
   assert.match(workflow, /sample-process-tree:/);
   assert.match(workflow, /process-sample-interval-ms:/);
   assert.match(workflow, /requested-parallelism:/);
   assert.match(workflow, /artifact-transfer-mode:/);
   assert.match(workflow, /artifact-signing-request-upload-no-proxy:/);
-  assert.equal((workflow.match(/vars\.BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY/g) || []).length, 2);
-  assert.equal((workflow.match(/Resolve artifact signing request upload route/g) || []).length, 2);
   assert.equal(
-    (workflow.match(/NO_PROXY: \$\{\{ steps\.signing-request-upload-route\.outputs\.no-proxy \}\}/g) || []).length,
+    (
+      workflow.match(
+        /vars\.BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY/g,
+      ) || []
+    ).length,
+    2,
+  );
+  assert.equal(
+    (workflow.match(/Resolve artifact signing request upload route/g) || [])
+      .length,
+    2,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /NO_PROXY: \$\{\{ steps\.signing-request-upload-route\.outputs\.no-proxy \}\}/g,
+      ) || []
+    ).length,
     2,
   );
   assert.match(workflow, /s3-to-github-artifacts/);
@@ -597,7 +840,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /checkout-cache-fetch-attempts:/);
   assert.match(workflow, /checkout-history-mode:/);
   assert.equal(
-    (workflow.match(/BUILDCHAIN_CHECKOUT_HISTORY_MODE: \$\{\{ inputs\.checkout-history-mode \}\}/g) || []).length,
+    (
+      workflow.match(
+        /BUILDCHAIN_CHECKOUT_HISTORY_MODE: \$\{\{ inputs\.checkout-history-mode \}\}/g,
+      ) || []
+    ).length,
     2,
   );
   assert.match(workflow, /shifu-cache-profile-ref:/);
@@ -605,10 +852,7 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /compiler-cache-provider:/);
   assert.match(workflow, /compiler-cache-platforms-json:/);
   assert.match(workflow, /compiler-cache-required:/);
-  assert.equal(
-    (workflow.match(/SHIFU_CACHE_PROFILE_REF:/g) || []).length,
-    6,
-  );
+  assert.equal((workflow.match(/SHIFU_CACHE_PROFILE_REF:/g) || []).length, 6);
   assert.equal(
     (workflow.match(/SHIFU_CACHE_PROFILE_DIGEST:/g) || []).length,
     8,
@@ -618,7 +862,11 @@ test("reusable build workflow exposes the required surface contract", () => {
     2,
   );
   assert.equal(
-    (workflow.match(/node \.buildchain\/runtime\/scripts\/compiler-cache-evidence\.mjs prepare/g) || []).length,
+    (
+      workflow.match(
+        /node \.buildchain\/runtime\/scripts\/compiler-cache-evidence\.mjs prepare/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
@@ -626,64 +874,140 @@ test("reusable build workflow exposes the required surface contract", () => {
     2,
   );
   assert.equal(
-    (workflow.match(/node \.buildchain\/runtime\/scripts\/compiler-cache-evidence\.mjs verify/g) || []).length,
+    (
+      workflow.match(
+        /node \.buildchain\/runtime\/scripts\/compiler-cache-evidence\.mjs verify/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
-    (workflow.match(/\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/compiler-cache-preparation\.json/g) || []).length,
+    (
+      workflow.match(
+        /\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/compiler-cache-preparation\.json/g,
+      ) || []
+    ).length,
     5,
   );
   assert.equal(
-    (workflow.match(/BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS:/g) || []).length,
+    (workflow.match(/BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS:/g) || [])
+      .length,
     4,
   );
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS:/);
   assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE/);
-  assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE/,
+  );
   assert.equal(
-    (workflow.match(/node \.buildchain\/runtime\/scripts\/locked-source-checkout\.mjs/g) || []).length,
+    (
+      workflow.match(
+        /node \.buildchain\/runtime\/scripts\/locked-source-checkout\.mjs/g,
+      ) || []
+    ).length,
     0,
   );
   assert.match(workflow, /buildchain-workflow-shell-sha:/);
   assert.match(workflow, /"workflow-shell-sha": workflowShellSha/);
   assert.match(workflow, /Checkout Buildchain workflow shell/);
-  assert.match(workflow, /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/);
-  assert.match(workflow, /path: \|\n\s+\.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/);
-  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-delegation\.mjs/);
-  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-controller\.mjs/);
-  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/artifact-signing-controller-core\.mjs/);
-  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-runner-burst-core\.mjs/);
-  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-windows-jit-core\.mjs/);
-  assert.match(workflow, /\.buildchain\/workflow-shell\/scripts\/aws-macos-jit-core\.mjs/);
+  assert.match(
+    workflow,
+    /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /path: \|\n\s+\.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /\.buildchain\/workflow-shell\/scripts\/artifact-signing-delegation\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /\.buildchain\/workflow-shell\/scripts\/artifact-signing-controller\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /\.buildchain\/workflow-shell\/scripts\/artifact-signing-controller-core\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /\.buildchain\/workflow-shell\/scripts\/aws-runner-burst-core\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /\.buildchain\/workflow-shell\/scripts\/aws-windows-jit-core\.mjs/,
+  );
+  assert.match(
+    workflow,
+    /\.buildchain\/workflow-shell\/scripts\/aws-macos-jit-core\.mjs/,
+  );
   assert.doesNotMatch(
-    fs.readFileSync(path.resolve(import.meta.dirname, "..", "scripts", "git-fetch-process-tree.mjs"), "utf8"),
+    fs.readFileSync(
+      path.resolve(
+        import.meta.dirname,
+        "..",
+        "scripts",
+        "git-fetch-process-tree.mjs",
+      ),
+      "utf8",
+    ),
     /from\s+["']\.\.\//,
     "the flattened runtime bootstrap must not import files outside scripts/",
   );
-  assert.equal((workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g) || []).length, 0);
   assert.equal(
-    (workflow.match(/node \.buildchain\/runtime-bootstrap\/artifact-signing-controller\.mjs seal/g) || []).length,
+    (
+      workflow.match(
+        /node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g,
+      ) || []
+    ).length,
+    0,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /node \.buildchain\/runtime-bootstrap\/artifact-signing-controller\.mjs seal/g,
+      ) || []
+    ).length,
     2,
   );
   assert.match(workflow, /Upload Buildchain runtime checkout bootstrap/);
   assert.equal(
-    (workflow.match(/Download Buildchain runtime checkout bootstrap/g) || []).length,
+    (workflow.match(/Download Buildchain runtime checkout bootstrap/g) || [])
+      .length,
     2,
   );
   assert.equal(
-    (workflow.match(/node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g) || []).length,
+    (
+      workflow.match(
+        /node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g,
+      ) || []
+    ).length,
     4,
   );
   assert.equal(
-    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_PATH: \.buildchain\/runtime/g) || []).length,
+    (
+      workflow.match(
+        /BUILDCHAIN_SOURCE_CHECKOUT_PATH: \.buildchain\/runtime/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
-    (workflow.match(/BUILDCHAIN_SOURCE_REPOSITORY: \$\{\{ inputs\.buildchain-repository \}\}/g) || []).length,
+    (
+      workflow.match(
+        /BUILDCHAIN_SOURCE_REPOSITORY: \$\{\{ inputs\.buildchain-repository \}\}/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
-    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/runtime-checkout\.json/g) || []).length,
+    (
+      workflow.match(
+        /BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/runtime-checkout\.json/g,
+      ) || []
+    ).length,
     2,
   );
   const nativeJob = workflow.slice(
@@ -694,18 +1018,38 @@ test("reusable build workflow exposes the required surface contract", () => {
     workflow.indexOf("\n  build-linux-container:"),
     workflow.indexOf("\n  relay-artifacts:"),
   );
-  assert.ok(nativeJob.indexOf("Setup Node.js") < nativeJob.indexOf("Download Buildchain runtime checkout bootstrap"));
-  assert.ok(containerJob.indexOf("Setup Buildchain Node.js") < containerJob.indexOf("Download Buildchain runtime checkout bootstrap"));
+  assert.ok(
+    nativeJob.indexOf("Setup Node.js") <
+      nativeJob.indexOf("Download Buildchain runtime checkout bootstrap"),
+  );
+  assert.ok(
+    containerJob.indexOf("Setup Buildchain Node.js") <
+      containerJob.indexOf("Download Buildchain runtime checkout bootstrap"),
+  );
   for (const job of [nativeJob, containerJob]) {
-    assert.ok(job.indexOf("Download Buildchain runtime checkout bootstrap") < job.indexOf("Checkout Buildchain runtime"));
-    assert.doesNotMatch(job, /Checkout Buildchain runtime\n\s+uses: actions\/checkout/);
+    assert.ok(
+      job.indexOf("Download Buildchain runtime checkout bootstrap") <
+        job.indexOf("Checkout Buildchain runtime"),
+    );
+    assert.doesNotMatch(
+      job,
+      /Checkout Buildchain runtime\n\s+uses: actions\/checkout/,
+    );
   }
   assert.equal(
-    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/source-checkout\.json/g) || []).length,
+    (
+      workflow.match(
+        /BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/source-checkout\.json/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
-    (workflow.match(/\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/source-checkout\.json/g) || []).length,
+    (
+      workflow.match(
+        /\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/source-checkout\.json/g,
+      ) || []
+    ).length,
     5,
   );
   assert.match(workflow, /id-token: write/);
@@ -716,10 +1060,19 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /artifact-relay-s3\.mjs download/);
   assert.match(workflow, /artifact-relay-s3\.mjs cleanup/);
   assert.match(workflow, /aws-actions\/configure-aws-credentials@v6\.1\.0/);
-  assert.match(workflow, /artifact-name \}\}-relay-manifest-\$\{\{ matrix\.platform\.id \}\}-/);
+  assert.match(
+    workflow,
+    /artifact-name \}\}-relay-manifest-\$\{\{ matrix\.platform\.id \}\}-/,
+  );
   assert.match(workflow, /relay-artifacts:/);
-  assert.match(workflow, /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'/);
-  assert.match(workflow, /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts'/);
+  assert.match(
+    workflow,
+    /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'/,
+  );
+  assert.match(
+    workflow,
+    /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts'/,
+  );
   assert.match(
     workflow,
     /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts' \|\| matrix\.platform\.githubHosted == true/,
@@ -742,8 +1095,11 @@ test("reusable build workflow exposes the required surface contract", () => {
     workflow.indexOf("\n  artifact-signing-control:"),
   );
   assert.equal(
-    (relayJob.match(/if: \$\{\{ matrix\.platform\.githubHosted != true \}\}/g) || [])
-      .length,
+    (
+      relayJob.match(
+        /if: \$\{\{ matrix\.platform\.githubHosted != true \}\}/g,
+      ) || []
+    ).length,
     9,
   );
   assert.match(workflow, /process-summary-required:/);
@@ -770,40 +1126,85 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
   assert.match(workflow, /generate-release-candidate-passport\.mjs/);
   assert.match(workflow, /release-candidate-enabled/);
-  assert.match(workflow, /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ needs\.resolve-source\.outputs\.publish-source-channel \|\| needs\.trust-gate\.outputs\.publish-channel \}\}/);
-  assert.match(workflow, /BUILDCHAIN_RC_PR_BASE_REF: \$\{\{ github\.base_ref \|\| github\.event\.pull_request\.base\.ref \}\}/);
-  assert.match(workflow, /release-candidate-target-channel=\$\{rc_target_channel\}/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ needs\.resolve-source\.outputs\.publish-source-channel \|\| needs\.trust-gate\.outputs\.publish-channel \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RC_PR_BASE_REF: \$\{\{ github\.base_ref \|\| github\.event\.pull_request\.base\.ref \}\}/,
+  );
+  assert.match(
+    workflow,
+    /release-candidate-target-channel=\$\{rc_target_channel\}/,
+  );
   assert.match(workflow, /alpha\/\*\)/);
   assert.match(workflow, /release\/\*\)/);
-  assert.match(workflow, /if: \$\{\{ steps\.names\.outputs\.release-candidate-enabled == 'true' \}\}/);
-  assert.match(workflow, /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ steps\.names\.outputs\.release-candidate-target-channel \}\}/);
+  assert.match(
+    workflow,
+    /if: \$\{\{ steps\.names\.outputs\.release-candidate-enabled == 'true' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ steps\.names\.outputs\.release-candidate-target-channel \}\}/,
+  );
   assert.match(workflow, /diagnostics-summary\.json/);
-  assert.match(workflow, /\$\{\{ inputs\.artifact-name \}\}-release-candidate-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
+  assert.match(
+    workflow,
+    /\$\{\{ inputs\.artifact-name \}\}-release-candidate-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
+  );
   assert.match(workflow, /generate-release-candidate-passport\.mjs/);
-  assert.match(workflow, /-diagnostics-summary-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/);
+  assert.match(
+    workflow,
+    /-diagnostics-summary-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
+  );
   assert.match(workflow, /Upload aggregate diagnostics summary/);
   assert.equal(
-    (workflow.match(/manifest-artifact-name: \$\{\{ inputs\.artifact-name \}\}-manifest-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g) || []).length,
+    (
+      workflow.match(
+        /manifest-artifact-name: \$\{\{ inputs\.artifact-name \}\}-manifest-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
-    (workflow.match(/diagnostics-artifact-name: \$\{\{ inputs\.artifact-name \}\}-diagnostics-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g) || []).length,
+    (
+      workflow.match(
+        /diagnostics-artifact-name: \$\{\{ inputs\.artifact-name \}\}-diagnostics-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
-    (workflow.match(/process-summary-path: \$\{\{ inputs\.process-summary-path \|\| \(inputs\.sample-process-tree && '\.buildchain\/diagnostics\/process-summary\.json'\) \|\| '' \}\}/g) || []).length,
+    (
+      workflow.match(
+        /process-summary-path: \$\{\{ inputs\.process-summary-path \|\| \(inputs\.sample-process-tree && '\.buildchain\/diagnostics\/process-summary\.json'\) \|\| '' \}\}/g,
+      ) || []
+    ).length,
     4,
   );
   assert.equal(
-    (workflow.match(/sample-process-tree: \$\{\{ inputs\.sample-process-tree \}\}/g) || []).length,
+    (
+      workflow.match(
+        /sample-process-tree: \$\{\{ inputs\.sample-process-tree \}\}/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
-    (workflow.match(/process-summary-required: \$\{\{ inputs\.require-build \}\}/g) || []).length,
+    (
+      workflow.match(
+        /process-summary-required: \$\{\{ inputs\.require-build \}\}/g,
+      ) || []
+    ).length,
     2,
   );
   assert.equal(
-    (workflow.match(/process-summary-required: \$\{\{ inputs\.process-summary-path != '' \|\| inputs\.require-build \}\}/g) || []).length,
+    (
+      workflow.match(
+        /process-summary-required: \$\{\{ inputs\.process-summary-path != '' \|\| inputs\.require-build \}\}/g,
+      ) || []
+    ).length,
     2,
   );
   assert.match(workflow, /publish-allowed:/);
@@ -811,7 +1212,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /publish-source-sha:/);
   assert.match(workflow, /release-manifest-json:/);
   assert.equal(
-    (workflow.match(/artifact-summary-json: \$\{\{ steps\.summary\.outputs\.artifact-summary-json \}\}/g) || []).length,
+    (
+      workflow.match(
+        /artifact-summary-json: \$\{\{ steps\.summary\.outputs\.artifact-summary-json \}\}/g,
+      ) || []
+    ).length,
     1,
   );
   assert.match(
@@ -822,10 +1227,17 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /artifact-compression-level:/);
   assert.match(workflow, /default: 0/);
   assert.equal(
-    (workflow.match(/name: Upload deterministic artifact[\s\S]*?compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/g) || []).length,
+    (
+      workflow.match(
+        /name: Upload deterministic artifact[\s\S]*?compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/g,
+      ) || []
+    ).length,
     3,
   );
-  assert.match(router, /artifact-compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/);
+  assert.match(
+    router,
+    /artifact-compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/,
+  );
 });
 
 test("publication artifact workflow exposes paper artifact contract", () => {
@@ -920,32 +1332,65 @@ test("paper release workflow publishes declared npm package with source lock and
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
-  assert.match(workflow, /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RUNTIME_CLASS: \$\{\{ steps\.runtime\.outputs\.runtime-class \}\}/,
+  );
   assert.match(workflow, /toolchain-type:/);
-  assert.match(workflow, /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/);
+  assert.match(
+    workflow,
+    /ghcr\.io\/kungfu-systems\/build-images\/latex-pdf-builder/,
+  );
   assert.match(workflow, /publication-artifact manifest/);
   assert.match(workflow, /publication-artifact npm-package/);
-  assert.match(workflow, /path\.resolve\(process\.cwd\(\), result\.outputDir\)/);
+  assert.match(
+    workflow,
+    /path\.resolve\(process\.cwd\(\), result\.outputDir\)/,
+  );
   assert.match(workflow, /write\("package-dir", result\.outputDir\)/);
   assert.match(workflow, /npm pack --dry-run/);
-  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ steps\.package\.outputs\.publish-required-artifacts-json \}\}/);
+  assert.match(
+    workflow,
+    /publish-required-artifacts-json: \$\{\{ steps\.package\.outputs\.publish-required-artifacts-json \}\}/,
+  );
   assert.match(workflow, /publish-command: >-/);
   assert.match(workflow, /scripts\/npm-publish-transaction\.mjs/);
   assert.match(workflow, /publish-mode: "publish-final-version"/);
   assert.match(workflow, /publish-auth: "trusted-publishing"/);
-  assert.match(workflow, /publish-dist-tag: \$\{\{ steps\.package\.outputs\.dist-tag \}\}/);
+  assert.match(
+    workflow,
+    /publish-dist-tag: \$\{\{ steps\.package\.outputs\.dist-tag \}\}/,
+  );
   assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
   assert.match(workflow, /publish-gate\/\$\{channel\}/);
   assert.match(workflow, /require-publish-source-lock: "true"/);
-  assert.match(workflow, /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/);
-  assert.match(workflow, /publish-source-sha: \$\{\{ steps\.publish-gate\.outputs\.sha \}\}/);
-  assert.match(workflow, /publish-source-locked: \$\{\{ steps\.publish-gate\.outputs\.locked \}\}/);
-  assert.match(workflow, /release-passport-product-name: \$\{\{ inputs\.release-passport-product-name \|\| steps\.package\.outputs\.package-name \}\}/);
+  assert.match(
+    workflow,
+    /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-source-sha: \$\{\{ steps\.publish-gate\.outputs\.sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-source-locked: \$\{\{ steps\.publish-gate\.outputs\.locked \}\}/,
+  );
+  assert.match(
+    workflow,
+    /release-passport-product-name: \$\{\{ inputs\.release-passport-product-name \|\| steps\.package\.outputs\.package-name \}\}/,
+  );
   assert.match(workflow, /github-release:/);
   assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
   assert.match(workflow, /publicationManifest\.artifacts/);
-  assert.match(workflow, /writeMultiline\("github-release-artifact-paths", releaseArtifactPaths\)/);
-  assert.match(workflow, /github-release-artifact-paths: \$\{\{ steps\.package\.outputs\.github-release-artifact-paths \}\}/);
+  assert.match(
+    workflow,
+    /writeMultiline\("github-release-artifact-paths", releaseArtifactPaths\)/,
+  );
+  assert.match(
+    workflow,
+    /github-release-artifact-paths: \$\{\{ steps\.package\.outputs\.github-release-artifact-paths \}\}/,
+  );
   assert.match(workflow, /permissions:\n  contents: read/);
   assert.match(
     sealedWorkflow,
@@ -960,19 +1405,19 @@ test("paper release workflow publishes declared npm package with source lock and
     workflow,
     /name: Seal paper publication capability\n    permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read/,
   );
-  assert.match(workflow, /permissions:\n      checks: write\n      contents: write\n      id-token: write/);
-  assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
-  assert.match(workflow, /Preflight protected publication authority/);
   assert.match(
     workflow,
-    /github-token: \$\{\{ github\.token \}\}/,
+    /permissions:\n      checks: write\n      contents: write\n      id-token: write/,
   );
-  assert.match(workflow, /cannot read branch protection before publication build/);
-  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
+  assert.doesNotMatch(workflow, /^ {4}environment\s*:/m);
+  assert.match(workflow, /Preflight protected publication authority/);
+  assert.match(workflow, /github-token: \$\{\{ github\.token \}\}/);
   assert.match(
-    docs,
-    /paper-release-sealed\.yml@<exact-buildchain-sha>/,
+    workflow,
+    /cannot read branch protection before publication build/,
   );
+  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
+  assert.match(docs, /paper-release-sealed\.yml@<exact-buildchain-sha>/);
   assert.match(docs, /does not use a long-lived token for npm publication/);
   assert.match(
     docs,
@@ -994,16 +1439,65 @@ test("paper release workflow publishes declared npm package with source lock and
 });
 
 test("artifact relay uploads to S3 and downloads verified GitHub artifact payloads without aws cli", async () => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-artifact-relay-"));
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-artifact-relay-"),
+  );
   const fakeS3Root = path.join(workspace, "fake-s3");
   fs.mkdirSync(path.join(workspace, "dist"), { recursive: true });
-  fs.mkdirSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64"), { recursive: true });
+  fs.mkdirSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64"), {
+    recursive: true,
+  });
   fs.writeFileSync(path.join(workspace, "dist", "package.tgz"), "payload\n");
-  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "manifest.json"), "{}\n");
-  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "summary.json"), "{}\n");
-  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "diagnostics.json"), "{}\n");
-  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "diagnostics-manifest.json"), "{}\n");
-  fs.writeFileSync(path.join(workspace, ".buildchain", "artifacts", "linux-x64", "events.jsonl"), "");
+  fs.writeFileSync(
+    path.join(
+      workspace,
+      ".buildchain",
+      "artifacts",
+      "linux-x64",
+      "manifest.json",
+    ),
+    "{}\n",
+  );
+  fs.writeFileSync(
+    path.join(
+      workspace,
+      ".buildchain",
+      "artifacts",
+      "linux-x64",
+      "summary.json",
+    ),
+    "{}\n",
+  );
+  fs.writeFileSync(
+    path.join(
+      workspace,
+      ".buildchain",
+      "artifacts",
+      "linux-x64",
+      "diagnostics.json",
+    ),
+    "{}\n",
+  );
+  fs.writeFileSync(
+    path.join(
+      workspace,
+      ".buildchain",
+      "artifacts",
+      "linux-x64",
+      "diagnostics-manifest.json",
+    ),
+    "{}\n",
+  );
+  fs.writeFileSync(
+    path.join(
+      workspace,
+      ".buildchain",
+      "artifacts",
+      "linux-x64",
+      "events.jsonl",
+    ),
+    "",
+  );
 
   const oldPath = process.env.PATH;
   const oldFakeRoot = process.env.BUILDCHAIN_ARTIFACT_RELAY_FAKE_S3_ROOT;
@@ -1067,17 +1561,43 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
       region: "cn-north-1",
       platformId: "linux-x64",
     });
-    assert.equal(download.objectCount, manifest.groups.reduce((sum, group) => sum + group.fileCount, 0));
     assert.equal(
-      fs.readFileSync(path.join(workspace, "relayed", "payload", "dist", "package.tgz"), "utf8"),
+      download.objectCount,
+      manifest.groups.reduce((sum, group) => sum + group.fileCount, 0),
+    );
+    assert.equal(
+      fs.readFileSync(
+        path.join(workspace, "relayed", "payload", "dist", "package.tgz"),
+        "utf8",
+      ),
       "payload\n",
     );
     assert.equal(
-      fs.readFileSync(path.join(workspace, "relayed", "manifest", ".buildchain", "artifacts", "linux-x64", "manifest.json"), "utf8"),
+      fs.readFileSync(
+        path.join(
+          workspace,
+          "relayed",
+          "manifest",
+          ".buildchain",
+          "artifacts",
+          "linux-x64",
+          "manifest.json",
+        ),
+        "utf8",
+      ),
       "{}\n",
     );
     assert.equal(
-      fs.readFileSync(path.join(workspace, "relayed", "credential-input", "dist", "package.tgz"), "utf8"),
+      fs.readFileSync(
+        path.join(
+          workspace,
+          "relayed",
+          "credential-input",
+          "dist",
+          "package.tgz",
+        ),
+        "utf8",
+      ),
       "payload\n",
     );
     const cleanup = await cleanupRelayArtifacts({
@@ -1088,7 +1608,9 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
     assert.equal(cleanup.objectCount, download.objectCount);
     const remainingObjects = fs
       .readdirSync(path.join(fakeS3Root, "relay-bucket"), { recursive: true })
-      .filter((entry) => fs.statSync(path.join(fakeS3Root, "relay-bucket", entry)).isFile());
+      .filter((entry) =>
+        fs.statSync(path.join(fakeS3Root, "relay-bucket", entry)).isFile(),
+      );
     assert.deepEqual(remainingObjects, []);
   } finally {
     process.env.PATH = oldPath;
@@ -1110,7 +1632,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     "utf8",
   );
   assert.match(workflow, /workflow_call:/);
-  assert.match(publicWorkflow, /publication-consumer-qualification-controller-sha:/);
+  assert.match(
+    publicWorkflow,
+    /publication-consumer-qualification-controller-sha:/,
+  );
   assert.match(
     publicWorkflow,
     /publication-consumer-qualification-controller-sha: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/,
@@ -1130,8 +1655,14 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
   assert.match(workflow, /Resolve checked out Buildchain runtime/);
   assert.match(workflow, /Check Buildchain contract lock/);
-  assert.match(workflow, /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/);
-  assert.match(workflow, /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/,
+  );
   assert.match(workflow, /Report consumer Buildchain contract drift/);
   assert.match(workflow, /allow-repository:/);
   assert.match(workflow, /default: ""/);
@@ -1151,97 +1682,232 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     /publish-rematerialize-on-resume: \$\{\{ inputs\.publish-rematerialize-on-resume \}\}/,
   );
   assert.match(workflow, /github-release:/);
-  assert.match(workflow, /github-release:\n\s+description: "Create\/update the public GitHub Release and upload Buildchain release passport\/evidence assets after a complete release transaction"\n\s+default: true/);
+  assert.match(
+    workflow,
+    /github-release:\n\s+description: "Create\/update the public GitHub Release and upload Buildchain release passport\/evidence assets after a complete release transaction"\n\s+default: true/,
+  );
   assert.match(workflow, /github-release-title:/);
   assert.match(workflow, /github-release-notes:/);
   assert.match(workflow, /release-passport-product-name:/);
   assert.match(workflow, /release-passport-impact-json:/);
-  assert.match(workflow, /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/);
-  assert.match(workflow, /release-passport-kfd-1-witness-jsons:/);
-  assert.match(workflow, /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \}\}/);
-  assert.match(workflow, /release-passport-kfd-2-claim-jsons:/);
-  assert.match(workflow, /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \}\}/);
-  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons:/);
-  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \}\}/);
-  assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
-  assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \}\}/);
-  assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
-  assert.match(workflow, /release-passport-kfd-adopter-manifest-json:/);
-  assert.match(workflow, /release-passport-kfd-adopter-manifest-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-json \}\}/);
-  assert.match(workflow, /release-passport-kfd-support-matrix-json:/);
-  assert.match(workflow, /release-passport-kfd-support-matrix-json: \$\{\{ inputs\.release-passport-kfd-support-matrix-json \}\}/);
-  assert.match(workflow, /release-passport-kfd-product-gate-jsons:/);
-  assert.match(workflow, /release-passport-kfd-product-gate-jsons: \$\{\{ inputs\.release-passport-kfd-product-gate-jsons \}\}/);
-  assert.match(workflow, /release-passport-invariant-passport-jsons:/);
-  assert.match(workflow, /release-passport-invariant-passport-jsons: \$\{\{ inputs\.release-passport-invariant-passport-jsons \}\}/);
-  assert.match(workflow, /release-passport-invariant-passport-command:/);
-  assert.match(workflow, /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/);
-  assert.match(workflow, /release-passport-evidence-jsons:/);
-  assert.match(workflow, /release-passport-evidence-jsons: \$\{\{ inputs\.release-passport-evidence-jsons \}\}/);
-  assert.match(workflow, /release-passport-attachment-command:/);
-  assert.match(workflow, /release-passport-attachment-command: \$\{\{ inputs\.release-passport-attachment-command \}\}/);
-  assert.match(workflow, /release-passport-buildchain-self-kfd:/);
-  assert.match(workflow, /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/);
-  assert.match(workflow, /github-artifact-attestation-policy-json:/);
-  assert.match(workflow, /release-passport-github-artifact-attestation-policy-jsons: \$\{\{ steps\.attestation-policy\.outputs\.path \}\}/);
-  assert.match(workflow, /name: Resolve GitHub artifact attestation policy/);
-  assert.match(workflow, /release-candidate-github-artifact-attestation-policy-paths/);
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@375b2d4b8a904776453773a33b4c4e4556c8c999/,
+    /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/,
+  );
+  assert.match(workflow, /release-passport-kfd-1-witness-jsons:/);
+  assert.match(
+    workflow,
+    /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \}\}/,
+  );
+  assert.match(workflow, /release-passport-kfd-2-claim-jsons:/);
+  assert.match(
+    workflow,
+    /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \}\}/,
+  );
+  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons:/);
+  assert.match(
+    workflow,
+    /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \}\}/,
+  );
+  assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
+  assert.match(
+    workflow,
+    /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \}\}/,
+  );
+  assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-json:/);
+  assert.match(
+    workflow,
+    /release-passport-kfd-adopter-manifest-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-json \}\}/,
+  );
+  assert.match(workflow, /release-passport-kfd-support-matrix-json:/);
+  assert.match(
+    workflow,
+    /release-passport-kfd-support-matrix-json: \$\{\{ inputs\.release-passport-kfd-support-matrix-json \}\}/,
+  );
+  assert.match(workflow, /release-passport-kfd-product-gate-jsons:/);
+  assert.match(
+    workflow,
+    /release-passport-kfd-product-gate-jsons: \$\{\{ inputs\.release-passport-kfd-product-gate-jsons \}\}/,
+  );
+  assert.match(workflow, /release-passport-invariant-passport-jsons:/);
+  assert.match(
+    workflow,
+    /release-passport-invariant-passport-jsons: \$\{\{ inputs\.release-passport-invariant-passport-jsons \}\}/,
+  );
+  assert.match(workflow, /release-passport-invariant-passport-command:/);
+  assert.match(
+    workflow,
+    /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/,
+  );
+  assert.match(workflow, /release-passport-evidence-jsons:/);
+  assert.match(
+    workflow,
+    /release-passport-evidence-jsons: \$\{\{ inputs\.release-passport-evidence-jsons \}\}/,
+  );
+  assert.match(workflow, /release-passport-attachment-command:/);
+  assert.match(
+    workflow,
+    /release-passport-attachment-command: \$\{\{ inputs\.release-passport-attachment-command \}\}/,
+  );
+  assert.match(workflow, /release-passport-buildchain-self-kfd:/);
+  assert.match(
+    workflow,
+    /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/,
+  );
+  assert.match(workflow, /github-artifact-attestation-policy-json:/);
+  assert.match(
+    workflow,
+    /release-passport-github-artifact-attestation-policy-jsons: \$\{\{ steps\.attestation-policy\.outputs\.path \}\}/,
+  );
+  assert.match(workflow, /name: Resolve GitHub artifact attestation policy/);
+  assert.match(
+    workflow,
+    /release-candidate-github-artifact-attestation-policy-paths/,
+  );
+  assert.match(
+    workflow,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@v4/,
   );
   assert.doesNotMatch(workflow, /github-artifact-attestation\.yml@v3/);
-  assert.match(workflow, /buildchain-ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/);
-  assert.match(workflow, /ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-buildchain-ref \}\}/);
+  assert.match(
+    workflow,
+    /buildchain-ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/,
+  );
+  assert.match(
+    workflow,
+    /ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-buildchain-ref \}\}/,
+  );
   assert.match(workflow, /artifact-metadata: write/);
   assert.match(workflow, /attestations: write/);
-  assert.match(workflow, /name: Publish verified attestation evidence to GitHub Release/);
+  assert.match(
+    workflow,
+    /name: Publish verified attestation evidence to GitHub Release/,
+  );
   assert.match(workflow, /publish-github-artifact-attestation-evidence\.mjs/);
   assert.match(workflow, /DRY_RUN: \$\{\{ inputs\.dry-run \}\}/);
   assert.match(workflow, /const dryRun = process\.env\.DRY_RUN === "true"/);
-  assert.match(workflow, /if \(dryRun\) \{\s+core\.notice\(`Dry-run would lock/);
+  assert.match(
+    workflow,
+    /if \(dryRun\) \{\s+core\.notice\(`Dry-run would lock/,
+  );
   assert.match(workflow, /core\.setOutput\("locked", "true"\)/);
   assert.match(workflow, /require-publish-source-lock: "true"/);
-  assert.match(workflow, /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/);
-  assert.match(workflow, /publish-source-sha: \$\{\{ steps\.publish-gate\.outputs\.sha \}\}/);
-  assert.match(workflow, /publish-source-locked: \$\{\{ steps\.publish-gate\.outputs\.locked \}\}/);
-  assert.match(workflow, /BUILDCHAIN_ARTIFACT_NAME: \$\{\{ inputs\.artifact-name \}\}/);
-  assert.match(workflow, /BUILDCHAIN_ARTIFACT_PATTERNS: \$\{\{ inputs\.artifact-patterns \}\}/);
-  assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/);
-  assert.match(workflow, /BUILDCHAIN_RC_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/);
-  assert.match(workflow, /BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: \$\{\{ inputs\.required-artifact-count \}\}/);
-  assert.match(workflow, /BUILDCHAIN_PUBLISH_PACKAGE_MAIN: \$\{\{ inputs\.publish-package-main \}\}/);
-  assert.match(workflow, /concurrency:\n\s+group: buildchain-release-promotion-\$\{\{ github\.repository \}\}\n\s+cancel-in-progress: false/);
+  assert.match(
+    workflow,
+    /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-source-sha: \$\{\{ steps\.publish-gate\.outputs\.sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-source-locked: \$\{\{ steps\.publish-gate\.outputs\.locked \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_ARTIFACT_NAME: \$\{\{ inputs\.artifact-name \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_ARTIFACT_PATTERNS: \$\{\{ inputs\.artifact-patterns \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RC_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: \$\{\{ inputs\.required-artifact-count \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_PUBLISH_PACKAGE_MAIN: \$\{\{ inputs\.publish-package-main \}\}/,
+  );
+  assert.match(
+    workflow,
+    /concurrency:\n\s+group: buildchain-release-promotion-\$\{\{ github\.repository \}\}\n\s+cancel-in-progress: false/,
+  );
   assert.match(workflow, /name: Revalidate promotion intent/);
   assert.match(workflow, /name: Revalidate queued promotion intent/);
   assert.match(workflow, /name: Preflight PR-stage release candidate evidence/);
   assert.match(workflow, /name: Plan exact publication version/);
-  assert.match(workflow, /name: Install exact publication planning dependencies/);
+  assert.match(
+    workflow,
+    /name: Install exact publication planning dependencies/,
+  );
   const publicationPlanStart = workflow.indexOf("  publication-plan:");
-  const publicationAuthorityStart = workflow.indexOf("  publication-authority:");
-  const publicationPlan = workflow.slice(publicationPlanStart, publicationAuthorityStart);
+  const publicationAuthorityStart = workflow.indexOf(
+    "  publication-authority:",
+  );
+  const publicationPlan = workflow.slice(
+    publicationPlanStart,
+    publicationAuthorityStart,
+  );
   assert.ok(
-    publicationPlan.indexOf("name: Install exact publication planning dependencies") <
-      publicationPlan.indexOf("name: Resolve exact publication transaction version"),
+    publicationPlan.indexOf(
+      "name: Install exact publication planning dependencies",
+    ) <
+      publicationPlan.indexOf(
+        "name: Resolve exact publication transaction version",
+      ),
     "exact publication planning must install source dependencies before version-state verification",
   );
-  assert.match(publicationPlan, /name: Validate consumer package manager contract/);
-  assert.match(publicationPlan, /publish-transaction-override: \$\{\{ inputs\.publish-transaction-override \}\}/);
+  assert.match(
+    publicationPlan,
+    /name: Validate consumer package manager contract/,
+  );
+  assert.match(
+    publicationPlan,
+    /publish-transaction-override: \$\{\{ inputs\.publish-transaction-override \}\}/,
+  );
   assert.match(publicationPlan, /corepack pnpm install --frozen-lockfile/);
   assert.doesNotMatch(publicationPlan, /corepack pnpm@11\.7\.0/);
-  assert.match(publicationPlan, /yarn install --immutable \|\| yarn install --frozen-lockfile/);
+  assert.match(
+    publicationPlan,
+    /yarn install --immutable \|\| yarn install --frozen-lockfile/,
+  );
   assert.match(publicationPlan, /npm ci/);
-  assert.match(publicationPlan, /Skipping dependency install for custom package manager/);
+  assert.match(
+    publicationPlan,
+    /Skipping dependency install for custom package manager/,
+  );
   assert.match(workflow, /planned-publication-version/);
-  assert.match(workflow, /publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
-  assert.match(workflow, /PUBLICATION_VERSION: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
-  assert.match(workflow, /expected-publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/);
+  assert.match(
+    workflow,
+    /publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/,
+  );
+  assert.match(
+    workflow,
+    /PUBLICATION_VERSION: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/,
+  );
+  assert.match(
+    workflow,
+    /expected-publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/,
+  );
   assert.match(workflow, /BUILDCHAIN_RC_DOWNLOAD: "false"/);
-  assert.match(workflow, /failure\(\) && !inputs\.dry-run && steps\.rc\.outcome != ''/);
+  assert.match(
+    workflow,
+    /failure\(\) && !inputs\.dry-run && steps\.rc\.outcome != ''/,
+  );
   assert.match(workflow, /compareCommitsWithBasehead/);
-  assert.match(workflow, /INPUT_PUBLISH_TRANSACTION_OVERRIDE: \$\{\{ inputs\.publish-transaction-override \}\}/);
-  assert.match(workflow, /const recoverableAdvance = durableRecovery && comparisonStatus === "ahead"/);
-  assert.match(workflow, /const superseded = !dryRun && !recoverableAdvance && comparisonStatus === "ahead"/);
+  assert.match(
+    workflow,
+    /INPUT_PUBLISH_TRANSACTION_OVERRIDE: \$\{\{ inputs\.publish-transaction-override \}\}/,
+  );
+  assert.match(
+    workflow,
+    /const recoverableAdvance = durableRecovery && comparisonStatus === "ahead"/,
+  );
+  assert.match(
+    workflow,
+    /const superseded = !dryRun && !recoverableAdvance && comparisonStatus === "ahead"/,
+  );
   assert.match(workflow, /!superseded && !recoverableAdvance/);
   assert.match(workflow, /moved incompatibly/);
   assert.match(workflow, /const action = superseded \? "noop" : "promote"/);
@@ -1255,28 +1921,78 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /publication-authority-workflow-path:/);
   assert.match(workflow, /release-candidate-wait-seconds:/);
   assert.match(workflow, /publication-auto-admission:/);
-  assert.match(workflow, /auto-admission: \$\{\{ inputs\.publication-auto-admission \}\}/);
+  assert.match(
+    workflow,
+    /auto-admission: \$\{\{ inputs\.publication-auto-admission \}\}/,
+  );
   assert.match(workflow, /publication-auto-no-gate:/);
-  assert.match(workflow, /auto-no-gate: \$\{\{ inputs\.publication-auto-no-gate \}\}/);
-  assert.match(workflow, /consumer-gate-command: \$\{\{ inputs\.publication-gate-command \}\}/);
-  assert.match(workflow, /consumer-gate-controller-sha: \$\{\{ inputs\.publication-gate-controller-sha \}\}/);
-  assert.match(workflow, /BUILDCHAIN_RC_WAIT_SECONDS: \$\{\{ inputs\.release-candidate-wait-seconds \}\}/);
-  assert.match(workflow, /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
-  assert.match(workflow, /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/);
-  assert.match(workflow, /authority-workflow-path: \$\{\{ inputs\.publication-authority-workflow-path \}\}/);
+  assert.match(
+    workflow,
+    /auto-no-gate: \$\{\{ inputs\.publication-auto-no-gate \}\}/,
+  );
+  assert.match(
+    workflow,
+    /consumer-gate-command: \$\{\{ inputs\.publication-gate-command \}\}/,
+  );
+  assert.match(
+    workflow,
+    /consumer-gate-controller-sha: \$\{\{ inputs\.publication-gate-controller-sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_RC_WAIT_SECONDS: \$\{\{ inputs\.release-candidate-wait-seconds \}\}/,
+  );
+  assert.match(
+    workflow,
+    /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/,
+  );
+  assert.match(
+    workflow,
+    /authority-workflow-path: \$\{\{ inputs\.publication-authority-workflow-path \}\}/,
+  );
   assert.match(workflow, /evidence-run-id:/);
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
-  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification\]/);
+  assert.match(
+    workflow,
+    /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+  );
+  assert.match(
+    workflow,
+    /needs: \[preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification\]/,
+  );
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
   assert.match(workflow, /name: Bind consumer publication predicate/);
-  assert.match(workflow, /name: Run consumer publication predicate/);
-  assert.match(workflow, /BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/);
-  assert.match(workflow, /const controllerSha = explicitControllerSha \|\| gateControllerSha \|\| sourceSha/);
+  assert.match(
+    workflow,
+    /name: Resolve exact v4 policy caller source[\s\S]*passport\.consumerPolicy\?\.receipt\?\.caller\?\.sourceSha/,
+  );
+  assert.match(
+    workflow,
+    /name: Checkout exact v4 policy caller source[\s\S]*ref: \$\{\{ steps\.v4-policy-caller\.outputs\.source-sha \}\}[\s\S]*path: \.buildchain\/runtime\/policy-caller/,
+  );
+  assert.match(
+    workflow,
+    /name: Run consumer publication predicate[\s\S]*BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: \$\{\{ steps\.v4-policy-caller\.outputs\.source-sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/,
+  );
+  assert.match(
+    workflow,
+    /const controllerSha = explicitControllerSha \|\| gateControllerSha \|\| sourceSha/,
+  );
   assert.match(workflow, /update\(`\$\{command\}\\0\$\{controllerSha\}`\)/);
   assert.match(workflow, /controller-sha=\$\{command \? controllerSha : ""\}/);
-  assert.match(workflow, /ref: \$\{\{ needs\.qualification-plan\.outputs\.controller-sha \}\}/);
+  assert.match(
+    workflow,
+    /ref: \$\{\{ needs\.qualification-plan\.outputs\.controller-sha \}\}/,
+  );
   assert.match(workflow, /permissions: \{\}/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_PATH/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH/);
@@ -1288,8 +2004,14 @@ test("release-candidate promote workflow is promote-only and never schedules a h
         workflow.indexOf("Seal deterministic qualification receipt"),
     "consumer code must not be able to replace the authority handoff used for receipt sealing",
   );
-  assert.match(workflow, /require-publication-qualification: \$\{\{ needs\.publication-qualification\.outputs\.required \}\}/);
-  assert.match(workflow, /publication-qualification-receipt-json: \$\{\{ needs\.publication-qualification\.outputs\.receipt-json \}\}/);
+  assert.match(
+    workflow,
+    /require-publication-qualification: \$\{\{ needs\.publication-qualification\.outputs\.required \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publication-qualification-receipt-json: \$\{\{ needs\.publication-qualification\.outputs\.receipt-json \}\}/,
+  );
   assert.match(
     workflow,
     /^ {4}environment: \$\{\{ inputs\.github-artifact-attestation-environment \}\}$/m,
@@ -1300,19 +2022,37 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     /generated-ref-update-token: \$\{\{ github\.token \}\}/,
   );
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.match(workflow, /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/);
-  assert.match(workflow, /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/);
+  assert.match(
+    workflow,
+    /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/,
+  );
   assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
   assert.match(workflow, /Install promotion dependencies/);
-  assert.match(workflow, /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/);
+  assert.match(
+    workflow,
+    /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/,
+  );
   assert.match(workflow, /corepack enable/);
   assert.match(workflow, /corepack pnpm install --frozen-lockfile/);
-  assert.match(workflow, /cd "\$\{RECONCILIATION_WORKSPACE\}"[\s\S]*corepack pnpm install --frozen-lockfile/);
+  assert.match(
+    workflow,
+    /cd "\$\{RECONCILIATION_WORKSPACE\}"[\s\S]*corepack pnpm install --frozen-lockfile/,
+  );
   assert.match(workflow, /Resolve post-release reconciliation checkout/);
-  assert.match(workflow, /Checkout current development channel for reconciliation/);
+  assert.match(
+    workflow,
+    /Checkout current development channel for reconciliation/,
+  );
   assert.match(workflow, /Install reconciliation dependencies/);
   assert.match(workflow, /workspace=\.buildchain\/reconciliation\/dev/);
-  assert.match(workflow, /reconciliation-workspace: \$\{\{ steps\.reconciliation\.outputs\.workspace \}\}/);
+  assert.match(
+    workflow,
+    /reconciliation-workspace: \$\{\{ steps\.reconciliation\.outputs\.workspace \}\}/,
+  );
   assert.match(workflow, /promote-only-release-candidate: "true"/);
   assert.match(workflow, /release-candidate-passport-path:/);
   assert.match(workflow, /release-candidate-build-summary-path:/);
@@ -1320,16 +2060,43 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-candidate-family-evidence-root:/);
   assert.match(workflow, /release-candidate-family-initiative-id:/);
   assert.match(workflow, /release-candidate-family-assignment-id:/);
-  assert.match(workflow, /required-status-check: \$\{\{ inputs\.required-status-check \}\}/);
-  assert.match(workflow, /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/);
-  assert.match(workflow, /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \}\}/);
-  assert.match(workflow, /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/);
-  assert.match(workflow, /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/);
-  assert.match(workflow, /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/);
-  assert.match(workflow, /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/);
+  assert.match(
+    workflow,
+    /required-status-check: \$\{\{ inputs\.required-status-check \}\}/,
+  );
+  assert.match(
+    workflow,
+    /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/,
+  );
+  assert.match(
+    workflow,
+    /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/,
+  );
+  assert.match(
+    workflow,
+    /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/,
+  );
   assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
-  assert.match(workflow, /github-release-title: \$\{\{ inputs\.github-release-title \}\}/);
-  assert.match(workflow, /github-release-notes: \$\{\{ inputs\.github-release-notes \}\}/);
+  assert.match(
+    workflow,
+    /github-release-title: \$\{\{ inputs\.github-release-title \}\}/,
+  );
+  assert.match(
+    workflow,
+    /github-release-notes: \$\{\{ inputs\.github-release-notes \}\}/,
+  );
   assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
   assert.match(workflow, /id: promote/);
   assert.ok(
@@ -1374,7 +2141,10 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /contents: read/);
   assert.doesNotMatch(workflow, /id-token:\s*write/);
   assert.doesNotMatch(workflow, /contents:\s*write/);
-  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
+  assert.doesNotMatch(
+    workflow,
+    /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/,
+  );
   assert.match(workflow, /BUILDCHAIN_USED_NONCES_JSON/);
   assert.match(workflow, /gate-aggregate-json=/);
   assert.match(workflow, /consumer-qualification-required:/);
@@ -1393,16 +2163,37 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /controllerReceipt:/);
   assert.match(workflow, /artifactManifests(?:,|:)/);
   assert.match(workflow, /artifactPayloads:/);
-  assert.match(workflow, /name: Restrict automatic admission to declared managed publication surfaces/);
-  assert.match(workflow, /release-candidate admission evidence must belong to the caller repository/);
-  assert.match(workflow, /release-candidate admission requires a repository-local publisher workflow path/);
-  assert.match(workflow, /release-candidate GitHub Release admission requires an empty publication-package-name and exact github-release:/);
+  assert.match(
+    workflow,
+    /name: Restrict automatic admission to declared managed publication surfaces/,
+  );
+  assert.match(
+    workflow,
+    /release-candidate admission evidence must belong to the caller repository/,
+  );
+  assert.match(
+    workflow,
+    /release-candidate admission requires a repository-local publisher workflow path/,
+  );
+  assert.match(
+    workflow,
+    /release-candidate GitHub Release admission requires an empty publication-package-name and exact github-release:/,
+  );
   assert.match(workflow, /publisher_mode="github-token"/);
-  assert.match(workflow, /release-candidate admission requires exactly one Gate aggregate, consumer Gate command, or explicit publication-auto-no-gate decision/);
+  assert.match(
+    workflow,
+    /release-candidate admission requires exactly one Gate aggregate, consumer Gate command, or explicit publication-auto-no-gate decision/,
+  );
   assert.match(workflow, /name: Checkout exact consumer Gate subject/);
   assert.match(workflow, /name: Checkout exact consumer Gate controller/);
-  assert.match(workflow, /name: Assemble consumer Gate from exact downloaded evidence/);
-  assert.match(workflow, /BUILDCHAIN_CONSUMER_GATE_COMMAND: \$\{\{ inputs\.consumer-gate-command \}\}/);
+  assert.match(
+    workflow,
+    /name: Assemble consumer Gate from exact downloaded evidence/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_CONSUMER_GATE_COMMAND: \$\{\{ inputs\.consumer-gate-command \}\}/,
+  );
   assert.match(workflow, /consumer-gate-controller-sha:/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_CONSUMER_CONTROLLER_SHA/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_SUBJECT_ROOT/);
@@ -1411,13 +2202,28 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /rebindPublicationGateAggregateForEquivalentTree/);
   assert.match(workflow, /consumer-gate-evidence-source-sha:/);
   assert.match(workflow, /BUILDCHAIN_PUBLICATION_EVIDENCE_SOURCE_TREE/);
-  assert.match(workflow, /name: Audit managed release-candidate publication control plane/);
-  assert.match(workflow, /--repository "\$\{\{ inputs\.evidence-repository \}\}"/);
-  assert.match(workflow, /--workflow-repository "\$\{\{ inputs\.buildchain-repository \}\}"/);
+  assert.match(
+    workflow,
+    /name: Audit managed release-candidate publication control plane/,
+  );
+  assert.match(
+    workflow,
+    /--repository "\$\{\{ inputs\.evidence-repository \}\}"/,
+  );
+  assert.match(
+    workflow,
+    /--workflow-repository "\$\{\{ inputs\.buildchain-repository \}\}"/,
+  );
   assert.match(workflow, /--source-sha "\$\{\{ inputs\.source-sha \}\}"/);
-  assert.match(workflow, /--workflow "\$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}"/);
+  assert.match(
+    workflow,
+    /--workflow "\$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}"/,
+  );
   assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
-  assert.match(workflow, /BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: \$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: \$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}/,
+  );
   assert.match(workflow, /name: Assemble managed release-candidate admission/);
   assert.match(workflow, /BUILDCHAIN_PLANNED_PUBLICATION_VERSION/);
   assert.match(workflow, /authority publication version mismatch/);
@@ -1449,7 +2255,10 @@ test("self-publication admission assembly binds downloaded evidence without publ
   assert.match(script, /policyDigest: gateBindings\.policyDigest/);
   assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
   assert.match(script, /github-hosted-single-job/);
-  assert.doesNotMatch(script, /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/);
+  assert.doesNotMatch(
+    script,
+    /NODE_AUTH_TOKEN|NPM_TOKEN|BUILDCHAIN_PROMOTION_TOKEN/,
+  );
 });
 
 test("publication artifact admission uses validated Gate policy bindings", () => {
@@ -1469,7 +2278,10 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.match(script, /provider-at-transaction/);
   assert.match(script, /authorizationDeferred: true/);
   assert.match(script, /configurationRead: false/);
-  assert.match(script, /workflowRef \? `\?ref=\$\{encodeURIComponent\(workflowRef\)\}`/);
+  assert.match(
+    script,
+    /workflowRef \? `\?ref=\$\{encodeURIComponent\(workflowRef\)\}`/,
+  );
   assert.match(script, /evidenceSource: "exact-workflow-source"/);
   assert.match(script, /evidenceSource: "exact-workflow-job"/);
   assert.match(script, /policyMode: "provider-enforced-transaction"/);
@@ -1521,6 +2333,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /diagnostic-context:/);
   assert.match(workflow, /required-status-checks:/);
   assert.match(workflow, /queue-admission-context:/);
+  assert.match(workflow, /active-lease-context:/);
+  assert.match(workflow, /BUILDCHAIN_DEV_PR_ACTIVE_LEASE_CONTEXT/);
   assert.match(workflow, /default: "check \/ check"/);
   assert.match(workflow, /ready-label:/);
   assert.match(workflow, /block-labels:/);
@@ -1544,14 +2358,50 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /checks: read/);
   assert.match(workflow, /statuses: write/);
   assert.match(workflow, /continue-on-error: true/);
-  assert.match(workflow, /Qualify exact source before scheduling[\s\S]*--landing-mode queue[\s\S]*--qualification-only/);
+  assert.match(
+    workflow,
+    /Qualify exact source before scheduling[\s\S]*--landing-mode queue[\s\S]*--qualification-only/,
+  );
   assert.match(workflow, /Enforce targeted admission result/);
   assert.match(workflow, /buildchain-dev-pr-admission-/);
-  assert.match(workflow, /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_DEV_PR_LANDING_MODE: \$\{\{ inputs\.landing-mode \}\}/,
+  );
   assert.match(workflow, /BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT:/);
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
+  assert.match(workflow, /legacy-active-owner-binding-json:/);
+  assert.match(workflow, /legacy-phase-less-active-owner/);
+  const legacyStart = workflow.indexOf(
+    'if [ "$selected_phase" = "legacy-active" ]',
+  );
+  const legacyHandoff = workflow.slice(
+    legacyStart,
+    workflow.indexOf(
+      "            else\n              handoff_args+=(",
+      legacyStart,
+    ),
+  );
+  assert.doesNotMatch(legacyHandoff, /nativeCommandContract|native-command/);
+  assert.match(legacyHandoff, /\.observation\.stateRoot/);
+  assert.match(legacyHandoff, /\.observation\.activeWarrant\.fencingToken/);
+  assert.match(legacyHandoff, /\.observation\.activeWarrant\.generation/);
+  assert.match(workflow, /\.receipt\.expectedOldStateRoot/);
+  assert.match(workflow, /\.buildchain\/dev-delivery\/submission\.json/);
+  assert.doesNotMatch(workflow, /\.buildchain\/dev-delivery\/result\.json/);
+  assert.match(
+    workflow,
+    /\$legacyBinding\.stateRoot == \$legacyOwnerStateRoot/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /\$legacyBinding\.stateRoot == \.observation\.stateRoot/,
+  );
 
-  const verify = fs.readFileSync(path.join(root, ".github/workflows/verify.yml"), "utf8");
+  const verify = fs.readFileSync(
+    path.join(root, ".github/workflows/verify.yml"),
+    "utf8",
+  );
   assert.match(verify, /pull_request:/);
   assert.match(verify, /merge_group:/);
   assert.match(verify, /types: \[checks_requested\]/);
@@ -1576,45 +2426,332 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
 });
 
-test("Buildchain self-delivery requires an exact Warrant before Merge Queue admission", () => {
+test("Buildchain self-delivery exposes the complete two-phase Warrant caller", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/buildchain-dev-delivery.yml"),
     "utf8",
+  );
+  const stableLock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain/contract-lock.json"), "utf8"),
+  );
+  const alphaLock = JSON.parse(
+    fs.readFileSync(
+      path.join(root, ".buildchain/alpha-contract-lock.json"),
+      "utf8",
+    ),
+  );
+  assert.equal(stableLock.buildchain.ref, "v4");
+  assert.equal(alphaLock.buildchain.ref, "v4-alpha");
+  const publicContract = JSON.parse(
+    fs.readFileSync(
+      path.join(root, "dist/site/buildchain-contract.json"),
+      "utf8",
+    ),
+  );
+  const deliverySurface = publicContract.surfaces.find(
+    (entry) => entry.id === "dev-pr-auto-merge",
+  );
+  assert.equal(
+    deliverySurface.publicRef,
+    "kungfu-systems/buildchain/.github/workflows/dev-pr-auto-merge.yml@v4-alpha",
+  );
+  assert.equal(
+    deliverySurface.breakingDefaults.durableSelfDeliveryRef,
+    "v4-alpha",
   );
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
   assert.match(workflow, /native-roots-json:/);
-  assert.match(workflow, /expected-pr-number: \$\{\{ fromJSON\(github\.event\.inputs\.expected-pr-number\) \}\}/);
-  assert.match(workflow, /assignment-root: \$\{\{ fromJSON\(github\.event\.inputs\.native-roots-json\)\.assignmentRoot \}\}/);
-  assert.match(workflow, /initiative-root: \$\{\{ fromJSON\(github\.event\.inputs\.native-roots-json\)\.initiativeRoot \}\}/);
+  assert.match(
+    workflow,
+    /repository_dispatch:\n    types: \[buildchain-dev-delivery-wake\]/,
+  );
+  assert.match(
+    workflow,
+    /expected-pr-number: \$\{\{ github\.event\.client_payload\.candidate\.pullRequestNumber \|\| fromJSON\(github\.event\.inputs\.expected-pr-number\) \}\}/,
+  );
+  assert.match(
+    workflow,
+    /assignment-root: \$\{\{ github\.event\.client_payload\.candidate\.assignmentRoot \|\| github\.event\.inputs\.assignment-root \|\| fromJSON\(github\.event\.inputs\.native-roots-json\)\.assignmentRoot \}\}/,
+  );
+  assert.match(
+    workflow,
+    /initiative-root: \$\{\{ github\.event\.client_payload\.candidate\.initiativeRoot \|\| github\.event\.inputs\.initiative-root \|\| fromJSON\(github\.event\.inputs\.native-roots-json\)\.initiativeRoot \}\}/,
+  );
   assert.match(workflow, /source-identity-root:/);
   assert.match(workflow, /source-patch-root:/);
   assert.match(workflow, /plan-root:/);
   assert.match(workflow, /closure-root:/);
   assert.match(workflow, /dependency-root:/);
   assert.match(workflow, /toolchain-root:/);
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/dev-pr-auto-merge\.yml/);
-  assert.match(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
+  assert.match(workflow, /environment-root:/);
+  assert.match(workflow, /native-proof-json:/);
+  assert.match(workflow, /native-command:/);
+  assert.match(workflow, /native-heartbeat-seconds:/);
+  assert.match(
+    workflow,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/dev-pr-auto-merge\.yml@v4-alpha/,
+  );
+  assert.match(
+    workflow,
+    /buildchain-ref: \$\{\{ github\.event\.inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/,
+  );
+  assert.doesNotMatch(workflow, /buildchain-ref: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /delivery-warrant-mode: required/);
-  assert.match(workflow, /delivery-class: native-proof-required/);
-  assert.match(workflow, /delivery-priority: ordinary/);
+  assert.match(
+    workflow,
+    /delivery-class: \$\{\{ github\.event\.client_payload\.candidate\.deliveryClass \|\| github\.event\.inputs\.delivery-class \|\| 'native-proof-required' \}\}/,
+  );
+  assert.match(
+    workflow,
+    /delivery-priority: \$\{\{ github\.event\.client_payload\.candidate\.priority \|\| github\.event\.inputs\.delivery-priority \|\| 'ordinary' \}\}/,
+  );
+  assert.match(workflow, /handoff-workflow-id: buildchain-dev-delivery\.yml/);
+  assert.match(workflow, /source-workflow-id: verify\.yml/);
+  assert.match(workflow, /legacy-active-owner-binding-json:/);
   assert.match(workflow, /required-status-checks: check/);
   assert.match(
     workflow,
-    /allowed-head-prefixes: feature\/,fix\/,chore\/,docs\/,ci\/,refactor\/,automation\/auditable-demo-/,
+    /allowed-head-prefixes: feature\/,fix\/,chore\/,docs\/,ci\/,refactor\/,automation\/auditable-demo-,buildchain\/version-state\//,
   );
   assert.match(workflow, /landing-mode: queue/);
   assert.match(workflow, /dry-run: false/);
-  assert.match(workflow, /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
-  assert.match(workflow, /run-name: "Buildchain PR #\$\{\{ inputs\.expected-pr-number \}\} · required Delivery Warrant"/);
+  assert.match(
+    workflow,
+    /github-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
+  assert.match(
+    workflow,
+    /run-name: "Buildchain PR #\$\{\{ github\.event\.client_payload\.candidate\.pullRequestNumber \|\| inputs\.expected-pr-number \}\} · two-phase Delivery Warrant"/,
+  );
   assert.doesNotMatch(workflow, /secrets: inherit/);
   assert.doesNotMatch(workflow, /delivery-warrant-mode: off/);
-  assert.doesNotMatch(workflow.slice(workflow.indexOf("    with:")), /\$\{\{ inputs\./);
-  const dispatchInputs = workflow
-    .slice(workflow.indexOf("    inputs:"), workflow.indexOf("\npermissions:"))
-    .match(/^      [a-z][a-z0-9-]+:$/gmu);
-  assert.equal(dispatchInputs?.length, 10);
+  assert.match(workflow, /queue-admission-context: Queue admission lease/);
+  assert.match(workflow, /active-lease-context: Queue family lease\/exact/);
+  assert.doesNotMatch(
+    workflow.slice(workflow.indexOf("    with:")),
+    /\$\{\{ inputs\./,
+  );
+  const dispatchInputs = [
+    ...workflow
+      .slice(
+        workflow.indexOf("    inputs:"),
+        workflow.indexOf("\n  repository_dispatch:"),
+      )
+      .matchAll(/^      ([a-z][a-z0-9-]+):/gmu),
+  ].map((match) => match[1]);
+  assert.deepEqual(dispatchInputs, [
+    "buildchain-ref",
+    "target-branch",
+    "expected-pr-number",
+    "expected-head-sha",
+    "native-roots-json",
+    "assignment-root",
+    "initiative-root",
+    "source-workflow-run-id",
+    "legacy-active-owner-binding-json",
+    "source-identity-root",
+    "source-patch-root",
+    "plan-root",
+    "closure-root",
+    "dependency-root",
+    "toolchain-root",
+    "environment-root",
+    "affected-paths-json",
+    "shard-evidence-roots-json",
+    "release-blocker-priority-json",
+    "native-proof-json",
+    "native-command",
+    "native-command-root",
+    "native-heartbeat-seconds",
+    "delivery-class",
+    "delivery-priority",
+  ]);
+});
+
+test("PR-controlled native delivery and provider finalization use distinct hosted jobs", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
+    "utf8",
+  );
+  const template = fs.readFileSync(
+    path.join(root, "templates/native-dev-delivery.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /buildchain-ref:\n\s+description: "Explicit Buildchain v4 runtime ref[^\n]+\n\s+default: "v4"/u,
+  );
+  assert.equal(
+    (workflow.match(/ref: \$\{\{ inputs\.buildchain-ref \}\}/gu) || []).length,
+    1,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /ref: \$\{\{ needs\.admission\.outputs\.runtime-sha \}\}/gu,
+      ) || []
+    ).length,
+    4,
+  );
+  assert.doesNotMatch(workflow, /inputs\.buildchain-ref \|\|/u);
+  assert.match(workflow, /empty and v3 selectors are rejected/u);
+  assert.match(
+    workflow,
+    /buildchain-ref must be v4, v4-alpha, or train\/v4\/v4\.0\/<capability>/u,
+  );
+  assert.match(
+    template,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/dev-pr-auto-merge\.yml@v4-alpha/u,
+  );
+  assert.match(template, /default: "v4-alpha"/u);
+  assert.match(template, /default: "native-proof-required"/u);
+  assert.match(template, /queue-admission-context: Queue admission lease/u);
+  assert.match(template, /active-lease-context: Queue family lease\/exact/u);
+  assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@v3(?:\b|-)/u);
+  assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@[0-9a-f]{40}/u);
+  const nativeStart = workflow.indexOf("  native-execution:");
+  const sealStart = workflow.indexOf("  seal-native-execution:", nativeStart);
+  const heartbeatStart = workflow.indexOf("  delivery-heartbeat:", sealStart);
+  const finalizerStart = workflow.indexOf("  merge-dev-prs:", nativeStart);
+  assert.ok(
+    nativeStart > 0 &&
+      sealStart > nativeStart &&
+      heartbeatStart > sealStart &&
+      finalizerStart > heartbeatStart,
+  );
+  for (const artifact of [
+    "control",
+    "native-raw",
+    "native-sealed",
+    "heartbeat",
+  ]) {
+    assert.match(
+      workflow,
+      new RegExp(
+        `buildchain-dev-delivery-${artifact}-\\$\\{\\{ github\\.run_id \\}\\}-\\$\\{\\{ github\\.run_attempt \\}\\}-`,
+        "u",
+      ),
+      `${artifact} artifact identity must bind the exact workflow run attempt`,
+    );
+  }
+  const nativeJob = workflow.slice(nativeStart, sealStart);
+  const sealJob = workflow.slice(sealStart, heartbeatStart);
+  const heartbeatJob = workflow.slice(heartbeatStart, finalizerStart);
+  const finalizerJob = workflow.slice(finalizerStart);
+  for (const name of [
+    "GITHUB_TOKEN",
+    "GH_TOKEN",
+    "BUILDCHAIN_PROMOTION_TOKEN",
+  ]) {
+    assert.doesNotMatch(nativeJob, new RegExp(name, "u"));
+  }
+  assert.match(nativeJob, /name: Credentialless native execution/u);
+  assert.match(nativeJob, /runs-on: ubuntu-24\.04/u);
+  assert.match(nativeJob, /permissions:\n\s+contents: read/u);
+  assert.match(
+    nativeJob,
+    /BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY: github-actions-runner-worker\/v1/u,
+  );
+  assert.match(nativeJob, /persist-credentials: false/u);
+  assert.match(nativeJob, /--native-only/u);
+  assert.match(nativeJob, /dev-delivery-process-boundary\.mjs record-native/u);
+  assert.match(sealJob, /name: Credentialless native evidence seal/u);
+  assert.match(sealJob, /runs-on: ubuntu-24\.04/u);
+  assert.match(sealJob, /permissions:\n\s+actions: read\n\s+contents: read/u);
+  assert.doesNotMatch(sealJob, /GH_TOKEN:|GITHUB_TOKEN:/u);
+  assert.match(sealJob, /dev-delivery-process-boundary\.mjs seal/u);
+  assert.match(
+    sealJob,
+    /--staging-directory \.buildchain\/native-transfer-staging/u,
+  );
+  assert.match(sealJob, /--runtime-selection-root/u);
+  assert.match(sealJob, /path: \.buildchain\/native-transfer-staging\//u);
+  assert.match(sealJob, /actions\/upload-artifact@v7\.0\.1/u);
+  assert.doesNotMatch(nativeJob, /contents: write/u);
+  assert.doesNotMatch(sealJob, /contents: write/u);
+  assert.match(
+    heartbeatJob,
+    /name: Credentialed independent Warrant heartbeat/u,
+  );
+  assert.match(heartbeatJob, /runs-on: macos-15/u);
+  assert.match(
+    heartbeatJob,
+    /permissions:\n\s+actions: read\n\s+contents: write/u,
+  );
+  assert.match(heartbeatJob, /dev-delivery-provider-heartbeat\.mjs run/u);
+  assert.match(heartbeatJob, /provider-heartbeat-receipt\.json/u);
+  assert.match(
+    heartbeatJob,
+    /GITHUB_TOKEN: \$\{\{ secrets\.github-token \|\| github\.token \}\}/u,
+  );
+  assert.doesNotMatch(nativeJob, /Credentialed independent Warrant heartbeat/u);
+  assert.match(finalizerJob, /name: Credentialed provider finalizer/u);
+  assert.match(
+    finalizerJob,
+    /needs:\n\s+- admission\n\s+- native-execution\n\s+- seal-native-execution\n\s+- delivery-heartbeat/u,
+  );
+  assert.match(finalizerJob, /runs-on: ubuntu-24\.04/u);
+  assert.match(finalizerJob, /dev-delivery-process-boundary\.mjs verify/u);
+  assert.match(finalizerJob, /provider-jobs\.json/u);
+  assert.match(finalizerJob, /provider-pull-request\.json/u);
+  assert.match(finalizerJob, /provider-base-ref\.json/u);
+  assert.match(finalizerJob, /dev-delivery-provider-heartbeat\.mjs verify/u);
+  assert.match(
+    finalizerJob,
+    /--admission-job-name "Reserve exact delivery candidate"/u,
+  );
+  assert.match(
+    finalizerJob,
+    /--heartbeat-job-name "Credentialed independent Warrant heartbeat"/u,
+  );
+  assert.match(
+    finalizerJob,
+    /--finalizer-job-name "Credentialed provider finalizer"/u,
+  );
+  assert.match(finalizerJob, /provider-heartbeat-verification\.json/u);
+  assert.match(finalizerJob, /--runtime-sha/u);
+  assert.match(finalizerJob, /--runtime-selection-root/u);
+  assert.match(finalizerJob, /--finalize-only/u);
+  assert.match(
+    finalizerJob,
+    /GITHUB_TOKEN: \$\{\{ secrets\.github-token \|\| github\.token \}\}/u,
+  );
+  assert.match(workflow, /native-execution-transfer-root:/u);
+  assert.match(workflow, /provider-finalizer-boundary-root:/u);
+  assert.match(workflow, /provider-heartbeat-receipt-root:/u);
+  assert.doesNotMatch(workflow, /runs-on: self-hosted/u);
+  const boundaryStep = finalizerJob.indexOf(
+    "Prove fresh provider finalizer job and runner boundary",
+  );
+  const proofStep = finalizerJob.indexOf(
+    "Verify transferred native proof before provider mutation",
+  );
+  const mutationStep = finalizerJob.indexOf(
+    "Independently recheck and atomically qualify native proof",
+  );
+  assert.ok(boundaryStep >= 0 && proofStep > boundaryStep);
+  assert.ok(mutationStep > proofStep);
+  const preMutation = finalizerJob.slice(0, mutationStep);
+  assert.doesNotMatch(preMutation, /dev-delivery-warrant\.mjs/u);
+  assert.doesNotMatch(preMutation, /--execute/u);
+  assert.match(
+    finalizerJob,
+    /steps\.boundary\.outputs\.native-outcome == 'success' && steps\.proof-verification\.outcome == 'success'/u,
+  );
+  assert.match(
+    finalizerJob,
+    /name: Settle the exact independently verified native failure[\s\S]*settlement_state="\$\(jq -er '\.latestStateRoot' \.buildchain\/provider-heartbeat-verification\.json\)"[\s\S]*--expected-old "\$\{settlement_state\}"[\s\S]*--evidence-root "\$\(jq -er '\.evidenceRoot'[\s\S]*--transfer-root[\s\S]*--finalizer-boundary-root[\s\S]*--native-job-id[\s\S]*--seal-job-id[\s\S]*--execute/u,
+  );
+  assert.doesNotMatch(
+    finalizerJob,
+    /name: Settle the exact independently verified native failure[\s\S]*--expected-old "\$\(jq -er '\.warrantStateRoot'/u,
+  );
+  assert.doesNotMatch(
+    finalizerJob,
+    /native-outcome == 'failure'[\s\S]{0,240}--finalize-only/u,
+  );
 });
 
 test("declared merge queue governance reconciles automatically on dev changes", () => {
@@ -1667,12 +2804,21 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(engine, /mode:/);
   assert.match(engine, /capabilities:/);
   assert.match(engine, /buildchain-patrol\.mjs/);
-  assert.match(engine, /BUILDCHAIN_PATROL_CADENCE: \$\{\{ inputs\.cadence \}\}/);
-  assert.match(engine, /BUILDCHAIN_PATROL_DRY_RUN: \$\{\{ inputs\.dry-run \}\}/);
+  assert.match(
+    engine,
+    /BUILDCHAIN_PATROL_CADENCE: \$\{\{ inputs\.cadence \}\}/,
+  );
+  assert.match(
+    engine,
+    /BUILDCHAIN_PATROL_DRY_RUN: \$\{\{ inputs\.dry-run \}\}/,
+  );
   assert.match(engine, /actions\/upload-artifact@v7\.0\.1/);
 
   assert.match(daily, /workflow_call:/);
-  assert.match(daily, /required-status-checks:\n\s+description: [^\n]+\n\s+default: "check \/ check"/);
+  assert.match(
+    daily,
+    /required-status-checks:\n\s+description: [^\n]+\n\s+default: "check \/ check"/,
+  );
   assert.match(daily, /cadence: daily/);
   assert.match(daily, /mode: cadence-default/);
   assert.match(daily, /max-actions:/);
@@ -1688,23 +2834,41 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   assert.match(monthly, /pull-requests: write/);
 
   assert.match(dogfoodDaily, /schedule:/);
-  assert.match(dogfoodDaily, /uses: \.\/\.github\/workflows\/patrol-daily\.yml/);
+  assert.match(
+    dogfoodDaily,
+    /uses: \.\/\.github\/workflows\/patrol-daily\.yml/,
+  );
   assert.match(dogfoodDaily, /required-status-checks: check/);
-  assert.match(dogfoodDaily, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
+  assert.match(
+    dogfoodDaily,
+    /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/,
+  );
   assert.match(dogfoodDaily, /landing-mode: queue/);
   assert.doesNotMatch(dogfoodDaily, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodDaily, /dry-run: \$\{\{ inputs\.dry-run \|\| false \}\}/);
   assert.match(dogfoodDaily, /contents: write/);
   assert.match(dogfoodDaily, /pull-requests: write/);
   assert.match(dogfoodWeekly, /schedule:/);
-  assert.match(dogfoodWeekly, /uses: \.\/\.github\/workflows\/patrol-weekly\.yml/);
-  assert.match(dogfoodWeekly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
+  assert.match(
+    dogfoodWeekly,
+    /uses: \.\/\.github\/workflows\/patrol-weekly\.yml/,
+  );
+  assert.match(
+    dogfoodWeekly,
+    /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/,
+  );
   assert.doesNotMatch(dogfoodWeekly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodWeekly, /contents: write/);
   assert.match(dogfoodWeekly, /pull-requests: write/);
   assert.match(dogfoodMonthly, /schedule:/);
-  assert.match(dogfoodMonthly, /uses: \.\/\.github\/workflows\/patrol-monthly\.yml/);
-  assert.match(dogfoodMonthly, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
+  assert.match(
+    dogfoodMonthly,
+    /uses: \.\/\.github\/workflows\/patrol-monthly\.yml/,
+  );
+  assert.match(
+    dogfoodMonthly,
+    /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/,
+  );
   assert.doesNotMatch(dogfoodMonthly, /target-branch: dev\/v2\/v2\.\d+/);
   assert.match(dogfoodMonthly, /contents: write/);
   assert.match(dogfoodMonthly, /pull-requests: write/);
@@ -1720,7 +2884,10 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
     "utf8",
   );
   const qualification = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-stable-candidate-qualification.yml"),
+    path.join(
+      root,
+      ".github/workflows/buildchain-stable-candidate-qualification.yml",
+    ),
     "utf8",
   );
   const implementation = fs.readFileSync(
@@ -1737,7 +2904,10 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(reusable, /auto-promote:/);
   assert.match(reusable, /auto-merge:/);
   assert.match(reusable, /approval-token:/);
-  assert.match(reusable, /GH_TOKEN: \$\{\{ secrets\.approval-token \|\| github\.token \}\}/);
+  assert.match(
+    reusable,
+    /GH_TOKEN: \$\{\{ secrets\.approval-token \|\| github\.token \}\}/,
+  );
   assert.match(reusable, /BUILDCHAIN_STABLE_REVOKED_ALPHA_VERSIONS/);
   assert.match(reusable, /stable-candidate-policy\.mjs/);
   assert.match(reusable, /stable-candidate-patrol\.mjs/);
@@ -1745,22 +2915,52 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   assert.match(ledger, /publish-gate\/release/);
   assert.match(implementation, /BUILDCHAIN_STABLE_RELEASE_NOW/);
   assert.match(dogfood, /cron: "0 19 \* \* \*"/);
-  assert.match(dogfood, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/);
-  assert.match(dogfood, /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
+  assert.match(
+    dogfood,
+    /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v4-alpha' \}\}/,
+  );
+  assert.match(
+    dogfood,
+    /promotion-token: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
   assert.match(
     dogfood,
     /approval-token: \$\{\{ secrets\.BUILDCHAIN_APPROVAL_TOKEN \|\| secrets\.KUNGFU_GITHUB_TOKEN \}\}/,
   );
   assert.match(qualification, /workflows: \["Buildchain Alpha Self-Dogfood"\]/);
   assert.match(qualification, /statuses: write/);
-  assert.match(qualification, /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/);
-  assert.match(qualification, /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/);
-  assert.match(qualification, /name: buildchain-v4-dual-channel-self-dogfood-evidence/);
-  assert.match(qualification, /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/);
-  assert.match(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/);
-  assert.doesNotMatch(qualification, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.candidate-sha \}\}/);
-  assert.match(qualification, /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ steps\.candidate\.outputs\.sha \}\}/);
-  assert.doesNotMatch(qualification, /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ github\.event\.workflow_run\.head_sha/);
+  assert.match(
+    qualification,
+    /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+  );
+  assert.match(
+    qualification,
+    /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/,
+  );
+  assert.match(
+    qualification,
+    /name: buildchain-v4-dual-channel-self-dogfood-evidence/,
+  );
+  assert.match(
+    qualification,
+    /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/,
+  );
+  assert.match(
+    qualification,
+    /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/,
+  );
+  assert.doesNotMatch(
+    qualification,
+    /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.candidate-sha \}\}/,
+  );
+  assert.match(
+    qualification,
+    /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ steps\.candidate\.outputs\.sha \}\}/,
+  );
+  assert.doesNotMatch(
+    qualification,
+    /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ github\.event\.workflow_run\.head_sha/,
+  );
   assert.match(qualification, /stable-candidate-qualification\.mjs/);
 });
 
@@ -1778,19 +2978,62 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(reusable, /mode:/);
   assert.match(reusable, /default: "verify"/);
   assert.match(reusable, /runs-on: ubuntu-24\.04/);
-  assert.match(reusable, /fetch-depth: \$\{\{ inputs\.mode == 'source' && '0' \|\| '1' \}\}/);
+  assert.match(
+    reusable,
+    /ref: \$\{\{ inputs\.mode == 'source' && inputs\.source-proof-reuse && github\.event_name == 'pull_request' && github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/,
+  );
+  assert.match(
+    reusable,
+    /fetch-depth: \$\{\{ inputs\.mode == 'source' && \(!inputs\.source-proof-reuse \|\| github\.event_name == 'pull_request'\) && '0' \|\| '1' \}\}/,
+  );
   assert.match(reusable, /persist-credentials: false/);
   assert.match(reusable, /Run declared install lifecycle/);
   assert.match(reusable, /lifecycle run install/);
   assert.match(reusable, /verify\) stage="verify"/);
   assert.match(reusable, /source\) stage="check"/);
-  assert.match(reusable, /--require-lifecycle-stages install,\$\{\{ steps\.lifecycle\.outputs\.stage \}\}/);
-  assert.match(reusable, /lifecycle run \$\{\{ steps\.lifecycle\.outputs\.stage \}\}/);
+  assert.match(
+    reusable,
+    /--require-lifecycle-stages install,\$\{\{ steps\.lifecycle\.outputs\.stage \}\}/,
+  );
+  assert.match(
+    reusable,
+    /lifecycle run \$\{\{ steps\.lifecycle\.outputs\.stage \}\}/,
+  );
   assert.equal(
-    (reusable.match(/BUILDCHAIN_CHECK_MODE: \$\{\{ inputs\.mode \}\}/g) || []).length,
+    (reusable.match(/BUILDCHAIN_CHECK_MODE: \$\{\{ inputs\.mode \}\}/g) || [])
+      .length,
     3,
   );
   assert.match(reusable, /if: \$\{\{ inputs\.upload-artifacts \}\}/);
+  assert.match(reusable, /source-proof-reuse:/);
+  assert.match(reusable, /github\.event_name == 'merge_group'/);
+  assert.match(reusable, /github\.rest\.actions\.listWorkflowRunsForRepo/);
+  assert.match(reusable, /github\.rest\.actions\.listWorkflowRunArtifacts/);
+  assert.match(
+    reusable,
+    /\(run\.pull_requests \|\| \[\]\)\.length === 0 \|\| \(run\.pull_requests \|\| \[\]\)\.some\(\(pullRequest\) => pullRequest\.number === pullNumber\)/,
+  );
+  assert.match(reusable, /steps\.source-proof-download\.outcome == 'success'/);
+  assert.match(
+    reusable,
+    /git fetch --no-tags --no-recurse-submodules --depth=64 origin/,
+  );
+  assert.match(
+    reusable,
+    /\+\$\{qualified_base\}:refs\/buildchain\/source-proof\/qualified-base/,
+  );
+  assert.match(reusable, /dev-delivery-source-proof-reuse\.mjs verify/);
+  assert.match(
+    reusable,
+    /steps\.source-proof-verify\.outputs\.reuse != 'true'/,
+  );
+  assert.match(
+    reusable,
+    /--manifest-output \.buildchain\/artifacts\/check-manifest\.json/,
+  );
+  assert.match(reusable, /dev-delivery-source-proof-reuse\.mjs seal/);
+  assert.match(reusable, /buildchain-source-qualification-proof-/);
+  assert.match(reusable, /retention-days: 14/);
   const lifecycleDocs = fs.readFileSync(
     path.join(root, "docs/lifecycle-protocol.md"),
     "utf8",
@@ -1804,8 +3047,12 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
 });
 
 test("source-check fixture executes only install and check", () => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-source-check-"));
-  fs.cpSync(path.join(root, "fixtures/source-check-shaped"), workspace, { recursive: true });
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-source-check-"),
+  );
+  fs.cpSync(path.join(root, "fixtures/source-check-shaped"), workspace, {
+    recursive: true,
+  });
 
   const previousMode = process.env.BUILDCHAIN_CHECK_MODE;
   process.env.BUILDCHAIN_CHECK_MODE = "source";
@@ -1827,10 +3074,13 @@ test("source-check fixture executes only install and check", () => {
       summaryPath: ".buildchain/artifacts/check-summary.json",
     });
 
-    const events = fs.readFileSync(
-      path.join(workspace, ".buildchain/source-check-events.txt"),
-      "utf8",
-    ).trim().split("\n");
+    const events = fs
+      .readFileSync(
+        path.join(workspace, ".buildchain/source-check-events.txt"),
+        "utf8",
+      )
+      .trim()
+      .split("\n");
     assert.deepEqual(events, ["install:source", "check:source"]);
     assert.ok(!events.some((event) => event.startsWith("build:")));
     assert.ok(!events.some((event) => event.startsWith("verify:")));
@@ -1871,15 +3121,30 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
     workflow.indexOf("Check Buildchain contract lock") <
       workflow.indexOf("Run caller build"),
   );
-  assert.match(workflow, /preview-aws-role-arn is required before preview-apply can build or deploy/);
-  assert.match(workflow, /staging-aws-role-arn is required before staging-apply can build or deploy/);
-  assert.doesNotMatch(workflow, /production-apply requires production-approved=true before production build or deploy/);
-  assert.doesNotMatch(workflow, /production-apply requires a trusted manual actor or reviewed matching release PR/);
+  assert.match(
+    workflow,
+    /preview-aws-role-arn is required before preview-apply can build or deploy/,
+  );
+  assert.match(
+    workflow,
+    /staging-aws-role-arn is required before staging-apply can build or deploy/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /production-apply requires production-approved=true before production build or deploy/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /production-apply requires a trusted manual actor or reviewed matching release PR/,
+  );
   assert.match(
     workflow,
     /\[ "\$PRODUCTION_APPLY" = "true" \] && \[ "\$production_event_approved" = "true" \] && \[ -z "\$PRODUCTION_ROLE_ARN" \]/,
   );
-  assert.match(workflow, /production-aws-role-arn is required before production-apply can build or deploy/);
+  assert.match(
+    workflow,
+    /production-aws-role-arn is required before production-apply can build or deploy/,
+  );
   assert.match(workflow, /production-release-on-main:/);
   assert.match(workflow, /production-release-label:/);
   assert.match(workflow, /production-release-head-prefix:/);
@@ -1915,7 +3180,10 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /pull-request-closed/);
   assert.match(workflow, /--dry-run false/);
   assert.match(workflow, /Apply pull request preview/);
-  assert.match(workflow, /preview-aws-role-arn is required when preview-apply is true/);
+  assert.match(
+    workflow,
+    /preview-aws-role-arn is required when preview-apply is true/,
+  );
   assert.match(workflow, /aws-actions\/configure-aws-credentials@v5/);
   assert.match(workflow, /buildchain:web-surface-preview/);
   assert.match(workflow, /web-surface-urls-json/);
@@ -1927,10 +3195,19 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /preview-cleanup-apply/);
   assert.match(workflow, /Plan main staging deploy/);
   assert.match(workflow, /github\.ref_name == 'main'/);
-  assert.match(workflow, /needs\.publication-decision\.outputs\.approved == 'true'/);
+  assert.match(
+    workflow,
+    /needs\.publication-decision\.outputs\.approved == 'true'/,
+  );
   assert.match(workflow, /Apply staging deploy/);
-  assert.match(workflow, /needs\.plan\.outputs\.web-surface-channel == 'staging'/);
-  assert.match(workflow, /staging-aws-role-arn is required when staging-apply is true/);
+  assert.match(
+    workflow,
+    /needs\.plan\.outputs\.web-surface-channel == 'staging'/,
+  );
+  assert.match(
+    workflow,
+    /staging-aws-role-arn is required when staging-apply is true/,
+  );
   assert.match(workflow, /Write staging release PR summary/);
   assert.match(workflow, /web-surface-staging-release-pr-summary\.json/);
   assert.match(workflow, /Upload staging apply diagnostics/);
@@ -1939,25 +3216,49 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /buildchain-web-surface-staging-release-pr-summary/);
   assert.match(workflow, /Open production release PR/);
   assert.match(workflow, /web-surface-production-release-pr\.mjs/);
-  assert.match(workflow, /PRODUCTION_RELEASE_PR_MODE: \$\{\{ inputs\.production-release-pr-mode \}\}/);
-  assert.match(workflow, /FAIL_ON_RELEASE_PR_ERROR: \$\{\{ inputs\.fail-on-release-pr-error \}\}/);
+  assert.match(
+    workflow,
+    /PRODUCTION_RELEASE_PR_MODE: \$\{\{ inputs\.production-release-pr-mode \}\}/,
+  );
+  assert.match(
+    workflow,
+    /FAIL_ON_RELEASE_PR_ERROR: \$\{\{ inputs\.fail-on-release-pr-error \}\}/,
+  );
   assert.match(workflow, /Resolve production release token config/);
   assert.match(workflow, /Create production release app token/);
   assert.match(workflow, /actions\/create-github-app-token@v3\.1\.1/);
   assert.match(workflow, /continue-on-error: true/);
-  assert.match(workflow, /client-id: \$\{\{ inputs\.production-release-app-client-id \|\| inputs\.production-release-app-id \}\}/);
-  assert.match(workflow, /private-key: \$\{\{ secrets\.production-release-app-private-key \}\}/);
+  assert.match(
+    workflow,
+    /client-id: \$\{\{ inputs\.production-release-app-client-id \|\| inputs\.production-release-app-id \}\}/,
+  );
+  assert.match(
+    workflow,
+    /private-key: \$\{\{ secrets\.production-release-app-private-key \}\}/,
+  );
   assert.match(workflow, /Resolve production release token source/);
   assert.match(
     workflow,
     /GITHUB_TOKEN: \$\{\{ steps\.production-release-app-token\.outputs\.token \|\| inputs\.production-release-pr-token \|\| github\.token \}\}/,
   );
-  assert.match(workflow, /PRODUCTION_RELEASE_TOKEN_SOURCE: \$\{\{ steps\.production-release-token\.outputs\.token-source \}\}/);
-  assert.match(workflow, /PRODUCTION_RELEASE_APP_TOKEN_STATUS: \$\{\{ steps\.production-release-token\.outputs\.app-token-status \}\}/);
-  assert.match(workflow, /buildchain-web-surface-production-release-pr-handoff/);
+  assert.match(
+    workflow,
+    /PRODUCTION_RELEASE_TOKEN_SOURCE: \$\{\{ steps\.production-release-token\.outputs\.token-source \}\}/,
+  );
+  assert.match(
+    workflow,
+    /PRODUCTION_RELEASE_APP_TOKEN_STATUS: \$\{\{ steps\.production-release-token\.outputs\.app-token-status \}\}/,
+  );
+  assert.match(
+    workflow,
+    /buildchain-web-surface-production-release-pr-handoff/,
+  );
   assert.match(workflow, /release-pr-status/);
   assert.match(workflow, /needs\.staging-apply\.result == 'success'/);
-  assert.match(workflow, /needs\.release-intent\.outputs\.production-release-approved != 'true'/);
+  assert.match(
+    workflow,
+    /needs\.release-intent\.outputs\.production-release-approved != 'true'/,
+  );
   assert.match(workflow, /Download staging release PR summary/);
   assert.match(workflow, /STAGING_RELEASE_PR_SUMMARY_PATH/);
   assert.doesNotMatch(
@@ -1968,26 +3269,52 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /contents: write/);
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /Plan gated production deploy/);
-  assert.match(workflow, /web-surface-channel: \$\{\{ steps\.gate\.outputs\.web-surface-channel \}\}/);
-  assert.match(workflow, /BUILDCHAIN_WEB_SURFACE_CHANNEL: \$\{\{ needs\.apply-input-gate\.outputs\.web-surface-channel \}\}/);
-  assert.match(workflow, /BUILDCHAIN_PREVIEW_ALIAS: \$\{\{ needs\.apply-input-gate\.outputs\.web-surface-alias \}\}/);
-  assert.match(workflow, /EVENT_NAME" = "workflow_dispatch".*web_surface_channel=staging/s);
-  assert.ok(workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"));
+  assert.match(
+    workflow,
+    /web-surface-channel: \$\{\{ steps\.gate\.outputs\.web-surface-channel \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_WEB_SURFACE_CHANNEL: \$\{\{ needs\.apply-input-gate\.outputs\.web-surface-channel \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_PREVIEW_ALIAS: \$\{\{ needs\.apply-input-gate\.outputs\.web-surface-alias \}\}/,
+  );
+  assert.match(
+    workflow,
+    /EVENT_NAME" = "workflow_dispatch".*web_surface_channel=staging/s,
+  );
+  assert.ok(
+    workflow.indexOf("id: gate") < workflow.indexOf("Run caller build"),
+  );
   assert.match(workflow, /Apply production deploy/);
   assert.match(workflow, /Seal managed web production publication capability/);
   assert.match(
     workflow,
     /name: Verify external web production publication capability[\s\S]*?permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read[\s\S]*?uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
   );
-  assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
+  assert.match(
+    workflow,
+    /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+  );
   assert.match(workflow, /publication-admission-json:/);
   assert.match(workflow, /publication-control-plane-audit-json:/);
   assert.match(workflow, /publication-gate-aggregate-json:/);
   assert.match(workflow, /- publication-authority/);
   assert.match(workflow, /inputs\.production-apply/);
-  assert.match(workflow, /BUILDCHAIN_PRODUCTION_APPROVED: \$\{\{ inputs\.production-approved \}\}/);
-  assert.match(workflow, /BUILDCHAIN_PRODUCTION_RELEASE_ON_MAIN: \$\{\{ inputs\.production-release-on-main \}\}/);
-  assert.match(workflow, /production-aws-role-arn is required when production-apply is true/);
+  assert.match(
+    workflow,
+    /BUILDCHAIN_PRODUCTION_APPROVED: \$\{\{ inputs\.production-approved \}\}/,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_PRODUCTION_RELEASE_ON_MAIN: \$\{\{ inputs\.production-release-on-main \}\}/,
+  );
+  assert.match(
+    workflow,
+    /production-aws-role-arn is required when production-apply is true/,
+  );
   assert.match(workflow, /Upload production apply diagnostics/);
   assert.match(workflow, /buildchain-web-surface-production-diagnostics/);
   assert.match(
@@ -1997,12 +3324,21 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.match(workflow, /include-hidden-files: true/);
   assert.match(workflow, /actions\/download-artifact@v7\.0\.0/);
-  assert.match(workflow, /--runtime-id "\$\{\{ needs\.runtime\.outputs\.runtime-sha \}\}"/);
-  assert.match(workflow, /--rollback-pointer "\$\{\{ needs\.runtime\.outputs\.rollback-ref \}\}"/);
+  assert.match(
+    workflow,
+    /--runtime-id "\$\{\{ needs\.runtime\.outputs\.runtime-sha \}\}"/,
+  );
+  assert.match(
+    workflow,
+    /--rollback-pointer "\$\{\{ needs\.runtime\.outputs\.rollback-ref \}\}"/,
+  );
   assert.match(workflow, /release-feedback-actor-privacy:/);
   assert.match(workflow, /Comment staging deploy feedback and write passport/);
   assert.match(workflow, /buildchain-web-surface-staging-release-passport/);
-  assert.match(workflow, /Comment production deploy feedback and write passport/);
+  assert.match(
+    workflow,
+    /Comment production deploy feedback and write passport/,
+  );
   assert.match(workflow, /buildchain-web-surface-production-release-passport/);
   assert.match(workflow, /web-surface-release-feedback\.mjs/);
 });
@@ -2013,7 +3349,9 @@ test("web-surface side-effect jobs and sealed production paths have explicit aut
     "utf8",
   );
   const job = (id) => {
-    const match = workflow.match(new RegExp(`^  ${id}:\\n([\\s\\S]*?)(?=^  [a-z0-9-]+:\\n|\\Z)`, "m"));
+    const match = workflow.match(
+      new RegExp(`^  ${id}:\\n([\\s\\S]*?)(?=^  [a-z0-9-]+:\\n|\\Z)`, "m"),
+    );
     assert.ok(match, `missing job ${id}`);
     return match[0];
   };
@@ -2021,28 +3359,47 @@ test("web-surface side-effect jobs and sealed production paths have explicit aut
   assert.match(plan, /pull-requests: write/);
   assert.match(plan, /issues: write/);
   assert.match(plan, /web-surface-release-pr-review\.mjs/);
-  assert.match(plan, /uses: \.\/\.buildchain\/runtime\/actions\/report-buildchain-issue/);
+  assert.match(
+    plan,
+    /uses: \.\/\.buildchain\/runtime\/actions\/report-buildchain-issue/,
+  );
 
   const decision = job("publication-decision");
   assert.match(decision, /web-surface-production-decision\.mjs/);
   assert.match(decision, /BUILDCHAIN_PRODUCTION_RELEASE_APPROVED/);
   const inputGate = job("apply-input-gate");
-  assert.doesNotMatch(inputGate, /production-apply requires a trusted manual actor/);
-  assert.match(inputGate, /if \[ "\$production_event_approved" = "true" \]; then\n\s+web_surface_channel=production/);
+  assert.doesNotMatch(
+    inputGate,
+    /production-apply requires a trusted manual actor/,
+  );
+  assert.match(
+    inputGate,
+    /if \[ "\$production_event_approved" = "true" \]; then\n\s+web_surface_channel=production/,
+  );
   assert.ok(
     inputGate.indexOf('if [ "$production_event_approved" = "true" ]') <
       inputGate.indexOf('elif [ "$EVENT_NAME" = "pull_request" ]'),
   );
   const authority = job("publication-authority");
-  assert.match(authority, /Create qualifying pre-publication controller receipt/);
+  assert.match(
+    authority,
+    /Create qualifying pre-publication controller receipt/,
+  );
   assert.match(authority, /assemble-web-surface-publication-admission\.mjs/);
-  assert.match(authority, /needs\.publication-decision\.outputs\.approved == 'true'/);
+  assert.match(
+    authority,
+    /needs\.publication-decision\.outputs\.approved == 'true'/,
+  );
   const production = job("production-apply");
   assert.match(production, /needs\.publication-authority\.result == 'success'/);
-  assert.match(production, /needs\.external-publication-authority\.result == 'success'/);
+  assert.match(
+    production,
+    /needs\.external-publication-authority\.result == 'success'/,
+  );
   assert.ok(
-    production.indexOf("Verify sealed production capability before artifact download") <
-      production.indexOf("Download web-surface artifact"),
+    production.indexOf(
+      "Verify sealed production capability before artifact download",
+    ) < production.indexOf("Download web-surface artifact"),
   );
 });
 
@@ -2080,8 +3437,13 @@ test("web-surface apply GitHub output summary omits operation logs", () => {
 });
 
 test("production release PR summary can be read from artifact file", () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-summary-"));
-  const summaryPath = path.join(dir, "web-surface-staging-release-pr-summary.json");
+  const dir = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-release-pr-summary-"),
+  );
+  const summaryPath = path.join(
+    dir,
+    "web-surface-staging-release-pr-summary.json",
+  );
   const fullApplyResult = {
     channel: "staging",
     status: "applied",
@@ -2093,7 +3455,10 @@ test("production release PR summary can be read from artifact file", () => {
     artifactHash: "sha256:artifact",
     operations: [{ stdout: "large-output" }],
   };
-  fs.writeFileSync(summaryPath, `${JSON.stringify(compactProductionReleasePrSummary(fullApplyResult), null, 2)}\n`);
+  fs.writeFileSync(
+    summaryPath,
+    `${JSON.stringify(compactProductionReleasePrSummary(fullApplyResult), null, 2)}\n`,
+  );
   const summary = readStagingReleasePrSummary({
     STAGING_RELEASE_PR_SUMMARY_PATH: summaryPath,
   });
@@ -2154,11 +3519,20 @@ test("web-surface production release PR handoff renders manual command facts", (
     runId: "123",
     serverUrl: "https://github.com",
   });
-  assert.equal(handoff.contract, "kungfu-buildchain-web-surface-production-release-pr-handoff");
+  assert.equal(
+    handoff.contract,
+    "kungfu-buildchain-web-surface-production-release-pr-handoff",
+  );
   assert.equal(handoff.branchName, "release/production-abcdef123456");
   assert.equal(handoff.title, "Release production from abcdef123456");
-  assert.match(handoff.manualCommand, /gh pr create --repo kungfu-systems\/site-libkungfu-dev/);
-  assert.match(handoff.manualCommand, /--body-file \.buildchain\/production-release-pr\/body\.md/);
+  assert.match(
+    handoff.manualCommand,
+    /gh pr create --repo kungfu-systems\/site-libkungfu-dev/,
+  );
+  assert.match(
+    handoff.manualCommand,
+    /--body-file \.buildchain\/production-release-pr\/body\.md/,
+  );
 });
 
 test("web-surface production release PR suppresses a duplicate for a merged release push", async () => {
@@ -2168,17 +3542,23 @@ test("web-surface production release PR suppresses a duplicate for a merged rele
   globalThis.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: options.method || "GET" });
     if (String(url).includes(`/commits/${sourceSha}/pulls?`)) {
-      return new Response(JSON.stringify([{
-        number: 42,
-        html_url: "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
-        merged_at: "2026-07-26T00:00:00Z",
-        base: { ref: "main" },
-        head: {
-          ref: "release/production-abcdef123456",
-          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
-        },
-        labels: [{ name: "buildchain-release" }],
-      }]), { status: 200 });
+      return new Response(
+        JSON.stringify([
+          {
+            number: 42,
+            html_url:
+              "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
+            merged_at: "2026-07-26T00:00:00Z",
+            base: { ref: "main" },
+            head: {
+              ref: "release/production-abcdef123456",
+              repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+            },
+            labels: [{ name: "buildchain-release" }],
+          },
+        ]),
+        { status: 200 },
+      );
     }
     throw new Error(`unexpected fetch: ${options.method || "GET"} ${url}`);
   };
@@ -2192,7 +3572,10 @@ test("web-surface production release PR suppresses a duplicate for a merged rele
     assert.equal(result.status, "suppressed-merged-release-pr");
     assert.equal(result.pullNumber, 42);
     assert.equal(calls.length, 1);
-    assert.equal(calls.some((call) => call.method === "POST"), false);
+    assert.equal(
+      calls.some((call) => call.method === "POST"),
+      false,
+    );
   } finally {
     globalThis.fetch = previousFetch;
   }
@@ -2205,29 +3588,44 @@ test("web-surface production release PR finds a merged intent by deterministic h
   globalThis.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: options.method || "GET" });
     if (String(url).includes(`/commits/${sourceSha}/pulls?`)) {
-      return new Response(JSON.stringify([{
-        number: 41,
-        merged_at: "2026-07-25T23:59:00Z",
-        base: { ref: "main" },
-        head: {
-          ref: "fix/preceding-source-change",
-          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
-        },
-        labels: [],
-      }]), { status: 200 });
+      return new Response(
+        JSON.stringify([
+          {
+            number: 41,
+            merged_at: "2026-07-25T23:59:00Z",
+            base: { ref: "main" },
+            head: {
+              ref: "fix/preceding-source-change",
+              repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+            },
+            labels: [],
+          },
+        ]),
+        { status: 200 },
+      );
     }
-    if (String(url).includes("/pulls?state=closed&base=main&head=kungfu-systems%3Arelease%2Fproduction-abcdef123456")) {
-      return new Response(JSON.stringify([{
-        number: 42,
-        html_url: "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
-        merged_at: "2026-07-26T00:00:00Z",
-        base: { ref: "main" },
-        head: {
-          ref: "release/production-abcdef123456",
-          repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
-        },
-        labels: [{ name: "buildchain-release" }],
-      }]), { status: 200 });
+    if (
+      String(url).includes(
+        "/pulls?state=closed&base=main&head=kungfu-systems%3Arelease%2Fproduction-abcdef123456",
+      )
+    ) {
+      return new Response(
+        JSON.stringify([
+          {
+            number: 42,
+            html_url:
+              "https://github.com/kungfu-systems/site-libkungfu-dev/pull/42",
+            merged_at: "2026-07-26T00:00:00Z",
+            base: { ref: "main" },
+            head: {
+              ref: "release/production-abcdef123456",
+              repo: { full_name: "kungfu-systems/site-libkungfu-dev" },
+            },
+            labels: [{ name: "buildchain-release" }],
+          },
+        ]),
+        { status: 200 },
+      );
     }
     throw new Error(`unexpected fetch: ${options.method || "GET"} ${url}`);
   };
@@ -2241,24 +3639,33 @@ test("web-surface production release PR finds a merged intent by deterministic h
     assert.equal(result.status, "suppressed-merged-release-pr");
     assert.equal(result.pullNumber, 42);
     assert.equal(calls.length, 2);
-    assert.equal(calls.every((call) => call.method === "GET"), true);
+    assert.equal(
+      calls.every((call) => call.method === "GET"),
+      true,
+    );
   } finally {
     globalThis.fetch = previousFetch;
   }
 });
 
 test("web-surface release-intent suppression records a durable control-plane outcome", () => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-suppression-event-"));
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-release-pr-suppression-event-"),
+  );
   const logPath = path.join(workspace, ".buildchain", "logs", "events.jsonl");
-  recordProductionReleasePrOutcome({
-    action: "suppressed-merged-release-pr",
-    status: "suppressed-merged-release-pr",
-    suppressionReason: "source-commit-already-has-qualifying-merged-release-pr",
-    repository: "kungfu-systems/site-libkungfu-dev",
-    productionReleaseChannel: "production",
-    pullNumber: 42,
-    sourceSha: "abcdef1234567890abcdef1234567890abcdef12",
-  }, { BUILDCHAIN_LOG_PATH: logPath });
+  recordProductionReleasePrOutcome(
+    {
+      action: "suppressed-merged-release-pr",
+      status: "suppressed-merged-release-pr",
+      suppressionReason:
+        "source-commit-already-has-qualifying-merged-release-pr",
+      repository: "kungfu-systems/site-libkungfu-dev",
+      productionReleaseChannel: "production",
+      pullNumber: 42,
+      sourceSha: "abcdef1234567890abcdef1234567890abcdef12",
+    },
+    { BUILDCHAIN_LOG_PATH: logPath },
+  );
 
   const event = JSON.parse(fs.readFileSync(logPath, "utf8").trim());
   assert.equal(event.event, "control-plane.release-intent.outcome");
@@ -2270,7 +3677,9 @@ test("web-surface release-intent suppression records a durable control-plane out
 });
 
 test("web-surface production release PR permission-denied is a non-fatal handoff", async () => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-permission-"));
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-release-pr-permission-"),
+  );
   const previousCwd = process.cwd();
   const previousFetch = globalThis.fetch;
   const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
@@ -2291,21 +3700,34 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
   const calls = [];
   globalThis.fetch = async (url, options = {}) => {
     calls.push({ url: String(url), method: options.method || "GET" });
-    if (String(url).includes(`/commits/${sourceSha}/pulls?`)) return new Response("[]", { status: 200 });
-    if (String(url).includes("/pulls?state=closed")) return new Response("[]", { status: 200 });
-    if (String(url).includes("/pulls?state=open")) return new Response("[]", { status: 200 });
+    if (String(url).includes(`/commits/${sourceSha}/pulls?`))
+      return new Response("[]", { status: 200 });
+    if (String(url).includes("/pulls?state=closed"))
+      return new Response("[]", { status: 200 });
+    if (String(url).includes("/pulls?state=open"))
+      return new Response("[]", { status: 200 });
     if (String(url).endsWith(`/git/commits/${sourceSha}`)) {
-      return new Response(JSON.stringify({ tree: { sha: "tree-sha" } }), { status: 200 });
+      return new Response(JSON.stringify({ tree: { sha: "tree-sha" } }), {
+        status: 200,
+      });
     }
     if (String(url).endsWith("/git/commits") && options.method === "POST") {
-      return new Response(JSON.stringify({ sha: "release-intent-sha" }), { status: 201 });
+      return new Response(JSON.stringify({ sha: "release-intent-sha" }), {
+        status: 201,
+      });
     }
     if (String(url).endsWith("/git/refs") && options.method === "POST") {
-      return new Response(JSON.stringify({ ref: "refs/heads/release/production-abcdef123456" }), { status: 201 });
+      return new Response(
+        JSON.stringify({ ref: "refs/heads/release/production-abcdef123456" }),
+        { status: 201 },
+      );
     }
     if (String(url).endsWith("/pulls") && options.method === "POST") {
       return new Response(
-        JSON.stringify({ message: "GitHub Actions is not permitted to create or approve pull requests." }),
+        JSON.stringify({
+          message:
+            "GitHub Actions is not permitted to create or approve pull requests.",
+        }),
         { status: 403 },
       );
     }
@@ -2325,15 +3747,31 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
       GITHUB_STEP_SUMMARY: stepSummaryPath,
       PRODUCTION_RELEASE_PR_MODE: "auto",
       FAIL_ON_RELEASE_PR_ERROR: "false",
-      PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
-      PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+      PRODUCTION_RELEASE_PR_SUMMARY_PATH:
+        ".buildchain/production-release-pr/handoff.json",
+      PRODUCTION_RELEASE_PR_BODY_PATH:
+        ".buildchain/production-release-pr/body.md",
       BUILDCHAIN_LOG_PATH: logPath,
     });
     assert.equal(result.status, "permission-denied");
-    assert.match(fs.readFileSync(outputPath, "utf8"), /release-pr-status=permission-denied/);
-    assert.match(fs.readFileSync(outputPath, "utf8"), /production-release-token-source=github-token/);
-    assert.match(fs.readFileSync(stepSummaryPath, "utf8"), /Manual PR creation command/);
-    const handoff = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/production-release-pr/handoff.json"), "utf8"));
+    assert.match(
+      fs.readFileSync(outputPath, "utf8"),
+      /release-pr-status=permission-denied/,
+    );
+    assert.match(
+      fs.readFileSync(outputPath, "utf8"),
+      /production-release-token-source=github-token/,
+    );
+    assert.match(
+      fs.readFileSync(stepSummaryPath, "utf8"),
+      /Manual PR creation command/,
+    );
+    const handoff = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/production-release-pr/handoff.json"),
+        "utf8",
+      ),
+    );
     assert.equal(handoff.status, "permission-denied");
     assert.equal(handoff.error.status, 403);
     assert.equal(handoff.tokenSource, "github-token");
@@ -2341,7 +3779,11 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
     assert.equal(event.event, "control-plane.release-intent.outcome");
     assert.equal(event.attributes.outcome, "failed");
     assert.equal(event.attributes.action, "permission-denied");
-    assert.ok(calls.some((call) => call.method === "POST" && call.url.endsWith("/pulls")));
+    assert.ok(
+      calls.some(
+        (call) => call.method === "POST" && call.url.endsWith("/pulls"),
+      ),
+    );
   } finally {
     process.chdir(previousCwd);
     globalThis.fetch = previousFetch;
@@ -2349,7 +3791,9 @@ test("web-surface production release PR permission-denied is a non-fatal handoff
 });
 
 test("web-surface production release PR reports unavailable app token before fallback github token", async () => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-app-token-unavailable-"));
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-release-pr-app-token-unavailable-"),
+  );
   const previousCwd = process.cwd();
   const previousFetch = globalThis.fetch;
   const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
@@ -2391,15 +3835,31 @@ test("web-surface production release PR reports unavailable app token before fal
       PRODUCTION_RELEASE_APP_CLIENT_ID_CONFIGURED: "true",
       PRODUCTION_RELEASE_APP_PRIVATE_KEY_CONFIGURED: "false",
       PRODUCTION_RELEASE_PR_TOKEN_CONFIGURED: "false",
-      PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
-      PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+      PRODUCTION_RELEASE_PR_SUMMARY_PATH:
+        ".buildchain/production-release-pr/handoff.json",
+      PRODUCTION_RELEASE_PR_BODY_PATH:
+        ".buildchain/production-release-pr/body.md",
     });
     assert.equal(result.status, "app-token-unavailable");
     assert.equal(called, false);
-    assert.match(fs.readFileSync(outputPath, "utf8"), /release-pr-status=app-token-unavailable/);
-    assert.match(fs.readFileSync(outputPath, "utf8"), /production-release-app-token-status=missing-private-key/);
-    assert.match(fs.readFileSync(stepSummaryPath, "utf8"), /app token status: `missing-private-key`/);
-    const handoff = JSON.parse(fs.readFileSync(path.join(workspace, ".buildchain/production-release-pr/handoff.json"), "utf8"));
+    assert.match(
+      fs.readFileSync(outputPath, "utf8"),
+      /release-pr-status=app-token-unavailable/,
+    );
+    assert.match(
+      fs.readFileSync(outputPath, "utf8"),
+      /production-release-app-token-status=missing-private-key/,
+    );
+    assert.match(
+      fs.readFileSync(stepSummaryPath, "utf8"),
+      /app token status: `missing-private-key`/,
+    );
+    const handoff = JSON.parse(
+      fs.readFileSync(
+        path.join(workspace, ".buildchain/production-release-pr/handoff.json"),
+        "utf8",
+      ),
+    );
     assert.equal(handoff.status, "app-token-unavailable");
     assert.equal(handoff.appConfig.clientIdConfigured, true);
     assert.equal(handoff.appConfig.privateKeyConfigured, false);
@@ -2411,7 +3871,9 @@ test("web-surface production release PR reports unavailable app token before fal
 });
 
 test("web-surface production release PR summary-only mode does not call GitHub PR API", async () => {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-pr-summary-only-"));
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-release-pr-summary-only-"),
+  );
   const previousCwd = process.cwd();
   const previousFetch = globalThis.fetch;
   const sourceSha = "abcdef1234567890abcdef1234567890abcdef12";
@@ -2439,13 +3901,25 @@ test("web-surface production release PR summary-only mode does not call GitHub P
       GITHUB_SHA: sourceSha,
       STAGING_RELEASE_PR_SUMMARY_PATH: summaryPath,
       PRODUCTION_RELEASE_PR_MODE: "summary-only",
-      PRODUCTION_RELEASE_PR_SUMMARY_PATH: ".buildchain/production-release-pr/handoff.json",
-      PRODUCTION_RELEASE_PR_BODY_PATH: ".buildchain/production-release-pr/body.md",
+      PRODUCTION_RELEASE_PR_SUMMARY_PATH:
+        ".buildchain/production-release-pr/handoff.json",
+      PRODUCTION_RELEASE_PR_BODY_PATH:
+        ".buildchain/production-release-pr/body.md",
     });
     assert.equal(result.status, "summary-only");
     assert.equal(called, false);
-    assert.equal(fs.existsSync(path.join(workspace, ".buildchain/production-release-pr/handoff.json")), true);
-    assert.equal(fs.existsSync(path.join(workspace, ".buildchain/production-release-pr/body.md")), true);
+    assert.equal(
+      fs.existsSync(
+        path.join(workspace, ".buildchain/production-release-pr/handoff.json"),
+      ),
+      true,
+    );
+    assert.equal(
+      fs.existsSync(
+        path.join(workspace, ".buildchain/production-release-pr/body.md"),
+      ),
+      true,
+    );
   } finally {
     process.chdir(previousCwd);
     globalThis.fetch = previousFetch;
@@ -2518,24 +3992,39 @@ test("web-surface release feedback passport records responsibility and renders s
       manifest: { rollbackPointer: "refs/tags/v2" },
     },
     runId: "123",
-    runUrl: "https://github.com/kungfu-systems/site-kungfu-tech/actions/runs/123",
+    runUrl:
+      "https://github.com/kungfu-systems/site-kungfu-tech/actions/runs/123",
     runtimeSha: "b".repeat(40),
     payload: { head_commit: { timestamp: "2026-07-04T00:00:00Z" } },
     sourceEvent: "push",
-    target: { pullNumber: 42, sourceBranch: "feature/release-site", source: "release-intent" },
+    target: {
+      pullNumber: 42,
+      sourceBranch: "feature/release-site",
+      source: "release-intent",
+    },
     gate: { label: "buildchain-release", headPrefix: "feature/release-" },
     privacyMode: "private-ref",
     actor: "keren",
     runnerActor: "GitHub Actions",
-    oidcDeployIdentity: "arn:aws:iam::123456789012:role/site-production-github-actions",
+    oidcDeployIdentity:
+      "arn:aws:iam::123456789012:role/site-production-github-actions",
   });
 
   assert.equal(passport.responsibility.pullRequest, 42);
   assert.equal(passport.responsibility.sourceEvent, "push");
-  assert.equal(passport.responsibility.requiredGateEvidence.label, "buildchain-release");
-  assert.match(passport.responsibility.humanDecisionActor, /^private-ref:sha256:/);
   assert.equal(
-    normalizeActorIdentity("keren", { privacyMode: "redacted", kind: "human-decision-actor" }),
+    passport.responsibility.requiredGateEvidence.label,
+    "buildchain-release",
+  );
+  assert.match(
+    passport.responsibility.humanDecisionActor,
+    /^private-ref:sha256:/,
+  );
+  assert.equal(
+    normalizeActorIdentity("keren", {
+      privacyMode: "redacted",
+      kind: "human-decision-actor",
+    }),
     "human-decision-actor:redacted",
   );
 
@@ -2563,7 +4052,10 @@ test("binary distribution blocks invalid release uploads before the build matrix
     workflow.indexOf("Binary distribution preflight") <
       workflow.indexOf("Build standalone binary archive"),
   );
-  assert.match(workflow, /upload-release is retired from the evidence-only Binary Distribution workflow/);
+  assert.match(
+    workflow,
+    /upload-release is retired from the evidence-only Binary Distribution workflow/,
+  );
   assert.match(workflow, /needs: preflight/);
   assert.match(workflow, /needs: \[preflight, binary\]/);
 });
@@ -2595,7 +4087,10 @@ test("binary evidence and product publication are isolated by the sealed asset w
   );
   assert.match(workflow, /Fetch durable release-state passport/);
   assert.match(workflow, /name: Write checksums[\s\S]*?! -name checksums\.txt/);
-  assert.match(workflow, /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/);
+  assert.match(
+    workflow,
+    /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/,
+  );
   assert.match(workflow, /authoritative-release-state-passport\.json/);
   assert.match(workflow, /authoritative-release-state-impact\.json/);
   assert.match(workflow, /durable release-state passport KFD base: ok/);
@@ -2610,12 +4105,21 @@ test("binary evidence and product publication are isolated by the sealed asset w
     ),
     /verify release-passport/,
   );
-  assert.match(workflow, /--base-passport-json \.buildchain\/release-passport\/authoritative-release-state-passport\.json/);
-  assert.match(workflow, /--impact-json \.buildchain\/release-evidence\/authoritative-release-state-impact\.json/);
+  assert.match(
+    workflow,
+    /--base-passport-json \.buildchain\/release-passport\/authoritative-release-state-passport\.json/,
+  );
+  assert.match(
+    workflow,
+    /--impact-json \.buildchain\/release-evidence\/authoritative-release-state-impact\.json/,
+  );
   assert.match(workflow, /--require-base-kfd/);
   assert.doesNotMatch(workflow, /scripts\/ensure-github-release\.mjs/);
   assert.doesNotMatch(workflow, /gh release upload/);
-  assert.match(publication, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
+  assert.match(
+    publication,
+    /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
+  );
   assert.match(
     publication,
     /name: Seal binary release asset capability\n    permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read/,
@@ -2635,7 +4139,10 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(workflow, /controller-receipt-qualifying != 'true'/);
   assert.match(workflow, /name: Dispatch sealed binary asset publication/);
   assert.match(workflow, /needs: passport/);
-  assert.match(workflow, /name: Dispatch exact evidence run to Binary Release Assets/);
+  assert.match(
+    workflow,
+    /name: Dispatch exact evidence run to Binary Release Assets/,
+  );
   assert.match(workflow, /gh workflow run binary-release-assets\.yml/);
   assert.match(workflow, /-f evidence-run-id="\$\{GITHUB_RUN_ID\}"/);
   assert.doesNotMatch(publicPublication, /workflow_run:/);
@@ -2647,12 +4154,24 @@ test("binary evidence and product publication are isolated by the sealed asset w
     publication,
     /uses: \.\/\.github\/workflows\/\.publication-authority\.yml\n    secrets: inherit/,
   );
-  assert.match(publicPublication, /Binary Distribution source \$source_sha does not match \$release_tag/);
-  assert.match(publicPublication, /manual buildchain-ref must equal the exact workflow source SHA/);
+  assert.match(
+    publicPublication,
+    /Binary Distribution source \$source_sha does not match \$release_tag/,
+  );
+  assert.match(
+    publicPublication,
+    /manual buildchain-ref must equal the exact workflow source SHA/,
+  );
   assert.match(authority, /--allow-release-reconciliation/);
-  assert.match(authority, /--environment-ref "v\$\{\{ inputs\.publication-version \}\}"/);
+  assert.match(
+    authority,
+    /--environment-ref "v\$\{\{ inputs\.publication-version \}\}"/,
+  );
   assert.match(authority, /--environment-ref-type tag/);
-  assert.match(authority, /BUILDCHAIN_AUTHORITY_REF: \$\{\{ inputs\.buildchain-ref \}\}/);
+  assert.match(
+    authority,
+    /BUILDCHAIN_AUTHORITY_REF: \$\{\{ inputs\.buildchain-ref \}\}/,
+  );
   assert.match(authority, /actualRuntimeSha !== expectedAuthorityRuntimeSha/);
   assert.match(
     authority,
@@ -2661,7 +4180,10 @@ test("binary evidence and product publication are isolated by the sealed asset w
   assert.match(publicPublication, /auto-admission: true/);
   assert.match(publication, /auto-admission-kind: binary-release-assets/);
   assert.match(publication, /gate-aggregate-json:/);
-  assert.match(promotion, /Dispatch standalone binary distribution for the exact public tag/);
+  assert.match(
+    promotion,
+    /Dispatch standalone binary distribution for the exact public tag/,
+  );
   assert.match(promotion, /gh workflow run binary-distribution\.yml/);
   assert.match(
     promotion,
@@ -2709,6 +4231,11 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
   );
   assert.match(
     selfPromotion,
+    /promote-alpha:[\s\S]*publish-rematerialize-on-resume: true/,
+  );
+  assert.match(selfPromotion, /promote-stable:[\s\S]*publish-rematerialize-on-resume:.*release\//);
+  assert.match(
+    selfPromotion,
     /recover-durable-transaction:[\s\S]*?type: boolean/,
   );
   assert.match(
@@ -2731,7 +4258,10 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
 
 test("runtime selection accepts official channels and gates train or SHA overrides", () => {
   assert.deepEqual(
-    resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@v2" }),
+    resolveRuntimeSelection({
+      requestedRef: "",
+      workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@v2",
+    }),
     {
       requestedRef: "",
       runtimeRef: "v2",
@@ -2744,7 +4274,11 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     },
   );
   assert.deepEqual(
-    resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/buildchain/.github/workflows/.build.yml@refs/tags/v2-alpha" }),
+    resolveRuntimeSelection({
+      requestedRef: "",
+      workflowRef:
+        "kungfu-systems/buildchain/.github/workflows/.build.yml@refs/tags/v2-alpha",
+    }),
     {
       requestedRef: "",
       runtimeRef: "v2-alpha",
@@ -2757,7 +4291,10 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     },
   );
   assert.equal(
-    resolveRuntimeSelection({ requestedRef: "", workflowRef: "kungfu-systems/libnode/.github/workflows/build.yml@main" }).runtimeRef,
+    resolveRuntimeSelection({
+      requestedRef: "",
+      workflowRef: "kungfu-systems/libnode/.github/workflows/build.yml@main",
+    }).runtimeRef,
     "v3",
   );
   assert.deepEqual(
@@ -2804,12 +4341,20 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     normalizeRequestedRuntimeRef("refs/heads/train/v2/v2.3/runtime-loader").ref,
     "train/v2/v2.3/runtime-loader",
   );
-  assert.equal(classifyBuildchainRuntimeRef("train/v2/v2.3/runtime-loader"), "train");
   assert.equal(
-    normalizeRequestedRuntimeRef("refs/heads/authority/v3/v3.0/artifact-signing").ref,
+    classifyBuildchainRuntimeRef("train/v2/v2.3/runtime-loader"),
+    "train",
+  );
+  assert.equal(
+    normalizeRequestedRuntimeRef(
+      "refs/heads/authority/v3/v3.0/artifact-signing",
+    ).ref,
     "authority/v3/v3.0/artifact-signing",
   );
-  assert.equal(classifyBuildchainRuntimeRef("authority/v3/v3.0/artifact-signing"), "authority");
+  assert.equal(
+    classifyBuildchainRuntimeRef("authority/v3/v3.0/artifact-signing"),
+    "authority",
+  );
   assert.equal(classifyBuildchainRuntimeRef("a".repeat(40)), "exact-sha");
   assert.throws(
     () => normalizeRequestedRuntimeRef("release/v2/v2.3"),
@@ -2824,7 +4369,8 @@ test("runtime selection accepts official channels and gates train or SHA overrid
     {
       ok: false,
       decision: "rejected-untrusted-event",
-      reason: "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
+      reason:
+        "buildchain-ref override is only allowed for trusted workflow_dispatch runs",
     },
   );
   assert.deepEqual(
@@ -2909,29 +4455,50 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
   ];
   for (const workflowFile of workflowFiles) {
     const workflow = fs.readFileSync(path.join(root, workflowFile), "utf8");
-    assert.match(workflow, /BUILDCHAIN_WORKFLOW_REF: \$\{\{ job\.workflow_ref \}\}/);
-    assert.match(workflow, /process\.env\.BUILDCHAIN_WORKFLOW_REF \|\| process\.env\.GITHUB_WORKFLOW_REF/);
+    assert.match(
+      workflow,
+      /BUILDCHAIN_WORKFLOW_REF: \$\{\{ job\.workflow_ref \}\}/,
+    );
+    assert.match(
+      workflow,
+      /process\.env\.BUILDCHAIN_WORKFLOW_REF \|\| process\.env\.GITHUB_WORKFLOW_REF/,
+    );
     assert.match(workflow, /const officialChannelRef = \/\^v\\d\+/);
-    assert.match(workflow, /const officialChannel = officialChannelRef\.test\(requested\)/);
+    assert.match(
+      workflow,
+      /const officialChannel = officialChannelRef\.test\(requested\)/,
+    );
     if (
       workflowFile === ".github/workflows/.build.yml" ||
       workflowFile === ".github/workflows/paper-release.yml" ||
       workflowFile === ".github/workflows/publication-artifact.yml"
     ) {
       assert.match(workflow, /const pinnedSelfRuntime =/);
-      assert.match(workflow, /requested\.toLowerCase\(\) === shellRef\.toLowerCase\(\)/);
-      assert.match(workflow, /requested !== "" && !officialChannel && !pinnedSelfRuntime/);
+      assert.match(
+        workflow,
+        /requested\.toLowerCase\(\) === shellRef\.toLowerCase\(\)/,
+      );
+      assert.match(
+        workflow,
+        /requested !== "" && !officialChannel && !pinnedSelfRuntime/,
+      );
       assert.match(workflow, /\? "pinned-self"/);
     } else {
       assert.match(workflow, /requested !== "" && !officialChannel/);
     }
     assert.match(workflow, /\? "official-channel"/);
-    assert.match(workflow, /buildchain-ref override is only allowed for trusted workflow_dispatch runs/);
+    assert.match(
+      workflow,
+      /buildchain-ref override is only allowed for trusted workflow_dispatch runs/,
+    );
   }
 });
 
 test("pinned self runtime inherits the explicitly declared contract-lock lane", () => {
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
   assert.match(
     workflow,
     /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: \$\{\{ steps\.runtime\.outputs\.runtime-override == 'true' \|\| steps\.runtime\.outputs\.runtime-trust-decision == 'pinned-self' \}\}/,
@@ -2939,13 +4506,25 @@ test("pinned self runtime inherits the explicitly declared contract-lock lane", 
 });
 
 test("web-surface release PR close hands production to the protected main push", () => {
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.web-surface.yml"), "utf8");
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.web-surface.yml"),
+    "utf8",
+  );
   assert.match(workflow, /trustedClosedReleasePrRuntime/);
-  assert.match(workflow, /requested\.toLowerCase\(\) === \(await resolveRef\(shellRef\)\)\.toLowerCase\(\)/);
-  assert.match(workflow, /closed-release-pr-shell-runtime/);
-  assert.match(workflow, /EVENT_ACTION" = "closed"[\s\S]*?web_surface_channel=""/);
   assert.match(
-    fs.readFileSync(path.join(root, "scripts/web-surface-production-decision.mjs"), "utf8"),
+    workflow,
+    /requested\.toLowerCase\(\) === \(await resolveRef\(shellRef\)\)\.toLowerCase\(\)/,
+  );
+  assert.match(workflow, /closed-release-pr-shell-runtime/);
+  assert.match(
+    workflow,
+    /EVENT_ACTION" = "closed"[\s\S]*?web_surface_channel=""/,
+  );
+  assert.match(
+    fs.readFileSync(
+      path.join(root, "scripts/web-surface-production-decision.mjs"),
+      "utf8",
+    ),
     /release-pr-verified-awaiting-main-push/,
   );
 });
@@ -2961,27 +4540,63 @@ test("runtime-aware workflows pin same-repository pull request merge refs", () =
   ];
   for (const workflowFile of workflowFiles) {
     const workflow = fs.readFileSync(path.join(root, workflowFile), "utf8");
-    assert.match(workflow, /const sameRepositoryWorkflow = workflowRef\.startsWith/);
-    assert.match(workflow, /const pullRequestMergeRef = \/\^refs\\\/pull\\\/\\d\+\\\/merge\$\//);
-    assert.match(workflow, /sameRepositoryWorkflow && pullRequestMergeRef\.test\(ref\)/);
-    assert.match(workflow, /const workflowSha = String\(context\.sha \|\| ""\)/);
-    assert.match(workflow, /current workflow SHA is invalid for Buildchain pull request merge ref/);
+    assert.match(
+      workflow,
+      /const sameRepositoryWorkflow = workflowRef\.startsWith/,
+    );
+    assert.match(
+      workflow,
+      /const pullRequestMergeRef = \/\^refs\\\/pull\\\/\\d\+\\\/merge\$\//,
+    );
+    assert.match(
+      workflow,
+      /sameRepositoryWorkflow && pullRequestMergeRef\.test\(ref\)/,
+    );
+    assert.match(
+      workflow,
+      /const workflowSha = String\(context\.sha \|\| ""\)/,
+    );
+    assert.match(
+      workflow,
+      /current workflow SHA is invalid for Buildchain pull request merge ref/,
+    );
   }
 });
 
 test("Gate profile treats its exact workflow shell SHA as a pinned self runtime", () => {
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.gate-profile.yml"), "utf8");
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.gate-profile.yml"),
+    "utf8",
+  );
   assert.match(workflow, /const pinnedSelfRuntime =/);
-  assert.match(workflow, /sameRepositoryWorkflow &&[\s\S]*exactSha\.test\(requested\)[\s\S]*exactSha\.test\(shellRef\)/);
-  assert.match(workflow, /requested\.toLowerCase\(\) === shellRef\.toLowerCase\(\)/);
-  assert.match(workflow, /requested && !official\.test\(requested\) && !pinnedSelfRuntime/);
+  assert.match(
+    workflow,
+    /sameRepositoryWorkflow &&[\s\S]*exactSha\.test\(requested\)[\s\S]*exactSha\.test\(shellRef\)/,
+  );
+  assert.match(
+    workflow,
+    /requested\.toLowerCase\(\) === shellRef\.toLowerCase\(\)/,
+  );
+  assert.match(
+    workflow,
+    /requested && !official\.test\(requested\) && !pinnedSelfRuntime/,
+  );
 });
 
 test("build workflow only trusts an exact same-repository pull request head override", () => {
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
   assert.match(workflow, /const trustedSameRepositoryPullRequestHead =/);
   assert.match(workflow, /pullRequestHeadRepository === repository/);
-  assert.match(workflow, /requested\.toLowerCase\(\) === pullRequestHeadSha\.toLowerCase\(\)/);
-  assert.match(workflow, /!trustedSameRepositoryPullRequestHead && context\.eventName !== "workflow_dispatch"/);
+  assert.match(
+    workflow,
+    /requested\.toLowerCase\(\) === pullRequestHeadSha\.toLowerCase\(\)/,
+  );
+  assert.match(
+    workflow,
+    /!trustedSameRepositoryPullRequestHead && context\.eventName !== "workflow_dispatch"/,
+  );
   assert.match(workflow, /\? "same-repository-pr-head"/);
 });

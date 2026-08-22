@@ -25,19 +25,24 @@
           "id": "submit-101",
           "operation": "submit",
           "pullRequestNumber": 101,
+          "overrides": { "deliveryClass": "non-native-fast" },
           "now": "2026-08-07T00:00:01Z"
         },
         {
           "id": "submit-102",
           "operation": "submit",
           "pullRequestNumber": 102,
-          "overrides": { "priority": "expedited" },
+          "overrides": {
+            "deliveryClass": "non-native-fast",
+            "priority": "expedited"
+          },
           "now": "2026-08-07T00:00:02Z"
         },
         {
           "id": "duplicate-101",
           "operation": "submit",
           "pullRequestNumber": 101,
+          "overrides": { "deliveryClass": "non-native-fast" },
           "now": "2026-08-07T00:00:03Z"
         },
         {
@@ -61,7 +66,7 @@
           "now": "2026-08-07T00:02:00Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:e01018e4797e98813454328aba2c0a04932885fcd6da7d216697c7961bc26f56"
+      "expectedLegacyProjectionRoot": "sha256:da58eec588414e16781ffad1b92d3733b207b43e2c7846f6b659c71b150d964d"
     },
     {
       "id": "lease-expiry-and-stale-fence",
@@ -76,14 +81,30 @@
           "id": "submit",
           "operation": "submit",
           "pullRequestNumber": 120,
+          "overrides": {
+            "environmentRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "nativeCommandContract": {
+              "schema": "kungfu.buildchain.native-command-contract/v1",
+              "runner": "bash-lc",
+              "command": "node --test tests/v4-warrant-shadow-plan.test.mjs",
+              "commandRoot": "sha256:4d9a03536802c46fe254f247b7236925aec49d789e5e9ac7b2dceac08d7cefab"
+            }
+          },
           "now": "2026-08-07T01:00:01Z"
+        },
+        {
+          "id": "submit-successor",
+          "operation": "submit",
+          "pullRequestNumber": 121,
+          "overrides": { "deliveryClass": "non-native-fast" },
+          "now": "2026-08-07T01:00:02Z"
         },
         {
           "id": "select-old",
           "operation": "select",
           "saveWarrant": "old",
           "leaseSeconds": 60,
-          "now": "2026-08-07T01:00:02Z"
+          "now": "2026-08-07T01:00:03Z"
         },
         {
           "id": "recover",
@@ -91,21 +112,29 @@
           "now": "2026-08-07T01:02:00Z"
         },
         {
+          "id": "close-expired",
+          "operation": "close",
+          "useWarrant": "old",
+          "outcome": "terminal-failure",
+          "reason": "fenced native worker stop proved",
+          "now": "2026-08-07T01:02:01Z"
+        },
+        {
           "id": "select-new",
           "operation": "select",
           "saveWarrant": "new",
           "leaseSeconds": 60,
-          "now": "2026-08-07T01:02:01Z"
+          "now": "2026-08-07T01:02:02Z"
         },
         {
           "id": "reject-old",
           "operation": "heartbeat",
           "useWarrant": "old",
           "expectError": "stale-fencing-token",
-          "now": "2026-08-07T01:02:02Z"
+          "now": "2026-08-07T01:02:03Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:3c39ba66a2329a22f3834c4212bda001b6d5c527dcb9fa8a1b3ca88a199a7d16"
+      "expectedLegacyProjectionRoot": "sha256:24cf52c9108393b268cb40943f540c0e9a000a782e59251e3a9b6d5a63c1eb06"
     },
     {
       "id": "settlement-idempotence",
@@ -129,6 +158,7 @@
           "id": "submit",
           "operation": "submit",
           "pullRequestNumber": 150,
+          "overrides": { "deliveryClass": "non-native-fast" },
           "now": "2026-08-07T02:00:02Z"
         },
         {
@@ -153,7 +183,7 @@
           "now": "2026-08-07T02:02:00Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:b67669b2093105f3b4539ca5e4ba3d366bd7005a8781b5352377ae724d310d26"
+      "expectedLegacyProjectionRoot": "sha256:60fead53ff605fcd81934e6d752ea5f2b4951c57addcec1c1df87fb6dec9b7ba"
     },
     {
       "id": "queued-cancellation-idempotence",
@@ -168,6 +198,7 @@
           "id": "submit",
           "operation": "submit",
           "pullRequestNumber": 151,
+          "overrides": { "deliveryClass": "non-native-fast" },
           "now": "2026-08-07T03:00:01Z"
         },
         {
@@ -187,7 +218,7 @@
           "now": "2026-08-07T03:00:03Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:128104385600c72af175a3ff6a58a4266ca7dcd59a5019adbd87ca7fd9bc65c9"
+      "expectedLegacyProjectionRoot": "sha256:7000f721d975b379c0f321d935ab70e38589229a691517a3c41d2b1330fd3796"
     },
     {
       "id": "cas-response-loss-provider-conflict",
@@ -202,6 +233,7 @@
           "id": "submit",
           "operation": "submit",
           "pullRequestNumber": 160,
+          "overrides": { "deliveryClass": "non-native-fast" },
           "now": "2026-08-07T04:00:01Z"
         },
         {
@@ -221,7 +253,7 @@
         },
         { "id": "provider-stop", "operation": "provider-conflict" }
       ],
-      "expectedLegacyProjectionRoot": "sha256:e5082eab6504bab8ee382d43429594d0bbe1ee0353f78eb21b0ead03a4740887"
+      "expectedLegacyProjectionRoot": "sha256:c616a8278ace8ece6933987cf9559ca53d4e2fba0e937664c2770464800cff04"
     }
   ]
 }

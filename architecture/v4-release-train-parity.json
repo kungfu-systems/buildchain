@@ -26,6 +26,7 @@
     {
       "path": "tests/dev-alpha-candidate-patrol.test.mjs",
       "count": 37,
+      "targetAdditionalCount": 4,
       "result": "exact"
     },
     {

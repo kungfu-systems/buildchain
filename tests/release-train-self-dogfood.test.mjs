@@ -7,11 +7,18 @@ import {
   runReleaseTrainSelfDogfoodCampaign,
   validateReleaseTrainSelfDogfoodCampaign,
 } from "../scripts/release-train-self-dogfood.mjs";
+import {
+  createNativeCommandContract,
+  createNativeExecutionReceipt,
+} from "../packages/core/dev-delivery-warrant.js";
 
 const SHA = (digit) => digit.repeat(40);
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 
 function fixture(overrides = {}) {
+  const nativeCommandRoot = createNativeCommandContract(
+    "pnpm run check",
+  ).commandRoot;
   return {
     repository: "kungfu-systems/buildchain",
     sourceBranch: "dev/v4/v4.0",
@@ -19,6 +26,24 @@ function fixture(overrides = {}) {
     assignmentRoot: ROOT("1"),
     initiativeRoot: ROOT("2"),
     dependencyProofRoot: ROOT("3"),
+    environmentRoot: ROOT("e"),
+    nativeCommand: "pnpm run check",
+    nativeExecutionReceipt: createNativeExecutionReceipt({
+      outcome: "succeeded",
+      commandRoot: nativeCommandRoot,
+      executionBinding: {
+        repository: "kungfu-systems/buildchain",
+        protectedBase: "dev/v4/v4.0",
+        sourceHead: SHA("7"),
+        qualifiedBase: SHA("6"),
+        nativeCommandRoot,
+        toolchainRoot: ROOT("d"),
+        environmentRoot: ROOT("e"),
+      },
+      startedAt: "2026-08-11T03:30:08.000Z",
+      completedAt: "2026-08-11T03:30:11.000Z",
+      heartbeatCount: 2,
+    }),
     originDevSha: SHA("1"),
     candidateSha: SHA("2"),
     candidateTreeSha: SHA("3"),

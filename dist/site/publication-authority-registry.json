@@ -337,6 +337,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      "authorityClass": "governance-write",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/buildchain-ref-promotion.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -882,10 +895,7 @@
     },
     {
       "path": ".github/workflows/build-surface-fixture.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -941,6 +951,14 @@
       "path": ".github/workflows/buildchain-patrol.yml",
       "signals": [
         "write-permission"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
       ],
       "classified": true
     },
@@ -1152,9 +1170,7 @@
     },
     {
       "path": ".github/workflows/release-tail.yml",
-      "signals": [
-        "write-permission"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1182,7 +1198,22 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/v4-adopter-delivery-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/v4-adopter-delivery.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/v4-public-consumer-dogfood.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
+      "path": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
       "signals": [],
       "classified": false
     },
@@ -1192,10 +1223,15 @@
       "classified": false
     },
     {
+      "path": ".github/workflows/v4-tail-reseal.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/verify.yml",
       "signals": [],
       "classified": false
     }
   ],
-  "registryDigest": "456987223fcd21bb1db29583187fcbefacf91668a1a245ed1fb186ffe95c15c3"
+  "registryDigest": "9c930540ed2366db36802ce03cac597657e45ff402c14ef13099c788ed4e2501"
 }

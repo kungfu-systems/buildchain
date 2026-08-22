@@ -52,6 +52,10 @@ on:
         description: "JSON array of consumed admission nonces"
         required: false
         default: "[]"
+      release-passport-v4-runtime-resume-evidence-json:
+        description: "Verified runtime A+B Stage Capsule resume evidence JSON"
+        required: false
+        default: ""
       resume-candidate-repository:
         description: "Repository that owns the sealed candidate run"
         required: false
@@ -119,36 +123,26 @@ jobs:
           echo "::error::Candidate recovery requires sha, repository, current runtime SHA, candidate runtime SHA, and expected tree or candidate root."
           exit 1
 
-  promote:
+  promote-alpha:
     if: >-
       ${{
         (
           github.event_name == 'workflow_dispatch' &&
-          (
-            inputs['dry-run'] == 'true' ||
-            inputs['publication-admission-json'] != '' ||
-            (inputs['recover-durable-transaction'] == true && inputs.sha != '') ||
-            (inputs['resume-candidate-run-id'] != '' && inputs.sha != '')
-          )
+          startsWith(inputs['target-ref'], 'alpha/') &&
+          (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
+          inputs.sha != ''
         ) ||
         (
+          github.event_name == 'workflow_run' &&
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
-          (
-            startsWith(github.event.workflow_run.head_branch, 'alpha/') ||
-            startsWith(github.event.workflow_run.head_branch, 'release/') ||
-            github.event.workflow_run.head_branch == 'publish-gate/major' ||
-            github.event.workflow_run.head_branch == 'major-gate'
-          ) &&
+          startsWith(github.event.workflow_run.head_branch, 'alpha/') &&
           !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
           !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    # Bootstrap self-publication from the exact repository commit. The public
-    # router delegates to floating channel shells and therefore cannot publish
-    # the first alpha that introduces a new advanced shell path.
-    uses: ./.github/workflows/.release-candidate-promote.yml
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write
@@ -160,15 +154,11 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
+      buildchain-channel: alpha
       buildchain-repository: kungfu-systems/buildchain
-      # Durable recovery keeps the exact protected channel SHA as product
-      # source while executing the reviewed workflow runtime that owns the
-      # recovery dispatch. This prevents a source-tree defect from making its
-      # own governed recovery path permanently unreachable.
-      buildchain-ref: ${{ github.event.workflow_run.head_sha || ((inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') && github.sha) || inputs.sha || github.sha }}
-      buildchain-expected-channel: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && 'alpha' || 'stable' }}
-      buildchain-expected-major: "4"
-      buildchain-contract-lock-path: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'alpha/') && '.buildchain/alpha-contract-lock.json' || '.buildchain/contract-lock.json' }}
+      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-sha'] || 'v4-alpha' }}
+      buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
+      buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       package-manager: pnpm
@@ -184,8 +174,84 @@ jobs:
       resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
       resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
-      # Alpha consumes sealed candidate npm bytes; stable materializes final bytes and cannot reuse alpha ref/digest.
-      artifact-patterns: "buildchain-package-*"
+      artifact-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '' || 'buildchain-package-*' }}
+      publish-rematerialize-on-resume: true
+      github-release: true
+      github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
+      standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
+      required-status-check: check
+      branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
+      required-artifact-count: 0
+      publish-transaction-override: ${{ inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '' }}
+      publish-required-artifacts-json: '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]'
+      publish-package-main: "@kungfu-tech/buildchain"
+      trusted-publishing: true
+      release-passport: true
+      release-passport-product-name: Buildchain
+      release-passport-buildchain-self-kfd: true
+      release-passport-impact-json: .buildchain/release-impact.json
+      publication-auto-admission: true
+      publication-auto-no-gate: true
+      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-product: Buildchain
+      publication-target: npm:@kungfu-tech/buildchain
+      publication-package-name: "@kungfu-tech/buildchain"
+      dry-run: ${{ inputs['dry-run'] == 'true' }}
+
+  promote-stable:
+    if: >-
+      ${{
+        (
+          github.event_name == 'workflow_dispatch' &&
+          !startsWith(inputs['target-ref'], 'alpha/') &&
+          (
+            inputs['dry-run'] == 'true' ||
+            inputs['publication-admission-json'] != '' ||
+            (inputs['recover-durable-transaction'] == true && inputs.sha != '') ||
+            (inputs['resume-candidate-run-id'] != '' && inputs.sha != '')
+          )
+        ) ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          !startsWith(github.event.workflow_run.head_branch, 'alpha/') &&
+          !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
+        )
+      }}
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4
+    permissions:
+      actions: write
+      artifact-metadata: write
+      attestations: write
+      checks: write
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+    secrets: inherit
+    with:
+      buildchain-repository: kungfu-systems/buildchain
+      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-sha'] || '' }}
+      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
+      target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
+      package-manager: pnpm
+      artifact-name: libnode-shaped
+      release-candidate-workflow-file: build-surface-fixture.yml
+      release-candidate-workflow-name: Build Surface Fixture
+      resume-candidate-repository: ${{ inputs['resume-candidate-repository'] }}
+      resume-candidate-run-id: ${{ inputs['resume-candidate-run-id'] }}
+      resume-expected-workflow-file: build-surface-fixture.yml
+      resume-expected-workflow-name: Build Surface Fixture
+      resume-expected-source-tree: ${{ inputs['resume-expected-source-tree'] }}
+      resume-expected-candidate-root: ${{ inputs['resume-expected-candidate-root'] }}
+      resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
+      resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
+      resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
+      artifact-patterns: ""
+      publish-rematerialize-on-resume: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'release/') }}
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
       standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
@@ -193,7 +259,7 @@ jobs:
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       required-artifact-count: 0
       publish-transaction-override: ${{ github.event_name == 'workflow_dispatch' && (inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') }}
-      publish-required-artifacts-json: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'release/') && '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]' || '' }}
+      publish-required-artifacts-json: '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]'
       publish-package-main: "@kungfu-tech/buildchain"
       trusted-publishing: true
       release-passport: true

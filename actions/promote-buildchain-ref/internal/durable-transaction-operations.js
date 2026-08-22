@@ -1,4 +1,11 @@
-function finalizationRequirements(material, rematerialize = false) { return (material?.artifacts || []).map((artifact) => rematerialize && artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
+export function finalizationRequirements(material, rematerialize = false) { return (typeof material === "string" ? JSON.parse(material || "[]") : material?.artifacts || []).map((artifact) => !rematerialize ? artifact : artifact?.kind === "npm" ? { group: artifact.group, kind: artifact.kind, name: artifact.name, ref_template: "{version}", role: artifact.role, required: artifact.required } : artifact?.kind === "github-release" ? { ...artifact, digest: "" } : artifact); }
+
+function releasePassportOutputPath(context) {
+  return context.path.resolve(
+    context.cwd,
+    context.releasePassportOutputDir || ".buildchain/release-passport",
+  );
+}
 
 function createDurableTransactionOperations(context) {
   const {
@@ -47,12 +54,13 @@ function createDurableTransactionOperations(context) {
     publicationUsedQualificationNoncesJson,
     publicationQualificationNow,
     releasePassport,
-    releasePassportOutputDir,
     releasePassportProductName,
     releasePassportBuildSummaryPath,
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
+    releasePassportV4RuntimeResumeEvidenceJson,
+    releasePassportV4RuntimeResumeEvidenceCommand,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
@@ -172,9 +180,7 @@ function createDurableTransactionOperations(context) {
       expectedTransactionId,
       publishSealedBundleRoot,
       publishSealedBundleManifest: material ? "" : publishSealedBundleManifest,
-      publishRequiredArtifactsJson: material
-        ? JSON.stringify(finalizationRequirements(material, rematerialize))
-        : publishRequiredArtifactsJson,
+      publishRequiredArtifactsJson: material || rematerialize ? JSON.stringify(finalizationRequirements(material || publishRequiredArtifactsJson, rematerialize)) : publishRequiredArtifactsJson,
       releaseMaterialSha: releaseMaterialShaOverride,
       publishToolingSha: publishToolingShaOverride,
       publishMode,
@@ -223,6 +229,8 @@ function createDurableTransactionOperations(context) {
       releasePassportPlatformManifestPaths,
     ),
     passportPromotionRoutingJson = releasePassportPromotionRoutingJson,
+    passportV4ConsumerPolicyCertificationJson =
+      context.releasePassportV4ConsumerPolicyCertificationJson,
     passportKfd1WitnessJsons = splitPathList(releasePassportKfd1WitnessJsons),
     passportKfd2ClaimJsons = splitPathList(releasePassportKfd2ClaimJsons),
     passportKfd3PrebuildWitnessJsons = splitPathList(
@@ -257,15 +265,19 @@ function createDurableTransactionOperations(context) {
       channel: channel || rule.channel,
       line: line || rule.releasePrefix || "",
       packageName: publishPackageMain,
-      outputDir: path.resolve(
-        cwd,
-        releasePassportOutputDir || ".buildchain/release-passport",
-      ),
+      outputDir: releasePassportOutputPath(context),
       productName: releasePassportProductName,
       buildSummaryPath: passportBuildSummaryPath,
       platformManifestPaths: passportPlatformManifestPaths,
       impactJson: releasePassportImpactJson,
       promotionRoutingJson: passportPromotionRoutingJson,
+      v4ConsumerPolicyCertificationJson: passportV4ConsumerPolicyCertificationJson,
+      v4ConsumerPolicyCertificationRoot:
+        context.releasePassportV4ConsumerPolicyCertificationRoot,
+      v4RuntimeResumeEvidenceJson: releasePassportV4RuntimeResumeEvidenceJson,
+      v4RuntimeResumeEvidenceCommand:
+        releasePassportV4RuntimeResumeEvidenceCommand,
+      v4RuntimeResumeEvidenceCommandCwd: cwd,
       kfd1WitnessJsons: passportKfd1WitnessJsons,
       kfd2ClaimJsons: passportKfd2ClaimJsons,
       kfd3PrebuildWitnessJsons: passportKfd3PrebuildWitnessJsons,

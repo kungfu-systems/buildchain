@@ -7,8 +7,18 @@ import {
   normalizeBuildchainRef,
   parseBuildchainRefIdentity,
 } from "./buildchain-channel-identity.js";
+import {
+  createHistoricalBuildchainCompatibilityFacts,
+  createHistoricalBuildchainCompatibilityProofs,
+} from "./buildchain-compatibility-fact.js";
+import {
+  assertBuildchainCompatibilityProjection,
+  createBuildchainCompatibilityProofRegistry,
+} from "./buildchain-compatibility-authority.js";
+import { evaluateBuildchainContractLock as evaluateFactBackedBuildchainContractLock } from "./buildchain-compatibility-proof.js";
 import { createControllerRegistry } from "./controller-evidence.js";
 import { enumerateWorkflowInputs } from "./public-surface-audit.js";
+import { devDeliveryWorkflowContractSurface } from "./dev-delivery-contract-surface.js";
 
 export {
   BUILDCHAIN_CHANNELS,
@@ -17,11 +27,47 @@ export {
   parseBuildchainRefIdentity,
 };
 
+export {
+  BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_RELEASE_EVIDENCE_SCHEMA,
+  createBuildchainCompatibilityFact,
+  createBuildchainCompatibilityFactRegistry,
+  createBuildchainCompatibilityProof,
+  createHistoricalBuildchainCompatibilityFacts,
+  createHistoricalBuildchainCompatibilityProofs,
+  verifyBuildchainCompatibilityFact,
+  verifyBuildchainCompatibilityFactRegistry,
+  verifyBuildchainCompatibilityProof,
+} from "./buildchain-compatibility-fact.js";
+export {
+  assertBuildchainCompatibilityProjection,
+  createBuildchainCompatibilityPathQuery,
+  createBuildchainCompatibilityProofRegistry,
+  createBuildchainCompatibilityReleaseEvidence,
+  resolveBuildchainCompatibilityProof,
+  verifyBuildchainCompatibilityPath,
+} from "./buildchain-compatibility-authority.js";
+export {
+  BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA,
+  BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA,
+  createBuildchainCompatibilityVerificationReceipt,
+  verifyBuildchainCompatibilityVerificationReceipt,
+} from "./buildchain-compatibility-proof.js";
+
 export const BUILDCHAIN_RUNTIME_CONTRACT_WORLD = "kungfu-buildchain-runtime-contract-world";
 export const BUILDCHAIN_CONTRACT_LOCK = "kungfu-buildchain-contract-lock";
 
 const DEFAULT_POLICY = "major-compatible";
-const FLOATING_CLASSES = new Set(["stable", "alpha"]);
+
+function compatibilityAuthority() {
+  return {
+    compatibilityFacts: createHistoricalBuildchainCompatibilityFacts(),
+    compatibilityProofs: createHistoricalBuildchainCompatibilityProofs(),
+  };
+}
 
 function optionalString(value) {
   return value === undefined || value === null ? "" : String(value);
@@ -125,8 +171,7 @@ export function createBuildchainContractWorld({
   packageJson = undefined,
   controllerRegistry = undefined,
 } = {}) {
-  const pkg = packageJson || readJson(path.join(root, "package.json"), {});
-  const majorLine = majorLineFromPackageVersion(pkg.version);
+  const pkg = packageJson || readJson(path.join(root, "package.json"), {}), majorLine = majorLineFromPackageVersion(pkg.version);
   const workflowDescriptors = controllerRegistry ? [] : enumerateWorkflowInputs({ root });
   const controllerWorkflowIds = new Set([
     "check",
@@ -217,6 +262,7 @@ export function createBuildchainContractWorld({
         "alpha and stable channel selections use separate consumer contract locks by default",
       ],
     }),
+    surface(root, devDeliveryWorkflowContractSurface(pkg, majorLine)),
     surface(root, {
       id: "release-candidate-promote",
       kind: "workflow",
@@ -795,26 +841,60 @@ export function createBuildchainContractWorld({
       version: pkg.version || "",
       repository: pkg.repository?.url || pkg.repository || "https://github.com/kungfu-systems/buildchain",
     },
-    majorLine,
-    compatibilityPolicy: DEFAULT_POLICY,
+    majorLine, compatibilityPolicy: DEFAULT_POLICY,
+    ...compatibilityAuthority(),
     surfaces,
   };
   return finalizeBuildchainContractWorld(base);
 }
 
 export function finalizeBuildchainContractWorld(contractWorld) {
+  if (!Array.isArray(contractWorld?.compatibilityFacts) || !Array.isArray(contractWorld?.compatibilityProofs)) {
+    throw new Error("contract world requires compatibility Facts and their proof projection");
+  }
+  const sourceSurfaces = (contractWorld.surfaces || []).map((entry) => ({ ...entry }));
+  const proofRegistry = createBuildchainCompatibilityProofRegistry({
+    proofs: contractWorld.compatibilityProofs,
+    surfaces: sourceSurfaces,
+    majorLine: contractWorld.majorLine,
+  });
+  if (JSON.stringify(contractWorld.compatibilityFacts) !== JSON.stringify(proofRegistry.facts)) {
+    throw new Error("contract world compatibility Facts drift from the verified registry");
+  }
   const world = {
     ...contractWorld,
-    surfaces: (contractWorld.surfaces || []).map((entry) => ({ ...entry })),
+    compatibilityFacts: proofRegistry.facts,
+    compatibilityFactRegistryRoot: proofRegistry.factRegistryRoot,
+    compatibilityFactCutRoot: proofRegistry.factCutRoot,
+    compatibilityProofs: proofRegistry.proofs,
+    compatibilityProofRegistryRoot: proofRegistry.registryRoot,
+    surfaces: sourceSurfaces.map((entry) => {
+      const surfaceEntry = { ...entry };
+      delete surfaceEntry.compatibleBreakingDigests;
+      delete surfaceEntry.compatibilityProofRoots;
+      delete surfaceEntry.compatibilityFactRoots;
+      const projection = proofRegistry.projections[entry.id] || [];
+      if (projection.length > 0) {
+        surfaceEntry.compatibleBreakingDigests = projection.map((item) => item.breakingDigest);
+        surfaceEntry.compatibilityProofRoots = projection.map((item) => item.proofRoot);
+        surfaceEntry.compatibilityFactRoots = projection.map((item) => item.factRoot);
+      }
+      return surfaceEntry;
+    }),
   };
   const compatibilityModel = {
     schemaVersion: world.schemaVersion,
     contract: world.contract,
     majorLine: world.majorLine,
+    compatibilityFactRegistryRoot: world.compatibilityFactRegistryRoot,
+    compatibilityFactCutRoot: world.compatibilityFactCutRoot,
+    compatibilityProofRegistryRoot: world.compatibilityProofRegistryRoot,
     surfaces: world.surfaces.map((entry) => ({
       id: entry.id,
       kind: entry.kind,
       breakingDigest: entry.breakingDigest,
+      compatibilityProofRoots: entry.compatibilityProofRoots || [],
+      compatibilityFactRoots: entry.compatibilityFactRoots || [],
     })),
   };
   const digestModel = {
@@ -846,6 +926,9 @@ export function createBuildchainContractLock({
       contract: contractWorld.contract,
       contractDigest: contractWorld.contractDigest,
       compatibilityDigest: contractWorld.compatibilityDigest,
+      compatibilityFactRegistryRoot: contractWorld.compatibilityFactRegistryRoot,
+      compatibilityFactCutRoot: contractWorld.compatibilityFactCutRoot,
+      compatibilityProofRegistryRoot: contractWorld.compatibilityProofRegistryRoot,
       majorLine: contractWorld.majorLine,
       compatibilityPolicy,
       acceptedAt,
@@ -853,6 +936,8 @@ export function createBuildchainContractLock({
         id: entry.id,
         kind: entry.kind,
         breakingDigest: entry.breakingDigest,
+        compatibilityProofRoots: entry.compatibilityProofRoots || [],
+        compatibilityFactRoots: entry.compatibilityFactRoots || [],
       })),
     },
   };
@@ -889,143 +974,8 @@ export function readBuildchainContractLock(filePath) {
   return value;
 }
 
-function surfaceMap(surfaces = []) {
-  return new Map(surfaces.map((entry) => [entry.id, entry]));
-}
-
-function evaluateChannelBinding({
-  lock,
-  workflowShellRef,
-  runtimeRef,
-  expectedChannel,
-  expectedMajor,
-  allowOpaqueRuntime,
-}) {
-  if (!workflowShellRef && !expectedChannel && !expectedMajor) return null;
-  return evaluateBuildchainChannelBinding({
-    workflowShellRef,
-    runtimeRef,
-    lockRef: lock?.buildchain?.ref || "",
-    lockMajorLine: lock?.buildchain?.majorLine || "",
-    expectedChannel,
-    expectedMajor,
-    allowOpaqueRuntime,
-  });
-}
-
-export function evaluateBuildchainContractLock({
-  lock,
-  current,
-  runtimeRef = "",
-  runtimeSha = "",
-  runtimeClass = "",
-  compatibilityPolicy = "",
-  workflowShellRef = "",
-  expectedChannel = "",
-  expectedMajor = "",
-  allowOpaqueRuntime = false,
-} = {}) {
-  if (!current || current.contract !== BUILDCHAIN_RUNTIME_CONTRACT_WORLD) {
-    throw new Error("current must be a Buildchain runtime contract world");
-  }
-  const binding = evaluateChannelBinding({
-    lock,
-    workflowShellRef,
-    runtimeRef,
-    expectedChannel,
-    expectedMajor,
-    allowOpaqueRuntime,
-  });
-  if (binding?.ok === false) {
-    return {
-      ok: false,
-      status: binding.status,
-      drift: false,
-      compatible: false,
-      issueRecommended: false,
-      reasons: binding.reasons,
-      channelBinding: binding,
-    };
-  }
-  const floatingRuntime = FLOATING_CLASSES.has(runtimeClass);
-  if (!floatingRuntime) {
-    return {
-      ok: true,
-      status: "non-floating-runtime",
-      drift: false,
-      compatible: true,
-      issueRecommended: false,
-      reason: `runtime class ${runtimeClass || "unknown"} is not a stable floating ref`,
-    };
-  }
-  if (!lock) {
-    return {
-      ok: true,
-      status: "missing-lock",
-      drift: false,
-      compatible: true,
-      issueRecommended: false,
-      reason: "consumer repository has no Buildchain contract lock",
-    };
-  }
-  const accepted = lock.buildchain || {};
-  const policy = compatibilityPolicy || accepted.compatibilityPolicy || DEFAULT_POLICY;
-  const shaDrift = !!accepted.resolvedSha && !!runtimeSha && accepted.resolvedSha !== runtimeSha;
-  const contractDrift = !!accepted.contractDigest && accepted.contractDigest !== current.contractDigest;
-  if (!shaDrift && !contractDrift) {
-    return {
-      ok: true,
-      status: "unchanged",
-      drift: false,
-      compatible: true,
-      issueRecommended: false,
-      policy,
-      accepted,
-      current: contractSummary(current, runtimeRef, runtimeSha),
-    };
-  }
-  const reasons = [];
-  if (accepted.contract !== current.contract) {
-    reasons.push(`contract changed from ${accepted.contract || "(unknown)"} to ${current.contract}`);
-  }
-  if (accepted.majorLine && accepted.majorLine !== current.majorLine) {
-    reasons.push(`major line changed from ${accepted.majorLine} to ${current.majorLine}`);
-  }
-  if (policy === "exact" && accepted.contractDigest !== current.contractDigest) {
-    reasons.push("exact policy requires the contract digest to remain unchanged");
-  }
-  if (!["major-compatible", "allow-additive", "exact"].includes(policy)) {
-    reasons.push(`unsupported compatibility policy: ${policy}`);
-  }
-  const currentSurfaces = surfaceMap(current.surfaces);
-  for (const oldSurface of accepted.surfaces || []) {
-    const nextSurface = currentSurfaces.get(oldSurface.id);
-    if (!nextSurface) {
-      reasons.push(`surface removed: ${oldSurface.id}`);
-      continue;
-    }
-    const compatibleBreakingDigests = new Set(nextSurface.compatibleBreakingDigests || []);
-    if (
-      nextSurface.breakingDigest !== oldSurface.breakingDigest
-      && !compatibleBreakingDigests.has(oldSurface.breakingDigest)
-    ) {
-      reasons.push(`surface breaking digest changed: ${oldSurface.id}`);
-    }
-  }
-  const compatible = reasons.length === 0;
-  return {
-    ok: compatible,
-    status: compatible ? "compatible-drift" : "breaking-drift",
-    drift: shaDrift || contractDrift,
-    shaDrift,
-    contractDrift,
-    compatible,
-    issueRecommended: true,
-    policy,
-    reasons,
-    accepted,
-    current: contractSummary(current, runtimeRef, runtimeSha),
-  };
+export function evaluateBuildchainContractLock(options = {}) {
+  return evaluateFactBackedBuildchainContractLock(options);
 }
 
 export function contractSummary(contractWorld, runtimeRef = "", runtimeSha = "") {
@@ -1035,6 +985,9 @@ export function contractSummary(contractWorld, runtimeRef = "", runtimeSha = "")
     contract: contractWorld.contract,
     contractDigest: contractWorld.contractDigest,
     compatibilityDigest: contractWorld.compatibilityDigest,
+    compatibilityFactRegistryRoot: contractWorld.compatibilityFactRegistryRoot,
+    compatibilityFactCutRoot: contractWorld.compatibilityFactCutRoot,
+    compatibilityProofRegistryRoot: contractWorld.compatibilityProofRegistryRoot,
     majorLine: contractWorld.majorLine,
     surfaceCount: Array.isArray(contractWorld.surfaces) ? contractWorld.surfaces.length : 0,
   };

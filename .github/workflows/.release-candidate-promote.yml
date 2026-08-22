@@ -77,8 +77,28 @@ on:
         default: false
         type: boolean
         required: false
+      promotion-runtime-authorization-json:
+        description: "Rooted transient runtime authorization receipt supplied by the public router"
+        default: ""
+        type: string
+        required: false
+      promotion-runtime-authorization-root:
+        description: "sha256 root of the transient runtime authorization receipt"
+        default: ""
+        type: string
+        required: false
       buildchain-contract-lock-path:
         description: "Consumer-owned Buildchain contract lock path"
+        default: ".buildchain/contract-lock.json"
+        type: string
+        required: false
+      buildchain-alpha-contract-lock-path:
+        description: "Consumer-owned alpha contract lock path"
+        default: ".buildchain/alpha-contract-lock.json"
+        type: string
+        required: false
+      buildchain-stable-contract-lock-path:
+        description: "Consumer-owned stable contract lock path"
         default: ".buildchain/contract-lock.json"
         type: string
         required: false
@@ -369,6 +389,11 @@ on:
         required: false
       release-passport-impact-json:
         description: "Surface-aware release impact JSON or path passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
+      release-passport-v4-runtime-resume-evidence-json:
+        description: "Rooted v4 transient runtime authorization and fresh-attempt Stage Capsule resume lineage JSON or path"
         default: ""
         type: string
         required: false
@@ -1443,7 +1468,7 @@ jobs:
         id: buildchain-runtime
         shell: bash
         run: |
-          runtime_ref="${INPUT_PROMOTION_RUNTIME_REF:-${INPUT_BUILDCHAIN_REF:-v3}}"
+          runtime_ref="${INPUT_PROMOTION_RUNTIME_REF:-${INPUT_BUILDCHAIN_REF:-v3}}"; test ! -d .buildchain/runtime/promotion-shell/actions/promote-buildchain-ref || cp -R .buildchain/runtime/promotion-shell/actions/promote-buildchain-ref/. .buildchain/runtime/actions/promote-buildchain-ref/
           runtime_sha="$(git -C .buildchain/runtime rev-parse HEAD)"
           runtime_class="development"
           if [[ "${runtime_ref}" =~ ^[0-9a-fA-F]{40}$ ]]; then
@@ -1472,6 +1497,43 @@ jobs:
 
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Verify transient runtime authorization handoff
+        if: ${{ inputs.promotion-router-ref != '' }}
+        shell: bash
+        env:
+          BUILDCHAIN_OVERRIDE_USED: ${{ inputs.promotion-override-used }}
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: ${{ inputs.promotion-runtime-authorization-json }}
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: ${{ inputs.promotion-runtime-authorization-root }}
+          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import { verifyV4RuntimeAuthorizationReceipt } from "./.buildchain/runtime/packages/core/v4-runtime-ref-resume-authority.js";
+          const overrideUsed = process.env.BUILDCHAIN_OVERRIDE_USED === "true";
+          const raw = process.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON || "";
+          const expectedRoot = process.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT || "";
+          if (!overrideUsed) {
+            if (raw || expectedRoot) throw new Error("non-override promotion must not carry runtime authorization evidence");
+            process.exit(0);
+          }
+          if (!raw || !expectedRoot) throw new Error("runtime override requires rooted authorization evidence");
+          const evidence = JSON.parse(raw);
+          if (evidence.receiptRoot !== expectedRoot) throw new Error("runtime authorization handoff root mismatch");
+          const verification = verifyV4RuntimeAuthorizationReceipt({
+            receipt: evidence.receipt,
+            receiptRoot: evidence.receiptRoot,
+            repository: process.env.GITHUB_REPOSITORY,
+            sourceSha: process.env.BUILDCHAIN_EXPECTED_SOURCE_SHA,
+            runtimeSha: process.env.BUILDCHAIN_EXPECTED_RUNTIME_SHA,
+          });
+          if (!verification.ok) throw new Error(`runtime authorization handoff rejected: ${verification.failures.join(", ")}`);
+          const output = ".buildchain/release-candidate/v4-runtime-authorization.json";
+          fs.mkdirSync(".buildchain/release-candidate", { recursive: true });
+          fs.writeFileSync(output, `${JSON.stringify(evidence, null, 2)}\n`);
+          NODE
 
       - name: Bridge Buildchain self-runtime dependencies
         if: ${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository }}
@@ -1602,6 +1664,7 @@ jobs:
           test -f "${RECOVERY_RECEIPT}"
           mkdir -p "${RELEASE_PASSPORT_OUTPUT_DIR}"
           cp "${RECOVERY_RECEIPT}" "${RELEASE_PASSPORT_OUTPUT_DIR}/release-candidate-recovery-receipt.json"
+          if [ -n "${{ steps.rc.outputs.v4-runtime-resume-evidence-path }}" ]; then cp "${{ steps.rc.outputs.v4-runtime-resume-evidence-path }}" "${RELEASE_PASSPORT_OUTPUT_DIR}/"; fi
 
       - name: Upload immutable candidate recovery receipt
         id: recovery-receipt
@@ -1636,6 +1699,47 @@ jobs:
           fi
           echo "path=$policy" >> "$GITHUB_OUTPUT"
 
+      - name: Resolve exact v4 policy caller source
+        id: v4-policy-caller
+        if: ${{ startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0' }}
+        shell: bash
+        env:
+          RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const passport = JSON.parse(fs.readFileSync(process.env.RELEASE_CANDIDATE_PASSPORT, "utf8"));
+          const sourceSha = passport.consumerPolicy?.receipt?.caller?.sourceSha || "";
+          const runtimeSha = passport.buildchain?.sha || "";
+          if (!/^[0-9a-f]{40}$/u.test(sourceSha)) throw new Error("release candidate policy receipt must bind an exact caller source SHA");
+          if (!/^[0-9a-f]{40}$/u.test(runtimeSha)) throw new Error("release candidate Passport must bind an exact Buildchain runtime SHA");
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `source-sha=${sourceSha}\nruntime-sha=${runtimeSha}\n`);
+          NODE
+
+      - name: Checkout exact v4 policy caller source
+        if: ${{ steps.v4-policy-caller.outputs.source-sha != '' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ steps.v4-policy-caller.outputs.source-sha }}
+          path: .buildchain/runtime/policy-caller
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout exact candidate policy runtime
+        if: >-
+          ${{
+            steps.v4-policy-caller.outputs.runtime-sha != '' &&
+            steps.v4-policy-caller.outputs.runtime-sha != steps.buildchain-runtime.outputs.sha
+          }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ steps.v4-policy-caller.outputs.runtime-sha }}
+          path: .buildchain/runtime/candidate-policy-runtime
+          clean: true
+          persist-credentials: false
+
       - name: Record promotion routing evidence
         id: routing-evidence
         if: ${{ inputs.promotion-router-ref != '' }}
@@ -1655,6 +1759,34 @@ jobs:
           OVERRIDE_USED: ${{ inputs.promotion-override-used }}
           RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
         run: node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs
+
+      - name: Independently certify v4 floating consumer policy evidence
+        id: v4-policy-certification
+        if: ${{ startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0' }}
+        shell: bash
+        env:
+          BUILDCHAIN_EXPECTED_CALLER_ROOT: ${{ github.workspace }}/.buildchain/runtime/policy-caller
+          BUILDCHAIN_EXPECTED_CALLER_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: ${{ steps.v4-policy-caller.outputs.source-sha }}
+          BUILDCHAIN_EXPECTED_INVOKED_WORKFLOW: .github/workflows/build.yml
+          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.v4-policy-caller.outputs.runtime-sha }}
+          BUILDCHAIN_CURRENT_RUNTIME_SHA: ${{ steps.buildchain-runtime.outputs.sha }}
+          BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA: ${{ steps.v4-policy-caller.outputs.runtime-sha }}
+          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
+          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-alpha-contract-lock-path }}
+          BUILDCHAIN_V4_POLICY_CERTIFICATION_PATH: .buildchain/release-candidate/v4-consumer-policy-certification.json
+        run: |
+          set -euo pipefail
+          policy_runtime=.buildchain/runtime
+          if [[ -n "${BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA}" && "${BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA}" != "${BUILDCHAIN_CURRENT_RUNTIME_SHA}" ]]; then
+            policy_runtime=.buildchain/runtime/candidate-policy-runtime
+          fi
+          test -f "${policy_runtime}/scripts/v4-consumer-policy.mjs"
+          node "${policy_runtime}/scripts/v4-consumer-policy.mjs" certify \
+            --input "${{ steps.rc.outputs.release-candidate-passport-path }}" \
+            --caller-root "${{ github.workspace }}/.buildchain/runtime/policy-caller" \
+            --stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}" \
+            --alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"
 
       - name: Resolve Buildchain stable candidate alpha
         id: buildchain-stable-candidate
@@ -1784,12 +1916,12 @@ jobs:
             echo "::error::publication commit, release activation, and receipt-only evidence synthesis must be configured together"
             exit 1
           fi
-
       - name: Promote-only publish
         id: promote
         env:
           BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
           BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
+          BUILDCHAIN_TAG_UPDATE_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
         uses: ./.buildchain/runtime/actions/promote-buildchain-ref
         with:
           token: ${{ github.token }}
@@ -1837,6 +1969,10 @@ jobs:
           release-passport-platform-manifest-paths: ${{ inputs.release-passport-platform-manifest-paths || steps.rc.outputs.release-candidate-platform-manifest-paths }}
           release-passport-impact-json: ${{ inputs.release-passport-impact-json }}
           release-passport-promotion-routing-json: ${{ steps.routing-evidence.outputs.routing-path }}
+          release-passport-v4-consumer-policy-certification-json: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-path }}
+          release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}
+          release-passport-v4-runtime-resume-evidence-json: ${{ inputs.release-passport-v4-runtime-resume-evidence-json || steps.rc.outputs.v4-runtime-resume-evidence-path }}
+          release-passport-v4-runtime-resume-evidence-command: ${{ steps.rc.outputs.v4-runtime-resume-finalize-command }}
           release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
           release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
@@ -2257,7 +2393,7 @@ jobs:
       attestations: write
       contents: read
       id-token: write
-    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@375b2d4b8a904776453773a33b4c4e4556c8c999
+    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@v4
     with:
       buildchain-ref: ${{ needs.promote.outputs.github-artifact-attestation-signer-ref }}
       evidence-run-id: ${{ github.run_id }}

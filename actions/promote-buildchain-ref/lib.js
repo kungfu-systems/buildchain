@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import os from "node:os";
 import { execFileSync, execSync } from "node:child_process";
 import {
   discoverConfiguredDerivedVersionMaterial,
@@ -45,7 +46,9 @@ import {
   writeJsonContent,
 } from "./internal/version-state.js";
 import {
+  collectPromotionVersionMaterial,
   collectRemoteVersionMaterial,
+  remoteVersionStateFilesMatch,
   getGitCommitWithRetry,
   getGitRefOrUndefined,
   listPullRequestsAssociatedWithCommitWithRetry,
@@ -101,7 +104,7 @@ import { promoteMajorChannel } from "./internal/promote-major-channel.js";
 import { promoteAlphaChannel } from "./internal/promote-alpha-channel.js";
 import { promoteReleaseChannel } from "./internal/promote-release-channel.js";
 import { createVersionStateOperations as createVersionStateOperationsModule } from "./internal/version-state-operations.js";
-import { createDurableTransactionOperations as createDurableTransactionOperationsModule } from "./internal/durable-transaction-operations.js";
+import { createDurableTransactionOperations as createDurableTransactionOperationsModule, finalizationRequirements } from "./internal/durable-transaction-operations.js";
 
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
@@ -181,6 +184,110 @@ function runPublishCommand({ cwd, command, loadedConfig, env }) {
     return "buildchain.toml";
   }
   return "none";
+}
+
+function rematerializedNpmPackEnvironment({ cwd, env, version, published = false }) {
+  const packagePath = path.join(cwd, "package.json");
+  if (!fs.existsSync(packagePath)) return undefined;
+  const pkg = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  const required = JSON.parse(env.BUILDCHAIN_REQUIRED_ARTIFACTS || "[]");
+  const requiredNpm = required.filter((artifact) => artifact.kind === "npm");
+  if (requiredNpm.length === 0) return undefined;
+  if (!requiredNpm.some((artifact) => artifact.name === pkg.name)) {
+    throw new Error(`rematerialized npm package does not match required artifacts: ${pkg.name}`);
+  }
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rematerialized-npm-"));
+  try {
+    const packed = JSON.parse(execNpmSync(["pack", ...(published ? [`${pkg.name}@${version}`] : []), "--json", "--pack-destination", temporaryRoot, "--registry=https://registry.npmjs.org/"], {
+      cwd, env: { ...process.env, ...env }, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"],
+    }));
+    const result = Array.isArray(packed) ? packed[0] : packed;
+    if (!result?.filename) throw new Error("rematerialized npm pack did not return a filename");
+    if (result.name !== pkg.name || result.version !== version) {
+      throw new Error(
+        `rematerialized npm pack identity mismatch: expected ${pkg.name}@${version}, got ${result.name || ""}@${result.version || ""}`,
+      );
+    }
+    const tarballPath = path.join(temporaryRoot, result.filename);
+    const bytes = fs.readFileSync(tarballPath);
+    return { temporaryRoot, env: {
+      ...env,
+      BUILDCHAIN_SEALED_BUNDLE_ROOT: "",
+      BUILDCHAIN_SEALED_NPM_TARBALL: tarballPath,
+      BUILDCHAIN_SEALED_NPM_INTEGRITY: `sha512-${crypto.createHash("sha512").update(bytes).digest("base64")}`,
+      BUILDCHAIN_SEALED_NPM_SHA256: crypto.createHash("sha256").update(bytes).digest("hex"),
+    } };
+  } catch (error) {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, version, published = false }) {
+  const discovered = discoverVersionStateFiles(cwd);
+  const changedFiles = updateVersionStateContents(discovered.files, version);
+  const originals = changedFiles.map((file) => {
+    const resolved = path.resolve(cwd, file.path);
+    return {
+      resolved,
+      content: fs.readFileSync(resolved),
+    };
+  });
+  try {
+    for (const [index, file] of changedFiles.entries()) {
+      fs.writeFileSync(originals[index].resolved, file.content);
+    }
+    const npmPack = rematerializedNpmPackEnvironment({ cwd, env, version, published });
+    const sealedEnvironmentNames = [
+          "BUILDCHAIN_SEALED_BUNDLE_ROOT",
+          "BUILDCHAIN_SEALED_NPM_TARBALL",
+          "BUILDCHAIN_SEALED_NPM_INTEGRITY",
+          "BUILDCHAIN_SEALED_NPM_SHA256",
+        ];
+    const previousSealedEnvironment = npmPack
+      ? Object.fromEntries(sealedEnvironmentNames.map((name) => [name, process.env[name]]))
+      : undefined;
+    try {
+      if (npmPack) {
+        Object.assign(
+          process.env,
+          Object.fromEntries(sealedEnvironmentNames.map((name) => [name, npmPack.env[name]])),
+        );
+      }
+      return runPublishCommand({ cwd, command, loadedConfig, env: npmPack?.env || env });
+    } finally {
+      for (const [name, value] of Object.entries(previousSealedEnvironment || {})) {
+        if (value === undefined) delete process.env[name];
+        else process.env[name] = value;
+      }
+      if (npmPack?.temporaryRoot) fs.rmSync(npmPack.temporaryRoot, { recursive: true, force: true });
+    }
+  } finally {
+    for (const original of originals) {
+      fs.writeFileSync(original.resolved, original.content);
+    }
+  }
+}
+
+function runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version, published = false }) {
+  if (existingNpmPromotion) {
+    throw new Error(
+      "publish-rematerialize-on-resume cannot replay promote-existing-version provider mutations",
+    );
+  }
+  const source = runRematerializedPublishCommand({
+    cwd,
+    command: publishCommand,
+    loadedConfig,
+    env: publishTransactionEnvironment(context, { useSealedBundle: false }),
+    version, published,
+  });
+  if (source === "none") {
+    throw new Error(
+      "publish-rematerialize-on-resume requires lifecycle.publish or publish-command",
+    );
+  }
+  return `resume-rematerialized:${source}`;
 }
 
 function npmPackageSpec(artifact) {
@@ -987,6 +1094,16 @@ async function releaseCommitIncludesTransactionHead({
   return false;
 }
 
+async function releaseCommitMatchesTransactionMaterial({ octokit, owner, repo, releaseSha, transactionReleaseShas }) {
+  const { data: releaseCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: releaseSha });
+  for (const transactionReleaseSha of uniqueShas(transactionReleaseShas)) {
+    if (!(await releaseCommitIncludesTransactionHead({ octokit, owner, repo, releaseSha, transactionReleaseSha }))) continue;
+    const { data: transactionCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: transactionReleaseSha });
+    if (releaseCommit.tree?.sha === transactionCommit.tree?.sha) return true;
+  }
+  return false;
+}
+
 function uniqueShas(values) {
   return [...new Set(values.filter(Boolean))];
 }
@@ -1390,7 +1507,8 @@ function publishTransactionEnvironment({
   version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
   requiredArtifacts, publishContract,
-}) {
+}, { useSealedBundle = true } = {}) {
+  const sealedBundle = useSealedBundle ? sealedBundleVerification : undefined;
   return {
     BUILDCHAIN_VERSION: version,
     BUILDCHAIN_CHANNEL: channel,
@@ -1408,12 +1526,12 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SURFACE_PUBLISHED_AT: promotionGeneratedAt,
     BUILDCHAIN_SURFACE_TIMESTAMP_POLICY: "ci-injected",
     BUILDCHAIN_PUBLISH_EVIDENCE: resolvedEvidencePath,
-    BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundleVerification?.root || "",
+    BUILDCHAIN_SEALED_BUNDLE_ROOT: sealedBundle?.root || "",
     BUILDCHAIN_SEALED_NPM_TARBALL:
-      sealedBundleVerification?.npm.absolutePath || "",
+      sealedBundle?.npm.absolutePath || "",
     BUILDCHAIN_SEALED_NPM_INTEGRITY:
-      sealedBundleVerification?.npm.integrity || "",
-    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundleVerification?.npm.sha256 || "",
+      sealedBundle?.npm.integrity || "",
+    BUILDCHAIN_SEALED_NPM_SHA256: sealedBundle?.npm.sha256 || "",
     BUILDCHAIN_REQUIRED_ARTIFACTS: JSON.stringify(requiredArtifacts),
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
@@ -1421,6 +1539,11 @@ function publishTransactionEnvironment({
     BUILDCHAIN_PACKAGE_SET_ORDER: publishContract.packageSetOrder,
     BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
   };
+}
+
+async function reopenValidatedRepair(transaction, durable, validation, explicitOverride, actor, runId, persist) {
+  if (transaction.state !== "repair_required" || !explicitOverride || !validation?.valid) return { transaction, durable };
+  return persist(transitionReleaseTransaction(transaction, "publishing", { actor, runId, failure: "" }));
 }
 
 async function runPublishTransaction(options) {
@@ -1501,7 +1624,6 @@ async function runPublishTransaction(options) {
       cwd,
     };
   }
-
   let validation;
   let publishSource = existingEvidence ? "existing-evidence" : "";
   let distTagEvidencePath = "";
@@ -1533,24 +1655,9 @@ async function runPublishTransaction(options) {
     if (recovery.blocked) {
       throw new Error(`release transaction cannot recover: ${recovery.reason}`);
     }
-    if (existing && validation?.valid && publishRematerializeOnResume) {
-      if (existingNpmPromotion) {
-        throw new Error(
-          "publish-rematerialize-on-resume cannot replay promote-existing-version provider mutations",
-        );
-      }
-      publishSource = runPublishCommand({
-        cwd,
-        command: publishCommand,
-        loadedConfig,
-        env: publishEnvironment,
-      });
-      if (publishSource === "none") {
-        throw new Error(
-          "publish-rematerialize-on-resume requires lifecycle.publish or publish-command",
-        );
-      }
-      publishSource = `resume-rematerialized:${publishSource}`;
+    ({ transaction, durable } = await reopenValidatedRepair(transaction, durable, validation, explicitOverride, actor, runId, persistTransaction));
+    if (existing && existing.state !== "complete" && validation?.valid && publishRematerializeOnResume) {
+      publishSource = runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version, published: true });
     }
     if (!validation?.valid) {
       if (transaction.state === "repair_required" && explicitOverride) {
@@ -1584,12 +1691,16 @@ async function runPublishTransaction(options) {
           artifacts: requiredArtifacts,
         });
       } else {
-        publishSource = runPublishCommand({
-          cwd,
-          command: publishCommand,
-          loadedConfig,
-          env: publishEnvironment,
-        });
+        publishSource = publishRematerializeOnResume
+          ? runResumeRematerializedPublish({
+              existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version,
+            })
+          : runPublishCommand({
+              cwd,
+              command: publishCommand,
+              loadedConfig,
+              env: publishEnvironment,
+            });
       }
       if (publishSource === "none") {
         throw new Error("publish transaction requires lifecycle.publish, publish-command, or existing evidence",
@@ -1783,7 +1894,7 @@ function generateReleaseEvidenceInputs({
   version,
   deploymentCoordinate,
   targetRef,
-  outputDir,
+  outputDir, extraEnv = {},
 }) {
   if (!command) {
     return [];
@@ -1800,7 +1911,7 @@ function generateReleaseEvidenceInputs({
         BUILDCHAIN_RELEASE_VERSION: version,
         BUILDCHAIN_RELEASE_DEPLOYMENT_COORDINATE: deploymentCoordinate,
         BUILDCHAIN_RELEASE_TARGET_REF: targetRef,
-        BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR: outputDir,
+        BUILDCHAIN_RELEASE_PASSPORT_OUTPUT_DIR: outputDir, ...extraEnv,
       },
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
@@ -1844,6 +1955,11 @@ async function collectAndPersistReleasePassport({
   platformManifestPaths = [],
   impactJson = "",
   promotionRoutingJson = "",
+  v4ConsumerPolicyCertificationJson = "",
+  v4ConsumerPolicyCertificationRoot = "",
+  v4RuntimeResumeEvidenceJson = "",
+  v4RuntimeResumeEvidenceCommand = "",
+  v4RuntimeResumeEvidenceCommandCwd = cwd,
   kfd1WitnessJsons = [],
   kfd2ClaimJsons = [],
   kfd3PrebuildWitnessJsons = [],
@@ -1902,6 +2018,29 @@ async function collectAndPersistReleasePassport({
     targetRef,
     outputDir: resolvedOutputDir,
   });
+  const generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs({
+    command: v4RuntimeResumeEvidenceCommand,
+    cwd: v4RuntimeResumeEvidenceCommandCwd,
+    sourceSha: passportSourceSha,
+    tag: publicReleaseTag,
+    channel,
+    version: publishedVersion,
+    deploymentCoordinate: `github-release:${owner}/${repo}@${publicReleaseTag}`,
+    targetRef,
+    outputDir: resolvedOutputDir,
+    extraEnv: {
+      BUILDCHAIN_V4_RUNTIME_RESUME_MATERIAL: path.resolve(
+        v4RuntimeResumeEvidenceCommandCwd,
+        ".buildchain/release-candidate/v4-runtime-resume-material.json",
+      ),
+      BUILDCHAIN_RELEASE_TRANSACTION_JSON: JSON.stringify(result.transaction),
+    },
+  });
+  if (generatedV4RuntimeResumeEvidence.length > 1) {
+    throw new Error(
+      "v4 runtime resume finalization must emit exactly one evidence file",
+    );
+  }
   const inferredImpactJson = createTreeEquivalentReleaseImpact({
     channel,
     version: publishedVersion,
@@ -1981,6 +2120,10 @@ async function collectAndPersistReleasePassport({
       ...releaseEvidenceJsons,
       ...generatedReleaseEvidenceJsons,
     ],
+    v4ConsumerPolicyCertificationJson,
+    v4ConsumerPolicyCertificationRoot,
+    v4RuntimeResumeEvidenceJson:
+      generatedV4RuntimeResumeEvidence[0] || v4RuntimeResumeEvidenceJson,
     githubArtifactAttestationPolicyJsons,
     buildSummaryJson,
     platformManifestJsons: platformManifests,
@@ -2828,27 +2971,15 @@ async function resumableAlphaTransactionState({
       }
       throw error;
     }
-    const exactTransactionSource =
-      transaction?.source_sha === sourceSha ||
-      transaction?.release_sha === sourceSha ||
-      transaction?.release_material_sha === sourceSha;
-    const transactionInSourceHistory =
-      !transactionHasPublishedMaterial(transaction) &&
-      ((await releaseCommitIncludesTransactionHead({
-          octokit,
-          owner,
-          repo,
-          releaseSha: sourceSha,
-          transactionReleaseSha: transaction?.release_sha,
-        })) ||
-        (await releaseCommitIncludesTransactionHead({
-          octokit,
-          owner,
-          repo,
-          releaseSha: sourceSha,
-          transactionReleaseSha: transaction?.release_material_sha,
-        })
-      ));
+    const publishedMaterial = transactionHasPublishedMaterial(transaction);
+    const exactTransactionSource = [transaction?.source_sha, transaction?.release_sha, transaction?.release_material_sha].includes(sourceSha);
+    const includesTransactionHead = (transactionReleaseSha) => releaseCommitIncludesTransactionHead({ octokit, owner, repo, releaseSha: sourceSha, transactionReleaseSha });
+    const transactionInSourceHistory = !publishedMaterial && ((await includesTransactionHead(transaction?.release_sha)) || (await includesTransactionHead(transaction?.release_material_sha)));
+    const publishedMaterialMerge = publishedMaterial &&
+      await releaseCommitMatchesTransactionMaterial({
+        octokit, owner, repo, releaseSha: sourceSha,
+        transactionReleaseShas: [transaction?.release_sha, transaction?.release_material_sha],
+      });
     const exactCompletedTransaction =
       transaction?.state === "complete" && exactTransactionSource;
     if (
@@ -2859,7 +2990,8 @@ async function resumableAlphaTransactionState({
       !["abandoned", "failed_permanently"].includes(transaction.state) &&
       (exactCompletedTransaction ||
         (transaction.state !== "complete" &&
-          (exactTransactionSource || transactionInSourceHistory)))
+          (exactTransactionSource || transactionInSourceHistory ||
+            publishedMaterialMerge)))
     ) {
       return {
         ...candidate,
@@ -2923,14 +3055,17 @@ async function resumableReleaseTransactionState({
           transactionReleaseSha: transaction?.release_material_sha,
         })
       ));
+    const exactCompletedTransaction =
+      transaction?.state === "complete" && exactTransactionSource;
     if (
       transaction &&
       (!expectedVersion || transaction.version === expectedVersion) &&
       transaction.target_ref === targetRef &&
       transaction.exact_tag === candidate.tag &&
-      !["complete", "abandoned", "failed_permanently"].includes(transaction.state,
-      ) &&
-      (exactTransactionSource || transactionInSourceHistory)
+      !["abandoned", "failed_permanently"].includes(transaction.state) &&
+      (exactCompletedTransaction ||
+        (transaction.state !== "complete" &&
+          (exactTransactionSource || transactionInSourceHistory)))
     ) {
       return {
         ...candidate,
@@ -3365,7 +3500,7 @@ function createRefMutationOperations(context) {
       if (!notFound(error)) {
         throw error;
       }
-      await octokit.rest.git.createRef({
+      await context.tagUpdateOctokit.rest.git.createRef({
         owner,
         repo,
         ref: `refs/tags/${tag}`,
@@ -3380,8 +3515,9 @@ function createRefMutationOperations(context) {
       updates.push({ tag, action: "dry-run", sha: tagSha });
       return;
     }
+    const tagRef = await getGitRefOrUndefined({ octokit, owner, repo, ref: `tags/${tag}` }); if (tagRef?.object?.sha === tagSha) return void updates.push({ tag, action: "existing", sha: tagSha });
     try {
-      await octokit.rest.git.updateRef({
+      await context.tagUpdateOctokit.rest.git.updateRef({
         owner,
         repo,
         ref: `tags/${tag}`,
@@ -3393,7 +3529,7 @@ function createRefMutationOperations(context) {
       if (!notFound(error)) {
         throw error;
       }
-      await octokit.rest.git.createRef({
+      await context.tagUpdateOctokit.rest.git.createRef({
         owner,
         repo,
         ref: `refs/tags/${tag}`,
@@ -3482,7 +3618,7 @@ function createRefMutationOperations(context) {
       }
     }
     const branchWriteOctokit = protectedUpdate ? refUpdateOctokit || octokit : octokit;
-    const openVersionStatePullRequest = async ({ error }) => {
+    const openVersionStatePullRequest = async ({ error, pendingSha = branchSha }) => {
       const message = error?.response?.data?.message || error?.message || String(error || "");
       if (
         !protectedUpdate?.allowPendingPullRequest ||
@@ -3491,24 +3627,24 @@ function createRefMutationOperations(context) {
       ) {
         throw protectedBranchDirectUpdateError({ branch, branchSha, error });
       }
-      const versionStateBranch = versionStateBranchName(branch, branchSha);
+      const versionStateBranch = versionStateBranchName(branch, pendingSha);
       const versionStateRef = `heads/${versionStateBranch}`;
       const existingVersionStateSha = await readRefSha(versionStateRef);
-      if (existingVersionStateSha && existingVersionStateSha !== branchSha) {
+      if (existingVersionStateSha && existingVersionStateSha !== pendingSha) {
         throw new Error(
-          `Buildchain generated version-state branch ${versionStateBranch} points at ${existingVersionStateSha}, not ${branchSha}`);
+          `Buildchain generated version-state branch ${versionStateBranch} points at ${existingVersionStateSha}, not ${pendingSha}`);
       }
       if (!existingVersionStateSha) {
         await branchWriteOctokit.rest.git.createRef({
           owner,
           repo,
           ref: `refs/${versionStateRef}`,
-          sha: branchSha,
+          sha: pendingSha,
         });
         updates.push({
           ref: versionStateBranch,
           action: "created-version-state-pr-head",
-          sha: branchSha,
+          sha: pendingSha,
         });
       }
       if (typeof pullRequestOctokit.rest.pulls?.list === "function") {
@@ -3524,7 +3660,7 @@ function createRefMutationOperations(context) {
           updates.push({
             ref: branch,
             action: "pending-version-state-pr",
-            sha: branchSha,
+            sha: pendingSha,
             pullRequest: existingPullRequest.html_url || existingPullRequest.url,
           });
           return {
@@ -3550,7 +3686,7 @@ function createRefMutationOperations(context) {
       updates.push({
         ref: branch,
         action: "pending-version-state-pr",
-        sha: branchSha,
+        sha: pendingSha,
         pullRequest: pullRequest.html_url || pullRequest.url,
       });
       return { updated: false, pending: true, currentSha, pullRequest };
@@ -3559,6 +3695,11 @@ function createRefMutationOperations(context) {
       const allowedPaths = protectedUpdate?.allowMergeCommitOnNonFastForwardPaths || [];
       if (!allowedPaths.length) {
         return undefined;
+      }
+      if (protectedUpdate?.reconciliationVersion && !reconciliationWorkspace) {
+        throw new Error(
+          `Version-state reconciliation for current ${branch} requires an exact checkout workspace`,
+        );
       }
       const { data: generatedCommit } = await getGitCommitWithRetry({
         octokit,
@@ -3576,7 +3717,7 @@ function createRefMutationOperations(context) {
         headSha: branchSha,
         allowedPaths,
       });
-      if (protectedUpdate?.reconciliationVersion && reconciliationWorkspace) {
+      if (protectedUpdate?.reconciliationVersion) {
         const workspaceCwd = path.resolve(cwd, reconciliationWorkspace);
         if (!fs.existsSync(workspaceCwd)) {
           throw new Error(`Version-state reconciliation workspace does not exist: ${workspaceCwd}`);
@@ -3749,13 +3890,27 @@ function createRefMutationOperations(context) {
               sha: mergeSha,
             });
           }
-          await branchWriteOctokit.rest.git.updateRef({
-            owner,
-            repo,
-            ref: `heads/${branch}`,
-            sha: mergeSha,
-            force: false,
-          });
+          try {
+            await branchWriteOctokit.rest.git.updateRef({
+              owner,
+              repo,
+              ref: `heads/${branch}`,
+              sha: mergeSha,
+              force: false,
+            });
+          } catch (mergeUpdateError) {
+            if (
+              protectedUpdate?.allowPendingPullRequest &&
+              (protectedBranchUpdateRejected(mergeUpdateError) ||
+                nonFastForwardUpdateRejected(mergeUpdateError))
+            ) {
+              return openVersionStatePullRequest({
+                error: mergeUpdateError,
+                pendingSha: mergeSha,
+              });
+            }
+            throw mergeUpdateError;
+          }
           updates.push({ ref: branch, action, sha: mergeSha });
           return { updated: true, mergeSha };
         }
@@ -4531,6 +4686,7 @@ async function promoteBuildchainRefs({
   statusCheckOctokit = octokit,
   pullRequestOctokit = octokit,
   refUpdateOctokit = octokit,
+  tagUpdateOctokit = octokit,
   branchProtectionBypassApps = "",
   branchProtectionBypassUsers = "",
   branchProtectionBypassTeams = "",
@@ -4565,6 +4721,10 @@ async function promoteBuildchainRefs({
   releasePassportPlatformManifestPaths = "",
   releasePassportImpactJson = "",
   releasePassportPromotionRoutingJson = "",
+  releasePassportV4ConsumerPolicyCertificationJson = "",
+  releasePassportV4ConsumerPolicyCertificationRoot = "",
+  releasePassportV4RuntimeResumeEvidenceJson = "",
+  releasePassportV4RuntimeResumeEvidenceCommand = "",
   releasePassportKfd1WitnessJsons = "",
   releasePassportKfd2ClaimJsons = "",
   releasePassportKfd3PrebuildWitnessJsons = "",
@@ -4622,9 +4782,7 @@ async function promoteBuildchainRefs({
       now: publicationQualificationNow || new Date(),
     });
   };
-  assertPublicationQualification();
-  const requestedTags = tags ? resolveTagsForTarget(targetRef, tags) : undefined;
-
+  assertPublicationQualification(); const requestedTags = tags ? resolveTagsForTarget(targetRef, tags) : undefined;
   const { data: branchRef } = await octokit.rest.git.getRef({
     owner,
     repo,
@@ -4743,6 +4901,7 @@ async function promoteBuildchainRefs({
     statusCheckOctokit,
     pullRequestOctokit,
     refUpdateOctokit,
+    tagUpdateOctokit,
     branchProtectionBypassApps,
     branchProtectionBypassUsers,
     branchProtectionBypassTeams,
@@ -4777,6 +4936,10 @@ async function promoteBuildchainRefs({
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
+    releasePassportV4ConsumerPolicyCertificationJson,
+    releasePassportV4ConsumerPolicyCertificationRoot,
+    releasePassportV4RuntimeResumeEvidenceJson,
+    releasePassportV4RuntimeResumeEvidenceCommand,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
@@ -4821,6 +4984,8 @@ async function promoteBuildchainRefs({
     beginTransactionFinalization,
     collectAndPersistReleasePassport,
     collectRemoteVersionMaterial,
+    collectPromotionVersionMaterial,
+    remoteVersionStateFilesMatch,
     completeTransactionFinalization,
     currentAlphaVersionState,
     currentConfiguredVersion,
@@ -4950,7 +5115,9 @@ export {
   generateReleaseEvidenceInputs,
   createTreeEquivalentReleaseImpact,
   createDurableTransactionOperations,
+  finalizationRequirements,
   createRefMutationOperations,
+  releaseCommitMatchesTransactionMaterial as testReleaseCommitMatchesTransactionMaterial,
   releasePassportArtifactFiles,
   validatePromotionReleaseCandidate,
 };

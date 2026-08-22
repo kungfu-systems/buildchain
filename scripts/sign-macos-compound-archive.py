@@ -25,6 +25,28 @@ MACH_O_MAGICS = {
         "cafebabe", "bebafeca", "cafebabf", "bfbafeca",
     )
 }
+THIN_MACH_O_ENDIAN = {
+    bytes.fromhex("feedface"): "big",
+    bytes.fromhex("feedfacf"): "big",
+    bytes.fromhex("cefaedfe"): "little",
+    bytes.fromhex("cffaedfe"): "little",
+}
+FAT_MACH_O_LAYOUT = {
+    bytes.fromhex("cafebabe"): ("big", 20, 4),
+    bytes.fromhex("bebafeca"): ("little", 20, 4),
+    bytes.fromhex("cafebabf"): ("big", 32, 8),
+    bytes.fromhex("bfbafeca"): ("little", 32, 8),
+}
+MH_EXECUTE = 2
+JIT_EXECUTABLE_ENTITLEMENTS = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+</dict>
+</plist>
+"""
 
 
 def safe_name(value: str, label: str) -> PurePosixPath:
@@ -119,10 +141,69 @@ def is_mach_o(path: Path) -> bool:
         return source.read(4) in MACH_O_MAGICS
 
 
-def run_codesign(path: Path, args: argparse.Namespace) -> None:
+def thin_mach_o_filetype(source, offset: int = 0) -> int:
+    source.seek(offset)
+    header = source.read(16)
+    if len(header) != 16 or header[:4] not in THIN_MACH_O_ENDIAN:
+        raise ValueError("Mach-O payload has an invalid thin header")
+    return int.from_bytes(header[12:16], THIN_MACH_O_ENDIAN[header[:4]])
+
+
+def mach_o_filetypes(path: Path) -> set[int]:
+    with path.open("rb") as source:
+        magic = source.read(4)
+        if magic in THIN_MACH_O_ENDIAN:
+            return {thin_mach_o_filetype(source)}
+        byteorder, entry_size, offset_size = FAT_MACH_O_LAYOUT[magic]
+        count_body = source.read(4)
+        if len(count_body) != 4:
+            raise ValueError("Mach-O payload has an invalid fat header")
+        count = int.from_bytes(count_body, byteorder)
+        if count < 1 or count > 64:
+            raise ValueError("Mach-O payload has an invalid architecture count")
+        offsets = []
+        for _ in range(count):
+            entry = source.read(entry_size)
+            if len(entry) != entry_size:
+                raise ValueError("Mach-O payload has a truncated architecture table")
+            offsets.append(int.from_bytes(entry[8 : 8 + offset_size], byteorder))
+        return {thin_mach_o_filetype(source, offset) for offset in offsets}
+
+
+def entitlement_target(path: Path, args: argparse.Namespace) -> bool:
+    try:
+        relative = path.relative_to(args.archive_root).as_posix()
+    except ValueError:
+        return False
+    if relative not in args.entitlements_paths:
+        return False
+    if mach_o_filetypes(path) != {MH_EXECUTE}:
+        raise ValueError(
+            f"requested entitlement path is not a Mach-O executable: {relative}"
+        )
+    args.matched_entitlements_paths.add(relative)
+    return True
+
+
+def entitlements_path(args: argparse.Namespace) -> Path | None:
+    if args.entitlements_profile == "none":
+        return None
+    target = Path(args.work_root) / "jit-executable-v1.plist"
+    if not target.exists():
+        target.write_text(JIT_EXECUTABLE_ENTITLEMENTS, encoding="utf-8")
+    return target
+
+
+def run_codesign(path: Path, args: argparse.Namespace) -> bool:
+    signing = [args.codesign, "--force", "--options", "runtime", "--timestamp"]
+    entitlements = entitlements_path(args) if entitlement_target(path, args) else None
+    if entitlements is not None:
+        signing.extend(["--entitlements", str(entitlements)])
+    signing.extend(
+        ["--keychain", args.keychain, "--sign", args.identity, str(path)]
+    )
     subprocess.run(
-        [args.codesign, "--force", "--options", "runtime", "--timestamp",
-         "--keychain", args.keychain, "--sign", args.identity, str(path)],
+        signing,
         check=True,
     )
     subprocess.run(
@@ -142,13 +223,24 @@ def run_codesign(path: Path, args: argparse.Namespace) -> None:
         raise ValueError("signed Mach-O does not prove hardened runtime")
     if "Timestamp=" not in output:
         raise ValueError("signed Mach-O does not prove a secure timestamp")
+    if entitlements is not None:
+        entitlement_detail = subprocess.run(
+            [args.codesign, "--display", "--entitlements", ":-", str(path)],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        entitlement_output = f"{entitlement_detail.stdout}\n{entitlement_detail.stderr}"
+        if "com.apple.security.cs.allow-jit" not in entitlement_output:
+            raise ValueError("signed executable does not prove the requested JIT entitlement")
+    return entitlements is not None
 
 
 def wheel_hash(body: bytes) -> str:
     return base64.urlsafe_b64encode(hashlib.sha256(body).digest()).rstrip(b"=").decode()
 
 
-def sign_wheel(wheel: Path, work: Path, args: argparse.Namespace) -> int:
+def sign_wheel(wheel: Path, work: Path, args: argparse.Namespace) -> tuple[int, int]:
     with zipfile.ZipFile(wheel) as source:
         infos = source.infolist()
         if not infos:
@@ -177,13 +269,14 @@ def sign_wheel(wheel: Path, work: Path, args: argparse.Namespace) -> int:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(body)
     signed = 0
+    entitled = 0
     for target in sorted(root.rglob("*")):
         if is_mach_o(target):
-            run_codesign(target, args)
+            entitled += int(run_codesign(target, args))
             signed += 1
     if signed == 0:
         shutil.rmtree(root)
-        return 0
+        return 0, 0
     for name in list(bodies):
         bodies[name] = root.joinpath(*PurePosixPath(name).parts).read_bytes()
     record = records[0]
@@ -206,7 +299,7 @@ def sign_wheel(wheel: Path, work: Path, args: argparse.Namespace) -> int:
                 output.writestr(info, bodies[info.filename])
     replacement.replace(wheel)
     shutil.rmtree(root)
-    return signed
+    return signed, entitled
 
 
 def repack_tar(root: Path, archive: Path) -> None:
@@ -240,11 +333,34 @@ def main() -> None:
     parser.add_argument("--identity", required=True)
     parser.add_argument("--keychain", required=True)
     parser.add_argument("--team-id", required=True)
+    parser.add_argument(
+        "--entitlements-profile",
+        choices=("none", "jit-executable-v1"),
+        default="none",
+    )
+    parser.add_argument("--entitlements-paths", default="")
     parser.add_argument("--codesign", default="/usr/bin/codesign")
     args = parser.parse_args()
     archive = Path(args.archive).resolve()
     work = Path(args.work_root).resolve()
     root = Path(args.notary_root).resolve()
+    args.archive_root = root
+    declared_entitlements_paths = [
+        safe_name(value, "entitlements path").as_posix()
+        for value in args.entitlements_paths.split(",")
+        if value
+    ]
+    if len(declared_entitlements_paths) != len(set(declared_entitlements_paths)):
+        raise ValueError("entitlements paths must not contain duplicates")
+    args.entitlements_paths = set(declared_entitlements_paths)
+    args.matched_entitlements_paths = set()
+    if (
+        (args.entitlements_profile == "none" and args.entitlements_paths)
+        or (args.entitlements_profile != "none" and not args.entitlements_paths)
+    ):
+        raise ValueError(
+            "entitlements paths must be non-empty exactly when a profile is enabled"
+        )
     work.mkdir(parents=True)
     root.mkdir(parents=True)
     if zipfile.is_zipfile(archive):
@@ -258,16 +374,28 @@ def main() -> None:
         raise ValueError("compound Apple archive must be zip or tar.gz")
     wheel_count = 0
     wheel_mach_o_count = 0
+    entitled_executable_count = 0
     for wheel in sorted(root.rglob("*.whl")):
         wheel_count += 1
-        wheel_mach_o_count += sign_wheel(wheel, work, args)
+        wheel_signed, wheel_entitled = sign_wheel(wheel, work, args)
+        wheel_mach_o_count += wheel_signed
+        entitled_executable_count += wheel_entitled
     mach_o_count = 0
     for target in sorted(root.rglob("*"), key=lambda item: (-len(item.parts), str(item))):
         if is_mach_o(target):
-            run_codesign(target, args)
+            entitled_executable_count += int(run_codesign(target, args))
             mach_o_count += 1
     if mach_o_count + wheel_mach_o_count == 0:
         raise ValueError("compound Apple archive contains no Mach-O code")
+    if args.entitlements_profile != "none" and entitled_executable_count == 0:
+        raise ValueError(
+            "requested JIT entitlement profile found no executable Mach-O payload"
+        )
+    unmatched = args.entitlements_paths - args.matched_entitlements_paths
+    if unmatched:
+        raise ValueError(
+            "requested entitlement paths were not signed: " + ", ".join(sorted(unmatched))
+        )
     if archive_format == "zip":
         repack_zip(root, archive, infos)
     else:
@@ -277,10 +405,26 @@ def main() -> None:
         "machOCount": mach_o_count,
         "wheelCount": wheel_count,
         "wheelMachOCount": wheel_mach_o_count,
+        "entitlementsProfile": args.entitlements_profile,
+        "entitledExecutableCount": entitled_executable_count,
+        "entitledPaths": sorted(args.matched_entitlements_paths),
+        **(
+            {
+                "entitlementsSha256": "sha256:"
+                + hashlib.sha256(JIT_EXECUTABLE_ENTITLEMENTS.encode()).hexdigest()
+            }
+            if args.entitlements_profile != "none"
+            else {}
+        ),
         "checks": [
             "codesign-strict", "developer-id-team", "hardened-runtime",
             "secure-timestamp", "compound-archive-safe-paths",
             "embedded-wheel-record-integrity",
+            *(
+                ["jit-executable-entitlement"]
+                if args.entitlements_profile != "none"
+                else []
+            ),
         ],
     }
     Path(args.evidence).write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")

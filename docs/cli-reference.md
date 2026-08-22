@@ -22,6 +22,63 @@ ai_provenance:
 
 Every listed help command is intercepted before dispatch, exits zero, and performs no command side effects.
 
+## `adopter-delivery`
+
+### `buildchain adopter-delivery`
+
+- Help: `buildchain adopter-delivery --help`
+- Canonical id: `adopter-delivery`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain adopter-delivery
+```
+
+### `buildchain adopter-delivery archive`
+
+- Help: `buildchain adopter-delivery archive --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery archive --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery bootstrap`
+
+- Help: `buildchain adopter-delivery bootstrap --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery run`
+
+- Help: `buildchain adopter-delivery run --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`
+- Syntax:
+
+```text
+buildchain adopter-delivery run --input <json-or-path> [--output <path>]
+```
+
+### `buildchain adopter-delivery verify`
+
+- Help: `buildchain adopter-delivery verify --help`
+- Canonical id: `adopter-delivery`
+- Options: `--input`, `--output`, `--readback`
+- Syntax:
+
+```text
+buildchain adopter-delivery verify --input <json-or-path> --readback <json-or-path> [--output <path>]
+```
+
 ## `architecture`
 
 ### `buildchain architecture`
@@ -269,6 +326,127 @@ buildchain create runner-provenance --input-json <file-or-json> [--output <file>
 buildchain dev
 ```
 
+### `buildchain dev authority admit-merge-group`
+
+- Help: `buildchain dev authority admit-merge-group --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority complete-qualification`
+
+- Help: `buildchain dev authority complete-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority heartbeat-landing`
+
+- Help: `buildchain dev authority heartbeat-landing --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority heartbeat-qualification`
+
+- Help: `buildchain dev authority heartbeat-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority lease-landing`
+
+- Help: `buildchain dev authority lease-landing --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority lease-qualification`
+
+- Help: `buildchain dev authority lease-qualification --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority migrate`
+
+- Help: `buildchain dev authority migrate --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority observe`
+
+- Help: `buildchain dev authority observe --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority recover`
+
+- Help: `buildchain dev authority recover --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority settle`
+
+- Help: `buildchain dev authority settle --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev authority submit`
+
+- Help: `buildchain dev authority submit --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--environment-root`, `--execute`, `--json`, `--output`, `--provider-attempt`, `--qualification-domains`, `--repository`
+- Syntax:
+
+```text
+buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--environment-root <root>] [--qualification-domains <json>] [--provider-attempt <admitted-attempt.json>] [--execute] [--output <file>] [--json]
+```
+
 ### `buildchain dev merge-queue`
 
 - Help: `buildchain dev merge-queue --help`
@@ -299,7 +477,18 @@ buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M> --pull-
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof classify-native`
+
+- Help: `buildchain dev proof classify-native --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof integration`
@@ -310,7 +499,18 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof native`
+
+- Help: `buildchain dev proof native --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof replay`
@@ -321,7 +521,7 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof source`
@@ -332,7 +532,7 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof verify-integration`
@@ -343,7 +543,29 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof verify-native`
+
+- Help: `buildchain dev proof verify-native --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev proof verify-native-reuse`
+
+- Help: `buildchain dev proof verify-native-reuse --help`
+- Canonical id: `dev`
+- Options: `--json`, `--output`
+- Syntax:
+
+```text
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
 ```
 
 ### `buildchain dev proof verify-source`
@@ -354,7 +576,18 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration> [--output <file>] [--json]
+buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration> [--output <file>] [--json]
+```
+
+### `buildchain dev two-phase`
+
+- Help: `buildchain dev two-phase --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--expected-head`, `--json`, `--native-command`, `--native-proof`, `--output`, `--pull-request`, `--repository`, `--warrant-result`
+- Syntax:
+
+```text
+buildchain dev two-phase --repository <owner/repo> --branch <dev/vN/vN.M> --pull-request <n> --expected-head <sha> --warrant-result <file> --native-command <command> [--native-proof <file>] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant cancel-queued`
@@ -365,7 +598,7 @@ buildchain dev proof <source|verify-source|classify|replay|integration|verify-in
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant close`
@@ -376,7 +609,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant heartbeat`
@@ -387,7 +620,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant observe`
@@ -398,7 +631,18 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant qualify`
+
+- Help: `buildchain dev warrant qualify --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant recover`
@@ -409,7 +653,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant select`
@@ -420,7 +664,18 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+```
+
+### `buildchain dev warrant settle`
+
+- Help: `buildchain dev warrant settle --help`
+- Canonical id: `dev`
+- Options: `--branch`, `--execute`, `--json`, `--output`, `--repository`
+- Syntax:
+
+```text
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ### `buildchain dev warrant submit`
@@ -431,7 +686,7 @@ buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|obse
 - Syntax:
 
 ```text
-buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
+buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository <owner/repo> --branch <dev/vN/vN.M> [--execute] [--output <file>] [--json]
 ```
 
 ## `diagnostics`
@@ -528,6 +783,50 @@ buildchain facts
 
 ```text
 buildchain facts aggregate [--cwd <dir>] [--product <id>] [--module-fact <file>]... [--artifact <path>]... [--output <file>] [--json]
+```
+
+### `buildchain facts compatibility project`
+
+- Help: `buildchain facts compatibility project --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--output`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility project [--cwd <dir>] [--registry <json-or-path>] [--output <file>] [--json]
+```
+
+### `buildchain facts compatibility query`
+
+- Help: `buildchain facts compatibility query --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--query`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility query --query <json-or-path> [--registry <json-or-path>] [--cwd <dir>] [--json]
+```
+
+### `buildchain facts compatibility query-template`
+
+- Help: `buildchain facts compatibility query-template --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--fact-root`, `--json`, `--query-id`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility query-template --fact-root <sha256:...> [--query-id <id>] [--registry <json-or-path>] [--cwd <dir>] [--json]
+```
+
+### `buildchain facts compatibility verify`
+
+- Help: `buildchain facts compatibility verify --help`
+- Canonical id: `build-facts`
+- Options: `--cwd`, `--json`, `--registry`
+- Syntax:
+
+```text
+buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] [--json]
 ```
 
 ### `buildchain facts module`
@@ -1388,6 +1687,30 @@ buildchain log <info|warn|error> --event <name> [--phase <phase>] [--component <
 buildchain mark --event <name> [--phase <phase>] [--component <name>] [--attribute key=value]... [--path <jsonl>] [--json]
 ```
 
+## `next-development`
+
+### `buildchain next-development`
+
+- Help: `buildchain next-development --help`
+- Canonical id: `next-development`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain next-development
+```
+
+### `buildchain next-development materialize`
+
+- Help: `buildchain next-development materialize --help`
+- Canonical id: `next-development`
+- Options: `--cwd`, `--input`, `--json`, `--output`, `--write`
+- Syntax:
+
+```text
+buildchain next-development materialize --input <request.json> [--cwd <dir>] [--write] [--output <path>] [--json]
+```
+
 ## `npm`
 
 ### `buildchain npm`
@@ -1980,6 +2303,17 @@ buildchain release-tail init --declaration <json-or-path> [--state <path>]
 buildchain release-tail plan --declaration <json-or-path> [--output <path>]
 ```
 
+### `buildchain release-tail rehearse`
+
+- Help: `buildchain release-tail rehearse --help`
+- Canonical id: `release-tail`
+- Options: `--candidate-root`, `--capsule`, `--evidence`, `--mode`, `--state`
+- Syntax:
+
+```text
+buildchain release-tail rehearse --capsule <absolute-path> --candidate-root <absolute-path> --mode <simulate|replay> --state <absolute-path> --evidence <absolute-path>
+```
+
 ### `buildchain release-tail status`
 
 - Help: `buildchain release-tail status --help`
@@ -2037,6 +2371,63 @@ buildchain sample process-tree [--interval-ms <n>] [--label <name>] [--output <j
 
 ```text
 buildchain span --event <name> [--phase <phase>] [--component <name>] [--path <jsonl>] -- <command> [args...]
+```
+
+## `tail-reseal`
+
+### `buildchain tail-reseal`
+
+- Help: `buildchain tail-reseal --help`
+- Canonical id: `tail-reseal`
+- Options: none declared
+- Syntax:
+
+```text
+buildchain tail-reseal
+```
+
+### `buildchain tail-reseal admit`
+
+- Help: `buildchain tail-reseal admit --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal admit --request <request.json> [--output <admission.json>]
+```
+
+### `buildchain tail-reseal plan`
+
+- Help: `buildchain tail-reseal plan --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal plan --request <request.json> [--output <plan.json>]
+```
+
+### `buildchain tail-reseal seal`
+
+- Help: `buildchain tail-reseal seal --help`
+- Canonical id: `tail-reseal`
+- Options: `--output`, `--passport`, `--plan`, `--protected-readback-root`, `--readbacks`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal seal --request <request.json> --plan <plan.json> --readbacks <dir> --passport <passport.json> --protected-readback-root <sha256:...> [--output <receipt.json>]
+```
+
+### `buildchain tail-reseal verify-platform`
+
+- Help: `buildchain tail-reseal verify-platform --help`
+- Canonical id: `tail-reseal`
+- Options: `--artifact-root`, `--mode`, `--output`, `--platform`, `--provider-readback-root`, `--request`
+- Syntax:
+
+```text
+buildchain tail-reseal verify-platform --request <request.json> --platform <id> [--artifact-root <dir>] [--mode retained|resealed] [--provider-readback-root <sha256:...>] [--output <readback.json>]
 ```
 
 ## `transaction`

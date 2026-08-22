@@ -3,13 +3,13 @@
   "contract": "kungfu-buildchain-contract-lock",
   "buildchain": {
     "ref": "v4-alpha",
-    "resolvedSha": "05a5825e7b7e69029b8e570028771e09dba3aba2",
+    "resolvedSha": "847ae56be147b243401498b1617b4f7cf95e0ce3",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:0cd2c99d63c0af1ab38f3df918ce086a7bece5929bf1e9cf742833232b62892d",
-    "compatibilityDigest": "sha256:7234ed200c568b1fea0e469de61ec7a67da48ede0af6290fb49b93a9e62e0b65",
+    "contractDigest": "sha256:e2e0bea1a4f70b69ec848e386126eed791e837145be53c3fbe6045cbd293f195",
+    "compatibilityDigest": "sha256:c8407195cafe42cb62ac2a4f5ff5b2c3f9b8aa65c27cc678efd46240cb3f0ecc",
     "majorLine": "v4",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-08-11T06:20:00.000Z",
+    "acceptedAt": "2026-08-16T01:05:21.000Z",
     "surfaces": [
       {
         "id": "reusable-build",
@@ -20,6 +20,11 @@
         "id": "channel-build-router",
         "kind": "workflow",
         "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962"
+      },
+      {
+        "id": "dev-pr-auto-merge",
+        "kind": "workflow",
+        "breakingDigest": "sha256:21b65d0746d2e8b3e8a7df4c6fab295a85c8fd42cc405ec3bc5df5cdab0421f0"
       },
       {
         "id": "release-candidate-promote",

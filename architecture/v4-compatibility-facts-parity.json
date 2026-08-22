@@ -1,0 +1,77 @@
+{
+  "schema": "buildchain.v4.compatibility-facts-parity/v1",
+  "source": {
+    "branch": "dev/v3/v3.0",
+    "commit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
+    "factRegistry": "packages/core/buildchain-compatibility-facts.json"
+  },
+  "target": {
+    "branch": "dev/v4/v4.0",
+    "commit": "60e61d0a17bdf41262454a3499aae430248036fc",
+    "schema": "contracts/v4-compatibility-facts-v1.schema.json"
+  },
+  "rootProtocol": "kungfu.fact-root.canonical/v2",
+  "matrixRoot": "sha256:be099fcb4ecc5ec0bf24e86853246d12210b2f6d082e928ce90a40b00345f262",
+  "matrix": [
+    {
+      "invariant": "immutable-directional-relation",
+      "v3": "source-to-target Fact",
+      "v4": "source-to-target Fact",
+      "parity": "exact"
+    },
+    {
+      "invariant": "operation-scope",
+      "v3": "accept-contract-lock",
+      "v4": "accept-contract-lock",
+      "parity": "exact"
+    },
+    {
+      "invariant": "time-awareness",
+      "v3": "validFromCutRoot plus Cut ancestry",
+      "v4": "validFromCutRoot plus Cut ancestry",
+      "parity": "exact"
+    },
+    {
+      "invariant": "append-only-current-truth",
+      "v3": "supersede and revoke records",
+      "v4": "supersede and revoke records",
+      "parity": "exact"
+    },
+    {
+      "invariant": "explicit-path",
+      "v3": "direct default and explicit bounded composition",
+      "v4": "direct default and explicit bounded composition",
+      "parity": "exact"
+    },
+    {
+      "invariant": "negative-receipts",
+      "v3": "rooted accepted or rejected path receipt",
+      "v4": "byte-identical Rust and TypeScript receipt",
+      "parity": "safety-equivalent"
+    },
+    {
+      "invariant": "legacy-digest-projection",
+      "v3": "compatibleBreakingDigests derived from proofs and Facts",
+      "v4": "exact-target current Facts derive digest arrays",
+      "parity": "safety-equivalent"
+    },
+    {
+      "invariant": "legacy-proof-projection",
+      "v3": "v1 proof roots retained",
+      "v4": "v1 proof roots retained as non-authoritative lineage",
+      "parity": "exact"
+    },
+    {
+      "invariant": "release-passport",
+      "v3": "Fact lineage available to verification receipt",
+      "v4": "Fact, Cut, proof and path roots attach as non-release-authority evidence",
+      "parity": "safety-equivalent"
+    },
+    {
+      "invariant": "unknown-state",
+      "v3": "fail closed",
+      "v4": "missing ambiguous expired revoked wrong-direction wrong-Cut disconnected and corrupt fail closed",
+      "parity": "exact"
+    }
+  ]
+}

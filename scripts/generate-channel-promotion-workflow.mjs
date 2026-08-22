@@ -20,9 +20,13 @@ const internalInputs = new Set([
   "promotion-publication-channel",
   "promotion-target-ref",
   "promotion-override-used",
+  "promotion-runtime-authorization-json",
+  "promotion-runtime-authorization-root",
   "publication-authority-workflow-path",
   "buildchain-expected-channel",
   "buildchain-expected-major",
+  "buildchain-alpha-contract-lock-path",
+  "buildchain-stable-contract-lock-path",
 ]);
 
 function blockBetween(source, start, end) {
@@ -120,6 +124,12 @@ function forwardedInputs(inputNames, { includeInternal = true, major = 2, unsupp
       if (name === "promotion-override-used") {
         return `      ${name}: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}`;
       }
+      if (name === "promotion-runtime-authorization-json") {
+        return `      ${name}: \${{ needs.consumer-admission.outputs.runtime-authorization-json }}`;
+      }
+      if (name === "promotion-runtime-authorization-root") {
+        return `      ${name}: \${{ needs.consumer-admission.outputs.runtime-authorization-root }}`;
+      }
       if (name === "buildchain-expected-major") {
         return `      buildchain-expected-major: "${major}"`;
       }
@@ -132,6 +142,15 @@ function forwardedInputs(inputNames, { includeInternal = true, major = 2, unsupp
     }).join("\n");
 }
 
+function routedInputs(inputNames, route, major) {
+  return forwardedInputs(inputNames, {
+    includeInternal: route.forwardInternalInputs,
+    major,
+    unsupportedInputs: route.unsupportedInputs,
+    workflowPath: route.workflowPath,
+  });
+}
+
 function validateWorkflowRoute(name, route, expectedLogicalRef) {
   if (!route || typeof route !== "object") throw new Error(`promotion shell routing missing ${name} route`);
   if (route.logicalRef !== expectedLogicalRef) {
@@ -140,8 +159,8 @@ function validateWorkflowRoute(name, route, expectedLogicalRef) {
   if (!/^\.github\/workflows\/[.a-z0-9-]+\.ya?ml$/.test(route.workflowPath || "")) {
     throw new Error(`promotion shell ${name} workflowPath must name a reusable workflow`);
   }
-  if (!/^(?:v[0-9]+(?:-alpha)?|train\/[A-Za-z0-9._+\/-]+|[0-9a-f]{40})$/.test(route.callRef || "")) {
-    throw new Error(`promotion shell ${name} callRef must be an official channel ref, trusted train, or exact SHA`);
+  if (!/^(?:v[0-9]+(?:-alpha)?|(?:train|alpha|release)\/[A-Za-z0-9._+\/-]+|[0-9a-f]{40})$/.test(route.callRef || "")) {
+    throw new Error(`promotion shell ${name} callRef must be an official tag, protected channel ref, trusted train, or exact SHA`);
   }
   if (typeof route.forwardInternalInputs !== "boolean") {
     throw new Error(`promotion shell ${name} forwardInternalInputs must be boolean`);
@@ -165,6 +184,94 @@ export function parsePromotionShellRouting(source, { major = 2 } = {}) {
     alpha: validateWorkflowRoute("alpha", parsed.alpha, `v${major}-alpha`),
     stable: validateWorkflowRoute("stable", parsed.stable, `v${major}`),
   };
+}
+
+function consumerAdmissionJob() {
+  return `  consumer-admission:
+    name: Admit v4 floating consumer policy
+    needs: resolve-promotion
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      runtime-authorization-json: \${{ steps.runtime-authority.outputs.runtime-authorization-json }}
+      runtime-authorization-root: \${{ steps.runtime-authority.outputs.runtime-authorization-root }}
+    steps:
+      - name: Checkout exact consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: \${{ inputs.target-sha || github.sha }}
+          path: .buildchain/consumer
+          persist-credentials: false
+      - name: Checkout exact policy runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: \${{ inputs.buildchain-repository }}
+          ref: \${{ needs.resolve-promotion.outputs.router-sha }}
+          path: .buildchain/v4-policy-runtime
+          persist-credentials: false
+      - name: Enforce v4 floating consumer policy
+        id: policy
+        env:
+          BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
+          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: \${{ needs.resolve-promotion.outputs.channel }}
+          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/release-candidate-promote.yml
+          BUILDCHAIN_WORKFLOW_SHA: \${{ needs.resolve-promotion.outputs.router-sha }}
+          BUILDCHAIN_RUNTIME_SHA: \${{ needs.resolve-promotion.outputs.router-sha }}
+          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: \${{ inputs.buildchain-stable-contract-lock-path }}
+          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: \${{ inputs.buildchain-alpha-contract-lock-path }}
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
+        run: >-
+          node .buildchain/v4-policy-runtime/scripts/v4-consumer-policy.mjs scan
+          --source-sha "\${{ inputs.target-sha || github.sha }}"
+
+      - name: Upload rooted consumer admission receipt
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-consumer-policy-release-candidate-promote-\${{ github.sha }}
+          path: .buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json
+          if-no-files-found: error
+
+      - name: Authorize transient v4 runtime selection
+        id: runtime-authority
+        if: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH: .buildchain/consumer/.buildchain/evidence/v4-runtime-authorization.json
+        with:
+          script: |
+            const script = require(process.env.GITHUB_WORKSPACE + "/.buildchain/v4-policy-runtime/scripts/authorize-promotion-runtime-override.cjs");
+            const result = await script.authorizePromotionRuntimeOverride({
+              github,
+              context,
+              request: {
+                consumerRoot: process.env.GITHUB_WORKSPACE + "/.buildchain/consumer",
+                runtimeModulePath: process.env.GITHUB_WORKSPACE + "/.buildchain/v4-policy-runtime/packages/core/v4-runtime-ref-resume-authority.js",
+                runtimeRepository: "\${{ inputs.buildchain-repository }}",
+                consumerPolicyReceiptPath: process.env.GITHUB_WORKSPACE + "/.buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json",
+                consumerPolicyReceiptRoot: "\${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}",
+                sourceSha: "\${{ inputs.target-sha || github.sha }}",
+                requestedRef: "\${{ needs.resolve-promotion.outputs.runtime-ref }}",
+                resolvedRuntimeSha: "\${{ needs.resolve-promotion.outputs.runtime-sha }}",
+                reason: "trusted \${{ inputs.resume-candidate-run-id != '' && 'resume' || 'dispatch' }} runtime override \${{ needs.resolve-promotion.outputs.runtime-ref }} for source \${{ inputs.target-sha || github.sha }}",
+                mode: "\${{ inputs.resume-candidate-run-id != '' && 'resume' || 'dispatch' }}",
+                outputPath: process.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH,
+              },
+            });
+            core.setOutput("runtime-authorization-json", JSON.stringify({
+              receipt: result.receipt,
+              receiptRoot: result.receiptRoot,
+            }));
+            core.setOutput("runtime-authorization-root", result.receiptRoot);
+
+      - name: Upload transient runtime authorization receipt
+        if: \${{ needs.resolve-promotion.outputs.override-used == 'true' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-runtime-authorization-release-candidate-promote-\${{ github.run_id }}
+          path: .buildchain/consumer/.buildchain/evidence/v4-runtime-authorization.json
+          if-no-files-found: error
+`;
 }
 
 export function generateChannelPromotionWorkflow(source, { major = 2, shellRouting } = {}) {
@@ -193,16 +300,8 @@ export function generateChannelPromotionWorkflow(source, { major = 2, shellRouti
   for (const required of ["buildchain-ref", "buildchain-contract-lock-path", "channel", "target-ref", ...internalInputs]) {
     if (!inputNames.includes(required)) throw new Error(`advanced promotion workflow missing input: ${required}`);
   }
-  const alphaForwarded = forwardedInputs(inputNames, {
-    includeInternal: alphaRoute.forwardInternalInputs,
-    major,
-    unsupportedInputs: alphaRoute.unsupportedInputs, workflowPath: alphaRoute.workflowPath,
-  });
-  const stableForwarded = forwardedInputs(inputNames, {
-    includeInternal: stableRoute.forwardInternalInputs,
-    major,
-    unsupportedInputs: stableRoute.unsupportedInputs, workflowPath: stableRoute.workflowPath,
-  });
+  const alphaForwarded = routedInputs(inputNames, alphaRoute, major);
+  const stableForwarded = routedInputs(inputNames, stableRoute, major);
   return `# Generated by scripts/generate-channel-promotion-workflow.mjs. Do not edit directly.
 name: Release Candidate Promote
 
@@ -419,9 +518,10 @@ jobs:
           [[ "$(git -C .buildchain/shell rev-parse HEAD)" = "\${SHELL_SHA}" ]] || { echo "::error::Promotion shell checkout moved"; exit 1; }
           [[ "$(git -C .buildchain/runtime rev-parse HEAD)" = "\${RUNTIME_SHA}" ]] || { echo "::error::Promotion runtime checkout moved"; exit 1; }
 
+${consumerAdmissionJob()}
   alpha:
     name: Promote with alpha workflow shell
-    needs: resolve-promotion
+    needs: [resolve-promotion, consumer-admission]
     if: \${{ needs.resolve-promotion.outputs.channel == 'alpha' }}
     uses: kungfu-systems/buildchain/${alphaRoute.workflowPath}@${alphaRoute.callRef}
     permissions:
@@ -439,7 +539,7 @@ ${alphaForwarded}
 
   stable:
     name: Promote with stable workflow shell
-    needs: resolve-promotion
+    needs: [resolve-promotion, consumer-admission]
     if: \${{ needs.resolve-promotion.outputs.channel == 'stable' }}
     uses: kungfu-systems/buildchain/${stableRoute.workflowPath}@${stableRoute.callRef}
     permissions:

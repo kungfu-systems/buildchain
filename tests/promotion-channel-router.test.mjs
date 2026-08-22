@@ -10,7 +10,6 @@ import { resolvePromotionChannel } from "../scripts/promotion-channel-router.mjs
 import { resolvePromotionIdentities } from "../scripts/promotion-identity-resolver.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
-const pinnedPromotionShellSha = "b2f0d35424a38123b4c71612be27bebeeec1104d";
 const shellRouting = parsePromotionShellRouting(
   fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
   { major: 4 },
@@ -30,6 +29,7 @@ test("alpha promotion selects the alpha workflow shell, runtime, and target", ()
   }), {
     targetRef: "alpha/v22/v22.22",
     publicationChannel: "alpha",
+    routerRef: "v3", routerSha: "",
     channel: "alpha",
     major: 3,
     shellRef: "v3-alpha",
@@ -101,6 +101,7 @@ test("an exact runtime pin matching the reusable workflow SHA is not an override
   }), {
     targetRef: "alpha/v3/v3.0",
     publicationChannel: "alpha",
+    routerRef: sha, routerSha: sha,
     channel: "alpha",
     major: 3,
     shellRef: "v3-alpha",
@@ -165,7 +166,13 @@ test("generated promotion router preserves every public input and output exactly
   const advanced = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
   const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
   const current = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
-  const internal = new Set(workflowFields(advanced, "inputs").filter((name) => name.startsWith("promotion-") || name === "publication-authority-workflow-path" || name === "buildchain-expected-channel" || name === "buildchain-expected-major"));
+  const internal = new Set(workflowFields(advanced, "inputs").filter((name) =>
+    name.startsWith("promotion-") ||
+    name === "publication-authority-workflow-path" ||
+    name === "buildchain-expected-channel" ||
+    name === "buildchain-expected-major" ||
+    name === "buildchain-alpha-contract-lock-path" ||
+    name === "buildchain-stable-contract-lock-path"));
   const expectedInputs = workflowFields(advanced, "inputs").filter((name) => !internal.has(name));
   expectedInputs.push("buildchain-channel", "buildchain-alpha-contract-lock-path", "buildchain-stable-contract-lock-path");
   const actualInputs = workflowFields(generated, "inputs");
@@ -189,11 +196,8 @@ test("generated router delegates alpha and stable lanes to their configured shel
   );
   const generated = generateChannelPromotionWorkflow(fixture, { major: 4, shellRouting });
 
-  assert.match(
-    generated,
-    new RegExp(`\\.release-candidate-promote\\.yml@${pinnedPromotionShellSha}`),
-  );
-  assert.equal(generated.match(new RegExp(`\\.release-candidate-promote\\.yml@${pinnedPromotionShellSha}`, "g"))?.length, 2);
+  assert.match(generated, /\.release-candidate-promote\.yml@v4-alpha/u);
+  assert.match(generated, /\.release-candidate-promote\.yml@v4/u);
   assert.notEqual(fixture, advanced);
   assert.doesNotMatch(generated, /Advanced Alpha Fixture/);
 });
@@ -204,10 +208,12 @@ test("stable route calls the hidden advanced workflow through the current major 
 
   assert.deepEqual(shellRouting.stable, {
     logicalRef: "v4",
-    callRef: pinnedPromotionShellSha,
+    callRef: "v4",
     workflowPath: ".github/workflows/.release-candidate-promote.yml",
     forwardInternalInputs: true,
     unsupportedInputs: [
+      "buildchain-alpha-contract-lock-path",
+      "buildchain-stable-contract-lock-path",
       "github-artifact-attestation-environment",
       "github-artifact-attestation-policy-json",
       "github-artifact-attestation-retention-days",
@@ -215,6 +221,8 @@ test("stable route calls the hidden advanced workflow through the current major 
       "publication-gate-controller-sha",
       "publication-authority-workflow-path",
       "publication-consumer-qualification-controller-sha",
+      "promotion-runtime-authorization-json",
+      "promotion-runtime-authorization-root",
       "release-activation-command",
       "release-activation-receipt-set-path",
       "release-candidate-wait-seconds",
@@ -229,6 +237,7 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-passport-kfd-adopter-manifest-json",
       "release-passport-kfd-support-matrix-json",
       "release-passport-kfd-product-gate-jsons",
+      "release-passport-v4-runtime-resume-evidence-json",
       "release-propagation-config-path",
       "resume-buildchain-runtime-sha",
       "resume-candidate-repository",
@@ -242,7 +251,7 @@ test("stable route calls the hidden advanced workflow through the current major 
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v4/);
-  assert.match(generated, new RegExp(`STABLE_SHELL_CALL_REF: ${pinnedPromotionShellSha}`));
+  assert.match(generated, /STABLE_SHELL_CALL_REF: v4/u);
   assert.match(generated, /if \[\[ "\$\{ref\}" =~ \^\[0-9a-fA-F\]\{40\}\$ \]\]; then sha="\$\{ref,,\}"/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
@@ -266,10 +275,10 @@ test("alpha route calls the matching current-major advanced shell", () => {
   const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
 
   assert.match(generated, /ALPHA_SHELL_REF: v4-alpha/);
-  assert.match(generated, new RegExp(`ALPHA_SHELL_CALL_REF: ${pinnedPromotionShellSha}`));
+  assert.match(generated, /ALPHA_SHELL_CALL_REF: v4-alpha/u);
   assert.match(
     generated,
-    new RegExp(`uses: kungfu-systems/buildchain/\\.github/workflows/\\.release-candidate-promote\\.yml@${pinnedPromotionShellSha}`),
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
   );
 });
 

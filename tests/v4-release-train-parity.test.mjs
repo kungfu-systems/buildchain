@@ -28,7 +28,7 @@ test("v4 Release Train parity binds every normative v3 vector", () => {
     const source = fs.readFileSync(path.join(root, vector.path), "utf8");
     assert.equal(
       source.split("\n").filter((line) => line.startsWith("test(")).length,
-      vector.count,
+      vector.count + (vector.targetAdditionalCount || 0),
       vector.path,
     );
     assert.equal(vector.result, "exact");

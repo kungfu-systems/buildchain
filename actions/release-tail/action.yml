@@ -4,10 +4,27 @@ description: "Execute rooted release provider effects through one Buildchain-own
 inputs:
   declaration:
     description: "Versioned release-tail declaration JSON or path"
-    required: true
+    required: false
   provider-bindings:
-    description: "Data-only artifact and provider document bindings JSON or path"
-    required: true
+    description: "Legacy release-tail bindings, or an optional exact canonical match for capsule-bound provider rehearsal bindings"
+    required: false
+  rehearsal-capsule:
+    description: "Optional v4 Publication Rehearsal Capsule JSON or path"
+    required: false
+  candidate-root:
+    description: "Explicit candidate file root for Publication Rehearsal Capsule verification"
+    required: false
+  rehearsal-mode:
+    description: "Publication rehearsal mode: simulate, replay, or provider"
+    default: "simulate"
+    required: false
+  rehearsal-authority:
+    description: "Exact rehearsal-only authority JSON or path required for provider mode"
+    required: false
+  rehearsal-evidence-path:
+    description: "Rooted Publication Rehearsal evidence output"
+    default: ".buildchain/publication-rehearsal/evidence.json"
+    required: false
   state-path:
     description: "Durable transaction checkpoint path"
     default: ".buildchain/release-tail/state.json"
@@ -31,6 +48,8 @@ outputs:
     description: "Durable transaction checkpoint path"
   receipt-roots-json:
     description: "JSON array of standardized receipt roots"
+  rehearsal-evidence-root:
+    description: "Root of effect-disabled or provider-observed rehearsal evidence"
 runs:
   using: "node24"
   main: "dist/index.js"

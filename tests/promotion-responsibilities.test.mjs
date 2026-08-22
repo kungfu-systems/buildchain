@@ -6,7 +6,11 @@ import {
   createDurableTransactionOperations,
   createRefMutationOperations,
 } from "../actions/promote-buildchain-ref/lib.js";
-import { promoteAlphaChannel } from "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js";
+import {
+  promoteAlphaChannel,
+  publishAlphaCandidate,
+  selectAlphaCandidate,
+} from "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js";
 import { promoteMajorChannel } from "../actions/promote-buildchain-ref/internal/promote-major-channel.js";
 import { promoteReleaseChannel } from "../actions/promote-buildchain-ref/internal/promote-release-channel.js";
 import { createDurableTransactionOperations as createDurableTransactionOperationsModule } from "../actions/promote-buildchain-ref/internal/durable-transaction-operations.js";
@@ -50,6 +54,66 @@ test("promotion facade delegates to independently owned channel modules", () => 
       `${channel} channel module is ${moduleLines} lines`,
     );
   }
+});
+
+test("alpha recovery selects the exact advanced publication transaction before an older contained transaction", () => {
+  const oldTransaction = {
+    version: "3.0.9-alpha.12",
+    exact_tag: "v3.0.9-alpha.12",
+    release_sha: "a".repeat(40),
+  };
+  const advancedPublicationTransaction = {
+    version: "3.0.9-alpha.13",
+    exact_tag: "v3.0.9-alpha.13",
+    release_sha: "b".repeat(40),
+  };
+
+  assert.deepEqual(
+    selectAlphaCandidate(
+      { advancedPublicationTransaction },
+      {
+        explicitAlphaTags: [],
+        transactionOpen: true,
+        containsTransaction: true,
+        settled: false,
+        currentAlpha: {
+          tag: oldTransaction.exact_tag,
+          transaction: oldTransaction,
+        },
+      },
+    ),
+    {
+      tag: advancedPublicationTransaction.exact_tag,
+      transaction: advancedPublicationTransaction,
+    },
+  );
+});
+
+test("alpha recovery keeps an advanced publication bound to its durable sealed bundle", async () => {
+  const transaction = {
+    version: "3.0.9-alpha.13",
+    exact_tag: "v3.0.9-alpha.13",
+    release_sha: "b".repeat(40),
+    sealed_bundle: { root: `sha256:${"c".repeat(64)}` },
+  };
+  const executions = [];
+
+  const publication = await publishAlphaCandidate(
+    {
+      rule: { channel: "alpha", releasePrefix: "v3.0" },
+      stripTagPrefix: (tag) => tag.replace(/^v/, ""),
+      transactionHasPublishedMaterial: () => true,
+      executePublishTransaction: async (options) => executions.push(options),
+    },
+    { currentAlpha: undefined, alphaPublishDistTag: "alpha" },
+    { tag: transaction.exact_tag, transaction },
+  );
+
+  assert.equal(publication.alpha.sha, transaction.release_sha);
+  assert.equal(executions.length, 1);
+  assert.equal(executions[0].version, transaction.version);
+  assert.equal(executions[0].releaseSha, transaction.release_sha);
+  assert.equal(executions[0].durablePublicationMaterial, transaction);
 });
 
 test("ref mutation responsibility plans provider operations without mutating during dry-run", async () => {
@@ -102,6 +166,113 @@ test("ref mutation responsibility plans provider operations without mutating dur
     updates.map(({ action }) => action),
     ["dry-run", "dry-run", "dry-run-default-branch"],
   );
+});
+
+test("floating tag finalization reads back an exact existing target without rewriting it", async () => {
+  const targetSha = "b".repeat(40);
+  const requests = [];
+  const updates = [];
+  const octokit = {
+    rest: {
+      git: {
+        getRef: async (request) => {
+          requests.push({ operation: "getRef", ...request });
+          return { data: { object: { sha: targetSha } } };
+        },
+        updateRef: async (request) => {
+          requests.push({ operation: "updateRef", ...request });
+        },
+        createRef: async (request) => {
+          requests.push({ operation: "createRef", ...request });
+        },
+      },
+    },
+  };
+  const operations = createRefMutationOperations({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: "a".repeat(40),
+    dryRun: false,
+    rule: { major: 3, minor: 0, releasePrefix: "v3.0" },
+    updates,
+  });
+
+  await operations.updateTag("v3.0-alpha", targetSha);
+
+  assert.deepEqual(requests, [
+    {
+      operation: "getRef",
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      ref: "tags/v3.0-alpha",
+    },
+  ]);
+  assert.deepEqual(updates, [
+    { tag: "v3.0-alpha", action: "existing", sha: targetSha },
+  ]);
+});
+
+test("floating tag finalization lets the writer recover a reader-side ref miss", async () => {
+  const targetSha = "c".repeat(40);
+  const requests = [];
+  const updates = [];
+  const reader = {
+    rest: {
+      git: {
+        getRef: async (request) => {
+          requests.push({ operation: "reader.getRef", ...request });
+          const error = new Error("Not Found");
+          error.status = 404;
+          throw error;
+        },
+      },
+    },
+  };
+  const writer = {
+    rest: {
+      git: {
+        updateRef: async (request) => {
+          requests.push({ operation: "writer.updateRef", ...request });
+        },
+        createRef: async (request) => {
+          requests.push({ operation: "writer.createRef", ...request });
+        },
+      },
+    },
+  };
+  const operations = createRefMutationOperations({
+    octokit: reader,
+    tagUpdateOctokit: writer,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: "a".repeat(40),
+    dryRun: false,
+    rule: { major: 3, minor: 0, releasePrefix: "v3.0" },
+    updates,
+  });
+
+  await operations.updateTag("v3.0-alpha", targetSha);
+
+  assert.deepEqual(requests, [
+    {
+      operation: "reader.getRef",
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      ref: "tags/v3.0-alpha",
+    },
+    {
+      operation: "writer.updateRef",
+      owner: "kungfu-systems",
+      repo: "buildchain",
+      ref: "tags/v3.0-alpha",
+      sha: targetSha,
+      force: true,
+    },
+  ]);
+  assert.deepEqual(updates, [
+    { tag: "v3.0-alpha", action: "updated", sha: targetSha },
+  ]);
 });
 
 test("durable transaction responsibility emits an auditable dry-run plan and enforces the expected version", async () => {

@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.kungfu.ai/contracts/release-tail-capabilities-v1.schema.json",
+  "title": "Buildchain release-tail capability declaration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "schemaVersion",
+    "transactionPolicy",
+    "subject",
+    "capabilities"
+  ],
+  "properties": {
+    "contract": {
+      "const": "kungfu-buildchain-release-tail-capabilities"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "transactionPolicy": {
+      "const": "buildchain.release-tail/v1"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "sourceSha", "version", "tag", "channel"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "version": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string", "minLength": 1 },
+        "channel": { "enum": ["alpha", "release", "stable"] }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/capability" }
+    }
+  },
+  "$defs": {
+    "root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "executor",
+        "adapter",
+        "artifactRoles",
+        "destination",
+        "channelPolicy",
+        "activationPolicy",
+        "readbackPredicates",
+        "effect",
+        "observation",
+        "receipt",
+        "operationIdentity",
+        "idempotency",
+        "retry",
+        "evidenceRequirements"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "artifact.publish",
+            "signed-channel.commit",
+            "release.activate",
+            "released-evidence.synthesize"
+          ]
+        },
+        "executor": { "enum": ["buildchain-core", "provider-adapter"] },
+        "adapter": { "type": "string", "minLength": 1 },
+        "artifactRoles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["role", "root"],
+            "properties": {
+              "role": { "type": "string", "minLength": 1 },
+              "root": { "$ref": "#/$defs/root" }
+            }
+          }
+        },
+        "destination": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "locator"],
+          "properties": {
+            "kind": { "type": "string", "minLength": 1 },
+            "locator": { "type": "string", "minLength": 1 }
+          }
+        },
+        "channelPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["channel", "tagPattern", "authorityMove"],
+          "properties": {
+            "channel": { "enum": ["alpha", "release", "stable"] },
+            "tagPattern": { "type": "string", "minLength": 1 },
+            "authorityMove": { "enum": ["none", "signed-cas", "verified-ref"] }
+          }
+        },
+        "activationPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "environment"],
+          "properties": {
+            "mode": { "enum": ["none", "receipt-set", "receipt-only"] },
+            "environment": { "enum": ["none", "shadow", "production"] }
+          }
+        },
+        "readbackPredicates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "expected"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "kind": { "type": "string", "minLength": 1 },
+              "expected": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "effect": { "$ref": "#/$defs/message" },
+        "observation": { "$ref": "#/$defs/message" },
+        "receipt": { "$ref": "#/$defs/message" },
+        "operationIdentity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "transactionRoot",
+            "capabilityId",
+            "subjectRoot",
+            "targetRoot",
+            "attemptKey"
+          ],
+          "properties": {
+            "transactionRoot": { "$ref": "#/$defs/root" },
+            "capabilityId": {
+              "enum": [
+                "artifact.publish",
+                "signed-channel.commit",
+                "release.activate",
+                "released-evidence.synthesize"
+              ]
+            },
+            "subjectRoot": { "$ref": "#/$defs/root" },
+            "targetRoot": { "$ref": "#/$defs/root" },
+            "attemptKey": { "type": "string", "minLength": 1 }
+          }
+        },
+        "idempotency": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scope", "duplicate"],
+          "properties": {
+            "scope": { "enum": ["operation", "subject-target"] },
+            "duplicate": {
+              "enum": ["return-observed-receipt", "readback-before-retry"]
+            }
+          }
+        },
+        "retry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["class", "localAttempts", "exhausted"],
+          "properties": {
+            "class": { "enum": ["never", "readback", "provider-transient"] },
+            "localAttempts": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "exhausted": {
+              "enum": ["blocked", "repair-required", "terminal-failure"]
+            }
+          }
+        },
+        "evidenceRequirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "schema"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "schema": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

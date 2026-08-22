@@ -148,10 +148,10 @@ function alignMajorBootstrapReleaseImpact(changedFiles, { version } = {}) {
 function uniquePaths(paths) {
   return [...new Set(paths.filter(Boolean))];
 }
-
 function versionVerificationAllowedPathsForPromotion(channel, discoveredPaths = []) {
   return uniquePaths([
     ...discoveredPaths,
+    ...(["alpha", "release"].includes(channel) ? ["dist/site/kfd-claims.json", "dist/site/public-surface-audit.json", "dist/site/workflow-registry.json"] : []),
     ...(channel === "major" ? ["dist/site/kfd-claims.json"] : []),
   ]);
 }
@@ -248,6 +248,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     ".buildchain/kfd/",
     ".buildchain/publication-result.json",
     ".buildchain/reconciliation/",
+    ".buildchain/recovered-publication/",
     ".buildchain/release-candidate/",
     ".buildchain/release-evidence/",
     ".buildchain/release-passport/",

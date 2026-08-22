@@ -8,6 +8,11 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain architecture qualify --authority-revision <git-revision>
                                       [--candidate-revision <git-revision>]
                                       [--cwd <dir>] [--json]
+  buildchain adopter-delivery run --input <json-or-path> [--output <path>]
+  buildchain adopter-delivery verify --input <json-or-path>
+                                      --readback <json-or-path> [--output <path>]
+  buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]
+  buildchain adopter-delivery archive --input <json-or-path> [--output <path>]
   buildchain portable-cache plan --manifest <file-or-json> [--output <file>]
                                  [--github-output <file>] [--json]
   buildchain portable-cache receipt --plan <file-or-json> [--matched-key <key>]
@@ -44,6 +49,23 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-tail init --declaration <json-or-path> [--state <path>]
   buildchain release-tail <status|verify> [--state <path>] [--output <path>]
   buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
+  buildchain release-tail rehearse --capsule <absolute-path>
+                                      --candidate-root <absolute-path>
+                                      --mode <simulate|replay>
+                                      --state <absolute-path>
+                                      --evidence <absolute-path>
+  buildchain tail-reseal plan --request <request.json> [--output <plan.json>]
+  buildchain tail-reseal admit --request <request.json> [--output <admission.json>]
+  buildchain tail-reseal verify-platform --request <request.json> --platform <id>
+                                      [--artifact-root <dir>] [--mode retained|resealed]
+                                      [--provider-readback-root <sha256:...>]
+                                      [--output <readback.json>]
+  buildchain tail-reseal seal --request <request.json> --plan <plan.json>
+                                      --readbacks <dir> --passport <passport.json>
+                                      --protected-readback-root <sha256:...>
+                                      [--output <receipt.json>]
+  buildchain next-development materialize --input <request.json> [--cwd <dir>]
+                                      [--write] [--output <path>] [--json]
   buildchain github-governance <plan|apply|rollback|protection-policy-plan|ruleset-policy-plan> ...
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...
@@ -127,11 +149,20 @@ export const BUILDCHAIN_USAGE = `Usage:
                              [--from-config | --workflow <required-workflow.yml>...] [--cwd <dir>]
                              [--check-response-timeout-minutes <n>]
                              [--max-entries-to-build <n>] [--apply]
-  buildchain dev warrant <submit|select|heartbeat|recover|close|cancel-queued|observe>
+  buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe>
                              --repository <owner/repo> --branch <dev/vN/vN.M>
                              [--execute] [--output <file>] [--json]
-  buildchain dev proof <source|verify-source|classify|replay|integration|verify-integration>
+  buildchain dev authority <migrate|submit|lease-qualification|heartbeat-qualification|complete-qualification|lease-landing|heartbeat-landing|recover|admit-merge-group|settle|observe>
+                             --repository <owner/repo> --branch <dev/vN/vN.M>
+                             [--environment-root <root>] [--qualification-domains <json>]
+                             [--provider-attempt <admitted-attempt.json>]
+                             [--execute] [--output <file>] [--json]
+  buildchain dev proof <source|verify-source|classify|native|verify-native|classify-native|verify-native-reuse|replay|integration|verify-integration>
                              [--output <file>] [--json]
+  buildchain dev two-phase --repository <owner/repo> --branch <dev/vN/vN.M>
+                             --pull-request <n> --expected-head <sha>
+                             --warrant-result <file> --native-command <command>
+                             [--native-proof <file>] [--output <file>] [--json]
   buildchain log <info|warn|error> --event <name> [--phase <phase>]
                  [--component <name>] [--source <name>] [--attribute key=value]...
                  [--path <jsonl>] [--json]
@@ -145,6 +176,14 @@ export const BUILDCHAIN_USAGE = `Usage:
                              [--module-fact <file>]... [--artifact <path>]...
                              [--output <file>] [--json]
   buildchain facts verify [--cwd <dir>] --fact <file> [--json]
+  buildchain facts compatibility project [--cwd <dir>] [--registry <json-or-path>]
+                                      [--output <file>] [--json]
+  buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] [--json]
+  buildchain facts compatibility query --query <json-or-path>
+                                      [--registry <json-or-path>] [--cwd <dir>] [--json]
+  buildchain facts compatibility query-template --fact-root <sha256:...>
+                                      [--query-id <id>] [--registry <json-or-path>]
+                                      [--cwd <dir>] [--json]
   buildchain kfd ...
   buildchain kfd hub <init|inspect|test|explain> [--cwd <dir>]
                      [--declaration <path>] [--output-dir <path>]

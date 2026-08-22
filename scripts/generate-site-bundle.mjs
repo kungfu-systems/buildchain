@@ -46,6 +46,31 @@ import {
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
 const README_PATH = "README.md";
+const DEV_DELIVERY_AUTHORITY_SCHEMA =
+  "schemas/dev-delivery-authority-v2.schema.json";
+const DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE =
+  "contracts/dev-delivery-authority-v2.schema.json";
+const V4_COMPATIBILITY_FACTS_SCHEMA =
+  "schemas/v4-compatibility-facts-v1.schema.json";
+const V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE =
+  "contracts/v4-compatibility-facts-v1.schema.json";
+const V4_PUBLICATION_REHEARSAL_SCHEMA =
+  "schemas/v4-publication-rehearsal-capsule-v1.schema.json";
+const V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE =
+  "contracts/v4-publication-rehearsal-capsule-v1.schema.json";
+const V4_ADOPTER_DELIVERY_SCHEMA =
+  "schemas/v4-adopter-delivery-v1.schema.json";
+const V4_ADOPTER_DELIVERY_SCHEMA_SOURCE =
+  "contracts/v4-adopter-delivery-v1.schema.json";
+const RELEASE_TAIL_CAPABILITIES_SCHEMA =
+  "schemas/release-tail-capabilities-v1.schema.json";
+const RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE =
+  "contracts/release-tail-capabilities-v1.schema.json";
+const PUBLICATION_REHEARSAL_SITE_SCHEMAS = [
+  V4_PUBLICATION_REHEARSAL_SCHEMA,
+  V4_ADOPTER_DELIVERY_SCHEMA,
+  RELEASE_TAIL_CAPABILITIES_SCHEMA,
+];
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
 const requireFromHere = createRequire(import.meta.url);
@@ -71,6 +96,21 @@ function writeJson(filePath, value) {
 
 function stableJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
+}
+
+function siteFileBytes(name, value) {
+  if (name === DEV_DELIVERY_AUTHORITY_SCHEMA) return readText(DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE);
+  if (name === V4_COMPATIBILITY_FACTS_SCHEMA) return readText(V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE);
+  if (name === V4_PUBLICATION_REHEARSAL_SCHEMA) return readText(V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE);
+  if (name === V4_ADOPTER_DELIVERY_SCHEMA) return readText(V4_ADOPTER_DELIVERY_SCHEMA_SOURCE);
+  if (name === RELEASE_TAIL_CAPABILITIES_SCHEMA) return readText(RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE);
+  return stableJson(value);
+}
+
+function writeSiteFile(name, value) {
+  const filePath = path.join(outputDir, name);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, siteFileBytes(name, value));
 }
 
 function env(name) {
@@ -367,13 +407,16 @@ const manualMetaById = new Map(Object.entries({
   "release-activation-transaction": { capabilityGroup: "release-passport-trust", audience: ["release-operator", "agent"], maturity: "preview", order: 125 },
   "release-candidate": { capabilityGroup: "reusable-build", audience: ["release-operator", "consumer"], maturity: "stable", order: 130 },
   "release-train": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 132 },
+  "next-development-transition": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 133 },
   "stable-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer"], maturity: "preview", order: 135 },
   "dev-qualification-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 136 },
   "dev-alpha-candidate-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 137 },
   "v4-canonical-contracts": { capabilityGroup: "governance-versioning", audience: ["developer", "maintainer", "agent"], maturity: "preview", order: 138 },
+  "v4-compatibility-facts": { capabilityGroup: "governance-versioning", audience: ["developer", "maintainer", "agent"], maturity: "preview", order: 139 },
   "observed-evidence-patrol": { capabilityGroup: "governance-versioning", audience: ["release-operator", "consumer", "agent"], maturity: "preview", order: 140 },
   "engineering-housekeeper": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer", "agent"], maturity: "preview", order: 145 },
   "reusable-build-surface": { capabilityGroup: "reusable-build", audience: ["consumer", "release-operator"], maturity: "stable", order: 200 },
+  "v4-adopter-delivery": { capabilityGroup: "reusable-build", audience: ["consumer", "developer", "agent"], maturity: "preview", order: 205 },
   "lifecycle-protocol": { capabilityGroup: "reusable-build", audience: ["consumer", "developer"], maturity: "stable", order: 210 },
   "runtime-train-validation": { capabilityGroup: "governance-versioning", audience: ["maintainer", "consumer"], maturity: "stable", order: 220 },
   "kfd-support": { capabilityGroup: "kfd-trust", audience: ["agent", "maintainer"], maturity: "stable", order: 300 },
@@ -737,6 +780,7 @@ function buildSiteBundle() {
       "docs/reusable-build-surface.md",
       "docs/release-candidate.md",
       "docs/release-train.md",
+      "docs/next-development-transition.md",
       "docs/stable-candidate-patrol.md",
       "docs/dev-qualification-patrol.md",
       "docs/dev-alpha-candidate-patrol.md",
@@ -931,6 +975,9 @@ function buildSiteBundle() {
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/dev-delivery-authority-v2.schema.json",
+      "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "kfd-support.json",
       "artifact-evidence.json",
       "product-mechanism.json",
@@ -965,6 +1012,9 @@ function buildSiteBundle() {
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/dev-delivery-authority-v2.schema.json",
+      "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "buildchain-contract.json",
       "kfd-claims.json",
       "product-mechanism.json",
@@ -1095,6 +1145,9 @@ function buildSiteBundle() {
       "schemas/release-passport-v1.schema.json",
       "schemas/kfd-agent-hub-adoption.schema.json",
       "schemas/kfd-product-gate-input-v1.schema.json",
+      "schemas/dev-delivery-authority-v2.schema.json",
+      "schemas/v4-compatibility-facts-v1.schema.json",
+      ...PUBLICATION_REHEARSAL_SITE_SCHEMAS,
       "buildchain-contract.json",
       "kfd-upstream-aggregate.json",
       "kfd-claims.json",
@@ -1269,6 +1322,18 @@ function buildSiteBundle() {
     "schemas/release-passport-v1.schema.json": RELEASE_PASSPORT_SCHEMA,
     "schemas/kfd-agent-hub-adoption.schema.json": KFD_AGENT_HUB_ADOPTION_SCHEMA,
     "schemas/kfd-product-gate-input-v1.schema.json": KFD_PRODUCT_GATE_INPUT_SCHEMA,
+    [DEV_DELIVERY_AUTHORITY_SCHEMA]: readJson(
+      DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE,
+    ),
+    [V4_COMPATIBILITY_FACTS_SCHEMA]: readJson(
+      V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE,
+    ),
+    ...Object.fromEntries(
+      PUBLICATION_REHEARSAL_SITE_SCHEMAS.map((name) => [
+        name,
+        JSON.parse(siteFileBytes(name)),
+      ]),
+    ),
     "badge-endpoint-registry.json": badgeEndpointRegistry,
     "publication-registry.json": publicationRegistry,
     "buildchain-contract.json": createBuildchainContractWorld({ root, controllerRegistry }),
@@ -1288,7 +1353,7 @@ export function writeSiteBundle({ check = false } = {}) {
   const mismatches = [];
   for (const [name, value] of Object.entries(files)) {
     const filePath = path.join(outputDir, name);
-    const next = stableJson(value);
+    const next = siteFileBytes(name, value);
     if (check) {
       if (existingJson(filePath) !== next) {
         mismatches.push(path.relative(root, filePath));
@@ -1301,11 +1366,11 @@ export function writeSiteBundle({ check = false } = {}) {
   if (!check) {
     for (let iteration = 0; iteration < 5; iteration += 1) {
       for (const [name, value] of Object.entries(files)) {
-        writeJson(path.join(outputDir, name), value);
+        writeSiteFile(name, value);
       }
       const nextFiles = buildSiteBundle();
       const stable = Object.entries(nextFiles).every(([name, value]) => (
-        existingJson(path.join(outputDir, name)) === stableJson(value)
+        existingJson(path.join(outputDir, name)) === siteFileBytes(name, value)
       ));
       files = nextFiles;
       if (stable) {
@@ -1316,7 +1381,7 @@ export function writeSiteBundle({ check = false } = {}) {
       }
     }
     for (const [name, value] of Object.entries(files)) {
-      writeJson(path.join(outputDir, name), value);
+      writeSiteFile(name, value);
     }
   }
   return {

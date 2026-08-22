@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-runtime-ref-resume-authority-v1.schema.json",
+  "title": "Buildchain v4 transient runtime authorization and resume lineage evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["authorizationRoot", "authorization", "lineageRoot", "lineage"],
+  "properties": {
+    "authorizationRoot": { "$ref": "#/$defs/root" },
+    "authorization": { "$ref": "#/$defs/authorization" },
+    "lineageRoot": { "$ref": "#/$defs/root" },
+    "lineage": { "$ref": "#/$defs/lineage" }
+  },
+  "$defs": {
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "token": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$" },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "contract",
+        "status",
+        "mode",
+        "eventName",
+        "repository",
+        "actor",
+        "reason",
+        "authorizedAt",
+        "source",
+        "request",
+        "runtime",
+        "contractLocks",
+        "consumerPolicyReceiptRoot",
+        "persistenceScanRoot"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "contract": {
+          "const": "kungfu-buildchain-v4-runtime-authorization/v1"
+        },
+        "status": { "const": "authorized" },
+        "mode": { "enum": ["dispatch", "resume", "rescue"] },
+        "eventName": { "const": "workflow_dispatch" },
+        "repository": { "type": "string", "minLength": 3 },
+        "actor": { "$ref": "#/$defs/actor" },
+        "reason": { "type": "string", "minLength": 1 },
+        "authorizedAt": {
+          "type": "string",
+          "pattern": "^(?!0000)\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$"
+        },
+        "source": { "$ref": "#/$defs/source" },
+        "request": { "$ref": "#/$defs/request" },
+        "runtime": { "$ref": "#/$defs/runtime" },
+        "contractLocks": { "$ref": "#/$defs/contractLocks" },
+        "consumerPolicyReceiptRoot": { "$ref": "#/$defs/root" },
+        "persistenceScanRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "contract",
+        "status",
+        "authorizationRoot",
+        "source",
+        "consumerPolicyReceiptRoot",
+        "attempts",
+        "floatingRefMovement",
+        "continuation",
+        "stageCapsules",
+        "finalPublicReadbackRoot"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "contract": {
+          "const": "kungfu-buildchain-v4-runtime-resume-lineage/v1"
+        },
+        "status": { "const": "qualified" },
+        "authorizationRoot": { "$ref": "#/$defs/root" },
+        "source": { "$ref": "#/$defs/source" },
+        "consumerPolicyReceiptRoot": { "$ref": "#/$defs/root" },
+        "attempts": { "$ref": "#/$defs/attempts" },
+        "floatingRefMovement": { "$ref": "#/$defs/floatingRefMovement" },
+        "continuation": { "$ref": "#/$defs/continuation" },
+        "stageCapsules": { "$ref": "#/$defs/stageCapsules" },
+        "finalPublicReadbackRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["login", "permission"],
+      "properties": {
+        "login": { "type": "string", "minLength": 1 },
+        "permission": { "enum": ["write", "maintain", "admin"] }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha", "treeSha"],
+      "properties": {
+        "sha": { "$ref": "#/$defs/sha" },
+        "treeSha": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "class"],
+      "properties": {
+        "ref": { "type": "string", "minLength": 1 },
+        "class": { "enum": ["exact-sha", "floating", "train", "authority"] }
+      }
+    },
+    "readback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "sha", "containsRuntimeSha", "readbackRoot"],
+      "properties": {
+        "ref": { "type": "string", "minLength": 1 },
+        "sha": { "$ref": "#/$defs/sha" },
+        "containsRuntimeSha": { "type": "boolean" },
+        "readbackRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha", "reachableFrom"],
+      "properties": {
+        "sha": { "$ref": "#/$defs/sha" },
+        "reachableFrom": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/readback" }
+        }
+      }
+    },
+    "contractLocks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stableRoot", "alphaRoot"],
+      "properties": {
+        "stableRoot": { "$ref": "#/$defs/root" },
+        "alphaRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "runtimeSha"],
+      "properties": {
+        "id": { "$ref": "#/$defs/token" },
+        "runtimeSha": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "attempts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build", "resume"],
+      "properties": {
+        "build": { "$ref": "#/$defs/attempt" },
+        "resume": { "$ref": "#/$defs/attempt" }
+      }
+    },
+    "refReadback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "sha"],
+      "properties": {
+        "ref": { "enum": ["v4", "v4-alpha"] },
+        "sha": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "floatingRefMovement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after"],
+      "properties": {
+        "before": { "$ref": "#/$defs/refReadback" },
+        "after": { "$ref": "#/$defs/refReadback" }
+      }
+    },
+    "continuation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mechanism", "rerunFailedJobs", "resumePlanRoot"],
+      "properties": {
+        "mechanism": { "const": "new-governed-attempt" },
+        "rerunFailedJobs": { "const": false },
+        "resumePlanRoot": { "$ref": "#/$defs/root" }
+      }
+    },
+    "capsule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "capsuleRoot", "identityRoot", "artifactDigest"],
+      "properties": {
+        "platform": { "$ref": "#/$defs/token" },
+        "capsuleRoot": { "$ref": "#/$defs/root" },
+        "identityRoot": { "$ref": "#/$defs/root" },
+        "artifactDigest": { "$ref": "#/$defs/root" }
+      }
+    },
+    "stageCapsules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredPlatforms", "reused", "rebuildPlatforms"],
+      "properties": {
+        "requiredPlatforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/token" }
+        },
+        "reused": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/capsule" }
+        },
+        "rebuildPlatforms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/token" }
+        }
+      }
+    }
+  }
+}

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-08-13T09:05:27.306Z",
-  "publishedAt": "2026-08-13T09:05:27.306Z",
+  "generatedAt": "2026-08-22T10:02:06.978Z",
+  "publishedAt": "2026-08-22T10:02:06.978Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "45a49dcaa0fcef59bc66481a85c39514d08972cc",
+  "sourceRevision": "5906a5dced70b95309dd76bfea28b0be1f3ce978",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "4.0.0",
+    "version": "4.0.1-alpha.9",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:94a4866f5a44f97ab10ad460c4d9ff39c58aa28e231311425af2fcb857aa8c72"
+      "digest": "sha256:a04d321dbec562807cb29b748039839d097a97d2c9d2f0e76d6d22f2845055ba"
     },
     {
       "id": "getting-started",
@@ -134,6 +134,14 @@
       "plane": "verify",
       "exists": true,
       "digest": "sha256:6989ada03d381e68fdec55b26b76b2070fb37969826eadc0a989844a732ba557"
+    },
+    {
+      "id": "next-development-transition",
+      "title": "Next-development transition",
+      "path": "docs/next-development-transition.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:c33c017ae163650b422f7ec294a05f3db8b8e99b87c55ab2d8ac3cce1726448f"
     },
     {
       "id": "release-propagation",
@@ -229,7 +237,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fad47682ed909f7b16f58bb8c24c51a943eb704a0a50ab6e033d745ee16a809a"
+      "digest": "sha256:60208f0862195df44b27ada15e474ff1808dee6d492cd6303402b92fd72f06bc"
     },
     {
       "id": "cli-reference",
@@ -237,7 +245,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0aa0c937ca4f3f239f67c10a3e656ca0934cd3618bf84639525ea1fbd685c055"
+      "digest": "sha256:ec16f350596692989cf5eade945e7bbeee157a661c6d8faa55c8249b14ef5632"
     },
     {
       "id": "node-api-reference",
@@ -245,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:f8200ba1fbe5779408b4a1e82a0e28a5e8f696b05f97efd2d286d3008755fdbb"
+      "digest": "sha256:da744d2071ab7871eccbf6b3049a4d8a44b21daa477598fa9327a28b7d89ae67"
     },
     {
       "id": "build-facts",
@@ -277,7 +285,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:4b7a8efe1d22751ded069f46a23490db70cda9e9e14641acab600ab781245b19"
+      "digest": "sha256:edff8787985801d060efe9c924d80ac1689f5f2305d853f645fe877bab34c207"
     },
     {
       "id": "reusable-build-surface",
@@ -285,7 +293,15 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:54cadd6e2f168ca40d9ed66d2f9848d5d56c9d05759bf0454f5027b1df274796"
+      "digest": "sha256:fc2649d0ae4dc6a08275bc1f2509efd3e9730227eaa8157ef64daf4b9c850264"
+    },
+    {
+      "id": "v4-adopter-delivery",
+      "title": "V4 public adopter delivery",
+      "path": "docs/v4-adopter-delivery.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:c74a004657f64d29ba2a47f599223e5ab132daf2881cf0564c85c04b22a69e6e"
     },
     {
       "id": "publish-transaction",
@@ -309,7 +325,7 @@
       "path": "docs/release-tail-provider-plane.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:80b39ba4f0a8ed723e2a03e7efff0fee1e891245f7d1bf343edc75011aded801"
+      "digest": "sha256:72dd8231f51003c8a0d6532991b908b39de02deb11300e8c63113cd3a9e5cd8e"
     },
     {
       "id": "release-governance",
@@ -318,6 +334,14 @@
       "plane": "why",
       "exists": true,
       "digest": "sha256:6dfe8a9b974040fc1465b0da696519b4e97b0b901e30d852ffacda0d193810af"
+    },
+    {
+      "id": "v4-compatibility-facts",
+      "title": "Buildchain v4 compatibility Facts",
+      "path": "docs/v4-compatibility-facts.md",
+      "plane": "verify",
+      "exists": true,
+      "digest": "sha256:d29c904a17aca0ca3ad4f48a826f530610d77ffca8bde76ef7e5b4c245c2ca47"
     },
     {
       "id": "release-flow",
@@ -333,7 +357,7 @@
       "path": "docs/runtime-train-validation.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:f0a1cdb7fe5f72fc2ed921f1aeadbd16184dda16be3727e4193fa2af250325db"
+      "digest": "sha256:7df1e85785a1bd8d87c22359d63bcd1caf3fc6c4924d04b6802584b189f75a08"
     },
     {
       "id": "versioning",
@@ -341,7 +365,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:7f6e377abf976e9eb9c5f0fd2baec96922ca44d9ab7dd08178608657fa858978"
+      "digest": "sha256:a2fc36e62ac3adfa0dd499972f22cad22131ccc526e11e890e2cbdc4d3a31341"
     },
     {
       "id": "web-surface-deployments",

@@ -4,6 +4,11 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { BUILDCHAIN_CONFIG_PATH } from "../packages/core/buildchain-layout.js";
 import { detectPackageManager, assertPackageManager } from "../packages/core/package-manager.js";
+import {
+  appendNextDevelopmentToml,
+  mergeNextDevelopmentAgentInstructions,
+  nextDevelopmentWorkflowHeader,
+} from "../packages/core/next-development-projection.js";
 
 const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v4";
 const DEFAULT_PUBLICATION_LATEX_IMAGE = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder";
@@ -327,7 +332,9 @@ function workflowArtifactPaths(type) {
 }
 
 function publicationWorkflowYaml() {
-  return `name: Build
+  return `${nextDevelopmentWorkflowHeader()}# Commit both .buildchain/contract-lock.json and .buildchain/alpha-contract-lock.json.
+# Persist only @v4 or @v4-alpha; pass temporary train/SHA runtimes through workflow_dispatch.
+name: Build
 
 on:
   workflow_dispatch:
@@ -359,8 +366,10 @@ jobs:
 }
 
 function workflowYaml({ type, runnerPreset, artifactName }) {
-  return `# Buildchain v4 lifecycle checkpoints are governed by architecture/v4-platform-stage-checkpoints.json.
+  return `${nextDevelopmentWorkflowHeader()}# Buildchain v4 lifecycle checkpoints are governed by architecture/v4-platform-stage-checkpoints.json.
 # Do not add undeclared runner-only inputs, outputs, environment, or provider effects.
+# Commit both .buildchain/contract-lock.json and .buildchain/alpha-contract-lock.json.
+# Persist only @v4 or @v4-alpha; pass temporary train/SHA runtimes through workflow_dispatch.
 name: Build
 
 on:
@@ -403,6 +412,13 @@ function writeIfAllowed(filePath, content, { force }) {
   return filePath;
 }
 
+function writeManagedAgentEntry(filePath, current) {
+  const content = mergeNextDevelopmentAgentInstructions(current);
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content);
+  return filePath;
+}
+
 export function initBuildchainRepo({
   cwd = process.cwd(),
   type = "package",
@@ -413,7 +429,7 @@ export function initBuildchainRepo({
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const manager = detectOrDefaultPackageManager(resolvedCwd, packageManager);
-  const toml = (() => {
+  const toml = appendNextDevelopmentToml((() => {
     if (type === "package") {
       return packageToml(resolvedCwd, manager);
     }
@@ -433,7 +449,12 @@ export function initBuildchainRepo({
       return anchoredPackageToml(resolvedCwd, manager);
     }
     throw new Error("init --type must be one of package, native, web-surface, infra-contract, publication-artifact, or anchored-package");
-  })();
+  })());
+
+  const agentsPath = path.join(resolvedCwd, "AGENTS.md");
+  const currentAgents = fs.existsSync(agentsPath)
+    ? fs.readFileSync(agentsPath, "utf8")
+    : "";
 
   const written = [
     writeIfAllowed(path.join(resolvedCwd, BUILDCHAIN_CONFIG_PATH), toml, { force }),
@@ -448,6 +469,7 @@ export function initBuildchainRepo({
           }),
       { force },
     ),
+    writeManagedAgentEntry(agentsPath, currentAgents),
   ];
 
   if (type === "anchored-package" && !fs.existsSync(path.join(resolvedCwd, "release.json"))) {

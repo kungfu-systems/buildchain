@@ -113,7 +113,7 @@ function candidate(number, overrides = {}) {
     closureRoot: ROOTS.closure,
     dependencyRoot: ROOTS.dependency,
     toolchainRoot: ROOTS.toolchain,
-    deliveryClass: "native-proof-required",
+    deliveryClass: "non-native-fast",
     priority: "ordinary",
     ...overrides,
   };

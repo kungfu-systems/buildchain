@@ -1,0 +1,217 @@
+{
+  "schema": "kungfu.buildchain.compatibility-fact-source/v1",
+  "rootProtocol": "kungfu.fact-root.canonical/v2",
+  "authority": {
+    "kind": "protected-base-contract-authority",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v3/v3.0"
+  },
+  "registryCut": {
+    "kind": "protected-git-cut",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v3/v3.0",
+    "commit": "888e87fec88cad41d225c32615e80a87744d4b6d"
+  },
+  "facts": [
+    {
+      "proofId": "release-candidate-promote-acd401-to-e60642",
+      "surfaceId": "release-candidate-promote",
+      "surfaceKind": "workflow",
+      "sourceBreakingDigest": "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
+      "targetBreakingDigest": "sha256:e60642aa298933d2c103284794921a6c340a50aa91ee528b06e58892a2a006bf",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2342",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "8870db287a9ee5fb95eebbbe907b1649d84d5b7f",
+        "mergeCommit": "30b605adea1ed33dcf0bbb4cc7b666b64a6ccd18",
+        "contractDigest": "sha256:9c07dbdb9aa8390569cd07ace044af45e6751b91ffe8fcc0cb69a77388b0f72b",
+        "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
+      }
+    },
+    {
+      "proofId": "advanced-release-candidate-promote-aa30f2-to-9db8dd",
+      "surfaceId": "advanced-release-candidate-promote",
+      "surfaceKind": "workflow",
+      "sourceBreakingDigest": "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
+      "targetBreakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2342",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "8870db287a9ee5fb95eebbbe907b1649d84d5b7f",
+        "mergeCommit": "30b605adea1ed33dcf0bbb4cc7b666b64a6ccd18",
+        "contractDigest": "sha256:9c07dbdb9aa8390569cd07ace044af45e6751b91ffe8fcc0cb69a77388b0f72b",
+        "compatibilityDigest": "sha256:80cfdf1786019217c439810f1a80d2866bf8f7ef35a6fa569e1a687fb2bf4cbe"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
+      }
+    },
+    {
+      "proofId": "promote-buildchain-ref-action-a59f09-to-6147c0",
+      "surfaceId": "promote-buildchain-ref-action",
+      "surfaceKind": "action",
+      "sourceBreakingDigest": "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
+      "targetBreakingDigest": "sha256:6147c0a8d5c36bfaa6021871574e1fc28192a3f1b8cfdae4d24ef3059ac1ebda",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/1556",
+        "protectedBase": "dev/v2/v2.14",
+        "sourceCommit": "f8e2c5d28ef34d711892589331b7e018095a96d7",
+        "mergeCommit": "6e0c29be1489f686a9a3792b46bfaa4466828393",
+        "contractDigest": "sha256:f6dbf5147d9ad3b8c49ba6630cd52b8c7853ead7c921d7e1210a393aebf97d1f",
+        "compatibilityDigest": "sha256:cdf588422ec6b460bd6f631400efa6e361a045e052c8967d6c50fadd7aa4dd90"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
+      }
+    },
+    {
+      "proofId": "build-lifecycle-e264a7-to-6b8d38",
+      "surfaceId": "controller:build-lifecycle",
+      "surfaceKind": "controller",
+      "sourceBreakingDigest": "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be",
+      "targetBreakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2058",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "c9a86bd1ac17b4fae54b0410498830edad80d831",
+        "mergeCommit": "3991801a7a7d6fe5e31b9a670dfde7ea59e61253",
+        "contractDigest": "sha256:da72850bbd3088f0e9eb20c17382557e0dfb7e68bf4469d352ed870ee8a334e8",
+        "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
+      }
+    },
+    {
+      "proofId": "build-lifecycle-307459-to-6b8d38",
+      "surfaceId": "controller:build-lifecycle",
+      "surfaceKind": "controller",
+      "sourceBreakingDigest": "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
+      "targetBreakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2058",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "c9a86bd1ac17b4fae54b0410498830edad80d831",
+        "mergeCommit": "3991801a7a7d6fe5e31b9a670dfde7ea59e61253",
+        "contractDigest": "sha256:da72850bbd3088f0e9eb20c17382557e0dfb7e68bf4469d352ed870ee8a334e8",
+        "compatibilityDigest": "sha256:32a651504c57829085dc8863f0e41dee98eb60708ff6dec958c9c7e4b1010102"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "ff0f9006be1c8f63be40e67789e0cfd28fd69d46"
+      }
+    },
+    {
+      "proofId": "build-channel-router-d40dd0-to-30549a",
+      "surfaceId": "controller:build-channel-router",
+      "surfaceKind": "controller",
+      "sourceBreakingDigest": "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273",
+      "targetBreakingDigest": "sha256:30549aa26cd1e1dd81f10fe3529d3c6e3f8438a6efa0100c47ebae4d2f3d71df",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2549",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "0d87b772265066f5e6157e1ba6a2ba1021fb5225",
+        "mergeCommit": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7",
+        "contractDigest": "sha256:2584ba36ab54cd5e9bab9e34dfc08d87a55dc57de1be7641492bf7ceb1366350",
+        "compatibilityDigest": "sha256:80f65cc191b1f771475184edf8a1bf9c10dd69bb58060aa09313d0e1e57f508a"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "34fad9d3a94c450d75c0d06fd6ed00470c992ff7"
+      }
+    },
+    {
+      "proofId": "reusable-build-a6a353-to-dfbedd",
+      "surfaceId": "reusable-build",
+      "surfaceKind": "workflow",
+      "sourceBreakingDigest": "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650",
+      "targetBreakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2089",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "1a6cb874bc6f1611f3eef607e711d3532798e9e7",
+        "mergeCommit": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
+        "contractDigest": "sha256:7c2a7c132a2b2722f70f148b81048147047d4d2c46cf33f7cd2dc158aec092e0",
+        "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "71a75f21159b994241ec7cb2c50f7a150c5d440b"
+      }
+    },
+    {
+      "proofId": "web-surface-da569f-to-27f0cb",
+      "surfaceId": "web-surface",
+      "surfaceKind": "workflow",
+      "sourceBreakingDigest": "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace",
+      "targetBreakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2089",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "1a6cb874bc6f1611f3eef607e711d3532798e9e7",
+        "mergeCommit": "71a75f21159b994241ec7cb2c50f7a150c5d440b",
+        "contractDigest": "sha256:7c2a7c132a2b2722f70f148b81048147047d4d2c46cf33f7cd2dc158aec092e0",
+        "compatibilityDigest": "sha256:61af7d0871220bc0909008bdc571905ad500cccf853e7841bc5d462a34b2d436"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "71a75f21159b994241ec7cb2c50f7a150c5d440b"
+      }
+    },
+    {
+      "proofId": "release-propagation-d7a1f1-to-b873ce",
+      "surfaceId": "controller:release-propagation",
+      "surfaceKind": "controller",
+      "sourceBreakingDigest": "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e",
+      "targetBreakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd",
+      "evidence": {
+        "kind": "protected-pull-request-contract-acceptance",
+        "pullRequest": "https://github.com/kungfu-systems/buildchain/pull/2143",
+        "protectedBase": "dev/v3/v3.0",
+        "sourceCommit": "b63aff4dd63ad6017b8f48e1c690f595a9c832a2",
+        "mergeCommit": "487ee09ca4832ffd15607db00060df4c0839fbae",
+        "contractDigest": "sha256:00c37f8a663387831ba4d066056d0b21d4f3c5f3ea5b0cf84456af332cf8d87e",
+        "compatibilityDigest": "sha256:3bbcaf835844260ed98414d3bd176667245d12131e13fc748e4c2fae12399691"
+      },
+      "cut": {
+        "kind": "protected-git-cut",
+        "repository": "kungfu-systems/buildchain",
+        "protectedBase": "dev/v3/v3.0",
+        "commit": "487ee09ca4832ffd15607db00060df4c0839fbae"
+      }
+    }
+  ],
+  "supersessions": [],
+  "revocations": []
+}

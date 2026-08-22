@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-runtime-ref-resume-authority/v1",
+  "schemaAuthority": "contracts/v4-runtime-ref-resume-authority-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-runtime-ref-resume-authority-v1/scenario.json",
+  "runtimeAuthority": "packages/core/v4-runtime-ref-resume-authority.js",
+  "mode": "v4-only",
+  "transientSelection": {
+    "trustedEvent": "workflow_dispatch",
+    "actorPermissions": ["write", "maintain", "admin"],
+    "approvedRefs": [
+      "v4",
+      "v4-alpha",
+      "train/v4/v4.N/*",
+      "authority/v4/v4.N/*"
+    ],
+    "exactShaRequiresApprovedRefReachability": true,
+    "operatorReasonRequired": true,
+    "sourceTreeBound": true,
+    "consumerPolicyReceiptBound": true,
+    "dualContractLockRootsBound": true,
+    "providerReadbackRooted": true
+  },
+  "persistence": {
+    "exactShaDefault": "deny",
+    "trainOrAuthorityDefault": "deny",
+    "repositoryVariableIndirection": "deny",
+    "secretIndirection": "deny",
+    "environmentIndirection": "deny",
+    "oidcIamAndExternalAuthorityInventory": "metadata-only"
+  },
+  "resume": {
+    "freshAttemptRequired": true,
+    "failedJobRerun": false,
+    "floatingRefMovementRequired": true,
+    "buildAndResumeRuntimeMustDiffer": true,
+    "sealedCapsuleIdentity": [
+      "source-sha",
+      "source-tree-sha",
+      "platform",
+      "build-runtime-sha",
+      "consumer-policy-receipt-root",
+      "capsule-root",
+      "identity-root",
+      "artifact-digest"
+    ],
+    "validUnaffectedPlatforms": "reuse",
+    "missingPlatforms": "rebuild",
+    "staleOrAmbiguousCapsules": "reject"
+  },
+  "passport": {
+    "section": "v4RuntimeResume",
+    "recordsRuntimeAAndB": true,
+    "authorizationRootRequired": true,
+    "lineageRootRequired": true,
+    "finalPublicReadbackRootRequired": true
+  },
+  "authority": {
+    "v3BehaviorChange": false,
+    "credentialsInEvidence": false,
+    "persistentExactSha": false,
+    "providerMutation": false
+  }
+}

@@ -11,6 +11,7 @@ import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
 import { runReleasePropagationCli } from "../scripts/release-propagation.mjs";
 import { runReleaseGovernanceCli } from "../scripts/reconcile-release-governance.mjs";
 import { runReleaseTailCli } from "../scripts/release-tail.mjs";
+import { runV4TailResealCli } from "../scripts/v4-tail-reseal.mjs";
 import { runPublicationArtifactCli } from "../scripts/publication-artifact.mjs";
 import { runPublicationPackageCli } from "../scripts/publication-package.mjs";
 import { runPublicationReproducibilityCli } from "../scripts/publication-reproducibility.mjs";
@@ -109,6 +110,8 @@ import {
   dispatchTrustReleaseCommand,
 } from "./internal/trust-release-cli.mjs";
 import { dispatchRegisteredCommand } from "./internal/command-registry.mjs";
+import { runCompatibilityFactsCli } from "./internal/compatibility-facts-cli.mjs";
+import { runAdopterDeliveryCli } from "./internal/adopter-delivery-cli.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const embeddedPackageVersion = process.env.BUILDCHAIN_EMBEDDED_PACKAGE_VERSION || "";
@@ -987,6 +990,9 @@ async function runKfdCli(args = []) {
 async function runBuildFactsCli(args = []) {
   const [subcommand = "", ...factArgs] = args;
   const cwd = path.resolve(readFlag(factArgs, "cwd", process.cwd()));
+  if (subcommand === "compatibility") {
+    return runCompatibilityFactsCli({ args: factArgs, cwd, packageRoot: root });
+  }
   if (subcommand === "module") {
     const fact = collectModuleBuildFacts({
       cwd,
@@ -1060,7 +1066,7 @@ async function runBuildFactsCli(args = []) {
     }
     return;
   }
-  throw new Error("usage: buildchain facts <module|aggregate|verify> ...");
+  throw new Error("usage: buildchain facts <module|aggregate|verify|compatibility> ...");
 }
 
 function appendJsonLine(filePath, value) {
@@ -1385,12 +1391,20 @@ async function handleDevCommand(args) {
       runScript("dev-delivery-warrant.mjs", devArgs);
       return;
     }
+    if (subcommand === "authority") {
+      runScript("dev-delivery-authority.mjs", devArgs);
+      return;
+    }
     if (subcommand === "proof") {
       runScript("dev-delivery-proof.mjs", devArgs);
       return;
     }
+    if (subcommand === "two-phase") {
+      runScript("dev-delivery-two-phase.mjs", devArgs);
+      return;
+    }
     if (subcommand !== "merge-queue") {
-      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant|proof> [options]");
+      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant|authority|proof|two-phase> [options]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;
@@ -1662,7 +1676,15 @@ async function handleReleaseGovernanceCommand(args) {
 }
 
 async function handleReleaseTailCommand(args) {
-  runReleaseTailCli(args);
+  await runReleaseTailCli(args);
+}
+
+async function handleTailResealCommand(args) {
+  await runV4TailResealCli(args);
+}
+
+async function handleNextDevelopmentCommand(args) {
+  runScript("next-development-transition.mjs", args);
 }
 
 async function handleGitHubGovernanceCommand(args) {
@@ -1729,6 +1751,10 @@ async function handleArchitectureCommand(args) {
   runScript("v4-architecture.mjs", args);
 }
 
+async function handleAdopterDeliveryCommand(args) {
+  await runAdopterDeliveryCli(args);
+}
+
 const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "help": handleHelpCommand,
   "version": handleVersionCommand,
@@ -1761,12 +1787,15 @@ const BUILDCHAIN_COMMAND_HANDLERS = Object.freeze({
   "release-propagation": handleReleasePropagationCommand,
   "release-governance": handleReleaseGovernanceCommand,
   "release-tail": handleReleaseTailCommand,
+  "tail-reseal": handleTailResealCommand,
+  "next-development": handleNextDevelopmentCommand,
   "github-governance": handleGitHubGovernanceCommand,
   "badges": handleBadgesCommand,
   "homebrew": handleHomebrewCommand,
   "build-contract": handleBuildContractCommand,
   "publish-source": handlePublishSourceCommand,
   "architecture": handleArchitectureCommand,
+  "adopter-delivery": handleAdopterDeliveryCommand,
 });
 
 async function main(argv = process.argv.slice(2)) {
