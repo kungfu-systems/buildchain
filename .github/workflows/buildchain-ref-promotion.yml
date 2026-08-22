@@ -130,8 +130,19 @@ jobs:
       contents: read
     outputs:
       sha: ${{ steps.source.outputs.sha }}
+      runtime-sha: ${{ steps.runtime.outputs.sha }}
       contract-lock-digest: ${{ steps.lock.outputs.digest }}
     steps:
+      - name: Checkout floating alpha runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: v4-alpha
+          path: .buildchain/runtime
+          persist-credentials: false
+      - name: Bind floating alpha runtime
+        id: runtime
+        run: echo "sha=$(git -C .buildchain/runtime rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
       - name: Checkout exact protected alpha source
         uses: actions/checkout@v7.0.0
         with:
@@ -177,15 +188,15 @@ jobs:
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ needs.resolve-alpha-recovery.outputs.sha }}
+      buildchain-ref: ${{ needs.resolve-alpha-recovery.outputs.runtime-sha }}
       buildchain-expected-channel: alpha
       buildchain-expected-major: "4"
-      promotion-router-ref: alpha/v4/v4.0
-      promotion-router-sha: ${{ needs.resolve-alpha-recovery.outputs.sha }}
+      promotion-router-ref: v4-alpha
+      promotion-router-sha: ${{ needs.resolve-alpha-recovery.outputs.runtime-sha }}
       promotion-shell-ref: alpha/v4/v4.0
       promotion-shell-sha: ${{ needs.resolve-alpha-recovery.outputs.sha }}
-      promotion-runtime-ref: alpha/v4/v4.0
-      promotion-runtime-sha: ${{ needs.resolve-alpha-recovery.outputs.sha }}
+      promotion-runtime-ref: v4-alpha
+      promotion-runtime-sha: ${{ needs.resolve-alpha-recovery.outputs.runtime-sha }}
       promotion-contract-lock-path: .buildchain/alpha-contract-lock.json
       promotion-contract-lock-digest: ${{ needs.resolve-alpha-recovery.outputs.contract-lock-digest }}
       promotion-publication-channel: alpha
