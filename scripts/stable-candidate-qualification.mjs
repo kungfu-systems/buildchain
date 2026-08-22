@@ -64,6 +64,22 @@ export function resolveStableCandidateQualificationCandidate({ eventName, inputC
   return observedSha;
 }
 
+export async function resolveStableCandidateQualificationRelease({
+  eventName,
+  inputCandidateSha = "",
+  selfDogfoodEvidence,
+  repository: repositoryName,
+  client,
+} = {}) {
+  const runtimeSha = resolveStableCandidateQualificationCandidate({ eventName, inputCandidateSha, selfDogfoodEvidence });
+  if (text(eventName) === "workflow_dispatch") return runtimeSha;
+  const exactAlpha = await client.resolveNearestExactAlphaAncestor(repository(repositoryName), runtimeSha);
+  if (!exactAlpha) {
+    throw new Error(`v4-alpha runtime ${runtimeSha} has no unambiguous exact alpha release ancestor`);
+  }
+  return exactAlpha.sha;
+}
+
 function optionalRef(value, label) {
   const normalized = text(value);
   if (
@@ -255,6 +271,25 @@ export function createGitHubQualificationClient({
       .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0];
   }
   return {
+    async resolveNearestExactAlphaAncestor(repositoryName, runtimeSha) {
+      const releases = await api(`/repos/${repositoryName}/releases?per_page=100`);
+      const candidates = releases
+        .filter((release) => release.prerelease && /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(release.tag_name || ""))
+        .sort((left, right) => right.tag_name.localeCompare(left.tag_name, "en", { numeric: true }));
+      for (const release of candidates) {
+        const sha = await resolveTagSha(repositoryName, release.tag_name);
+        const comparison = await api(`/repos/${repositoryName}/compare/${sha}...${runtimeSha}`);
+        if (!["ahead", "identical"].includes(comparison.status)) continue;
+        return {
+          version: release.tag_name.slice(1),
+          tag: release.tag_name,
+          sha,
+          releaseUrl: release.html_url,
+          distance: Number(comparison.ahead_by || 0),
+        };
+      }
+      return undefined;
+    },
     async resolveExactAlpha(repositoryName, candidateSha) {
       const releases = await api(`/repos/${repositoryName}/releases?per_page=100`);
       for (const release of releases) {
@@ -305,10 +340,13 @@ async function main() {
       const evidencePath = text(process.env.BUILDCHAIN_QUALIFICATION_SELF_DOGFOOD_EVIDENCE);
       selfDogfoodEvidence = JSON.parse(fs.readFileSync(evidencePath, "utf8"));
     }
-    const sha = resolveStableCandidateQualificationCandidate({
+    const client = createGitHubQualificationClient({ token: process.env.GITHUB_TOKEN });
+    const sha = await resolveStableCandidateQualificationRelease({
       eventName: process.env.BUILDCHAIN_QUALIFICATION_EVENT_NAME,
       inputCandidateSha: process.env.BUILDCHAIN_QUALIFICATION_INPUT_CANDIDATE_SHA,
       selfDogfoodEvidence,
+      repository: process.env.GITHUB_REPOSITORY,
+      client,
     });
     process.stdout.write(`${sha}\n`);
     if (process.env.GITHUB_OUTPUT) {
