@@ -6,7 +6,6 @@ import {
 } from "./v4-floating-consumer-evidence.js";
 
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
-
 export function isV4PromotionRouting(value = undefined) {
   return [
     value?.router?.ref,
@@ -84,7 +83,9 @@ export function resolveV4ConsumerPolicyCertificationIdentity({
 } = {}) {
   const builtSourceSha =
     release?.builtSourceSha || release?.built_source_sha || "";
-  const retainsCaller = release?.certification?.caller?.sourceSha === sourceSha;
+  const certification =
+    release?.certification?.certification || release?.certification;
+  const retainsCaller = certification?.caller?.sourceSha === sourceSha;
   return {
     sourceSha:
       release?.treeEquivalent === true && builtSourceSha && !retainsCaller
@@ -96,7 +97,6 @@ export function resolveV4ConsumerPolicyCertificationIdentity({
       "",
   };
 }
-
 export function requireV4ConsumerPolicyCertification({
   value,
   repository,
