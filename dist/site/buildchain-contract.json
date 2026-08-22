@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:80b3532dc9b473dd2327c28dd68fb7ddfe01b6bdad14f22f7e9be435490f9088",
+      "auditDigest": "sha256:bb201d3e6618be79c9d23616a90c714adea45c5d5a435710a4a9605305c5dcd6",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -2233,7 +2233,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:14c116689f571b197fad4632683335bc13718abd17276f3da0ffbf1e85a74483"
+      "auditDigest": "sha256:05b63e8be4335a07da714e1687341bd99393043ff21eaefd0341d18cce842a5f"
     },
     {
       "contractVersion": 1,
@@ -5082,7 +5082,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:80b3532dc9b473dd2327c28dd68fb7ddfe01b6bdad14f22f7e9be435490f9088"
+      "auditDigest": "sha256:bb201d3e6618be79c9d23616a90c714adea45c5d5a435710a4a9605305c5dcd6"
     },
     {
       "contractVersion": 1,
@@ -5308,5 +5308,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:5de1c69386510b74b17eb70141b8bdd07063d62c504f91db5e84b67c6d4b64a2",
-  "contractDigest": "sha256:acca5274f58fbd4fb4627aacf7b616db4914bcbc1b661e36c9834077c91f75d0"
+  "contractDigest": "sha256:ffa4c9e529d672f9d9e79bc2e89569ffc4753ecae9740d9d5403286049e4dee7"
 }

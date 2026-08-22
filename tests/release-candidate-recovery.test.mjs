@@ -158,6 +158,8 @@ function durableTransaction(input, state = "complete") {
     repository: input.candidateRepository,
     target_ref: input.targetRef,
     source_sha: input.targetSha,
+    release_sha: input.targetSha,
+    release_material_sha: input.targetSha,
     version: input.passport.target.version,
     channel: input.passport.target.channel,
     state,
@@ -636,9 +638,37 @@ test("recovery rejects transaction identity and candidate-root conflicts", () =>
     expectedTransactionId: "tx-expected",
     existingTransaction: { id: "tx-other", state: "finalizing" },
   }));
-  expectCode("transaction-identity-conflict", fixture({
-    existingTransaction: { id: "tx-expected", state: "publishing", candidateRoot: `sha256:${"9".repeat(64)}` },
-  }));
+  const candidateConflict = fixture();
+  candidateConflict.existingTransaction = {
+    ...durableTransaction(candidateConflict, "publishing"),
+    candidateRoot: `sha256:${"9".repeat(64)}`,
+  };
+  expectCode("transaction-identity-conflict", candidateConflict);
+});
+
+test("recovery accepts only exact durable release material when it differs from transaction source", () => {
+  const input = fixture();
+  const transactionSourceSha = "9".repeat(40);
+  const transactionId = releaseTransactionId({
+    repository: input.candidateRepository,
+    version: input.passport.target.version,
+    sourceSha: transactionSourceSha,
+    targetRef: input.targetRef,
+  });
+  input.expectedTransactionId = transactionId;
+  input.existingTransaction = {
+    ...durableTransaction(input),
+    id: transactionId,
+    source_sha: transactionSourceSha,
+    release_sha: input.targetSha,
+    release_material_sha: input.targetSha,
+  };
+  const receipt = verifyReleaseCandidateRecovery(input).receipt;
+  assert.equal(receipt.transaction.identity, transactionId);
+  assert.equal(receipt.target.sha, input.targetSha);
+
+  input.targetSha = "a".repeat(40);
+  expectCode("transaction-identity-conflict", input);
 });
 
 test("recovery is deterministic and idempotent for a complete transaction", () => {
@@ -933,7 +963,11 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     promoteLib,
     /generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs[\s\S]*?collectGitHubReleasePassport\(/,
   );
-  assert.match(advanced, /if \[ -f "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" \]; then/);
+  assert.match(advanced, /if \[ -n "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" \]; then/);
+  assert.match(
+    advanced,
+    /cp "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" "\$\{RELEASE_PASSPORT_OUTPUT_DIR\}\//,
+  );
   assert.match(
     refPromotion,
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
