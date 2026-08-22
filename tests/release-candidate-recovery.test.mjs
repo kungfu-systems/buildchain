@@ -933,10 +933,13 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     promoteLib,
     /generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs[\s\S]*?collectGitHubReleasePassport\(/,
   );
-  assert.match(advanced, /if \[ -n "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" \]; then/);
   assert.match(
     advanced,
-    /cp "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" "\$\{RELEASE_PASSPORT_OUTPUT_DIR\}\/"/,
+    /RUNTIME_RESUME_EVIDENCE: \$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}/,
+  );
+  assert.match(
+    advanced,
+    /if \[ -n "\$\{RUNTIME_RESUME_EVIDENCE\}" \] && \[ -f "\$\{RUNTIME_RESUME_EVIDENCE\}" \]; then[\s\S]*?cp "\$\{RUNTIME_RESUME_EVIDENCE\}" "\$\{RELEASE_PASSPORT_OUTPUT_DIR\}\/"/,
   );
   assert.match(
     refPromotion,
