@@ -28,6 +28,9 @@ test("exact runtime pins dispatch through the formal protected authority ref", (
     resolveAuthorityDispatchRef(FORMAL_AUTHORITY_REF),
     FORMAL_AUTHORITY_REF,
   );
+  assert.equal(resolveAuthorityDispatchRef("v4"), FORMAL_AUTHORITY_REF);
+  assert.equal(resolveAuthorityDispatchRef("v4.0"), FORMAL_AUTHORITY_REF);
+  assert.equal(resolveAuthorityDispatchRef("v4-alpha"), FORMAL_AUTHORITY_REF);
 });
 
 function digest(value) {
