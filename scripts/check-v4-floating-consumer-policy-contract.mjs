@@ -54,6 +54,7 @@ export function assertPromotionCertificationWiring(source) {
   for (const marker of [
     "path: .buildchain/runtime/candidate-policy-runtime",
     "BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.v4-policy-caller.outputs.runtime-sha }}",
+    "policy_runtime=.buildchain/runtime",
     'node "${policy_runtime}/scripts/v4-consumer-policy.mjs" certify',
     "passport.consumerPolicy?.receipt?.caller?.sourceSha",
     "path: .buildchain/runtime/policy-caller",
@@ -125,7 +126,12 @@ export function checkV4FloatingConsumerPolicyContract() {
     "Enforce v4 floating consumer policy",
     "Validate consumer package manager contract",
   ]);
-  if (!read(".github/workflows/.build.yml").includes("BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ inputs.buildchain-expected-channel }}")) fail("channel builds must disambiguate dual-channel caller invocations");
+  if (
+    !read(".github/workflows/.build.yml").includes(
+      "BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ inputs.buildchain-expected-channel }}",
+    )
+  )
+    fail("channel builds must disambiguate dual-channel caller invocations");
   assertTrustGatedJobs(read(".github/workflows/.build.yml"), [
     "resolve-source",
     "resolve-contract",

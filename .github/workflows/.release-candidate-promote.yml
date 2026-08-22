@@ -1777,7 +1777,7 @@ jobs:
           BUILDCHAIN_V4_POLICY_CERTIFICATION_PATH: .buildchain/release-candidate/v4-consumer-policy-certification.json
         run: |
           set -euo pipefail
-          policy_runtime=.buildchain/runtime/promotion-shell
+          policy_runtime=.buildchain/runtime
           if [[ -n "${BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA}" && "${BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA}" != "${BUILDCHAIN_CURRENT_RUNTIME_SHA}" ]]; then
             policy_runtime=.buildchain/runtime/candidate-policy-runtime
           fi
