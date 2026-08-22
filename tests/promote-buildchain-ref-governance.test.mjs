@@ -757,7 +757,7 @@ test("strict alpha promotion uses provider transaction evidence when protection 
   let protectionReadStatus = 403;
   let observedHeadSha = SHA;
   const pullRequestHeadSha = "b".repeat(40);
-  const checkedRefs = [];
+  const checkedQueries = [];
   const octokit = {
     rest: {
       repos: {
@@ -811,12 +811,19 @@ test("strict alpha promotion uses provider transaction evidence when protection 
         },
       },
       checks: {
-        listForRef: async ({ ref }) => {
-          checkedRefs.push(ref);
+        listForRef: async ({ ref, check_name: checkName, filter, per_page: perPage }) => {
+          checkedQueries.push({ ref, checkName, filter, perPage });
           assert.equal(ref, pullRequestHeadSha);
           return {
             data: {
-              check_runs: [{ name: "check", conclusion: "success", app: { id: 15368 } }],
+              total_count: checkName === "check" ? 1 : 226,
+              check_runs: checkName === "check"
+                ? [{ name: "check", conclusion: "success", app: { id: 15368 } }]
+                : Array.from({ length: 100 }, (_, index) => ({
+                    name: `decoy-${index}`,
+                    conclusion: "success",
+                    app: { id: 15368 },
+                  })),
             },
           };
         },
@@ -836,7 +843,10 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     });
     assert.equal(resolvedStatusCheck, "check");
   }
-  assert.deepEqual(checkedRefs, [pullRequestHeadSha, pullRequestHeadSha]);
+  assert.deepEqual(checkedQueries, [
+    { ref: pullRequestHeadSha, checkName: "check", filter: "latest", perPage: 100 },
+    { ref: pullRequestHeadSha, checkName: "check", filter: "latest", perPage: 100 },
+  ]);
 
   observedHeadSha = OTHER_SHA;
   const recoveredStatusCheck = await assertProtectedChannel({ octokit, owner: "kungfu-systems", repo: "buildchain", sourceSha: SHA, expectedChannelSha: OTHER_SHA, targetRef: "alpha/v1/v1.0", requiredStatusCheck: "check" });

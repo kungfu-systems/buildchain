@@ -2423,6 +2423,8 @@ async function assertProviderEnforcedChannelTransaction({
         owner,
         repo,
         ref: pullRequestHeadSha,
+        check_name: resolvedStatusCheck,
+        filter: "latest",
         per_page: 100,
       })
     : { data: { check_runs: [] } };
