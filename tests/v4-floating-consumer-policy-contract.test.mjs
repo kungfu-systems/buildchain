@@ -46,6 +46,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
 
 test("bounded alpha recovery admits the floating advanced shell before promotion", () => {
   const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
+  const legacyRelative = ".github/workflows/release-candidate-promote.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
   const authority = resolveV4FloatingConsumerPolicyAuthority({
     runtimeRoot: root,
@@ -68,7 +69,7 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
       repository: "kungfu-systems/buildchain",
       sourceSha: "a".repeat(40),
       invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-      invocationSourcePath: relative,
+      invocationSourcePath: legacyRelative,
       expectedInvocationChannel: "alpha",
       resolvedWorkflowSha: "b".repeat(40),
       resolvedRuntimeSha: "c".repeat(40),
@@ -82,16 +83,19 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
       ),
       true,
     );
-    fs.mkdirSync(path.dirname(path.join(consumerRoot, relative)), {
+    fs.mkdirSync(path.dirname(path.join(consumerRoot, legacyRelative)), {
       recursive: true,
     });
-    fs.copyFileSync(path.join(root, relative), path.join(consumerRoot, relative));
+    fs.copyFileSync(
+      path.join(root, legacyRelative),
+      path.join(consumerRoot, legacyRelative),
+    );
     const legacyCompatible = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
       repository: "kungfu-systems/buildchain",
       sourceSha: "a".repeat(40),
       invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-      invocationSourcePath: relative,
+      invocationSourcePath: legacyRelative,
       expectedInvocationChannel: "alpha",
       resolvedWorkflowSha: "b".repeat(40),
       resolvedRuntimeSha: "c".repeat(40),
@@ -103,6 +107,8 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
       true,
       JSON.stringify(legacyCompatible.failures),
     );
+    assert.equal(legacyCompatible.receipt.invocation.visibleSelector, "v4-alpha");
+    assert.equal(legacyCompatible.receipt.invocation.sourcePath, legacyRelative);
 
     const foreignRepository = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
@@ -174,7 +180,7 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   assert.match(workflow, /path: \.buildchain\/recovered-source/u);
   assert.match(
     workflow,
-    /sparse-checkout:\s+\|\s+\.buildchain\/contract-lock\.json\s+\.buildchain\/alpha-contract-lock\.json\s+\.github\/workflows\/buildchain-ref-promotion-recovery\.yml/u,
+    /sparse-checkout:\s+\|\s+\.buildchain\/contract-lock\.json\s+\.buildchain\/alpha-contract-lock\.json\s+\.github\/workflows\/release-candidate-promote\.yml/u,
   );
   assert.match(workflow, /sparse-checkout-cone-mode: false/u);
   assert.match(
@@ -183,7 +189,11 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   );
   assert.match(
     workflow,
-    /cp "\.buildchain\/recovered-source\/\.github\/workflows\/buildchain-ref-promotion-recovery\.yml" \\\s+"\.buildchain\/consumer\/\.github\/workflows\/buildchain-ref-promotion-recovery\.yml"/u,
+    /cp "\.buildchain\/recovered-source\/\.github\/workflows\/release-candidate-promote\.yml" \\\s+"\.buildchain\/consumer\/\.github\/workflows\/release-candidate-promote\.yml"/u,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \.github\/workflows\/release-candidate-promote\.yml/u,
   );
   assert.match(workflow, /git -C \.buildchain\/consumer init --quiet/u);
   assert.match(
