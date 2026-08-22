@@ -16,14 +16,27 @@
   "state_ref": "buildchain/release-state/4-0-1-alpha-9",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v4.0.1-alpha.9.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v4.0.1-alpha.9/evidence.json",
-  "state": "publishing",
-  "previous_state": "sealed",
+  "state": "published",
+  "previous_state": "publishing",
   "actor": "kungfu-origin",
   "run_id": "32566329817",
   "superseded_by": "",
   "failure": "",
-  "artifacts": [],
-  "evidence": [],
+  "artifacts": [
+    {
+      "group": "node",
+      "kind": "npm",
+      "name": "@kungfu-tech/buildchain",
+      "ref": "4.0.1-alpha.9",
+      "digest": "sha512-LAMn6o0u45Cf4Bxk8ZU5vqQ9PrmPKjg1zhlof5Y8oFTtEvTPvUNfJnX7PK4UmBgt0osSkWD5JMu0eiAk6Rb5uQ==",
+      "role": "",
+      "required": true
+    }
+  ],
+  "evidence": [
+    ".buildchain/release-evidence/v4.0.1-alpha.9/evidence.json",
+    ".buildchain/release-evidence/v4.0.1-alpha.9/dist-tag-evidence.json"
+  ],
   "sealed_bundle": {
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-publication-sealed-bundle",
@@ -83,9 +96,15 @@
     "durablePath": "sealed-bundle/sha256/8f21d86f87110fcefb168e0400796a43abd1fc3f3767139c911dea59606b24f9",
     "resumeCommand": "buildchain paper resume --version \"4.0.1-alpha.8\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-8\""
   },
-  "publication_state": "sealed",
-  "milestones": {},
+  "publication_state": "package-published",
+  "milestones": {
+    "package_published": {
+      "status": "complete",
+      "artifactCount": 1,
+      "sealedBundleRoot": "sha256:8f21d86f87110fcefb168e0400796a43abd1fc3f3767139c911dea59606b24f9"
+    }
+  },
   "resume_command": "buildchain paper resume --version \"4.0.1-alpha.8\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-8\"",
   "created_at": "2026-08-22T10:08:03.507Z",
-  "updated_at": "2026-08-22T10:08:07.282Z"
+  "updated_at": "2026-08-22T10:08:18.153Z"
 }
