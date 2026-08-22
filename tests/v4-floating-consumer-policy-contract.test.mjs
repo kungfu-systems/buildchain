@@ -141,7 +141,7 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   assert.match(workflow, /path: \.buildchain\/recovered-source/u);
   assert.match(
     workflow,
-    /sparse-checkout:\s+\|\s+\.buildchain\/contract-lock\.json\s+\.buildchain\/alpha-contract-lock\.json/u,
+    /sparse-checkout:\s+\|\s+\.buildchain\/contract-lock\.json\s+\.buildchain\/alpha-contract-lock\.json\s+\.github\/workflows\/buildchain-ref-promotion-recovery\.yml/u,
   );
   assert.match(workflow, /sparse-checkout-cone-mode: false/u);
   assert.match(
@@ -188,7 +188,7 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/router/u,
+    /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/recovered-source/u,
   );
   assert.match(workflow, /--shell-ref alpha\/v4\/v4\.0/u);
   assert.match(workflow, /--shell-call-ref alpha\/v4\/v4\.0/u);

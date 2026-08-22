@@ -96,6 +96,7 @@ jobs:
           sparse-checkout: |
             .buildchain/contract-lock.json
             .buildchain/alpha-contract-lock.json
+            .github/workflows/buildchain-ref-promotion-recovery.yml
           sparse-checkout-cone-mode: false
 
       - name: Project immutable consumer policy locks as exact Git evidence
@@ -170,7 +171,7 @@ jobs:
         id: policy
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
-          BUILDCHAIN_INVOCATION_SOURCE_ROOT: .buildchain/router
+          BUILDCHAIN_INVOCATION_SOURCE_ROOT: .buildchain/recovered-source
           BUILDCHAIN_INVOCATION_SOURCE_PATH: .github/workflows/buildchain-ref-promotion-recovery.yml
           BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: alpha
           BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/.release-candidate-promote.yml
