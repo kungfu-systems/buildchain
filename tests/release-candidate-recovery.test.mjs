@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -22,6 +23,7 @@ import {
   createRecoveredPublicationCandidate,
   normalizePlatformManifests,
   resolveAnchorRecoveryRequest,
+  trackedRuntimePersistenceScan,
   validateV4RuntimeResumePublicReadback,
   verifyReleaseCandidateStageCapsules,
 } from "../scripts/resume-from-candidate-run.mjs";
@@ -292,6 +294,32 @@ test("cross-runtime recovery reuses only provider-bound original Stage Capsules"
           downloads,
         }),
       /does not bind the verified provider artifact/,
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("runtime persistence scan is rooted at the checked-out recovery runtime", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-runtime-persistence-scan-"),
+  );
+  try {
+    const workflowPath = path.join(workspace, ".github/workflows/recovery.yml");
+    fs.mkdirSync(path.dirname(workflowPath), { recursive: true });
+    fs.writeFileSync(workflowPath, "name: Recovery\n");
+    for (const args of [
+      ["init", "--quiet"],
+      ["add", ".github/workflows/recovery.yml"],
+    ]) {
+      execFileSync("git", args, { cwd: workspace });
+    }
+
+    const scan = trackedRuntimePersistenceScan({ runtimeRoot: workspace });
+    assert.equal(scan.status, "passed");
+    assert.deepEqual(
+      scan.files.map((file) => file.path),
+      [".github/workflows/recovery.yml"],
     );
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });

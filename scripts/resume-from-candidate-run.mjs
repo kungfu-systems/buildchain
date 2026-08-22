@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 import { normalizeAnchorProvenance, normalizeCandidateRun, recoverCandidateProvenance } from "./release-candidate-anchor-provenance.mjs";
@@ -111,15 +111,17 @@ function readOnlyJson(files, label) {
   return JSON.parse(fs.readFileSync(files[0].absolutePath, "utf8"));
 }
 
-function trackedRuntimePersistenceScan() {
+export function trackedRuntimePersistenceScan({
+  runtimeRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
+} = {}) {
   const paths = execFileSync(
     "git",
-    ["ls-files", ".github/workflows", ".github/actions", ".buildchain"],
+    ["-C", runtimeRoot, "ls-files", ".github/workflows", ".github/actions", ".buildchain"],
     { encoding: "utf8" },
   )
     .split(/\r?\n/)
     .filter((entry) => /\.(?:json|toml|ya?ml)$/u.test(entry));
-  return scanV4RuntimeSelectorPersistence({ root: process.cwd(), paths });
+  return scanV4RuntimeSelectorPersistence({ root: runtimeRoot, paths });
 }
 
 export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads }) {
