@@ -3,15 +3,53 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 670,
-  "fencingCounter": 121,
+  "generation": 671,
+  "fencingCounter": 122,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:0c06c2d15f33dc45b2dab2d679ea1e900b574be1d7c445ee53f4865ad4e63a2f",
+    "pullRequestNumber": 2954,
+    "sourceHead": "673a1cec578778f2ac781f6f20879a2f5c5b41e1",
+    "assignmentRoot": "sha256:b8cb2aad4416b77e9f53742aa2479c41143c7b1869f7729a52de5077045df9e6",
+    "initiativeRoot": "sha256:0fc567629323a724deea1e21b4156681613164431b97a254b6c68673a6c9c139",
+    "sourceIdentityRoot": "sha256:bdcc7f0771b384151ddee7b4556d3ef3347650c2ea9584002313371fc10b9248",
+    "sourcePatchRoot": "sha256:7f57e7ba494a708baaea837075e25cf4457bc9a4f270d324b2c9fa3908a017da",
+    "sourceProofRoot": "sha256:b3d2c8067b6c34690491f2a8a9464dcc1c40bce0a693fd130fff1be8b5bc66be",
+    "planRoot": "sha256:9ecff59046cb0b9893a57da9d328331b575ad31a61c1a2e072bc1be0c6b5392c",
+    "closureRoot": "sha256:906175a58a01c7ad45043062891083d2f3d8043683b93120772e4c534b7c5b31",
+    "dependencyRoot": "sha256:830594efe79033dd6a1f101cd8d9568d4511dd4bea7a0716d95e6abc0a14c740",
+    "toolchainRoot": "sha256:d7978820bff97b65604b1f940397f9dac56e9af7dfb208db32085fd98ce07b1e",
+    "environmentRoot": "sha256:302cd5fbcae472e9d7e6e39dbb4a8c115a34bdcf98ce63669ad0cb98169adfdc",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "corepack prepare pnpm@11.7.0 --activate && corepack enable && pnpm --version && pnpm install --frozen-lockfile && pnpm run check",
+      "commandRoot": "sha256:d0c014631f0785ed2ce01b5d5b62dcca5fbc82387621dc36d759552bdb394656"
+    },
+    "affectedPaths": [
+      ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      "tests/v4-floating-consumer-policy-contract.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 32556813442,
+    "deliveryClass": "release",
+    "priority": "ordinary",
+    "generation": 122,
+    "expectedOldStateRoot": "sha256:412bf3fb73d58d4d39c7b5c58d2f00a209be25ccc19c56a40015e9db76231f44",
+    "issuedAt": "2026-08-22T06:35:39.305Z",
+    "expiresAt": "2026-08-22T07:35:39.305Z",
+    "fencingToken": "sha256:e3f1e01a247168295d5f6b5c7177acd251c2adfa3bfa2a071c23ea93c39be451",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -5474,10 +5512,10 @@
       "sourceWorkflowRunId": 32556813442,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-22T06:35:36.600Z",
-      "updatedAt": "2026-08-22T06:35:36.600Z",
+      "updatedAt": "2026-08-22T06:35:39.305Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/buildchain-ref-promotion-recovery.yml",
@@ -5486,6 +5524,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-22T06:35:36.600Z",
-  "stateRoot": "sha256:412bf3fb73d58d4d39c7b5c58d2f00a209be25ccc19c56a40015e9db76231f44"
+  "updatedAt": "2026-08-22T06:35:39.305Z",
+  "stateRoot": "sha256:0b33d8ecbecedfe10bc8ac09934f4a509f292bcaaf2ff58f8ee5a2da79f62a5e"
 }
