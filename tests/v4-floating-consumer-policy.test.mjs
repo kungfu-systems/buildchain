@@ -641,7 +641,9 @@ test("final v4 Release Passport construction requires fresh external certificati
 test("tree-equivalent finalization keeps transaction source and build runtime identity", () => {
   const identity = resolveV4ConsumerPolicyCertificationIdentity({
     release: {
-      certification: { caller: { sourceSha: ALPHA_SHA } },
+      certification: {
+        certification: { caller: { sourceSha: ALPHA_SHA } },
+      },
       builtSourceSha: SOURCE_SHA,
       treeEquivalent: true,
     },
