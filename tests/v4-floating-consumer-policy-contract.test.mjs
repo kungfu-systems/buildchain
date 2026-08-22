@@ -35,6 +35,14 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
     workflow,
     /path: \.buildchain\/evidence\/v4-adopter-delivery-policy-receipt\.json/u,
   );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/v4-adopter-delivery-dogfood\.yml' \|\| '' \}\}/u,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /github\.event_name == 'workflow_dispatch'/u,
+  );
 });
 
 test("alpha promotion caller passes the same runtime admission used in GitHub", () => {

@@ -92,7 +92,7 @@ jobs:
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-adopter-delivery.yml
-          BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ github.event_name == 'workflow_dispatch' && '.github/workflows/v4-adopter-delivery-dogfood.yml' || github.workflow_ref }}
+          BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ github.repository == 'kungfu-systems/buildchain' && '.github/workflows/v4-adopter-delivery-dogfood.yml' || '' }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
