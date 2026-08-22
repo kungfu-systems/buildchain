@@ -1658,13 +1658,21 @@ jobs:
         shell: bash
         env:
           RECOVERY_RECEIPT: ${{ steps.rc.outputs.release-candidate-recovery-receipt-path }}
+          RUNTIME_RESUME_EVIDENCE: ${{ steps.rc.outputs.v4-runtime-resume-evidence-path }}
           RELEASE_PASSPORT_OUTPUT_DIR: ${{ inputs.release-passport-output-dir }}
         run: |
           set -euo pipefail
           test -f "${RECOVERY_RECEIPT}"
           mkdir -p "${RELEASE_PASSPORT_OUTPUT_DIR}"
           cp "${RECOVERY_RECEIPT}" "${RELEASE_PASSPORT_OUTPUT_DIR}/release-candidate-recovery-receipt.json"
-          if [ -n "${{ steps.rc.outputs.v4-runtime-resume-evidence-path }}" ]; then cp "${{ steps.rc.outputs.v4-runtime-resume-evidence-path }}" "${RELEASE_PASSPORT_OUTPUT_DIR}/"; fi
+          # Cross-runtime recovery first emits rooted plan/material inputs. The
+          # final evidence document only exists after the publication
+          # transaction completes, when the promote action runs its declared
+          # finalize command. A caller-supplied precomputed document may exist
+          # here, but a future output path must not be treated as a file.
+          if [ -n "${RUNTIME_RESUME_EVIDENCE}" ] && [ -f "${RUNTIME_RESUME_EVIDENCE}" ]; then
+            cp "${RUNTIME_RESUME_EVIDENCE}" "${RELEASE_PASSPORT_OUTPUT_DIR}/"
+          fi
 
       - name: Upload immutable candidate recovery receipt
         id: recovery-receipt
