@@ -501,16 +501,16 @@ export function createGitHubDevQualificationClient({
       sourceBranch,
       { activeOnly = false } = {},
     ) {
-      const query = sourceBranch
-        ? `?branch=${encodeURIComponent(sourceBranch)}`
-        : "";
-      const runs = await paged(
-        `/repos/${owner}/${repo}/actions/workflows/${encodeURIComponent(workflow)}/runs${query}`,
-        "workflow_runs",
+      const query = sourceBranch ? `branch=${encodeRef(sourceBranch)}&` : "";
+      const runs = await Promise.all(
+        [...(activeOnly ? ACTIVE_STATUSES : [""])].map((status) =>
+          paged(
+            `/repos/${owner}/${repo}/actions/workflows/${encodeURIComponent(workflow)}/runs?${query}${status ? `status=${status}` : ""}`,
+            "workflow_runs",
+          ),
+        ),
       );
-      return activeOnly
-        ? runs.filter((run) => ACTIVE_STATUSES.has(text(run.status)))
-        : runs;
+      return runs.flat();
     },
     async listRunJobs(runId, runAttempt) {
       return paged(

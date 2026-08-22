@@ -295,7 +295,10 @@ async function observeQueue(loaded, options) {
   const readMode = text(options.readMode || "v3").toLowerCase();
   if (!["v3", "v4"].includes(readMode))
     throw new Error("readMode must be v3 or v4");
-  let observation = observeDevDeliveryQueue(loaded.queue, { now: options.now });
+  let observation = observeDevDeliveryQueue(loaded.queue, {
+    now: options.now,
+    allowLegacyV3Readback: true,
+  });
   let readCandidate;
   if (readMode === "v4") {
     const qualification =
@@ -374,6 +377,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     stateRef: options.stateRef,
     protectedBase: options.branch,
     now: options.now,
+    allowLegacyV3Readback: options.command === "observe",
   });
   if (
     options.expectedOldStateRoot &&

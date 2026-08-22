@@ -143,6 +143,7 @@ export async function readCurrentDeliveryQueueState(client, repository, targetBr
   const { queue } = await store.read({
     stateRef: defaultDevDeliveryStateRef(targetBranch),
     protectedBase: targetBranch,
+    allowLegacyV3Readback: true,
   });
   return queue;
 }

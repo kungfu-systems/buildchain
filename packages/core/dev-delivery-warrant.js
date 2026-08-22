@@ -516,14 +516,19 @@ export const settleDevDeliveryTerminalEvent = createDevDeliveryTerminalSettler({
 });
 export function observeDevDeliveryQueue(
   queueInput,
-  { now = new Date().toISOString() } = {},
+  { now = new Date().toISOString(), allowLegacyV3Readback = false } = {},
 ) {
-  const queue = normalizeDevDeliveryQueue(queueInput);
+  const queue = normalizeDevDeliveryQueue(queueInput, {
+    allowLegacyV3Readback,
+  });
   const currentTime = timestamp(now, "now");
   const states = {};
   for (const candidate of queue.candidates)
     states[candidate.status] = (states[candidate.status] || 0) + 1;
-  const queued = rankDevDeliveryCandidates(queue, { now: currentTime });
+  const queued = rankDevDeliveryCandidates(queue, {
+    now: currentTime,
+    allowLegacyV3Readback,
+  });
   return {
     schema: "kungfu.buildchain.dev-delivery-queue-observation/v1",
     repository: queue.repository,

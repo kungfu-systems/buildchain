@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "suite": "ledger-specification-driver-clean-room",
+  "authorityRoot": "sha256:9c00c9310807378c9fc318fa4ff909351e40f5702ad8dc57cddedbb02dc4c0b2",
+  "request": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-adopter-delivery-request",
+    "protocol": {
+      "id": "example.specification/ledger",
+      "version": "1.0.0"
+    },
+    "artifactProfile": {
+      "id": "buildchain.artifact/package",
+      "version": "1.0.0"
+    },
+    "project": {
+      "instanceId": "ledger-product-stable",
+      "adopterId": "example/ledger-product"
+    },
+    "artifact": {
+      "kind": "package",
+      "coordinate": "@example/ledger-product@1.2.3",
+      "root": "sha256:4db31003b95bc64a21100952fd3f74c037c57981e2b406e0fb636464410fe49b"
+    },
+    "declaration": {
+      "specification": {
+        "schema": "ledger-specification/v1",
+        "authorityRoot": "sha256:9c00c9310807378c9fc318fa4ff909351e40f5702ad8dc57cddedbb02dc4c0b2",
+        "project": "example/ledger-product",
+        "artifactRoot": "sha256:4db31003b95bc64a21100952fd3f74c037c57981e2b406e0fb636464410fe49b",
+        "claims": ["ledger.entries-ordered", "ledger.entries-rooted"],
+        "evidence": [
+          {
+            "claim": "ledger.entries-ordered",
+            "root": "sha256:ccc1041f831c96211deab17473d54b1507c57952f56cae5ae533776d50f59221"
+          },
+          {
+            "claim": "ledger.entries-rooted",
+            "root": "sha256:3fce177654ddce385806c5fe3ecd9ecffce4299f6a6d4304cb47d77a9b0bed4b"
+          }
+        ]
+      }
+    }
+  },
+  "negativeSubstitutions": [
+    {
+      "id": "schema",
+      "path": "/declaration/specification/schema",
+      "value": "ledger-specification/v2",
+      "issueCode": "ledger-schema-mismatch"
+    },
+    {
+      "id": "evidence",
+      "path": "/declaration/specification/evidence/0/root",
+      "value": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "issueCode": "ledger-evidence-root-mismatch"
+    },
+    {
+      "id": "evidence-set",
+      "path": "/declaration/specification/evidence/2",
+      "value": {
+        "claim": "unrelated.claim",
+        "root": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "issueCode": "ledger-evidence-invalid"
+    },
+    {
+      "id": "authority-root",
+      "path": "/declaration/specification/authorityRoot",
+      "value": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "issueCode": "ledger-authority-root-mismatch"
+    },
+    {
+      "id": "artifact-root",
+      "path": "/declaration/specification/artifactRoot",
+      "value": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "issueCode": "ledger-artifact-root-mismatch"
+    },
+    {
+      "id": "claim",
+      "path": "/declaration/specification/claims/0",
+      "value": "ledger.entries-invented",
+      "issueCode": "ledger-claim-unknown"
+    }
+  ],
+  "suiteRoot": "sha256:270041a81c7bbbcb437654e206b640246064f892788a6a9d61484eb78800791e"
+}
