@@ -1722,7 +1722,7 @@ jobs:
         with:
           repository: ${{ github.repository }}
           ref: ${{ steps.v4-policy-caller.outputs.source-sha }}
-          path: .buildchain/policy-caller
+          path: .buildchain/runtime/policy-caller
           clean: true
           persist-credentials: false
 
@@ -1736,7 +1736,7 @@ jobs:
         with:
           repository: ${{ inputs.buildchain-repository }}
           ref: ${{ steps.v4-policy-caller.outputs.runtime-sha }}
-          path: .buildchain/candidate-policy-runtime
+          path: .buildchain/runtime/candidate-policy-runtime
           clean: true
           persist-credentials: false
 
@@ -1765,7 +1765,7 @@ jobs:
         if: ${{ startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0' }}
         shell: bash
         env:
-          BUILDCHAIN_EXPECTED_CALLER_ROOT: ${{ github.workspace }}/.buildchain/policy-caller
+          BUILDCHAIN_EXPECTED_CALLER_ROOT: ${{ github.workspace }}/.buildchain/runtime/policy-caller
           BUILDCHAIN_EXPECTED_CALLER_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: ${{ steps.v4-policy-caller.outputs.source-sha }}
           BUILDCHAIN_EXPECTED_INVOKED_WORKFLOW: .github/workflows/build.yml
@@ -1779,12 +1779,12 @@ jobs:
           set -euo pipefail
           policy_runtime=.buildchain/runtime/promotion-shell
           if [[ -n "${BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA}" && "${BUILDCHAIN_CANDIDATE_POLICY_RUNTIME_SHA}" != "${BUILDCHAIN_CURRENT_RUNTIME_SHA}" ]]; then
-            policy_runtime=.buildchain/candidate-policy-runtime
+            policy_runtime=.buildchain/runtime/candidate-policy-runtime
           fi
           test -f "${policy_runtime}/scripts/v4-consumer-policy.mjs"
           node "${policy_runtime}/scripts/v4-consumer-policy.mjs" certify \
             --input "${{ steps.rc.outputs.release-candidate-passport-path }}" \
-            --caller-root "${{ github.workspace }}/.buildchain/policy-caller" \
+            --caller-root "${{ github.workspace }}/.buildchain/runtime/policy-caller" \
             --stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}" \
             --alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"
 
