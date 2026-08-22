@@ -138,6 +138,18 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /candidate recovery inputs must be supplied together or omitted together/u,
   );
+  assert.match(
+    workflow,
+    /transaction identity is required when resuming a sealed candidate/u,
+  );
+  assert.match(
+    workflow,
+    /fresh candidate recovery must not claim a pre-existing transaction identity/u,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /resume-transaction-id:[\s\S]{0,180}required: true/u,
+  );
   assert.match(workflow, /path: \.buildchain\/recovered-source/u);
   assert.match(
     workflow,
