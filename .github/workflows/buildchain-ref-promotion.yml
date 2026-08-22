@@ -130,6 +130,7 @@ jobs:
       contents: read
     outputs:
       sha: ${{ steps.source.outputs.sha }}
+      head-sha: ${{ steps.source.outputs.head-sha }}
       runtime-sha: ${{ steps.runtime.outputs.sha }}
       contract-lock-digest: ${{ steps.lock.outputs.digest }}
     steps:
@@ -172,6 +173,7 @@ jobs:
           fi
           [[ "$(git -C .buildchain/source rev-parse HEAD)" = "${SOURCE_SHA}" ]] || { echo "::error::checked out alpha source moved"; exit 1; }
           echo "sha=${SOURCE_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "head-sha=${remote_sha}" >> "${GITHUB_OUTPUT}"
       - name: Bind alpha contract lock
         id: lock
         run: echo "digest=sha256:$(shasum -a 256 .buildchain/source/.buildchain/alpha-contract-lock.json | awk '{print $1}')" >> "$GITHUB_OUTPUT"
@@ -203,7 +205,7 @@ jobs:
       promotion-router-ref: v4-alpha
       promotion-router-sha: ${{ needs.resolve-alpha-recovery.outputs.runtime-sha }}
       promotion-shell-ref: alpha/v4/v4.0
-      promotion-shell-sha: ${{ needs.resolve-alpha-recovery.outputs.sha }}
+      promotion-shell-sha: ${{ needs.resolve-alpha-recovery.outputs.head-sha }}
       promotion-runtime-ref: v4-alpha
       promotion-runtime-sha: ${{ needs.resolve-alpha-recovery.outputs.runtime-sha }}
       promotion-contract-lock-path: .buildchain/alpha-contract-lock.json
