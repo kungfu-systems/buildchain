@@ -312,15 +312,13 @@ function prepareRuntimeResumeEvidence({
   recovery,
   outputDir,
 }) {
-  const authorizationPath = path.resolve(
-    ".buildchain/release-candidate/v4-runtime-authorization.json",
-  );
-  if (!fs.existsSync(authorizationPath)) {
-    throw new Error(
-      "cross-runtime recovery requires a fresh runtime authorization receipt",
-    );
-  }
-  const delegated = readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization");
+  const authorizationPath = path.resolve(".buildchain/release-candidate/v4-runtime-authorization.json");
+  const delegatedRaw = env("BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON").trim();
+  const delegatedRoot = env("BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT").trim();
+  const authorizationFileExists = fs.existsSync(authorizationPath);
+  if (!authorizationFileExists && (!delegatedRaw || !delegatedRoot)) throw new Error("cross-runtime recovery requires a fresh runtime authorization receipt");
+  const delegated = authorizationFileExists ? readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization") : JSON.parse(delegatedRaw);
+  if (!authorizationFileExists && delegated.receiptRoot !== delegatedRoot) throw new Error("fresh recovery runtime authorization handoff root mismatch");
   const delegatedVerification = verifyV4RuntimeAuthorizationReceipt({
     receipt: delegated.receipt,
     receiptRoot: delegated.receiptRoot,

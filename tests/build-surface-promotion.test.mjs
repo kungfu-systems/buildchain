@@ -755,6 +755,37 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.doesNotMatch(workflow, /uses: \.\/actions\/promote-buildchain-ref/);
 });
 
+test("cross-runtime candidate preflight receives rooted transient authorization", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const resolver = fs.readFileSync(
+    path.join(root, "scripts/resume-from-candidate-run.mjs"),
+    "utf8",
+  );
+  const preflight = workflow.slice(
+    workflow.indexOf("  release-candidate-preflight:"),
+    workflow.indexOf("  publication-plan:"),
+  );
+
+  assert.match(
+    preflight,
+    /BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: \$\{\{ inputs\.promotion-runtime-authorization-json \}\}/,
+  );
+  assert.match(
+    preflight,
+    /BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: \$\{\{ inputs\.promotion-runtime-authorization-root \}\}/,
+  );
+  assert.match(resolver, /const delegatedRaw = env\("BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON"\)\.trim\(\)/);
+  assert.match(resolver, /const delegatedRoot = env\("BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT"\)\.trim\(\)/);
+  assert.match(
+    resolver,
+    /delegated\.receiptRoot !== delegatedRoot[\s\S]*fresh recovery runtime authorization handoff root mismatch/,
+  );
+  assert.match(resolver, /verifyV4RuntimeAuthorizationReceipt/);
+});
+
 test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   const action = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),
