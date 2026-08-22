@@ -52,12 +52,12 @@ function assertOrdered(relative, markers) {
 
 export function assertPromotionCertificationWiring(source) {
   for (const marker of [
-    "path: .buildchain/candidate-policy-runtime",
+    "path: .buildchain/runtime/candidate-policy-runtime",
     "BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.v4-policy-caller.outputs.runtime-sha }}",
     'node "${policy_runtime}/scripts/v4-consumer-policy.mjs" certify',
     "passport.consumerPolicy?.receipt?.caller?.sourceSha",
-    "path: .buildchain/policy-caller",
-    '--caller-root "${{ github.workspace }}/.buildchain/policy-caller"',
+    "path: .buildchain/runtime/policy-caller",
+    '--caller-root "${{ github.workspace }}/.buildchain/runtime/policy-caller"',
     '--stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}"',
     '--alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"',
     "release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}",
