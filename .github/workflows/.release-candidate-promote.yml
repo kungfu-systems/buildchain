@@ -946,7 +946,6 @@ jobs:
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
-
       - name: Preflight PR-stage release candidate evidence
         id: release-candidate
         shell: bash
@@ -989,7 +988,8 @@ jobs:
           BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}
           BUILDCHAIN_CURRENT_RUNTIME_SHA: ${{ needs.controller-plan.outputs.runtime-sha }}
           BUILDCHAIN_RESUME_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
-
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: ${{ inputs.promotion-runtime-authorization-json }}
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: ${{ inputs.promotion-runtime-authorization-root }}
   publication-plan:
     name: Plan exact publication version
     needs: [preflight, controller-plan, release-candidate-preflight]
