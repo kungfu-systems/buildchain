@@ -7,6 +7,7 @@ function releasePassportOutputPath(context) {
   );
 }
 
+function persistBeforePassport(context, transaction, enabled) { return !enabled || !context.fs.existsSync(transaction?.evidencePath || ""); }
 function createDurableTransactionOperations(context) {
   const {
     octokit,
@@ -253,7 +254,7 @@ function createDurableTransactionOperations(context) {
     latestPublishTransaction = await completeTransactionFinalization(
       latestPublishTransaction,
       actor,
-      runId,
+      runId, persistBeforePassport(context, latestPublishTransaction, releasePassport),
     );
     latestPublishTransaction = await collectAndPersistReleasePassport({
       result: latestPublishTransaction,

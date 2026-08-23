@@ -249,7 +249,6 @@ async function finalizeContainedAlpha(context, state) {
       passportKfdSupportMatrixJson: "",
       passportKfdProductGateJsons: [],
       passportInvariantPassportJsons: [],
-      passportReleaseCandidateValidation: null,
     });
   } finally {
     if (finalizationSource?.root) {
