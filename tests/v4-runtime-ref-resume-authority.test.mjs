@@ -161,17 +161,25 @@ test("resume finalization reads public effects before producing Passport lineage
             "dist-tags": { alpha: version },
             versions: { [version]: { dist: { integrity } } },
           }
-        : String(url).includes("/compare/")
-          ? { status: "ahead" }
-          : {
-              object: {
-                sha: String(url).includes("tags/v4-alpha")
-                  ? SHA_B
-                  : String(url).includes("tags/v4.0.1-alpha.6")
-                    ? SOURCE_SHA
-                    : "e".repeat(40),
-              },
-            };
+        : String(url).includes("/contents/package.json")
+          ? {
+              type: "file",
+              encoding: "base64",
+              content: Buffer.from(JSON.stringify({ version })).toString(
+                "base64",
+              ),
+            }
+          : String(url).includes("/compare/")
+            ? { status: "ahead" }
+            : {
+                object: {
+                  sha: String(url).includes("tags/v4-alpha")
+                    ? SHA_B
+                    : String(url).includes("tags/v4.0.1-alpha.6")
+                      ? SOURCE_SHA
+                      : "e".repeat(40),
+                },
+              };
       return {
         ok: true,
         status: 200,
