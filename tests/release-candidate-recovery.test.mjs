@@ -1059,7 +1059,11 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   );
   assert.match(
     refPromotion,
-    /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| '' \}\}/,
+    /promote-stable:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| 'v4' \}\}/,
+  );
+  assert.match(
+    publicWorkflow,
+    /stable:[\s\S]*resume-candidate-repository: \$\{\{ inputs\.resume-candidate-repository \}\}[\s\S]*resume-candidate-run-id: \$\{\{ inputs\.resume-candidate-run-id \}\}[\s\S]*resume-expected-source-tree: \$\{\{ inputs\.resume-expected-source-tree \}\}[\s\S]*resume-expected-candidate-runtime-sha: \$\{\{ inputs\.resume-expected-candidate-runtime-sha \}\}[\s\S]*resume-buildchain-runtime-sha: \$\{\{ inputs\.resume-buildchain-runtime-sha \}\}/,
   );
   assert.match(
     refPromotion,

@@ -239,19 +239,14 @@ test("stable route calls the hidden advanced workflow through the current major 
       "release-passport-kfd-product-gate-jsons",
       "release-passport-v4-runtime-resume-evidence-json",
       "release-propagation-config-path",
-      "resume-buildchain-runtime-sha",
-      "resume-candidate-repository",
-      "resume-candidate-run-id",
-      "resume-expected-candidate-root",
-      "resume-expected-candidate-runtime-sha",
-      "resume-expected-source-tree",
-      "resume-expected-workflow-file",
-      "resume-expected-workflow-name",
-      "resume-transaction-id",
     ],
   });
   assert.match(generated, /STABLE_SHELL_REF: v4/);
   assert.match(generated, /STABLE_SHELL_CALL_REF: v4/u);
+  assert.match(
+    generated,
+    /stable:[\s\S]*resume-candidate-run-id: \$\{\{ inputs\.resume-candidate-run-id \}\}[\s\S]*resume-expected-source-tree: \$\{\{ inputs\.resume-expected-source-tree \}\}[\s\S]*resume-buildchain-runtime-sha: \$\{\{ inputs\.resume-buildchain-runtime-sha \}\}/u,
+  );
   assert.match(generated, /if \[\[ "\$\{ref\}" =~ \^\[0-9a-fA-F\]\{40\}\$ \]\]; then sha="\$\{ref,,\}"/);
   assert.match(generated, /STABLE_SHELL_WORKFLOW_PATH: \.github\/workflows\/\.release-candidate-promote\.yml/);
   assert.match(generated, /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/);
