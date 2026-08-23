@@ -2955,6 +2955,7 @@ async function resumableAlphaTransactionState({
   const candidates = refs
     .map((ref) => parseAlphaPrereleaseRef(ref.ref, releasePrefix))
     .filter((ref) => ref?.source === "release-state")
+    .filter((ref) => !expectedVersion || stripTagPrefix(ref.tag) === expectedVersion)
     .sort((a, b) => b.patch - a.patch || b.prerelease - a.prerelease);
   for (const candidate of candidates) {
     const version = stripTagPrefix(candidate.tag);
@@ -4855,7 +4856,7 @@ async function promoteBuildchainRefs({
   }
   const promotionGeneratedAt = new Date().toISOString(); let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
-    const releaseCandidateSourceSha = advancedPublicationTransaction ? branchSha : sha;
+    const releaseCandidateSourceSha = releaseCandidateRecoveryReceiptPath || !advancedPublicationTransaction ? sha : branchSha;
     const targetCommitInfo = await getCommitInfo(octokit, owner, repo, releaseCandidateSourceSha);
     releaseCandidateValidation = validatePromotionReleaseCandidate({
       cwd,
