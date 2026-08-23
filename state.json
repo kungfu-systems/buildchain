@@ -16,14 +16,27 @@
   "state_ref": "buildchain/release-state/4-0-1-alpha-24",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v4.0.1-alpha.24.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v4.0.1-alpha.24/evidence.json",
-  "state": "publishing",
-  "previous_state": "publish_failed",
+  "state": "published",
+  "previous_state": "publishing",
   "actor": "dongkeren",
   "run_id": "32626406736",
   "superseded_by": "",
-  "failure": "Command failed: node scripts/npm-publish-transaction.mjs",
-  "artifacts": [],
-  "evidence": [],
+  "failure": "",
+  "artifacts": [
+    {
+      "group": "node",
+      "kind": "npm",
+      "name": "@kungfu-tech/buildchain",
+      "ref": "4.0.1-alpha.24",
+      "digest": "sha512-Umy0LL5F/Z5qnA9RmkB8j7GZjz/h0kjRBwtyWSqVwZStgdHJIQ9SXnFEygxu1sPm8FfnjoldaWWvCs7CeIrWSA==",
+      "role": "",
+      "required": true
+    }
+  ],
+  "evidence": [
+    ".buildchain/release-evidence/v4.0.1-alpha.24/evidence.json",
+    ".buildchain/release-evidence/v4.0.1-alpha.24/dist-tag-evidence.json"
+  ],
   "sealed_bundle": {
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-publication-sealed-bundle",
@@ -83,9 +96,15 @@
     "durablePath": "sealed-bundle/sha256/2e00a08dff57dca2a9fde92a08629b0ba8a2aae3e9c39000f319828a11e02231",
     "resumeCommand": "buildchain paper resume --version \"4.0.1-alpha.23\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-23\""
   },
-  "publication_state": "sealed",
-  "milestones": {},
+  "publication_state": "package-published",
+  "milestones": {
+    "package_published": {
+      "status": "complete",
+      "artifactCount": 1,
+      "sealedBundleRoot": "sha256:2e00a08dff57dca2a9fde92a08629b0ba8a2aae3e9c39000f319828a11e02231"
+    }
+  },
   "resume_command": "buildchain paper resume --version \"4.0.1-alpha.23\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-23\"",
   "created_at": "2026-08-23T07:32:59.640Z",
-  "updated_at": "2026-08-23T07:51:36.965Z"
+  "updated_at": "2026-08-23T07:51:47.414Z"
 }
