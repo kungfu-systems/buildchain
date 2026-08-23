@@ -304,6 +304,9 @@ export async function readPublicResumeState({
   return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
 }
 
+export const resolveV4RuntimeResumePublicRuntimeSha = (material) =>
+  material?.buildAttempt?.runtimeSha || "";
+
 function prepareRuntimeResumeEvidence({
   repoInfo,
   targetRef,
@@ -438,7 +441,7 @@ export async function finalizeRuntimeResumeEvidence({
   const readback = await readPublicResumeState({
     repoInfo,
     targetRef,
-    runtimeSha: material.runtimeSha,
+    runtimeSha: resolveV4RuntimeResumePublicRuntimeSha(material),
     version,
     transaction,
     token,
