@@ -52,7 +52,7 @@ async function planAlphaPublication(context) {
           releasePrefix: context.rule.releasePrefix,
           targetRef: context.targetRef,
           sourceSha: context.sha,
-          expectedVersion: context.expectedPublicationVersion,
+          expectedVersion: context.expectedPublicationVersion || currentAlpha?.version,
         });
   const currentAlphaTagSha = currentAlpha
     ? await context.readRefSha(`tags/${currentAlpha.tag}`)
@@ -249,7 +249,6 @@ async function finalizeContainedAlpha(context, state) {
       passportKfdSupportMatrixJson: "",
       passportKfdProductGateJsons: [],
       passportInvariantPassportJsons: [],
-      passportReleaseCandidateValidation: null,
     });
   } finally {
     if (finalizationSource?.root) {
