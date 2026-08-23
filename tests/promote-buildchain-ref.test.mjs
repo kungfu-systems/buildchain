@@ -30,6 +30,7 @@ const {
   parseTags,
   persistDurableReleaseTransaction,
   promoteBuildchainRefs,
+  recordGitHubReleaseTransactionCompletion,
   restoreDurableReleaseTransaction,
   runPublishTransaction,
   resolveTagsForTarget,
@@ -3053,7 +3054,23 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     path.join(cwd, result.publishTransaction.statePath),
     "utf8",
   ));
+  assert.equal(transaction.state, "complete");
   assert.equal(transaction.artifacts[0].ref, "v1.0.0-alpha.1");
+  const completion = await recordGitHubReleaseTransactionCompletion({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    statePath: result.publishTransaction.statePath,
+    evidencePath: result.publishTransaction.evidencePath,
+    release: {
+      action: "created",
+      tag: "v1.0.0-alpha.1",
+      url: "https://github.com/kungfu-systems/buildchain/releases/tag/v1.0.0-alpha.1",
+      assetCount: 1,
+    },
+  });
+  assert.equal(completion.transaction.publication_state, "alpha-complete");
   const passport = JSON.parse(fs.readFileSync(
     path.join(cwd, result.publishTransaction.releasePassportPath),
     "utf8",
