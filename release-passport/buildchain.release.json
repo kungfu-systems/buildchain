@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-release-passport",
-  "generatedAt": "2026-08-23T13:25:02.042Z",
+  "generatedAt": "2026-08-23T16:10:23.928Z",
   "surfaceTimestampPolicy": {
-    "generatedAt": "2026-08-23T13:25:02.042Z",
-    "publishedAt": "2026-08-23T13:25:02.042Z",
+    "generatedAt": "2026-08-23T16:10:23.928Z",
+    "publishedAt": "2026-08-23T16:10:23.928Z",
     "reproducible": true,
     "timestampPolicy": "ci-injected",
     "deterministicInputs": [
@@ -60,7 +60,7 @@
     "treeEquivalent": true,
     "publishToolingSha": "2469b5e68b6f32843e262a2caee8ff04efbab5bf",
     "releaseStateRef": "refs/heads/buildchain/release-state/4-0-1-alpha-27",
-    "releaseStateSha": "9189404dc8fb9eb231682880c1333a52e8fc2e3e",
+    "releaseStateSha": "",
     "package": {
       "name": "@kungfu-tech/buildchain",
       "version": "4.0.1-alpha.27"
@@ -98,7 +98,7 @@
     "statePath": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v4.0.1-alpha.27.json",
     "stateSha": "",
     "evidencePath": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v4.0.1-alpha.27/evidence.json",
-    "updatedAt": "2026-08-23T13:24:56.435Z",
+    "updatedAt": "2026-08-23T16:10:18.744Z",
     "result": {
       "command": "finalize",
       "validation": {
@@ -111,17 +111,17 @@
     "schemaVersion": 1,
     "contract": "buildchain.promotion-routing/v1",
     "router": {
-      "ref": "train/v4/v4.0/adopter-receipt-alpha.25",
-      "sha": "4974b344ceae325d8964df0e4782ffe8cc2a407d"
+      "ref": "train/v4/v4.0/floating-consumer-hard-gate",
+      "sha": "67ef7c31eb25a69dc5279340e4da70f41e1a74e4"
     },
     "shell": {
       "channel": "alpha",
       "ref": "alpha/v4/v4.0",
-      "sha": "34c6e96731827f45c75c156bd9a93cd6a439da0c"
+      "sha": "7c11fee468681506b953ae8ebeaf368944582161"
     },
     "runtime": {
-      "requestedRef": "train/v4/v4.0/adopter-receipt-alpha.25",
-      "resolvedSha": "4974b344ceae325d8964df0e4782ffe8cc2a407d"
+      "requestedRef": "train/v4/v4.0/floating-consumer-hard-gate",
+      "resolvedSha": "67ef7c31eb25a69dc5279340e4da70f41e1a74e4"
     },
     "contractLock": {
       "path": ".buildchain/alpha-contract-lock.json",
@@ -6900,7 +6900,7 @@
         },
         "sourceVerification": {
           "status": "passed",
-          "verifiedAt": "2026-08-23T13:25:02.043Z",
+          "verifiedAt": "2026-08-23T16:10:23.929Z",
           "required": true,
           "surfaces": [
             {
@@ -7819,7 +7819,7 @@
         },
         "artifactVerification": {
           "status": "passed",
-          "verifiedAt": "2026-08-23T13:25:02.043Z",
+          "verifiedAt": "2026-08-23T16:10:23.929Z",
           "surfaces": [
             {
               "name": ".github/workflows/.build.yml",
@@ -9084,7 +9084,7 @@
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-kfd-2-release-trust-passport-audit",
     "status": "passed",
-    "verifiedAt": "2026-08-23T13:25:02.076Z",
+    "verifiedAt": "2026-08-23T16:10:23.966Z",
     "auditBoundary": {
       "scope": "public release claims visible to humans or agents",
       "policy": "public claims must bind declared sources, machine-readable evidence, hashes, artifact coordinates, verification results, audit boundaries, responsibility state, and residual risk"
@@ -22023,7 +22023,7 @@
         },
         "comparison": {
           "status": "passed",
-          "verifiedAt": "2026-08-23T13:25:02.067Z",
+          "verifiedAt": "2026-08-23T16:10:23.956Z",
           "supportLevel": "release",
           "declaredPublicSurfaceCount": 190,
           "declaredShippedPublicSurfaceCount": 190,
@@ -22090,7 +22090,7 @@
     }
   },
   "v4RuntimeResume": {
-    "authorizationRoot": "sha256:9699ddebc091d6b01878fde44ce4b2d20e5038fa0abd6ba73d5f17ca50f92b98",
+    "authorizationRoot": "sha256:d55675941c3774c9a9c1ee299b5f661c3d39ffa4727ad36fec5eb36a4450a7cb",
     "authorization": {
       "schemaVersion": 1,
       "contract": "kungfu-buildchain-v4-runtime-authorization/v1",
@@ -22103,35 +22103,35 @@
         "permission": "write"
       },
       "reason": "resume sealed candidate run 32640618744 from a tree-equivalent protected source",
-      "authorizedAt": "2026-08-23T13:24:39.274Z",
+      "authorizedAt": "2026-08-23T16:10:03.979Z",
       "source": {
         "sha": "b109471555d665c04b793a0e3276ac9b86e2d592",
         "treeSha": "2d757d3b71bd1437a1543db039c0f26b07b476cc"
       },
       "request": {
-        "ref": "train/v4/v4.0/adopter-receipt-alpha.25",
+        "ref": "train/v4/v4.0/floating-consumer-hard-gate",
         "class": "train"
       },
       "runtime": {
-        "sha": "4974b344ceae325d8964df0e4782ffe8cc2a407d",
+        "sha": "67ef7c31eb25a69dc5279340e4da70f41e1a74e4",
         "reachableFrom": [
           {
-            "ref": "train/v4/v4.0/adopter-receipt-alpha.25",
-            "sha": "4974b344ceae325d8964df0e4782ffe8cc2a407d",
+            "ref": "train/v4/v4.0/floating-consumer-hard-gate",
+            "sha": "67ef7c31eb25a69dc5279340e4da70f41e1a74e4",
             "containsRuntimeSha": true,
-            "readbackRoot": "sha256:2fa42a08a65a42afeb5ee7473f85d5234cca87dd55592d62950a1df87e1d28a9"
+            "readbackRoot": "sha256:7a932b06583dcc1b4aef703b008c6b4a25600189c9fcd3d3ee923d6cae918c45"
           },
           {
             "ref": "v4",
             "sha": "9f43b6d1eaf388b9347b80c492e5b8415016816c",
             "containsRuntimeSha": false,
-            "readbackRoot": "sha256:510f2bf7f5c29cbd95cdd911b22c3397026c719f706c1ebb9ff24db80e9b6d6a"
+            "readbackRoot": "sha256:1fb919d1cd6405af553c701ea2554050113bcb3d4f2011e703be0000da5c1c25"
           },
           {
             "ref": "v4-alpha",
-            "sha": "2469b5e68b6f32843e262a2caee8ff04efbab5bf",
+            "sha": "7c11fee468681506b953ae8ebeaf368944582161",
             "containsRuntimeSha": true,
-            "readbackRoot": "sha256:af4411a16c1f414473dae8580cbb2b6c4f628998412b8581f0ae80b3119d772f"
+            "readbackRoot": "sha256:c783c71243c5663620606464e850fefe29a8ff90816c7cbb1ed46d1c3d173960"
           }
         ]
       },
@@ -22140,14 +22140,14 @@
         "alphaRoot": "sha256:af1a3f68d458334143f5c1e4d6961c636adc051671764cbcdfa0f5ef2fb412cd"
       },
       "consumerPolicyReceiptRoot": "sha256:ea9d702e19360f7ff8b4677ac100afa9f66bf71272b637353b1da3ece1dab094",
-      "persistenceScanRoot": "sha256:241844779fa625639f93053e9ea3cd3c80fc7ae3c7f17fc43b14c5c773cfe854"
+      "persistenceScanRoot": "sha256:54b68bc2119341f0270ba751d2163465d7d99e79af294782da5c3f1ba0cb81d6"
     },
-    "lineageRoot": "sha256:c7d92b6a173f1ec02f42fec019ed892373243a78e0970202e8b207d675367fb5",
+    "lineageRoot": "sha256:d3d7dd7fea754ca5a49d04a64986e7dd2d9c518d4c1f08832e27d5c84a56d09a",
     "lineage": {
       "schemaVersion": 1,
       "contract": "kungfu-buildchain-v4-runtime-resume-lineage/v1",
       "status": "qualified",
-      "authorizationRoot": "sha256:9699ddebc091d6b01878fde44ce4b2d20e5038fa0abd6ba73d5f17ca50f92b98",
+      "authorizationRoot": "sha256:d55675941c3774c9a9c1ee299b5f661c3d39ffa4727ad36fec5eb36a4450a7cb",
       "source": {
         "sha": "b109471555d665c04b793a0e3276ac9b86e2d592",
         "treeSha": "2d757d3b71bd1437a1543db039c0f26b07b476cc"
@@ -22159,8 +22159,8 @@
           "runtimeSha": "569d3e30cd65fee45df98129222df2b472612ccb"
         },
         "resume": {
-          "id": "github-run:32642149318:attempt:1",
-          "runtimeSha": "4974b344ceae325d8964df0e4782ffe8cc2a407d"
+          "id": "github-run:32650525505:attempt:1",
+          "runtimeSha": "67ef7c31eb25a69dc5279340e4da70f41e1a74e4"
         }
       },
       "floatingRefMovement": {
@@ -22170,13 +22170,13 @@
         },
         "after": {
           "ref": "v4-alpha",
-          "sha": "34c6e96731827f45c75c156bd9a93cd6a439da0c"
+          "sha": "01b246d66e71f555bbb859d54faf22d553f39c6d"
         }
       },
       "continuation": {
         "mechanism": "new-governed-attempt",
         "rerunFailedJobs": false,
-        "resumePlanRoot": "sha256:7d0a317b3feaec0cc7a0b73eca0dd09cf1386e3c2db7deba59f6074153494f97"
+        "resumePlanRoot": "sha256:debaf2aa70cc7ad61621188e844138bcaedd00bbeec8d4cd7d8b81912b18af67"
       },
       "stageCapsules": {
         "requiredPlatforms": [
@@ -22206,7 +22206,7 @@
         ],
         "rebuildPlatforms": []
       },
-      "finalPublicReadbackRoot": "sha256:1a9a88512e64b665339ff926e4fae5210e378577fb1410373740807a1c4e1fb2"
+      "finalPublicReadbackRoot": "sha256:e4091100d10ba4affb7ef7dfb919771c2fee1d1d96646300320e34854fb0bdc1"
     }
   },
   "controllerReceipts": [
