@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-v4-runtime-resume-public-readback/v1",
-  "observedAt": "2026-08-23T16:10:22.681Z",
+  "observedAt": "2026-08-23T17:54:49.451Z",
   "repository": "kungfu-systems/buildchain",
   "version": "4.0.1-alpha.27",
   "refs": {
     "target": {
       "ref": "alpha/v4/v4.0",
-      "sha": "01b246d66e71f555bbb859d54faf22d553f39c6d"
+      "sha": "e7cf3fa773de1db5a5e56f8aae2fb864ee73aef3"
     },
     "floating": {
       "ref": "v4-alpha",
-      "sha": "01b246d66e71f555bbb859d54faf22d553f39c6d"
+      "sha": "e7cf3fa773de1db5a5e56f8aae2fb864ee73aef3"
     },
     "exactTag": {
       "ref": "v4.0.1-alpha.27",
@@ -23,9 +23,9 @@
     "version": "4.0.1-alpha.27",
     "distTag": "alpha",
     "integrity": "sha512-Ek8j0beyxagZ3oYyPwqMB3MkiMeXM6m+wJs0jiOAWlrf2NAZ3Dp+N6rH4Jc5/eDIvO6oH5Ov0CsbcdYQNHdloA==",
-    "targetVersion": "4.0.1-alpha.30",
-    "distTagVersion": "4.0.1-alpha.30",
-    "distTagIntegrity": "sha512-s9n7rQDSzMB2I9hN/wgK/OgVlrUiR6YhRtnBZQrQyLF91y/UUXOAIz1nYMCUGA2N1y4Wlz643tXFXSZCTA5GBg=="
+    "targetVersion": "4.0.1-alpha.31",
+    "distTagVersion": "4.0.1-alpha.31",
+    "distTagIntegrity": "sha512-ap+uSzvvSj2h462w5bUHM4oIHJkwpBzBlnMVSlsCRCbfN8jxWEBNEvR+fDd27Xyy8tLfC6ugjkZmp5G4RZE/BA=="
   },
-  "root": "sha256:e4091100d10ba4affb7ef7dfb919771c2fee1d1d96646300320e34854fb0bdc1"
+  "root": "sha256:cb056bbdb5daf11a40c489aa8088500934afeaa4b9842473a61157c5987ce7fc"
 }

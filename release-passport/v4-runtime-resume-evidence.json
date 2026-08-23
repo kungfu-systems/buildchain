@@ -7,11 +7,11 @@
     "eventName": "workflow_dispatch",
     "repository": "kungfu-systems/buildchain",
     "actor": {
-      "login": "dongkeren",
-      "permission": "write"
+      "login": "kungfu-origin",
+      "permission": "admin"
     },
     "reason": "resume sealed candidate run 32640618744 from a tree-equivalent protected source",
-    "authorizedAt": "2026-08-23T16:10:03.979Z",
+    "authorizedAt": "2026-08-23T17:54:31.524Z",
     "source": {
       "sha": "b109471555d665c04b793a0e3276ac9b86e2d592",
       "treeSha": "2d757d3b71bd1437a1543db039c0f26b07b476cc"
@@ -21,25 +21,25 @@
       "class": "train"
     },
     "runtime": {
-      "sha": "67ef7c31eb25a69dc5279340e4da70f41e1a74e4",
+      "sha": "f367f88b34c036effd1b49c1118ab23b35a7aea1",
       "reachableFrom": [
         {
           "ref": "train/v4/v4.0/floating-consumer-hard-gate",
-          "sha": "67ef7c31eb25a69dc5279340e4da70f41e1a74e4",
+          "sha": "f367f88b34c036effd1b49c1118ab23b35a7aea1",
           "containsRuntimeSha": true,
-          "readbackRoot": "sha256:7a932b06583dcc1b4aef703b008c6b4a25600189c9fcd3d3ee923d6cae918c45"
+          "readbackRoot": "sha256:2dd35228c0b0633286b7b570fc994fdc55adb5b55d45264c16227c6d23451b55"
         },
         {
           "ref": "v4",
           "sha": "9f43b6d1eaf388b9347b80c492e5b8415016816c",
           "containsRuntimeSha": false,
-          "readbackRoot": "sha256:1fb919d1cd6405af553c701ea2554050113bcb3d4f2011e703be0000da5c1c25"
+          "readbackRoot": "sha256:d88166b5d717a4fe22a1c1c65687e01a2f138acdb7beea8c7db4fa9cec30824f"
         },
         {
           "ref": "v4-alpha",
-          "sha": "7c11fee468681506b953ae8ebeaf368944582161",
-          "containsRuntimeSha": true,
-          "readbackRoot": "sha256:c783c71243c5663620606464e850fefe29a8ff90816c7cbb1ed46d1c3d173960"
+          "sha": "e7cf3fa773de1db5a5e56f8aae2fb864ee73aef3",
+          "containsRuntimeSha": false,
+          "readbackRoot": "sha256:a02ab2fe151545b51610cff2e2ea61f570998cd30cf5c734ab44ab87ec5e9120"
         }
       ]
     },
@@ -50,12 +50,12 @@
     "consumerPolicyReceiptRoot": "sha256:ea9d702e19360f7ff8b4677ac100afa9f66bf71272b637353b1da3ece1dab094",
     "persistenceScanRoot": "sha256:54b68bc2119341f0270ba751d2163465d7d99e79af294782da5c3f1ba0cb81d6"
   },
-  "authorizationRoot": "sha256:d55675941c3774c9a9c1ee299b5f661c3d39ffa4727ad36fec5eb36a4450a7cb",
+  "authorizationRoot": "sha256:aee3cc05fae9a4bf82834423d786f80313b0b540f4ac2caddd3e7aaf52d4ee08",
   "lineage": {
     "schemaVersion": 1,
     "contract": "kungfu-buildchain-v4-runtime-resume-lineage/v1",
     "status": "qualified",
-    "authorizationRoot": "sha256:d55675941c3774c9a9c1ee299b5f661c3d39ffa4727ad36fec5eb36a4450a7cb",
+    "authorizationRoot": "sha256:aee3cc05fae9a4bf82834423d786f80313b0b540f4ac2caddd3e7aaf52d4ee08",
     "source": {
       "sha": "b109471555d665c04b793a0e3276ac9b86e2d592",
       "treeSha": "2d757d3b71bd1437a1543db039c0f26b07b476cc"
@@ -67,8 +67,8 @@
         "runtimeSha": "569d3e30cd65fee45df98129222df2b472612ccb"
       },
       "resume": {
-        "id": "github-run:32650525505:attempt:1",
-        "runtimeSha": "67ef7c31eb25a69dc5279340e4da70f41e1a74e4"
+        "id": "github-run:32656233716:attempt:1",
+        "runtimeSha": "f367f88b34c036effd1b49c1118ab23b35a7aea1"
       }
     },
     "floatingRefMovement": {
@@ -78,13 +78,13 @@
       },
       "after": {
         "ref": "v4-alpha",
-        "sha": "01b246d66e71f555bbb859d54faf22d553f39c6d"
+        "sha": "e7cf3fa773de1db5a5e56f8aae2fb864ee73aef3"
       }
     },
     "continuation": {
       "mechanism": "new-governed-attempt",
       "rerunFailedJobs": false,
-      "resumePlanRoot": "sha256:debaf2aa70cc7ad61621188e844138bcaedd00bbeec8d4cd7d8b81912b18af67"
+      "resumePlanRoot": "sha256:2eedada8bdd809bc809d0a588a32a5233b5b766eb45a40483af8f791c8707870"
     },
     "stageCapsules": {
       "requiredPlatforms": [
@@ -114,7 +114,7 @@
       ],
       "rebuildPlatforms": []
     },
-    "finalPublicReadbackRoot": "sha256:e4091100d10ba4affb7ef7dfb919771c2fee1d1d96646300320e34854fb0bdc1"
+    "finalPublicReadbackRoot": "sha256:cb056bbdb5daf11a40c489aa8088500934afeaa4b9842473a61157c5987ce7fc"
   },
-  "lineageRoot": "sha256:d3d7dd7fea754ca5a49d04a64986e7dd2d9c518d4c1f08832e27d5c84a56d09a"
+  "lineageRoot": "sha256:d189420c4deceaa6ad6ede86dfaab1dd91d87a81a13aaca2695256b5933588e7"
 }
