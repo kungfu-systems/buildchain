@@ -51,8 +51,8 @@ export async function reconcileImmutableReleaseAssets({ octokit, owner, repo, re
       throw new Error(`github-release=true requires a declared GitHub Release artifact, got '${assetPath || ""}'`);
     }
     const name = path.basename(assetPath);
-    if (local.has(name)) throw new Error(`complete recovery repair found duplicate asset basename '${name}'`);
     const data = fs.readFileSync(assetPath);
+    if (local.has(name) && !local.get(name).data.equals(data)) throw new Error(`complete recovery repair found conflicting asset basename '${name}'`);
     local.set(name, { data, digest: sha256(data) });
   }
   if (rejectUnknown) for (const name of remoteAssets.keys()) {

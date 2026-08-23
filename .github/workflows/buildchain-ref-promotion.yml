@@ -233,7 +233,7 @@ jobs:
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-sha'] || '' }}
+      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-sha'] || 'v4' }}
       buildchain-contract-lock-path: .buildchain/contract-lock.json
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
