@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   artifactSigningCorrelation,
+  artifactSigningControlRequestOutputs,
   assertArtifactSigningControllerReceipt,
   assertArtifactSigningControlRequestContext,
   createArtifactSigningControlRequest,
@@ -93,6 +94,10 @@ test("seals an immutable run-attempt-bound signing control request", () => {
     });
     assert.deepEqual(readArtifactSigningControlRequest(outputPath), sealed);
     assert.equal(sealed.source.runAttempt, 3);
+    assert.equal(
+      artifactSigningControlRequestOutputs(sealed)["source-run-attempt"],
+      "3",
+    );
     assert.match(sealed.request.root, /^sha256:[0-9a-f]{64}$/u);
     assert.match(sealed.authority.correlationId, /^100-3-/u);
     assert.deepEqual(

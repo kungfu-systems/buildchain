@@ -31,6 +31,10 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
     workflow,
     /path: \$\{\{ steps\.policy\.outputs\.v4-consumer-policy-receipt-path \}\}/u,
   );
+  assert.match(
+    workflow,
+    /path: \$\{\{ steps\.policy\.outputs\.v4-consumer-policy-receipt-path \}\}\n\s+include-hidden-files: true\n\s+if-no-files-found: error/u,
+  );
   assert.doesNotMatch(
     workflow,
     /path: \.buildchain\/evidence\/v4-adopter-delivery-policy-receipt\.json/u,
