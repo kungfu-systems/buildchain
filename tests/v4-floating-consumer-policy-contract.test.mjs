@@ -319,7 +319,7 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   );
   assert.match(
     workflow,
-    /artifact-patterns: \$\{\{ needs\.consumer-admission\.outputs\.publication-channel == 'alpha' && 'buildchain-package-\*' \|\| '' \}\}/u,
+    /artifact-patterns: \$\{\{ \(inputs\['resume-candidate-run-id'\] != '' \|\| needs\.consumer-admission\.outputs\.publication-channel == 'alpha'\) && 'buildchain-package-\*' \|\| '' \}\}/u,
   );
   assert.match(
     workflow,
