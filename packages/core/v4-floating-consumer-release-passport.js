@@ -78,14 +78,15 @@ export function resolveV4ConsumerPolicyCertificationIdentity({
   runtimeResume = undefined,
   sourceSha = "",
 } = {}) {
-  const certifiedSourceSha =
-    (release?.certification?.certification || release?.certification)?.caller
-      ?.sourceSha || "";
+  const certification =
+    release?.certification?.certification || release?.certification;
+  const certifiedSourceSha = certification?.caller?.sourceSha || "";
   const treeEquivalentSources = [
     release?.builtSourceSha || release?.built_source_sha,
     release?.promotionChannelSha || release?.promotion_channel_sha,
   ];
-  const buildRuntimeSha = runtimeResume?.lineage?.attempts?.build?.runtimeSha;
+  const buildSha = runtimeResume?.lineage?.attempts?.build?.runtimeSha;
+  const certifiedSha = certification?.invocation?.resolvedRuntimeSha || "";
   return {
     sourceSha:
       certifiedSourceSha === sourceSha ||
@@ -93,7 +94,7 @@ export function resolveV4ConsumerPolicyCertificationIdentity({
         treeEquivalentSources.includes(certifiedSourceSha))
         ? certifiedSourceSha
         : sourceSha,
-    runtimeSha: buildRuntimeSha || routing?.runtime?.resolvedSha || "",
+    runtimeSha: buildSha || certifiedSha || routing?.runtime?.resolvedSha || "",
   };
 }
 export function requireV4ConsumerPolicyCertification({

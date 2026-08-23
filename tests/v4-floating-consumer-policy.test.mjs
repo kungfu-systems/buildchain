@@ -552,6 +552,26 @@ test("final v4 Release Passport construction requires fresh external certificati
     v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
   });
   assert.equal(passport.v4ConsumerPolicy.certification.status, "certified");
+  const recoveredWithFreshRuntime = createReleasePassport({
+    ...input,
+    release: {
+      promotionRouting: {
+        ...promotionRouting,
+        runtime: { requestedRef: "v4", resolvedSha: ALPHA_SHA },
+      },
+    },
+    v4ConsumerPolicyCertification: certification,
+    v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
+  });
+  assert.equal(
+    recoveredWithFreshRuntime.v4ConsumerPolicy.certification.invocation
+      .resolvedRuntimeSha,
+    STABLE_SHA,
+  );
+  assert.equal(
+    recoveredWithFreshRuntime.promotionRouting.runtime.resolvedSha,
+    ALPHA_SHA,
+  );
   const promotionSourceSha = "9".repeat(40);
   const treeEquivalent = createReleasePassport({
     ...input,
