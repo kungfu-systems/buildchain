@@ -666,7 +666,7 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
     ".buildchain/release-passport/buildchain.release.json": {
       release: { tag: "v1.0.0" },
     },
-    ".buildchain/release-passport/evidence.json": { passport: true },
+    ".buildchain/release-passport/evidence.json": { ok: true },
     "dist/paper.pdf": "paper bytes",
   });
 
@@ -680,7 +680,6 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
     [
       ".buildchain/release-evidence/v1.0.0/evidence.json",
       ".buildchain/release-passport/buildchain.release.json",
-      ".buildchain/release-passport/evidence.json",
       "dist/paper.pdf",
     ],
   );
@@ -712,6 +711,16 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
       additionalAssetPaths: [path.join(cwd, ".buildchain/release-passport/buildchain.release.json")],
     }),
     /duplicate asset basename 'buildchain\.release\.json'/,
+  );
+
+  fs.writeFileSync(path.join(cwd, ".buildchain/release-passport/evidence.json"), '{"passport":true}\n');
+  assert.throws(
+    () => collectGitHubReleaseEvidenceAssets({
+      publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json"),
+      releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+      releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+    }),
+    /conflicting duplicate evidence asset basename 'evidence\.json'/,
   );
 });
 
