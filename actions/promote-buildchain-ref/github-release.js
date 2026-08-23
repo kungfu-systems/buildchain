@@ -54,15 +54,16 @@ export function collectGitHubReleaseEvidenceAssets({
   const assets = [publishEvidencePath];
   for (const entry of fs.readdirSync(releasePassportOutputDir).sort()) {
     const candidate = path.join(releasePassportOutputDir, entry);
-    if (!fs.statSync(candidate).isFile()) continue;
-    const duplicate = assets.find((assetPath) => path.basename(assetPath) === entry);
-    if (!duplicate) assets.push(candidate);
-    else if (!fs.readFileSync(duplicate).equals(fs.readFileSync(candidate))) {
-      throw new Error(`github-release=true found conflicting duplicate evidence asset basename '${entry}'`);
-    }
+    if (fs.statSync(candidate).isFile()) assets.push(candidate);
   }
-  if (assets.length < 2) throw new Error(`github-release=true found no release passport assets under ${releasePassportOutputDir}`);
-  const occupiedBasenames = new Set(assets.map((assetPath) => path.basename(assetPath)));
+  if (assets.length < 2) {
+    throw new Error(
+      `github-release=true found no release passport assets under ${releasePassportOutputDir}`,
+    );
+  }
+  const occupiedBasenames = new Set(
+    assets.map((assetPath) => path.basename(assetPath)),
+  );
   for (const assetPath of additionalAssetPaths) {
     assertFile(assetPath, "a declared GitHub Release artifact");
     const basename = path.basename(assetPath);

@@ -2197,13 +2197,8 @@ async function collectAndPersistReleasePassport({
     evidencePath: result.evidencePath,
     extraFiles: releasePassportArtifactFiles(collected.outputDir),
   });
-  const persistedTransaction = writeReleaseTransaction(
-    result.statePath,
-    result.transaction,
-  );
   return {
     ...result,
-    transaction: persistedTransaction,
     publicReleaseTag,
     durable: finalDurable || durable,
     releasePassport: {
