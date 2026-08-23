@@ -1,13 +1,12 @@
 name: Buildchain Ref Promotion Recovery
-
 on:
   workflow_dispatch:
     inputs:
       sha:
-        description: "Exact protected alpha commit that owns the recovery"
+        description: "Exact protected v4 channel commit that owns the recovery"
         required: true
       target-ref:
-        description: "Exact protected alpha channel branch"
+        description: "Exact protected v4 alpha or stable channel branch"
         required: true
         default: "alpha/v4/v4.0"
       dry-run:
@@ -21,7 +20,8 @@ on:
         description: "Exact successful Build Surface Fixture run ID; empty rematerializes a fresh candidate"
       resume-expected-source-tree:
         description: "Exact Git tree recorded for the sealed candidate"
-      resume-expected-candidate-root: { description: "Optional exact sha256 Release Candidate root" }
+      resume-expected-candidate-root:
+        { description: "Optional exact candidate root" }
       resume-expected-candidate-runtime-sha:
         description: "Exact Buildchain runtime SHA recorded by the candidate"
       resume-buildchain-runtime-ref:
@@ -37,15 +37,16 @@ on:
 
 permissions:
   contents: read
-
 jobs:
   consumer-admission:
-    name: Admit bounded floating alpha recovery
+    name: Admit bounded floating v4 recovery
     runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
     outputs:
+      channel: ${{ steps.route.outputs.channel }}
+      publication-channel: ${{ steps.route.outputs.publication-channel }}
       router-ref: ${{ inputs['resume-buildchain-runtime-ref'] }}
       router-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
       shell-call-ref: ${{ steps.identities.outputs.shell-call-ref }}
@@ -74,19 +75,20 @@ jobs:
         run: |
           set -euo pipefail
           [[ "${SOURCE_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::sha must be exact"; exit 1; }
-          [[ "${TARGET_REF}" = "alpha/v4/v4.0" ]] || { echo "::error::recovery is restricted to alpha/v4/v4.0"; exit 1; }
+          [[ "${TARGET_REF}" =~ ^(alpha|release)/v4/v4\.0$ ]] || { echo "::error::recovery target must be alpha/v4/v4.0 or release/v4/v4.0"; exit 1; }
           [[ -n "${RECOVERY_RUNTIME_REF}" ]] || { echo "::error::recovery runtime ref is required"; exit 1; }
           [[ "${RECOVERY_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::recovery runtime must be exact"; exit 1; }
           if [[ -n "${CANDIDATE_RUN_ID}" ]]; then
             [[ "${CANDIDATE_RUN_ID}" =~ ^[0-9]+$ && -n "${CANDIDATE_REPOSITORY}" ]] || { echo "::error::candidate run ID and repository must be exact"; exit 1; }
             [[ "${CANDIDATE_TREE}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate tree must be exact"; exit 1; }
             [[ "${CANDIDATE_RUNTIME_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::candidate runtime must be exact"; exit 1; }
-            [[ -n "${TRANSACTION_ID}" ]] || { echo "::error::transaction identity is required when resuming a sealed candidate"; exit 1; }
           elif [[ -n "${CANDIDATE_REPOSITORY}" || -n "${CANDIDATE_TREE}" || -n "${CANDIDATE_ROOT}" || -n "${CANDIDATE_RUNTIME_SHA}" || -n "${RESUME_EVIDENCE_JSON}" ]]; then
             { echo "::error::candidate recovery inputs must be supplied together or omitted together"; exit 1; }
           elif [[ -n "${TRANSACTION_ID}" ]]; then
             { echo "::error::fresh candidate recovery must not claim a pre-existing transaction identity"; exit 1; }
           fi
+          [[ "${TARGET_REF}" != alpha/* || -z "${CANDIDATE_RUN_ID}" || -n "${TRANSACTION_ID}" ]] || { echo "::error::transaction identity is required when resuming a published alpha candidate"; exit 1; }
+          [[ "${TARGET_REF}" != release/* || -n "${CANDIDATE_RUN_ID}" ]] || { echo "::error::stable recovery requires an exact sealed candidate run"; exit 1; }
 
       - name: Checkout exact recovered publication policy locks
         uses: actions/checkout@v7.0.0
@@ -127,15 +129,14 @@ jobs:
           ref: ${{ inputs['resume-buildchain-runtime-sha'] }}
           path: .buildchain/router
           persist-credentials: false
-      - name: Resolve alpha recovery route
+      - name: Resolve v4 recovery route
         id: route
         shell: bash
         run: >-
           node .buildchain/router/scripts/promotion-channel-router.mjs
           --cwd .buildchain/router
-          --channel alpha
+          --channel auto
           --buildchain-ref "${{ inputs['resume-buildchain-runtime-ref'] }}"
-          --publication-channel alpha
           --target-ref "${{ inputs['target-ref'] }}"
           --router-ref "${{ inputs['resume-buildchain-runtime-ref'] }}"
           --router-sha "${{ inputs['resume-buildchain-runtime-sha'] }}"
@@ -156,12 +157,12 @@ jobs:
       - name: Bind governed recovery ref to exact runtime B
         run: test "${{ steps.identities.outputs.runtime-sha }}" = "${{ inputs['resume-buildchain-runtime-sha'] }}"
 
-      - name: Bind protected alpha contract lock
+      - name: Bind protected v4 contract lock
         id: lock
         shell: bash
         run: |
           set -euo pipefail
-          path=".buildchain/alpha-contract-lock.json"
+          [[ "${{ steps.route.outputs.channel }}" = "alpha" ]] && path=".buildchain/alpha-contract-lock.json" || path=".buildchain/contract-lock.json"
           test -f ".buildchain/consumer/${path}"
           digest="sha256:$(shasum -a 256 ".buildchain/consumer/${path}" | awk '{print $1}')"
           echo "path=${path}" >> "${GITHUB_OUTPUT}"
@@ -173,7 +174,7 @@ jobs:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_INVOCATION_SOURCE_ROOT: .buildchain/recovered-source
           BUILDCHAIN_INVOCATION_SOURCE_PATH: .github/workflows/release-candidate-promote.yml
-          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: alpha
+          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ steps.route.outputs.channel }}
           BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/.release-candidate-promote.yml
           BUILDCHAIN_WORKFLOW_SHA: ${{ steps.identities.outputs.shell-sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
@@ -204,7 +205,7 @@ jobs:
                 sourceSha: "${{ inputs.sha }}",
                 requestedRef: "${{ steps.route.outputs.runtime-ref }}",
                 resolvedRuntimeSha: "${{ steps.identities.outputs.runtime-sha }}",
-                reason: "bounded alpha tail recovery for candidate ${{ inputs['resume-candidate-run-id'] }}",
+                reason: "bounded ${{ steps.route.outputs.channel }} tail recovery for candidate ${{ inputs['resume-candidate-run-id'] }}",
                 mode: "resume",
                 outputPath: process.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH,
               },
@@ -218,16 +219,16 @@ jobs:
       - name: Upload rooted recovery admission receipts
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: v4-consumer-policy-buildchain-alpha-recovery-${{ github.run_id }}
+          name: v4-consumer-policy-buildchain-${{ steps.route.outputs.channel }}-recovery-${{ github.run_id }}
           path: |
             .buildchain/recovery-admission/v4-consumer-policy-receipt.json
             .buildchain/recovery-admission/v4-runtime-authorization.json
           if-no-files-found: error
 
   promote-alpha-recovery:
-    name: Resume sealed alpha candidate through floating shell
+    name: Resume sealed v4 candidate through the advanced shell
     needs: consumer-admission
-    # Bounded bootstrap: the public v4-alpha shell cannot certify a policy scanner that has not reached the tag yet.
+    # Bounded bootstrap: the advanced shell authorizes an exact runtime while durable consumers stay floating.
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0
     permissions:
       actions: write
@@ -242,7 +243,7 @@ jobs:
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ needs.consumer-admission.outputs.runtime-sha }}
-      buildchain-expected-channel: alpha
+      buildchain-expected-channel: ${{ needs.consumer-admission.outputs.channel }}
       buildchain-expected-major: "4"
       promotion-router-ref: ${{ needs.consumer-admission.outputs.router-ref }}
       promotion-router-sha: ${{ needs.consumer-admission.outputs.router-sha }}
@@ -252,15 +253,15 @@ jobs:
       promotion-runtime-sha: ${{ needs.consumer-admission.outputs.runtime-sha }}
       promotion-contract-lock-path: ${{ needs.consumer-admission.outputs.contract-lock-path }}
       promotion-contract-lock-digest: ${{ needs.consumer-admission.outputs.contract-lock-digest }}
-      promotion-publication-channel: alpha
+      promotion-publication-channel: ${{ needs.consumer-admission.outputs.publication-channel }}
       promotion-target-ref: ${{ inputs['target-ref'] }}
       promotion-override-used: true
       promotion-runtime-authorization-json: ${{ needs.consumer-admission.outputs.runtime-authorization-json }}
       promotion-runtime-authorization-root: ${{ needs.consumer-admission.outputs.runtime-authorization-root }}
-      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
+      buildchain-contract-lock-path: ${{ needs.consumer-admission.outputs.contract-lock-path }}
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
-      channel: alpha
+      channel: ${{ needs.consumer-admission.outputs.publication-channel }}
       target-ref: ${{ inputs['target-ref'] }}
       target-sha: ${{ inputs.sha }}
       package-manager: pnpm
@@ -276,7 +277,7 @@ jobs:
       resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
       resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
-      artifact-patterns: "buildchain-package-*"
+      artifact-patterns: ${{ (inputs['resume-candidate-run-id'] != '' || needs.consumer-admission.outputs.publication-channel == 'alpha') && 'buildchain-package-*' || '' }}
       publish-rematerialize-on-resume: true
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
