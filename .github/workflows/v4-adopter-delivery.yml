@@ -88,7 +88,6 @@ jobs:
           persist-credentials: false
       - name: Enforce v4 floating consumer policy
         id: policy
-        shell: bash
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-adopter-delivery.yml
@@ -104,6 +103,7 @@ jobs:
         with:
           name: v4-adopter-delivery-policy-${{ inputs.consumer }}-${{ github.sha }}
           path: ${{ steps.policy.outputs.v4-consumer-policy-receipt-path }}
+          include-hidden-files: true
           if-no-files-found: error
 
   conformance:
