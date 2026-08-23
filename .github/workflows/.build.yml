@@ -2485,10 +2485,11 @@ jobs:
           BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
           BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
           BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
-
   artifact-signing-control:
     name: Control detached signing ${{ matrix.platform.name }}
     runs-on: ubuntu-24.04
+    outputs:
+      source-run-attempt: ${{ steps.control-request.outputs.source-run-attempt }}
     needs:
       - trust-gate
       - resolve-contract
@@ -2652,21 +2653,20 @@ jobs:
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
-          name: ${{ inputs.artifact-name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ inputs.artifact-name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ needs.artifact-signing-control.outputs.source-run-attempt }}
           path: .buildchain/signing/delegations/${{ matrix.platform.id }}
-
       - name: Download immutable signing control request
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
-          name: ${{ inputs.artifact-name }}-signing-control-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ inputs.artifact-name }}-signing-control-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ needs.artifact-signing-control.outputs.source-run-attempt }}
           path: .buildchain/signing/control-requests/${{ matrix.platform.id }}
 
       - name: Download signing controller receipt
         uses: actions/download-artifact@v7.0.0
         with:
           github-token: ${{ github.token }}
-          name: ${{ inputs.artifact-name }}-signing-controller-receipt-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ inputs.artifact-name }}-signing-controller-receipt-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ needs.artifact-signing-control.outputs.source-run-attempt }}
           path: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}
 
       - name: Validate signing control request, receipt, and finalization delegation
@@ -2678,7 +2678,7 @@ jobs:
           BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
           BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_EXPECTED_SOURCE_RUN_ID: ${{ github.run_id }}
-          BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ needs.artifact-signing-control.outputs.source-run-attempt }}
           BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
           BUILDCHAIN_EXPECTED_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
           BUILDCHAIN_EXPECTED_RUNTIME_REPOSITORY: ${{ inputs.buildchain-repository }}
