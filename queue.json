@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 763,
+  "generation": 764,
   "fencingCounter": 129,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:4d3fd647eabc571ff4ccd3aa573cfccc1ebc23cf4c293d599e0280b526d94512",
@@ -48,8 +48,13 @@
     "issuedAt": "2026-08-23T13:18:33.847Z",
     "expiresAt": "2026-08-23T14:22:13.751Z",
     "fencingToken": "sha256:51d339fceac9936fec09f54784b98ac8b6ff98c69c79aa3083e94118af6d3400",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-23T13:22:13.751Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-23T13:22:13.751Z",
+    "nativeProofRoot": "sha256:fb918b7e6829ae5966e9ab6c058c31c3be18ae0c413eb9f835260939e7a898b1",
+    "nativeExecutionReceiptRoot": "sha256:7c8346919ebb5e754ad8f345d74c159dc662116283edb8d65896cbd58be412fb",
+    "nativeProofReuseRoot": "sha256:8f1fe8b24f8ca942e01d09f013675f6d1818f737b82356e240c6237727726230",
+    "qualificationReceiptRoot": "sha256:01b43060c1794e3d1c6a28d28b74de25e7081a89f0db8eaecf17e822c6aabed1",
+    "qualifiedAt": "2026-08-23T13:22:38.305Z"
   },
   "candidates": [
     {
@@ -5848,10 +5853,10 @@
       "sourceWorkflowRunId": 32641000143,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-23T13:18:31.100Z",
-      "updatedAt": "2026-08-23T13:22:13.751Z",
+      "updatedAt": "2026-08-23T13:22:38.305Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "scripts/dev-pr-prequeue-guard.mjs",
@@ -5860,6 +5865,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-23T13:22:13.751Z",
-  "stateRoot": "sha256:2614b13329351bd1e36eb603502e98f831687466b9f5fbc61230b4ea3b44d374"
+  "updatedAt": "2026-08-23T13:22:38.305Z",
+  "stateRoot": "sha256:438d1757cd99e0d8af2a535b0a87d39d228f7acaee0dcee244ecf7b261c45c65"
 }
