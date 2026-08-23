@@ -402,11 +402,12 @@ test("runtime persistence scan is rooted at the checked-out recovery runtime", (
   }
 });
 
-test("resume public readback keeps the target branch distinct from the floating runtime", () => {
+test("resume public readback preserves exact history while the protected alpha channel advances", () => {
   const version = "4.0.1-alpha.6";
   const targetRef = "alpha/v4/v4.0";
   const exactTagSha = "6".repeat(40);
-  const targetSha = "7".repeat(40);
+  const targetSha = "9".repeat(40);
+  const alphaSha = "7".repeat(40);
   const runtimeSha = "8".repeat(40);
   const digest = "sha512-public";
   const transaction = {
@@ -416,37 +417,24 @@ test("resume public readback keeps the target branch distinct from the floating 
   };
   const main = { digest };
   const npm = {
-    "dist-tags": { alpha: version },
-    versions: { [version]: { dist: { integrity: digest } } },
+    "dist-tags": { alpha: "4.0.1-alpha.8" },
+    versions: {
+      [version]: { dist: { integrity: digest } },
+      "4.0.1-alpha.8": { dist: { integrity: "sha512-current" } },
+    },
   };
-  assert.doesNotThrow(() =>
-    validateV4RuntimeResumePublicReadback({
-      targetRef,
-      targetSha,
-      alphaSha: runtimeSha,
-      exactTagSha,
-      tagLineage: { status: "ahead" },
-      runtimeSha,
-      version,
-      transaction,
-      main,
-      npm,
-    }),
-  );
+  const valid = { targetRef, targetSha, targetVersion: "4.0.1-alpha.8", alphaSha, exactTagSha,
+    tagLineage: { status: "ahead" }, runtimeLineage: { status: "ahead" }, floatingTargetLineage: { status: "ahead" }, runtimeSha, version, transaction, main, npm };
+  assert.doesNotThrow(() => validateV4RuntimeResumePublicReadback(valid));
   assert.throws(
-    () =>
-      validateV4RuntimeResumePublicReadback({
-        targetRef,
-        targetSha,
-        alphaSha: runtimeSha,
-        exactTagSha,
-        tagLineage: { status: "diverged" },
-        runtimeSha,
-        version,
-        transaction,
-        main,
-        npm,
-      }),
+    () => validateV4RuntimeResumePublicReadback({ ...valid, tagLineage: { status: "diverged" } }),
+    /does not match durable publication/,
+  );
+  const regressed = structuredClone(npm);
+  regressed["dist-tags"].alpha = "4.0.1-alpha.5";
+  regressed.versions["4.0.1-alpha.5"] = { dist: { integrity: "sha512-regressed" } };
+  assert.throws(
+    () => validateV4RuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }),
     /does not match durable publication/,
   );
 });
