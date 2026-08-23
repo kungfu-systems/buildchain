@@ -24,6 +24,7 @@ import {
   normalizePlatformManifests,
   resolveAnchorRecoveryRequest,
   resolveRecoveryTransaction,
+  resolveV4RuntimeResumePublicRuntimeSha,
   trackedRuntimePersistenceScan,
   validateV4RuntimeResumePublicReadback,
   verifyReleaseCandidateStageCapsules,
@@ -436,6 +437,19 @@ test("resume public readback preserves exact history while the protected alpha c
   assert.throws(
     () => validateV4RuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }),
     /does not match durable publication/,
+  );
+});
+
+test("resume public readback follows runtime A while runtime B remains transient", () => {
+  const buildRuntimeSha = "8".repeat(40);
+  const recoveryRuntimeSha = "9".repeat(40);
+  assert.equal(
+    resolveV4RuntimeResumePublicRuntimeSha({
+      runtimeSha: recoveryRuntimeSha,
+      buildAttempt: { runtimeSha: buildRuntimeSha },
+      floatingRefBefore: { ref: "v4-alpha", sha: buildRuntimeSha },
+    }),
+    buildRuntimeSha,
   );
 });
 
