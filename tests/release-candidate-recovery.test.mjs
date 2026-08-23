@@ -24,6 +24,7 @@ import {
   normalizePlatformManifests,
   resolveAnchorRecoveryRequest,
   resolveRecoveryTransaction,
+  resolveRecoveredPublicationVersion,
   resolveV4RuntimeResumePublicRuntimeSha,
   trackedRuntimePersistenceScan,
   validateV4RuntimeResumePublicReadback,
@@ -504,6 +505,23 @@ test("custom-product recovery uses Passport version and manifests without treati
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("stable rematerialized recovery preserves candidate bytes but selects the final release version", () => {
+  assert.equal(resolveRecoveredPublicationVersion({
+    artifactVersion: "4.0.1-alpha.31",
+    channel: "release",
+    rematerializeOnResume: true,
+  }), "4.0.1");
+  assert.equal(resolveRecoveredPublicationVersion({
+    artifactVersion: "4.0.1-alpha.31",
+    channel: "release",
+  }), "4.0.1-alpha.31");
+  assert.equal(resolveRecoveredPublicationVersion({
+    artifactVersion: "4.0.1-alpha.31",
+    channel: "alpha",
+    rematerializeOnResume: true,
+  }), "4.0.1-alpha.31");
 });
 
 test("candidate recovery excludes credential-island manifests outside the Passport platform matrix", () => {
@@ -1027,6 +1045,10 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/,
   );
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
+  assert.equal(
+    advanced.match(/BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME: \$\{\{ inputs\.publish-rematerialize-on-resume \}\}/g)?.length,
+    2,
+  );
   assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
   assert.match(
     advanced,

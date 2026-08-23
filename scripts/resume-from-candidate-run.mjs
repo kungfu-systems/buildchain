@@ -41,10 +41,7 @@ import {
   verifyV4RuntimeAuthorizationReceipt,
 } from "../packages/core/v4-runtime-ref-resume-authority.js";
 
-function env(name, fallback = "") {
-  return process.env[name] || fallback;
-}
-
+function env(name, fallback = "") { return process.env[name] || fallback; }
 function requiredEnv(name) {
   const value = env(name).trim();
   if (!value) throw new Error(`${name} is required for candidate recovery`);
@@ -57,9 +54,7 @@ function splitRepository(repository) {
   return { owner: match[1], repo: match[2], fullName: `${match[1]}/${match[2]}` };
 }
 
-function splitPatterns(value = "") {
-  return String(value || "").split(/\r?\n|,/).map((entry) => entry.trim()).filter(Boolean);
-}
+function splitPatterns(value = "") { return String(value || "").split(/\r?\n|,/).map((entry) => entry.trim()).filter(Boolean); }
 
 function patternMatcher(pattern) {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*");
@@ -700,8 +695,12 @@ export function createRecoveredPublicationCandidate({
   };
   return { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
 }
-
-export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests }) {
+export function resolveRecoveredPublicationVersion({ artifactVersion, channel, rematerializeOnResume = false } = {}) {
+  const version = String(artifactVersion || "").trim(), match = version.match(/^(\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u);
+  if (!match) throw new Error(`recovered npm artifact has invalid publication version: ${version || "<empty>"}`);
+  return channel === "release" && rematerializeOnResume ? match[1] : version;
+}
+export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests, channel, rematerializeOnResume = false }) {
   const allFiles = downloads.flatMap((download) => download.files.map((file) => ({
     path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
     size: file.size,
@@ -732,6 +731,7 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
   const npmReleaseAssets = allFiles.filter((file) => releaseMatchers.length
     ? releaseMatchers.some((matcher) => matcher.test(path.basename(file.path)))
     : file.path.toLowerCase().endsWith(".tgz"));
+  const publicationVersion = resolveRecoveredPublicationVersion({ artifactVersion: main.metadata.ref, channel, rematerializeOnResume });
   const candidate = createRecoveredPublicationCandidate({
     allFiles,
     repository,
@@ -751,12 +751,12 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
     npmArtifacts,
     allFiles,
     releaseAssets: npmReleaseAssets,
-    version: manifest.npm.version,
+    version: publicationVersion,
     publishRequiredArtifacts: generatePublishRequiredArtifacts({
       kind: "npm",
       tarballPaths: npmArtifacts.map((entry) => entry.file.absolutePath),
       mainPackage: publishPackageMain,
-    }),
+    }).map((artifact) => rematerializeOnResume ? { ...artifact, ref: publicationVersion } : artifact),
   };
 }
 
@@ -865,7 +865,7 @@ export async function resumeFromCandidateRun({
   channel, targetRef, targetSha,
   expectedSourceTree = "", expectedCandidateRoot = "",
   candidateRuntimeSha, runtimeSha,
-  transactionId = "", artifactName = "", artifactPatterns = "", releasePatterns = "",
+  transactionId = "", artifactName = "", artifactPatterns = "", releasePatterns = "", rematerializeOnResume = false,
   requiredArtifactCount = 0,
   publishArtifactKind = "npm", publishPackageMain = "",
   outputDir = ".buildchain/release-candidate-recovery",
@@ -908,7 +908,7 @@ export async function resumeFromCandidateRun({
       publishArtifactKind,
       publishPackageMain,
       releasePatterns,
-      platformManifests: platformManifestEvidence.manifests,
+      platformManifests: platformManifestEvidence.manifests, channel, rematerializeOnResume,
     });
     const stageCapsules = resolveRecoveredStageCapsules({
       candidateRuntimeSha,
@@ -1048,7 +1048,7 @@ export async function resumeFromCandidateRunCli() {
       expectedCandidateRoot: env("BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_ROOT"),
       candidateRuntimeSha: requiredEnv("BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_RUNTIME_SHA"),
       runtimeSha: requiredEnv("BUILDCHAIN_RESUME_RUNTIME_SHA"),
-      transactionId: env("BUILDCHAIN_RESUME_TRANSACTION_ID"),
+      transactionId: env("BUILDCHAIN_RESUME_TRANSACTION_ID"), rematerializeOnResume: env("BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME") === "true",
       artifactName: env("BUILDCHAIN_ARTIFACT_NAME"),
       artifactPatterns: env("BUILDCHAIN_ARTIFACT_PATTERNS"),
       releasePatterns: env("BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS"),
