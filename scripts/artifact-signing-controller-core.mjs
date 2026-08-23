@@ -374,6 +374,7 @@ export function assertArtifactSigningControlRequestContext(
 export function artifactSigningControlRequestOutputs(request) {
   const value = validateArtifactSigningControlRequest(request);
   return {
+    "source-run-attempt": String(value.source.runAttempt),
     "request-count": String(value.request.count),
     "request-artifact": value.request.artifact,
     "request-root": value.request.root,
@@ -384,7 +385,6 @@ export function artifactSigningControlRequestOutputs(request) {
     "runtime-sha": value.runtime.sha,
   };
 }
-
 export function normalizeControllerStatus(value) {
   const normalized = required(value, "authority status");
   if (
