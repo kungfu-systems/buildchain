@@ -404,6 +404,19 @@ test("reusable build workflow exposes the required surface contract", () => {
   );
   assert.match(
     workflow,
+    /artifact-signing-control:[\s\S]*?outputs:\n\s+source-run-attempt: \$\{\{ steps\.control-request\.outputs\.source-run-attempt \}\}/u,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /needs\.artifact-signing-control\.outputs\.source-run-attempt/g,
+      ) || []
+    ).length,
+    4,
+    "failed-job reruns must finalize the exact source attempt retained by the signing controller",
+  );
+  assert.match(
+    workflow,
     /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
   );
   assert.match(
