@@ -4230,6 +4230,10 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
     "utf8",
   );
+  const selfPromotionRecovery = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
+    "utf8",
+  );
   assert.match(
     promotion,
     /standalone-binary-distribution:\n\s+description: "Dispatch binary-distribution\.yml after promotion; enable only when the caller repository provides that workflow"\n\s+default: false/,
@@ -4246,7 +4250,27 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     selfPromotion,
     /promote-alpha:[\s\S]*publish-rematerialize-on-resume: true/,
   );
-  assert.match(selfPromotion, /promote-stable:[\s\S]*publish-rematerialize-on-resume:.*release\//);
+  assert.match(
+    selfPromotionRecovery,
+    /--channel auto[\s\S]*--target-ref "\$\{\{ inputs\['target-ref'\] \}\}"/,
+  );
+  assert.match(
+    selfPromotionRecovery,
+    /buildchain-ref: \$\{\{ needs\.consumer-admission\.outputs\.runtime-sha \}\}[\s\S]*release-passport-v4-runtime-resume-evidence-json:/,
+  );
+  assert.match(
+    selfPromotion,
+    /promote-stable:[\s\S]*publish-rematerialize-on-resume:.*release\//,
+  );
+  const stableJob = selfPromotion.slice(
+    selfPromotion.indexOf("\n  promote-stable:\n"),
+  );
+  const stableCondition = stableJob.slice(0, stableJob.indexOf("\n    uses:"));
+  assert.doesNotMatch(stableCondition, /resume-candidate-run-id/);
+  assert.match(
+    stableJob,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4/,
+  );
   assert.match(
     selfPromotion,
     /recover-durable-transaction:[\s\S]*?type: boolean/,
