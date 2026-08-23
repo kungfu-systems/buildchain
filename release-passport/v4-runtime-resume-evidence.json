@@ -1,0 +1,120 @@
+{
+  "authorization": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-v4-runtime-authorization/v1",
+    "status": "authorized",
+    "mode": "resume",
+    "eventName": "workflow_dispatch",
+    "repository": "kungfu-systems/buildchain",
+    "actor": {
+      "login": "dongkeren",
+      "permission": "write"
+    },
+    "reason": "resume sealed candidate run 32640618744 from a tree-equivalent protected source",
+    "authorizedAt": "2026-08-23T13:24:39.274Z",
+    "source": {
+      "sha": "b109471555d665c04b793a0e3276ac9b86e2d592",
+      "treeSha": "2d757d3b71bd1437a1543db039c0f26b07b476cc"
+    },
+    "request": {
+      "ref": "train/v4/v4.0/adopter-receipt-alpha.25",
+      "class": "train"
+    },
+    "runtime": {
+      "sha": "4974b344ceae325d8964df0e4782ffe8cc2a407d",
+      "reachableFrom": [
+        {
+          "ref": "train/v4/v4.0/adopter-receipt-alpha.25",
+          "sha": "4974b344ceae325d8964df0e4782ffe8cc2a407d",
+          "containsRuntimeSha": true,
+          "readbackRoot": "sha256:2fa42a08a65a42afeb5ee7473f85d5234cca87dd55592d62950a1df87e1d28a9"
+        },
+        {
+          "ref": "v4",
+          "sha": "9f43b6d1eaf388b9347b80c492e5b8415016816c",
+          "containsRuntimeSha": false,
+          "readbackRoot": "sha256:510f2bf7f5c29cbd95cdd911b22c3397026c719f706c1ebb9ff24db80e9b6d6a"
+        },
+        {
+          "ref": "v4-alpha",
+          "sha": "2469b5e68b6f32843e262a2caee8ff04efbab5bf",
+          "containsRuntimeSha": true,
+          "readbackRoot": "sha256:af4411a16c1f414473dae8580cbb2b6c4f628998412b8581f0ae80b3119d772f"
+        }
+      ]
+    },
+    "contractLocks": {
+      "stableRoot": "sha256:8642e12a356df2ab9552277f005f944601e507e94264a4059f8b2d8851702858",
+      "alphaRoot": "sha256:af1a3f68d458334143f5c1e4d6961c636adc051671764cbcdfa0f5ef2fb412cd"
+    },
+    "consumerPolicyReceiptRoot": "sha256:ea9d702e19360f7ff8b4677ac100afa9f66bf71272b637353b1da3ece1dab094",
+    "persistenceScanRoot": "sha256:241844779fa625639f93053e9ea3cd3c80fc7ae3c7f17fc43b14c5c773cfe854"
+  },
+  "authorizationRoot": "sha256:9699ddebc091d6b01878fde44ce4b2d20e5038fa0abd6ba73d5f17ca50f92b98",
+  "lineage": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-v4-runtime-resume-lineage/v1",
+    "status": "qualified",
+    "authorizationRoot": "sha256:9699ddebc091d6b01878fde44ce4b2d20e5038fa0abd6ba73d5f17ca50f92b98",
+    "source": {
+      "sha": "b109471555d665c04b793a0e3276ac9b86e2d592",
+      "treeSha": "2d757d3b71bd1437a1543db039c0f26b07b476cc"
+    },
+    "consumerPolicyReceiptRoot": "sha256:ea9d702e19360f7ff8b4677ac100afa9f66bf71272b637353b1da3ece1dab094",
+    "attempts": {
+      "build": {
+        "id": "github-run:32640618744:attempt:1",
+        "runtimeSha": "569d3e30cd65fee45df98129222df2b472612ccb"
+      },
+      "resume": {
+        "id": "github-run:32642149318:attempt:1",
+        "runtimeSha": "4974b344ceae325d8964df0e4782ffe8cc2a407d"
+      }
+    },
+    "floatingRefMovement": {
+      "before": {
+        "ref": "v4-alpha",
+        "sha": "569d3e30cd65fee45df98129222df2b472612ccb"
+      },
+      "after": {
+        "ref": "v4-alpha",
+        "sha": "34c6e96731827f45c75c156bd9a93cd6a439da0c"
+      }
+    },
+    "continuation": {
+      "mechanism": "new-governed-attempt",
+      "rerunFailedJobs": false,
+      "resumePlanRoot": "sha256:7d0a317b3feaec0cc7a0b73eca0dd09cf1386e3c2db7deba59f6074153494f97"
+    },
+    "stageCapsules": {
+      "requiredPlatforms": [
+        "linux-x64",
+        "macos",
+        "windows-x64"
+      ],
+      "reused": [
+        {
+          "platform": "linux-x64",
+          "capsuleRoot": "sha256:47adefe63eb3c7c3b5b2ac37a9a6315bda15ac256fc89e07bc47e6d0f0177c4e",
+          "identityRoot": "sha256:0cd247e2fbc2de2cabf89d23323214b839938e3a0c1da03edc92358eb27b8f71",
+          "artifactDigest": "sha256:0b28b11ed052e2e9ab2e1b25039c19775a23f2cb98de4dbc777b9610e30fb9e7"
+        },
+        {
+          "platform": "macos",
+          "capsuleRoot": "sha256:a158802e57a5dd87280111ae850431d10b05ab3f58d6048165f720e695e6a838",
+          "identityRoot": "sha256:d0e36abeacbccfed2fc5706c1e732435901d5e38d4ab7f7a115838e0570eb7a7",
+          "artifactDigest": "sha256:8cb4c6cf3ebfba35e8c66167620f24039b89c42160b2dd8df903476dd0825491"
+        },
+        {
+          "platform": "windows-x64",
+          "capsuleRoot": "sha256:a1e20ef381f90649e5e97f2a6895c44d964a2a42ccef747884168edf3da52228",
+          "identityRoot": "sha256:a01d061e553842237917deb2dabed374d669f366133c4320056f48454cdc4f27",
+          "artifactDigest": "sha256:7aff40f36ea2a63703870fd7802d693a270a226702a0392bf097d87d3d565834"
+        }
+      ],
+      "rebuildPlatforms": []
+    },
+    "finalPublicReadbackRoot": "sha256:1a9a88512e64b665339ff926e4fae5210e378577fb1410373740807a1c4e1fb2"
+  },
+  "lineageRoot": "sha256:c7d92b6a173f1ec02f42fec019ed892373243a78e0970202e8b207d675367fb5"
+}
