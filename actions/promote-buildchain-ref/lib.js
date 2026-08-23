@@ -2223,7 +2223,7 @@ async function beginTransactionFinalization(result, actor, runId) {
   return persistTransactionResult(result, transaction);
 }
 
-async function completeTransactionFinalization(result, actor, runId) {
+async function completeTransactionFinalization(result, actor, runId, persist = true) {
   if (!result?.transaction) {
     return result;
   }
@@ -2237,7 +2237,7 @@ async function completeTransactionFinalization(result, actor, runId) {
       failure: "",
     },
     );
-    return persistTransactionResult(result, cleared);
+    return persist ? persistTransactionResult(result, cleared) : { ...result, transaction: cleared };
   }
   const current =
     result.transaction.state === "published"
@@ -2250,7 +2250,7 @@ async function completeTransactionFinalization(result, actor, runId) {
     actor,
     runId,
   });
-  return persistTransactionResult(result, transaction);
+  return persist ? persistTransactionResult(result, transaction) : { ...result, transaction };
 }
 
 async function getCommitInfo(octokit, owner, repo, sha) {

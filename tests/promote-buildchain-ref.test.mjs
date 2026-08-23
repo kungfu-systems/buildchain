@@ -3271,7 +3271,7 @@ exit 64
 `,
   );
 
-  const { octokit, refs, commits, trees } = createGitMock({
+  const { octokit, refs, blobs, commits, trees } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", SHA],
       ["tags/v1.0.0-alpha.0", OTHER_SHA],
@@ -3313,11 +3313,11 @@ exit 64
     assert.ok(stateSha);
     const stateCommit = commits.get(stateSha);
     assert.ok(stateCommit);
-    assert.equal(
+    assert.deepEqual([JSON.parse(Buffer.from(blobs.get((trees.get(stateCommit.tree.sha) || []).find((entry) => entry.path === "state.json").sha).content, "base64")).state,
       (trees.get(stateCommit.tree.sha) || []).some((entry) =>
         entry.path === "release-passport/buildchain.release.json"
       ),
-      false,
+    ], ["finalizing", false],
     );
   } finally {
     for (const [key, value] of Object.entries(previousEnv)) {
