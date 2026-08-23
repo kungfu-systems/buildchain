@@ -996,7 +996,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     assert.match(advanced, new RegExp(`${input}:`));
     assert.match(publicWorkflow, new RegExp(`${input}:`));
   }
-  assert.match(advanced, /node \.buildchain\/runtime\/scripts\/resume-from-candidate-run\.mjs/);
+  assert.match(advanced, /Preflight PR[^]*pnpm@11[^]*resume-from-candidate-run/);
   assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(
     advanced,

@@ -950,7 +950,7 @@ jobs:
         id: release-candidate
         shell: bash
         run: |
-          set -euo pipefail
+          set -euo pipefail; corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
           if [ -n "${BUILDCHAIN_RESUME_CANDIDATE_RUN_ID}" ]; then
             if [ "${BUILDCHAIN_RESUME_RUNTIME_SHA}" != "${BUILDCHAIN_CURRENT_RUNTIME_SHA}" ]; then
               echo "::error::resume-buildchain-runtime-sha must equal the checked-out Buildchain runtime ${BUILDCHAIN_CURRENT_RUNTIME_SHA}"
