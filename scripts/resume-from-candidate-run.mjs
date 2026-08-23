@@ -4,9 +4,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
+import { compareSemver } from "./publication-registry-hydrate.mjs";
 import { normalizeAnchorProvenance, normalizeCandidateRun, recoverCandidateProvenance } from "./release-candidate-anchor-provenance.mjs";
 export { resolveAnchorRecoveryRequest } from "./release-candidate-anchor-provenance.mjs";
 import {
@@ -111,15 +112,17 @@ function readOnlyJson(files, label) {
   return JSON.parse(fs.readFileSync(files[0].absolutePath, "utf8"));
 }
 
-function trackedRuntimePersistenceScan() {
+export function trackedRuntimePersistenceScan({
+  runtimeRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
+} = {}) {
   const paths = execFileSync(
     "git",
-    ["ls-files", ".github/workflows", ".github/actions", ".buildchain"],
+    ["-C", runtimeRoot, "ls-files", ".github/workflows", ".github/actions", ".buildchain"],
     { encoding: "utf8" },
   )
     .split(/\r?\n/)
     .filter((entry) => /\.(?:json|toml|ya?ml)$/u.test(entry));
-  return scanV4RuntimeSelectorPersistence({ root: process.cwd(), paths });
+  return scanV4RuntimeSelectorPersistence({ root: runtimeRoot, paths });
 }
 
 export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads }) {
@@ -201,23 +204,36 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
 export function validateV4RuntimeResumePublicReadback({
   targetRef,
   targetSha,
+  targetVersion,
   alphaSha,
   exactTagSha,
   tagLineage,
+  runtimeLineage,
+  floatingTargetLineage,
   runtimeSha,
   version,
   transaction,
   main,
   npm,
 }) {
+  const channelVersion = npm["dist-tags"]?.alpha;
+  let channelDidNotRegress = false;
+  try {
+    channelDidNotRegress = compareSemver(channelVersion, version) >= 0;
+  } catch { channelDidNotRegress = false; }
   if (
     transaction?.target_ref !== targetRef ||
     transaction?.version !== version ||
     exactTagSha !== transaction?.source_sha ||
     !["ahead", "identical"].includes(tagLineage?.status) ||
-    alphaSha !== runtimeSha ||
+    !["ahead", "identical"].includes(runtimeLineage?.status) ||
+    !["ahead", "identical"].includes(floatingTargetLineage?.status) ||
+    !alphaSha ||
     !targetSha ||
-    npm["dist-tags"]?.alpha !== version ||
+    !runtimeSha ||
+    channelVersion !== targetVersion ||
+    !channelDidNotRegress ||
+    !npm.versions?.[channelVersion]?.dist?.integrity ||
     npm.versions?.[version]?.dist?.integrity !== main.digest
   ) {
     throw new Error(
@@ -236,21 +252,12 @@ export async function readPublicResumeState({
   apiUrl,
   fetchImpl,
 }) {
-  const readRef = async (ref) =>
-    (await githubJson({
-      apiUrl,
-      token,
-      fetchImpl,
-      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/${ref}`,
-    })).object?.sha || "";
+  const readRef = async (ref) => (await githubJson({ apiUrl, token, fetchImpl,
+    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/${ref}` })).object?.sha || "";
   const main = transaction?.artifacts?.find((entry) => entry.kind === "npm" && entry.required !== false);
-  if (!main || main.ref !== version || !main.digest) {
-    throw new Error(
-      "cross-runtime recovery requires exact durable npm publication evidence",
-    );
-  }
-  const packageUrl =
-    `https://registry.npmjs.org/${encodeURIComponent(main.name)}`;
+  if (!main || main.ref !== version || !main.digest)
+    throw new Error("cross-runtime recovery requires exact durable npm publication evidence");
+  const packageUrl = `https://registry.npmjs.org/${encodeURIComponent(main.name)}`;
   const exactTag = transaction.exact_tag || `v${version}`;
   const [targetSha, alphaSha, exactTagSha, npmResponse] = await Promise.all([
     readRef(`heads/${targetRef}`),
@@ -262,24 +269,18 @@ export async function readPublicResumeState({
     throw new Error(`npm public readback failed with HTTP ${npmResponse.status}`);
   }
   const npm = await npmResponse.json();
-  const tagLineage = await githubJson({
-    apiUrl,
-    token,
-    fetchImpl,
-    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${exactTagSha}...${targetSha}`,
-  });
-  validateV4RuntimeResumePublicReadback({
-    targetRef,
-    targetSha,
-    alphaSha,
-    exactTagSha,
-    tagLineage,
-    runtimeSha,
-    version,
-    transaction,
-    main,
-    npm,
-  });
+  const [tagLineage, runtimeLineage, floatingTargetLineage, targetPackageFile] = await Promise.all([
+    githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${exactTagSha}...${targetSha}` }),
+    githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${runtimeSha}...${alphaSha}` }),
+    githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${alphaSha}...${targetSha}` }),
+    githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/contents/package.json?ref=${encodeURIComponent(targetSha)}` }),
+  ]);
+  if (targetPackageFile?.type !== "file" || targetPackageFile.encoding !== "base64" || !targetPackageFile.content)
+    throw new Error("cross-runtime recovery requires protected target version state");
+  const targetVersion = JSON.parse(Buffer.from(String(targetPackageFile.content).replace(/\s/g, ""), "base64").toString("utf8")).version;
+  validateV4RuntimeResumePublicReadback({ targetRef, targetSha, targetVersion, alphaSha,
+    exactTagSha, tagLineage, runtimeLineage, floatingTargetLineage, runtimeSha,
+    version, transaction, main, npm });
   const body = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-v4-runtime-resume-public-readback/v1",
@@ -296,10 +297,15 @@ export async function readPublicResumeState({
       version,
       distTag: "alpha",
       integrity: npm.versions[version].dist.integrity,
+      targetVersion, distTagVersion: npm["dist-tags"].alpha,
+      distTagIntegrity: npm.versions[npm["dist-tags"].alpha].dist.integrity,
     },
   };
   return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
 }
+
+export const resolveV4RuntimeResumePublicRuntimeSha = (material) =>
+  material?.buildAttempt?.runtimeSha || "";
 
 function prepareRuntimeResumeEvidence({
   repoInfo,
@@ -312,15 +318,13 @@ function prepareRuntimeResumeEvidence({
   recovery,
   outputDir,
 }) {
-  const authorizationPath = path.resolve(
-    ".buildchain/release-candidate/v4-runtime-authorization.json",
-  );
-  if (!fs.existsSync(authorizationPath)) {
-    throw new Error(
-      "cross-runtime recovery requires a fresh runtime authorization receipt",
-    );
-  }
-  const delegated = readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization");
+  const authorizationPath = path.resolve(".buildchain/release-candidate/v4-runtime-authorization.json");
+  const delegatedRaw = env("BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON").trim();
+  const delegatedRoot = env("BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT").trim();
+  const authorizationFileExists = fs.existsSync(authorizationPath);
+  if (!authorizationFileExists && (!delegatedRaw || !delegatedRoot)) throw new Error("cross-runtime recovery requires a fresh runtime authorization receipt");
+  const delegated = authorizationFileExists ? readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization") : JSON.parse(delegatedRaw);
+  if (!authorizationFileExists && delegated.receiptRoot !== delegatedRoot) throw new Error("fresh recovery runtime authorization handoff root mismatch");
   const delegatedVerification = verifyV4RuntimeAuthorizationReceipt({
     receipt: delegated.receipt,
     receiptRoot: delegated.receiptRoot,
@@ -437,7 +441,7 @@ export async function finalizeRuntimeResumeEvidence({
   const readback = await readPublicResumeState({
     repoInfo,
     targetRef,
-    runtimeSha: material.runtimeSha,
+    runtimeSha: resolveV4RuntimeResumePublicRuntimeSha(material),
     version,
     transaction,
     token,
@@ -456,7 +460,7 @@ export async function finalizeRuntimeResumeEvidence({
     resumePlanRoot: material.resumePlanRoot,
     finalPublicReadbackRoot: readback.root,
     floatingRefBefore: material.floatingRefBefore,
-    floatingRefAfter: { ref: "v4-alpha", sha: material.runtimeSha },
+    floatingRefAfter: { ref: "v4-alpha", sha: readback.refs.floating.sha },
   });
   const evidence = {
     authorization: material.authorization,
@@ -810,7 +814,7 @@ async function resolveTargetAdvance({ observedTargetSha, targetSha, transactionI
   return { status: comparison.status, mergeIsAncestor: ["ahead", "identical"].includes(comparison.status) };
 }
 
-async function resolveRecoveryTransaction({
+export async function resolveRecoveryTransaction({
   repoInfo,
   apiUrl,
   token,
@@ -818,22 +822,21 @@ async function resolveRecoveryTransaction({
   transactionId,
   publicationVersion,
 }) {
-  const byId = await readExistingTransactionById({
-    repoInfo,
-    apiUrl,
-    token,
-    fetchImpl,
-    transactionId,
-  });
-  const version = byId?.version || publicationVersion;
-  const transaction = byId || await readExistingTransaction({
-    repoInfo,
-    apiUrl,
-    token,
-    fetchImpl,
-    version,
-  });
-  return { version, transaction };
+  let transaction = publicationVersion
+    ? await readExistingTransaction({
+        repoInfo,
+        apiUrl,
+        token,
+        fetchImpl,
+        version: publicationVersion,
+      })
+    : undefined;
+  if (!transaction) {
+    transaction = await readExistingTransactionById({
+      repoInfo, apiUrl, token, fetchImpl, transactionId,
+    });
+  }
+  return { version: transaction?.version || publicationVersion, transaction };
 }
 
 function resolveRecoveredStageCapsules({

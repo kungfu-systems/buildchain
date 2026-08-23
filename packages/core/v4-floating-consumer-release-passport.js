@@ -4,9 +4,7 @@ import {
   v4FloatingConsumerDocumentRoot,
   verifyV4FloatingConsumerPolicyCertification,
 } from "./v4-floating-consumer-evidence.js";
-
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
-
 export function isV4PromotionRouting(value = undefined) {
   return [
     value?.router?.ref,
@@ -14,7 +12,6 @@ export function isV4PromotionRouting(value = undefined) {
     value?.runtime?.requestedRef,
   ].some((ref) => /^v4(?:-alpha)?$/u.test(String(ref || "")));
 }
-
 function resolveInside(root, relative, label) {
   const resolvedRoot = path.resolve(root);
   const file = path.resolve(resolvedRoot, relative);
@@ -23,7 +20,6 @@ function resolveInside(root, relative, label) {
   }
   return file;
 }
-
 function resolveCallerLock(root, relative, label) {
   const file = resolveInside(root, relative, `${label} contract lock`);
   if (!fs.existsSync(file)) {
@@ -76,27 +72,31 @@ function normalizeCertification(value, expected) {
   }
   return { certificationRoot: verification.certificationRoot, certification };
 }
-
 export function resolveV4ConsumerPolicyCertificationIdentity({
   release = {},
   routing = {},
   runtimeResume = undefined,
   sourceSha = "",
 } = {}) {
-  const builtSourceSha =
-    release?.builtSourceSha || release?.built_source_sha || "";
+  const certification =
+    release?.certification?.certification || release?.certification;
+  const certifiedSourceSha = certification?.caller?.sourceSha || "";
+  const treeEquivalentSources = [
+    release?.builtSourceSha || release?.built_source_sha,
+    release?.promotionChannelSha || release?.promotion_channel_sha,
+  ];
+  const buildSha = runtimeResume?.lineage?.attempts?.build?.runtimeSha;
+  const certifiedSha = certification?.invocation?.resolvedRuntimeSha || "";
   return {
     sourceSha:
-      release?.treeEquivalent === true && builtSourceSha
-        ? builtSourceSha
+      certifiedSourceSha === sourceSha ||
+      (release?.treeEquivalent === true &&
+        treeEquivalentSources.includes(certifiedSourceSha))
+        ? certifiedSourceSha
         : sourceSha,
-    runtimeSha:
-      runtimeResume?.lineage?.attempts?.build?.runtimeSha ||
-      routing?.runtime?.resolvedSha ||
-      "",
+    runtimeSha: buildSha || certifiedSha || routing?.runtime?.resolvedSha || "",
   };
 }
-
 export function requireV4ConsumerPolicyCertification({
   value,
   repository,
@@ -134,7 +134,7 @@ export function releasePassportCertificationVerificationOptions({
 }) {
   const authority = evidence?.certification?.authority || {};
   const identity = resolveV4ConsumerPolicyCertificationIdentity({
-    release: passport?.release,
+    release: { ...passport?.release, certification: evidence?.certification },
     routing,
     runtimeResume: passport?.v4RuntimeResume,
     sourceSha: passport?.release?.sourceSha || "",

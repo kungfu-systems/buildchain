@@ -2197,8 +2197,13 @@ async function collectAndPersistReleasePassport({
     evidencePath: result.evidencePath,
     extraFiles: releasePassportArtifactFiles(collected.outputDir),
   });
+  const persistedTransaction = writeReleaseTransaction(
+    result.statePath,
+    result.transaction,
+  );
   return {
     ...result,
+    transaction: persistedTransaction,
     publicReleaseTag,
     durable: finalDurable || durable,
     releasePassport: {
@@ -2223,7 +2228,7 @@ async function beginTransactionFinalization(result, actor, runId) {
   return persistTransactionResult(result, transaction);
 }
 
-async function completeTransactionFinalization(result, actor, runId) {
+async function completeTransactionFinalization(result, actor, runId, persist = true) {
   if (!result?.transaction) {
     return result;
   }
@@ -2237,7 +2242,7 @@ async function completeTransactionFinalization(result, actor, runId) {
       failure: "",
     },
     );
-    return persistTransactionResult(result, cleared);
+    return persist ? persistTransactionResult(result, cleared) : { ...result, transaction: cleared };
   }
   const current =
     result.transaction.state === "published"
@@ -2250,7 +2255,7 @@ async function completeTransactionFinalization(result, actor, runId) {
     actor,
     runId,
   });
-  return persistTransactionResult(result, transaction);
+  return persist ? persistTransactionResult(result, transaction) : { ...result, transaction };
 }
 
 async function getCommitInfo(octokit, owner, repo, sha) {
@@ -2423,6 +2428,8 @@ async function assertProviderEnforcedChannelTransaction({
         owner,
         repo,
         ref: pullRequestHeadSha,
+        check_name: resolvedStatusCheck,
+        filter: "latest",
         per_page: 100,
       })
     : { data: { check_runs: [] } };
@@ -2953,6 +2960,7 @@ async function resumableAlphaTransactionState({
   const candidates = refs
     .map((ref) => parseAlphaPrereleaseRef(ref.ref, releasePrefix))
     .filter((ref) => ref?.source === "release-state")
+    .filter((ref) => !expectedVersion || stripTagPrefix(ref.tag) === expectedVersion)
     .sort((a, b) => b.patch - a.patch || b.prerelease - a.prerelease);
   for (const candidate of candidates) {
     const version = stripTagPrefix(candidate.tag);
@@ -4851,8 +4859,7 @@ async function promoteBuildchainRefs({
       sha: branchSha,
     });
   }
-  const promotionGeneratedAt = new Date().toISOString();
-  let releaseCandidateValidation;
+  const promotionGeneratedAt = new Date().toISOString(); let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
     const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
     releaseCandidateValidation = validatePromotionReleaseCandidate({

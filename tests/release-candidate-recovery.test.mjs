@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -22,6 +23,9 @@ import {
   createRecoveredPublicationCandidate,
   normalizePlatformManifests,
   resolveAnchorRecoveryRequest,
+  resolveRecoveryTransaction,
+  resolveV4RuntimeResumePublicRuntimeSha,
+  trackedRuntimePersistenceScan,
   validateV4RuntimeResumePublicReadback,
   verifyReleaseCandidateStageCapsules,
 } from "../scripts/resume-from-candidate-run.mjs";
@@ -33,6 +37,79 @@ const TREE = "3".repeat(40);
 const RUNTIME_SHA = "4".repeat(40);
 const PAYLOAD_DIGEST = `sha256:${"5".repeat(64)}`;
 const ARCHIVE_DIGEST = `sha256:${"6".repeat(64)}`;
+
+test("recovery resolves an exact publication version without scanning historical state refs", async () => {
+  const transaction = {
+    id: "transaction-exact",
+    version: "4.0.1-alpha.18",
+  };
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    assert.doesNotMatch(url, /matching-refs/u);
+    return new Response(JSON.stringify({
+      type: "file",
+      encoding: "base64",
+      content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
+    }), { status: 200 });
+  };
+
+  const result = await resolveRecoveryTransaction({
+    repoInfo: {
+      owner: "kungfu-systems",
+      repo: "buildchain",
+    },
+    apiUrl: "https://api.github.test",
+    token: "test-token",
+    fetchImpl,
+    transactionId: transaction.id,
+    publicationVersion: transaction.version,
+  });
+
+  assert.deepEqual(result, { version: transaction.version, transaction });
+  assert.equal(calls.length, 1);
+  assert.match(calls[0], /contents\/state\.json\?ref=buildchain%2Frelease-state%2F4-0-1-alpha-18$/u);
+});
+
+test("recovery scans historical state refs only when the exact publication version is absent", async () => {
+  const transaction = {
+    id: "transaction-fallback",
+    version: "4.0.1-alpha.18",
+  };
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.includes("contents/state.json?ref=buildchain%2Frelease-state%2F4-0-1-alpha-19")) {
+      return new Response(JSON.stringify({ message: "Not Found" }), { status: 404 });
+    }
+    if (url.includes("git/matching-refs/heads/buildchain/release-state/")) {
+      return new Response(JSON.stringify([{
+        ref: "refs/heads/buildchain/release-state/4-0-1-alpha-18",
+      }]), { status: 200 });
+    }
+    return new Response(JSON.stringify({
+      type: "file",
+      encoding: "base64",
+      content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
+    }), { status: 200 });
+  };
+
+  const result = await resolveRecoveryTransaction({
+    repoInfo: {
+      owner: "kungfu-systems",
+      repo: "buildchain",
+    },
+    apiUrl: "https://api.github.test",
+    token: "test-token",
+    fetchImpl,
+    transactionId: transaction.id,
+    publicationVersion: "4.0.1-alpha.19",
+  });
+
+  assert.deepEqual(result, { version: transaction.version, transaction });
+  assert.equal(calls.length, 3);
+  assert.match(calls[1], /git\/matching-refs\/heads\/buildchain\/release-state\/$/u);
+});
 
 function fixture(overrides = {}) {
   const platformFiles = [
@@ -156,6 +233,8 @@ function durableTransaction(input, state = "complete") {
     repository: input.candidateRepository,
     target_ref: input.targetRef,
     source_sha: input.targetSha,
+    release_sha: input.targetSha,
+    release_material_sha: input.targetSha,
     version: input.passport.target.version,
     channel: input.passport.target.channel,
     state,
@@ -298,11 +377,38 @@ test("cross-runtime recovery reuses only provider-bound original Stage Capsules"
   }
 });
 
-test("resume public readback keeps the target branch distinct from the floating runtime", () => {
+test("runtime persistence scan is rooted at the checked-out recovery runtime", () => {
+  const workspace = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-runtime-persistence-scan-"),
+  );
+  try {
+    const workflowPath = path.join(workspace, ".github/workflows/recovery.yml");
+    fs.mkdirSync(path.dirname(workflowPath), { recursive: true });
+    fs.writeFileSync(workflowPath, "name: Recovery\n");
+    for (const args of [
+      ["init", "--quiet"],
+      ["add", ".github/workflows/recovery.yml"],
+    ]) {
+      execFileSync("git", args, { cwd: workspace });
+    }
+
+    const scan = trackedRuntimePersistenceScan({ runtimeRoot: workspace });
+    assert.equal(scan.status, "passed");
+    assert.deepEqual(
+      scan.files.map((file) => file.path),
+      [".github/workflows/recovery.yml"],
+    );
+  } finally {
+    fs.rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
+test("resume public readback preserves exact history while the protected alpha channel advances", () => {
   const version = "4.0.1-alpha.6";
   const targetRef = "alpha/v4/v4.0";
   const exactTagSha = "6".repeat(40);
-  const targetSha = "7".repeat(40);
+  const targetSha = "9".repeat(40);
+  const alphaSha = "7".repeat(40);
   const runtimeSha = "8".repeat(40);
   const digest = "sha512-public";
   const transaction = {
@@ -312,38 +418,38 @@ test("resume public readback keeps the target branch distinct from the floating 
   };
   const main = { digest };
   const npm = {
-    "dist-tags": { alpha: version },
-    versions: { [version]: { dist: { integrity: digest } } },
+    "dist-tags": { alpha: "4.0.1-alpha.8" },
+    versions: {
+      [version]: { dist: { integrity: digest } },
+      "4.0.1-alpha.8": { dist: { integrity: "sha512-current" } },
+    },
   };
-  assert.doesNotThrow(() =>
-    validateV4RuntimeResumePublicReadback({
-      targetRef,
-      targetSha,
-      alphaSha: runtimeSha,
-      exactTagSha,
-      tagLineage: { status: "ahead" },
-      runtimeSha,
-      version,
-      transaction,
-      main,
-      npm,
-    }),
-  );
+  const valid = { targetRef, targetSha, targetVersion: "4.0.1-alpha.8", alphaSha, exactTagSha,
+    tagLineage: { status: "ahead" }, runtimeLineage: { status: "ahead" }, floatingTargetLineage: { status: "ahead" }, runtimeSha, version, transaction, main, npm };
+  assert.doesNotThrow(() => validateV4RuntimeResumePublicReadback(valid));
   assert.throws(
-    () =>
-      validateV4RuntimeResumePublicReadback({
-        targetRef,
-        targetSha,
-        alphaSha: runtimeSha,
-        exactTagSha,
-        tagLineage: { status: "diverged" },
-        runtimeSha,
-        version,
-        transaction,
-        main,
-        npm,
-      }),
+    () => validateV4RuntimeResumePublicReadback({ ...valid, tagLineage: { status: "diverged" } }),
     /does not match durable publication/,
+  );
+  const regressed = structuredClone(npm);
+  regressed["dist-tags"].alpha = "4.0.1-alpha.5";
+  regressed.versions["4.0.1-alpha.5"] = { dist: { integrity: "sha512-regressed" } };
+  assert.throws(
+    () => validateV4RuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }),
+    /does not match durable publication/,
+  );
+});
+
+test("resume public readback follows runtime A while runtime B remains transient", () => {
+  const buildRuntimeSha = "8".repeat(40);
+  const recoveryRuntimeSha = "9".repeat(40);
+  assert.equal(
+    resolveV4RuntimeResumePublicRuntimeSha({
+      runtimeSha: recoveryRuntimeSha,
+      buildAttempt: { runtimeSha: buildRuntimeSha },
+      floatingRefBefore: { ref: "v4-alpha", sha: buildRuntimeSha },
+    }),
+    buildRuntimeSha,
   );
 });
 
@@ -608,9 +714,37 @@ test("recovery rejects transaction identity and candidate-root conflicts", () =>
     expectedTransactionId: "tx-expected",
     existingTransaction: { id: "tx-other", state: "finalizing" },
   }));
-  expectCode("transaction-identity-conflict", fixture({
-    existingTransaction: { id: "tx-expected", state: "publishing", candidateRoot: `sha256:${"9".repeat(64)}` },
-  }));
+  const candidateConflict = fixture();
+  candidateConflict.existingTransaction = {
+    ...durableTransaction(candidateConflict, "publishing"),
+    candidateRoot: `sha256:${"9".repeat(64)}`,
+  };
+  expectCode("transaction-identity-conflict", candidateConflict);
+});
+
+test("recovery accepts only exact durable release material when it differs from transaction source", () => {
+  const input = fixture();
+  const transactionSourceSha = "9".repeat(40);
+  const transactionId = releaseTransactionId({
+    repository: input.candidateRepository,
+    version: input.passport.target.version,
+    sourceSha: transactionSourceSha,
+    targetRef: input.targetRef,
+  });
+  input.expectedTransactionId = transactionId;
+  input.existingTransaction = {
+    ...durableTransaction(input),
+    id: transactionId,
+    source_sha: transactionSourceSha,
+    release_sha: input.targetSha,
+    release_material_sha: input.targetSha,
+  };
+  const receipt = verifyReleaseCandidateRecovery(input).receipt;
+  assert.equal(receipt.transaction.identity, transactionId);
+  assert.equal(receipt.target.sha, input.targetSha);
+
+  input.targetSha = "a".repeat(40);
+  expectCode("transaction-identity-conflict", input);
 });
 
 test("recovery is deterministic and idempotent for a complete transaction", () => {
@@ -643,6 +777,15 @@ test("recovery requires successful trusted PR workflow and permission evidence",
   const untrusted = fixture();
   untrusted.pullRequest.authorAssociation = "NONE";
   expectCode("permission-evidence-insufficient", untrusted);
+});
+
+test("recovery accepts an exact tree-equivalent protected merge when the PR merge SHA is ephemeral", () => {
+  const input = fixture({ ancestry: { mergeIsAncestor: false, status: "diverged" } });
+  const receipt = verifyReleaseCandidateRecovery(input).receipt;
+  assert.equal(receipt.target.tree, TREE);
+
+  input.targetTree = "a".repeat(40);
+  expectCode("ancestry-invalid", input);
 });
 
 test("anchored rematerialization inherits only the exact superseded PR provenance", () => {
@@ -867,7 +1010,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     assert.match(advanced, new RegExp(`${input}:`));
     assert.match(publicWorkflow, new RegExp(`${input}:`));
   }
-  assert.match(advanced, /node \.buildchain\/runtime\/scripts\/resume-from-candidate-run\.mjs/);
+  assert.match(advanced, /Preflight PR[^]*pnpm@11[^]*resume-from-candidate-run/);
   assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(
     advanced,
@@ -905,10 +1048,10 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     promoteLib,
     /generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs[\s\S]*?collectGitHubReleasePassport\(/,
   );
-  assert.match(advanced, /if \[ -n "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" \]; then/);
+  assert.match(advanced, /if \[ -f "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" \]; then/);
   assert.match(
     advanced,
-    /cp "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" "\$\{RELEASE_PASSPORT_OUTPUT_DIR\}\/"/,
+    /cp "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" "\$\{RELEASE_PASSPORT_OUTPUT_DIR\}\//,
   );
   assert.match(
     refPromotion,

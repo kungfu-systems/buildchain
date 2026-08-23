@@ -16,7 +16,11 @@ import {
   githubReleaseAssetsTargetRoot,
 } from "../../packages/core/release-tail-provider-adapters.js";
 import { ensureGitHubRelease } from "../../scripts/ensure-github-release.mjs";
-import { reuseCompleteGitHubReleaseEvidence } from "./reuse-complete-release.js";
+import {
+  reconcileImmutableReleaseAssets,
+  reuseCompleteGitHubReleaseEvidence,
+  uniqueReleaseAssets,
+} from "./reuse-complete-release.js";
 
 function assertFile(pathname, label) {
   if (
@@ -50,16 +54,15 @@ export function collectGitHubReleaseEvidenceAssets({
   const assets = [publishEvidencePath];
   for (const entry of fs.readdirSync(releasePassportOutputDir).sort()) {
     const candidate = path.join(releasePassportOutputDir, entry);
-    if (fs.statSync(candidate).isFile()) assets.push(candidate);
+    if (!fs.statSync(candidate).isFile()) continue;
+    const duplicate = assets.find((assetPath) => path.basename(assetPath) === entry);
+    if (!duplicate) assets.push(candidate);
+    else if (!fs.readFileSync(duplicate).equals(fs.readFileSync(candidate))) {
+      throw new Error(`github-release=true found conflicting duplicate evidence asset basename '${entry}'`);
+    }
   }
-  if (assets.length < 2) {
-    throw new Error(
-      `github-release=true found no release passport assets under ${releasePassportOutputDir}`,
-    );
-  }
-  const occupiedBasenames = new Set(
-    assets.map((assetPath) => path.basename(assetPath)),
-  );
+  if (assets.length < 2) throw new Error(`github-release=true found no release passport assets under ${releasePassportOutputDir}`);
+  const occupiedBasenames = new Set(assets.map((assetPath) => path.basename(assetPath)));
   for (const assetPath of additionalAssetPaths) {
     assertFile(assetPath, "a declared GitHub Release artifact");
     const basename = path.basename(assetPath);
@@ -206,78 +209,6 @@ export function createDeclarativeGitHubReleasePlan({
   };
 }
 
-function releaseAssetBytes(data) {
-  if (Buffer.isBuffer(data)) return data;
-  if (data instanceof ArrayBuffer) return Buffer.from(data);
-  if (ArrayBuffer.isView(data)) {
-    return Buffer.from(data.buffer, data.byteOffset, data.byteLength);
-  }
-  return Buffer.from(data || "");
-}
-
-async function existingReleaseAssetDigest({ octokit, owner, repo, asset }) {
-  const declared = String(asset.digest || "").match(/^sha256:([0-9a-f]{64})$/i);
-  if (declared) return declared[1].toLowerCase();
-  if (typeof octokit.rest.repos.getReleaseAsset !== "function") {
-    throw new Error(
-      `GitHub Release asset '${asset.name}' has no sha256 digest and cannot be read for immutable comparison`,
-    );
-  }
-  const response = await octokit.rest.repos.getReleaseAsset({
-    owner,
-    repo,
-    asset_id: asset.id,
-    headers: { accept: "application/octet-stream" },
-  });
-  return sha256(releaseAssetBytes(response.data));
-}
-
-async function uploadReleaseAssetImmutable({
-  octokit,
-  owner,
-  repo,
-  releaseId,
-  assetPath,
-}) {
-  const name = path.basename(assetPath);
-  const data = fs.readFileSync(assetPath);
-  const digest = sha256(data);
-  const existing = await octokit.rest.repos.listReleaseAssets({
-    owner,
-    repo,
-    release_id: releaseId,
-    per_page: 100,
-  });
-  const matches = (existing.data || []).filter((asset) => asset.name === name);
-  if (matches.length > 1) {
-    throw new Error(
-      `immutable GitHub Release asset collision: '${name}' exists more than once`,
-    );
-  }
-  if (matches.length === 1) {
-    const existingDigest = await existingReleaseAssetDigest({
-      octokit,
-      owner,
-      repo,
-      asset: matches[0],
-    });
-    if (existingDigest !== digest) {
-      throw new Error(
-        `immutable GitHub Release asset collision: '${name}' already exists with sha256:${existingDigest}, refusing sha256:${digest}`,
-      );
-    }
-    return { action: "preserved", name, digest: `sha256:${digest}` };
-  }
-  await octokit.rest.repos.uploadReleaseAsset({
-    owner,
-    repo,
-    release_id: releaseId,
-    name,
-    data,
-  });
-  return { action: "uploaded", name, digest: `sha256:${digest}` };
-}
-
 export function recoveryCompletedBeforeThisRun(receiptPath = "") {
   if (!receiptPath) return false;
   const receipt = JSON.parse(
@@ -304,6 +235,7 @@ export async function publishGitHubReleaseEvidence({
   releasePassportOutputDir = "",
   additionalAssetPaths = [],
   reuseExistingCompleteEvidence = false,
+  repairMissingCompleteEvidence = false,
   targetRef = "",
 } = {}) {
   if (!tag) {
@@ -338,20 +270,15 @@ export async function publishGitHubReleaseEvidence({
       channel,
       targetRef,
       additionalAssetPaths,
+      repairAssetPaths: repairMissingCompleteEvidence ? assets : [],
     });
   }
-  const assetResults = [];
-  for (const assetPath of assets) {
-    assetResults.push(
-      await uploadReleaseAssetImmutable({
-        octokit,
-        owner,
-        repo,
-        releaseId: release.release.id,
-        assetPath,
-      }),
-    );
-  }
+  const listed = await octokit.rest.repos.listReleaseAssets({ owner, repo, release_id: release.release.id, per_page: 100 });
+  const assetResults = await reconcileImmutableReleaseAssets({
+    octokit, owner, repo, releaseId: release.release.id,
+    remoteAssets: uniqueReleaseAssets(listed.data || []), assetPaths: assets,
+    uploadReleaseAsset: (request) => octokit.rest.repos.uploadReleaseAsset(request),
+  });
   return {
     action: release.action,
     url: release.release.html_url || "",

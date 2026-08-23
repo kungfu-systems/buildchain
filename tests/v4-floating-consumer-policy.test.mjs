@@ -552,6 +552,26 @@ test("final v4 Release Passport construction requires fresh external certificati
     v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
   });
   assert.equal(passport.v4ConsumerPolicy.certification.status, "certified");
+  const recoveredWithFreshRuntime = createReleasePassport({
+    ...input,
+    release: {
+      promotionRouting: {
+        ...promotionRouting,
+        runtime: { requestedRef: "v4", resolvedSha: ALPHA_SHA },
+      },
+    },
+    v4ConsumerPolicyCertification: certification,
+    v4ConsumerPolicyCertificationRoot: certification.certificationRoot,
+  });
+  assert.equal(
+    recoveredWithFreshRuntime.v4ConsumerPolicy.certification.invocation
+      .resolvedRuntimeSha,
+    STABLE_SHA,
+  );
+  assert.equal(
+    recoveredWithFreshRuntime.promotionRouting.runtime.resolvedSha,
+    ALPHA_SHA,
+  );
   const promotionSourceSha = "9".repeat(40);
   const treeEquivalent = createReleasePassport({
     ...input,
@@ -638,13 +658,15 @@ test("final v4 Release Passport construction requires fresh external certificati
   );
 });
 
-test("cross-runtime certification keeps candidate source and build runtime identity", () => {
+test("tree-equivalent finalization keeps transaction source and build runtime identity", () => {
   const identity = resolveV4ConsumerPolicyCertificationIdentity({
     release: {
+      certification: {
+        certification: { caller: { sourceSha: ALPHA_SHA } },
+      },
       builtSourceSha: SOURCE_SHA,
       treeEquivalent: true,
     },
-    routing: { runtime: { resolvedSha: ALPHA_SHA } },
     runtimeResume: {
       lineage: {
         attempts: {
@@ -653,10 +675,40 @@ test("cross-runtime certification keeps candidate source and build runtime ident
         },
       },
     },
-    sourceSha: "9".repeat(40),
+    sourceSha: ALPHA_SHA,
   });
   assert.deepEqual(identity, {
-    sourceSha: SOURCE_SHA,
+    sourceSha: ALPHA_SHA,
     runtimeSha: STABLE_SHA,
   });
+
+  const promotionChannelSha = "9".repeat(40);
+  assert.equal(
+    resolveV4ConsumerPolicyCertificationIdentity({
+      release: {
+        certification: {
+          certification: { caller: { sourceSha: promotionChannelSha } },
+        },
+        builtSourceSha: SOURCE_SHA,
+        promotionChannelSha,
+        treeEquivalent: true,
+      },
+      sourceSha: ALPHA_SHA,
+    }).sourceSha,
+    promotionChannelSha,
+  );
+  assert.equal(
+    resolveV4ConsumerPolicyCertificationIdentity({
+      release: {
+        certification: {
+          certification: { caller: { sourceSha: "7".repeat(40) } },
+        },
+        builtSourceSha: SOURCE_SHA,
+        promotionChannelSha,
+        treeEquivalent: true,
+      },
+      sourceSha: ALPHA_SHA,
+    }).sourceSha,
+    ALPHA_SHA,
+  );
 });

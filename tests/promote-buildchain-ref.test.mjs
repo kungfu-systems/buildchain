@@ -30,6 +30,7 @@ const {
   parseTags,
   persistDurableReleaseTransaction,
   promoteBuildchainRefs,
+  recordGitHubReleaseTransactionCompletion,
   restoreDurableReleaseTransaction,
   runPublishTransaction,
   resolveTagsForTarget,
@@ -665,7 +666,7 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
     ".buildchain/release-passport/buildchain.release.json": {
       release: { tag: "v1.0.0" },
     },
-    ".buildchain/release-passport/evidence.json": { passport: true },
+    ".buildchain/release-passport/evidence.json": { ok: true },
     "dist/paper.pdf": "paper bytes",
   });
 
@@ -679,7 +680,6 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
     [
       ".buildchain/release-evidence/v1.0.0/evidence.json",
       ".buildchain/release-passport/buildchain.release.json",
-      ".buildchain/release-passport/evidence.json",
       "dist/paper.pdf",
     ],
   );
@@ -711,6 +711,16 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
       additionalAssetPaths: [path.join(cwd, ".buildchain/release-passport/buildchain.release.json")],
     }),
     /duplicate asset basename 'buildchain\.release\.json'/,
+  );
+
+  fs.writeFileSync(path.join(cwd, ".buildchain/release-passport/evidence.json"), '{"passport":true}\n');
+  assert.throws(
+    () => collectGitHubReleaseEvidenceAssets({
+      publishEvidencePath: path.join(cwd, ".buildchain/release-evidence/v1.0.0/evidence.json"),
+      releasePassportPath: path.join(cwd, ".buildchain/release-passport/buildchain.release.json"),
+      releasePassportOutputDir: path.join(cwd, ".buildchain/release-passport"),
+    }),
+    /conflicting duplicate evidence asset basename 'evidence\.json'/,
   );
 });
 
@@ -969,6 +979,110 @@ test("complete candidate recovery reuses verified public evidence and preserves 
   assert.equal(result.action, "reused");
   assert.equal(result.passportVerified, true);
   assert.equal(result.uploadedAssetCount, 0);
+  assert.deepEqual(uploaded, []);
+});
+
+test("explicit complete recovery repairs a missing public Passport from the verified local evidence closure", async () => {
+  const cwd = makeTempWorkspace({
+    "release/buildchain.release.json": JSON.stringify({
+      release: {
+        tag: "v1.0.1-alpha.0",
+        publicTag: "v1.0.1-alpha.0",
+        channel: "alpha",
+        targetRef: "alpha/v1/v1.0",
+        releaseSha: SHA,
+      },
+      product: { repository: "kungfu-systems/buildchain" },
+    }),
+    "release/evidence.json": "published evidence",
+  });
+  const repairAssetPaths = [
+    path.join(cwd, "release/buildchain.release.json"),
+    path.join(cwd, "release/evidence.json"),
+  ];
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({ data: [] }),
+        uploadReleaseAsset: async ({ name, data }) =>
+          uploaded.push({ name, data: Buffer.from(data) }),
+      },
+    },
+  };
+
+  const result = await reuseCompleteGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    release: { id: 123, html_url: "https://github.test/release" },
+    tag: "v1.0.1-alpha.0",
+    target: SHA,
+    channel: "alpha",
+    targetRef: "alpha/v1/v1.0",
+    repairAssetPaths,
+    verifyPassport: async () => ({ ok: true, issues: [] }),
+  });
+
+  assert.equal(result.action, "repaired");
+  assert.equal(result.passportVerified, true);
+  assert.equal(result.uploadedAssetCount, 2);
+  assert.deepEqual(
+    uploaded.map(({ name }) => name),
+    ["buildchain.release.json", "evidence.json"],
+  );
+});
+
+test("complete recovery repair preflights every remote digest before uploading missing evidence", async () => {
+  const cwd = makeTempWorkspace({
+    "release/buildchain.release.json": JSON.stringify({
+      release: {
+        tag: "v1.0.1-alpha.0",
+        channel: "alpha",
+        targetRef: "alpha/v1/v1.0",
+        releaseSha: SHA,
+      },
+      product: { repository: "kungfu-systems/buildchain" },
+    }),
+    "release/evidence.json": "expected evidence",
+  });
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({
+          data: [
+            {
+              id: 9,
+              name: "evidence.json",
+              digest: `sha256:${"0".repeat(64)}`,
+            },
+          ],
+        }),
+        uploadReleaseAsset: async ({ name }) => uploaded.push(name),
+      },
+    },
+  };
+
+  await assert.rejects(
+    () =>
+      reuseCompleteGitHubReleaseEvidence({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        release: { id: 123 },
+        tag: "v1.0.1-alpha.0",
+        target: SHA,
+        channel: "alpha",
+        targetRef: "alpha/v1/v1.0",
+        repairAssetPaths: [
+          path.join(cwd, "release/buildchain.release.json"),
+          path.join(cwd, "release/evidence.json"),
+        ],
+        verifyPassport: async () => ({ ok: true, issues: [] }),
+      }),
+    /immutable GitHub Release evidence collision/,
+  );
   assert.deepEqual(uploaded, []);
 });
 
@@ -2949,7 +3063,23 @@ fs.writeFileSync(process.env.BUILDCHAIN_PUBLISH_EVIDENCE, JSON.stringify({
     path.join(cwd, result.publishTransaction.statePath),
     "utf8",
   ));
+  assert.equal(transaction.state, "complete");
   assert.equal(transaction.artifacts[0].ref, "v1.0.0-alpha.1");
+  const completion = await recordGitHubReleaseTransactionCompletion({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    cwd,
+    statePath: result.publishTransaction.statePath,
+    evidencePath: result.publishTransaction.evidencePath,
+    release: {
+      action: "created",
+      tag: "v1.0.0-alpha.1",
+      url: "https://github.com/kungfu-systems/buildchain/releases/tag/v1.0.0-alpha.1",
+      assetCount: 1,
+    },
+  });
+  assert.equal(completion.transaction.publication_state, "alpha-complete");
   const passport = JSON.parse(fs.readFileSync(
     path.join(cwd, result.publishTransaction.releasePassportPath),
     "utf8",
@@ -3271,7 +3401,7 @@ exit 64
 `,
   );
 
-  const { octokit, refs, commits, trees } = createGitMock({
+  const { octokit, refs, blobs, commits, trees } = createGitMock({
     refs: new Map([
       ["heads/release/v1/v1.0", SHA],
       ["tags/v1.0.0-alpha.0", OTHER_SHA],
@@ -3313,11 +3443,11 @@ exit 64
     assert.ok(stateSha);
     const stateCommit = commits.get(stateSha);
     assert.ok(stateCommit);
-    assert.equal(
+    assert.deepEqual([JSON.parse(Buffer.from(blobs.get((trees.get(stateCommit.tree.sha) || []).find((entry) => entry.path === "state.json").sha).content, "base64")).state,
       (trees.get(stateCommit.tree.sha) || []).some((entry) =>
         entry.path === "release-passport/buildchain.release.json"
       ),
-      false,
+    ], ["finalizing", false],
     );
   } finally {
     for (const [key, value] of Object.entries(previousEnv)) {

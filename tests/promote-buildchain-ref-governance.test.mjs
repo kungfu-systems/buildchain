@@ -191,6 +191,15 @@ test("governed promotion resumes its exact durable transaction after the target 
       version: "1.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "1.0.0-alpha.0" },
+      source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      diagnostics: {},
+    },
   });
   const { octokit, refs, commits } = createGitMock({
     refs: new Map([
@@ -284,6 +293,8 @@ test("governed promotion resumes its exact durable transaction after the target 
     publishTransactionOverride: true,
     expectedPublicationVersion: "1.0.0-alpha.0",
     releasePassport: false,
+    promoteOnlyReleaseCandidate: true,
+    releaseCandidateVersion: "1.0.0-alpha.0",
   };
   const result = await promoteBuildchainRefs(recovery);
 
@@ -298,6 +309,14 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(refs.get("tags/v1-alpha"), advancedSha);
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
   assert.equal(result.updates[0].action, "resumed-advanced-publication");
+  assert.equal(
+    result.updates.some(
+      (update) =>
+        update.action === "verified-release-candidate" &&
+        update.sha === SHA,
+    ),
+    true,
+  );
   assert.equal(result.updates.at(-1).action, "finalized-advanced-publication");
 
   const repeated = await promoteBuildchainRefs(recovery);
@@ -757,7 +776,7 @@ test("strict alpha promotion uses provider transaction evidence when protection 
   let protectionReadStatus = 403;
   let observedHeadSha = SHA;
   const pullRequestHeadSha = "b".repeat(40);
-  const checkedRefs = [];
+  const checkedQueries = [];
   const octokit = {
     rest: {
       repos: {
@@ -811,12 +830,19 @@ test("strict alpha promotion uses provider transaction evidence when protection 
         },
       },
       checks: {
-        listForRef: async ({ ref }) => {
-          checkedRefs.push(ref);
+        listForRef: async ({ ref, check_name: checkName, filter, per_page: perPage }) => {
+          checkedQueries.push({ ref, checkName, filter, perPage });
           assert.equal(ref, pullRequestHeadSha);
           return {
             data: {
-              check_runs: [{ name: "check", conclusion: "success", app: { id: 15368 } }],
+              total_count: checkName === "check" ? 1 : 226,
+              check_runs: checkName === "check"
+                ? [{ name: "check", conclusion: "success", app: { id: 15368 } }]
+                : Array.from({ length: 100 }, (_, index) => ({
+                    name: `decoy-${index}`,
+                    conclusion: "success",
+                    app: { id: 15368 },
+                  })),
             },
           };
         },
@@ -836,7 +862,10 @@ test("strict alpha promotion uses provider transaction evidence when protection 
     });
     assert.equal(resolvedStatusCheck, "check");
   }
-  assert.deepEqual(checkedRefs, [pullRequestHeadSha, pullRequestHeadSha]);
+  assert.deepEqual(checkedQueries, [
+    { ref: pullRequestHeadSha, checkName: "check", filter: "latest", perPage: 100 },
+    { ref: pullRequestHeadSha, checkName: "check", filter: "latest", perPage: 100 },
+  ]);
 
   observedHeadSha = OTHER_SHA;
   const recoveredStatusCheck = await assertProtectedChannel({ octokit, owner: "kungfu-systems", repo: "buildchain", sourceSha: SHA, expectedChannelSha: OTHER_SHA, targetRef: "alpha/v1/v1.0", requiredStatusCheck: "check" });

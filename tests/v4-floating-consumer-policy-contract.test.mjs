@@ -31,9 +31,21 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
     workflow,
     /path: \$\{\{ steps\.policy\.outputs\.v4-consumer-policy-receipt-path \}\}/u,
   );
+  assert.match(
+    workflow,
+    /path: \$\{\{ steps\.policy\.outputs\.v4-consumer-policy-receipt-path \}\}\n\s+include-hidden-files: true\n\s+if-no-files-found: error/u,
+  );
   assert.doesNotMatch(
     workflow,
     /path: \.buildchain\/evidence\/v4-adopter-delivery-policy-receipt\.json/u,
+  );
+  assert.match(
+    workflow,
+    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/v4-adopter-delivery-dogfood\.yml' \|\| '' \}\}/u,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /github\.event_name == 'workflow_dispatch'/u,
   );
 });
 

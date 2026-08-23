@@ -1120,7 +1120,7 @@ function normalizePromotionEvidence({
 }) {
   const routing = normalizePromotionRouting(release.promotionRouting);
   const identity = resolveV4ConsumerPolicyCertificationIdentity({
-    release,
+    release: { ...release, certification },
     routing,
     runtimeResume: v4RuntimeResumeEvidence,
     sourceSha,

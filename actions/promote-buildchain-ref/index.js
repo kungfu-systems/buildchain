@@ -134,6 +134,9 @@ async function publishReleaseTail({
     );
     return null;
   }
+  const explicitCompleteRecovery = recoveryCompletedBeforeThisRun(
+    releaseCandidateRecoveryReceiptPath,
+  );
   const releaseOptions = {
     octokit,
     owner: github.context.repo.owner,
@@ -156,13 +159,12 @@ async function publishReleaseTail({
       ?.length
       ? result.publishTransaction.sealedReleaseAssetPaths
       : artifactPaths,
-    reuseExistingCompleteEvidence: recoveryCompletedBeforeThisRun(
-      releaseCandidateRecoveryReceiptPath,
-    ) || result.updates.some(
+    reuseExistingCompleteEvidence: explicitCompleteRecovery || result.updates.some(
       (update) =>
         update.action === "resumed-advanced-publication" &&
         update.transactionState === "complete",
     ),
+    repairMissingCompleteEvidence: explicitCompleteRecovery,
     targetRef,
   };
   const release = await publishSelectedGitHubRelease({

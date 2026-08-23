@@ -164,15 +164,6 @@ async function qualifyProjectCut({
 
   let reuseDecision = null;
   if (currentBaseSha !== previousBaseSha) {
-    const observedPullRequestBase = String(
-      observedPullRequest.base?.sha || "",
-    ).toLowerCase();
-    if (observedPullRequestBase !== currentBaseSha) {
-      mismatch("pre-enqueue-project-cut-base-stale", {
-        observedPullRequestBase,
-        currentBaseSha,
-      });
-    }
     const proof = readOptionalJson(options.sourceProofPath);
     if (!proof) mismatch("pre-enqueue-base-attribution-unknown");
     if (
@@ -341,15 +332,6 @@ export async function qualifyPreEnqueueReadback({
     String(casPullRequest.head?.sha || "").toLowerCase() !== expectedHeadSha
   ) {
     mismatch("head-sha-drift-after-project-cut");
-  }
-  const casPullRequestBase = String(
-    casPullRequest.base?.sha || "",
-  ).toLowerCase();
-  if (casPullRequestBase && casPullRequestBase !== casBaseSha) {
-    mismatch("pre-enqueue-project-cut-base-stale", {
-      observedPullRequestBase: casPullRequestBase,
-      currentBaseSha: casBaseSha,
-    });
   }
   if (casPullRequest.mergeable === false) {
     mismatch("pre-enqueue-merge-conflict-after-project-cut");

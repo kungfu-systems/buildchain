@@ -88,11 +88,10 @@ jobs:
           persist-credentials: false
       - name: Enforce v4 floating consumer policy
         id: policy
-        shell: bash
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-adopter-delivery.yml
-          BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ github.event_name == 'workflow_dispatch' && '.github/workflows/v4-adopter-delivery-dogfood.yml' || github.workflow_ref }}
+          BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ github.repository == 'kungfu-systems/buildchain' && '.github/workflows/v4-adopter-delivery-dogfood.yml' || '' }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
@@ -104,6 +103,7 @@ jobs:
         with:
           name: v4-adopter-delivery-policy-${{ inputs.consumer }}-${{ github.sha }}
           path: ${{ steps.policy.outputs.v4-consumer-policy-receipt-path }}
+          include-hidden-files: true
           if-no-files-found: error
 
   conformance:

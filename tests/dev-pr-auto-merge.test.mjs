@@ -610,7 +610,7 @@ test("post-lease base or predecessor drift fails before enqueue", async () => {
   }
 });
 
-test("required prequeue guard reuses only a disjoint attributed base move and binds a distinct Project Cut", async () => {
+test("required prequeue guard trusts the protected ref over a stale PR base snapshot", async () => {
   const previousBase = "b".repeat(40);
   const currentBase = "c".repeat(40);
   const mergeCommitSha = "d".repeat(40);
@@ -626,7 +626,7 @@ test("required prequeue guard reuses only a disjoint attributed base move and bi
   fs.writeFileSync(proofPath, `${JSON.stringify(proof)}\n`);
   try {
     await withWarrantResult({ warrant: { sourceProofRoot: proof.proofRoot } }, async (resultPath, warrantResult) => {
-      const target = pr({ number: 21, headSha: exactHead, baseSha: currentBase, mergeCommitSha, mergeable_state: "blocked" });
+      const target = pr({ number: 21, headSha: exactHead, baseSha: previousBase, mergeCommitSha, mergeable_state: "blocked" });
       const authority = { activeWarrant: warrantResult.warrant, candidates: [{ candidateId: warrantResult.warrant.candidateId, sourceHead: exactHead, status: "qualified" }] };
       const run = (fake) => runDevPrAdmission({ ...targetedOptions, dryRun: false, warrantMode: "required", warrantResultPath: resultPath, sourceProofPath: proofPath }, fake);
       const fake = client({ pullRequests: [target], branchShas: [previousBase, currentBase, currentBase, currentBase, currentBase], queueStates: Array.from({ length: 6 }, () => ({ enabled: true, id: "MQ_1", entries: [] })), baseDelta: { status: "ahead", merge_base_commit: { sha: previousBase }, files: [{ status: "modified", filename: "docs/guide.md" }] }, commitTrees: { [mergeCommitSha]: replayTree }, currentDeliveryQueue: authority });
@@ -640,6 +640,13 @@ test("required prequeue guard reuses only a disjoint attributed base move and bi
       assert.equal(transaction.preEnqueueProjectCut.baseMoved, true);
       assert.match(transaction.preEnqueueProjectCut.sourceProofReuseDecisionRoot, /^sha256:[0-9a-f]{64}$/u);
       assert.deepEqual(fake.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
+
+      const staleSnapshot = pr({ number: 21, headSha: exactHead, baseSha: "a".repeat(40), mergeCommitSha, mergeable_state: "blocked" });
+      const stableBase = client({ pullRequests: [staleSnapshot], branchShas: Array(5).fill(currentBase), queueStates: Array.from({ length: 6 }, () => ({ enabled: true, id: "MQ_1", entries: [] })), commitTrees: { [mergeCommitSha]: replayTree }, currentDeliveryQueue: authority });
+      const stableBaseResult = await run(stableBase);
+      assert.equal(stableBaseResult.ok, true);
+      assert.equal(stableBaseResult.receipt.queue.admissionTransaction.admittedBase, currentBase);
+      assert.deepEqual(stableBase.enqueued, [{ pullRequestId: "PR_21", expectedHeadOid: exactHead }]);
 
       const overlap = client({ pullRequests: [target], branchShas: [previousBase, currentBase, currentBase], queueStates: Array.from({ length: 5 }, () => ({ enabled: true, id: "MQ_1", entries: [] })), baseDelta: { status: "ahead", merge_base_commit: { sha: previousBase }, files: [{ status: "modified", filename: "packages/native/runtime.cc" }] }, commitTrees: { [mergeCommitSha]: replayTree }, currentDeliveryQueue: authority });
       const overlapResult = await run(overlap);

@@ -354,7 +354,7 @@ function validateCandidateProvenance({
   run,
   workflow,
   pullRequest,
-  ancestry,
+  ancestry, targetTree,
   passport,
   anchorProvenance,
   expectedTransactionId,
@@ -383,7 +383,7 @@ function validateCandidateProvenance({
   const boundByNumber = Array.isArray(provenanceRun?.pullRequestNumbers) && provenanceRun.pullRequestNumbers.includes(Number(pullRequest?.number));
   const boundByHead = provenanceRun?.headSha === pullRequest?.headSha && normalizedRef(provenanceRun?.headBranch) === normalizedRef(pullRequest?.headRef);
   if (!boundByNumber && !boundByHead) fail("pr-identity-invalid", "candidate run is not bound to the merged candidate PR", "Select the exact PR-stage Build run.");
-  if (!ancestry?.mergeIsAncestor && ancestry?.status !== "identical") fail("ancestry-invalid", "candidate merge is not an ancestor of the promotion SHA", "Promote a descendant of the verified merged candidate identity.");
+  if (!ancestry?.mergeIsAncestor && ancestry?.status !== "identical" && exactSha(targetTree, "targetTree") !== exactSha(passport?.source?.treeHash, "passport.source.treeHash")) fail("ancestry-invalid", "candidate merge is neither an ancestor nor tree-equivalent to the promotion SHA", "Promote a descendant of the verified merged candidate identity or its exact tree-equivalent protected merge result.");
   return { repository, workflowFile };
 }
 
@@ -428,11 +428,11 @@ function validateRecoveryTransaction({ existingTransaction, expectedTransactionI
   if (expectedTransactionId && !actualTransactionId) fail("transaction-identity-conflict", `expected transaction ${expectedTransactionId} does not exist`, "Remove the stale transaction identity only if no durable transaction was ever sealed; otherwise preserve evidence and enter repair_required.");
   if (expectedTransactionId && expectedTransactionId !== actualTransactionId) fail("transaction-identity-conflict", `existing transaction ${actualTransactionId} conflicts with expected ${expectedTransactionId}`, "Enter repair_required and inspect the durable transaction before any retry.");
   if (existingTransaction) {
-    const expectedIdentity = releaseTransactionId({ repository, version, sourceSha: sha, targetRef: normalizedRef(targetRef) });
+    const expectedIdentity = releaseTransactionId({ repository, version, sourceSha: exactSha(existingTransaction.source_sha, "existingTransaction.source_sha"), targetRef: normalizedRef(targetRef) });
     assertEqual(existingTransaction.id, expectedIdentity, "transaction-identity-conflict", "durable transaction identity", "Enter repair_required; the durable transaction does not belong to this exact publication target.");
     assertEqual(existingTransaction.repository, repository, "transaction-identity-conflict", "durable transaction repository", "Enter repair_required; never cross repository transaction boundaries.");
     assertEqual(normalizedRef(existingTransaction.target_ref), normalizedRef(targetRef), "transaction-identity-conflict", "durable transaction target ref", "Enter repair_required; never retarget a sealed transaction.");
-    assertEqual(existingTransaction.source_sha, sha, "transaction-identity-conflict", "durable transaction source SHA", "Resume with the transaction's exact promotion SHA or enter repair_required.");
+    if (![existingTransaction.source_sha, existingTransaction.release_sha, existingTransaction.release_material_sha].filter(Boolean).includes(sha)) fail("transaction-identity-conflict", "recovery promotion SHA is not bound to the durable transaction", "Resume with the transaction's exact source, release, or release material SHA, or enter repair_required.");
     assertEqual(existingTransaction.version, version, "transaction-identity-conflict", "durable transaction version", "Enter repair_required; never change a sealed publication version.");
     assertEqual(existingTransaction.channel, channel || passport.target.channel, "transaction-identity-conflict", "durable transaction channel", "Enter repair_required; never move a transaction between channels.");
   }
@@ -476,7 +476,7 @@ export function verifyReleaseCandidateRecovery({
   const { repository, workflowFile } = validateCandidateProvenance({
     candidateRepository, targetRepository, expectedRunId, expectedWorkflowFile,
     expectedWorkflowName, targetRef, run, workflow, pullRequest, ancestry,
-    passport, anchorProvenance, expectedTransactionId,
+    targetTree, passport, anchorProvenance, expectedTransactionId,
   });
   const { sha, tree, runtimeSha, toolingSha } = validateCandidateIdentity({
     repository, channel, targetSha, targetTree, expectedSourceTree,
