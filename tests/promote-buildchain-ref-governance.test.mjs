@@ -191,6 +191,15 @@ test("governed promotion resumes its exact durable transaction after the target 
       version: "1.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
+    ".buildchain/artifacts/release-candidate-passport.json": {
+      schemaVersion: 1,
+      contract: "kungfu-buildchain-release-candidate-passport",
+      repository: "kungfu-systems/buildchain",
+      target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "1.0.0-alpha.0" },
+      source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${advancedSha}` },
+      platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
+      diagnostics: {},
+    },
   });
   const { octokit, refs, commits } = createGitMock({
     refs: new Map([
@@ -284,6 +293,8 @@ test("governed promotion resumes its exact durable transaction after the target 
     publishTransactionOverride: true,
     expectedPublicationVersion: "1.0.0-alpha.0",
     releasePassport: false,
+    promoteOnlyReleaseCandidate: true,
+    releaseCandidateVersion: "1.0.0-alpha.0",
   };
   const result = await promoteBuildchainRefs(recovery);
 
@@ -298,6 +309,14 @@ test("governed promotion resumes its exact durable transaction after the target 
   assert.equal(refs.get("tags/v1-alpha"), advancedSha);
   assert.equal(fs.existsSync(path.join(cwd, result.publishTransaction.evidencePath)), true);
   assert.equal(result.updates[0].action, "resumed-advanced-publication");
+  assert.equal(
+    result.updates.some(
+      (update) =>
+        update.action === "verified-release-candidate" &&
+        update.sha === SHA,
+    ),
+    true,
+  );
   assert.equal(result.updates.at(-1).action, "finalized-advanced-publication");
 
   const repeated = await promoteBuildchainRefs(recovery);
