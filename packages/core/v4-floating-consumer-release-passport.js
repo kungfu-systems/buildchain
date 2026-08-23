@@ -4,7 +4,6 @@ import {
   v4FloatingConsumerDocumentRoot,
   verifyV4FloatingConsumerPolicyCertification,
 } from "./v4-floating-consumer-evidence.js";
-
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
 export function isV4PromotionRouting(value = undefined) {
   return [
@@ -13,7 +12,6 @@ export function isV4PromotionRouting(value = undefined) {
     value?.runtime?.requestedRef,
   ].some((ref) => /^v4(?:-alpha)?$/u.test(String(ref || "")));
 }
-
 function resolveInside(root, relative, label) {
   const resolvedRoot = path.resolve(root);
   const file = path.resolve(resolvedRoot, relative);
@@ -22,7 +20,6 @@ function resolveInside(root, relative, label) {
   }
   return file;
 }
-
 function resolveCallerLock(root, relative, label) {
   const file = resolveInside(root, relative, `${label} contract lock`);
   if (!fs.existsSync(file)) {
@@ -81,20 +78,22 @@ export function resolveV4ConsumerPolicyCertificationIdentity({
   runtimeResume = undefined,
   sourceSha = "",
 } = {}) {
-  const builtSourceSha =
-    release?.builtSourceSha || release?.built_source_sha || "";
-  const certification =
-    release?.certification?.certification || release?.certification;
-  const retainsCaller = certification?.caller?.sourceSha === sourceSha;
+  const certifiedSourceSha =
+    (release?.certification?.certification || release?.certification)?.caller
+      ?.sourceSha || "";
+  const treeEquivalentSources = [
+    release?.builtSourceSha || release?.built_source_sha,
+    release?.promotionChannelSha || release?.promotion_channel_sha,
+  ];
+  const buildRuntimeSha = runtimeResume?.lineage?.attempts?.build?.runtimeSha;
   return {
     sourceSha:
-      release?.treeEquivalent === true && builtSourceSha && !retainsCaller
-        ? builtSourceSha
+      certifiedSourceSha === sourceSha ||
+      (release?.treeEquivalent === true &&
+        treeEquivalentSources.includes(certifiedSourceSha))
+        ? certifiedSourceSha
         : sourceSha,
-    runtimeSha:
-      runtimeResume?.lineage?.attempts?.build?.runtimeSha ||
-      routing?.runtime?.resolvedSha ||
-      "",
+    runtimeSha: buildRuntimeSha || routing?.runtime?.resolvedSha || "",
   };
 }
 export function requireV4ConsumerPolicyCertification({
