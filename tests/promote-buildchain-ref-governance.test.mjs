@@ -196,7 +196,7 @@ test("governed promotion resumes its exact durable transaction after the target 
       contract: "kungfu-buildchain-release-candidate-passport",
       repository: "kungfu-systems/buildchain",
       target: { channel: "alpha", ref: "alpha/v1/v1.0", version: "1.0.0-alpha.0" },
-      source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${advancedSha}` },
+      source: { headSha: OTHER_SHA, mergeRefSha: OTHER_SHA, treeHash: `tree-${SHA}` },
       platformMatrix: [{ platformId: "linux-x64", artifactName: "buildchain-linux-x64" }],
       diagnostics: {},
     },
