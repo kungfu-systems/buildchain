@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-release-candidate-recovery/v1",
+  "action": "reused",
+  "createdAt": "2026-08-23T17:27:29.798Z",
+  "repository": "kungfu-systems/buildchain",
+  "recoveryRunId": "32654776374",
+  "originalCandidate": {
+    "runId": "32653449806",
+    "workflowFile": "build-surface-fixture.yml",
+    "workflowName": "Build Surface Fixture",
+    "pullRequest": 3065,
+    "sourceSha": "5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+    "mergeSha": "e7cf3fa773de1db5a5e56f8aae2fb864ee73aef3",
+    "tree": "5d01ee12ba64d7ca35d1b6430e2999fd11f3496c"
+  },
+  "target": {
+    "channel": "alpha",
+    "ref": "alpha/v4/v4.0",
+    "sha": "ee63bb63c75620d03b510de8e9ea1b12df5088fb",
+    "observedRefSha": "e7cf3fa773de1db5a5e56f8aae2fb864ee73aef3",
+    "tree": "5d01ee12ba64d7ca35d1b6430e2999fd11f3496c",
+    "version": "4.0.1-alpha.31"
+  },
+  "recovered": {
+    "candidateRoot": "sha256:ae90c73bc89ac950aa7b3894179b7db0117ad1d3a2e7a63793dcf0f44dadd936",
+    "buildSummaryRoot": "sha256:3c103fff08d26f46933465b75b615ba0ea52af716919284a3844f418414ae5d7",
+    "artifactRoot": "sha256:807353e3baad87afc4fd23875c439b905782477755a316de9f069623ac646410",
+    "artifactArchiveRoot": "sha256:cc6c1952ad1af54c6b68731dfa0f8b9bf37c950e23f38c400617400325d83efe",
+    "artifactCount": 13,
+    "artifacts": [
+      {
+        "name": "buildchain-package-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 2556639,
+        "digest": "sha256:db6f9cb409b2e7be10bafdbc6125186291b6d3503fb01d66b1c321ffcd6f4ebb"
+      },
+      {
+        "name": "libnode-shaped-diagnostics-linux-x64-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 7396,
+        "digest": "sha256:3e10f7c7a9b129f57278b584939a4a5ea0894969073de72f66a8ca736711cf2f"
+      },
+      {
+        "name": "libnode-shaped-diagnostics-macos-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 7350,
+        "digest": "sha256:3bde6641e65efe5585d6475c710e6bbc8e6a86561ec39792d285ad45b45cbe3c"
+      },
+      {
+        "name": "libnode-shaped-diagnostics-windows-x64-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 7347,
+        "digest": "sha256:e869ebacf0e9edd4f58a6c0860beb99a4f29d288f5016ea968f480c4781ca9c6"
+      },
+      {
+        "name": "libnode-shaped-linux-x64-5cb14ac8fe1a",
+        "size": 99178,
+        "digest": "sha256:5b287a0c188a2b728bc269f7d91fa81675c01a321cba9c3fd2e4a564e419a38c"
+      },
+      {
+        "name": "libnode-shaped-macos-5cb14ac8fe1a",
+        "size": 98599,
+        "digest": "sha256:03fa6501ecb806159ef4e251106b6ac76d84f373aa4873f7f84cc3d00d03c887"
+      },
+      {
+        "name": "libnode-shaped-manifest-linux-x64-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 8064,
+        "digest": "sha256:f523f9f4e3d6438f266d2ca50d9a3252e9767eb6313113dab2bb8f133365a802"
+      },
+      {
+        "name": "libnode-shaped-manifest-macos-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 8061,
+        "digest": "sha256:95250c990ff966e8029045667b4e14542afb3f8f2006972b0f2d00320498793e"
+      },
+      {
+        "name": "libnode-shaped-manifest-windows-x64-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 8074,
+        "digest": "sha256:b220ebf130ada85fc95ffcbebe852eef6ef981324c003a12ebcb4d9b6806a665"
+      },
+      {
+        "name": "libnode-shaped-release-candidate-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 4004,
+        "digest": "sha256:177194ca74e26d8784bcfa440904a23672add611d9c95e3a4f957a4c06d20d70"
+      },
+      {
+        "name": "libnode-shaped-release-candidate-controller-receipt-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 1004,
+        "digest": "sha256:2892349923e6e4ee26d049bbff376502681c5c368ca20a1ba0e0c2a876e5b8eb"
+      },
+      {
+        "name": "libnode-shaped-summary-5cb14ac8fe1acb3fff86ba9123f86503bb7bb7ef",
+        "size": 4212,
+        "digest": "sha256:5807d3a04d74ff78d0b5e135779e4426c7d451d54996d62c36d61fa04f3440cb"
+      },
+      {
+        "name": "libnode-shaped-windows-x64-5cb14ac8fe1a",
+        "size": 99367,
+        "digest": "sha256:3f8f3342fe35116f90ba44c33423754e93d1018734df49886f65b5deabc849fa"
+      }
+    ]
+  },
+  "skippedBuildStages": [
+    "install",
+    "build",
+    "verify",
+    "platform-matrix"
+  ],
+  "payloadBytes": "unchanged",
+  "buildchainToolingSha": "1e9338fb3d23aa41b409fe28c9ce7634effedcca",
+  "transaction": {
+    "identity": "a1cac2c6078e1824b7aa4bd30a04b68a220513a3e6db5eebed9b9074fdd5ac33",
+    "state": "complete",
+    "publicationState": "package-published"
+  },
+  "root": "sha256:6432f252234795970c706ace0d33f84a011a4216a93531508f4be27b67fdea22"
+}

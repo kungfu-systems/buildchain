@@ -6,7 +6,7 @@
     "tag": "v4.0.1-alpha.31",
     "sourceSha": "9a982c6995994839b7ddd6a97dd4bde0737b9d60"
   },
-  "generatedAt": "2026-08-23T17:15:05.134Z",
+  "generatedAt": "2026-08-23T17:27:51.225Z",
   "runner": {
     "kind": "github-hosted",
     "os": "Linux",
@@ -15,7 +15,7 @@
     "image": "ubuntu24"
   },
   "workflow": {
-    "name": "Buildchain Ref Promotion",
+    "name": "Buildchain Ref Promotion Recovery",
     "runId": "32654061054",
     "runAttempt": "1",
     "url": "https://github.com/kungfu-systems/buildchain/actions/runs/32654061054"
