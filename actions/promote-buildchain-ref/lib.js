@@ -4856,8 +4856,7 @@ async function promoteBuildchainRefs({
   }
   const promotionGeneratedAt = new Date().toISOString(); let releaseCandidateValidation;
   if (promoteOnlyReleaseCandidate) {
-    const releaseCandidateSourceSha = releaseCandidateRecoveryReceiptPath || !advancedPublicationTransaction ? sha : branchSha;
-    const targetCommitInfo = await getCommitInfo(octokit, owner, repo, releaseCandidateSourceSha);
+    const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
     releaseCandidateValidation = validatePromotionReleaseCandidate({
       cwd,
       passportPath: releaseCandidatePassportPath,
@@ -4867,7 +4866,7 @@ async function promoteBuildchainRefs({
       version: releaseCandidateVersion,
       recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
       targetRef,
-      sourceHeadSha: releaseCandidateSourceSha,
+      sourceHeadSha: sha,
       sourceTreeSha: targetCommitInfo.treeSha,
       requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
       familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
