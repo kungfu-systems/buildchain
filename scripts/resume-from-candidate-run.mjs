@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
+import { compareSemver } from "./publication-registry-hydrate.mjs";
 import { normalizeAnchorProvenance, normalizeCandidateRun, recoverCandidateProvenance } from "./release-candidate-anchor-provenance.mjs";
 export { resolveAnchorRecoveryRequest } from "./release-candidate-anchor-provenance.mjs";
 import {
@@ -203,23 +204,36 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
 export function validateV4RuntimeResumePublicReadback({
   targetRef,
   targetSha,
+  targetVersion,
   alphaSha,
   exactTagSha,
   tagLineage,
+  runtimeLineage,
+  floatingTargetLineage,
   runtimeSha,
   version,
   transaction,
   main,
   npm,
 }) {
+  const channelVersion = npm["dist-tags"]?.alpha;
+  let channelDidNotRegress = false;
+  try {
+    channelDidNotRegress = compareSemver(channelVersion, version) >= 0;
+  } catch { channelDidNotRegress = false; }
   if (
     transaction?.target_ref !== targetRef ||
     transaction?.version !== version ||
     exactTagSha !== transaction?.source_sha ||
     !["ahead", "identical"].includes(tagLineage?.status) ||
-    alphaSha !== runtimeSha ||
+    !["ahead", "identical"].includes(runtimeLineage?.status) ||
+    !["ahead", "identical"].includes(floatingTargetLineage?.status) ||
+    !alphaSha ||
     !targetSha ||
-    npm["dist-tags"]?.alpha !== version ||
+    !runtimeSha ||
+    channelVersion !== targetVersion ||
+    !channelDidNotRegress ||
+    !npm.versions?.[channelVersion]?.dist?.integrity ||
     npm.versions?.[version]?.dist?.integrity !== main.digest
   ) {
     throw new Error(
@@ -238,21 +252,12 @@ export async function readPublicResumeState({
   apiUrl,
   fetchImpl,
 }) {
-  const readRef = async (ref) =>
-    (await githubJson({
-      apiUrl,
-      token,
-      fetchImpl,
-      path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/${ref}`,
-    })).object?.sha || "";
+  const readRef = async (ref) => (await githubJson({ apiUrl, token, fetchImpl,
+    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/git/ref/${ref}` })).object?.sha || "";
   const main = transaction?.artifacts?.find((entry) => entry.kind === "npm" && entry.required !== false);
-  if (!main || main.ref !== version || !main.digest) {
-    throw new Error(
-      "cross-runtime recovery requires exact durable npm publication evidence",
-    );
-  }
-  const packageUrl =
-    `https://registry.npmjs.org/${encodeURIComponent(main.name)}`;
+  if (!main || main.ref !== version || !main.digest)
+    throw new Error("cross-runtime recovery requires exact durable npm publication evidence");
+  const packageUrl = `https://registry.npmjs.org/${encodeURIComponent(main.name)}`;
   const exactTag = transaction.exact_tag || `v${version}`;
   const [targetSha, alphaSha, exactTagSha, npmResponse] = await Promise.all([
     readRef(`heads/${targetRef}`),
@@ -264,24 +269,18 @@ export async function readPublicResumeState({
     throw new Error(`npm public readback failed with HTTP ${npmResponse.status}`);
   }
   const npm = await npmResponse.json();
-  const tagLineage = await githubJson({
-    apiUrl,
-    token,
-    fetchImpl,
-    path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${exactTagSha}...${targetSha}`,
-  });
-  validateV4RuntimeResumePublicReadback({
-    targetRef,
-    targetSha,
-    alphaSha,
-    exactTagSha,
-    tagLineage,
-    runtimeSha,
-    version,
-    transaction,
-    main,
-    npm,
-  });
+  const [tagLineage, runtimeLineage, floatingTargetLineage, targetPackageFile] = await Promise.all([
+    githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${exactTagSha}...${targetSha}` }),
+    githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${runtimeSha}...${alphaSha}` }),
+    githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/compare/${alphaSha}...${targetSha}` }),
+    githubJson({ apiUrl, token, fetchImpl, path: `/repos/${repoInfo.owner}/${repoInfo.repo}/contents/package.json?ref=${encodeURIComponent(targetSha)}` }),
+  ]);
+  if (targetPackageFile?.type !== "file" || targetPackageFile.encoding !== "base64" || !targetPackageFile.content)
+    throw new Error("cross-runtime recovery requires protected target version state");
+  const targetVersion = JSON.parse(Buffer.from(String(targetPackageFile.content).replace(/\s/g, ""), "base64").toString("utf8")).version;
+  validateV4RuntimeResumePublicReadback({ targetRef, targetSha, targetVersion, alphaSha,
+    exactTagSha, tagLineage, runtimeLineage, floatingTargetLineage, runtimeSha,
+    version, transaction, main, npm });
   const body = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-v4-runtime-resume-public-readback/v1",
@@ -298,6 +297,8 @@ export async function readPublicResumeState({
       version,
       distTag: "alpha",
       integrity: npm.versions[version].dist.integrity,
+      targetVersion, distTagVersion: npm["dist-tags"].alpha,
+      distTagIntegrity: npm.versions[npm["dist-tags"].alpha].dist.integrity,
     },
   };
   return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
@@ -456,7 +457,7 @@ export async function finalizeRuntimeResumeEvidence({
     resumePlanRoot: material.resumePlanRoot,
     finalPublicReadbackRoot: readback.root,
     floatingRefBefore: material.floatingRefBefore,
-    floatingRefAfter: { ref: "v4-alpha", sha: material.runtimeSha },
+    floatingRefAfter: { ref: "v4-alpha", sha: readback.refs.floating.sha },
   });
   const evidence = {
     authorization: material.authorization,
