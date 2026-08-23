@@ -43,10 +43,7 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
     workflow,
     /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/v4-adopter-delivery-dogfood\.yml' \|\| '' \}\}/u,
   );
-  assert.doesNotMatch(
-    workflow,
-    /github\.event_name == 'workflow_dispatch'/u,
-  );
+  assert.doesNotMatch(workflow, /github\.event_name == 'workflow_dispatch'/u);
 });
 
 test("alpha promotion caller passes the same runtime admission used in GitHub", () => {
@@ -147,6 +144,24 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
       legacyCompatible.receipt.invocation.sourcePath,
       legacyRelative,
     );
+    const stableCompatible = scanV4FloatingConsumerPolicy({
+      root: consumerRoot,
+      repository: "kungfu-systems/buildchain",
+      sourceSha: "a".repeat(40),
+      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+      invocationSourcePath: legacyRelative,
+      expectedInvocationChannel: "stable",
+      resolvedWorkflowSha: "b".repeat(40),
+      resolvedRuntimeSha: "c".repeat(40),
+      policy: authority.policy,
+      scannerRoot: authority.scannerRoot,
+    });
+    assert.equal(
+      stableCompatible.ok,
+      true,
+      JSON.stringify(stableCompatible.failures),
+    );
+    assert.equal(stableCompatible.receipt.invocation.visibleSelector, "v4");
 
     const internalReceipt = path.join(
       consumerRoot,
@@ -233,7 +248,11 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   );
   assert.match(
     workflow,
-    /transaction identity is required when resuming a sealed candidate/u,
+    /transaction identity is required when resuming a published alpha candidate/u,
+  );
+  assert.match(
+    workflow,
+    /TARGET_REF\}" != alpha\/\* \|\| -z "\$\{CANDIDATE_RUN_ID\}" \|\| -n "\$\{TRANSACTION_ID\}"/u,
   );
   assert.match(
     workflow,
@@ -242,6 +261,10 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   assert.doesNotMatch(
     workflow,
     /resume-transaction-id:[\s\S]{0,180}required: true/u,
+  );
+  assert.match(
+    workflow,
+    /stable recovery requires an exact sealed candidate run/u,
   );
   assert.match(workflow, /path: \.buildchain\/recovered-source/u);
   assert.match(
@@ -294,7 +317,10 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
     workflow,
     /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/u,
   );
-  assert.match(workflow, /artifact-patterns: "buildchain-package-\*"/u);
+  assert.match(
+    workflow,
+    /artifact-patterns: \$\{\{ needs\.consumer-admission\.outputs\.publication-channel == 'alpha' && 'buildchain-package-\*' \|\| '' \}\}/u,
+  );
   assert.match(
     workflow,
     /router-ref: \$\{\{ inputs\['resume-buildchain-runtime-ref'\] \}\}/u,
