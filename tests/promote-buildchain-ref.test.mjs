@@ -975,6 +975,7 @@ test("complete candidate recovery reuses verified public evidence and preserves 
 
 test("explicit complete recovery repairs a missing public Passport from the verified local evidence closure", async () => {
   const cwd = makeTempWorkspace({
+    "publish/evidence.json": "published evidence",
     "release/buildchain.release.json": JSON.stringify({
       release: {
         tag: "v1.0.1-alpha.0",
@@ -988,6 +989,7 @@ test("explicit complete recovery repairs a missing public Passport from the veri
     "release/evidence.json": "published evidence",
   });
   const repairAssetPaths = [
+    path.join(cwd, "publish/evidence.json"),
     path.join(cwd, "release/buildchain.release.json"),
     path.join(cwd, "release/evidence.json"),
   ];
@@ -1002,7 +1004,7 @@ test("explicit complete recovery repairs a missing public Passport from the veri
     },
   };
 
-  const result = await reuseCompleteGitHubReleaseEvidence({
+  const request = {
     octokit,
     owner: "kungfu-systems",
     repo: "buildchain",
@@ -1013,15 +1015,19 @@ test("explicit complete recovery repairs a missing public Passport from the veri
     targetRef: "alpha/v1/v1.0",
     repairAssetPaths,
     verifyPassport: async () => ({ ok: true, issues: [] }),
-  });
+  };
+  const result = await reuseCompleteGitHubReleaseEvidence(request);
 
   assert.equal(result.action, "repaired");
   assert.equal(result.passportVerified, true);
   assert.equal(result.uploadedAssetCount, 2);
   assert.deepEqual(
     uploaded.map(({ name }) => name),
-    ["buildchain.release.json", "evidence.json"],
+    ["evidence.json", "buildchain.release.json"],
   );
+  fs.writeFileSync(repairAssetPaths[0], "conflicting evidence");
+  await assert.rejects(() => reuseCompleteGitHubReleaseEvidence(request), /conflicting asset basename 'evidence\.json'/);
+  assert.equal(uploaded.length, 2);
 });
 
 test("complete recovery repair preflights every remote digest before uploading missing evidence", async () => {
