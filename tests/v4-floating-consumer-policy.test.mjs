@@ -661,4 +661,34 @@ test("tree-equivalent finalization keeps transaction source and build runtime id
     sourceSha: ALPHA_SHA,
     runtimeSha: STABLE_SHA,
   });
+
+  const promotionChannelSha = "9".repeat(40);
+  assert.equal(
+    resolveV4ConsumerPolicyCertificationIdentity({
+      release: {
+        certification: {
+          certification: { caller: { sourceSha: promotionChannelSha } },
+        },
+        builtSourceSha: SOURCE_SHA,
+        promotionChannelSha,
+        treeEquivalent: true,
+      },
+      sourceSha: ALPHA_SHA,
+    }).sourceSha,
+    promotionChannelSha,
+  );
+  assert.equal(
+    resolveV4ConsumerPolicyCertificationIdentity({
+      release: {
+        certification: {
+          certification: { caller: { sourceSha: "7".repeat(40) } },
+        },
+        builtSourceSha: SOURCE_SHA,
+        promotionChannelSha,
+        treeEquivalent: true,
+      },
+      sourceSha: ALPHA_SHA,
+    }).sourceSha,
+    ALPHA_SHA,
+  );
 });
