@@ -234,6 +234,13 @@ restored sealed bundle, and a conflicting payload digest fails closed. Ordinary
 duplicate publication without a complete recovery receipt retains the stricter
 same-name/same-digest rule for all assets.
 
+If that explicit complete recovery finds that the public Release Passport is
+absent, it may restore the complete locally verified evidence closure. Before
+the first upload, Buildchain rejects undeclared remote assets and compares every
+same-name remote asset byte-for-byte; any unknown name or digest conflict fails
+closed without mutation. Ordinary duplicate publication cannot enter this
+repair path.
+
 After a transaction finalizes, the target branch can legitimately advance from
 the original promotion SHA. Repeating explicit recovery accepts that movement
 only when the caller supplies the exact durable transaction identity, the

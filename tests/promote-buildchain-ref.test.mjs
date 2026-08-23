@@ -972,6 +972,110 @@ test("complete candidate recovery reuses verified public evidence and preserves 
   assert.deepEqual(uploaded, []);
 });
 
+test("explicit complete recovery repairs a missing public Passport from the verified local evidence closure", async () => {
+  const cwd = makeTempWorkspace({
+    "release/buildchain.release.json": JSON.stringify({
+      release: {
+        tag: "v1.0.1-alpha.0",
+        publicTag: "v1.0.1-alpha.0",
+        channel: "alpha",
+        targetRef: "alpha/v1/v1.0",
+        releaseSha: SHA,
+      },
+      product: { repository: "kungfu-systems/buildchain" },
+    }),
+    "release/evidence.json": "published evidence",
+  });
+  const repairAssetPaths = [
+    path.join(cwd, "release/buildchain.release.json"),
+    path.join(cwd, "release/evidence.json"),
+  ];
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({ data: [] }),
+        uploadReleaseAsset: async ({ name, data }) =>
+          uploaded.push({ name, data: Buffer.from(data) }),
+      },
+    },
+  };
+
+  const result = await reuseCompleteGitHubReleaseEvidence({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    release: { id: 123, html_url: "https://github.test/release" },
+    tag: "v1.0.1-alpha.0",
+    target: SHA,
+    channel: "alpha",
+    targetRef: "alpha/v1/v1.0",
+    repairAssetPaths,
+    verifyPassport: async () => ({ ok: true, issues: [] }),
+  });
+
+  assert.equal(result.action, "repaired");
+  assert.equal(result.passportVerified, true);
+  assert.equal(result.uploadedAssetCount, 2);
+  assert.deepEqual(
+    uploaded.map(({ name }) => name),
+    ["buildchain.release.json", "evidence.json"],
+  );
+});
+
+test("complete recovery repair preflights every remote digest before uploading missing evidence", async () => {
+  const cwd = makeTempWorkspace({
+    "release/buildchain.release.json": JSON.stringify({
+      release: {
+        tag: "v1.0.1-alpha.0",
+        channel: "alpha",
+        targetRef: "alpha/v1/v1.0",
+        releaseSha: SHA,
+      },
+      product: { repository: "kungfu-systems/buildchain" },
+    }),
+    "release/evidence.json": "expected evidence",
+  });
+  const uploaded = [];
+  const octokit = {
+    rest: {
+      repos: {
+        listReleaseAssets: async () => ({
+          data: [
+            {
+              id: 9,
+              name: "evidence.json",
+              digest: `sha256:${"0".repeat(64)}`,
+            },
+          ],
+        }),
+        uploadReleaseAsset: async ({ name }) => uploaded.push(name),
+      },
+    },
+  };
+
+  await assert.rejects(
+    () =>
+      reuseCompleteGitHubReleaseEvidence({
+        octokit,
+        owner: "kungfu-systems",
+        repo: "buildchain",
+        release: { id: 123 },
+        tag: "v1.0.1-alpha.0",
+        target: SHA,
+        channel: "alpha",
+        targetRef: "alpha/v1/v1.0",
+        repairAssetPaths: [
+          path.join(cwd, "release/buildchain.release.json"),
+          path.join(cwd, "release/evidence.json"),
+        ],
+        verifyPassport: async () => ({ ok: true, issues: [] }),
+      }),
+    /immutable GitHub Release evidence collision/,
+  );
+  assert.deepEqual(uploaded, []);
+});
+
 test("complete candidate recovery rejects a conflicting public product payload", async () => {
   const cwd = makeTempWorkspace({
     "dist/package.tgz": "sealed product bytes",
