@@ -15,26 +15,22 @@ function bytes(data) {
   return Buffer.from(data || "");
 }
 
-async function downloadAsset({ octokit, owner, repo, asset }) {
+export async function downloadReleaseAsset({ octokit, owner, repo, asset }) {
   if (typeof octokit.rest.repos.getReleaseAsset !== "function") {
     throw new Error(`cannot verify existing GitHub Release asset '${asset.name}': getReleaseAsset is unavailable`);
   }
   const response = await octokit.rest.repos.getReleaseAsset({
-    owner,
-    repo,
-    asset_id: asset.id,
-    headers: { accept: "application/octet-stream" },
+    owner, repo, asset_id: asset.id, headers: { accept: "application/octet-stream" },
   });
   return bytes(response.data);
 }
 
-async function assetDigest({ octokit, owner, repo, asset }) {
+async function remoteDigest({ octokit, owner, repo, asset }) {
   const declared = String(asset.digest || "").match(/^sha256:([0-9a-f]{64})$/i);
-  if (declared) return declared[1].toLowerCase();
-  return sha256(await downloadAsset({ octokit, owner, repo, asset }));
+  return declared ? declared[1].toLowerCase() : sha256(await downloadReleaseAsset({ octokit, owner, repo, asset }));
 }
 
-function uniqueAssets(assets = []) {
+export function uniqueReleaseAssets(assets = []) {
   const byName = new Map();
   for (const asset of assets) {
     if (!asset?.name || path.basename(asset.name) !== asset.name) {
@@ -48,10 +44,39 @@ function uniqueAssets(assets = []) {
   return byName;
 }
 
+export async function reconcileImmutableReleaseAssets({ octokit, owner, repo, releaseId, remoteAssets, assetPaths, rejectUnknown = false, collisionKind = "asset", uploadReleaseAsset = (request) => octokit.rest.repos.uploadReleaseAsset(request) }) {
+  const local = new Map();
+  for (const assetPath of assetPaths) {
+    if (!assetPath || !fs.existsSync(assetPath) || !fs.statSync(assetPath).isFile()) {
+      throw new Error(`github-release=true requires a declared GitHub Release artifact, got '${assetPath || ""}'`);
+    }
+    const name = path.basename(assetPath);
+    if (local.has(name)) throw new Error(`complete recovery repair found duplicate asset basename '${name}'`);
+    const data = fs.readFileSync(assetPath);
+    local.set(name, { data, digest: sha256(data) });
+  }
+  if (rejectUnknown) for (const name of remoteAssets.keys()) {
+    if (!local.has(name)) throw new Error(`complete recovery repair found undeclared existing GitHub Release asset '${name}'`);
+  }
+  const plan = [];
+  for (const [name, value] of local) {
+    const existing = remoteAssets.get(name);
+    const digest = existing ? await remoteDigest({ octokit, owner, repo, asset: existing }) : "";
+    if (existing && digest !== value.digest) {
+      throw new Error(`immutable GitHub Release ${collisionKind} collision: '${name}' already exists with sha256:${digest}, refusing sha256:${value.digest}`);
+    }
+    plan.push({ action: existing ? "preserved" : "uploaded", name, ...value });
+  }
+  for (const asset of plan.filter((entry) => entry.action === "uploaded")) {
+    await uploadReleaseAsset({ owner, repo, release_id: releaseId, name: asset.name, data: asset.data });
+  }
+  return plan;
+}
+
 async function stagePublicPassport({ octokit, owner, repo, remoteAssets, directory }) {
   for (const asset of remoteAssets.values()) {
     if (!asset.name.endsWith(".json")) continue;
-    const data = await downloadAsset({ octokit, owner, repo, asset });
+    const data = await downloadReleaseAsset({ octokit, owner, repo, asset });
     fs.writeFileSync(path.join(directory, asset.name), data);
   }
   return path.join(directory, "buildchain.release.json");
@@ -99,25 +124,36 @@ async function verifyPublicPassport({ octokit, owner, repo, remoteAssets, expect
   }
 }
 
-async function reconcilePayload({ octokit, owner, repo, releaseId, remoteAssets, assetPath }) {
-  if (!assetPath || !fs.existsSync(assetPath) || !fs.statSync(assetPath).isFile()) {
-    throw new Error(`github-release=true requires a declared GitHub Release artifact, got '${assetPath || ""}'`);
-  }
-  const name = path.basename(assetPath);
-  const data = fs.readFileSync(assetPath);
-  const localDigest = sha256(data);
-  const existing = remoteAssets.get(name);
-  if (!existing) {
-    await octokit.rest.repos.uploadReleaseAsset({ owner, repo, release_id: releaseId, name, data });
-    return { action: "uploaded", name, digest: `sha256:${localDigest}` };
-  }
-  const remoteDigest = await assetDigest({ octokit, owner, repo, asset: existing });
-  if (localDigest !== remoteDigest) {
+async function verifyLocalPassport({
+  passportPath,
+  owner,
+  repo,
+  expected,
+  verifyPassport,
+}) {
+  if (
+    !passportPath ||
+    !fs.existsSync(passportPath) ||
+    !fs.statSync(passportPath).isFile()
+  ) {
     throw new Error(
-      `immutable GitHub Release product payload collision: '${name}' already exists with sha256:${remoteDigest}, refusing sha256:${localDigest}`,
+      "complete recovery repair requires a local 'buildchain.release.json'",
     );
   }
-  return { action: "preserved", name, digest: `sha256:${localDigest}` };
+  const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const report = await verifyPassport({ passportLocation: passportPath });
+  if (report?.ok !== true) {
+    const issues = (report?.issues || [])
+      .map(
+        (issue) =>
+          `${issue.code || "unknown"}: ${issue.message || "verification failed"}`,
+      )
+      .join("; ");
+    throw new Error(
+      `local recovery Passport verification failed${issues ? `: ${issues}` : ""}`,
+    );
+  }
+  assertPassportIdentity({ passport, owner, repo, ...expected });
 }
 
 export async function reuseCompleteGitHubReleaseEvidence({
@@ -130,6 +166,7 @@ export async function reuseCompleteGitHubReleaseEvidence({
   channel = "",
   targetRef = "",
   additionalAssetPaths = [],
+  repairAssetPaths = [],
   verifyPassport = verifyReleasePassport,
 } = {}) {
   const listed = await octokit.rest.repos.listReleaseAssets({
@@ -138,9 +175,45 @@ export async function reuseCompleteGitHubReleaseEvidence({
     release_id: release.id,
     per_page: 100,
   });
-  const remoteAssets = uniqueAssets(listed.data || []);
+  const remoteAssets = uniqueReleaseAssets(listed.data || []);
   if (!remoteAssets.has("buildchain.release.json")) {
-    throw new Error("complete recovery requires the existing GitHub Release asset 'buildchain.release.json'");
+    const localPassportPaths = repairAssetPaths.filter(
+      (assetPath) => path.basename(assetPath) === "buildchain.release.json",
+    );
+    if (localPassportPaths.length !== 1) {
+      throw new Error(
+        "complete recovery requires the existing GitHub Release asset 'buildchain.release.json'",
+      );
+    }
+    await verifyLocalPassport({
+      passportPath: localPassportPaths[0],
+      owner,
+      repo,
+      expected: { tag, target, channel, targetRef },
+      verifyPassport,
+    });
+    const repaired = await reconcileImmutableReleaseAssets({
+      octokit,
+      owner,
+      repo,
+      releaseId: release.id,
+      remoteAssets,
+      assetPaths: repairAssetPaths,
+      rejectUnknown: true,
+      collisionKind: "evidence",
+    });
+    return {
+      action: "repaired",
+      url: release.html_url || "",
+      tag,
+      assetCount: repaired.length,
+      uploadedAssetCount: repaired.filter((asset) => asset.action === "uploaded")
+        .length,
+      preservedAssetCount: repaired.filter(
+        (asset) => asset.action === "preserved",
+      ).length,
+      passportVerified: true,
+    };
   }
   await verifyPublicPassport({
     octokit,
@@ -150,17 +223,10 @@ export async function reuseCompleteGitHubReleaseEvidence({
     expected: { tag, target, channel, targetRef },
     verifyPassport,
   });
-  const payloadResults = [];
-  for (const assetPath of additionalAssetPaths) {
-    payloadResults.push(await reconcilePayload({
-      octokit,
-      owner,
-      repo,
-      releaseId: release.id,
-      remoteAssets,
-      assetPath,
-    }));
-  }
+  const payloadResults = await reconcileImmutableReleaseAssets({
+    octokit, owner, repo, releaseId: release.id, remoteAssets, assetPaths: additionalAssetPaths,
+    collisionKind: "product payload",
+  });
   const uploadedAssetCount = payloadResults.filter((asset) => asset.action === "uploaded").length;
   return {
     action: "reused",
