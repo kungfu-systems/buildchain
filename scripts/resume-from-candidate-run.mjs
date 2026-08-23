@@ -810,7 +810,7 @@ async function resolveTargetAdvance({ observedTargetSha, targetSha, transactionI
   return { status: comparison.status, mergeIsAncestor: ["ahead", "identical"].includes(comparison.status) };
 }
 
-async function resolveRecoveryTransaction({
+export async function resolveRecoveryTransaction({
   repoInfo,
   apiUrl,
   token,
@@ -818,22 +818,21 @@ async function resolveRecoveryTransaction({
   transactionId,
   publicationVersion,
 }) {
-  const byId = await readExistingTransactionById({
-    repoInfo,
-    apiUrl,
-    token,
-    fetchImpl,
-    transactionId,
-  });
-  const version = byId?.version || publicationVersion;
-  const transaction = byId || await readExistingTransaction({
-    repoInfo,
-    apiUrl,
-    token,
-    fetchImpl,
-    version,
-  });
-  return { version, transaction };
+  let transaction = publicationVersion
+    ? await readExistingTransaction({
+        repoInfo,
+        apiUrl,
+        token,
+        fetchImpl,
+        version: publicationVersion,
+      })
+    : undefined;
+  if (!transaction) {
+    transaction = await readExistingTransactionById({
+      repoInfo, apiUrl, token, fetchImpl, transactionId,
+    });
+  }
+  return { version: transaction?.version || publicationVersion, transaction };
 }
 
 function resolveRecoveredStageCapsules({
