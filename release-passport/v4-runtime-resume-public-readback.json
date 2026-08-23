@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-runtime-resume-public-readback/v1",
+  "observedAt": "2026-08-23T15:55:01.218Z",
+  "repository": "kungfu-systems/buildchain",
+  "version": "4.0.1-alpha.28",
+  "refs": {
+    "target": {
+      "ref": "alpha/v4/v4.0",
+      "sha": "7c11fee468681506b953ae8ebeaf368944582161"
+    },
+    "floating": {
+      "ref": "v4-alpha",
+      "sha": "7c11fee468681506b953ae8ebeaf368944582161"
+    },
+    "exactTag": {
+      "ref": "v4.0.1-alpha.28",
+      "sha": "3c83a3212470ef967cda326752d11a2c608ad473"
+    }
+  },
+  "npm": {
+    "package": "@kungfu-tech/buildchain",
+    "version": "4.0.1-alpha.28",
+    "distTag": "alpha",
+    "integrity": "sha512-9RYBSCvvpxTSTqJi67DEjh7/HzpuC2PiQ0CMgyRInAd66gkpYWzvd64ESgPXsUU9rniyOnOd7oxD7Vhv0W9fTA==",
+    "targetVersion": "4.0.1-alpha.29",
+    "distTagVersion": "4.0.1-alpha.29",
+    "distTagIntegrity": "sha512-rAqC68Bk/5OxDB+/5GbnudRdWkdca1B56D94X3L/HUUsIQH/yZPmtf/wqFsPAiQDCtLD8XfrR76a2La3WB8pfg=="
+  },
+  "root": "sha256:2a506514b96bc64ba4486806ab54b7a9b3fc9b7ff065a1f9f4580dfbd7f93a19"
+}
