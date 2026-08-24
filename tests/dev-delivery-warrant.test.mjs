@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { classifyDevDeliveryDelta, cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, createNativeCommandContract, devDeliveryContentRoot, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, heartbeatDevDeliveryWarrant, normalizeDevDeliveryQueue, observeDevDeliveryQueue, rankDevDeliveryCandidates, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
+import { classifyDevDeliveryDelta, cancelQueuedDevDeliveryCandidate, closeDevDeliveryWarrant, createDevDeliveryQueue, createNativeCommandContract, devDeliveryContentRoot, createIntegrationDeliveryProof, createProjectCutReplayPlan, createProjectCutReplayProof, createSourceQualificationProof, heartbeatDevDeliveryWarrant, normalizeDevDeliveryQueue, observeDevDeliveryQueue, rankDevDeliveryCandidates, reconcileDevDeliveryTerminalEvidence, recoverExpiredDevDeliveryWarrant, selectDevDeliveryWarrant, settleDevDeliveryTerminalEvent, submitDevDeliveryCandidate, verifyIntegrationDeliveryProof, verifyProjectCutReplayProof, verifySourceQualificationProof } from "../packages/core/dev-delivery-warrant.js";
 
 const ROOTS = Object.fromEntries(["assignment", "initiative", "source", "patch", "proof", "plan", "closure", "dependency", "toolchain", "shard", "context", "evidence"].map((name, index) => [name, `sha256:${(index + 1).toString(16).repeat(64)}`]));
 
@@ -480,6 +480,35 @@ test("terminal failure settlement closes the exact active Warrant and repeats id
       }),
     /outcome does not match/u,
   );
+});
+
+test("terminal evidence correction preserves history and admits only the exact integration proof", () => {
+  const submitted = submit(queue(), 149, "2026-08-04T00:00:00Z", { environmentRoot: undefined, nativeCommandContract: undefined, deliveryClass: "non-native-fast" });
+  const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
+  const terminalInput = { pullRequestNumber: 149, sourceHead: selected.warrant.sourceHead, fencingToken: selected.warrant.fencingToken, leaseGeneration: selected.warrant.generation, outcome: "merged", evidenceRoot: ROOTS.evidence, reason: "legacy terminal evidence" };
+  const closed = settleDevDeliveryTerminalEvent(selected.queue, terminalInput, { now: "2026-08-04T00:02:00Z" });
+  const integrationProof = createIntegrationDeliveryProof({ repository: closed.queue.repository, protectedBase: closed.queue.protectedBase, sourceProofRoot: selected.warrant.sourceProofRoot, currentBase: "b".repeat(40), replayTree: "c".repeat(40), mergeGroupHead: "b".repeat(40), mergeGroupTree: "c".repeat(40), warrant: selected.warrant, requiredContextRoots: [ROOTS.context], verifiedAt: "2026-08-04T00:03:00Z" });
+  const correctionInput = { candidateId: selected.warrant.candidateId, expectedPriorEvidenceRoot: ROOTS.evidence, integrationProof, reason: "Replace untyped terminal evidence with the product integration proof." };
+  const corrected = reconcileDevDeliveryTerminalEvidence(closed.queue, correctionInput, { now: "2026-08-04T00:04:00Z" });
+  const terminal = corrected.queue.candidates[0].terminal;
+  assert.equal(terminal.evidenceRoot, ROOTS.evidence);
+  assert.equal(terminal.integrationEvidenceCorrection.priorEvidenceRoot, ROOTS.evidence);
+  assert.equal(terminal.integrationEvidenceCorrection.integrationProof.proofRoot, integrationProof.proofRoot);
+  assert.match(terminal.integrationEvidenceCorrection.correctionRoot, /^sha256:[0-9a-f]{64}$/u);
+  assert.equal(normalizeDevDeliveryQueue(corrected.queue).stateRoot, corrected.queue.stateRoot);
+
+  const duplicateCorrection = reconcileDevDeliveryTerminalEvidence(corrected.queue, correctionInput, { now: "2026-08-04T00:05:00Z" });
+  assert.equal(duplicateCorrection.receipt.action, "duplicate-terminal-evidence-correction-noop");
+  assert.equal(duplicateCorrection.queue.stateRoot, corrected.queue.stateRoot);
+  const duplicateSettlement = settleDevDeliveryTerminalEvent(corrected.queue, { ...terminalInput, evidenceRoot: integrationProof.proofRoot }, { now: "2026-08-04T00:05:00Z" });
+  assert.equal(duplicateSettlement.receipt.action, "duplicate-terminal-event-noop");
+  assert.equal(duplicateSettlement.receipt.evidenceRoot, integrationProof.proofRoot);
+  assert.throws(() => settleDevDeliveryTerminalEvent(corrected.queue, terminalInput), /evidenceRoot drift/u);
+
+  const tampered = structuredClone(integrationProof);
+  tampered.requiredContextRoots = [ROOTS.shard];
+  assert.throws(() => reconcileDevDeliveryTerminalEvidence(closed.queue, { ...correctionInput, integrationProof: tampered }), /exact integration proof/u);
+  assert.throws(() => reconcileDevDeliveryTerminalEvidence(corrected.queue, { ...correctionInput, reason: "different correction" }), /already exists with different evidence/u);
 });
 
 test("duplicate terminal failure settlement remains a no-op after the next Warrant is selected", () => {
