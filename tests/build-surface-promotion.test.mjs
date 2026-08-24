@@ -247,6 +247,16 @@ test("Buildchain stable promotion gates publication after RC resolution", () => 
   );
   assert.match(
     wrapper,
+    /BUILDCHAIN_RECOVERED_CANDIDATE_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.version \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.publication-version \}\}/,
+  );
+  assert.match(wrapper, /planned-publication-version=\$\{BUILDCHAIN_RECOVERED_PUBLICATION_VERSION\}/);
+  assert.match(wrapper, /planned-release-candidate-version=\$\{BUILDCHAIN_RECOVERED_CANDIDATE_VERSION\}/);
+  assert.match(
+    wrapper,
     /Buildchain stable publication plan must bind an exact alpha candidate version/,
   );
   assert.match(
