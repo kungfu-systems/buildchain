@@ -106,6 +106,17 @@ function containedFinalizationPassportCwd(context, finalizationSource) {
   return finalizationSource?.workspace || context.cwd;
 }
 
+function containedFinalizationReleaseCandidateValidation(context) {
+  const validation = context.releaseCandidateValidation;
+  if (
+    validation?.recoveredCandidate === true
+    && validation?.treeEquivalent === true
+  ) {
+    return validation;
+  }
+  return null;
+}
+
 async function evaluateAlphaRecovery(context, plan) {
   const acceptedExactShas = context.transactionAcceptedExactTagShas(
     plan.currentAlphaTransaction,
@@ -254,7 +265,8 @@ async function finalizeContainedAlpha(context, state) {
       passportKfdSupportMatrixJson: "",
       passportKfdProductGateJsons: [],
       passportInvariantPassportJsons: [],
-      passportReleaseCandidateValidation: null,
+      passportReleaseCandidateValidation:
+        containedFinalizationReleaseCandidateValidation(context),
     });
   } finally {
     if (finalizationSource?.root) {
@@ -622,4 +634,8 @@ async function promoteAlphaChannel(context) {
   );
   return finalizeAlphaPublication(context, state, publication);
 }
-export { containedFinalizationPassportCwd, promoteAlphaChannel };
+export {
+  containedFinalizationPassportCwd,
+  containedFinalizationReleaseCandidateValidation,
+  promoteAlphaChannel,
+};

@@ -55,6 +55,7 @@ const {
 } = await import("../actions/promote-buildchain-ref/internal/durable-transaction-operations.js");
 const {
   containedFinalizationPassportCwd,
+  containedFinalizationReleaseCandidateValidation,
 } = await import("../actions/promote-buildchain-ref/internal/promote-alpha-channel.js");
 
 const {
@@ -82,6 +83,33 @@ test("recovered alpha finalization keeps hydrated candidate evidence as the Pass
       { workspace: "/tmp/transaction-source" },
     ),
     "/tmp/transaction-source",
+  );
+
+  const recoveredValidation = {
+    recoveredCandidate: true,
+    treeEquivalent: true,
+    candidateSourceSha: "6".repeat(40),
+  };
+  assert.equal(
+    containedFinalizationReleaseCandidateValidation({
+      releaseCandidateValidation: recoveredValidation,
+    }),
+    recoveredValidation,
+  );
+  assert.equal(
+    containedFinalizationReleaseCandidateValidation({
+      releaseCandidateValidation: {
+        ...recoveredValidation,
+        treeEquivalent: false,
+      },
+    }),
+    null,
+  );
+  assert.equal(
+    containedFinalizationReleaseCandidateValidation({
+      releaseCandidateValidation: undefined,
+    }),
+    null,
   );
 });
 
@@ -318,6 +346,91 @@ test("durable transaction operations forward the verified gate aggregate", async
   assert.equal(
     observedEnvironment.BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON,
     aggregate,
+  );
+});
+
+test("contained recovered finalization forwards exact candidate validation into the Passport", async () => {
+  const candidateValidation = {
+    candidateSourceSha: "6".repeat(40),
+    builtSourceSha: "6".repeat(40),
+    promotionChannelSha: "7".repeat(40),
+    candidateSourceTreeSha: "8".repeat(40),
+    builtSourceTreeSha: "8".repeat(40),
+    promotionChannelTreeSha: "8".repeat(40),
+    treeEquivalent: true,
+    recoveredCandidate: true,
+  };
+  let collectedOptions;
+  const transaction = {
+    id: "alpha3-transaction",
+    version: "4.0.0-alpha.3",
+    exact_tag: "v4.0.0-alpha.3",
+    source_sha: candidateValidation.promotionChannelSha,
+    release_sha: candidateValidation.promotionChannelSha,
+    state: "finalizing",
+  };
+  const transactionResult = {
+    transaction,
+    statePath: "/tmp/kungfu-alpha3/.buildchain/release-state/4.0.0-alpha.3.json",
+    evidencePath:
+      "/tmp/kungfu-alpha3/.buildchain/release-evidence/4.0.0-alpha.3/evidence.json",
+  };
+  const operations = createDurableTransactionOperations({
+    octokit: {},
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    sha: candidateValidation.promotionChannelSha,
+    targetRef: "alpha/v4/v4.0",
+    cwd: "/tmp/kungfu-alpha3",
+    publishTransaction: true,
+    releasePassport: true,
+    releaseCandidateValidation: candidateValidation,
+    updates: [],
+    rule: { channel: "alpha", releasePrefix: "v4.0" },
+    assertExpectedPublicationVersion() {},
+    assertPublicationQualification() {},
+    loadBuildchainConfig() {
+      return {};
+    },
+    getLifecycleStage() {
+      return undefined;
+    },
+    async runPublishTransaction() {
+      return transactionResult;
+    },
+    async completeTransactionFinalization() {
+      return { ...transactionResult, transaction: { ...transaction, state: "complete" } };
+    },
+    async collectAndPersistReleasePassport(options) {
+      collectedOptions = options;
+      return options.result;
+    },
+    releaseTagForPublishedVersion(version) {
+      return `v${version}`;
+    },
+    publicReleaseTagForTransaction(value) {
+      return value.exact_tag;
+    },
+    splitPathList() {
+      return [];
+    },
+    path,
+  });
+
+  await operations.executePublishTransaction({
+    version: transaction.version,
+    exactTag: transaction.exact_tag,
+    channel: "alpha",
+    line: "v4.0",
+    releaseSha: transaction.release_sha,
+  });
+  await operations.markComplete({
+    passportReleaseCandidateValidation: candidateValidation,
+  });
+
+  assert.deepEqual(
+    collectedOptions.releaseCandidateValidation,
+    candidateValidation,
   );
 });
 const {
