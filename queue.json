@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 826,
+  "generation": 827,
   "fencingCounter": 135,
   "policy": {
     "agingSeconds": 900,
@@ -11,47 +11,7 @@
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:7e7482d01eb14163813dcfda724114da95d52fdf0576d5dbf45bc09800d346df",
-    "pullRequestNumber": 3097,
-    "sourceHead": "86df880e68045d7732c0c9a104d44e85751670f8",
-    "assignmentRoot": "sha256:3972499a9f69af7db7877536a28ad466bfff75fe592e885f7083de76c9742486",
-    "initiativeRoot": "sha256:606b81bda91d831a3f927132a5b30903ca78f341e534c1b1b728e897ee84b701",
-    "sourceIdentityRoot": "sha256:0964a1a3a51fb9cbefae01feadc8a022bc53c9cdac0f4e08dfb1d052321a8bc5",
-    "sourcePatchRoot": "sha256:abba90aedccfb15b1e742a2c64512f5a7538a8f11544d6a7c4efed29ec45cb6f",
-    "sourceProofRoot": "sha256:10da0788c350857a6fd7fccd85607a9961ebcc4c67913f3c208a88491e1773f0",
-    "planRoot": "sha256:64af524c0fb2b19c7923226266e3e2f9e102905aeb194bcb88339909f1e66da1",
-    "closureRoot": "sha256:eef7308e7f3acf3b29741ac367ca68560daf1ea528210843e389376e74657986",
-    "dependencyRoot": "sha256:64d45cd2c501266cf685f78e8a13659be902126f162f6acb2343fb44c5c81b96",
-    "toolchainRoot": "sha256:db199a21e5511e66a7f0c4a8557cdb03e5941f9a69f7e065167ad98f970dfa67",
-    "environmentRoot": "sha256:7ad100ac4a5742137ee9fb71a667ab30338ea4e4a240f9adb9b9ea880009c475",
-    "nativeCommandContract": {
-      "schema": "kungfu.buildchain.native-command-contract/v1",
-      "runner": "bash-lc",
-      "command": "corepack prepare pnpm@11.7.0 --activate && corepack enable && pnpm --version && pnpm install --frozen-lockfile && pnpm run check",
-      "commandRoot": "sha256:d0c014631f0785ed2ce01b5d5b62dcca5fbc82387621dc36d759552bdb394656"
-    },
-    "affectedPaths": [
-      "actions/promote-buildchain-ref/dist/index.js",
-      "actions/promote-buildchain-ref/lib.js",
-      "tests/promote-buildchain-ref-recovery.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 32685434093,
-    "deliveryClass": "native-proof-required",
-    "priority": "ordinary",
-    "generation": 135,
-    "expectedOldStateRoot": "sha256:2ef4cb01849f9baaaff91ef61c073a0de72ec9742f324a9ef046ffac779bce8a",
-    "issuedAt": "2026-08-24T03:29:00.629Z",
-    "expiresAt": "2026-08-24T04:32:46.019Z",
-    "fencingToken": "sha256:ff99ca64584e19965881a7ce374ed9460bc66b8c8c986eb1f239c5cd64c13507",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-24T03:32:46.019Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -6133,11 +6093,18 @@
       "sourceWorkflowRunId": 32685434093,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-24T03:28:56.784Z",
-      "updatedAt": "2026-08-24T03:32:46.019Z",
+      "updatedAt": "2026-08-24T03:42:11.838Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
-      "terminal": null,
+      "status": "terminal-failure",
+      "terminal": {
+        "outcome": "terminal-failure",
+        "reason": "Provider finalizer run 32686576144 rejected the live PR boundary because merge queue landed PR 3097 before Warrant qualification; credentialless native transfer completed and is terminal.",
+        "evidenceRoot": "sha256:b547523d56a4a80b90a6e0a0a5ad1054f66a4981bb81e95453d6a603b7d290d5",
+        "closedAt": "2026-08-24T03:42:11.838Z",
+        "fencingToken": "sha256:ff99ca64584e19965881a7ce374ed9460bc66b8c8c986eb1f239c5cd64c13507",
+        "leaseGeneration": 135
+      },
       "affectedPaths": [
         "actions/promote-buildchain-ref/dist/index.js",
         "actions/promote-buildchain-ref/lib.js",
@@ -6146,6 +6113,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-24T03:32:46.019Z",
-  "stateRoot": "sha256:e4a410625b19f990d0d7058b1f42e32f18da555e223da5009b2b3b53f8e73e4f"
+  "updatedAt": "2026-08-24T03:42:11.838Z",
+  "stateRoot": "sha256:5c528518feab618954b47254e74b41d4b0b58b8e323e9d727cae2a0b76e11b88"
 }
