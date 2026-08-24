@@ -42,6 +42,17 @@ test("targeted CLI preserves an explicit queue landing mode", () => {
   assert.equal(options.landingMode, "queue");
 });
 
+test("alpha caller compatibility retains the required pre-readiness queue fence", () => {
+  const options = cliOptions([
+    "--repository", "kungfu-systems/buildchain",
+    "--branch", "dev/v4/v4.0",
+    "--pull-request", "21",
+    "--expected-head", "a".repeat(40),
+  ], { WARRANT_MODE: "required" });
+  assert.equal(options.warrantMode, "required");
+  assert.equal(options.queueAdmissionContext, "Queue admission lease");
+});
+
 function pr(overrides = {}) {
   return {
     number: overrides.number ?? 1,

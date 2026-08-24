@@ -1137,6 +1137,11 @@ function cliFlag(args, name) {
 
 export function cliOptions(args = [], environment = process.env) {
   const targetPullRequestNumber = cliValue(args, "pull-request", environment.BUILDCHAIN_DEV_PR_EXPECTED_PR_NUMBER);
+  const warrantMode = cliValue(
+    args,
+    "warrant-mode",
+    environment.BUILDCHAIN_DEV_PR_WARRANT_MODE || environment.WARRANT_MODE,
+  );
   return {
     repository: cliValue(args, "repository", environment.BUILDCHAIN_DEV_PR_REPOSITORY || environment.GITHUB_REPOSITORY),
     targetBranch: cliValue(args, "branch", environment.BUILDCHAIN_DEV_PR_TARGET_BRANCH || environment.GITHUB_REF_NAME),
@@ -1146,10 +1151,14 @@ export function cliOptions(args = [], environment = process.env) {
     blockLabels: cliValue(args, "block-labels", environment.BUILDCHAIN_DEV_PR_BLOCK_LABELS),
     allowedHeadPrefixes: cliValue(args, "allowed-head-prefixes", environment.BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES),
     requiredChecks: cliValue(args, "required-checks", environment.BUILDCHAIN_DEV_PR_REQUIRED_CHECKS),
-    queueAdmissionContext: cliValue(args, "queue-admission-context", environment.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT),
+    queueAdmissionContext: cliValue(
+      args,
+      "queue-admission-context",
+      environment.BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT || (warrantMode === "required" ? "Queue admission lease" : ""),
+    ),
     activeLeaseContext: cliValue(args, "active-lease-context", environment.BUILDCHAIN_DEV_PR_ACTIVE_LEASE_CONTEXT),
     diagnosticContext: cliValue(args, "diagnostic-context", environment.BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT),
-    warrantMode: cliValue(args, "warrant-mode", environment.BUILDCHAIN_DEV_PR_WARRANT_MODE),
+    warrantMode,
     warrantResultPath: cliValue(args, "warrant-result", environment.BUILDCHAIN_DEV_PR_WARRANT_RESULT_PATH),
     projectCutProofPath: cliValue(args, "project-cut-proof", environment.BUILDCHAIN_DEV_PR_PROJECT_CUT_PROOF_PATH),
     sourceProofPath: cliValue(args, "source-proof", environment.BUILDCHAIN_DEV_PR_SOURCE_PROOF_PATH),
