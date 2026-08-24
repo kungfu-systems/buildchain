@@ -428,6 +428,83 @@ test("release passport preserves a tree-equivalent RC controller source during d
   );
 });
 
+test("release passport preserves a tree-equivalent promotion controller source during durable recovery", () => {
+  const transactionSourceSha = "f".repeat(40);
+  const builtSourceSha = "a".repeat(40);
+  const promotionChannelSha = "e".repeat(40);
+  const equivalentTreeSha = "1".repeat(40);
+  const reference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"b".repeat(64)}`,
+    receiptDigest: `sha256:${"c".repeat(64)}`,
+    sourceSha: promotionChannelSha,
+    runtimeSha: "d".repeat(40),
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
+  const passport = createReleasePassport({
+    repository: "kungfu-systems/buildchain",
+    tag: "v3.0.1",
+    sourceSha: transactionSourceSha,
+    release: {
+      builtSourceSha,
+      builtSourceTreeSha: equivalentTreeSha,
+      promotionChannelSha,
+      promotionChannelTreeSha: equivalentTreeSha,
+      treeEquivalent: true,
+    },
+    controllerReceiptReferences: [reference],
+  });
+
+  assert.deepEqual(passport.controllerReceipts, [reference]);
+});
+
+test("release passport preserves the sealed candidate controller source only for the exact promotion tree", () => {
+  const transactionSourceSha = "f".repeat(40);
+  const candidateSourceSha = "9".repeat(40);
+  const builtSourceSha = "a".repeat(40);
+  const promotionChannelSha = "e".repeat(40);
+  const equivalentTreeSha = "1".repeat(40);
+  const reference = {
+    controllerId: "build-lifecycle",
+    planDigest: `sha256:${"b".repeat(64)}`,
+    receiptDigest: `sha256:${"c".repeat(64)}`,
+    sourceSha: candidateSourceSha,
+    runtimeSha: "d".repeat(40),
+    status: "passed",
+    artifact: "buildchain-controller-receipt",
+  };
+  const release = {
+    candidateSourceSha,
+    candidateSourceTreeSha: equivalentTreeSha,
+    builtSourceSha,
+    builtSourceTreeSha: equivalentTreeSha,
+    promotionChannelSha,
+    promotionChannelTreeSha: equivalentTreeSha,
+    treeEquivalent: true,
+  };
+  const passport = createReleasePassport({
+    repository: "kungfu-systems/buildchain",
+    tag: "v3.0.1",
+    sourceSha: transactionSourceSha,
+    release,
+    controllerReceiptReferences: [reference],
+  });
+
+  assert.deepEqual(passport.controllerReceipts, [reference]);
+  assert.equal(passport.release.candidateSourceSha, candidateSourceSha);
+  assert.equal(passport.release.candidateSourceTreeSha, equivalentTreeSha);
+  assert.throws(
+    () => createReleasePassport({
+      tag: "v3.0.1",
+      sourceSha: transactionSourceSha,
+      release: { ...release, candidateSourceTreeSha: "2".repeat(40) },
+      controllerReceiptReferences: [reference],
+    }),
+    /source SHA mismatch/,
+  );
+});
+
 test("KFD release gate metadata is statically bundled for action runtimes", () => {
   const source = fs.readFileSync(path.resolve("packages/core/kfd-gate.js"), "utf8");
   assert.match(source, /from "@kungfu-tech\/kfd\/package\.json" with \{ type: "json" \}/);
@@ -2760,6 +2837,49 @@ test("release passport can collect KFD-3 artifact witness from product verify co
 
   assert.equal(report.ok, true);
   assert.equal(passport[metadata.key].collaborationInterfaces[0].artifactWitness.id, "kungfu-agent-bridge");
+});
+
+test("KFD-3 artifact command inherits the exact tree-equivalent adopter source", () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitness } = createKfd3WitnessFixture();
+  const observedSourcePath = path.join(cwd, "observed-kfd-source.txt");
+  const commandFixturePath = path.join(cwd, "emit-source-bound-artifact-witness.mjs");
+  const candidateSourceSha = "c".repeat(40);
+  const promotionChannelSha = "d".repeat(40);
+  const equivalentTreeSha = "e".repeat(40);
+  fs.writeFileSync(
+    commandFixturePath,
+    [
+      'import fs from "node:fs";',
+      `fs.writeFileSync(${JSON.stringify(observedSourcePath)}, process.env.BUILDCHAIN_SOURCE_SHA || "");`,
+      `process.stdout.write(${JSON.stringify(JSON.stringify(artifactWitness))});`,
+      "",
+    ].join("\n"),
+  );
+
+  collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: promotionChannelSha,
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+      candidateSourceSha,
+      builtSourceSha: candidateSourceSha,
+      promotionChannelSha,
+      candidateSourceTreeSha: equivalentTreeSha,
+      builtSourceTreeSha: equivalentTreeSha,
+      promotionChannelTreeSha: equivalentTreeSha,
+      treeEquivalent: true,
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactVerifyCommand: `${process.execPath} ${commandFixturePath}`,
+  });
+
+  assert.equal(fs.readFileSync(observedSourcePath, "utf8"), candidateSourceSha);
 });
 
 test("KFD-3 artifact command can materialize transient product gate inputs before collection", () => {

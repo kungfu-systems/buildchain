@@ -43,11 +43,21 @@ const {
   selectReleaseTag,
   updateVersionStateContents,
   validatePromotionReleaseCandidate,
+  preparePublishTransactionContext,
+  publishTransactionEnvironment,
   sanitizedPublishProcessEnvironment,
 } = await import("../actions/promote-buildchain-ref/lib.js");
 const {
   loadBuildchainConfig,
 } = await import("../packages/core/buildchain-config.js");
+const {
+  createDurableTransactionOperations,
+} = await import("../actions/promote-buildchain-ref/internal/durable-transaction-operations.js");
+const {
+  containedFinalizationPassportCwd,
+  containedFinalizationKfdAdopterInputs,
+  containedFinalizationReleaseCandidateValidation,
+} = await import("../actions/promote-buildchain-ref/internal/promote-alpha-channel.js");
 
 const {
   explainReleaseLineDryRun,
@@ -56,6 +66,75 @@ const {
 const {
   transitionReleaseTransaction,
 } = await import("../packages/core/publish-transaction.js");
+
+test("recovered alpha finalization keeps hydrated candidate evidence as the Passport cwd", () => {
+  assert.equal(
+    containedFinalizationPassportCwd(
+      {
+        cwd: "/runner/work/kungfu",
+        releaseCandidateValidation: { recoveredCandidate: true },
+      },
+      { workspace: "/tmp/transaction-source" },
+    ),
+    "/runner/work/kungfu",
+  );
+  assert.equal(
+    containedFinalizationPassportCwd(
+      { cwd: "/runner/work/kungfu", releaseCandidateValidation: undefined },
+      { workspace: "/tmp/transaction-source" },
+    ),
+    "/tmp/transaction-source",
+  );
+
+  const recoveredValidation = {
+    recoveredCandidate: true,
+    treeEquivalent: true,
+    candidateSourceSha: "6".repeat(40),
+  };
+  assert.equal(
+    containedFinalizationReleaseCandidateValidation({
+      releaseCandidateValidation: recoveredValidation,
+    }),
+    recoveredValidation,
+  );
+  assert.equal(
+    containedFinalizationReleaseCandidateValidation({
+      releaseCandidateValidation: {
+        ...recoveredValidation,
+        treeEquivalent: false,
+      },
+    }),
+    null,
+  );
+  assert.equal(
+    containedFinalizationReleaseCandidateValidation({
+      releaseCandidateValidation: undefined,
+    }),
+    null,
+  );
+
+  const kfdInputs = containedFinalizationKfdAdopterInputs(
+    {
+      releasePassportKfdAdopterManifestJson:
+        ".buildchain/runtime/kfd-adopter/manifest.json",
+      releasePassportKfdProductGateJsons:
+        ".buildchain/runtime/kfd-product-gates/kfd-4/gate.json\n.buildchain/runtime/kfd-product-gates/kfd-5/gate.json",
+      splitPathList(value) {
+        return value.split("\n");
+      },
+    },
+    recoveredValidation,
+  );
+  assert.equal(
+    kfdInputs.manifestJson,
+    ".buildchain/runtime/kfd-adopter/manifest.json",
+  );
+  assert.equal(kfdInputs.productGateJsons.length, 2);
+  assert.deepEqual(
+    containedFinalizationKfdAdopterInputs({}, null),
+    { manifestJson: "", productGateJsons: [] },
+  );
+});
 
 test("release passport recovers assets from the durable sealed-bundle manifest", () => {
   const cwd = path.join("/tmp", "buildchain-recovered-passport");
@@ -200,6 +279,182 @@ test("publish subprocesses omit oversized inline variables", () => {
     if (previous === undefined) delete process.env[name];
     else process.env[name] = previous;
   }
+});
+
+test("publish transaction context forwards the verified gate aggregate after input sanitization", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-publish-gate-"));
+  const aggregate = JSON.stringify({
+    contract: "buildchain.shifu-gate-aggregate/v1",
+    digest: `sha256:${"a".repeat(64)}`,
+  });
+  const context = preparePublishTransactionContext({
+    octokit: {},
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    cwd,
+    loadedConfig: {},
+    publishTransaction: true,
+    publishCommand: "node consumer-publish.mjs",
+    version: "4.0.0-alpha.2",
+    exactTag: "v4.0.0-alpha.2",
+    channel: "alpha",
+    line: "v4/v4.0",
+    sourceSha: "a".repeat(40),
+    targetRef: "alpha/v4/v4.0",
+    releaseSha: "b".repeat(40),
+    releaseMaterialSha: "c".repeat(40),
+    publishToolingSha: "d".repeat(40),
+    promotionGeneratedAt: "2026-08-15T00:00:00.000Z",
+    publishMode: "publish-final-version",
+    publishAuth: "trusted-publishing",
+    publishDistTag: "alpha",
+    publicationGateAggregateJson: aggregate,
+  });
+  const publishEnv = publishTransactionEnvironment(context);
+  const sanitized = sanitizedPublishProcessEnvironment(publishEnv);
+  assert.equal(
+    sanitized.BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON,
+    aggregate,
+  );
+});
+
+test("durable transaction operations forward the verified gate aggregate", async () => {
+  const aggregate = JSON.stringify({
+    contract: "buildchain.shifu-gate-aggregate/v1",
+    digest: `sha256:${"b".repeat(64)}`,
+  });
+  let observedEnvironment;
+  const operations = createDurableTransactionOperations({
+    octokit: {},
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    sha: "a".repeat(40),
+    targetRef: "alpha/v4/v4.0",
+    cwd: "/tmp",
+    publishTransaction: true,
+    publishCommand: "node consumer-publish.mjs",
+    publicationGateAggregateJson: aggregate,
+    updates: [],
+    assertExpectedPublicationVersion() {},
+    assertPublicationQualification() {},
+    loadBuildchainConfig() {
+      return {};
+    },
+    getLifecycleStage() {
+      return undefined;
+    },
+    async runPublishTransaction(options) {
+      const prepared = preparePublishTransactionContext({
+        ...options,
+        loadedConfig: {},
+      });
+      observedEnvironment = sanitizedPublishProcessEnvironment(
+        publishTransactionEnvironment(prepared),
+      );
+      return undefined;
+    },
+    releaseTagForPublishedVersion(version) {
+      return `v${version}`;
+    },
+  });
+
+  await operations.executePublishTransaction({
+    version: "4.0.0-alpha.2",
+    exactTag: "v4.0.0-alpha.2",
+    channel: "alpha",
+    line: "v4/v4.0",
+    releaseSha: "c".repeat(40),
+  });
+
+  assert.equal(
+    observedEnvironment.BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON,
+    aggregate,
+  );
+});
+
+test("contained recovered finalization forwards exact candidate validation into the Passport", async () => {
+  const candidateValidation = {
+    candidateSourceSha: "6".repeat(40),
+    builtSourceSha: "6".repeat(40),
+    promotionChannelSha: "7".repeat(40),
+    candidateSourceTreeSha: "8".repeat(40),
+    builtSourceTreeSha: "8".repeat(40),
+    promotionChannelTreeSha: "8".repeat(40),
+    treeEquivalent: true,
+    recoveredCandidate: true,
+  };
+  let collectedOptions;
+  const transaction = {
+    id: "alpha3-transaction",
+    version: "4.0.0-alpha.3",
+    exact_tag: "v4.0.0-alpha.3",
+    source_sha: candidateValidation.promotionChannelSha,
+    release_sha: candidateValidation.promotionChannelSha,
+    state: "finalizing",
+  };
+  const transactionResult = {
+    transaction,
+    statePath: "/tmp/kungfu-alpha3/.buildchain/release-state/4.0.0-alpha.3.json",
+    evidencePath:
+      "/tmp/kungfu-alpha3/.buildchain/release-evidence/4.0.0-alpha.3/evidence.json",
+  };
+  const operations = createDurableTransactionOperations({
+    octokit: {},
+    owner: "kungfu-systems",
+    repo: "kungfu",
+    sha: candidateValidation.promotionChannelSha,
+    targetRef: "alpha/v4/v4.0",
+    cwd: "/tmp/kungfu-alpha3",
+    publishTransaction: true,
+    releasePassport: true,
+    releaseCandidateValidation: candidateValidation,
+    updates: [],
+    rule: { channel: "alpha", releasePrefix: "v4.0" },
+    assertExpectedPublicationVersion() {},
+    assertPublicationQualification() {},
+    loadBuildchainConfig() {
+      return {};
+    },
+    getLifecycleStage() {
+      return undefined;
+    },
+    async runPublishTransaction() {
+      return transactionResult;
+    },
+    async completeTransactionFinalization() {
+      return { ...transactionResult, transaction: { ...transaction, state: "complete" } };
+    },
+    async collectAndPersistReleasePassport(options) {
+      collectedOptions = options;
+      return options.result;
+    },
+    releaseTagForPublishedVersion(version) {
+      return `v${version}`;
+    },
+    publicReleaseTagForTransaction(value) {
+      return value.exact_tag;
+    },
+    splitPathList() {
+      return [];
+    },
+    path,
+  });
+
+  await operations.executePublishTransaction({
+    version: transaction.version,
+    exactTag: transaction.exact_tag,
+    channel: "alpha",
+    line: "v4.0",
+    releaseSha: transaction.release_sha,
+  });
+  await operations.markComplete({
+    passportReleaseCandidateValidation: candidateValidation,
+  });
+
+  assert.deepEqual(
+    collectedOptions.releaseCandidateValidation,
+    candidateValidation,
+  );
 });
 const {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,

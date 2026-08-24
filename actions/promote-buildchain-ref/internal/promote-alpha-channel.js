@@ -1,3 +1,10 @@
+import {
+  containedFinalizationKfdAdopterInputs,
+  containedFinalizationPassportCwd,
+  containedFinalizationReleaseCandidateValidation,
+  evaluateAlphaRecovery,
+} from "./alpha-publication-recovery.js";
+
 async function planAlphaPublication(context) {
   const ownsMajorAlphaTag = await context.ownsMajorAlphaFloatingTag();
   const sharedAlphaAuthorityMajor = context.getPublishContract(
@@ -13,7 +20,9 @@ async function planAlphaPublication(context) {
     ? context.requestedTags.filter((tag) => tag.includes("-alpha."))
     : [];
   if (explicitAlphaTags.length > 1) {
-    throw new Error("Alpha promotion accepts at most one explicit prerelease tag");
+    throw new Error(
+      "Alpha promotion accepts at most one explicit prerelease tag",
+    );
   }
   const currentAlpha = explicitAlphaTags[0]
     ? undefined
@@ -32,11 +41,11 @@ async function planAlphaPublication(context) {
     : undefined;
   const publishTransactionEnabled = Boolean(
     context.publishTransaction ||
-      context.publishCommand ||
-      context.getLifecycleStage(
-        context.loadBuildchainConfig(context.cwd),
-        "publish",
-      ),
+    context.publishCommand ||
+    context.getLifecycleStage(
+      context.loadBuildchainConfig(context.cwd),
+      "publish",
+    ),
   );
   const resumableAlpha =
     explicitAlphaTags[0] || !publishTransactionEnabled
@@ -80,94 +89,6 @@ async function planAlphaPublication(context) {
     currentAlphaDevSha,
   };
 }
-function needsContainedAlphaFinalization(context, plan, recovery) {
-  return Boolean(
-    plan.currentAlpha &&
-      recovery.transactionOpen &&
-      ["published", "finalizing"].includes(
-        plan.currentAlphaTransaction.state || "",
-      ) &&
-      context.transactionHasPublishedMaterial(plan.currentAlphaTransaction) &&
-      recovery.containsTransaction &&
-      plan.currentAlpha.version === plan.currentAlphaTransaction.version &&
-      plan.currentAlpha.tag === plan.currentAlphaTransaction.exact_tag &&
-      plan.currentAlphaTransaction.target_ref === context.targetRef &&
-      (!context.expectedPublicationVersion ||
-        context.expectedPublicationVersion ===
-          plan.currentAlphaTransaction.version) &&
-      !plan.currentAlphaTagSha,
-  );
-}
-
-async function evaluateAlphaRecovery(context, plan) {
-  const acceptedExactShas = context.transactionAcceptedExactTagShas(
-    plan.currentAlphaTransaction,
-    context.sha,
-  );
-  const settled =
-    plan.currentAlpha &&
-    plan.currentAlphaDevSha === context.sha &&
-    plan.currentAlphaFloatingSha === context.sha &&
-    (!plan.ownsMajorAlphaTag ||
-      plan.currentAlphaMajorFloatingSha === context.sha) &&
-    plan.currentAlphaTagSha &&
-    acceptedExactShas.includes(plan.currentAlphaTagSha);
-  const hasFinalizationRefs =
-    plan.currentAlpha &&
-    Boolean(
-      plan.currentAlphaTagSha ||
-        plan.currentAlphaFloatingSha ||
-        plan.currentAlphaDevSha,
-    );
-  const transactionOpen =
-    plan.currentAlphaTransaction &&
-    !["complete", "abandoned", "failed_permanently"].includes(
-      plan.currentAlphaTransaction.state,
-    );
-  const containsTransaction =
-    transactionOpen &&
-    ((await context.releaseCommitIncludesTransactionHead({
-      octokit: context.octokit,
-      owner: context.owner,
-      repo: context.repo,
-      releaseSha: context.sha,
-      transactionReleaseSha: plan.currentAlphaTransaction.release_sha,
-    })) ||
-      (await context.releaseCommitIncludesTransactionHead({
-        octokit: context.octokit,
-        owner: context.owner,
-        repo: context.repo,
-        releaseSha: context.sha,
-        transactionReleaseSha:
-          plan.currentAlphaTransaction.release_material_sha,
-      })));
-  const canReplaceStaleTransaction =
-    transactionOpen &&
-    !containsTransaction &&
-    !context.transactionHasPublishedMaterial(plan.currentAlphaTransaction);
-  const canFinalize =
-    plan.currentAlpha &&
-    (!transactionOpen ||
-      containsTransaction ||
-      settled ||
-      canReplaceStaleTransaction);
-  const recovery = { transactionOpen, containsTransaction };
-  const needsContainedPublishedFinalization = needsContainedAlphaFinalization(
-    context,
-    plan,
-    recovery,
-  );
-  return {
-    ...plan,
-    settled,
-    hasFinalizationRefs,
-    transactionOpen,
-    containsTransaction,
-    canFinalize,
-    needsContainedPublishedFinalization,
-  };
-}
-
 async function finalizeContainedAlpha(context, state) {
   if (!state.needsContainedPublishedFinalization) return undefined;
   const transaction = state.currentAlphaTransaction;
@@ -231,8 +152,17 @@ async function finalizeContainedAlpha(context, state) {
     });
     await context.updateTag(context.rule.alphaTag, transaction.release_sha);
     await context.updateMajorAlphaFloatingTag({ sha: transaction.release_sha });
+    const passportReleaseCandidateValidation =
+      containedFinalizationReleaseCandidateValidation(context);
+    const kfdAdopterInputs = containedFinalizationKfdAdopterInputs(
+      context,
+      passportReleaseCandidateValidation,
+    );
     await context.markComplete({
-      passportCwd: finalizationSource?.workspace || context.cwd,
+      passportCwd: containedFinalizationPassportCwd(
+        context,
+        finalizationSource,
+      ),
       passportBuildSummaryPath: "",
       passportPlatformManifestPaths: [],
       passportPromotionRoutingJson: "",
@@ -240,11 +170,11 @@ async function finalizeContainedAlpha(context, state) {
       passportKfd2ClaimJsons: [],
       passportKfd3PrebuildWitnessJsons: [],
       passportKfd3ArtifactWitnessJsons: [],
-      passportKfdAdopterManifestJson: "",
+      passportKfdAdopterManifestJson: kfdAdopterInputs.manifestJson,
       passportKfdSupportMatrixJson: "",
-      passportKfdProductGateJsons: [],
+      passportKfdProductGateJsons: kfdAdopterInputs.productGateJsons,
       passportInvariantPassportJsons: [],
-      passportReleaseCandidateValidation: null,
+      passportReleaseCandidateValidation,
     });
   } finally {
     if (finalizationSource?.root) {
@@ -276,11 +206,7 @@ function selectAlphaCandidate(context, state) {
   if (state.explicitAlphaTags[0]) {
     return { tag: state.explicitAlphaTags[0] };
   }
-  if (
-    state.transactionOpen &&
-    state.containsTransaction &&
-    !state.settled
-  ) {
+  if (state.transactionOpen && state.containsTransaction && !state.settled) {
     return state.currentAlpha;
   }
   if (
@@ -333,7 +259,11 @@ async function settleExistingAlpha(context, state, selectedAlpha) {
   });
   context.updates.push(
     state.ownsMajorAlphaTag
-      ? { tag: context.rule.majorAlphaTag, action: "existing", sha: context.sha }
+      ? {
+          tag: context.rule.majorAlphaTag,
+          action: "existing",
+          sha: context.sha,
+        }
       : {
           tag: context.rule.majorAlphaTag,
           action: "skipped-newer-minor-alpha-exists",
@@ -406,9 +336,7 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
     selectedAlpha.tag === state.currentAlpha.tag &&
     state.transactionOpen &&
     context.transactionHasPublishedMaterial(state.currentAlphaTransaction) &&
-    !["existing", "existing-publish-transaction"].includes(
-      alpha.commit.action,
-    );
+    !["existing", "existing-publish-transaction"].includes(alpha.commit.action);
   if (currentRequiresNewPublication) {
     context.updates.push({
       tag: selectedAlpha.tag,
@@ -481,7 +409,8 @@ async function finalizeAlphaPublication(context, state, publication) {
         "",
       ),
     });
-    await context.updateTag(context.rule.alphaTag, alpha.sha); await context.updateMajorAlphaFloatingTag({ sha: alpha.sha });
+    await context.updateTag(context.rule.alphaTag, alpha.sha);
+    await context.updateMajorAlphaFloatingTag({ sha: alpha.sha });
     await context.markComplete();
     context.updates.push({
       action: "finalized-advanced-publication",
@@ -527,31 +456,50 @@ async function finalizeAlphaPublication(context, state, publication) {
         { finalizationNeeded: true },
       );
     }
-    const devUpdate = await context.updateBranch(
-      `dev/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`,
-      alpha.sha,
-      "updated",
-      {
-        title: `Prepare ${selectedAlpha.tag}`,
-        body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
-        allowPendingPullRequest: true,
-        ...{ allowMergeCommitOnNonFastForward: true, allowMergeCommitOnNonFastForwardPaths: alpha.commit.files, reconciliationVersion: alpha.version },
-      },
-    );
-    if (devUpdate.pending) {
-      return context.withPublishTransaction(
+    const transaction =
+      context.getLatestPublishTransaction()?.transaction ||
+      state.currentAlphaTransaction;
+    const deferDevMirror =
+      context.publishTransactionOverride === true &&
+      context.transactionHasPublishedMaterial(transaction);
+    const devRef = `dev/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`;
+    if (deferDevMirror) {
+      context.updates.push({
+        ref: devRef,
+        action: "deferred-post-publication-dev-mirror",
+        sha: (await context.readRefSha(`heads/${devRef}`)) || "",
+      });
+    } else {
+      const devUpdate = await context.updateBranch(
+        devRef,
+        alpha.sha,
+        "updated",
         {
-          owner: context.owner,
-          repo: context.repo,
-          sourceSha: context.sha,
-          sha: alpha.sha,
-          targetRef: context.targetRef,
-          pendingPullRequest:
-            devUpdate.pullRequest.html_url || devUpdate.pullRequest.url,
-          updates: context.updates,
+          title: `Prepare ${selectedAlpha.tag}`,
+          body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
+          allowPendingPullRequest: true,
+          ...{
+            allowMergeCommitOnNonFastForward: true,
+            allowMergeCommitOnNonFastForwardPaths: alpha.commit.files,
+            reconciliationVersion: alpha.version,
+          },
         },
-        { finalizationNeeded: true },
       );
+      if (devUpdate.pending) {
+        return context.withPublishTransaction(
+          {
+            owner: context.owner,
+            repo: context.repo,
+            sourceSha: context.sha,
+            sha: alpha.sha,
+            targetRef: context.targetRef,
+            pendingPullRequest:
+              devUpdate.pullRequest.html_url || devUpdate.pullRequest.url,
+            updates: context.updates,
+          },
+          { finalizationNeeded: true },
+        );
+      }
     }
   }
   await context.markFinalizing();
@@ -596,4 +544,9 @@ async function promoteAlphaChannel(context) {
   );
   return finalizeAlphaPublication(context, state, publication);
 }
-export { promoteAlphaChannel };
+export {
+  containedFinalizationPassportCwd,
+  containedFinalizationKfdAdopterInputs,
+  containedFinalizationReleaseCandidateValidation,
+  promoteAlphaChannel,
+};

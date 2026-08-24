@@ -152,6 +152,7 @@
       "owner": "Buildchain action maintainers",
       "implementation": [
         "actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
+        "actions/promote-buildchain-ref/internal/alpha-publication-recovery.js",
         "actions/promote-buildchain-ref/internal/promote-major-channel.js",
         "actions/promote-buildchain-ref/internal/promote-release-channel.js"
       ],

@@ -1086,6 +1086,7 @@ test("provider transaction accepts a configured check on the merged source when 
 
 test("provider-hidden protection accepts only an exact receipt-bound alpha recovery", async () => {
   const checkedRefs = [];
+  const checkedPages = [];
   const recoveryPullRequestHeadSha = "c".repeat(40);
   let recoveryMergeSha = SHA;
   const octokit = {
@@ -1134,13 +1135,21 @@ test("provider-hidden protection accepts only an exact receipt-bound alpha recov
         },
       },
       checks: {
-        listForRef: async ({ ref }) => {
+        listForRef: async ({ ref, page }) => {
           checkedRefs.push(ref);
+          checkedPages.push(page);
           return {
             data: {
-              check_runs: [
-                { name: "check", conclusion: "success", app: { id: 15368 } },
-              ],
+              total_count: 101,
+              check_runs: page === 1
+                ? Array.from({ length: 100 }, (_, index) => ({
+                    name: `superseding-check-${index}`,
+                    conclusion: "success",
+                    app: { id: 15368 },
+                  }))
+                : [
+                    { name: "check", conclusion: "success", app: { id: 15368 } },
+                  ],
             },
           };
         },
@@ -1165,7 +1174,8 @@ test("provider-hidden protection accepts only an exact receipt-bound alpha recov
     exactReleaseCandidateSource: exactRecovery,
   });
   assert.equal(resolvedStatusCheck, "check");
-  assert.deepEqual(checkedRefs, [recoveryPullRequestHeadSha]);
+  assert.deepEqual(checkedRefs, [recoveryPullRequestHeadSha, recoveryPullRequestHeadSha]);
+  assert.deepEqual(checkedPages, [1, 2]);
 
   await assert.rejects(
     assertProtectedChannel({

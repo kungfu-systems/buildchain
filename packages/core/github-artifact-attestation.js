@@ -247,6 +247,33 @@ function findPassportPolicy(passport, expectedPolicy) {
   return match;
 }
 
+function passportAcceptsPolicySource(passport, policy) {
+  const release = passport.release || {};
+  const policySourceSha = policy.caller.sourceSha;
+  if (String(release.sourceSha || "").toLowerCase() === policySourceSha) {
+    return true;
+  }
+  if (
+    release.treeEquivalent !== true
+    || !release.builtSourceTreeSha
+    || release.builtSourceTreeSha !== release.promotionChannelTreeSha
+    || String(release.builtSourceTreeSha).toLowerCase() !== policy.caller.sourceTreeSha
+  ) {
+    return false;
+  }
+  const acceptedSourceShas = [release.builtSourceSha, release.promotionChannelSha];
+  if (
+    release.candidateSourceSha
+    && release.candidateSourceTreeSha
+    && release.candidateSourceTreeSha === release.promotionChannelTreeSha
+  ) {
+    acceptedSourceShas.push(release.candidateSourceSha);
+  }
+  return acceptedSourceShas
+    .map((value) => String(value || "").toLowerCase())
+    .includes(policySourceSha);
+}
+
 export function prepareGitHubArtifactAttestation({
   subjectPath,
   platformManifestPath,
@@ -314,11 +341,11 @@ export function prepareGitHubArtifactAttestation({
     throw new Error("release passport contract must be kungfu-buildchain-release-passport");
   }
   findPassportPolicy(passport, normalizedPolicy);
-  assertEqual(
-    String(passport.release?.sourceSha || "").toLowerCase(),
-    normalizedPolicy.caller.sourceSha,
-    "release passport source SHA",
-  );
+  if (!passportAcceptsPolicySource(passport, normalizedPolicy)) {
+    throw new Error(
+      `release passport source SHA mismatch: expected ${normalizedPolicy.caller.sourceSha}, got ${String(passport.release?.sourceSha || "").toLowerCase()}`,
+    );
+  }
   assertEqual(
     String(passport.release?.builtSourceTreeSha || passport.release?.sourceTreeSha || "").toLowerCase(),
     normalizedPolicy.caller.sourceTreeSha,
@@ -351,7 +378,7 @@ export function prepareGitHubArtifactAttestation({
 function walkRegularFiles(root) {
   const resolvedRoot = path.resolve(root);
   if (!fs.existsSync(resolvedRoot)) return [];
-  const pending = [resolvedRoot];
+  const pending = [fs.realpathSync(resolvedRoot)];
   const files = [];
   while (pending.length > 0) {
     const current = pending.pop();
@@ -479,6 +506,10 @@ export function createGitHubArtifactAttestationEvidence({
   workflow = {},
 } = {}) {
   const prepared = object(preparation, "preparation");
+  const providerSourceSha = commit(
+    workflow.sourceSha || prepared.policy.caller.sourceSha,
+    "workflow.sourceSha",
+  );
   const resolvedBundle = path.resolve(string(bundlePath, "bundlePath"));
   const bundle = readJson(resolvedBundle, "attestation bundle");
   validateStatement(decodeBundleStatement(bundle), prepared);
@@ -501,6 +532,7 @@ export function createGitHubArtifactAttestationEvidence({
     },
     workflow: {
       repository: repository(workflow.repository, "workflow.repository"),
+      sourceSha: providerSourceSha,
       runId: string(workflow.runId, "workflow.runId"),
       runAttempt: string(workflow.runAttempt, "workflow.runAttempt"),
       job: string(workflow.job, "workflow.job"),
@@ -510,7 +542,7 @@ export function createGitHubArtifactAttestationEvidence({
       repository: prepared.policy.caller.repository,
       signerWorkflow: `${prepared.policy.signer.repository}/${prepared.policy.signer.workflowPath}`,
       signerDigest: prepared.policy.signer.workflowDigest,
-      sourceDigest: prepared.policy.caller.sourceSha,
+      sourceDigest: providerSourceSha,
       predicateType: prepared.predicateType,
       denySelfHostedRunners: true,
     },

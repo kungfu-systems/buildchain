@@ -612,6 +612,8 @@ function validatePromotionReleaseCandidate({
     gateProfileEvidence: passport.gateProfileEvidence,
     familyEvidence: passport.familyEvidence,
     controllerReceipts: passport.controllerReceipts || [],
+    candidateSourceSha: passport.source?.headSha || "",
+    candidateSourceTreeSha: passport.source?.treeHash || "",
     builtSourceSha: passport.source?.mergeRefSha || passport.source?.headSha || "",
     builtSourceTreeSha: passport.source?.treeHash || "",
     promotionChannelSha: sourceHeadSha || "",
@@ -1140,6 +1142,7 @@ function preparePublishTransactionContext({
   publishDistTag = "",
   publishPackageSetOrder = "",
   publishPackageMain = "",
+  publicationGateAggregateJson = "",
   publishRematerializeOnResume = false,
   actor = "",
   runId = "",
@@ -1223,6 +1226,7 @@ function preparePublishTransactionContext({
     version, exactTag, channel, line, publishCommand, publishRematerializeOnResume,
     actor, runId, explicitOverride, allowVersionStateFinalization, promotionGeneratedAt,
     repository, resolvedStatePath, resolvedEvidencePath, requiredArtifacts, publishContract,
+    publicationGateAggregateJson,
     existingNpmPromotion, expected, durableStateRef, requestedBundleRoot, requestedBundleManifest,
     expectedTransactionId: String(expectedTransactionId || "").trim(),
   };
@@ -1431,6 +1435,7 @@ function publishTransactionEnvironment({
   cwd, version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
   publishSealedNpmTarball, requiredArtifacts, publishContract,
+  publicationGateAggregateJson,
 }) {
   const requiredArtifactsJson = JSON.stringify(requiredArtifacts);
   const requiredArtifactsPath = path.resolve(
@@ -1462,6 +1467,7 @@ function publishTransactionEnvironment({
     BUILDCHAIN_SEALED_NPM_SHA256: (publishSealedNpmTarball && sealedBundleVerification?.npm.sha256) || "",
     BUILDCHAIN_REQUIRED_ARTIFACTS: requiredArtifactsJson,
     BUILDCHAIN_PUBLISH_REQUIRED_ARTIFACTS_PATH: requiredArtifactsPath,
+    BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_JSON: publicationGateAggregateJson || "",
     BUILDCHAIN_PUBLISH_MODE: publishContract.mode,
     BUILDCHAIN_PUBLISH_AUTH: publishContract.auth,
     BUILDCHAIN_NPM_DIST_TAG: publishContract.distTag,
@@ -1940,6 +1946,7 @@ async function collectAndPersistReleasePassport({
   kfd3ArtifactVerifyCommand = "",
   adopterDeliveryJson = "",
   kfdAdopterManifestJson = "",
+  kfdAdopterManifestGateJson = "",
   kfdSupportMatrixJson = "",
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
@@ -2076,6 +2083,7 @@ async function collectAndPersistReleasePassport({
     kfd3ArtifactVerifyCommand,
     adopterDeliveryJson,
     kfdAdopterManifestJson: kfdAdopterManifestJson || selfAdopter?.outputs?.["kfd-adopter-manifest-json"],
+    kfdAdopterManifestGateJson: kfdAdopterManifestGateJson || selfAdopter?.outputs?.["kfd-adopter-manifest-gate-json"],
     kfdSupportMatrixJson: kfdSupportMatrixJson || selfAdopter?.outputs?.["kfd-support-matrix-json"],
     kfdProductGateJsons: kfdProductGateJsons.length > 0 ? kfdProductGateJsons : selfAdopter?.outputs?.["kfd-product-gate-jsons"].split(","),
     invariantPassportJsons,
@@ -2104,6 +2112,8 @@ async function collectAndPersistReleasePassport({
         ? {
             builtSourceSha: releaseCandidateValidation.builtSourceSha,
             builtSourceTreeSha: releaseCandidateValidation.builtSourceTreeSha,
+            candidateSourceSha: releaseCandidateValidation.candidateSourceSha,
+            candidateSourceTreeSha: releaseCandidateValidation.candidateSourceTreeSha,
             promotionChannelSha: releaseCandidateValidation.promotionChannelSha,
             promotionChannelTreeSha: releaseCandidateValidation.promotionChannelTreeSha,
             treeEquivalent: releaseCandidateValidation.treeEquivalent,
@@ -2420,14 +2430,23 @@ async function assertProviderEnforcedChannelTransaction({
   const providerCheckRefs = [...new Set([pullRequestHeadSha, sourceSha])].filter((ref) => /^[0-9a-f]{40}$/i.test(ref));
   let requiredCheckPassed = false;
   for (const ref of providerCheckRefs) {
-    const { data: checkRuns } = await octokit.rest.checks.listForRef(
-      { owner, repo, ref, per_page: 100 },
-    );
-    requiredCheckPassed = (checkRuns.check_runs || []).some((entry) =>
-      entry.name === resolvedStatusCheck &&
-      entry.conclusion === "success" &&
-      (!requiredCheck?.app_id || entry.app?.id === requiredCheck.app_id),
-    );
+    for (let page = 1; page <= 100; page += 1) {
+      const { data: checkRuns } = await octokit.rest.checks.listForRef(
+        { owner, repo, ref, per_page: 100, page },
+      );
+      const entries = checkRuns.check_runs || [];
+      requiredCheckPassed = entries.some((entry) =>
+        entry.name === resolvedStatusCheck &&
+        entry.conclusion === "success" &&
+        (!requiredCheck?.app_id || entry.app?.id === requiredCheck.app_id),
+      );
+      if (requiredCheckPassed) break;
+      const totalCount = Number(checkRuns.total_count);
+      const hasNextPage = Number.isSafeInteger(totalCount)
+        ? page * 100 < totalCount
+        : entries.length === 100;
+      if (!hasNextPage) break;
+    }
     if (requiredCheckPassed) break;
   }
   const missing = [];
@@ -3410,6 +3429,7 @@ function createRefMutationOperations(context) {
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand, releasePassportAdopterDeliveryJson,
     releasePassportKfdAdopterManifestJson,
+    releasePassportKfdAdopterManifestGateJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -4042,6 +4062,7 @@ function createReconciliationOperations(context) {
     releasePassportKfd3ArtifactWitnessJsons,
     releasePassportKfd3ArtifactVerifyCommand, releasePassportAdopterDeliveryJson,
     releasePassportKfdAdopterManifestJson,
+    releasePassportKfdAdopterManifestGateJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -4755,6 +4776,7 @@ async function promoteBuildchainRefs({
   releasePassportKfd3ArtifactWitnessJsons = "",
   releasePassportKfd3ArtifactVerifyCommand = "", releasePassportAdopterDeliveryJson = "",
   releasePassportKfdAdopterManifestJson = "",
+  releasePassportKfdAdopterManifestGateJson = "",
   releasePassportKfdSupportMatrixJson = "",
   releasePassportKfdProductGateJsons = "",
   releasePassportInvariantPassportJsons = "",
@@ -4989,6 +5011,7 @@ async function promoteBuildchainRefs({
     releasePassportKfd3ArtifactVerifyCommand,
     releasePassportAdopterDeliveryJson,
     releasePassportKfdAdopterManifestJson,
+    releasePassportKfdAdopterManifestGateJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,
@@ -5161,5 +5184,7 @@ export {
   releasePassportArtifactFiles, releasePassportAssetsFromSealedBundle,
   verifyCollectedReleasePassport,
   validatePromotionReleaseCandidate,
+  preparePublishTransactionContext,
+  publishTransactionEnvironment,
   sanitizedPublishProcessEnvironment,
 };

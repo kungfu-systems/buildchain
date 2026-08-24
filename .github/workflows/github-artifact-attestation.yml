@@ -109,7 +109,6 @@ jobs:
           EVIDENCE_RUN_ID: ${{ inputs.evidence-run-id }}
           CURRENT_RUN_ID: ${{ github.run_id }}
           SOURCE_SHA: ${{ inputs.source-sha }}
-          CURRENT_SOURCE_SHA: ${{ github.sha }}
           SUBJECT_RELATIVE_PATH: ${{ inputs.subject-relative-path }}
           PLATFORM_MANIFEST_RELATIVE_PATH: ${{ inputs.platform-manifest-relative-path }}
           RELEASE_PASSPORT_RELATIVE_PATH: ${{ inputs.release-passport-relative-path }}
@@ -124,8 +123,8 @@ jobs:
             echo "::error::attestation inputs must come from the current caller workflow run"
             exit 1
           fi
-          if [[ ! "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ || "$SOURCE_SHA" != "$CURRENT_SOURCE_SHA" ]]; then
-            echo "::error::source-sha must equal the exact caller workflow SHA attested by GitHub"
+          if [[ ! "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::source-sha must be the exact sealed candidate SHA"
             exit 1
           fi
           for relative_path in \
@@ -202,7 +201,7 @@ jobs:
           BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
           PREDICATE_TYPE: ${{ steps.prepare.outputs.predicate-type }}
           CALLER_REPOSITORY: ${{ github.repository }}
-          CALLER_SOURCE_SHA: ${{ inputs.source-sha }}
+          PROVIDER_SOURCE_SHA: ${{ github.sha }}
           BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
         shell: bash
         run: |
@@ -211,7 +210,7 @@ jobs:
             --repo "$CALLER_REPOSITORY" \
             --signer-workflow "kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml" \
             --signer-digest "$BUILDCHAIN_REF" \
-            --source-digest "$CALLER_SOURCE_SHA" \
+            --source-digest "$PROVIDER_SOURCE_SHA" \
             --predicate-type "$PREDICATE_TYPE" \
             --bundle "$BUNDLE_PATH" \
             --deny-self-hosted-runners \

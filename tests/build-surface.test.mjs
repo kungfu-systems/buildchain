@@ -242,6 +242,11 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(promotion, /BUILDCHAIN_EXPECTED_MAJOR="\$expected_major"/);
   assert.match(
     promotion,
+    /else\n\s+node \.buildchain\/runtime\/scripts\/buildchain-contract-lock\.mjs check\n\s+fi/,
+    "direct recovery must preserve native contract-lock channel and major inference",
+  );
+  assert.match(
+    promotion,
     /"id":"publication-authority","status":"\$\{\{ needs\.promote\.result == 'success' && 'success' \|\| needs\.publication-authority\.result \}\}"/,
     "a successful promotion must preserve its already-enforced publication authority result",
   );
@@ -1143,6 +1148,8 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(workflow, /release-passport-kfd-adopter-manifest-json:/);
   assert.match(workflow, /release-passport-kfd-adopter-manifest-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-json \}\}/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-gate-json:/);
+  assert.match(workflow, /release-passport-kfd-adopter-manifest-gate-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-gate-json \}\}/);
   assert.match(workflow, /release-passport-kfd-support-matrix-json:/);
   assert.match(workflow, /release-passport-kfd-support-matrix-json: \$\{\{ inputs\.release-passport-kfd-support-matrix-json \}\}/);
   assert.match(workflow, /release-passport-kfd-product-gate-jsons:/);
@@ -1174,13 +1181,16 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /release-passport-github-artifact-attestation-policy-jsons: \$\{\{ steps\.attestation-policy\.outputs\.path \}\}/);
   assert.match(workflow, /name: Resolve GitHub artifact attestation policy/);
   assert.match(workflow, /release-candidate-github-artifact-attestation-policy-paths/);
+  assert.match(workflow, /-tail-reseal-request-\[0-9a-f\]\{40\}\$/);
+  assert.match(workflow, /expected exactly one retained attestation-policy artifact/);
+  assert.match(workflow, /RECOVERED_PAYLOAD_ROOT: \$\{\{ steps\.rc\.outputs\.release-candidate-payload-dir \}\}/);
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@375b2d4b8a904776453773a33b4c4e4556c8c999/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@9a0e8c8a65bb6c0380ae8206c06af5b7b9a77e97/,
   );
   assert.doesNotMatch(workflow, /github-artifact-attestation\.yml@v3/);
   assert.match(workflow, /buildchain-ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/);
-  assert.match(workflow, /ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-buildchain-ref \}\}/);
+  assert.match(workflow, /ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/);
   assert.match(workflow, /artifact-metadata: write/);
   assert.match(workflow, /attestations: write/);
   assert.match(workflow, /name: Publish verified attestation evidence to GitHub Release/);
@@ -1256,7 +1266,10 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /evidence-manifest-pattern:/);
   assert.match(workflow, /name: Seal product publication capability/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/);
-  assert.match(workflow, /needs: \[preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification\]/);
+  assert.match(
+    workflow,
+    /needs:\s*\[\s*preflight,\s*controller-plan,\s*release-candidate-preflight,\s*publication-plan,\s*publication-authority,\s*publication-qualification,?\s*\]/,
+  );
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
   assert.match(workflow, /name: Bind consumer publication predicate/);
   assert.match(workflow, /name: Run consumer publication predicate/);
@@ -1300,6 +1313,12 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   assert.match(workflow, /corepack pnpm install --frozen-lockfile/);
   assert.match(workflow, /cd "\$\{RECONCILIATION_WORKSPACE\}"[\s\S]*corepack pnpm install --frozen-lockfile/);
   assert.match(workflow, /Resolve post-release reconciliation checkout/);
+  assert.match(
+    workflow,
+    /needs\.preflight\.outputs\.channel == 'release' \|\| needs\.preflight\.outputs\.channel == 'alpha'/,
+  );
+  assert.match(workflow, /\^\(release\|alpha\)\/v\[0-9\]\+\/v\[0-9\]\+\\\.\[0-9\]\+\$/);
+  assert.match(workflow, /ref=dev\//);
   assert.match(workflow, /Checkout current development channel for reconciliation/);
   assert.match(workflow, /Install reconciliation dependencies/);
   assert.match(workflow, /workspace=\.buildchain\/reconciliation\/dev/);

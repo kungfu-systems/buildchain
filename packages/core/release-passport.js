@@ -499,6 +499,7 @@ function parseJsonCommandOutput({
   cwd = process.cwd(),
   label = "command",
   acceptNonzeroJson = undefined,
+  env = undefined,
 } = {}) {
   const normalized = String(command || "").trim();
   if (!normalized) {
@@ -506,6 +507,7 @@ function parseJsonCommandOutput({
   }
   const result = spawnSync(normalized, [], {
     cwd,
+    env: env ? { ...process.env, ...env } : process.env,
     shell: true,
     encoding: "utf8",
     maxBuffer: 16 * 1024 * 1024,
@@ -1180,15 +1182,63 @@ function releaseField(release, camelKey, snakeKey, ...fallbacks) {
   return optionalString(firstTruthy(release[camelKey], release[snakeKey], ...fallbacks));
 }
 
+export function releasePassportKfdAdopterSourceSha({
+  passportSourceSha = "",
+  release = undefined,
+} = {}) {
+  const exactSha = (value) => /^[0-9a-f]{40}$/.test(String(value || "").trim());
+  const candidateSourceSha = optionalString(release?.candidateSourceSha);
+  const builtSourceSha = optionalString(release?.builtSourceSha);
+  const promotionChannelSha = optionalString(release?.promotionChannelSha);
+  const candidateSourceTreeSha = optionalString(release?.candidateSourceTreeSha);
+  const builtSourceTreeSha = optionalString(release?.builtSourceTreeSha);
+  const promotionChannelTreeSha = optionalString(release?.promotionChannelTreeSha);
+  if (
+    release?.treeEquivalent !== true
+    || !exactSha(passportSourceSha)
+    || !exactSha(candidateSourceSha)
+    || !exactSha(builtSourceSha)
+    || !exactSha(promotionChannelSha)
+    || candidateSourceSha !== builtSourceSha
+    || promotionChannelSha !== passportSourceSha
+    || !exactSha(candidateSourceTreeSha)
+    || !exactSha(builtSourceTreeSha)
+    || !exactSha(promotionChannelTreeSha)
+    || candidateSourceTreeSha !== builtSourceTreeSha
+    || candidateSourceTreeSha !== promotionChannelTreeSha
+  ) {
+    return passportSourceSha;
+  }
+  return candidateSourceSha;
+}
+
 function optionalSections(entries) {
   return Object.fromEntries(entries.filter(([, value]) => value && (!Array.isArray(value) || value.length > 0)));
 }
 
 function acceptedControllerSourceShas(input) {
-  const { treeEquivalent, builtSourceSha, promotionChannelSha, sourceSha, recoveryTreeEquivalent } = input;
-  return treeEquivalent && builtSourceSha && (promotionChannelSha === sourceSha || recoveryTreeEquivalent)
-    ? [builtSourceSha]
-    : [];
+  const {
+    treeEquivalent,
+    builtSourceSha,
+    candidateSourceSha,
+    candidateSourceTreeSha,
+    promotionChannelSha,
+    promotionChannelTreeSha,
+    sourceSha,
+    recoveryTreeEquivalent,
+  } = input;
+  if (!treeEquivalent || !builtSourceSha || !promotionChannelSha) return [];
+  if (promotionChannelSha !== sourceSha && !recoveryTreeEquivalent) return [];
+  const acceptedSourceShas = [builtSourceSha, promotionChannelSha];
+  if (
+    candidateSourceSha &&
+    candidateSourceTreeSha &&
+    promotionChannelTreeSha &&
+    candidateSourceTreeSha === promotionChannelTreeSha
+  ) {
+    acceptedSourceShas.push(candidateSourceSha);
+  }
+  return [...new Set(acceptedSourceShas)];
 }
 
 function prepareReleaseAdopterArtifacts({ adopterDelivery, kfdAdopter, assets, repository, tag, sourceSha, workflow }) {
@@ -1289,6 +1339,8 @@ export function createReleasePassport({
   });
   const builtSourceSha = releaseField(release, "builtSourceSha", "built_source_sha");
   const builtSourceTreeSha = releaseField(release, "builtSourceTreeSha", "built_source_tree_sha");
+  const candidateSourceSha = releaseField(release, "candidateSourceSha", "candidate_source_sha");
+  const candidateSourceTreeSha = releaseField(release, "candidateSourceTreeSha", "candidate_source_tree_sha");
   const promotionChannelSha = releaseField(release, "promotionChannelSha", "promotion_channel_sha");
   const promotionChannelTreeSha = releaseField(release, "promotionChannelTreeSha", "promotion_channel_tree_sha");
   const treeEquivalent = release.treeEquivalent === true;
@@ -1305,7 +1357,10 @@ export function createReleasePassport({
     acceptedSourceShas: acceptedControllerSourceShas({
       treeEquivalent,
       builtSourceSha,
+      candidateSourceSha,
+      candidateSourceTreeSha,
       promotionChannelSha,
+      promotionChannelTreeSha,
       sourceSha,
       recoveryTreeEquivalent,
     }),
@@ -1368,6 +1423,8 @@ export function createReleasePassport({
       releaseMaterialSha,
       builtSourceSha: optionalString(release.builtSourceSha || release.built_source_sha),
       builtSourceTreeSha,
+      candidateSourceSha,
+      candidateSourceTreeSha,
       promotionChannelSha: optionalString(release.promotionChannelSha || release.promotion_channel_sha),
       promotionChannelTreeSha,
       treeEquivalent: release.treeEquivalent === undefined ? undefined : Boolean(release.treeEquivalent),
@@ -1473,8 +1530,9 @@ export function createReleasePassport({
   };
 }
 
-function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, productGateJsons, repository, sourceSha, checkedAt }) {
+function collectKfdAdopterReleaseInputs({ cwd, manifestJson, manifestGateJson, supportMatrixJson, productGateJsons, repository, sourceSha, checkedAt }) {
   const manifestMeta = parseJsonInputWithMeta(manifestJson, undefined, { cwd, label: "kfdAdopterManifestJson" });
+  const manifestGateMeta = parseJsonInputWithMeta(manifestGateJson, undefined, { cwd, label: "kfdAdopterManifestGateJson" });
   const supportMatrixMeta = parseJsonInputWithMeta(supportMatrixJson, undefined, { cwd, label: "kfdSupportMatrixJson" });
   const productGateMetas = (productGateJsons || [])
     .filter(Boolean)
@@ -1482,6 +1540,7 @@ function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, 
     .filter((meta) => meta.value);
   return collectKfdAdopterReleaseEvidence({
     manifest: manifestMeta.value,
+    manifestGate: manifestGateMeta.value,
     gateResults: productGateMetas.map((meta) => meta.value),
     comparisonMatrix: supportMatrixMeta.value,
     expectedAdopterId: repository || "kungfu-systems/buildchain", expectedSourceRepository: repository, sourceSha,
@@ -1535,6 +1594,7 @@ export function collectGitHubReleasePassport({
   kfd3ArtifactWitnessJsons = [],
   kfd3ArtifactVerifyCommand = "", adopterDeliveryJson = "",
   kfdAdopterManifestJson = "",
+  kfdAdopterManifestGateJson = "",
   kfdSupportMatrixJson = "",
   kfdProductGateJsons = [],
   invariantPassportJsons = [],
@@ -1552,6 +1612,10 @@ export function collectGitHubReleasePassport({
 } = {}) {
   const release = parseJsonInput(releaseJson, {}, { cwd, label: "releaseJson" });
   const releaseExtra = parseJsonInput(releaseJsonExtra, {}, { cwd, label: "releaseJsonExtra" });
+  const kfdAdopterExpectedSourceSha = releasePassportKfdAdopterSourceSha({
+    passportSourceSha: sourceSha,
+    release: releaseExtra,
+  });
   const assetsFromJson = parseJsonInput(assetsJson, [], { cwd, label: "assetsJson" });
   const packageSet = parseJsonInput(packageSetJson, undefined, { cwd, label: "packageSetJson" });
   const publishEvidenceMeta = parseJsonInputWithMeta(publishEvidenceJson, undefined, { cwd, label: "publishEvidenceJson" });
@@ -1593,6 +1657,9 @@ export function collectGitHubReleasePassport({
     command: kfd3ArtifactVerifyCommand,
     cwd,
     label: "KFD-3 artifact verify command",
+    env: kfdAdopterExpectedSourceSha
+      ? { BUILDCHAIN_SOURCE_SHA: kfdAdopterExpectedSourceSha }
+      : undefined,
   });
   const adopterDelivery = parseJsonInput(
     adopterDeliveryJson,
@@ -1674,8 +1741,9 @@ export function collectGitHubReleasePassport({
   const resolvedCheckedAt = optionalString(checkedAt) || nowIso();
   const productMechanism = defaultProductMechanism({ repository, productName });
   const kfdAdopterEvidence = collectKfdAdopterReleaseInputs({
-    cwd, manifestJson: kfdAdopterManifestJson, supportMatrixJson: kfdSupportMatrixJson,
-    productGateJsons: kfdProductGateJsons, repository, sourceSha, checkedAt: resolvedCheckedAt,
+    cwd, manifestJson: kfdAdopterManifestJson, manifestGateJson: kfdAdopterManifestGateJson, supportMatrixJson: kfdSupportMatrixJson,
+    productGateJsons: kfdProductGateJsons, repository,
+    sourceSha: kfdAdopterExpectedSourceSha, checkedAt: resolvedCheckedAt,
   });
   const {
     manifest: kfdAdopterManifest,
@@ -2124,7 +2192,11 @@ function validateReleaseEvidenceContracts({
     legacyProjection: kfdSupportEvidence,
     passportLegacyProjection: passport?.kfdSupport,
     expectedAdopterId: optionalString(passport?.product?.repository) || "kungfu-systems/buildchain",
-    expectedSourceRepository: optionalString(passport?.product?.repository), expectedSourceSha: optionalString(passport?.release?.sourceSha),
+    expectedSourceRepository: optionalString(passport?.product?.repository),
+    expectedSourceSha: releasePassportKfdAdopterSourceSha({
+      passportSourceSha: optionalString(passport?.release?.sourceSha),
+      release: passport?.release,
+    }),
   })) {
     issues.push(issue("error", entry.code, entry.message, entry.details));
   }
@@ -2141,9 +2213,20 @@ function validateReleaseEvidenceContracts({
         release.treeEquivalent === true
         && release.builtSourceTreeSha
         && release.builtSourceTreeSha === release.promotionChannelTreeSha
-        && release.builtSourceSha
       ) {
-        acceptedSourceShas.add(String(release.builtSourceSha).toLowerCase());
+        if (release.builtSourceSha) {
+          acceptedSourceShas.add(String(release.builtSourceSha).toLowerCase());
+        }
+        if (release.promotionChannelSha) {
+          acceptedSourceShas.add(String(release.promotionChannelSha).toLowerCase());
+        }
+        if (
+          release.candidateSourceSha
+          && release.candidateSourceTreeSha
+          && release.candidateSourceTreeSha === release.promotionChannelTreeSha
+        ) {
+          acceptedSourceShas.add(String(release.candidateSourceSha).toLowerCase());
+        }
       }
       if (!acceptedSourceShas.has(policy.caller.sourceSha)) {
         issues.push(issue(
@@ -2159,7 +2242,7 @@ function validateReleaseEvidenceContracts({
           `githubArtifactAttestations[${index}].subject.name`,
           `attestation subject ${policy.subject.name} is absent from the Release Passport artifacts`,
         ));
-      } else if (artifact.sha256 !== policy.subject.digest.sha256) {
+      } else if (`sha256:${artifact.sha256}` !== policy.subject.digest) {
         issues.push(issue(
           "error",
           `githubArtifactAttestations[${index}].subject.digest`,
@@ -2541,6 +2624,14 @@ function validatePassportTrustSections({ passport, issues }) {
     passport?.release?.builtSourceSha,
     passport?.release?.promotionChannelSha,
   ].filter(Boolean));
+  if (
+    passport?.release?.treeEquivalent === true
+    && passport?.release?.candidateSourceSha
+    && passport?.release?.candidateSourceTreeSha
+    && passport?.release?.candidateSourceTreeSha === passport?.release?.promotionChannelTreeSha
+  ) {
+    acceptedSourceShas.add(passport.release.candidateSourceSha);
+  }
   for (const [index, entry] of (section.passports || []).entries()) {
     const prefix = `invariantPassports.passports[${index}]`;
     if (entry.admission?.scope !== "consumer-invariant-coverage" || entry.admission?.result !== "passed") {

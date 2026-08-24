@@ -21,6 +21,7 @@ const SOURCE_SHA = "1".repeat(40);
 const SOURCE_TREE_SHA = "2".repeat(40);
 const BUILDCHAIN_SHA = "3".repeat(40);
 const SIGNER_SHA = "4".repeat(40);
+const PROVIDER_SOURCE_SHA = "5".repeat(40);
 
 function writeJson(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -126,6 +127,7 @@ function fixture() {
     bundlePath,
     workflow: {
       repository: "kungfu-systems/kungfu",
+      sourceSha: PROVIDER_SOURCE_SHA,
       runId: "42",
       runAttempt: "1",
       job: "attest",
@@ -208,6 +210,8 @@ test("reusable signer verifies the actual certificate identity before retaining 
   ]) {
     assert.ok(workflow.includes(flag), `missing exact provider verification flag ${flag}`);
   }
+  assert.match(workflow, /PROVIDER_SOURCE_SHA: \$\{\{ github\.sha \}\}/u);
+  assert.match(workflow, /--source-digest "\$PROVIDER_SOURCE_SHA"/u);
 });
 
 test("preparation binds exact subject, original runner manifest, source tree, Buildchain SHA, and Release Passport", () => {
@@ -237,6 +241,127 @@ test("promotion stages one digest-selected subject, manifest, policy, and Passpo
     value.policy.subject.digest,
   );
   assert.deepEqual(JSON.parse(fs.readFileSync(staged.paths.policy, "utf8")), value.policy);
+});
+
+test("promotion follows the recovered candidate payload root symlink without following nested symlinks", () => {
+  const value = fixture();
+  const recoveredPayloadRoot = path.join(value.root, "recovered-payloads");
+  fs.symlinkSync(path.join(value.root, "subject"), recoveredPayloadRoot, "dir");
+  fs.symlinkSync(
+    path.join(value.root, "subject", "dist"),
+    path.join(value.root, "subject", "nested-link"),
+    "dir",
+  );
+
+  const staged = stageGitHubArtifactAttestationInputs({
+    policy: value.policy,
+    subjectRoots: [recoveredPayloadRoot],
+    platformManifestPaths: [value.manifestPath],
+    releasePassportPath: value.passportPath,
+    outputDir: path.join(value.root, "symlink-root-staged"),
+  });
+
+  assert.equal(staged.policy.subject.digest, value.policy.subject.digest);
+  assert.equal(staged.relativePaths.subject, "subject/kungfu-linux-x64.tar.gz");
+  assert.equal(
+    githubArtifactAttestationSha256File(staged.paths.subject),
+    value.policy.subject.digest,
+  );
+});
+
+test("promotion stages a policy bound to a tree-equivalent promotion source", () => {
+  const value = fixture();
+  const promotionSourceSha = "5".repeat(40);
+  const policy = createGitHubArtifactAttestationPolicy({
+    ...value.policy,
+    caller: { ...value.policy.caller, sourceSha: promotionSourceSha },
+  });
+  const manifest = JSON.parse(fs.readFileSync(value.manifestPath, "utf8"));
+  manifest.git.sha = promotionSourceSha;
+  writeJson(value.manifestPath, manifest);
+  const manifestDigest = githubArtifactAttestationSha256File(value.manifestPath);
+  const treeEquivalentPolicy = createGitHubArtifactAttestationPolicy({
+    ...policy,
+    build: {
+      ...policy.build,
+      platformManifestDigest: manifestDigest,
+      runnerReceiptRoot: manifestDigest,
+    },
+  });
+  writeJson(value.passportPath, createReleasePassport({
+    repository: "kungfu-systems/kungfu",
+    tag: "v4.0.0-alpha.1",
+    sourceSha: SOURCE_SHA,
+    assets: [{
+      name: treeEquivalentPolicy.subject.name,
+      size: treeEquivalentPolicy.subject.size,
+      sha256: treeEquivalentPolicy.subject.digest.replace(/^sha256:/, ""),
+    }],
+    release: {
+      builtSourceSha: SOURCE_SHA,
+      builtSourceTreeSha: SOURCE_TREE_SHA,
+      promotionChannelSha: promotionSourceSha,
+      promotionChannelTreeSha: SOURCE_TREE_SHA,
+      treeEquivalent: true,
+    },
+    githubArtifactAttestations: [treeEquivalentPolicy],
+  }));
+
+  const staged = stageGitHubArtifactAttestationInputs({
+    policy: treeEquivalentPolicy,
+    subjectRoots: [path.dirname(path.dirname(value.subjectPath))],
+    platformManifestPaths: [value.manifestPath],
+    releasePassportPath: value.passportPath,
+    outputDir: path.join(value.root, "tree-equivalent-staged"),
+  });
+  assert.equal(staged.policy.caller.sourceSha, promotionSourceSha);
+});
+
+test("promotion stages a policy bound to the sealed candidate source on the exact promotion tree", () => {
+  const value = fixture();
+  const candidateSourceSha = "6".repeat(40);
+  const manifest = JSON.parse(fs.readFileSync(value.manifestPath, "utf8"));
+  manifest.git.sha = candidateSourceSha;
+  writeJson(value.manifestPath, manifest);
+  const manifestDigest = githubArtifactAttestationSha256File(value.manifestPath);
+  const policy = createGitHubArtifactAttestationPolicy({
+    ...value.policy,
+    caller: { ...value.policy.caller, sourceSha: candidateSourceSha },
+    build: {
+      ...value.policy.build,
+      platformManifestDigest: manifestDigest,
+      runnerReceiptRoot: manifestDigest,
+    },
+  });
+  writeJson(value.passportPath, createReleasePassport({
+    repository: "kungfu-systems/kungfu",
+    tag: "v4.0.0-alpha.2",
+    sourceSha: SOURCE_SHA,
+    assets: [{
+      name: policy.subject.name,
+      size: policy.subject.size,
+      sha256: policy.subject.digest.replace(/^sha256:/, ""),
+    }],
+    release: {
+      candidateSourceSha,
+      candidateSourceTreeSha: SOURCE_TREE_SHA,
+      builtSourceSha: SOURCE_SHA,
+      builtSourceTreeSha: SOURCE_TREE_SHA,
+      promotionChannelSha: "5".repeat(40),
+      promotionChannelTreeSha: SOURCE_TREE_SHA,
+      treeEquivalent: true,
+    },
+    githubArtifactAttestations: [policy],
+  }));
+
+  const staged = stageGitHubArtifactAttestationInputs({
+    policy,
+    subjectRoots: [path.dirname(path.dirname(value.subjectPath))],
+    platformManifestPaths: [value.manifestPath],
+    releasePassportPath: value.passportPath,
+    outputDir: path.join(value.root, "candidate-source-staged"),
+  });
+  assert.equal(staged.policy.caller.sourceSha, candidateSourceSha);
 });
 
 test("promotion refuses a digest-identical subject at the wrong declared path", () => {
@@ -282,7 +407,9 @@ test("retained evidence and explicit gh policy verify the matching bundle", () =
   assert.ok(plan.args.includes("--deny-self-hosted-runners"));
   assert.equal(plan.args[plan.args.indexOf("--repo") + 1], "kungfu-systems/kungfu");
   assert.equal(plan.args[plan.args.indexOf("--signer-digest") + 1], SIGNER_SHA);
-  assert.equal(plan.args[plan.args.indexOf("--source-digest") + 1], SOURCE_SHA);
+  assert.equal(plan.args[plan.args.indexOf("--source-digest") + 1], PROVIDER_SOURCE_SHA);
+  assert.equal(value.evidence.caller.sourceSha, SOURCE_SHA);
+  assert.equal(value.evidence.workflow.sourceSha, PROVIDER_SOURCE_SHA);
   const report = verifyGitHubArtifactAttestationEvidence({
     artifactPath: value.subjectPath,
     platformManifestPath: value.manifestPath,

@@ -270,6 +270,7 @@ async function main() {
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
   const releasePassportAdopterDeliveryJson = core.getInput("release-passport-adopter-delivery-json");
   const releasePassportKfdAdopterManifestJson = core.getInput("release-passport-kfd-adopter-manifest-json");
+  const releasePassportKfdAdopterManifestGateJson = core.getInput("release-passport-kfd-adopter-manifest-gate-json");
   const releasePassportKfdSupportMatrixJson = core.getInput("release-passport-kfd-support-matrix-json");
   const releasePassportKfdProductGateJsons = core.getInput("release-passport-kfd-product-gate-jsons");
   const releasePassportInvariantPassportJsons = core.getInput("release-passport-invariant-passport-jsons");
@@ -382,6 +383,7 @@ async function main() {
     releasePassportKfd3ArtifactVerifyCommand,
     releasePassportAdopterDeliveryJson,
     releasePassportKfdAdopterManifestJson,
+    releasePassportKfdAdopterManifestGateJson,
     releasePassportKfdSupportMatrixJson,
     releasePassportKfdProductGateJsons,
     releasePassportInvariantPassportJsons,

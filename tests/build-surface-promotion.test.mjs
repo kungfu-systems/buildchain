@@ -298,16 +298,41 @@ test("promotion commits consumer discovery authority only after public release a
   );
   assert.match(
     wrapper,
+    /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/,
+  );
+  assert.match(
+    wrapper,
     /--candidate-source-sha "\$\{BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA\}"/,
   );
   assert.match(
     wrapper,
-    /publication-commit-command requires standalone-binary-distribution=false/,
+    /BUILDCHAIN_PUBLICATION_GATE_CONTROLLER_SHA: \$\{\{ inputs\.publication-gate-controller-sha \}\}/,
+  );
+  assert.doesNotMatch(wrapper, /loadUncheckedUpgradePublicationAdmission/);
+  assert.doesNotMatch(
+    wrapper,
+    /fs\.writeFileSync\(file, source\)/,
+    "Buildchain must execute the exact consumer publication controller without rewriting it",
   );
   assert.match(
     wrapper,
     /PUBLICATION_COMMIT_EVIDENCE.*publication-commit-evidence\.json/s,
   );
+  assert.match(wrapper, /ATTESTATION_SUBJECT_ROOTS="\$\(realpath "\$ATTESTATION_SUBJECT_ROOTS"\)"/);
+  assert.match(
+    wrapper,
+    /attestation_stager=\.buildchain\/promotion-shell\/scripts\/stage-github-artifact-attestation-inputs\.mjs/,
+  );
+  assert.match(
+    wrapper,
+    /PUBLICATION_COMMIT_SUCCEEDED: \$\{\{ steps\.publication-commit\.outcome == 'success' \}\}/,
+  );
+  assert.match(wrapper, /BUILDCHAIN_RELEASE_CANDIDATE_PASSPORT:/);
+  assert.match(
+    wrapper,
+    /passport\.source\?\.builtSourceSha \|\| passport\.source\?\.mergeRefSha/,
+  );
+  assert.doesNotMatch(wrapper, /Alpha publication tail precheck shape drifted/);
   assert.match(
     wrapper,
     /Commit consumer publication authority last[\s\S]*?steps\.promote\.outputs\.finalization-needed != 'true'/,
@@ -334,6 +359,29 @@ test("promotion commits consumer discovery authority only after public release a
   );
 });
 
+test("promotion executes the provider transaction from the selected tail shell", () => {
+  const wrapper = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const promoteStart = wrapper.indexOf("- name: Promote-only publish");
+  const promoteEnd = wrapper.indexOf(
+    "- name: Retain declarative release-tail contract and transaction",
+    promoteStart,
+  );
+  const promoteStep = wrapper.slice(promoteStart, promoteEnd);
+
+  assert.ok(promoteStart >= 0 && promoteEnd > promoteStart);
+  assert.match(
+    promoteStep,
+    /uses: \.\/\.buildchain\/promotion-shell\/actions\/promote-buildchain-ref/,
+  );
+  assert.doesNotMatch(
+    promoteStep,
+    /uses: \.\/\.buildchain\/runtime\/actions\/promote-buildchain-ref/,
+  );
+});
+
 test("reusable build exposes release-candidate passport outputs", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.build.yml"),
@@ -349,6 +397,10 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /create-github-artifact-attestation-policy\.mjs/);
   assert.match(workflow, /name: Upload GitHub artifact attestation policy/);
   assert.match(workflow, /publish-source-tree-sha:/);
+  assert.match(
+    workflow,
+    /publish-source-consumer-version:[\s\S]*?value: \$\{\{ jobs\.resolve-source\.outputs\.publish-source-consumer-version \|\| jobs\.tail-reseal-plan\.outputs\.target-version \}\}/,
+  );
   assert.match(workflow, /Resolve source tree SHA/);
   assert.match(workflow, /Generate release candidate passport/);
   assert.match(workflow, /BUILDCHAIN_RC_SOURCE_TREE_HASH/);
@@ -358,6 +410,56 @@ test("reusable build exposes release-candidate passport outputs", () => {
   assert.match(workflow, /BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON/);
   assert.match(workflow, /BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON/);
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
+});
+
+test("tail reseal preserves source-bound GitHub artifact attestation policy evidence", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.build.yml"),
+    "utf8",
+  );
+  const tailReseal = workflow.slice(
+    workflow.indexOf("  tail-reseal-platforms:"),
+    workflow.indexOf("  tail-reseal-summarize:"),
+  );
+
+  assert.match(
+    tailReseal,
+    /name: Recreate retained GitHub artifact attestation policy/,
+  );
+  assert.match(
+    tailReseal,
+    /\.buildchain\/recovery-runtime\/scripts\/create-github-artifact-attestation-policy\.mjs/,
+  );
+  assert.match(
+    tailReseal,
+    /BUILDCHAIN_RUNTIME_SHA: \$\{\{ needs\.tail-reseal-plan\.outputs\.candidate-runtime-sha \}\}/,
+  );
+  assert.match(
+    tailReseal,
+    /name: Upload retained GitHub artifact attestation policy/,
+  );
+  assert.match(
+    tailReseal,
+    /attestation-policy-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.tail-reseal-plan\.outputs\.source-sha \}\}/,
+  );
+});
+
+test("publication authority hydrates retained tail-reseal auxiliary evidence", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.publication-authority.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /name: Hydrate retained tail-reseal auxiliary evidence/,
+  );
+  assert.match(workflow, /-tail-reseal-request-\[0-9a-f\]\{40\}\$/);
+  assert.match(workflow, /-attestation-policy-/);
+  assert.match(workflow, /source\.runId/);
+  assert.match(
+    workflow,
+    /\.buildchain\/publication-evidence\/payloads\/\$policy_artifact/,
+  );
 });
 
 test("reusable build exposes runner-local tools before lifecycle execution", () => {
@@ -717,6 +819,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-kfd-3-artifact-verify-command:/);
   assert.match(action, /release-passport-adopter-delivery-json:/);
   assert.match(action, /release-passport-kfd-adopter-manifest-json:/);
+  assert.match(action, /release-passport-kfd-adopter-manifest-gate-json:/);
   assert.match(action, /release-passport-kfd-support-matrix-json:/);
   assert.match(action, /release-passport-kfd-product-gate-jsons:/);
   assert.match(action, /release-passport-invariant-passport-jsons:/);
@@ -2961,6 +3064,8 @@ test("release-candidate passport validates tree-equivalent promote-only source l
       sourceHeadSha: "c".repeat(40),
       sourceTreeSha: "b".repeat(40),
     });
+    assert.equal(validation.candidateSourceSha, "a".repeat(40));
+    assert.equal(validation.candidateSourceTreeSha, "b".repeat(40));
     assert.equal(validation.builtSourceSha, "a".repeat(40));
     assert.equal(validation.builtSourceTreeSha, "b".repeat(40));
     assert.equal(validation.promotionChannelSha, "c".repeat(40));

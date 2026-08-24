@@ -35,6 +35,7 @@ function git(cwd, args) {
 ensureMaintainabilityRevisionsAvailable(root, {
   baselineRevision: baseline.revision,
   enforcementRevision: policy.enforcementRevision || baseline.revision,
+  publicSurfaceRevision: policy.publicSurfaceRevision,
 });
 
 test("new-only budgets detect added anonymous and duplicate-name functions", () => {
@@ -270,7 +271,10 @@ test("public surface lifecycle metadata preserves baseline contracts", () => {
   assert.deepEqual(
     evaluatePublicSurface({
       root,
-      revision: policy.enforcementRevision || baseline.revision,
+      revision:
+        policy.publicSurfaceRevision ||
+        policy.enforcementRevision ||
+        baseline.revision,
       policy,
     }),
     [],
@@ -284,12 +288,15 @@ test("public surface transitions require an exact reviewed successor contract", 
   ].contract.outputs.push("unreviewed-output");
   const issues = evaluatePublicSurface({
     root,
-    revision: policy.enforcementRevision || baseline.revision,
+    revision:
+      policy.publicSurfaceRevision ||
+      policy.enforcementRevision ||
+      baseline.revision,
     policy: fixturePolicy,
   });
   assert.ok(
     issues.includes(
-      `workflow:release-propagation: existing public contract drifted from ${policy.enforcementRevision}`,
+      `workflow:release-propagation: existing public contract drifted from ${policy.publicSurfaceRevision || policy.enforcementRevision}`,
     ),
   );
 });

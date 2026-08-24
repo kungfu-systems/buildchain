@@ -545,6 +545,34 @@ jobs:
           pattern: ${{ inputs.evidence-payload-pattern }}
           path: .buildchain/publication-evidence/payloads
 
+      - name: Hydrate retained tail-reseal auxiliary evidence
+        if: ${{ !inputs.dry-run && inputs.auto-admission-kind == 'release-candidate' && inputs.consumer-gate-command != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_REPOSITORY: ${{ inputs.evidence-repository }}
+          EVIDENCE_RUN_ID: ${{ inputs.evidence-run-id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          request_root="$RUNNER_TEMP/buildchain-tail-reseal-request"
+          candidate_artifacts="$RUNNER_TEMP/buildchain-candidate-artifacts.json"
+          gh api --paginate "repos/${EVIDENCE_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}/artifacts?per_page=100" | jq -s '[.[].artifacts[]]' > "$candidate_artifacts"
+          request_artifact="$(jq -er '[.[] | select(.expired == false and (.name | test("-tail-reseal-request-[0-9a-f]{40}$")))] | if length == 0 then "" elif length == 1 then .[0].name else error("multiple tail-reseal request artifacts") end' "$candidate_artifacts")"
+          if [[ -z "$request_artifact" ]]; then
+            exit 0
+          fi
+          mkdir -p "$request_root"
+          gh run download "$EVIDENCE_RUN_ID" --repo "$EVIDENCE_REPOSITORY" --name "$request_artifact" --dir "$request_root"
+          request_path="$request_root/request.json"
+          source_run_id="$(jq -er --arg repository "$EVIDENCE_REPOSITORY" 'select(.repository == $repository and (.contract | endswith("-release-candidate-tail-reseal/v1"))) | .source.runId' "$request_path")"
+          source_sha="$(jq -er '.source.sha | select(test("^[0-9a-f]{40}$"))' "$request_path")"
+          source_artifacts="$RUNNER_TEMP/buildchain-tail-reseal-source-artifacts.json"
+          gh api --paginate "repos/${EVIDENCE_REPOSITORY}/actions/runs/${source_run_id}/artifacts?per_page=100" | jq -s '[.[].artifacts[]]' > "$source_artifacts"
+          policy_artifact="$(jq -er --arg suffix "$source_sha" '[.[] | select(.expired == false and (.name | contains("-attestation-policy-")) and (.name | endswith($suffix)))] | if length == 1 then .[0].name else error("expected exactly one retained attestation-policy artifact") end' "$source_artifacts")"
+          policy_root=".buildchain/publication-evidence/payloads/$policy_artifact"
+          mkdir -p "$policy_root"
+          gh run download "$source_run_id" --repo "$EVIDENCE_REPOSITORY" --name "$policy_artifact" --dir "$policy_root"
+
       - name: Checkout exact consumer Gate subject
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' && inputs.consumer-gate-command != '' }}
         uses: actions/checkout@v7.0.0

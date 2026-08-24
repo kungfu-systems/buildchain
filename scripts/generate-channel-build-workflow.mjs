@@ -63,6 +63,10 @@ function routerOutputs(outputBlock) {
     .replace("value: ${{ jobs.alpha.outputs.controller-receipt-digest || jobs.stable.outputs.controller-receipt-digest }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}")
     .replace("value: ${{ jobs.alpha.outputs.controller-receipt-status || jobs.stable.outputs.controller-receipt-status }}", "value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}")
     .replace(
+      "value: ${{ jobs.resolve-source.outputs.publish-source-consumer-version || jobs.tail-reseal-plan.outputs.target-version }}",
+      "value: ${{ jobs.alpha.outputs.publish-source-consumer-version || jobs.stable.outputs.publish-source-consumer-version }}",
+    )
+    .replace(
       /(      credential-island-macos-artifact:\n(?:        .*\n)*?        value:) \$\{\{ jobs\.alpha\.outputs\.artifact-name \|\| jobs\.stable\.outputs\.artifact-name \}\}/,
       "$1 ${{ jobs.alpha.outputs.credential-island-macos-artifact || jobs.stable.outputs.credential-island-macos-artifact }}",
     )

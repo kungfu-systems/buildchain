@@ -179,6 +179,9 @@ inputs:
   release-passport-kfd-adopter-manifest-json:
     description: "Standard full-cut adopter conformance manifest JSON path bound into the release passport"
     default: ""
+  release-passport-kfd-adopter-manifest-gate-json:
+    description: "Producer-generated adopter manifest gate JSON path verified and bound into the release passport"
+    default: ""
   release-passport-kfd-support-matrix-json:
     description: "Legacy KFD support projection JSON path accepted only for exact comparison with the adopter manifest"
     default: ""
