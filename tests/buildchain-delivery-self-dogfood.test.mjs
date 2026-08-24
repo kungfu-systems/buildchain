@@ -38,7 +38,7 @@ const checkedAt = "2026-08-12T00:00:00.000Z";
 const maxAgeSeconds = 86400;
 const root = (value) => adopterDeliveryGateDigest(value);
 const commit = (character) => character.repeat(40);
-const kfdPackageRoot = root("kfd-1.0.0-alpha.62-package-bytes");
+const kfdPackageRoot = root("kfd-1.0.0-alpha.65-package-bytes");
 const authorityPackageRoot = root("buildchain-3.0.9-alpha.10-package-bytes");
 const candidatePackageRoot = root("buildchain-3.0.9-alpha.11-package-bytes");
 const source = {
@@ -188,7 +188,7 @@ test("published N-1 Buildchain and KFD abilities self-dogfood an exact candidate
     result.authorityRuntime.buildchainPackage.version,
     "3.0.9-alpha.10",
   );
-  assert.equal(result.authorityRuntime.kfdPackage.version, "1.0.0-alpha.62");
+  assert.equal(result.authorityRuntime.kfdPackage.version, "1.0.0-alpha.65");
   assert.equal(result.instanceReport.valid, true);
   assert.equal(result.gateResult.status, "passed");
   assert.equal(result.bootstrap.status, "passed");
@@ -328,7 +328,7 @@ test("published archive bytes supply every self-dogfood semantic ability", async
     }),
     kfd: await authorityArchive(rootDirectory, {
       name: "@kungfu-tech/kfd",
-      version: "1.0.0-alpha.62",
+      version: "1.0.0-alpha.65",
       semanticArtifactRoot: kfdPackageRoot,
     }),
   };
