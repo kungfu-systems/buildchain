@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 841,
+  "generation": 842,
   "fencingCounter": 137,
   "policy": {
     "agingSeconds": 900,
@@ -11,55 +11,7 @@
     "leaseSeconds": 3600,
     "emergencyPolicy": "reviewed-explicit-only"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "qualified",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:c5d48311323ad88369146fc4705ff54ee647d6a3b4420a761b5cedd86f530c69",
-    "pullRequestNumber": 3100,
-    "sourceHead": "ddac1876650f2faba5a9e1a2e5f55e7d836ac46b",
-    "assignmentRoot": "sha256:3972499a9f69af7db7877536a28ad466bfff75fe592e885f7083de76c9742486",
-    "initiativeRoot": "sha256:606b81bda91d831a3f927132a5b30903ca78f341e534c1b1b728e897ee84b701",
-    "sourceIdentityRoot": "sha256:72ba347e7d2ccde55efc76ba332fff993a6ff50d9afb678f3e580d8bb4a4ccc1",
-    "sourcePatchRoot": "sha256:0d206b280b095a4740ed99eaca2203b1683e381324250dfd543b698f098fa466",
-    "sourceProofRoot": "sha256:d646c8d5b2636973fc7e8a563a6420cee2c6878cacf4c6f44590425da709abdb",
-    "planRoot": "sha256:2804bf1f469a4157222fe868422bd5b09dadffdcfefa3d942f37d4652544383a",
-    "closureRoot": "sha256:534300b45c502d96c7874b9d13f3d3baf16785f1a06e7aba3ffbfbc5961b5bae",
-    "dependencyRoot": "sha256:64d45cd2c501266cf685f78e8a13659be902126f162f6acb2343fb44c5c81b96",
-    "toolchainRoot": "sha256:58f07ee47f949f7a542696913b572902a994337e5790f3ffa29f64f03abb250f",
-    "environmentRoot": "sha256:7ad100ac4a5742137ee9fb71a667ab30338ea4e4a240f9adb9b9ea880009c475",
-    "nativeCommandContract": {
-      "schema": "kungfu.buildchain.native-command-contract/v1",
-      "runner": "bash-lc",
-      "command": "corepack prepare pnpm@11.7.0 --activate && corepack enable && pnpm --version && pnpm install --frozen-lockfile && pnpm run check",
-      "commandRoot": "sha256:d0c014631f0785ed2ce01b5d5b62dcca5fbc82387621dc36d759552bdb394656"
-    },
-    "affectedPaths": [
-      ".github/workflows/dev-pr-auto-merge.yml",
-      "architecture/maintainability-policy.json",
-      "dist/site/buildchain-contract.json",
-      "scripts/dev-pr-auto-merge.mjs",
-      "scripts/dev-pr-delivery-warrant.mjs",
-      "tests/dev-pr-auto-merge.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 32691145617,
-    "deliveryClass": "native-proof-required",
-    "priority": "ordinary",
-    "generation": 137,
-    "expectedOldStateRoot": "sha256:eba576bb77d8cf9a06346ea9a2e15b86e0e223d0ae04e688b43077446c437613",
-    "issuedAt": "2026-08-24T05:16:32.329Z",
-    "expiresAt": "2026-08-24T06:17:24.123Z",
-    "fencingToken": "sha256:95706fc1828be702da1a229483575250f00aecafba4b96d95ae9beb4a096ab71",
-    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
-    "heartbeatAt": "2026-08-24T05:17:24.123Z",
-    "nativeProofRoot": "sha256:e9fb6e337864b0c6d9acbfc956dd3feb189fa1f0ac02ab5638c5f9429682a273",
-    "nativeExecutionReceiptRoot": "sha256:66cfea1093044bcda358a15a286b5bdf486fa1c2b3282238b7c1e2c357112796",
-    "nativeProofReuseRoot": "sha256:7d0b52a05b8c18b35126172c5ec29a26a9d00e80652ff6d72238bffcc1218e5b",
-    "qualificationReceiptRoot": "sha256:200f89c4135c48af7d9576bbbac3176aa1f060744078f4033fe0502b3005f00f",
-    "qualifiedAt": "2026-08-24T05:17:54.139Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -6236,11 +6188,18 @@
       "sourceWorkflowRunId": 32691145617,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-24T05:16:28.399Z",
-      "updatedAt": "2026-08-24T05:17:54.139Z",
+      "updatedAt": "2026-08-24T05:36:16.939Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "qualified",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "reason": "Protected merge-group a9b5f3ff and merge-head Verify succeeded for exact PR 3100 head ddac1876.",
+        "evidenceRoot": "sha256:c4bc5c6e2db96e6b9d6282fd7921b952afe5059a2f4af4d0da062ce9d10cba3e",
+        "closedAt": "2026-08-24T05:36:16.939Z",
+        "fencingToken": "sha256:95706fc1828be702da1a229483575250f00aecafba4b96d95ae9beb4a096ab71",
+        "leaseGeneration": 137
+      },
       "affectedPaths": [
         ".github/workflows/dev-pr-auto-merge.yml",
         "architecture/maintainability-policy.json",
@@ -6252,6 +6211,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-24T05:17:54.139Z",
-  "stateRoot": "sha256:a1b6be3c3d83163b7d5f3566f4f9fa57f71227a4a55e36a45b8c759c05a230dd"
+  "updatedAt": "2026-08-24T05:36:16.939Z",
+  "stateRoot": "sha256:8bfcc909527b1759cb50a2487ca9b3f5ee75dfaa2941a314a4070f3b8a951785"
 }
