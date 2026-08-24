@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-17
 ai_provenance:
   model_family: GPT-5
   product: Codex
@@ -74,6 +74,27 @@ The supported priority classes are `ordinary`, `expedited`, and `emergency`.
 The queue does not infer an emergency: callers must choose it explicitly under
 their reviewed policy. Delivery classes are `non-native-fast`,
 `native-proof-required`, `cross-platform`, and `release`.
+
+## CI lane change budget
+
+`architecture/ci-lane-change-budget.json` pins the exact protected-Dev cut
+that predates lane-budget enforcement. `scripts/check-ci-lane-change-budget.mjs`
+compares the current workflow job set with that cut on every repository check.
+Legacy jobs remain readable without invented metadata, while every newly added
+job fails closed until its exact `<workflow>#<job>` lane declares:
+
+- merge or non-merge authority class;
+- trigger class;
+- concurrency scope and `cancel-in-progress` behavior;
+- expected runner-minutes per run;
+- cancellation/settlement behavior; and
+- merge-critical SLO impact, expected contribution, metric, and rationale.
+
+The guard is repository policy only. It does not become another required
+GitHub status, acquire merge-queue authority, or relax Delivery Warrant,
+exact-head, approval, required-check, and protected-ref enforcement. A removed
+lane must also remove its declaration, so stale budget records cannot conceal
+workflow drift.
 
 A release-blocker candidate may additionally carry a rooted priority claim
 created from a settled Release Train dual landing. The claim binds the exact
@@ -294,9 +315,15 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   reuses semantic native proof under heartbeat, atomically qualifies the same
   fence, and refuses GitHub enqueue unless the immutable queue commit, state root, active Warrant, and
   selected candidate all pass exact readback validation. Immediately before
-  enqueue, the controller also rereads the current protected state ref and
-  verifies the active candidate, fencing token, generation, pull request, and
-  exact head. A previously valid result is not authority after terminal
+  enqueue, the controller writes and then reads back both the exact-head queue
+  admission status and active lease status. Only after those statuses are
+  visible at their required states does it reread the pull request head,
+  protected base, native merge queue, and current protected Warrant state. The
+  final rooted admission transaction binds the frozen base, source head,
+  candidate, fencing token, generation, native proof roots, Project Cut proof,
+  and both status contexts. Status propagation is retried before enqueue;
+  base, head, queue-predecessor, lease, or Warrant drift revokes both statuses
+  without attempting enqueue. A previously valid result is not authority after terminal
   closeout. Re-running qualification for the same selected head may regenerate
   timestamped proof bytes, but it retains the immutable active Warrant and its
   originally selected proof instead of rewriting or rejecting that attempt.
@@ -304,6 +331,30 @@ The reusable `dev-pr-auto-merge.yml` supports three explicit rollout modes:
   controller discovers that another candidate owns the active Warrant, a
   configured consumer workflow is dispatched immediately for that exact PR,
   head, and source run; the candidate is not left waiting for a patrol cron.
+
+  Required-mode admission also performs a latest-base Project Cut immediately
+  before enqueue. If the protected base advanced, the controller reclassifies
+  the exact attributed delta against the rooted native proof. Only a disjoint,
+  fully attributed move may reuse that proof; overlap, unknown attribution,
+  missing composition, or merge conflict fails with a stable pre-enqueue reason.
+  The rooted Project Cut receipt binds the frozen and admitted base SHAs,
+  GitHub's exact synthetic merge commit and replay tree, and the unchanged PR
+  head. A final base/head/queue/Warrant compare-and-swap readback must still
+  match that receipt before the enqueue mutation is attempted.
+
+  The protected branch ref is the base authority for that compare-and-swap.
+  A pull request's `base.sha` may remain an older composition snapshot while
+  GitHub reports the pull request as behind, so it is diagnostic rather than a
+  substitute for the separately read protected ref and rooted Project Cut.
+
+  A required-mode caller may set `defer-landing: true` to stop after the exact
+  Warrant is qualified and its evidence artifact is published. This is not a
+  dry run: source qualification, candidate submission, Warrant selection, and
+  fresh-or-reused native proof remain mandatory. The controller and queue
+  mutation are skipped, and a handoff to a different active Warrant fails the
+  deferred call. A later exact-contract call with `defer-landing: false` must
+  perform the protected landing; changing the source head invalidates the
+  qualified Warrant.
 
 For a required native delivery class, the reusable controller rejects a
 missing or malformed environment root before runtime checkout, candidate

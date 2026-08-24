@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:57d37609068590238f547a133b6b69ee994b452825030447d20529683ba61fbd",
+    "compatibilityDigest": "sha256:95c0c5a1dcc77c234b99557f35936702797885663d803d38c1168c1eefbbe0ca",
     "majorLine": "v3"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e17a790fb24b0dfede66aa8513feae321e47a100b70d850e7edca14870652f81",
+    "sha256": "9d455c0ea35be96ac0e833752218bd501ebeed80a80434339c1482f5ce194eb6",
     "summary": {
       "cliCommandCount": 114,
       "workflowCount": 69,
       "actionCount": 7,
-      "sitePageCount": 74,
+      "sitePageCount": 75,
       "docCommandRefCount": 989,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e17a790fb24b0dfede66aa8513feae321e47a100b70d850e7edca14870652f81",
+      "sha256": "9d455c0ea35be96ac0e833752218bd501ebeed80a80434339c1482f5ce194eb6",
       "summary": {
         "cliCommandCount": 114,
         "workflowCount": 69,
         "actionCount": 7,
-        "sitePageCount": 74,
+        "sitePageCount": 75,
         "docCommandRefCount": 989,
         "failureCount": 0
       },
@@ -1365,6 +1365,18 @@
           "packageExport": "./buildchain-contract"
         },
         {
+          "id": "export:./compatibility-fact-authority",
+          "name": "@kungfu-tech/buildchain/compatibility-fact-authority",
+          "kind": "package-export",
+          "sourcePath": "packages/core/buildchain-compatibility-proof.js",
+          "evidencePath": "packages/core/buildchain-compatibility-proof.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./compatibility-fact-authority"
+        },
+        {
           "id": "export:./candidate-timeline",
           "name": "@kungfu-tech/buildchain/candidate-timeline",
           "kind": "package-export",
@@ -1375,6 +1387,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./candidate-timeline"
+        },
+        {
+          "id": "export:./ci-lane-change-budget",
+          "name": "@kungfu-tech/buildchain/ci-lane-change-budget",
+          "kind": "package-export",
+          "sourcePath": "packages/core/ci-lane-change-budget.js",
+          "evidencePath": "packages/core/ci-lane-change-budget.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./ci-lane-change-budget"
         },
         {
           "id": "export:./channel-candidate",
@@ -3730,7 +3754,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 86,
+          "inputCount": 88,
           "inputs": [
             "artifact-compression-level",
             "artifact-name",
@@ -3752,6 +3776,8 @@
             "build-command",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
+            "buildchain-contract-expected-channel",
+            "buildchain-contract-expected-major",
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
@@ -4314,13 +4340,15 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 41,
+          "inputCount": 43,
           "inputs": [
             "artifact-path",
             "aws-region",
             "build-command",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
+            "buildchain-contract-expected-channel",
+            "buildchain-contract-expected-major",
             "buildchain-contract-lock-path",
             "buildchain-ref",
             "buildchain-repository",
@@ -4767,13 +4795,18 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 7,
+          "inputCount": 12,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
             "mode",
             "node-version",
             "require-version-state",
+            "source-proof-closure-paths-json",
+            "source-proof-dependency-paths-json",
+            "source-proof-policy-paths-json",
+            "source-proof-required-contexts-json",
+            "source-proof-reuse",
             "upload-artifacts",
             "working-directory"
           ],
@@ -4888,7 +4921,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 40,
+          "inputCount": 41,
           "inputs": [
             "active-lease-context",
             "affected-paths-json",
@@ -4898,6 +4931,7 @@
             "buildchain-ref",
             "buildchain-repository",
             "closure-root",
+            "defer-landing",
             "delivery-class",
             "delivery-priority",
             "delivery-warrant-mode",
@@ -6250,6 +6284,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:compatibility-fact-authority",
+          "name": "site-page:manual:compatibility-fact-authority",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:consumer-issue-reporting",
           "name": "site-page:manual:consumer-issue-reporting",
           "kind": "site-page",
@@ -6972,6 +7018,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 447
+    "publicSurfaceCount": 450
   }
 }

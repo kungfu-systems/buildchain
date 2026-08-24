@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "protocol": {
+    "id": "example.specification/ledger",
+    "version": "1.0.0"
+  },
+  "project": "example/ledger-product",
+  "claims": ["ledger.entries-ordered", "ledger.entries-rooted"],
+  "authorityRoot": "sha256:9c00c9310807378c9fc318fa4ff909351e40f5702ad8dc57cddedbb02dc4c0b2"
+}

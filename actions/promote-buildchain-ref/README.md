@@ -504,6 +504,9 @@ governance semantics:
 - alpha promotion must come from a merged same-repository PR
   `dev/vN/vN.M -> alpha/vN/vN.M`, or from a strict same-line
   `publish-gate/alpha/vN/vN.M/<version> -> alpha/vN/vN.M` source-lock PR;
+  the exact merge commit of another reviewed same-repository PR into that
+  protected alpha target is also accepted, while a commit merely contained by
+  an associated PR is not;
   an immutable recovery receipt may instead admit the exact current alpha
   channel SHA only when its sealed candidate tree is byte-equivalent and its
   publication version is bound by that receipt; when administrative protection

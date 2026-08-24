@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:81a419036b590cdbb5c927c0324d6e16cf5bdbaf9c7b1d0e206fbaf76ad3fbff"
+      "digest": "sha256:84f1fad4544b4b6f3727d919e4726678ac20d084d1ec55d8cc5193925863538a"
     },
     {
       "id": "getting-started",
@@ -205,7 +205,7 @@
       "path": "docs/site-bundle-contract.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:371030eda56d7a968d037e8b9a348e0211038506b8c0b14c539ec790ce884945"
+      "digest": "sha256:5e6878260ee35a19e3451beeda8e1e4057d3afa19a95b0ac95bc37895925aa5e"
     },
     {
       "id": "migration-inventory",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:306cc5be607ff78b2aa0890c819257ba9e87f1f27fb3a2d9914811a4d98ab485"
+      "digest": "sha256:393ace4bd5878717374a92b30d8bc3a6301dcbb36339476ed194c12843fec68d"
     },
     {
       "id": "build-facts",
@@ -285,7 +285,7 @@
       "path": "docs/lifecycle-protocol.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:9fdab92b63eae0085d460a4ec78511fbb63999a311cd7693c669705bd9897eb2"
+      "digest": "sha256:544ed27bf0fa587dcc57a733c03189f1a40a89896e9165b9d15b9a2191d384fc"
     },
     {
       "id": "reusable-build-surface",
@@ -293,7 +293,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:8868acbf7942b0d8e5101203a4ab98b984028b90e0584ea131e1d9b0253e4344"
+      "digest": "sha256:ab14d7fc95b1d1471d6b915ffd6ced3af3ac3bb8882edf5e66a4feb2713ef091"
     },
     {
       "id": "publish-transaction",
@@ -333,7 +333,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:889955042854bb95bc5dd58d2bdd26bdc8259c096e15c0a8d479289ff51448b8"
+      "digest": "sha256:66eca6c682edd21deeeaae769bcd6882f8fc70b6f9448abec9ed922d2a47ad97"
     },
     {
       "id": "release-flow",
@@ -357,7 +357,7 @@
       "path": "docs/versioning.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:af1be0d4b9f110807534f1111e5003b2454908993183215badcf7a33b9f48461"
+      "digest": "sha256:ad5333683bd99f627ef3bd252738a8d58790ef56d415c855dbdd565b639c9a59"
     },
     {
       "id": "web-surface-deployments",
@@ -365,7 +365,7 @@
       "path": "docs/web-surface-deployments.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:484e896746d2f4cca4f9f18d29c14784ec20143c12affc3dbb9ccfbf8f221b55"
+      "digest": "sha256:4aba152fbf373129363f106914a612cd0d6a135e74f4714976e3361ad670cac7"
     }
   ],
   "facts": [

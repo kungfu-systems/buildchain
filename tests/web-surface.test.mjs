@@ -304,6 +304,44 @@ test("web-surface deploy apply defaults to dry-run operations", () => {
   });
 });
 
+test("web-surface deploy passes exact redirects to managed CloudFront viewer-request routing", () => {
+  withFixture((fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        "[deploy.staging]\nadapter = \"aws-s3-cloudfront\"",
+        `[deploy.staging]
+adapter = "aws-s3-cloudfront"
+redirects = [
+  { from = "/install.sh", to = "https://libkungfu.dev/install.sh", status = 307 },
+  { from = "/install.ps1", to = "https://libkungfu.dev/install.ps1", status = 307 },
+]`,
+      ),
+    );
+    fs.mkdirSync(path.join(fixture, "dist"), { recursive: true });
+    fs.writeFileSync(path.join(fixture, "dist", "index.html"), "hello\n");
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "staging",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+      appliedAt: "2026-07-01T00:00:00.000Z",
+    });
+    const rewrite = result.operations.find((operation) => operation.action === "ensure-cloudfront-directory-index-rewrite");
+    const redirectFlag = rewrite.args.indexOf("--redirects-base64");
+    assert.ok(redirectFlag > 0);
+    assert.deepEqual(
+      JSON.parse(Buffer.from(rewrite.args[redirectFlag + 1], "base64").toString("utf8")),
+      [
+        { source: "/install.sh", target: "https://libkungfu.dev/install.sh", status: 307 },
+        { source: "/install.ps1", target: "https://libkungfu.dev/install.ps1", status: 307 },
+      ],
+    );
+    assert.deepEqual(result.manifest.surfaceBindings[0].routing.redirects, rewrite.routing.redirects);
+  });
+});
+
 test("web-surface deploy apply can treat directory index rewrite as externally managed", () => {
   withFixture((fixture) => {
     const configPath = path.join(fixture, "buildchain.toml");
@@ -1648,6 +1686,79 @@ test("web-surface health check retries transient installer route failures", asyn
     });
     assert.equal(health.status, "passed");
     assert.equal(ps1Attempts, 2);
+  });
+});
+
+test("web-surface production health verifies configured redirects without following them", async () => {
+  await withFixtureAsync(async (fixture) => {
+    const configPath = path.join(fixture, "buildchain.toml");
+    fs.writeFileSync(
+      configPath,
+      fs.readFileSync(configPath, "utf8").replace(
+        "[deploy.production]\nadapter = \"aws-s3-cloudfront\"",
+        `[deploy.production]
+adapter = "aws-s3-cloudfront"
+redirects = [
+  { from = "/install.sh", to = "https://libkungfu.dev/install.sh", status = 307 },
+  { from = "/install.ps1", to = "https://libkungfu.dev/install.ps1", status = 307 },
+]`,
+      ),
+    );
+    writeInstallerPublicationFixture(fixture);
+    const result = applyWebSurfaceDeploy({
+      cwd: fixture,
+      channel: "production",
+      sourceSha: "b".repeat(40),
+      dryRun: true,
+    });
+    const manualRequests = [];
+    const health = await checkWebSurfaceHealth({
+      cwd: fixture,
+      result,
+      httpRetryAttempts: 1,
+      httpRetryIntervalMs: 0,
+      fetchImpl(url, options = {}) {
+        const parsed = new URL(url);
+        if (parsed.pathname === "/install.sh" || parsed.pathname === "/install.ps1") {
+          manualRequests.push([parsed.pathname, options.redirect]);
+          return {
+            status: 307,
+            url,
+            headers: new Headers({ location: `https://libkungfu.dev${parsed.pathname}` }),
+            text: async () => "",
+          };
+        }
+        if (parsed.pathname.includes("/installers/")) {
+          const name = parsed.pathname.split("/").at(-1);
+          const bytes = name === "install.sh"
+            ? Buffer.from("#!/bin/sh\nexit 0\n")
+            : Buffer.from("exit 0\r\n");
+          return {
+            status: 200,
+            url,
+            headers: new Headers({
+              "content-type": name === "install.sh" ? "text/x-shellscript" : "text/plain",
+              "cache-control": "public,max-age=31536000,immutable",
+            }),
+            arrayBuffer: async () => bytes,
+          };
+        }
+        return {
+          status: 200,
+          url,
+          headers: new Headers({ "content-type": "text/html" }),
+          text: async () => "<!doctype html>",
+        };
+      },
+    });
+    assert.equal(health.status, "passed");
+    assert.deepEqual(manualRequests, [["/install.sh", "manual"], ["/install.ps1", "manual"]]);
+    const redirects = health.checks.find((check) => check.surface === "__redirects__");
+    assert.equal(redirects.status, "pass");
+    assert.deepEqual(redirects.redirects.map((entry) => entry.httpStatus), [307, 307]);
+    const installer = health.checks.find((check) => check.surface === "__installer__");
+    assert.equal(installer.status, "pass");
+    assert.deepEqual([...new Set(installer.evidence.observations.map((entry) => entry.route))], ["immutable"]);
   });
 });
 

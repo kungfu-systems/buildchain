@@ -188,14 +188,14 @@ on:
         }
       queue-admission-context:
         {
-          description: "Temporary exact-head commit status required before native queue admission",
+          description: "Exact-head status written and read back before native queue admission; required in Warrant mode",
           default: "",
           type: string,
           required: false,
         }
       active-lease-context:
         {
-          description: "Exact-head lease status context that must remain pending while merge-group qualification runs",
+          description: "Exact-head lease status written and read back as pending before enqueue; required in Warrant mode",
           default: "",
           type: string,
           required: false,
@@ -239,6 +239,11 @@ on:
         description: "Landing mode: auto selects native queue when enabled; queue fails closed without one"
         default: "auto"
         type: string
+        required: false
+      defer-landing:
+        description: "Qualify the exact required Warrant and publish its evidence without queue admission"
+        default: false
+        type: boolean
         required: false
       dry-run:
         description: "Plan only; do not merge PRs"
@@ -361,11 +366,16 @@ jobs:
             echo "::error::required delivery Warrant mode cannot be combined with dry-run"
             exit 1
           fi
+          if [ "${DEFER_LANDING}" = "true" ] && [ "${WARRANT_MODE}" != "required" ]; then
+            echo "::error::defer-landing requires delivery-warrant-mode required"
+            exit 1
+          fi
         env:
           INPUT_TARGET_BRANCH: ${{ inputs.target-branch }}
           WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
           EXPECTED_PR: ${{ inputs.expected-pr-number }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          DEFER_LANDING: ${{ inputs.defer-landing }}
           DRY_RUN: ${{ inputs.dry-run }}
 
       - name: Validate native qualification contract before Warrant admission
@@ -778,7 +788,7 @@ jobs:
 
       - name: Run Buildchain dev PR auto-merge
         id: merge
-        if: steps.warrant.outputs.handoff-required != 'true' && (inputs.delivery-warrant-mode != 'required' || steps.warrant.outputs.already-qualified == 'true' || steps.native-final.outcome == 'success')
+        if: inputs.defer-landing != true && steps.warrant.outputs.handoff-required != 'true' && (inputs.delivery-warrant-mode != 'required' || steps.warrant.outputs.already-qualified == 'true' || steps.native-final.outcome == 'success')
         continue-on-error: true
         run: node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs
         env:
@@ -807,7 +817,7 @@ jobs:
           BUILDCHAIN_DEV_PR_OUTPUT_PATH: .buildchain/dev-pr-auto-merge/result.json
 
       - name: Upload dev PR auto-merge plan
-        if: always()
+        if: always() && inputs.defer-landing != true
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-dev-pr-auto-merge-${{ steps.target.outputs.branch-artifact }}
@@ -829,6 +839,10 @@ jobs:
         shell: bash
         run: |
           if [ "${HANDOFF_REQUIRED}" = "true" ]; then
+            if [ "${DEFER_LANDING}" = "true" ]; then
+              echo "::error::defer-landing cannot succeed by handing off a different active Warrant"
+              exit 1
+            fi
             if [ "${WARRANT_OUTCOME}" != "success" ] || [ "${HANDOFF_DISPATCHED}" != "true" ]; then
               echo "::error::Active Warrant handoff was not dispatched"
               exit 1
@@ -836,7 +850,7 @@ jobs:
             echo "Immediate handoff dispatched to the active Warrant candidate."
             exit 0
           fi
-          if [ "${MERGE_STEP_OUTCOME}" != "success" ]; then
+          if [ "${DEFER_LANDING}" != "true" ] && [ "${MERGE_STEP_OUTCOME}" != "success" ]; then
             echo "::error::Buildchain dev PR controller failed; inspect the uploaded receipt"
             exit 1
           fi
@@ -856,6 +870,14 @@ jobs:
             echo "::error::Provisional Warrant did not atomically upgrade with an exact native proof"
             exit 1
           fi
+          if [ "${DEFER_LANDING}" = "true" ]; then
+            if [ "${WARRANT_MODE}" != "required" ]; then
+              echo "::error::defer-landing requires delivery-warrant-mode required"
+              exit 1
+            fi
+            echo "Exact required Warrant qualified; landing is explicitly deferred."
+            exit 0
+          fi
           if [ "${TARGETED}" = "true" ] && [ "${TARGETED_OK}" != "true" ]; then
             echo "::error::Targeted PR was not admitted at its expected head"
             exit 1
@@ -864,6 +886,7 @@ jobs:
           MERGE_STEP_OUTCOME: ${{ steps.merge.outcome }}
           TARGETED: ${{ steps.merge.outputs.targeted }}
           TARGETED_OK: ${{ steps.merge.outputs.targeted-ok }}
+          DEFER_LANDING: ${{ inputs.defer-landing }}
           WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
           QUALIFY_OUTCOME: ${{ steps.qualify.outcome }}
           SUBMIT_OUTCOME: ${{ steps.submit.outcome }}

@@ -112,6 +112,8 @@
         "build-command",
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-expected-channel",
+        "buildchain-contract-expected-major",
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
@@ -179,7 +181,7 @@
         "verify-substage-evidence-path",
         "working-directory"
       ],
-      "inputCount": 86,
+      "inputCount": 88,
       "secrets": [
         "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
         "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -949,6 +951,8 @@
         "build-command",
         "buildchain-contract-compatibility-policy",
         "buildchain-contract-drift-issue-mode",
+        "buildchain-contract-expected-channel",
+        "buildchain-contract-expected-major",
         "buildchain-contract-lock-path",
         "buildchain-ref",
         "buildchain-repository",
@@ -986,7 +990,7 @@
         "verify-command",
         "working-directory"
       ],
-      "inputCount": 41,
+      "inputCount": 43,
       "secrets": [
         "production-release-app-private-key"
       ],
@@ -1647,10 +1651,15 @@
         "mode",
         "node-version",
         "require-version-state",
+        "source-proof-closure-paths-json",
+        "source-proof-dependency-paths-json",
+        "source-proof-policy-paths-json",
+        "source-proof-required-contexts-json",
+        "source-proof-reuse",
         "upload-artifacts",
         "working-directory"
       ],
-      "inputCount": 7,
+      "inputCount": 12,
       "secrets": [],
       "secretCount": 0,
       "outputs": [
@@ -1660,9 +1669,14 @@
         "controller-receipt-artifact",
         "controller-receipt-digest",
         "controller-receipt-json",
-        "controller-receipt-status"
+        "controller-receipt-status",
+        "source-proof-decision-root",
+        "source-proof-producer-run-id",
+        "source-proof-reuse-reason",
+        "source-proof-reused",
+        "source-proof-root"
       ],
-      "outputCount": 7,
+      "outputCount": 12,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active",
@@ -1846,6 +1860,7 @@
         "buildchain-ref",
         "buildchain-repository",
         "closure-root",
+        "defer-landing",
         "delivery-class",
         "delivery-priority",
         "delivery-warrant-mode",
@@ -1879,7 +1894,7 @@
         "toolchain-root",
         "warrant-lease-seconds"
       ],
-      "inputCount": 40,
+      "inputCount": 41,
       "secrets": [
         "github-token"
       ],

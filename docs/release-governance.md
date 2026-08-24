@@ -113,6 +113,9 @@ The implementation is intentionally stricter than a local release script:
   `dev/vX/vX.Y` to `alpha/vX/vX.Y`;
 - release promotion must come from a merged same-repository PR from
   `alpha/vX/vX.Y` to `release/vX/vX.Y`;
+- an exact SHA that is itself the merge commit of a reviewed same-repository PR
+  into the protected target is equivalent lineage evidence; a commit merely
+  contained by an unrelated PR is not;
 - major promotion must come from a merged same-repository PR from
   `release/vX/vX.Y` to `publish-gate/major`;
 - release promotion requires an existing same-patch alpha tag and checks the

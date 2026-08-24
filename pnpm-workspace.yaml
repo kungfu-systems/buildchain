@@ -7,3 +7,4 @@ allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:
   - '@kungfu-tech/kfd'
+  - '@kungfu-tech/buildchain@3.0.9-alpha.11'

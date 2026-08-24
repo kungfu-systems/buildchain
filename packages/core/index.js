@@ -140,6 +140,11 @@ export {
 } from "./candidate-timeline.js";
 
 export {
+  CI_LANE_CHANGE_BUDGET_CONTRACT,
+  evaluateCiLaneChangeBudget,
+} from "./ci-lane-change-budget.js";
+
+export {
   CHANNEL_CANDIDATE_DECISION_SCHEMA,
   channelCandidateSourceLockRef,
   decideChannelCandidate,

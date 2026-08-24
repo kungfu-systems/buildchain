@@ -6,7 +6,7 @@
     "cliCommandCount": 114,
     "workflowCount": 69,
     "actionCount": 7,
-    "sitePageCount": 74,
+    "sitePageCount": 75,
     "docCommandRefCount": 989,
     "failureCount": 0
   },
@@ -673,6 +673,8 @@
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-expected-channel",
+          "buildchain-contract-expected-major",
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
@@ -740,7 +742,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 86,
+        "inputCount": 88,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1370,6 +1372,8 @@
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-expected-channel",
+          "buildchain-contract-expected-major",
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
@@ -1407,7 +1411,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 41,
+        "inputCount": 43,
         "secrets": [
           "production-release-app-private-key"
         ],
@@ -1858,10 +1862,15 @@
           "mode",
           "node-version",
           "require-version-state",
+          "source-proof-closure-paths-json",
+          "source-proof-dependency-paths-json",
+          "source-proof-policy-paths-json",
+          "source-proof-required-contexts-json",
+          "source-proof-reuse",
           "upload-artifacts",
           "working-directory"
         ],
-        "inputCount": 7,
+        "inputCount": 12,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1871,9 +1880,14 @@
           "controller-receipt-artifact",
           "controller-receipt-digest",
           "controller-receipt-json",
-          "controller-receipt-status"
+          "controller-receipt-status",
+          "source-proof-decision-root",
+          "source-proof-producer-run-id",
+          "source-proof-reuse-reason",
+          "source-proof-reused",
+          "source-proof-root"
         ],
-        "outputCount": 7
+        "outputCount": 12
       },
       {
         "id": "dev-alpha-candidate-patrol",
@@ -2007,6 +2021,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "closure-root",
+          "defer-landing",
           "delivery-class",
           "delivery-priority",
           "delivery-warrant-mode",
@@ -2040,7 +2055,7 @@
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 40,
+        "inputCount": 41,
         "secrets": [
           "github-token"
         ],
@@ -3214,6 +3229,10 @@
       },
       {
         "id": "manual:cli-reference",
+        "category": "manual"
+      },
+      {
+        "id": "manual:compatibility-fact-authority",
         "category": "manual"
       },
       {
@@ -8354,8 +8373,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "613ca42d3fe36e953603221d1cf16478ba84e6cf27dd6d11ddb2c1caea42ec3b",
-    "workflowRegistryDigest": "b96628a4fc2ea164ed508e5fdd09fe04651f2a64792101eae8aa1ecccf8f0234",
-    "pageRegistryDigest": "18255a56a80d74edf7b07009eb4d7499d1ab7d2317afefba1f016f4e644d8912"
+    "workflowRegistryDigest": "bf320eb0f5c4aab99adf17b7b4f2375c805509165f79e6e5f693e740e1814d58",
+    "pageRegistryDigest": "890980c737e6ddae717971befc23dd62e560a3f8c690baf72ce4e16c929ab09a"
   },
   "comparison": {
     "missingCliRegistry": [],

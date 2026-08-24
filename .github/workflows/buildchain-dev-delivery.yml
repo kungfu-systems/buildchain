@@ -1,7 +1,5 @@
 name: Buildchain Dev Delivery
-
 run-name: "Buildchain PR #${{ github.event.client_payload.candidate.pullRequestNumber || inputs.expected-pr-number }} · two-phase Delivery Warrant"
-
 on:
   workflow_dispatch:
     inputs:
@@ -100,6 +98,8 @@ jobs:
       delivery-class: ${{ github.event.client_payload.candidate.deliveryClass || 'native-proof-required' }}
       delivery-priority: ${{ github.event.client_payload.candidate.priority || 'ordinary' }}
       required-status-checks: check
+      queue-admission-context: Queue admission lease
+      active-lease-context: Queue family lease/exact
       ready-label: ready
       block-labels: blocked,do-not-merge,work-in-progress
       allowed-head-prefixes: feature/,fix/,chore/,docs/,ci/,refactor/,automation/auditable-demo-

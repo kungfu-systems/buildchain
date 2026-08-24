@@ -215,6 +215,41 @@ acceptance without weakening promotion installs.
 The reusable job name remains `check`, and `upload-artifacts: false` disables
 evidence upload without changing the job conclusion used by branch protection.
 
+Repositories with an expensive `lifecycle.check` may opt into exact source
+qualification proof reuse for merge groups. Set `source-proof-reuse: true` and
+provide non-empty JSON arrays for the policy, closure, dependency, and required
+context inputs. A successful pull-request run seals its exact source head, base,
+patch, runtime, plan, path-set roots, required contexts, controller receipt, and
+workflow run into a content-addressed artifact. The corresponding merge-group
+run downloads only an unexpired artifact from a successful run of the same
+caller workflow and pull request, recomputes every predicate, and records a
+merge-group-bound reuse decision. Reuse additionally requires the synthetic
+merge-group commit to have exactly the qualified base and proved PR head as its
+two parents; grouped or otherwise changed composition falls back. Exact
+verification skips package setup and the duplicate lifecycle commands while
+retaining the stable `check / check` context and an explicit non-executed
+lifecycle evidence manifest.
+
+The optimization is fail closed. A missing artifact, API or download error,
+base advance, source change, runtime change, contract change, configured path
+change, file blob change, required-context change, malformed proof, or
+non-qualifying producer receipt runs the full `lifecycle.install` plus
+`lifecycle.check` path. Existing callers remain unchanged because proof reuse is
+disabled by default.
+
+```yaml
+jobs:
+  source-acceptance:
+    uses: kungfu-systems/buildchain/.github/workflows/check.yml@<exact-sha>
+    with:
+      mode: source
+      source-proof-reuse: true
+      source-proof-policy-paths-json: '[".github/workflows/source.yml"]'
+      source-proof-closure-paths-json: '[".buildchain/buildchain.toml","scripts/source-check.mjs"]'
+      source-proof-dependency-paths-json: '["pnpm-lock.yaml"]'
+      source-proof-required-contexts-json: '["Candidate source acceptance / check"]'
+```
+
 Shared environment variables can be declared once:
 
 ```toml

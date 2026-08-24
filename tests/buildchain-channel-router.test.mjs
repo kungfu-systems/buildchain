@@ -108,6 +108,8 @@ test("generated channel workflow mirrors the advanced build surface", () => {
   assert.equal(current, expected);
   assert.match(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@v3-alpha/);
   assert.match(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@v3\n/);
+  assert.doesNotMatch(current, /buildchain-contract-expected-channel/);
+  assert.doesNotMatch(current, /buildchain-contract-expected-major/);
   assert.doesNotMatch(current, /uses: \.\/\.github\/workflows\/\.build\.yml/);
   assert.match(current, /buildchain-ref: \$\{\{ needs\.resolve-channel\.outputs\.buildchain-ref \}\}/);
   assert.match(current, /buildchain-contract-lock-path: \$\{\{ needs\.resolve-channel\.outputs\.contract-lock-path \}\}/);

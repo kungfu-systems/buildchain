@@ -2138,7 +2138,7 @@
       ]
     },
     {
-      "id": "packages/core/buildchain-compatibility-proof.js#assertBuildchainCompatibilityProjection",
+      "id": "packages/core/buildchain-compatibility-fact.js#assertBuildchainCompatibilityProjection",
       "name": "assertBuildchainCompatibilityProjection",
       "kind": "function",
       "signature": "function assertBuildchainCompatibilityProjection(contractWorld)",
@@ -2156,8 +2156,8 @@
         "none-detected-by-static-source-scan"
       ],
       "source": {
-        "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 365
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 442
       },
       "example": "import { assertBuildchainCompatibilityProjection } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -2167,7 +2167,55 @@
       ]
     },
     {
-      "id": "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+      "name": "BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 25
+      },
+      "example": "import { BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+      "name": "BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 23
+      },
+      "example": "import { BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
       "name": "BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
       "kind": "constant",
       "signature": "const BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
@@ -2180,8 +2228,8 @@
         "none-on-import"
       ],
       "source": {
-        "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 13
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 21
       },
       "example": "import { BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -2191,7 +2239,7 @@
       ]
     },
     {
-      "id": "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
+      "id": "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
       "name": "BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
       "kind": "constant",
       "signature": "const BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
@@ -2204,10 +2252,323 @@
         "none-on-import"
       ],
       "source": {
-        "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 12
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 19
       },
       "example": "import { BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFact",
+      "name": "createBuildchainCompatibilityFact",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityFact(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 189
+      },
+      "example": "import { createBuildchainCompatibilityFact } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFactRegistry",
+      "name": "createBuildchainCompatibilityFactRegistry",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityFactRegistry({ factInputs = compatibilityFactSource.facts.map((entry) => ({ ...entry, authority: compatibilityFactSource.authority, })), registryCut = compatibilityFactSource.registryCut, supersessions = compatibilityFactSource.supersessions, revocations = compatibilityFactSource.revocations, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ factInputs = compatibilityFactSource.facts.map((entry) => ({ ...entry, authority: compatibilityFactSource.authority, })), registryCut = compatibilityFactSource.registryCut, supersessions = compatibilityFactSource.supersessions, revocations = compatibilityFactSource.revocations, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 248
+      },
+      "example": "import { createBuildchainCompatibilityFactRegistry } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityPathQuery",
+      "name": "createBuildchainCompatibilityPathQuery",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityPathQuery({ registry, queryId, sourceRoot, targetRoot, relationPathRoots, maxDepth = 1, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ registry, queryId, sourceRoot, targetRoot, relationPathRoots, maxDepth = 1, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 512
+      },
+      "example": "import { createBuildchainCompatibilityPathQuery } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProof",
+      "name": "createBuildchainCompatibilityProof",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityProof(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 88
+      },
+      "example": "import { createBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProofRegistry",
+      "name": "createBuildchainCompatibilityProofRegistry",
+      "kind": "function",
+      "signature": "function createBuildchainCompatibilityProofRegistry({ proofs = createHistoricalBuildchainCompatibilityProofs(), surfaces = [], majorLine = \"\", } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ proofs = createHistoricalBuildchainCompatibilityProofs(), surfaces = [], majorLine = \"\", } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 391
+      },
+      "example": "import { createBuildchainCompatibilityProofRegistry } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityFacts",
+      "name": "createHistoricalBuildchainCompatibilityFacts",
+      "kind": "function",
+      "signature": "function createHistoricalBuildchainCompatibilityFacts()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 354
+      },
+      "example": "import { createHistoricalBuildchainCompatibilityFacts } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityProofs",
+      "name": "createHistoricalBuildchainCompatibilityProofs",
+      "kind": "function",
+      "signature": "function createHistoricalBuildchainCompatibilityProofs()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 358
+      },
+      "example": "import { createHistoricalBuildchainCompatibilityProofs } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#resolveBuildchainCompatibilityProof",
+      "name": "resolveBuildchainCompatibilityProof",
+      "kind": "function",
+      "signature": "function resolveBuildchainCompatibilityProof({ registry, surface, sourceBreakingDigest, majorLine, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ registry, surface, sourceBreakingDigest, majorLine, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 548
+      },
+      "example": "import { resolveBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFact",
+      "name": "verifyBuildchainCompatibilityFact",
+      "kind": "function",
+      "signature": "function verifyBuildchainCompatibilityFact(factInput)",
+      "parameters": [
+        {
+          "name": "factInput",
+          "signature": "factInput"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 225
+      },
+      "example": "import { verifyBuildchainCompatibilityFact } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityPath",
+      "name": "verifyBuildchainCompatibilityPath",
+      "kind": "function",
+      "signature": "function verifyBuildchainCompatibilityPath({ registry, query } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ registry, query } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 506
+      },
+      "example": "import { verifyBuildchainCompatibilityPath } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityProof",
+      "name": "verifyBuildchainCompatibilityProof",
+      "kind": "function",
+      "signature": "function verifyBuildchainCompatibilityProof(proofInput, expected = {})",
+      "parameters": [
+        {
+          "name": "proofInput",
+          "signature": "proofInput"
+        },
+        {
+          "name": "expected",
+          "signature": "expected = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-fact.js",
+        "line": 142
+      },
+      "example": "import { verifyBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -2229,9 +2590,33 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 14
+        "line": 35
       },
       "example": "import { BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "name": "BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "kind": "constant",
+      "signature": "const BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/buildchain-compatibility-proof.js",
+        "line": 33
+      },
+      "example": "import { BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -2266,67 +2651,9 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 448
+        "line": 173
       },
       "example": "import { contractSummary } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityProof",
-      "name": "createBuildchainCompatibilityProof",
-      "kind": "function",
-      "signature": "function createBuildchainCompatibilityProof(input = {})",
-      "parameters": [
-        {
-          "name": "input",
-          "signature": "input = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 246
-      },
-      "example": "import { createBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityProofRegistry",
-      "name": "createBuildchainCompatibilityProofRegistry",
-      "kind": "function",
-      "signature": "function createBuildchainCompatibilityProofRegistry({ proofs = createHistoricalBuildchainCompatibilityProofs(), surfaces = [], majorLine = \"\" } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ proofs = createHistoricalBuildchainCompatibilityProofs(), surfaces = [], majorLine = \"\" } = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 341
-      },
-      "example": "import { createBuildchainCompatibilityProofRegistry } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -2353,33 +2680,9 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 411
+        "line": 48
       },
       "example": "import { createBuildchainCompatibilityVerificationReceipt } from \"@kungfu-tech/buildchain/buildchain-contract\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/buildchain-compatibility-proof.js#createHistoricalBuildchainCompatibilityProofs",
-      "name": "createHistoricalBuildchainCompatibilityProofs",
-      "kind": "function",
-      "signature": "function createHistoricalBuildchainCompatibilityProofs()",
-      "parameters": [],
-      "returns": "unknown",
-      "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 318
-      },
-      "example": "import { createHistoricalBuildchainCompatibilityProofs } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -2406,7 +2709,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 542
+        "line": 324
       },
       "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2419,11 +2722,11 @@
       "id": "packages/core/buildchain-compatibility-proof.js#renderBuildchainContractDriftIssueBody",
       "name": "renderBuildchainContractDriftIssueBody",
       "kind": "function",
-      "signature": "function renderBuildchainContractDriftIssueBody({ repository = \"\", workflow = \"\", runUrl = \"\", lockPath = \"\", evaluation } = {})",
+      "signature": "function renderBuildchainContractDriftIssueBody({ repository = \"\", workflow = \"\", runUrl = \"\", lockPath = \"\", evaluation, } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ repository = \"\", workflow = \"\", runUrl = \"\", lockPath = \"\", evaluation } = {}"
+          "signature": "{ repository = \"\", workflow = \"\", runUrl = \"\", lockPath = \"\", evaluation, } = {}"
         }
       ],
       "returns": "unknown",
@@ -2435,42 +2738,9 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 680
+        "line": 496
       },
       "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
-      "id": "packages/core/buildchain-compatibility-proof.js#verifyBuildchainCompatibilityProof",
-      "name": "verifyBuildchainCompatibilityProof",
-      "kind": "function",
-      "signature": "function verifyBuildchainCompatibilityProof(proofInput, expected = {})",
-      "parameters": [
-        {
-          "name": "proofInput",
-          "signature": "proofInput"
-        },
-        {
-          "name": "expected",
-          "signature": "expected = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 294
-      },
-      "example": "import { verifyBuildchainCompatibilityProof } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -2497,7 +2767,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-compatibility-proof.js",
-        "line": 435
+        "line": 148
       },
       "example": "import { verifyBuildchainCompatibilityVerificationReceipt } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -2530,7 +2800,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1527
+        "line": 1588
       },
       "example": "import { discoverConfiguredDerivedVersionMaterial } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2563,7 +2833,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1488
+        "line": 1549
       },
       "example": "import { discoverConfiguredVersionStateFiles } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2596,7 +2866,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1432
+        "line": 1493
       },
       "example": "import { getLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2625,7 +2895,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 585
+        "line": 586
       },
       "example": "import { getNativeDiagnosticsProfile } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2654,7 +2924,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1436
+        "line": 1497
       },
       "example": "import { getPublishContract } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2683,7 +2953,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 353
+        "line": 354
       },
       "example": "import { getStableReleasePolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2712,7 +2982,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1560
+        "line": 1621
       },
       "example": "import { getVersionStrategy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2741,7 +3011,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 183
+        "line": 184
       },
       "example": "import { loadBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2774,7 +3044,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1569
+        "line": 1630
       },
       "example": "import { loadConfiguredAnchorManifest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2803,7 +3073,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 206
+        "line": 207
       },
       "example": "import { normalizeBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2840,7 +3110,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1393
+        "line": 1454
       },
       "example": "import { normalizeLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2869,7 +3139,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1440
+        "line": 1501
       },
       "example": "import { runLifecycleStage } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2902,7 +3172,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1740
+        "line": 1802
       },
       "example": "import { updateConfiguredVersionStateContents } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2935,7 +3205,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-config.js",
-        "line": 1607
+        "line": 1668
       },
       "example": "import { validateBuildchainConfig } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2959,7 +3229,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 36
+        "line": 47
       },
       "example": "import { BUILDCHAIN_CONTRACT_LOCK } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -2983,7 +3253,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 35
+        "line": 46
       },
       "example": "import { BUILDCHAIN_RUNTIME_CONTRACT_WORLD } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3012,7 +3282,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 846
+        "line": 874
       },
       "example": "import { createBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3041,7 +3311,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 137
+        "line": 148
       },
       "example": "import { createBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3063,14 +3333,14 @@
       ],
       "returns": "unknown",
       "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 801
+        "line": 815
       },
       "example": "import { finalizeBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3099,7 +3369,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 900
+        "line": 931
       },
       "example": "import { readBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3128,7 +3398,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 879
+        "line": 910
       },
       "example": "import { readBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3157,7 +3427,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 57
+        "line": 68
       },
       "example": "import { sha256BuildchainContractJson } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3186,7 +3456,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 61
+        "line": 72
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -3215,7 +3485,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 57
+        "line": 68
       },
       "example": "import { sha256Json } from \"@kungfu-tech/buildchain/buildchain-contract\";",
       "maturity": "stable",
@@ -5268,6 +5538,59 @@
       ]
     },
     {
+      "id": "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "name": "CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "kind": "constant",
+      "signature": "const CI_LANE_CHANGE_BUDGET_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/ci-lane-change-budget.js",
+        "line": 4
+      },
+      "example": "import { CI_LANE_CHANGE_BUDGET_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
+      "name": "evaluateCiLaneChangeBudget",
+      "kind": "function",
+      "signature": "function evaluateCiLaneChangeBudget({ policy, workflows, baselineWorkflows = null, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ policy, workflows, baselineWorkflows = null, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/ci-lane-change-budget.js",
+        "line": 180
+      },
+      "example": "import { evaluateCiLaneChangeBudget } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/controller-evidence.js#aggregateControllerReceipts",
       "name": "aggregateControllerReceipts",
       "kind": "function",
@@ -6845,7 +7168,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 75
+        "line": 109
       },
       "example": "import { classifyDevDeliveryDelta } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6874,7 +7197,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 207
+        "line": 241
       },
       "example": "import { createIntegrationDeliveryProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6903,7 +7226,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 121
+        "line": 155
       },
       "example": "import { createProjectCutReplayPlan } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6932,7 +7255,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 141
+        "line": 175
       },
       "example": "import { createProjectCutReplayProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -6961,9 +7284,38 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 31
+        "line": 32
       },
       "example": "import { createSourceQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-proof.js#createSourceQualificationProofV2",
+      "name": "createSourceQualificationProofV2",
+      "kind": "function",
+      "signature": "function createSourceQualificationProofV2(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-proof.js",
+        "line": 53
+      },
+      "example": "import { createSourceQualificationProofV2 } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -6985,7 +7337,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 5
+        "line": 6
       },
       "example": "import { INTEGRATION_DELIVERY_PROOF_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7009,7 +7361,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 4
+        "line": 5
       },
       "example": "import { PROJECT_CUT_REPLAY_PROOF_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7043,6 +7395,30 @@
       ]
     },
     {
+      "id": "packages/core/dev-delivery-proof.js#SOURCE_QUALIFICATION_PROOF_V2_SCHEMA",
+      "name": "SOURCE_QUALIFICATION_PROOF_V2_SCHEMA",
+      "kind": "constant",
+      "signature": "const SOURCE_QUALIFICATION_PROOF_V2_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-proof.js",
+        "line": 4
+      },
+      "example": "import { SOURCE_QUALIFICATION_PROOF_V2_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/dev-delivery-proof.js#verifyIntegrationDeliveryProof",
       "name": "verifyIntegrationDeliveryProof",
       "kind": "function",
@@ -7066,7 +7442,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 228
+        "line": 262
       },
       "example": "import { verifyIntegrationDeliveryProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7099,7 +7475,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 187
+        "line": 221
       },
       "example": "import { verifyProjectCutReplayProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7132,7 +7508,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-proof.js",
-        "line": 52
+        "line": 81
       },
       "example": "import { verifySourceQualificationProof } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -9100,7 +9476,7 @@
       ],
       "source": {
         "path": "packages/core/github-artifact-attestation.js",
-        "line": 493
+        "line": 501
       },
       "example": "import { createGitHubArtifactAttestationEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -9158,7 +9534,7 @@
       ],
       "source": {
         "path": "packages/core/github-artifact-attestation.js",
-        "line": 543
+        "line": 556
       },
       "example": "import { createGitHubArtifactAttestationVerificationPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -9326,7 +9702,7 @@
       ],
       "source": {
         "path": "packages/core/github-artifact-attestation.js",
-        "line": 659
+        "line": 672
       },
       "example": "import { githubArtifactAttestationRequiredPermissions } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -9471,7 +9847,7 @@
       ],
       "source": {
         "path": "packages/core/github-artifact-attestation.js",
-        "line": 269
+        "line": 277
       },
       "example": "import { prepareGitHubArtifactAttestation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -9529,7 +9905,7 @@
       ],
       "source": {
         "path": "packages/core/github-artifact-attestation.js",
-        "line": 408
+        "line": 416
       },
       "example": "import { stageGitHubArtifactAttestationInputs } from \"@kungfu-tech/buildchain/github-artifact-attestation\";",
       "maturity": "stable",
@@ -9558,7 +9934,7 @@
       ],
       "source": {
         "path": "packages/core/github-artifact-attestation.js",
-        "line": 582
+        "line": 595
       },
       "example": "import { verifyGitHubArtifactAttestationEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20595,7 +20971,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1509
+        "line": 1566
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20624,7 +21000,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1167
+        "line": 1169
       },
       "example": "import { createArtifactEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20682,7 +21058,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2696
+        "line": 2780
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20711,7 +21087,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1204
+        "line": 1254
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20740,7 +21116,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2850
+        "line": 2934
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20889,7 +21265,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2879
+        "line": 2963
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20950,7 +21326,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2766
+        "line": 2850
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21032,6 +21408,35 @@
       ]
     },
     {
+      "id": "packages/core/release-passport.js#releasePassportKfdAdopterSourceSha",
+      "name": "releasePassportKfdAdopterSourceSha",
+      "kind": "function",
+      "signature": "function releasePassportKfdAdopterSourceSha({ passportSourceSha = \"\", release = undefined, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ passportSourceSha = \"\", release = undefined, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/release-passport.js",
+        "line": 1185
+      },
+      "example": "import { releasePassportKfdAdopterSourceSha } from \"@kungfu-tech/buildchain/release-passport\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/release-passport.js#sha256File",
       "name": "sha256File",
       "kind": "function",
@@ -21105,7 +21510,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2891
+        "line": 2975
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21134,7 +21539,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2815
+        "line": 2899
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24236,14 +24641,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:f37909d2a4f2806563b89cde4c616d9821d968f0d1e8a72a3c4e2c31645f9397",
+      "digest": "sha256:7a77ee4ab8322502746e46381e261e52497ae47d3a6f45b3154f12f783aaecfc",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 608,
+      "symbolCount": 610,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -24342,6 +24747,7 @@
         "packages/core/homebrew.js#checkHomebrewTap",
         "packages/core/kfd2-product-claims.js#checkKfd2ProductClaimOutputs",
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
@@ -24498,6 +24904,7 @@
         "packages/core/public-surface-audit.js#enumerateSitePages",
         "packages/core/public-surface-audit.js#enumerateWorkflowInputs",
         "packages/core/buildchain-compatibility-proof.js#evaluateBuildchainContractLock",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
         "packages/core/github-governance-authority.js#evaluateCodeownersAuthority",
         "packages/core/github-governance-authority.js#evaluateGithubGovernanceSnapshot",
         "packages/core/kfd-product-gates.js#evaluateKfdProductGate",
@@ -24942,14 +25349,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:f37909d2a4f2806563b89cde4c616d9821d968f0d1e8a72a3c4e2c31645f9397",
+      "digest": "sha256:7a77ee4ab8322502746e46381e261e52497ae47d3a6f45b3154f12f783aaecfc",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 608,
+      "symbolCount": 610,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -25048,6 +25455,7 @@
         "packages/core/homebrew.js#checkHomebrewTap",
         "packages/core/kfd2-product-claims.js#checkKfd2ProductClaimOutputs",
         "packages/core/readme-badges.js#checkReadmeBadgeBlock",
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
         "packages/core/release-propagation-work-transitions.js#claimReleasePropagationWork",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperBranch",
         "packages/core/engineering-housekeeper.js#classifyHousekeeperPullRequest",
@@ -25204,6 +25612,7 @@
         "packages/core/public-surface-audit.js#enumerateSitePages",
         "packages/core/public-surface-audit.js#enumerateWorkflowInputs",
         "packages/core/buildchain-compatibility-proof.js#evaluateBuildchainContractLock",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget",
         "packages/core/github-governance-authority.js#evaluateCodeownersAuthority",
         "packages/core/github-governance-authority.js#evaluateGithubGovernanceSnapshot",
         "packages/core/kfd-product-gates.js#evaluateKfdProductGate",
@@ -25637,7 +26046,7 @@
       "specifier": "@kungfu-tech/buildchain/github-artifact-attestation",
       "export": "./github-artifact-attestation",
       "target": "./packages/core/github-artifact-attestation.js",
-      "digest": "sha256:83ca5dbb5e22c35d75a397be05e189322e377ae9fb01f07fde1445e81b4bc53a",
+      "digest": "sha256:e94fdefa043a2c4ce54e194936d2c0d8f68f3e769beb4d1713042de3376825a8",
       "summary": "GitHub keyless artifact attestation policy, predicate, provider evidence, and fail-closed verification APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -25785,29 +26194,36 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:ce3eb4b59193b9a5b4edbe67483f685dd56350bb0f9e1ae26e9ea9c013a0b4ad",
+      "digest": "sha256:6678b9780c2cb4404746e579023261a78fd6c0ed13f679d3fdf6947a8525bdc5",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 26,
+      "symbolCount": 36,
       "symbolIds": [
-        "packages/core/buildchain-compatibility-proof.js#assertBuildchainCompatibilityProjection",
+        "packages/core/buildchain-compatibility-fact.js#assertBuildchainCompatibilityProjection",
         "packages/core/buildchain-channel-identity.js#BUILDCHAIN_CHANNELS",
-        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
-        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
         "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
         "packages/core/buildchain-contract.js#BUILDCHAIN_CONTRACT_LOCK",
+        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
         "packages/core/buildchain-contract.js#BUILDCHAIN_RUNTIME_CONTRACT_WORLD",
         "packages/core/buildchain-compatibility-proof.js#contractSummary",
-        "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityProof",
-        "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityProofRegistry",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFact",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFactRegistry",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityPathQuery",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProofRegistry",
         "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityVerificationReceipt",
         "packages/core/buildchain-contract.js#createBuildchainContractLock",
         "packages/core/buildchain-contract.js#createBuildchainContractWorld",
-        "packages/core/buildchain-compatibility-proof.js#createHistoricalBuildchainCompatibilityProofs",
+        "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityFacts",
+        "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityProofs",
         "packages/core/buildchain-channel-identity.js#evaluateBuildchainChannelBinding",
         "packages/core/buildchain-compatibility-proof.js#evaluateBuildchainContractLock",
         "packages/core/buildchain-contract.js#finalizeBuildchainContractWorld",
@@ -25816,9 +26232,57 @@
         "packages/core/buildchain-contract.js#readBuildchainContractLock",
         "packages/core/buildchain-contract.js#readBuildchainContractWorld",
         "packages/core/buildchain-compatibility-proof.js#renderBuildchainContractDriftIssueBody",
+        "packages/core/buildchain-compatibility-fact.js#resolveBuildchainCompatibilityProof",
         "packages/core/buildchain-contract.js#sha256File",
         "packages/core/buildchain-contract.js#sha256Json",
-        "packages/core/buildchain-compatibility-proof.js#verifyBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFact",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityPath",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-proof.js#verifyBuildchainCompatibilityVerificationReceipt"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/compatibility-fact-authority",
+      "export": "./compatibility-fact-authority",
+      "target": "./packages/core/buildchain-compatibility-proof.js",
+      "digest": "sha256:7b4934e4c345f550ac9ff29a0569a01dc16221b6abcf072cc109367e709df930",
+      "summary": "KFR2 compatibility Fact registry, explicit bounded path verification, and deterministic legacy projection APIs.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 23,
+      "symbolIds": [
+        "packages/core/buildchain-compatibility-fact.js#assertBuildchainCompatibilityProjection",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA",
+        "packages/core/buildchain-compatibility-fact.js#BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA",
+        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+        "packages/core/buildchain-compatibility-proof.js#BUILDCHAIN_LEGACY_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA",
+        "packages/core/buildchain-compatibility-proof.js#contractSummary",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFact",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityFactRegistry",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityPathQuery",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-fact.js#createBuildchainCompatibilityProofRegistry",
+        "packages/core/buildchain-compatibility-proof.js#createBuildchainCompatibilityVerificationReceipt",
+        "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityFacts",
+        "packages/core/buildchain-compatibility-fact.js#createHistoricalBuildchainCompatibilityProofs",
+        "packages/core/buildchain-compatibility-proof.js#evaluateBuildchainContractLock",
+        "packages/core/buildchain-compatibility-proof.js#renderBuildchainContractDriftIssueBody",
+        "packages/core/buildchain-compatibility-fact.js#resolveBuildchainCompatibilityProof",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityFact",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityPath",
+        "packages/core/buildchain-compatibility-fact.js#verifyBuildchainCompatibilityProof",
         "packages/core/buildchain-compatibility-proof.js#verifyBuildchainCompatibilityVerificationReceipt"
       ],
       "owner": "buildchain-core",
@@ -25847,6 +26311,30 @@
         "packages/core/candidate-timeline.js#createCandidateTimeline",
         "packages/core/candidate-timeline.js#formatCandidateTimelineReport",
         "packages/core/candidate-timeline.js#normalizeCandidateTimelineEvent"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/ci-lane-change-budget",
+      "export": "./ci-lane-change-budget",
+      "target": "./packages/core/ci-lane-change-budget.js",
+      "digest": "sha256:0cabfc98dedfeeb37a49461e7fbb480e8bb1b5b22cf2ac4ae5bae31305977033",
+      "summary": "Exact-baseline CI lane admission requiring authority, trigger, concurrency, runner, cancellation, and merge-critical SLO budgets.",
+      "capabilityGroup": "governance-versioning",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 2,
+      "symbolIds": [
+        "packages/core/ci-lane-change-budget.js#CI_LANE_CHANGE_BUDGET_CONTRACT",
+        "packages/core/ci-lane-change-budget.js#evaluateCiLaneChangeBudget"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -26046,14 +26534,14 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:09384bf4419d79ddfada223ee29bd777effabe95aabb11943c6527dac54eac00",
+      "digest": "sha256:4728c4f947b88a07ee9aff4cff2fd24f1c79796cfcb64de6ac37d305d78ae068",
       "summary": "Durable single-flight Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 49,
+      "symbolCount": 51,
       "symbolIds": [
         "packages/core/dev-delivery-warrant.js#cancelQueuedDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#classifyDevDeliveryDelta",
@@ -26069,6 +26557,7 @@
         "packages/core/dev-delivery-proof.js#createProjectCutReplayProof",
         "packages/core/release-blocker-priority.js#createReleaseBlockerPriorityClaim",
         "packages/core/dev-delivery-proof.js#createSourceQualificationProof",
+        "packages/core/dev-delivery-proof.js#createSourceQualificationProofV2",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CLASSES",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_LEASE_RECEIPT_SCHEMA",
@@ -26097,6 +26586,7 @@
         "packages/core/dev-delivery-warrant.js#selectDevDeliveryWarrant",
         "packages/core/dev-delivery-warrant.js#settleDevDeliveryTerminalEvent",
         "packages/core/dev-delivery-proof.js#SOURCE_QUALIFICATION_PROOF_SCHEMA",
+        "packages/core/dev-delivery-proof.js#SOURCE_QUALIFICATION_PROOF_V2_SCHEMA",
         "packages/core/dev-delivery-warrant.js#submitDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#verifyIntegrationDeliveryProof",
         "packages/core/dev-delivery-native-proof.js#verifyNativeExecutionReceipt",
@@ -27448,14 +27938,14 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:b96c2203ce72b4e584c306c428448c30f66b4ae7b68496549b568e1b1cc3bd83",
+      "digest": "sha256:b4f7ce1812d2e428cc8e01f161f50ffef818ef80c9ab8852249d1f5e00a6acac",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 23,
+      "symbolCount": 24,
       "symbolIds": [
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
         "packages/core/release-passport.js#ARTIFACT_EVIDENCE_CONTRACT",
@@ -27476,6 +27966,7 @@
         "packages/core/release-passport.js#RELEASE_CHECK_REPORT_CONTRACT",
         "packages/core/release-passport.js#RELEASE_EVIDENCE_ATTACHMENT_CONTRACT",
         "packages/core/release-passport.js#RELEASE_PASSPORT_CONTRACT",
+        "packages/core/release-passport.js#releasePassportKfdAdopterSourceSha",
         "packages/core/release-passport.js#sha256File",
         "packages/core/release-passport.js#sha256Text",
         "packages/core/release-passport.js#validateKnownReleasePassportContracts",
@@ -27493,7 +27984,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport-contract",
       "export": "./release-passport-contract",
       "target": "./packages/core/release-passport-contract.js",
-      "digest": "sha256:160a3f73d524ee90153b6e9cc9753542863a85791311abacb3c28601328b0da7",
+      "digest": "sha256:f6adc695fbd1c835b89546db4b2a5b0cd4e0cd0fd56cb5ef0556c4b47031663b",
       "summary": "Standalone release passport JSON Schema, ownership/check manifest, and structural validation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -27855,7 +28346,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:306cc5be607ff78b2aa0890c819257ba9e87f1f27fb3a2d9914811a4d98ab485"
+      "digest": "sha256:393ace4bd5878717374a92b30d8bc3a6301dcbb36339476ed194c12843fec68d"
     },
     {
       "id": "build-facts",
@@ -27880,7 +28371,7 @@
     {
       "id": "site-bundle-contract",
       "path": "docs/site-bundle-contract.md",
-      "digest": "sha256:371030eda56d7a968d037e8b9a348e0211038506b8c0b14c539ec790ce884945"
+      "digest": "sha256:5e6878260ee35a19e3451beeda8e1e4057d3afa19a95b0ac95bc37895925aa5e"
     }
   ],
   "guidance": "These are the public Node import surfaces and symbols shipped by the npm package. Prefer them over internal file paths."
