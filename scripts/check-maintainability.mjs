@@ -50,13 +50,16 @@ function ensureRevisionAvailable(root, revision) {
 
 function ensureMaintainabilityRevisionsAvailable(
   root,
-  { baselineRevision, enforcementRevision },
+  { baselineRevision, enforcementRevision, publicSurfaceRevision },
 ) {
   return Object.fromEntries(
-    [...new Set([baselineRevision, enforcementRevision])].map((revision) => [
-      revision,
-      ensureRevisionAvailable(root, revision),
-    ]),
+    [
+      ...new Set(
+        [baselineRevision, enforcementRevision, publicSurfaceRevision].filter(
+          Boolean,
+        ),
+      ),
+    ].map((revision) => [revision, ensureRevisionAvailable(root, revision)]),
   );
 }
 
@@ -383,16 +386,19 @@ function checkMaintainability({ root = process.cwd() } = {}) {
   const policy = readJson(root, "architecture/maintainability-policy.json");
   const baseline = readJson(root, policy.baseline);
   const enforcementRevision = policy.enforcementRevision || baseline.revision;
+  const publicSurfaceRevision =
+    policy.publicSurfaceRevision || enforcementRevision;
   const hydratedRevisions = ensureMaintainabilityRevisionsAvailable(root, {
     baselineRevision: baseline.revision,
     enforcementRevision,
+    publicSurfaceRevision,
   });
   const current = collectMaintainabilityMetrics({ root });
   const baselineFiles = sourceMetricsAtRevision(root, enforcementRevision);
   const issues = evaluateMaintainability({ current, baselineFiles, policy });
   issues.push(...evaluateRepositoryBudgets({ current, policy }));
   issues.push(
-    ...evaluatePublicSurface({ root, revision: enforcementRevision, policy }),
+    ...evaluatePublicSurface({ root, revision: publicSurfaceRevision, policy }),
   );
   if (issues.length > 0) {
     throw new Error(`maintainability check failed:\n- ${issues.join("\n- ")}`);
@@ -401,8 +407,10 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     schemaVersion: 1,
     baselineRevision: baseline.revision,
     enforcementRevision,
+    publicSurfaceRevision,
     hydratedBaselineRevision: hydratedRevisions[baseline.revision],
     hydratedEnforcementRevision: hydratedRevisions[enforcementRevision],
+    hydratedPublicSurfaceRevision: hydratedRevisions[publicSurfaceRevision],
     trackedFiles: current.repository.trackedFiles,
     sourceFiles: current.repository.handMaintainedSourceFiles,
     publicSurface: current.publicSurface,

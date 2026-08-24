@@ -290,7 +290,7 @@ test("promotion commits consumer discovery authority only after public release a
   );
   assert.match(
     wrapper,
-    /evidence\.publication\?\.url \|\| ""/,
+    /node \.buildchain\/runtime\/scripts\/publication-commit-evidence\.mjs/,
   );
   assert.match(
     wrapper,
@@ -299,6 +299,10 @@ test("promotion commits consumer discovery authority only after public release a
   assert.match(
     wrapper,
     /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/,
+  );
+  assert.match(
+    wrapper,
+    /--candidate-source-sha "\$\{BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA\}"/,
   );
   assert.match(
     wrapper,
