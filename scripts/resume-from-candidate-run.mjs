@@ -41,10 +41,7 @@ import {
   verifyV4RuntimeAuthorizationReceipt,
 } from "../packages/core/v4-runtime-ref-resume-authority.js";
 
-function env(name, fallback = "") {
-  return process.env[name] || fallback;
-}
-
+function env(name, fallback = "") { return process.env[name] || fallback; }
 function requiredEnv(name) {
   const value = env(name).trim();
   if (!value) throw new Error(`${name} is required for candidate recovery`);
@@ -57,9 +54,7 @@ function splitRepository(repository) {
   return { owner: match[1], repo: match[2], fullName: `${match[1]}/${match[2]}` };
 }
 
-function splitPatterns(value = "") {
-  return String(value || "").split(/\r?\n|,/).map((entry) => entry.trim()).filter(Boolean);
-}
+function splitPatterns(value = "") { return String(value || "").split(/\r?\n|,/).map((entry) => entry.trim()).filter(Boolean); }
 
 function patternMatcher(pattern) {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*");
@@ -700,14 +695,26 @@ export function createRecoveredPublicationCandidate({
   };
   return { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
 }
-
-export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests }) {
-  const allFiles = downloads.flatMap((download) => download.files.map((file) => ({
-    path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
-    size: file.size,
-    sha256: file.sha256.replace(/^sha256:/, ""),
-    absolutePath: file.absolutePath,
-  }))).sort((left, right) => left.path.localeCompare(right.path));
+export function resolveRecoveredPublicationVersion({ artifactVersion, channel, rematerializeOnResume = false } = {}) {
+  const version = String(artifactVersion || "").trim(), match = version.match(/^(\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u);
+  if (!match) throw new Error(`recovered npm artifact has invalid publication version: ${version || "<empty>"}`);
+  return channel === "release" && rematerializeOnResume ? match[1] : version;
+}
+export function resolveRecoveredCandidateVersion({ artifactVersion, publicationVersion, channel, rematerializeOnResume = false, targetRef = "", candidateRef = "" } = {}) {
+  const version = String(artifactVersion || "").trim(), target = String(targetRef || "").replace(/^refs\/heads\//u, ""), candidate = String(candidateRef || "").replace(/^refs\/heads\//u, "");
+  if (channel !== "release" || !rematerializeOnResume) return version;
+  const prefix = `publish-gate/${target}/`;
+  if (!target || !candidate.startsWith(prefix)) throw new Error(`stable recovery candidate ref must descend from ${prefix || "publish-gate/<target>/"}`);
+  const candidateVersion = candidate.slice(prefix.length);
+  if (!/^\d+\.\d+\.\d+-alpha\.\d+$/u.test(candidateVersion)) throw new Error(`stable recovery candidate ref must bind an exact alpha version, got ${candidateVersion || "<empty>"}`);
+  if (candidateVersion.replace(/-alpha\.\d+$/u, "") !== publicationVersion) throw new Error(`stable recovery candidate ${candidateVersion} does not match publication ${publicationVersion || "<empty>"}`);
+  if (![candidateVersion, publicationVersion].includes(version)) throw new Error(`recovered npm artifact version ${version || "<empty>"} is not bound to candidate ${candidateVersion} or publication ${publicationVersion}`);
+  return candidateVersion;
+}
+export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests, channel, targetRef = "", candidateRef = "", rematerializeOnResume = false }) {
+  const allFiles = downloads.flatMap((download) => download.files.map((file) => ({ path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
+    size: file.size, sha256: file.sha256.replace(/^sha256:/, ""), absolutePath: file.absolutePath })))
+    .sort((left, right) => left.path.localeCompare(right.path));
   const kind = String(publishArtifactKind || "npm");
   const releaseMatchers = splitPatterns(releasePatterns).map(patternMatcher);
   const releaseAssets = allFiles.filter((file) => releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
@@ -715,12 +722,8 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
     createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
     const version = String(passport.target?.version || "").trim();
     if (!version) throw new Error("candidate recovery requires a passport publication version");
-    return {
-      manifest: undefined,
-      npmArtifacts: [],
-      allFiles,
-      releaseAssets,
-      version,
+    return { manifest: undefined, npmArtifacts: [], allFiles, releaseAssets,
+      version, candidateVersion: version,
       publishRequiredArtifacts: generatePublishRequiredArtifacts({ manifests: platformManifests, version, kind }),
     };
   }
@@ -732,12 +735,9 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
   const npmReleaseAssets = allFiles.filter((file) => releaseMatchers.length
     ? releaseMatchers.some((matcher) => matcher.test(path.basename(file.path)))
     : file.path.toLowerCase().endsWith(".tgz"));
-  const candidate = createRecoveredPublicationCandidate({
-    allFiles,
-    repository,
-    passport,
-    candidateRuntimeSha,
-  });
+  const publicationVersion = resolveRecoveredPublicationVersion({ artifactVersion: main.metadata.ref, channel, rematerializeOnResume });
+  const candidateVersion = resolveRecoveredCandidateVersion({ artifactVersion: main.metadata.ref, publicationVersion, channel, rematerializeOnResume, targetRef, candidateRef });
+  const candidate = createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
   const manifest = createPublicationSealedBundle({
     candidate,
     packageName: main.metadata.name,
@@ -751,12 +751,12 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
     npmArtifacts,
     allFiles,
     releaseAssets: npmReleaseAssets,
-    version: manifest.npm.version,
+    version: publicationVersion, candidateVersion,
     publishRequiredArtifacts: generatePublishRequiredArtifacts({
       kind: "npm",
       tarballPaths: npmArtifacts.map((entry) => entry.file.absolutePath),
       mainPackage: publishPackageMain,
-    }),
+    }).map((artifact) => rematerializeOnResume ? { ...artifact, ref: publicationVersion } : artifact),
   };
 }
 
@@ -832,9 +832,9 @@ export async function resolveRecoveryTransaction({
       })
     : undefined;
   if (!transaction) {
-    transaction = await readExistingTransactionById({
-      repoInfo, apiUrl, token, fetchImpl, transactionId,
-    });
+    transaction = transactionId
+      ? await readExistingTransactionById({ repoInfo, apiUrl, token, fetchImpl, transactionId })
+      : undefined;
   }
   return { version: transaction?.version || publicationVersion, transaction };
 }
@@ -865,7 +865,7 @@ export async function resumeFromCandidateRun({
   channel, targetRef, targetSha,
   expectedSourceTree = "", expectedCandidateRoot = "",
   candidateRuntimeSha, runtimeSha,
-  transactionId = "", artifactName = "", artifactPatterns = "", releasePatterns = "",
+  transactionId = "", artifactName = "", artifactPatterns = "", releasePatterns = "", rematerializeOnResume = false,
   requiredArtifactCount = 0,
   publishArtifactKind = "npm", publishPackageMain = "",
   outputDir = ".buildchain/release-candidate-recovery",
@@ -908,7 +908,7 @@ export async function resumeFromCandidateRun({
       publishArtifactKind,
       publishPackageMain,
       releasePatterns,
-      platformManifests: platformManifestEvidence.manifests,
+      platformManifests: platformManifestEvidence.manifests, channel, targetRef, candidateRef: pullRequest.head?.ref || "", rematerializeOnResume,
     });
     const stageCapsules = resolveRecoveredStageCapsules({
       candidateRuntimeSha,
@@ -918,7 +918,7 @@ export async function resumeFromCandidateRun({
       downloads,
     });
     const {
-      version: candidateVersion,
+      version: publicationVersion,
       transaction: existingTransaction,
     } = await resolveRecoveryTransaction({
       repoInfo,
@@ -976,7 +976,7 @@ export async function resumeFromCandidateRun({
       platformManifestEvidence: platformManifestEvidence.evidence,
       productPayloadManifests,
       artifacts: downloads.map((download) => download.record),
-      publicationVersion: candidateVersion,
+      publicationVersion,
       currentToolingSha: runtimeSha,
       recoveryRunId,
     });
@@ -992,7 +992,7 @@ export async function resumeFromCandidateRun({
           repoInfo,
           targetRef,
           runtimeSha,
-          version: candidateVersion,
+          version: publicationVersion,
           passport,
           sidecar: stageCapsuleSidecar,
           stageCapsules,
@@ -1007,7 +1007,7 @@ export async function resumeFromCandidateRun({
       repository: repoInfo.fullName,
       run: { id: runId, url: run.html_url || "", name: run.name },
       artifacts: { passport: selected.passport.name, summary: selected.summary.name, payloads: chosen.map((artifact) => artifact.name), sourceSha: selected.sourceSha },
-      version: candidateVersion,
+      version: publicationVersion, candidateVersion: publication.candidateVersion,
       candidateRoot: recovery.receipt.recovered.candidateRoot,
       artifactRoot: recovery.receipt.recovered.artifactRoot,
       receipt: recovery.receipt,
@@ -1048,7 +1048,7 @@ export async function resumeFromCandidateRunCli() {
       expectedCandidateRoot: env("BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_ROOT"),
       candidateRuntimeSha: requiredEnv("BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_RUNTIME_SHA"),
       runtimeSha: requiredEnv("BUILDCHAIN_RESUME_RUNTIME_SHA"),
-      transactionId: env("BUILDCHAIN_RESUME_TRANSACTION_ID"),
+      transactionId: env("BUILDCHAIN_RESUME_TRANSACTION_ID"), rematerializeOnResume: env("BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME") === "true",
       artifactName: env("BUILDCHAIN_ARTIFACT_NAME"),
       artifactPatterns: env("BUILDCHAIN_ARTIFACT_PATTERNS"),
       releasePatterns: env("BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS"),
@@ -1062,7 +1062,7 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-action": result.action,
       "release-candidate-passport-path": result.paths.passport,
       "release-candidate-build-summary-path": result.paths.buildSummary,
-      "release-candidate-version": result.version,
+      "release-candidate-version": result.candidateVersion, "release-candidate-publication-version": result.version,
       "release-candidate-source-sha": result.artifacts.sourceSha,
       "release-candidate-artifact": result.artifacts.passport,
       "release-candidate-build-summary-artifact": result.artifacts.summary,
