@@ -218,6 +218,24 @@ test("promote wrapper exposes controlled branch-protection review bypass", () =>
   assert.doesNotMatch(selfPromotion, /BUILDCHAIN_PROMOTION_BYPASS_TEAMS/);
 });
 
+test("recovered promotion exposes the pnpm shim before version-state verification", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const promoteJob = workflow.slice(workflow.indexOf("  promote:"));
+  const runtimeInstallIndex = promoteJob.indexOf(
+    "- name: Install Buildchain runtime dependencies",
+  );
+  const promoteIndex = promoteJob.indexOf("- name: Promote-only publish");
+
+  assert.ok(runtimeInstallIndex >= 0 && runtimeInstallIndex < promoteIndex);
+  assert.match(
+    promoteJob.slice(runtimeInstallIndex, promoteIndex),
+    /run: corepack enable pnpm && corepack pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/,
+  );
+});
+
 test("Buildchain stable promotion gates publication after RC resolution", () => {
   const wrapper = fs.readFileSync(
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
