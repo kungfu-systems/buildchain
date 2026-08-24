@@ -1,13 +1,18 @@
 import {
+  devDeliveryClone as clone,
   devDeliveryContentRoot,
   devDeliveryExactRoot as exactRoot,
   devDeliveryExactSha as exactSha,
   devDeliveryPositiveInteger as positiveInteger,
   devDeliveryText as text,
+  devDeliveryTimestamp as timestamp,
 } from "./dev-delivery-common.js";
+import { verifyIntegrationDeliveryProof } from "./dev-delivery-proof.js";
 
 export const DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA =
   "kungfu.buildchain.dev-delivery-settlement-receipt/v1";
+export const DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA =
+  "kungfu.buildchain.dev-delivery-terminal-evidence-correction/v1";
 
 const PROVIDER_FAILURE_FIELDS = [
   "transferRoot",
@@ -15,6 +20,233 @@ const PROVIDER_FAILURE_FIELDS = [
   "nativeJobId",
   "sealJobId",
 ];
+
+function correctionBody(input) {
+  const body = clone(input || {});
+  delete body.correctionRoot;
+  return body;
+}
+
+export function normalizeTerminalEvidenceCorrection(
+  input,
+  { candidate, repository, protectedBase } = {},
+) {
+  const correction = correctionBody(input);
+  if (correction.schema !== DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA) {
+    throw new Error("unsupported terminal evidence correction schema");
+  }
+  correction.candidateId = exactRoot(
+    correction.candidateId,
+    "terminal evidence correction candidateId",
+  );
+  correction.pullRequestNumber = positiveInteger(
+    correction.pullRequestNumber,
+    "terminal evidence correction pullRequestNumber",
+  );
+  correction.sourceHead = exactSha(
+    correction.sourceHead,
+    "terminal evidence correction sourceHead",
+  );
+  correction.outcome = text(correction.outcome);
+  correction.priorEvidenceRoot = exactRoot(
+    correction.priorEvidenceRoot,
+    "terminal evidence correction priorEvidenceRoot",
+  );
+  correction.correctedAt = timestamp(
+    correction.correctedAt,
+    "terminal evidence correction correctedAt",
+  );
+  correction.reason = text(correction.reason);
+  if (!correction.reason) {
+    throw new Error("terminal evidence correction reason is required");
+  }
+  const verification = verifyIntegrationDeliveryProof(
+    correction.integrationProof,
+  );
+  if (!verification.ok) {
+    throw new Error(
+      `terminal evidence correction requires an exact integration proof: ${verification.reason}`,
+    );
+  }
+  if (
+    correction.integrationProof.currentBase !==
+      correction.integrationProof.mergeGroupHead ||
+    correction.integrationProof.replayTree !==
+      correction.integrationProof.mergeGroupTree
+  ) {
+    throw new Error(
+      "terminal evidence correction requires exact merge-group commit and tree continuity",
+    );
+  }
+  if (candidate) {
+    const checks = {
+      candidateId: correction.candidateId === candidate.candidateId,
+      pullRequestNumber:
+        correction.pullRequestNumber === candidate.pullRequestNumber,
+      sourceHead: correction.sourceHead === candidate.sourceHead,
+      outcome:
+        correction.outcome === candidate.status &&
+        correction.outcome === candidate.terminal?.outcome,
+      priorEvidenceRoot:
+        correction.priorEvidenceRoot === candidate.terminal?.evidenceRoot,
+      repository: correction.integrationProof.repository === repository,
+      protectedBase:
+        correction.integrationProof.protectedBase === protectedBase,
+      sourceProofRoot:
+        correction.integrationProof.sourceProofRoot ===
+        candidate.sourceProofRoot,
+      warrantCandidateId:
+        correction.integrationProof.warrantCandidateId ===
+        candidate.candidateId,
+      warrantFencingToken:
+        correction.integrationProof.warrantFencingToken ===
+        candidate.terminal?.fencingToken,
+      warrantGeneration:
+        correction.integrationProof.warrantGeneration ===
+        candidate.terminal?.leaseGeneration,
+    };
+    const failed = Object.entries(checks)
+      .filter(([, matches]) => !matches)
+      .map(([field]) => field);
+    if (failed.length > 0) {
+      throw new Error(
+        `terminal evidence correction identity drift: ${failed.join(", ")}`,
+      );
+    }
+  }
+  const correctionRoot = devDeliveryContentRoot(correction);
+  if (input?.correctionRoot && input.correctionRoot !== correctionRoot) {
+    throw new Error("terminal evidence correction root drift");
+  }
+  return { ...correction, correctionRoot };
+}
+
+export function effectiveTerminalEvidenceRoot(candidate) {
+  return (
+    candidate?.terminal?.integrationEvidenceCorrection?.integrationProof
+      ?.proofRoot ||
+    candidate?.terminal?.evidenceRoot ||
+    ""
+  );
+}
+
+export function createTerminalEvidenceCorrection(
+  candidate,
+  input,
+  { repository, protectedBase, now } = {},
+) {
+  return normalizeTerminalEvidenceCorrection(
+    {
+      schema: DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA,
+      candidateId: candidate?.candidateId,
+      pullRequestNumber: candidate?.pullRequestNumber,
+      sourceHead: candidate?.sourceHead,
+      outcome: candidate?.status,
+      priorEvidenceRoot: input?.expectedPriorEvidenceRoot,
+      integrationProof: input?.integrationProof,
+      correctedAt: now,
+      reason: input?.reason,
+    },
+    { candidate, repository, protectedBase },
+  );
+}
+
+export function createDevDeliveryTerminalEvidenceReconciler({
+  normalizeQueue,
+  transition,
+}) {
+  return function reconcileDevDeliveryTerminalEvidence(
+    queueInput,
+    input,
+    { now = new Date().toISOString() } = {},
+  ) {
+    const before = normalizeQueue(queueInput);
+    const candidate = before.candidates.find(
+      (entry) =>
+        entry.candidateId === exactRoot(input?.candidateId, "candidateId"),
+    );
+    if (!candidate)
+      throw new Error("terminal evidence candidate does not exist");
+    if (candidate.status !== "merged") {
+      throw new Error(
+        "integration evidence correction requires a merged candidate",
+      );
+    }
+    const existing = candidate.terminal?.integrationEvidenceCorrection;
+    const correction = createTerminalEvidenceCorrection(candidate, input, {
+      repository: before.repository,
+      protectedBase: before.protectedBase,
+      now: existing?.correctedAt || timestamp(now, "now"),
+    });
+    if (existing) {
+      if (existing.correctionRoot !== correction.correctionRoot) {
+        throw new Error(
+          "terminal evidence correction already exists with different evidence",
+        );
+      }
+      const receipt = {
+        schema: DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA,
+        action: "duplicate-terminal-evidence-correction-noop",
+        applicable: true,
+        repository: before.repository,
+        protectedBase: before.protectedBase,
+        candidateId: candidate.candidateId,
+        pullRequestNumber: candidate.pullRequestNumber,
+        sourceHead: candidate.sourceHead,
+        outcome: candidate.status,
+        priorEvidenceRoot: candidate.terminal.evidenceRoot,
+        evidenceRoot: correction.integrationProof.proofRoot,
+        correctionRoot: correction.correctionRoot,
+        expectedOldStateRoot: before.stateRoot,
+        nextStateRoot: before.stateRoot,
+        nextAction:
+          "Retain the exact verified integration evidence correction.",
+      };
+      return {
+        queue: before,
+        receipt,
+        receiptRoot: devDeliveryContentRoot(receipt),
+      };
+    }
+    const transaction = transition(
+      before,
+      (queue) => {
+        const mutable = queue.candidates.find(
+          (entry) => entry.candidateId === candidate.candidateId,
+        );
+        mutable.terminal = {
+          ...mutable.terminal,
+          integrationEvidenceCorrection: correction,
+        };
+        return { candidate: mutable };
+      },
+      correction.correctedAt,
+    );
+    const receipt = {
+      schema: DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA,
+      action: "terminal-evidence-corrected",
+      applicable: true,
+      repository: transaction.after.repository,
+      protectedBase: transaction.after.protectedBase,
+      candidateId: candidate.candidateId,
+      pullRequestNumber: candidate.pullRequestNumber,
+      sourceHead: candidate.sourceHead,
+      outcome: candidate.status,
+      priorEvidenceRoot: candidate.terminal.evidenceRoot,
+      evidenceRoot: correction.integrationProof.proofRoot,
+      correctionRoot: correction.correctionRoot,
+      expectedOldStateRoot: transaction.expectedOldStateRoot,
+      nextStateRoot: transaction.after.stateRoot,
+      nextAction:
+        "Read back the corrected terminal candidate and repeat settlement idempotently.",
+    };
+    return {
+      queue: transaction.after,
+      receipt,
+      receiptRoot: devDeliveryContentRoot(receipt),
+    };
+  };
+}
 
 export function normalizeProviderFailureAuthorityBinding(
   input = {},
@@ -56,7 +288,7 @@ function noopReceipt(queue, identity, candidate, action, details = {}) {
     outcome: identity.outcome,
     candidateId: candidate?.candidateId || null,
     evidenceRoot:
-      candidate?.terminal?.evidenceRoot || identity.evidenceRoot || null,
+      effectiveTerminalEvidenceRoot(candidate) || identity.evidenceRoot || null,
     expectedOldStateRoot: queue.stateRoot,
     nextStateRoot: queue.stateRoot,
     nextAction: "No fenced delivery state remains for this terminal event.",
@@ -95,7 +327,7 @@ function settleTerminalCandidate(queue, identity, candidate) {
       "duplicate terminal event provider failure authority drift",
     );
   }
-  if (candidate.terminal?.evidenceRoot !== identity.evidenceRoot) {
+  if (effectiveTerminalEvidenceRoot(candidate) !== identity.evidenceRoot) {
     throw new Error("duplicate terminal event evidenceRoot drift");
   }
   const receipt = noopReceipt(

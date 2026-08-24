@@ -9,10 +9,12 @@ import {
   runDevDeliveryCommand,
 } from "../scripts/dev-delivery-warrant.mjs";
 import {
+  createIntegrationDeliveryProof,
   createDevDeliveryQueue,
   devDeliveryContentRoot,
   createNativeCommandContract,
   selectDevDeliveryWarrant,
+  settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
 
@@ -142,6 +144,82 @@ test("stale expected-old input fails before any write", async () => {
     /expected-old state drift/,
   );
   assert.equal(store.writes.length, 0);
+});
+
+test("terminal evidence reconciliation requires CAS and persists exact product proof", async () => {
+  const submitted = submitDevDeliveryCandidate(
+    initialQueue(),
+    {
+      ...submitOptions(),
+      environmentRoot: undefined,
+      nativeCommandContract: undefined,
+      deliveryClass: "non-native-fast",
+    },
+    { now: "2026-08-04T00:01:00Z" },
+  );
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:02:00Z",
+  });
+  const priorEvidenceRoot = ROOT("e");
+  const closed = settleDevDeliveryTerminalEvent(
+    selected.queue,
+    {
+      pullRequestNumber: 200,
+      sourceHead: selected.warrant.sourceHead,
+      fencingToken: selected.warrant.fencingToken,
+      leaseGeneration: selected.warrant.generation,
+      outcome: "merged",
+      evidenceRoot: priorEvidenceRoot,
+      reason: "untyped legacy evidence",
+    },
+    { now: "2026-08-04T00:03:00Z" },
+  );
+  const integrationProof = createIntegrationDeliveryProof({
+    repository: closed.queue.repository,
+    protectedBase: closed.queue.protectedBase,
+    sourceProofRoot: selected.warrant.sourceProofRoot,
+    currentBase: "b".repeat(40),
+    replayTree: "c".repeat(40),
+    mergeGroupHead: "b".repeat(40),
+    mergeGroupTree: "c".repeat(40),
+    warrant: selected.warrant,
+    requiredContextRoots: [ROOT("d")],
+    verifiedAt: "2026-08-04T00:04:00Z",
+  });
+  const store = new MemoryStore(closed.queue);
+  const options = {
+    command: "reconcile-terminal-evidence",
+    repository: closed.queue.repository,
+    branch: closed.queue.protectedBase,
+    candidateId: selected.warrant.candidateId,
+    expectedPriorEvidenceRoot: priorEvidenceRoot,
+    integrationProof,
+    reason: "Attach the exact product-owned integration proof.",
+    execute: true,
+    now: "2026-08-04T00:05:00Z",
+  };
+  await assert.rejects(
+    runDevDeliveryCommand(options, store),
+    /requires expected-old CAS/u,
+  );
+  const result = await runDevDeliveryCommand(
+    { ...options, expectedOldStateRoot: closed.queue.stateRoot },
+    store,
+  );
+  assert.equal(result.mutationApplied, true);
+  assert.equal(result.receipt.action, "terminal-evidence-corrected");
+  assert.equal(result.receipt.priorEvidenceRoot, priorEvidenceRoot);
+  assert.equal(result.receipt.evidenceRoot, integrationProof.proofRoot);
+  assert.equal(result.observation.states.merged, 1);
+  assert.equal(
+    store.queue.candidates[0].terminal.evidenceRoot,
+    priorEvidenceRoot,
+  );
+  assert.equal(
+    store.queue.candidates[0].terminal.integrationEvidenceCorrection
+      .integrationProof.proofRoot,
+    integrationProof.proofRoot,
+  );
 });
 
 test("selection and observation use the same durable state contract", async () => {
