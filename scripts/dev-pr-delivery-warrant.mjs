@@ -206,6 +206,50 @@ export async function setActiveLeaseStatus(client, repository, sha, context, sta
   return { context, state, sha };
 }
 
+export async function setQueueAdmissionStatus(client, repository, sha, context, state) {
+  if (!context) return null;
+  const descriptions = {
+    pending: "Buildchain is awaiting a qualified Warrant for this exact PR head",
+    success: "Buildchain admitted this exact PR head to the merge queue",
+    failure: "Buildchain rejected merge queue admission for this exact PR head",
+  };
+  await client.request("POST", `/repos/${repository.owner}/${repository.repo}/statuses/${sha}`, {
+    body: { state, context, description: descriptions[state] || descriptions.failure },
+  });
+  return { context, state, sha };
+}
+
+export function createPreReadinessQueueFence({ client, options, sleep }) {
+  let status = null;
+  const write = async (state) => {
+    status = await setQueueAdmissionStatus(client, options.repository, options.expectedHeadSha, options.queueAdmissionContext, state);
+    return status;
+  };
+  return {
+    async establish() {
+      if (options.dryRun || options.warrantMode !== "required") return null;
+      if (!options.queueAdmissionContext) mismatch("queue-admission-context-required-before-readiness");
+      await write("pending");
+      for (let attempt = 1; attempt <= Math.max(1, options.pollMergeableAttempts); attempt += 1) {
+        const checks = await client.listCommitChecks(options.expectedHeadSha);
+        const readback = (checks?.statuses || []).find((entry) => entry.context === options.queueAdmissionContext);
+        if (readback?.state === "pending") return { ...status, readbackAttempts: attempt };
+        if (attempt < options.pollMergeableAttempts) await sleep(options.pollMergeableDelayMs);
+      }
+      await write("failure");
+      mismatch("pre-readiness-queue-fence-readback-mismatch");
+    },
+    async qualifyExisting(entry) {
+      if (entry && status?.state === "pending") await write("success");
+    },
+    async finish(result) {
+      const controllerFailed = result.controller?.evaluated?.some((entry) => entry.queueAdmissionStatus?.state === "failure");
+      if (!result.ok && status?.state === "pending" && !controllerFailed) await write("failure");
+      return result;
+    },
+  };
+}
+
 async function readBackAdmissionStatuses(client, options, expectedHeadSha, sleep) {
   let last = { queueAdmission: null, activeLease: null };
   const attempts = Math.max(1, options.pollMergeableAttempts);
