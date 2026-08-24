@@ -24,6 +24,7 @@ import {
   normalizePlatformManifests,
   resolveAnchorRecoveryRequest,
   resolveRecoveryTransaction,
+  resolveRecoveredCandidateVersion,
   resolveRecoveredPublicationVersion,
   resolveV4RuntimeResumePublicRuntimeSha,
   trackedRuntimePersistenceScan,
@@ -110,6 +111,30 @@ test("recovery scans historical state refs only when the exact publication versi
   assert.deepEqual(result, { version: transaction.version, transaction });
   assert.equal(calls.length, 3);
   assert.match(calls[1], /git\/matching-refs\/heads\/buildchain\/release-state\/$/u);
+});
+
+test("recovery without a transaction id does not adopt an unrelated historical transaction", async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    assert.doesNotMatch(url, /matching-refs/u);
+    return new Response(JSON.stringify({ message: "Not Found" }), { status: 404 });
+  };
+
+  const result = await resolveRecoveryTransaction({
+    repoInfo: {
+      owner: "kungfu-systems",
+      repo: "buildchain",
+    },
+    apiUrl: "https://api.github.test",
+    token: "test-token",
+    fetchImpl,
+    publicationVersion: "4.0.1",
+  });
+
+  assert.deepEqual(result, { version: "4.0.1", transaction: undefined });
+  assert.equal(calls.length, 1);
+  assert.match(calls[0], /contents\/state\.json\?ref=buildchain%2Frelease-state%2F4-0-1$/u);
 });
 
 function fixture(overrides = {}) {
@@ -497,6 +522,7 @@ test("custom-product recovery uses Passport version and manifests without treati
       platformManifests: [manifest],
     });
     assert.equal(publication.version, "4.0.0-alpha.1");
+    assert.equal(publication.candidateVersion, "4.0.0-alpha.1");
     assert.equal(publication.manifest, undefined);
     assert.deepEqual(publication.npmArtifacts, []);
     assert.deepEqual(publication.releaseAssets.map((entry) => path.basename(entry.absolutePath)), [path.basename(first)]);
@@ -522,6 +548,42 @@ test("stable rematerialized recovery preserves candidate bytes but selects the f
     channel: "alpha",
     rematerializeOnResume: true,
   }), "4.0.1-alpha.31");
+
+  for (const artifactVersion of ["4.0.1", "4.0.1-alpha.33"]) {
+    assert.equal(resolveRecoveredCandidateVersion({
+      artifactVersion,
+      publicationVersion: "4.0.1",
+      channel: "release",
+      rematerializeOnResume: true,
+      targetRef: "release/v4/v4.0",
+      candidateRef: "publish-gate/release/v4/v4.0/4.0.1-alpha.33",
+    }), "4.0.1-alpha.33");
+  }
+
+  const stableRecovery = {
+    artifactVersion: "4.0.1",
+    publicationVersion: "4.0.1",
+    channel: "release",
+    rematerializeOnResume: true,
+    targetRef: "release/v4/v4.0",
+    candidateRef: "publish-gate/release/v4/v4.0/4.0.1-alpha.33",
+  };
+  assert.throws(() => resolveRecoveredCandidateVersion({
+    ...stableRecovery,
+    candidateRef: "publish-gate/release/v4/v4.1/4.0.1-alpha.33",
+  }), /must descend from publish-gate\/release\/v4\/v4\.0\//u);
+  assert.throws(() => resolveRecoveredCandidateVersion({
+    ...stableRecovery,
+    candidateRef: "publish-gate/release/v4/v4.0/4.0.1",
+  }), /must bind an exact alpha version/u);
+  assert.throws(() => resolveRecoveredCandidateVersion({
+    ...stableRecovery,
+    candidateRef: "publish-gate/release/v4/v4.0/4.0.2-alpha.1",
+  }), /does not match publication 4\.0\.1/u);
+  assert.throws(() => resolveRecoveredCandidateVersion({
+    ...stableRecovery,
+    artifactVersion: "4.0.1-alpha.32",
+  }), /is not bound to candidate 4\.0\.1-alpha\.33 or publication 4\.0\.1/u);
 });
 
 test("candidate recovery excludes credential-island manifests outside the Passport platform matrix", () => {
@@ -1039,6 +1101,17 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   assert.match(advanced, /name: Install exact publication planning dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Resolve exact publication transaction version\n\s+id: plan\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Reuse sealed candidate publication version/);
+  assert.match(advanced, /release-candidate-publication-version/);
+  assert.match(
+    advanced,
+    /BUILDCHAIN_RECOVERED_CANDIDATE_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.version \}\}/,
+  );
+  assert.match(
+    advanced,
+    /BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.publication-version \}\}/,
+  );
+  assert.match(advanced, /planned-publication-version=\$\{BUILDCHAIN_RECOVERED_PUBLICATION_VERSION\}/);
+  assert.match(advanced, /planned-release-candidate-version=\$\{BUILDCHAIN_RECOVERED_CANDIDATE_VERSION\}/);
   assert.match(advanced, /publish-sealed-bundle-root: \$\{\{ steps\.rc\.outputs\.publish-sealed-bundle-root \}\}/);
   assert.match(
     advanced,
