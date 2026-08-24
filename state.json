@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "id": "a28158cef969cb22dbbe1a14c75ded43c31308265d02d40fdced24269847913c",
+  "repository": "kungfu-systems/buildchain",
+  "target_ref": "alpha/v4/v4.0",
+  "source_sha": "975c93b1e33d04d6c27e2879651f8dcfd9b5fe42",
+  "release_sha": "2e50509bb2492ef74155597005619f8fe30daaee",
+  "release_material_sha": "2e50509bb2492ef74155597005619f8fe30daaee",
+  "publish_tooling_sha": "2e50509bb2492ef74155597005619f8fe30daaee",
+  "version": "4.0.1-alpha.36",
+  "exact_tag": "v4.0.1-alpha.36",
+  "channel": "alpha",
+  "line": "v4.0",
+  "version_strategy": "",
+  "lifecycle_identity": "lifecycle.publish",
+  "state_ref": "buildchain/release-state/4-0-1-alpha-36",
+  "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v4.0.1-alpha.36.json",
+  "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v4.0.1-alpha.36/evidence.json",
+  "state": "sealed",
+  "previous_state": "prepared",
+  "actor": "kungfu-origin",
+  "run_id": "32688482820",
+  "superseded_by": "",
+  "failure": "",
+  "artifacts": [],
+  "evidence": [],
+  "sealed_bundle": {
+    "schemaVersion": 1,
+    "contract": "kungfu-buildchain-publication-sealed-bundle",
+    "root": "sha256:a3cf973e4fad376a5db769b2d21c1449706a65fbf72c432c5873725999ea5cce",
+    "candidate": {
+      "schemaVersion": 1,
+      "contract": "kungfu-buildchain-publication-artifact-candidate",
+      "repository": "kungfu-systems/buildchain",
+      "sourceSha": "a2c8e96ab803c51f4fe091ede8166b6629e7f8bf",
+      "sourceTreeSha": "feb08ece250464603e598aeea312fbf66f5e26b9",
+      "runtimeSha": "e4a2665285106f32dc3d818d581e62056b4d4255",
+      "releaseCandidateRoot": "sha256:3d24f7047671aa5c5a2fb157ed8e1f19b471a5e0fb011140e0aa0e8e80554882",
+      "files": [
+        {
+          "path": "buildchain-package-a2c8e96ab803c51f4fe091ede8166b6629e7f8bf/kungfu-tech-buildchain-4.0.1-alpha.35.tgz",
+          "size": 2556571,
+          "sha256": "52d9aeb19253075fdf689011fb550d114bba4090d2bc2acc169d03e008847261"
+        },
+        {
+          "path": "buildchain-package-a2c8e96ab803c51f4fe091ede8166b6629e7f8bf/product-payload-manifest.json",
+          "size": 887,
+          "sha256": "97c3d72aeaf04b5167ed10b34de27c64df68cfa706cb094008cbabf98f6713f5"
+        }
+      ],
+      "candidateDigest": "a3cf973e4fad376a5db769b2d21c1449706a65fbf72c432c5873725999ea5cce"
+    },
+    "files": [
+      {
+        "path": "buildchain-package-a2c8e96ab803c51f4fe091ede8166b6629e7f8bf/kungfu-tech-buildchain-4.0.1-alpha.35.tgz",
+        "size": 2556571,
+        "sha256": "52d9aeb19253075fdf689011fb550d114bba4090d2bc2acc169d03e008847261"
+      },
+      {
+        "path": "buildchain-package-a2c8e96ab803c51f4fe091ede8166b6629e7f8bf/product-payload-manifest.json",
+        "size": 887,
+        "sha256": "97c3d72aeaf04b5167ed10b34de27c64df68cfa706cb094008cbabf98f6713f5"
+      }
+    ],
+    "npm": {
+      "name": "@kungfu-tech/buildchain",
+      "version": "4.0.1-alpha.35",
+      "path": "buildchain-package-a2c8e96ab803c51f4fe091ede8166b6629e7f8bf/kungfu-tech-buildchain-4.0.1-alpha.35.tgz",
+      "size": 2556571,
+      "sha256": "52d9aeb19253075fdf689011fb550d114bba4090d2bc2acc169d03e008847261",
+      "integrity": "sha512-EB8hRsih5kqrug9sPPMZcMwXeen0N9rjmv21g9m/RQKpEF/3CVcpL+jxG2lSeVAwM1TJoAbHQ8arUe+yzbIHbg=="
+    },
+    "releaseAssets": [
+      {
+        "path": "buildchain-package-a2c8e96ab803c51f4fe091ede8166b6629e7f8bf/kungfu-tech-buildchain-4.0.1-alpha.35.tgz",
+        "size": 2556571,
+        "sha256": "52d9aeb19253075fdf689011fb550d114bba4090d2bc2acc169d03e008847261"
+      }
+    ],
+    "completion": {
+      "githubReleaseRequired": true
+    },
+    "durablePath": "sealed-bundle/sha256/a3cf973e4fad376a5db769b2d21c1449706a65fbf72c432c5873725999ea5cce",
+    "resumeCommand": "buildchain paper resume --version \"4.0.1-alpha.35\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-35\""
+  },
+  "publication_state": "sealed",
+  "milestones": {},
+  "resume_command": "buildchain paper resume --version \"4.0.1-alpha.35\" --state-ref \"refs/heads/buildchain/release-state/4-0-1-alpha-35\"",
+  "created_at": "2026-08-24T04:08:08.471Z",
+  "updated_at": "2026-08-24T04:08:08.472Z"
+}
