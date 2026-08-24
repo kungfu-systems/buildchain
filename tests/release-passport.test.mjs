@@ -2839,6 +2839,49 @@ test("release passport can collect KFD-3 artifact witness from product verify co
   assert.equal(passport[metadata.key].collaborationInterfaces[0].artifactWitness.id, "kungfu-agent-bridge");
 });
 
+test("KFD-3 artifact command inherits the exact tree-equivalent adopter source", () => {
+  const { cwd, assetsDir, prebuildWitnessPath, artifactWitness } = createKfd3WitnessFixture();
+  const observedSourcePath = path.join(cwd, "observed-kfd-source.txt");
+  const commandFixturePath = path.join(cwd, "emit-source-bound-artifact-witness.mjs");
+  const candidateSourceSha = "c".repeat(40);
+  const promotionChannelSha = "d".repeat(40);
+  const equivalentTreeSha = "e".repeat(40);
+  fs.writeFileSync(
+    commandFixturePath,
+    [
+      'import fs from "node:fs";',
+      `fs.writeFileSync(${JSON.stringify(observedSourcePath)}, process.env.BUILDCHAIN_SOURCE_SHA || "");`,
+      `process.stdout.write(${JSON.stringify(JSON.stringify(artifactWitness))});`,
+      "",
+    ].join("\n"),
+  );
+
+  collectGitHubReleasePassport({
+    cwd,
+    tag: "v4.0.0-alpha.0",
+    repository: "kungfu-systems/kungfu",
+    productName: "Kungfu",
+    sourceSha: promotionChannelSha,
+    assetsDir: path.relative(cwd, assetsDir),
+    outputDir: "release-passport",
+    releaseJsonExtra: JSON.stringify({
+      channel: "alpha",
+      targetRef: "alpha/v4/v4.0",
+      candidateSourceSha,
+      builtSourceSha: candidateSourceSha,
+      promotionChannelSha,
+      candidateSourceTreeSha: equivalentTreeSha,
+      builtSourceTreeSha: equivalentTreeSha,
+      promotionChannelTreeSha: equivalentTreeSha,
+      treeEquivalent: true,
+    }),
+    kfd3PrebuildWitnessJsons: [prebuildWitnessPath],
+    kfd3ArtifactVerifyCommand: `${process.execPath} ${commandFixturePath}`,
+  });
+
+  assert.equal(fs.readFileSync(observedSourcePath, "utf8"), candidateSourceSha);
+});
+
 test("KFD-3 artifact command can materialize transient product gate inputs before collection", () => {
   const { cwd, assetsDir, prebuildWitnessPath, artifactWitness } = createKfd3WitnessFixture();
   const gatePath = path.join(cwd, "transient-product-gate.json");

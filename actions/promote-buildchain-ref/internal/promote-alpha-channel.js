@@ -117,6 +117,18 @@ function containedFinalizationReleaseCandidateValidation(context) {
   return null;
 }
 
+function containedFinalizationKfdAdopterInputs(context, validation) {
+  if (!validation) {
+    return { manifestJson: "", productGateJsons: [] };
+  }
+  return {
+    manifestJson: context.releasePassportKfdAdopterManifestJson,
+    productGateJsons: context.splitPathList(
+      context.releasePassportKfdProductGateJsons,
+    ),
+  };
+}
+
 async function evaluateAlphaRecovery(context, plan) {
   const acceptedExactShas = context.transactionAcceptedExactTagShas(
     plan.currentAlphaTransaction,
@@ -249,6 +261,12 @@ async function finalizeContainedAlpha(context, state) {
     });
     await context.updateTag(context.rule.alphaTag, transaction.release_sha);
     await context.updateMajorAlphaFloatingTag({ sha: transaction.release_sha });
+    const passportReleaseCandidateValidation =
+      containedFinalizationReleaseCandidateValidation(context);
+    const kfdAdopterInputs = containedFinalizationKfdAdopterInputs(
+      context,
+      passportReleaseCandidateValidation,
+    );
     await context.markComplete({
       passportCwd: containedFinalizationPassportCwd(
         context,
@@ -261,12 +279,11 @@ async function finalizeContainedAlpha(context, state) {
       passportKfd2ClaimJsons: [],
       passportKfd3PrebuildWitnessJsons: [],
       passportKfd3ArtifactWitnessJsons: [],
-      passportKfdAdopterManifestJson: "",
+      passportKfdAdopterManifestJson: kfdAdopterInputs.manifestJson,
       passportKfdSupportMatrixJson: "",
-      passportKfdProductGateJsons: [],
+      passportKfdProductGateJsons: kfdAdopterInputs.productGateJsons,
       passportInvariantPassportJsons: [],
-      passportReleaseCandidateValidation:
-        containedFinalizationReleaseCandidateValidation(context),
+      passportReleaseCandidateValidation,
     });
   } finally {
     if (finalizationSource?.root) {
@@ -636,6 +653,7 @@ async function promoteAlphaChannel(context) {
 }
 export {
   containedFinalizationPassportCwd,
+  containedFinalizationKfdAdopterInputs,
   containedFinalizationReleaseCandidateValidation,
   promoteAlphaChannel,
 };

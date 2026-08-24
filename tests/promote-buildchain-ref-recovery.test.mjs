@@ -55,6 +55,7 @@ const {
 } = await import("../actions/promote-buildchain-ref/internal/durable-transaction-operations.js");
 const {
   containedFinalizationPassportCwd,
+  containedFinalizationKfdAdopterInputs,
   containedFinalizationReleaseCandidateValidation,
 } = await import("../actions/promote-buildchain-ref/internal/promote-alpha-channel.js");
 
@@ -110,6 +111,28 @@ test("recovered alpha finalization keeps hydrated candidate evidence as the Pass
       releaseCandidateValidation: undefined,
     }),
     null,
+  );
+
+  const kfdInputs = containedFinalizationKfdAdopterInputs(
+    {
+      releasePassportKfdAdopterManifestJson:
+        ".buildchain/runtime/kfd-adopter/manifest.json",
+      releasePassportKfdProductGateJsons:
+        ".buildchain/runtime/kfd-product-gates/kfd-4/gate.json\n.buildchain/runtime/kfd-product-gates/kfd-5/gate.json",
+      splitPathList(value) {
+        return value.split("\n");
+      },
+    },
+    recoveredValidation,
+  );
+  assert.equal(
+    kfdInputs.manifestJson,
+    ".buildchain/runtime/kfd-adopter/manifest.json",
+  );
+  assert.equal(kfdInputs.productGateJsons.length, 2);
+  assert.deepEqual(
+    containedFinalizationKfdAdopterInputs({}, null),
+    { manifestJson: "", productGateJsons: [] },
   );
 });
 

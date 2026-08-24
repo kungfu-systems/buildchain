@@ -499,6 +499,7 @@ function parseJsonCommandOutput({
   cwd = process.cwd(),
   label = "command",
   acceptNonzeroJson = undefined,
+  env = undefined,
 } = {}) {
   const normalized = String(command || "").trim();
   if (!normalized) {
@@ -506,6 +507,7 @@ function parseJsonCommandOutput({
   }
   const result = spawnSync(normalized, [], {
     cwd,
+    env: env ? { ...process.env, ...env } : process.env,
     shell: true,
     encoding: "utf8",
     maxBuffer: 16 * 1024 * 1024,
@@ -1610,6 +1612,10 @@ export function collectGitHubReleasePassport({
 } = {}) {
   const release = parseJsonInput(releaseJson, {}, { cwd, label: "releaseJson" });
   const releaseExtra = parseJsonInput(releaseJsonExtra, {}, { cwd, label: "releaseJsonExtra" });
+  const kfdAdopterExpectedSourceSha = releasePassportKfdAdopterSourceSha({
+    passportSourceSha: sourceSha,
+    release: releaseExtra,
+  });
   const assetsFromJson = parseJsonInput(assetsJson, [], { cwd, label: "assetsJson" });
   const packageSet = parseJsonInput(packageSetJson, undefined, { cwd, label: "packageSetJson" });
   const publishEvidenceMeta = parseJsonInputWithMeta(publishEvidenceJson, undefined, { cwd, label: "publishEvidenceJson" });
@@ -1651,6 +1657,9 @@ export function collectGitHubReleasePassport({
     command: kfd3ArtifactVerifyCommand,
     cwd,
     label: "KFD-3 artifact verify command",
+    env: kfdAdopterExpectedSourceSha
+      ? { BUILDCHAIN_SOURCE_SHA: kfdAdopterExpectedSourceSha }
+      : undefined,
   });
   const adopterDelivery = parseJsonInput(
     adopterDeliveryJson,
@@ -1731,10 +1740,6 @@ export function collectGitHubReleasePassport({
   copyReleaseEvidenceAttachments(releaseEvidenceAttachments, resolvedOutputDir);
   const resolvedCheckedAt = optionalString(checkedAt) || nowIso();
   const productMechanism = defaultProductMechanism({ repository, productName });
-  const kfdAdopterExpectedSourceSha = releasePassportKfdAdopterSourceSha({
-    passportSourceSha: sourceSha,
-    release: releaseExtra,
-  });
   const kfdAdopterEvidence = collectKfdAdopterReleaseInputs({
     cwd, manifestJson: kfdAdopterManifestJson, manifestGateJson: kfdAdopterManifestGateJson, supportMatrixJson: kfdSupportMatrixJson,
     productGateJsons: kfdProductGateJsons, repository,
