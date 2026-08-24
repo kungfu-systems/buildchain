@@ -549,7 +549,7 @@ test("stable rematerialized recovery preserves candidate bytes but selects the f
     rematerializeOnResume: true,
   }), "4.0.1-alpha.31");
 
-  for (const artifactVersion of ["4.0.1", "4.0.1-alpha.33"]) {
+  for (const artifactVersion of ["4.0.1", "4.0.1-alpha.33", "4.0.1-alpha.32"]) {
     assert.equal(resolveRecoveredCandidateVersion({
       artifactVersion,
       publicationVersion: "4.0.1",
@@ -582,8 +582,8 @@ test("stable rematerialized recovery preserves candidate bytes but selects the f
   }), /does not match publication 4\.0\.1/u);
   assert.throws(() => resolveRecoveredCandidateVersion({
     ...stableRecovery,
-    artifactVersion: "4.0.1-alpha.32",
-  }), /is not bound to candidate 4\.0\.1-alpha\.33 or publication 4\.0\.1/u);
+    artifactVersion: "4.0.2-alpha.32",
+  }), /does not match publication 4\.0\.1/u);
 });
 
 test("candidate recovery excludes credential-island manifests outside the Passport platform matrix", () => {
