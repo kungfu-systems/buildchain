@@ -29,6 +29,7 @@ import {
 import { generateBuildchainKfdAdopterRelease } from "../scripts/generate-buildchain-kfd-witnesses.mjs";
 import {
   collectGitHubReleasePassport,
+  releasePassportKfdAdopterSourceSha,
   verifyReleasePassport,
 } from "../packages/core/release-passport.js";
 import { collectKfdAdopterReleaseEvidence } from "../packages/core/release-passport-contract.js";
@@ -444,6 +445,55 @@ test("non-self adopter identity and source remain exact through gate, projection
   assert.equal(output.passport.kfdAdopter.bindingRoot, output.artifactEvidence.kfdAdopter.bindingRoot);
   const verified = await verifyReleasePassport({ passportLocation: path.join(cwd, "kungfu-release-passport/buildchain.release.json"), checkedAt });
   assert.equal(verified.ok, true, JSON.stringify(verified.issues));
+
+  const promotionSourceSha = "b".repeat(40);
+  const sourceTreeSha = "c".repeat(40);
+  const releaseJsonExtra = {
+    candidateSourceSha: sourceSha,
+    builtSourceSha: sourceSha,
+    promotionChannelSha: promotionSourceSha,
+    candidateSourceTreeSha: sourceTreeSha,
+    builtSourceTreeSha: sourceTreeSha,
+    promotionChannelTreeSha: sourceTreeSha,
+    treeEquivalent: true,
+  };
+  const recovered = collectGitHubReleasePassport({
+    cwd, repository: kungfuRepository, productName: "Kungfu", packageName: "@kungfu-trader/kungfu",
+    tag: "v4.0.0-alpha.1", sourceSha: promotionSourceSha,
+    outputDir: "kungfu-recovered-release-passport", assetsDir: "assets",
+    kfdAdopterManifestJson: manifestPath, kfdProductGateJsons: gatePaths, checkedAt,
+    releaseJsonExtra: JSON.stringify(releaseJsonExtra),
+  });
+  assert.equal(recovered.passport.release.sourceSha, promotionSourceSha);
+  assert.equal(recovered.passport.kfdAdopter.source.sha, sourceSha);
+  const recoveredVerified = await verifyReleasePassport({
+    passportLocation: path.join(cwd, "kungfu-recovered-release-passport/buildchain.release.json"),
+    checkedAt,
+  });
+  assert.equal(recoveredVerified.ok, true, JSON.stringify(recoveredVerified.issues));
+  assert.equal(
+    releasePassportKfdAdopterSourceSha({
+      passportSourceSha: promotionSourceSha,
+      release: releaseJsonExtra,
+    }),
+    sourceSha,
+  );
+  for (const drift of [
+    { treeEquivalent: false },
+    { builtSourceSha: "d".repeat(40) },
+    { promotionChannelSha: "e".repeat(40) },
+    { candidateSourceTreeSha: "f".repeat(40) },
+    { builtSourceTreeSha: "f".repeat(40) },
+    { promotionChannelTreeSha: "f".repeat(40) },
+  ]) {
+    assert.equal(
+      releasePassportKfdAdopterSourceSha({
+        passportSourceSha: promotionSourceSha,
+        release: { ...releaseJsonExtra, ...drift },
+      }),
+      promotionSourceSha,
+    );
+  }
 
   const substitutedIdentity = structuredClone(manifest);
   substitutedIdentity.adopter.id = buildchainRepository;
