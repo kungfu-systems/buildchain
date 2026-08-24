@@ -930,6 +930,7 @@ jobs:
       evidence-run-id: ${{ steps.release-candidate.outputs.release-candidate-run-id }}
       source-sha: ${{ steps.release-candidate.outputs.release-candidate-source-sha }}
       version: ${{ steps.release-candidate.outputs.release-candidate-version }}
+      publication-version: ${{ steps.release-candidate.outputs.release-candidate-publication-version }}
       passport-artifact: ${{ steps.release-candidate.outputs.release-candidate-artifact }}
       summary-artifact: ${{ steps.release-candidate.outputs.release-candidate-build-summary-artifact }}
       manifest-pattern: ${{ inputs.artifact-name }}-manifest-*-${{ steps.release-candidate.outputs.release-candidate-source-sha }}
@@ -1080,17 +1081,16 @@ jobs:
         if: ${{ inputs.resume-candidate-run-id != '' }}
         shell: bash
         env:
-          BUILDCHAIN_RECOVERED_VERSION: ${{ needs.release-candidate-preflight.outputs.version }}
+          BUILDCHAIN_RECOVERED_CANDIDATE_VERSION: ${{ needs.release-candidate-preflight.outputs.version }}
+          BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: ${{ needs.release-candidate-preflight.outputs.publication-version }}
         run: |
           set -euo pipefail
-          if [[ ! "${BUILDCHAIN_RECOVERED_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::recovered candidate did not provide a valid exact publication version: ${BUILDCHAIN_RECOVERED_VERSION:-<empty>}"
-            exit 1
-          fi
+          for version in "${BUILDCHAIN_RECOVERED_CANDIDATE_VERSION}" "${BUILDCHAIN_RECOVERED_PUBLICATION_VERSION}"; do
+            [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "::error::recovery did not provide a valid exact version: ${version:-<empty>}"; exit 1; }; done
           {
-            echo "planned-publication-version=${BUILDCHAIN_RECOVERED_VERSION}"
-            echo "planned-publication-exact-tag=v${BUILDCHAIN_RECOVERED_VERSION}"
-            echo "planned-release-candidate-version=${BUILDCHAIN_RECOVERED_VERSION}"
+            echo "planned-publication-version=${BUILDCHAIN_RECOVERED_PUBLICATION_VERSION}"
+            echo "planned-publication-exact-tag=v${BUILDCHAIN_RECOVERED_PUBLICATION_VERSION}"
+            echo "planned-release-candidate-version=${BUILDCHAIN_RECOVERED_CANDIDATE_VERSION}"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Require an exact publication transaction version
