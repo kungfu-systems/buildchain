@@ -4868,7 +4868,9 @@ async function promoteBuildchainRefs({
       buildSummaryPath: releaseCandidateBuildSummaryPath,
       repository: `${owner}/${repo}`,
       targetChannel: rule.channel,
-      version: releaseCandidateVersion,
+      version: releaseCandidateRecoveryReceiptPath
+        ? expectedPublicationVersion
+        : releaseCandidateVersion,
       recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
       targetRef,
       sourceHeadSha: sha,
