@@ -708,7 +708,7 @@ export function resolveRecoveredCandidateVersion({ artifactVersion, publicationV
   const candidateVersion = candidate.slice(prefix.length);
   if (!/^\d+\.\d+\.\d+-alpha\.\d+$/u.test(candidateVersion)) throw new Error(`stable recovery candidate ref must bind an exact alpha version, got ${candidateVersion || "<empty>"}`);
   if (candidateVersion.replace(/-alpha\.\d+$/u, "") !== publicationVersion) throw new Error(`stable recovery candidate ${candidateVersion} does not match publication ${publicationVersion || "<empty>"}`);
-  if (![candidateVersion, publicationVersion].includes(version)) throw new Error(`recovered npm artifact version ${version || "<empty>"} is not bound to candidate ${candidateVersion} or publication ${publicationVersion}`);
+  if ((version.match(/^(\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u)?.[1] || "") !== publicationVersion) throw new Error(`recovered npm artifact version ${version || "<empty>"} does not match publication ${publicationVersion}`);
   return candidateVersion;
 }
 export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests, channel, targetRef = "", candidateRef = "", rematerializeOnResume = false }) {

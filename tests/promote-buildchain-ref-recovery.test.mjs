@@ -2524,6 +2524,98 @@ test("release promotion does not resume an ancestor transaction for another plan
   assert.equal(refs.get("tags/v1.0.0"), oldTagSha);
 });
 
+test("stable recovery validates the receipt against the final publication version", async () => {
+  const mergeSha = "6".repeat(40);
+  const alphaSha = "7".repeat(40);
+  const oldTagSha = "8".repeat(40);
+  const candidateHash = "a".repeat(64);
+  const treeSha = `tree-${mergeSha}`;
+  const passportPath = ".buildchain/artifacts/release-candidate-passport.json";
+  const recoveryReceiptPath = ".buildchain/artifacts/recovery-receipt.json";
+  const passport = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-passport",
+    repository: "kungfu-systems/buildchain",
+    target: {
+      channel: "release",
+      ref: "release/v1/v1.0",
+      version: "22.22.3-kf.0",
+    },
+    source: { headSha: mergeSha, mergeRefSha: mergeSha, treeHash: treeSha },
+    platformMatrix: [
+      { platformId: "linux-x64", artifactName: "buildchain-linux-x64" },
+    ],
+    diagnostics: {},
+    candidateHash,
+  };
+  const recoveryReceipt = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-recovery/v1",
+    action: "reused",
+    repository: "kungfu-systems/buildchain",
+    originalCandidate: { sourceSha: mergeSha, tree: treeSha },
+    target: {
+      channel: "release",
+      ref: "release/v1/v1.0",
+      sha: mergeSha,
+      tree: treeSha,
+      version: "1.0.1",
+    },
+    recovered: { candidateRoot: `sha256:${candidateHash}` },
+    skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
+    payloadBytes: "unchanged",
+  };
+  recoveryReceipt.root = `sha256:${sha256Json(recoveryReceipt)}`;
+  const cwd = makeTempWorkspace({
+    "package.json": {
+      name: "@kungfu-tech/buildchain",
+      version: "1.0.1",
+      packageManager: "pnpm@11.7.0",
+    },
+    [passportPath]: passport,
+    [recoveryReceiptPath]: recoveryReceipt,
+  });
+  const { octokit, refs, commits } = createGitMock({
+    refs: new Map([
+      ["heads/release/v1/v1.0", mergeSha],
+      ["tags/v1.0.0", oldTagSha],
+      ["tags/v1.0.1-alpha.0", alphaSha],
+    ]),
+  });
+  commits.set(mergeSha, {
+    sha: mergeSha,
+    tree: { sha: treeSha },
+    parents: [],
+  });
+
+  const result = await promoteBuildchainRefs({
+    octokit,
+    owner: "kungfu-systems",
+    repo: "buildchain",
+    sha: mergeSha,
+    targetRef: "release/v1/v1.0",
+    cwd,
+    dryRun: true,
+    publishTransaction: true,
+    requireVersionState: true,
+    expectedPublicationVersion: "1.0.1",
+    promoteOnlyReleaseCandidate: true,
+    releaseCandidatePassportPath: passportPath,
+    releaseCandidateRecoveryReceiptPath: recoveryReceiptPath,
+    releaseCandidateVersion: "1.0.1-alpha.0",
+    releasePassport: false,
+  });
+
+  assert.equal(
+    result.updates.some(
+      (update) =>
+        update.action === "verified-release-candidate" &&
+        update.publicationVersionBinding === "recovery-receipt",
+    ),
+    true,
+  );
+});
+
 test("publish transaction durable ref restores state and evidence in a fresh workspace", async () => {
   const sourceCwd = makeTempWorkspace({});
   const statePath = path.join(sourceCwd, ".buildchain/release-state/1.0.0.json");

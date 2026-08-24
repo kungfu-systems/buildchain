@@ -549,6 +549,7 @@ jobs:
           EXPECTED_PR: ${{ inputs.expected-pr-number }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
           WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}
+          BUILDCHAIN_DEV_PR_WARRANT_MODE: ${{ inputs.delivery-warrant-mode == 'required' && 'required' || 'off' }}
           DRY_RUN: ${{ inputs.dry-run }}
           SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
           PROJECT_CUT_PROOF_PATH: ${{ steps.project-cut.outputs.path }}
@@ -559,6 +560,7 @@ jobs:
           BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES: ${{ inputs.allowed-head-prefixes }}
           BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL: ${{ inputs.require-approval }}
           BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY: ${{ inputs.same-repository-only }}
+          BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: ${{ inputs.queue-admission-context }}
 
       - name: Seal Source Qualification Proof
         id: proof
