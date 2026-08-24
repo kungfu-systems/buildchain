@@ -431,7 +431,7 @@ export function collectKfdAdopterReleaseEvidence({ manifest, manifestGate, gateR
     if (!Number.isFinite(Date.parse(producerCheckedAt)) || !Number.isSafeInteger(maxAgeSeconds) || maxAgeSeconds < 0) {
       throw new Error("KFD adopter manifest gate must bind an exact checkedAt and non-negative maxAgeSeconds cut");
     }
-  } else if (comparisonMatrix) {
+  } else if (comparisonMatrix || gateResults.length > 0) {
     const gateCheckedAts = [...new Set(gateResults.map((gate) => String(gate?.checkedAt || "").trim()))];
     if (gateCheckedAts.length !== 1 || !Number.isFinite(Date.parse(gateCheckedAts[0]))) {
       throw new Error("KFD product gates must bind one exact producer checkedAt cut for legacy projection comparison");

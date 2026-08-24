@@ -415,6 +415,10 @@ test("non-self adopter identity and source remain exact through gate, projection
   assert.equal(releaseEvidence.manifestGate.verificationCut.maxAgeSeconds, maxAgeSeconds);
   assert.equal(releaseEvidence.manifestGate.gateRoot, manifestGate.gateRoot);
 
+  const generatedGateEvidence = collectKfdAdopterReleaseEvidence({ manifest, gateResults: gates, expectedAdopterId: kungfuRepository, expectedSourceRepository: kungfuRepository, sourceSha, checkedAt: passportCheckedAt });
+  assert.equal(generatedGateEvidence.manifestGate.checkedAt, checkedAt);
+  assert.equal(generatedGateEvidence.manifestGate.verificationCut.checkedAt, checkedAt);
+
   const driftedManifestGate = structuredClone(manifestGate);
   driftedManifestGate.verificationCut.maxAgeSeconds = 86400;
   assert.throws(
