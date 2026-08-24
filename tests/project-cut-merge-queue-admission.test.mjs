@@ -124,6 +124,53 @@ test("overlapping latest-base composition fails closed", (context) => {
   );
 });
 
+test("one linear empty lineage commit replays onto the latest base", (context) => {
+  const fixture = repository();
+  context.after(() => fs.rmSync(fixture.cwd, { recursive: true, force: true }));
+  git(fixture.cwd, "switch", "source");
+  git(fixture.cwd, "reset", "--hard", fixture.fork);
+  git(fixture.cwd, "commit", "--allow-empty", "-m", "release lineage");
+  const emptyHead = git(fixture.cwd, "rev-parse", "HEAD");
+
+  const receipt = qualifyProjectCut({
+    cwd: fixture.cwd,
+    base: fixture.base,
+    head: emptyHead,
+  });
+
+  assert.equal(receipt.ok, true);
+  assert.equal(receipt.forkCommitOid, fixture.fork);
+  assert.equal(receipt.headCommitOid, emptyHead);
+  assert.equal(
+    receipt.candidateTreeOid,
+    git(fixture.cwd, "rev-parse", `${fixture.base}^{tree}`),
+  );
+  assert.equal(receipt.replayedCommitCount, 1);
+});
+
+test("multi-commit net-zero source composition fails closed", (context) => {
+  const fixture = repository();
+  context.after(() => fs.rmSync(fixture.cwd, { recursive: true, force: true }));
+  git(fixture.cwd, "switch", "source");
+  git(fixture.cwd, "reset", "--hard", fixture.fork);
+  write(fixture.cwd, "transient.txt", "transient\n");
+  commit(fixture.cwd, "add transient source");
+  fs.rmSync(path.join(fixture.cwd, "transient.txt"));
+  const netZeroHead = commit(fixture.cwd, "remove transient source");
+
+  assert.throws(
+    () =>
+      qualifyProjectCut({
+        cwd: fixture.cwd,
+        base: fixture.base,
+        head: netZeroHead,
+      }),
+    (error) =>
+      error instanceof ProjectCutAdmissionError &&
+      error.reasonCode === "empty-source-composition",
+  );
+});
+
 test("family markers reject duplicates and release head drift", (context) => {
   const fixture = repository();
   context.after(() => fs.rmSync(fixture.cwd, { recursive: true, force: true }));
