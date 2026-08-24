@@ -2569,7 +2569,7 @@ test("stable recovery validates the receipt against the final publication versio
   const cwd = makeTempWorkspace({
     "package.json": {
       name: "@kungfu-tech/buildchain",
-      version: "1.0.1",
+      version: "1.0.1-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
     [passportPath]: passport,
@@ -2597,6 +2597,7 @@ test("stable recovery validates the receipt against the final publication versio
     cwd,
     dryRun: true,
     publishTransaction: true,
+    publishRematerializeOnResume: true,
     requireVersionState: true,
     expectedPublicationVersion: "1.0.1",
     promoteOnlyReleaseCandidate: true,
@@ -2613,6 +2614,16 @@ test("stable recovery validates the receipt against the final publication versio
         update.publicationVersionBinding === "recovery-receipt",
     ),
     true,
+  );
+  assert.deepEqual(
+    result.updates.find((update) => update.action === "dry-run-version-state"),
+    {
+      version: "1.0.1",
+      action: "dry-run-version-state",
+      packageManager: "pnpm",
+      files: ["package.json"],
+      sha: mergeSha,
+    },
   );
 });
 
