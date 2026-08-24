@@ -88,6 +88,7 @@ function client({
   const enqueued = [];
   const commitStatuses = [];
   const comments = [];
+  const events = [];
   let branchRead = 0;
   let queueRead = 0;
   let statusReadbackCount = 0;
@@ -97,8 +98,10 @@ function client({
     enqueued,
     commitStatuses,
     comments,
+    events,
     async request(method, requestPath, { body } = {}) {
       commitStatuses.push({ method, requestPath, body });
+      if (body?.context) events.push(`status:${body.context}:${body.state}`);
       return { data: { id: commitStatuses.length } };
     },
     async listPullRequests() {
@@ -164,6 +167,7 @@ function client({
       };
     },
     async addLabels(number, labels) {
+      events.push(`label:add:${labels.join(",")}`);
       const target = pullRequests.find((entry) => entry.number === number);
       if (!target) throw new Error(`missing PR ${number}`);
       const existing = new Set((target.labels || []).map((label) => label.name || label));
@@ -186,6 +190,7 @@ function client({
     },
     async setCommitStatus(sha, body) {
       commitStatuses.push({ method: "POST", requestPath: `statuses/${sha}`, body });
+      events.push(`status:${body.context}:${body.state}`);
       return { id: commitStatuses.length };
     },
   };
@@ -366,6 +371,12 @@ test("reusable admission retains immutable Warrant and Project Cut readback coor
   assert.match(workflow, /\.after\.commitSha \| test\("\^\[0-9a-f\]\{40\}\$"\)/u);
   assert.match(workflow, /\.warrant == \.observation\.activeWarrant/u);
   assert.match(workflow, /\.observation\.activeCandidate\.candidateId == \.observation\.activeWarrant\.candidateId/u);
+  const sourceQualification = workflow.slice(
+    workflow.indexOf("- name: Qualify exact source before scheduling"),
+    workflow.indexOf("- name: Seal Source Qualification Proof"),
+  );
+  assert.match(sourceQualification, /BUILDCHAIN_DEV_PR_WARRANT_MODE: \$\{\{ inputs\.delivery-warrant-mode == 'required'/u);
+  assert.match(sourceQualification, /BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: \$\{\{ inputs\.queue-admission-context \}\}/u);
 });
 
 test("merge mode merges eligible PRs sequentially and honors max-merges", async () => {
@@ -1020,8 +1031,56 @@ test("qualification-only execute may establish readiness but never admits to Git
   assert.deepEqual(fake.enqueued, []);
 });
 
+test("required Warrant source qualification establishes the pending queue fence before readiness", async () => {
+  const target = pr({ number: 21, headSha: exactHead, labels: [] });
+  const fake = client({ pullRequests: [target] });
+  fake.getMergeQueueState = async () => {
+    throw new Error("qualification-only must not read queue authority");
+  };
+  const result = await runDevPrAdmission(
+    {
+      ...targetedOptions,
+      dryRun: false,
+      warrantMode: "required",
+      qualificationOnly: true,
+    },
+    fake,
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.outcome, "source-qualified");
+  assert.deepEqual(fake.events.slice(0, 2), [
+    "status:Queue admission lease:pending",
+    "label:add:ready",
+  ]);
+  assert.equal(
+    fake.commitStatuses.filter((entry) => entry.body.context === "Queue admission lease").at(-1).body.state,
+    "pending",
+  );
+  assert.deepEqual(fake.enqueued, []);
+});
+
+test("required Warrant source qualification refuses readiness without a queue fence context", async () => {
+  const target = pr({ number: 21, headSha: exactHead, labels: [] });
+  const fake = client({ pullRequests: [target] });
+  const result = await runDevPrAdmission(
+    {
+      ...targetedOptions,
+      queueAdmissionContext: "",
+      dryRun: false,
+      warrantMode: "required",
+      qualificationOnly: true,
+    },
+    fake,
+  );
+  assert.equal(result.ok, false);
+  assert.equal(result.receipt.reason, "queue-admission-context-required-before-readiness");
+  assert.deepEqual(fake.events, ["status:Buildchain delivery intent:failure"]);
+  assert.equal(target.labels.length, 0);
+  assert.deepEqual(fake.enqueued, []);
+});
+
 test("required Warrant fails closed before GitHub queue admission", async () => {
-  const target = pr({ number: 21, headSha: exactHead });
+  const target = pr({ number: 21, headSha: exactHead, labels: [] });
   const fake = client({
     pullRequests: [target],
     queueStates: [{ enabled: true, id: "MQ_1", entries: [] }],
@@ -1029,6 +1088,14 @@ test("required Warrant fails closed before GitHub queue admission", async () => 
   const result = await runDevPrAdmission({ ...targetedOptions, dryRun: false, warrantMode: "required" }, fake);
   assert.equal(result.ok, false);
   assert.equal(result.receipt.reason, "missing-delivery-warrant");
+  assert.deepEqual(fake.events.slice(0, 2), [
+    "status:Queue admission lease:pending",
+    "label:add:ready",
+  ]);
+  assert.equal(
+    fake.commitStatuses.filter((entry) => entry.body.context === "Queue admission lease").at(-1).body.state,
+    "failure",
+  );
   assert.deepEqual(fake.enqueued, []);
 });
 
@@ -1098,6 +1165,7 @@ test("required Warrant restores the canonical active lease context for a floatin
     assert.deepEqual(
       fake.commitStatuses.map((entry) => [entry.body.context, entry.body.state]),
       [
+        ["Queue admission lease", "pending"],
         ["Queue family lease/exact", "pending"],
         ["Queue admission lease", "success"],
         ["Buildchain delivery intent", "success"],
@@ -1145,8 +1213,8 @@ test("required Warrant rejects current generation drift before enqueue", async (
     assert.equal(result.receipt.reason, "delivery-warrant-current-generation-mismatch");
     assert.deepEqual(fake.enqueued, []);
     assert.deepEqual(
-      fake.commitStatuses.slice(0, 4).map((entry) => entry.body.state),
-      ["pending", "success", "failure", "failure"],
+      fake.commitStatuses.slice(0, 5).map((entry) => entry.body.state),
+      ["pending", "pending", "success", "failure", "failure"],
     );
   });
 });

@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { admitExistingQueueEntry, createDevPrAdmissionReceipt, qualifyAtomicQueueAdmission, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission, setActiveLeaseStatus, verifyCurrentDeliveryWarrant } from "./dev-pr-delivery-warrant.mjs";
+import { admitExistingQueueEntry, createDevPrAdmissionReceipt, createPreReadinessQueueFence, qualifyAtomicQueueAdmission, readDeliveryWarrantResult, runSourceQualification, runTargetedQueueAdmission, setActiveLeaseStatus, setQueueAdmissionStatus, verifyCurrentDeliveryWarrant } from "./dev-pr-delivery-warrant.mjs";
 import { projectCutQualification } from "./dev-pr-prequeue-guard.mjs";
 const DEFAULT_BLOCK_LABELS = ["blocked", "do-not-merge", "work-in-progress"];
 const DEFAULT_ALLOWED_HEAD_PREFIXES = ["feature/", "fix/", "chore/", "docs/", "ci/", "refactor/"];
@@ -197,12 +197,6 @@ function mergeableAccepted(pr, landingMode = "direct", projectCutQualified = fal
 function rejectBaseMoveBeforeAtomicReplay(options, initialBaseSha, observedBaseSha) {
   return observedBaseSha !== initialBaseSha && options.warrantMode !== "required";
 }
-async function setQueueAdmissionStatus(client, repository, sha, context, state) {
-  if (!context) return null;
-  await client.request("POST", `/repos/${repository.owner}/${repository.repo}/statuses/${sha}`, { body: { state, context, description: state === "success" ? "Buildchain admitted this exact PR head to the merge queue" : "Buildchain rejected merge queue admission for this exact PR head" } });
-  return { context, state, sha };
-}
-
 function skip(reason, details = {}) {
   return { action: "skip", reason, ...details };
 }
@@ -790,8 +784,10 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
     return targetedFailure({ options, pr: {}, state: "missing", reason: "pull-request-not-found" });
   }
 
+  const readinessFence = createPreReadinessQueueFence({ client, options, sleep: delay });
   const reject = async (state, reason, readiness = { observed: hasReadyLabel(pr, options.readyLabel), established: false }) => {
     const result = targetedFailure({ options, pr, state, reason, readiness });
+    await readinessFence.finish(result);
     if (!options.dryRun) result.diagnostic = await publishAdmissionDiagnostic(client, options, result.receipt, result.receiptRoot);
     return result;
   };
@@ -802,6 +798,12 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   if (hasBlockedLabel(pr, options.blockLabels)) return reject("blocked", "blocked-label");
   if (pr.draft) return reject("blocked", "draft");
   if (!headPrefixAllowed(pr, options.allowedHeadPrefixes)) return reject("blocked", "head-prefix-not-allowed");
+
+  try {
+    await readinessFence.establish();
+  } catch (error) {
+    return reject("blocked", error.code || "pre-readiness-queue-fence-failed");
+  }
 
   let readiness = { observed: hasReadyLabel(pr, options.readyLabel), established: false };
   if (!readiness.observed) {
@@ -825,7 +827,7 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   }
 
   if (options.qualificationOnly) {
-    return runSourceQualification({
+    const result = await runSourceQualification({
       options, pullRequest: pr, readiness, client, reject,
       evaluate: evaluatePullRequest,
       admissionState: admissionStateFor,
@@ -833,6 +835,7 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
       root: contentRoot,
       publishDiagnostic: publishAdmissionDiagnostic,
     });
+    return readinessFence.finish(result);
   }
 
   const initialQueue = await client.getMergeQueueState(options.targetBranch);
@@ -844,6 +847,7 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   }
   const matchingEntry = initialQueue.entries.find((entry) =>
     entry.pullRequestNumber === pr.number && entry.pullRequestHeadSha === options.expectedHeadSha);
+  await readinessFence.qualifyExisting(matchingEntry);
   const existing = await admitExistingQueueEntry({
     options, pullRequest: pr, readiness, client, entry: matchingEntry, warrant,
     createReceipt: createAdmissionReceipt,
@@ -852,7 +856,7 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   });
   if (existing) return existing;
 
-  return runTargetedQueueAdmission({
+  const result = await runTargetedQueueAdmission({
     options, pullRequest: pr, readiness, client, warrant,
     runController: runDevPrAutoMerge,
     admissionState: admissionStateFor,
@@ -860,6 +864,7 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
     root: contentRoot,
     publishDiagnostic: publishAdmissionDiagnostic,
   });
+  return readinessFence.finish(result);
 }
 
 function finalizePatrolResult(result) {
