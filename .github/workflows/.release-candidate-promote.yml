@@ -2084,14 +2084,13 @@ jobs:
           mkdir -p "$(dirname "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}")"
           bash -euo pipefail -c "${BUILDCHAIN_PUBLICATION_COMMIT_COMMAND}"
           result="$(
-            node -e '
-              const fs = require("node:fs");
-              const evidence = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-              process.stdout.write(JSON.stringify({
-                publicUrl: evidence.publication?.url || "",
-                payloadRoot: evidence.publication?.payloadRoot || "",
-              }));
-            ' "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}"
+            node .buildchain/runtime/scripts/publication-commit-evidence.mjs \
+              --evidence "${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" \
+              --version "${BUILDCHAIN_PUBLICATION_COMMIT_VERSION}" \
+              --source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_SOURCE_SHA}" \
+              --candidate-source-sha "${BUILDCHAIN_PUBLICATION_COMMIT_CANDIDATE_SOURCE_SHA}" \
+              --release-sha "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_SHA}" \
+              --release-tag "${BUILDCHAIN_PUBLICATION_COMMIT_RELEASE_TAG}"
           )"
           RESULT="${result}" EVIDENCE_PATH="${BUILDCHAIN_PUBLICATION_COMMIT_EVIDENCE}" node <<'NODE'
           const crypto = require("node:crypto");
