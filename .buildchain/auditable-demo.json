@@ -30,7 +30,7 @@
     "argv": ["version"],
     "timeoutSeconds": 20,
     "expectedExitCodes": [0],
-    "stdoutIncludes": ["3.0."]
+    "stdoutIncludes": ["4."]
   },
   "renditions": [
     {"id": "1080p", "role": "primary", "columns": 150, "rows": 36, "width": 1920, "height": 1080},
@@ -63,7 +63,7 @@
           "argv": ["version"],
           "timeoutSeconds": 20,
           "expectedExitCodes": [0],
-          "stdoutIncludes": ["3.0."],
+          "stdoutIncludes": ["4."],
           "fileAssertions": []
         }
       ]
