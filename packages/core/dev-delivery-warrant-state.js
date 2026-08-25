@@ -19,7 +19,10 @@ import {
   normalizeNativeCommandContract,
   validateActiveDevDeliveryWarrant,
 } from "./dev-delivery-native-proof.js";
-import { normalizeProviderFailureAuthorityBinding } from "./dev-delivery-warrant-settlement.js";
+import {
+  normalizeProviderFailureAuthorityBinding,
+  normalizeTerminalEvidenceCorrection,
+} from "./dev-delivery-warrant-settlement.js";
 import {
   compareReleaseBlockerPriority,
   normalizeReleaseBlockerPriorityClaim,
@@ -244,8 +247,18 @@ function normalizeCandidate(input, expected) {
         "provider failure authority can exist only on terminal-failure state",
       );
     }
-    if (failureAuthority) {
+    if (failureAuthority)
       candidate.terminal = { ...candidate.terminal, ...failureAuthority };
+    if (candidate.terminal.integrationEvidenceCorrection) {
+      candidate.terminal.integrationEvidenceCorrection =
+        normalizeTerminalEvidenceCorrection(
+          candidate.terminal.integrationEvidenceCorrection,
+          {
+            candidate,
+            repository: expected.repository,
+            protectedBase: expected.protectedBase,
+          },
+        );
     }
   }
   if (Object.hasOwn(input, "affectedPaths")) {

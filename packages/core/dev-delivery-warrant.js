@@ -11,7 +11,9 @@ import {
   createCancelQueuedDevDeliveryCandidate,
 } from "./dev-delivery-warrant-cancellation.js";
 import {
+  createDevDeliveryTerminalEvidenceReconciler,
   DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA,
+  DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA,
   createDevDeliveryTerminalSettler,
   normalizeProviderFailureAuthorityBinding,
 } from "./dev-delivery-warrant-settlement.js";
@@ -91,6 +93,7 @@ export {
 };
 export { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA };
 export { DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA };
+export { DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA };
 
 export function selectDevDeliveryWarrant(
   queueInput,
@@ -514,6 +517,11 @@ export const settleDevDeliveryTerminalEvent = createDevDeliveryTerminalSettler({
   cancelQueued: cancelQueuedDevDeliveryCandidate,
   terminalStates: TERMINAL_STATES,
 });
+export const reconcileDevDeliveryTerminalEvidence =
+  createDevDeliveryTerminalEvidenceReconciler({
+    normalizeQueue: normalizeDevDeliveryQueue,
+    transition,
+  });
 export function observeDevDeliveryQueue(
   queueInput,
   { now = new Date().toISOString(), allowLegacyV3Readback = false } = {},

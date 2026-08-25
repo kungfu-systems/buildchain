@@ -8120,7 +8120,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 508
+        "line": 511
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8157,7 +8157,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 384
+        "line": 387
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8383,6 +8383,30 @@
       ]
     },
     {
+      "id": "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA",
+      "name": "DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA",
+      "kind": "value",
+      "signature": "DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "No narrower error contract was mechanically discoverable."
+      ],
+      "sideEffects": [
+        "unknown"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-warrant.js",
+        "line": 1
+      },
+      "example": "import { DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_WARRANT_SCHEMA",
       "name": "DEV_DELIVERY_WARRANT_SCHEMA",
       "kind": "value",
@@ -8434,7 +8458,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 255
+        "line": 258
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8491,7 +8515,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 517
+        "line": 525
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8515,7 +8539,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 380
+        "line": 383
       },
       "example": "import { qualifyDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8549,6 +8573,30 @@
       ]
     },
     {
+      "id": "packages/core/dev-delivery-warrant.js#reconcileDevDeliveryTerminalEvidence",
+      "name": "reconcileDevDeliveryTerminalEvidence",
+      "kind": "constant",
+      "signature": "const reconcileDevDeliveryTerminalEvidence",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-warrant.js",
+        "line": 520
+      },
+      "example": "import { reconcileDevDeliveryTerminalEvidence } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/dev-delivery-warrant.js#recoverExpiredDevDeliveryWarrant",
       "name": "recoverExpiredDevDeliveryWarrant",
       "kind": "function",
@@ -8572,7 +8620,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 301
+        "line": 304
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8605,7 +8653,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 95
+        "line": 98
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8629,7 +8677,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 511
+        "line": 514
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -27926,14 +27974,14 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:621dac9c40b6e9aab15ea9340a5d7b8d05639c4bee497ddb64470cd2141f38a1",
+      "digest": "sha256:7def95efbb6f76cea7962e2ec07e2155a3e6bacdc1ee1043d985f33eddb25ac7",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 54,
+      "symbolCount": 56,
       "symbolIds": [
         "packages/core/dev-delivery-warrant.js#cancelQueuedDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#classifyDevDeliveryDelta",
@@ -27960,6 +28008,7 @@
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA",
+        "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_WARRANT_SCHEMA",
         "packages/core/dev-delivery-common.js#devDeliveryContentRoot",
         "packages/core/dev-delivery-warrant.js#heartbeatDevDeliveryWarrant",
@@ -27976,6 +28025,7 @@
         "packages/core/dev-delivery-proof.js#PROJECT_CUT_REPLAY_PROOF_SCHEMA",
         "packages/core/dev-delivery-warrant.js#qualifyDevDeliveryWarrant",
         "packages/core/dev-delivery-warrant.js#rankDevDeliveryCandidates",
+        "packages/core/dev-delivery-warrant.js#reconcileDevDeliveryTerminalEvidence",
         "packages/core/dev-delivery-warrant.js#recoverExpiredDevDeliveryWarrant",
         "packages/core/release-blocker-priority.js#RELEASE_BLOCKER_PRIORITY_CLAIM_SCHEMA",
         "packages/core/dev-delivery-warrant.js#selectDevDeliveryWarrant",
@@ -29860,7 +29910,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:da744d2071ab7871eccbf6b3049a4d8a44b21daa477598fa9327a28b7d89ae67"
+      "digest": "sha256:e8a597dae50b7907221d6ae8ed21eccee94001c3463e8671b49ec010f12d2b68"
     },
     {
       "id": "build-facts",
