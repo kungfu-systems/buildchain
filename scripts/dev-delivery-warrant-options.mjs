@@ -7,6 +7,32 @@ export function hasFlag(args, name) {
   return args.includes(`--${name}`);
 }
 
+function terminalEvidenceOptions(rest, environment) {
+  return {
+    outcome: flag(rest, "outcome", environment.BUILDCHAIN_DEV_DELIVERY_OUTCOME),
+    eventAction: flag(
+      rest,
+      "event-action",
+      environment.BUILDCHAIN_DEV_DELIVERY_EVENT_ACTION,
+    ),
+    evidenceRoot: flag(
+      rest,
+      "evidence-root",
+      environment.BUILDCHAIN_DEV_DELIVERY_EVIDENCE_ROOT,
+    ),
+    expectedPriorEvidenceRoot: flag(
+      rest,
+      "expected-prior-evidence-root",
+      environment.BUILDCHAIN_DEV_DELIVERY_EXPECTED_PRIOR_EVIDENCE_ROOT,
+    ),
+    integrationProofPath: flag(
+      rest,
+      "integration-proof",
+      environment.BUILDCHAIN_DEV_DELIVERY_INTEGRATION_PROOF,
+    ),
+  };
+}
+
 export function devDeliveryCliOptions(args = [], environment = process.env) {
   const [command = "", ...rest] = args;
   return {
@@ -196,17 +222,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
       "lease-seconds",
       environment.BUILDCHAIN_DEV_DELIVERY_LEASE_SECONDS,
     ),
-    outcome: flag(rest, "outcome", environment.BUILDCHAIN_DEV_DELIVERY_OUTCOME),
-    eventAction: flag(
-      rest,
-      "event-action",
-      environment.BUILDCHAIN_DEV_DELIVERY_EVENT_ACTION,
-    ),
-    evidenceRoot: flag(
-      rest,
-      "evidence-root",
-      environment.BUILDCHAIN_DEV_DELIVERY_EVIDENCE_ROOT,
-    ),
+    ...terminalEvidenceOptions(rest, environment),
     transferRoot: flag(rest, "transfer-root"),
     finalizerBoundaryRoot: flag(rest, "finalizer-boundary-root"),
     nativeJobId: flag(rest, "native-job-id"),
