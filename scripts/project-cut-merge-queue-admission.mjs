@@ -192,12 +192,12 @@ function replayProjectCut(cwd, base, head) {
         reason: "source-patch-unreadable",
       },
     );
-    git(cwd, ["apply", "--cached", "--3way", "--whitespace=nowarn", "-"], {
-      env: indexEnvironment,
-      input: sourcePatch,
-      encoding: "utf8",
-      reason: "project-cut-conflict",
-    });
+    const emptySourcePatch = sourcePatch.length === 0;
+    if (emptySourcePatch && commits.length !== 1)
+      throw new ProjectCutAdmissionError("empty-source-composition", "an empty source composition must be exactly one linear commit");
+    if (!emptySourcePatch) git(cwd, ["apply", "--cached", "--3way", "--whitespace=nowarn", "-"], {
+        env: indexEnvironment, input: sourcePatch, encoding: "utf8", reason: "project-cut-conflict",
+      });
     const candidateTreeOid = git(cwd, ["write-tree"], {
       env: indexEnvironment,
       reason: "candidate-tree-unreadable",
@@ -226,10 +226,10 @@ function replayProjectCut(cwd, base, head) {
         reason: "replay-paths-unreadable",
       },
     );
-    if (
-      patchId(cwd, sourcePatch) !== patchId(cwd, replayPatch) ||
-      sourceNames !== replayNames
-    ) {
+    const compositionDrifted = emptySourcePatch ? replayPatch.length !== 0 ||
+      sourceNames !== "" || replayNames !== "" : patchId(cwd, sourcePatch) !==
+      patchId(cwd, replayPatch) || sourceNames !== replayNames;
+    if (compositionDrifted) {
       throw new ProjectCutAdmissionError(
         "composition-drift",
         "latest-base replay changes the immutable source composition",

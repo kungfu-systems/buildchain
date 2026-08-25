@@ -10,6 +10,7 @@ import {
   observeDevDeliveryQueue,
   qualifyDevDeliveryWarrant,
   recoverExpiredDevDeliveryWarrant,
+  reconcileDevDeliveryTerminalEvidence,
   selectDevDeliveryWarrant,
   settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
@@ -50,6 +51,43 @@ function exactSha(value, label) {
   if (!/^[0-9a-f]{40}$/.test(normalized))
     throw new Error(`${label} must be a 40-character Git SHA`);
   return normalized;
+}
+
+function terminalSourceHead(options) {
+  return exactSha(
+    options.expectedSourceHead || options.sourceHead,
+    "sourceHead",
+  );
+}
+
+function reconcileTerminalEvidenceCommand(queue, options) {
+  return reconcileDevDeliveryTerminalEvidence(
+    queue,
+    {
+      candidateId: exactRoot(options.candidateId, "candidateId"),
+      expectedPriorEvidenceRoot: exactRoot(
+        options.expectedPriorEvidenceRoot,
+        "expectedPriorEvidenceRoot",
+      ),
+      integrationProof:
+        options.integrationProof ||
+        jsonFile(options.integrationProofPath, "integration proof"),
+      reason: options.reason,
+    },
+    { now: options.now },
+  );
+}
+
+function requireTerminalEvidenceCas(options) {
+  if (
+    options.command === "reconcile-terminal-evidence" &&
+    options.execute &&
+    !options.expectedOldStateRoot
+  ) {
+    throw new Error(
+      "terminal evidence reconciliation execute requires expected-old CAS",
+    );
+  }
 }
 
 function normalizeRepository(value) {
@@ -245,10 +283,7 @@ function transitionFor(command, queue, options) {
           options.pullRequestNumber,
           "pullRequestNumber",
         ),
-        sourceHead: exactSha(
-          options.expectedSourceHead || options.sourceHead,
-          "sourceHead",
-        ),
+        sourceHead: terminalSourceHead(options),
         fencingToken: options.fencingToken,
         leaseGeneration: options.leaseGeneration,
         outcome: options.outcome,
@@ -262,6 +297,9 @@ function transitionFor(command, queue, options) {
       },
       { now: options.now },
     );
+  }
+  if (command === "reconcile-terminal-evidence") {
+    return reconcileTerminalEvidenceCommand(queue, options);
   }
   if (command === "cancel-queued") {
     return cancelQueuedDevDeliveryCandidate(
@@ -356,6 +394,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     now: new Date(optionsInput.now || Date.now()).toISOString(),
     execute: bool(optionsInput.execute, false),
   };
+  requireTerminalEvidenceCas(options);
   if (
     options.command === "submit" &&
     options.execute &&
@@ -457,7 +496,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n\nRead candidate:\n  observe --read-mode v4 --read-qualification FILE --read-qualification-root sha256:... --read-typescript-revision SHA --read-rust-revision SHA --read-validator-version TOKEN [--read-evidence-output FILE]\n";
+  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|reconcile-terminal-evidence|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n\nRead candidate:\n  observe --read-mode v4 --read-qualification FILE --read-qualification-root sha256:... --read-typescript-revision SHA --read-rust-revision SHA --read-validator-version TOKEN [--read-evidence-output FILE]\n";
 }
 
 async function main() {
@@ -476,6 +515,7 @@ async function main() {
       "recover",
       "close",
       "settle",
+      "reconcile-terminal-evidence",
       "cancel-queued",
       "observe",
     ].includes(options.command)
