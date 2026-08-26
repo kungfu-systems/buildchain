@@ -1500,6 +1500,9 @@ test("version verification allows only discovered version-state file changes", (
     "README.md": "fixture\n",
   });
   run(["git", "init"], cwd);
+  const excludesFile = path.join(cwd, ".git", "test-excludes");
+  fs.writeFileSync(excludesFile, "");
+  run(["git", "config", "core.excludesFile", excludesFile], cwd);
   run(["git", "add", "."], cwd);
   run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
 
@@ -1627,6 +1630,13 @@ test("version verification allows only the exact self-runtime dependency bridge"
   const bridge = path.join(cwd, "node_modules");
   fs.mkdirSync(path.join(cwd, ".buildchain/runtime/node_modules"), { recursive: true });
   fs.symlinkSync(path.join(cwd, ".buildchain/runtime/node_modules"), bridge, "junction");
+  assert.match(
+    execFileSync("git", ["status", "--porcelain", "--untracked-files=all"], {
+      cwd,
+      encoding: "utf8",
+    }),
+    /\?\? node_modules/,
+  );
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
   fs.unlinkSync(bridge);
   fs.symlinkSync(path.join(cwd, ".buildchain/runtime"), bridge, "junction");
