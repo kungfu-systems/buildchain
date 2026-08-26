@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "2b262be170e546f4fcfc18f095fc2b4ef9f5cf475c3d70ddba1afa4b4709aa3f",
+    "sha256": "97347acd0ad7584a1bfccaf14c70570e3322c98a8dfcd4a7416790742a9972eb",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 77,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "2b262be170e546f4fcfc18f095fc2b4ef9f5cf475c3d70ddba1afa4b4709aa3f",
+      "sha256": "97347acd0ad7584a1bfccaf14c70570e3322c98a8dfcd4a7416790742a9972eb",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 77,
@@ -4677,7 +4677,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 94,
+          "inputCount": 96,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -4703,6 +4703,8 @@
             "buildchain-channel",
             "buildchain-contract-compatibility-policy",
             "buildchain-contract-drift-issue-mode",
+            "buildchain-contract-expected-channel",
+            "buildchain-contract-expected-major",
             "buildchain-contract-lock-path",
             "buildchain-expected-channel",
             "buildchain-expected-major",
