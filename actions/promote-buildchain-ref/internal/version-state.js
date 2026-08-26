@@ -262,17 +262,12 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
         ? filePath.startsWith(allowedPath)
         : filePath === allowedPath,
     );
-  const isEphemeralRuntimeBridge = (status, filePath) => {
-    if (status !== "??" || filePath !== "node_modules") return false;
-    try {
-      const bridgePath = path.join(cwd, filePath);
-      return fs.lstatSync(bridgePath).isSymbolicLink() &&
-        fs.realpathSync(bridgePath) ===
-          fs.realpathSync(path.resolve(cwd, ".buildchain/runtime/node_modules"));
-    } catch {
-      return false;
-    }
-  };
+  const runtimeBridgePath = path.join(cwd, "node_modules");
+  let isExactRuntimeBridge = false;
+  try {
+    isExactRuntimeBridge = fs.realpathSync(runtimeBridgePath) ===
+      fs.realpathSync(path.resolve(cwd, ".buildchain/runtime/node_modules"));
+  } catch { /* Missing paths are not the exact runtime bridge. */ }
   const unexpected = output
     .split(/\r?\n/)
     .filter(Boolean)
@@ -280,9 +275,13 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
       const status = line.slice(0, 2);
       const filePath = line.slice(3).trim();
       if (isEphemeralBuildchainEvidence(status, filePath)) return false;
-      if (isEphemeralRuntimeBridge(status, filePath)) return false;
+      if (status === "??" && filePath === "node_modules" && isExactRuntimeBridge) return false;
       return !(allowed.has(filePath) && status !== "??" && !status.includes("D"));
     });
+  if (fs.existsSync(runtimeBridgePath) && !isExactRuntimeBridge &&
+    !unexpected.includes("?? node_modules")) {
+    unexpected.push("?? node_modules");
+  }
   if (unexpected.length > 0) {
     throw new Error(
       `Version verification changed files outside version state: ${unexpected.join(", ")}`,
