@@ -232,7 +232,11 @@ test("recovered promotion exposes the pnpm shim before version-state verificatio
   assert.ok(runtimeInstallIndex >= 0 && runtimeInstallIndex < promoteIndex);
   assert.match(
     promoteJob.slice(runtimeInstallIndex, promoteIndex),
-    /run: corepack enable pnpm && corepack pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/,
+    /run: corepack enable pnpm && corepack pnpm@11\.7\.0 install --dir \.buildchain\/runtime --frozen-lockfile --ignore-scripts/,
+  );
+  assert.doesNotMatch(
+    promoteJob.slice(runtimeInstallIndex, promoteIndex),
+    /install --dir \.buildchain\/runtime --prod /,
   );
 });
 
