@@ -1405,6 +1405,28 @@ jobs:
         if: ${{ steps.interrupted-provider.outcome == 'failure' }}
         uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
         with: *v4-provider-inputs
+      - name: Bundle declarative release-candidate-promotion controller evidence
+        id: declarative-controller-evidence
+        if: ${{ always() && (steps.provider.outcome == 'success' || steps.resume.outcome == 'success') }}
+        shell: bash
+        env:
+          RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
+          PUBLISH_EVIDENCE: .buildchain/release-tail/publication-evidence.json
+          RELEASE_PASSPORT: ${{ steps.provider.outputs.release-passport-path || steps.resume.outputs.release-passport-path }}
+        run: |
+          set -euo pipefail
+          evidence_dir=.buildchain/controller/promotion-evidence
+          mkdir -p "${evidence_dir}"
+          cp -- "${RELEASE_CANDIDATE_PASSPORT}" "${evidence_dir}/release-candidate-passport.json"
+          cp -- "${PUBLISH_EVIDENCE}" "${evidence_dir}/publish-evidence.json"
+          cp -- "${RELEASE_PASSPORT}" "${evidence_dir}/release-passport.json"
+      - name: Upload declarative release-candidate-promotion controller evidence
+        if: ${{ always() && steps.declarative-controller-evidence.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-release-promotion-controller-evidence-${{ needs.preflight.outputs.requested-sha }}
+          path: .buildchain/controller/promotion-evidence/
+          if-no-files-found: error
       - name: Retain declarative promotion and resume evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.1

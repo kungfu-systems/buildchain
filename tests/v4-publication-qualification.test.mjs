@@ -130,6 +130,40 @@ test("v4 admission requires declarative mode while v3 remains compatible", () =>
   );
 });
 
+test("v4 Provider Plane publishes the standard promotion controller evidence", () => {
+  const workflow = fs.readFileSync(
+    new URL(
+      "../.github/workflows/.release-candidate-promote.yml",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const declarativeJob = workflow.slice(
+    workflow.indexOf("\n  v4-declarative-promote:\n"),
+    workflow.indexOf("\n  legacy-promote:\n"),
+  );
+  assert.match(
+    declarativeJob,
+    /name: Bundle declarative release-candidate-promotion controller evidence/u,
+  );
+  assert.match(
+    declarativeJob,
+    /RELEASE_CANDIDATE_PASSPORT: \$\{\{ steps\.rc\.outputs\.release-candidate-passport-path \}\}/u,
+  );
+  assert.match(
+    declarativeJob,
+    /PUBLISH_EVIDENCE: \.buildchain\/release-tail\/publication-evidence\.json/u,
+  );
+  assert.match(
+    declarativeJob,
+    /RELEASE_PASSPORT: \$\{\{ steps\.provider\.outputs\.release-passport-path \|\| steps\.resume\.outputs\.release-passport-path \}\}/u,
+  );
+  assert.match(
+    declarativeJob,
+    /name: buildchain-release-promotion-controller-evidence-\$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/u,
+  );
+});
+
 test("qualified v4 release materializes the four built-in provider capabilities", () => {
   const directory = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-v4-tail-"),
