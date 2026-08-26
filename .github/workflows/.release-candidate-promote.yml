@@ -2123,7 +2123,6 @@ jobs:
           github-release-notes: ${{ inputs.github-release-notes }}
           promote-only-release-candidate: "true"
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
-          v4-publication-qualification-path: ${{ steps.rc.outputs.release-candidate-publication-qualification-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
           release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
