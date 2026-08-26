@@ -17,7 +17,7 @@ export const V3_V4_CAPABILITY_INVENTORY_CONTRACT =
 export const V3_V4_CAPABILITY_CUTS = Object.freeze({
   priorFamilyV3: "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
   liveV3: "88d089b9c69dd08be00f120d623447ae881f1374",
-  liveV4: "08af14ed7dcfaa260401b517d1dd4b0c094b3add",
+  liveV4: "e54aea06424563d256631be2f1f6686f60d21f3e",
 });
 
 const INVENTORY_PATH = "architecture/v3-v4-live-capability-inventory.json";
@@ -141,7 +141,7 @@ const PROJECTION_SYMBOLS = Object.freeze([
   "publicationRehearsalToml",
   "publicationRehearsalWorkflow",
 ]);
-const EXPECTED_RESIDUAL_IDS = new Set([
+const PUBLIC_SURFACE_CLOSURE_IDS = new Set([
   "documented-module:./publication-rehearsal-projection",
   "documented-module:./publication-rehearsal-runtime",
   "node-export:./publication-rehearsal-projection",
@@ -239,7 +239,7 @@ function rowFromCatalogEntry(source, targetCatalog) {
   } else if (migrated) {
     disposition = "executable-migration";
     v4Route = { capabilityId: migrated.id, evidence: migrated.evidence };
-  } else if (EXPECTED_RESIDUAL_IDS.has(source.id)) {
+  } else if (PUBLIC_SURFACE_CLOSURE_IDS.has(source.id)) {
     disposition = "owned-missing";
     residual = {
       ownerAssignment,
@@ -382,7 +382,7 @@ export function buildV3V4CapabilityInventory({ root = process.cwd() } = {}) {
 
 function validateRoute(row, issues) {
   if (row.disposition === "owned-missing") {
-    if (!EXPECTED_RESIDUAL_IDS.has(row.id))
+    if (!PUBLIC_SURFACE_CLOSURE_IDS.has(row.id))
       issues.push(`${row.id}: residual is not in the exact expected set`);
     if (!row?.residual?.ownerAssignment || row.v4Route)
       issues.push(`${row.id}: owned residual binding is invalid`);
@@ -438,9 +438,11 @@ function validateCoverage(inventory, rows, issues) {
       .filter((row) => row.disposition === "owned-missing")
       .map((row) => row.id),
   );
-  for (const id of EXPECTED_RESIDUAL_IDS) {
-    if (!actualResiduals.has(id))
-      issues.push(`expected residual is absent: ${id}`);
+  for (const id of PUBLIC_SURFACE_CLOSURE_IDS) {
+    const row = rows.find((entry) => entry.id === id);
+    if (!row) issues.push(`public-surface closure identity is absent: ${id}`);
+    else if (actualResiduals.has(id))
+      issues.push(`public-surface capability remains unresolved: ${id}`);
   }
   if (
     inventory?.reverseHistory?.fromCommit !==
