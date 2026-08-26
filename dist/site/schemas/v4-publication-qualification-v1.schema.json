@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kungfu.link/schemas/buildchain/v4-publication-qualification-v1.schema.json",
+  "title": "Buildchain v4 Publication Qualification Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "repository",
+    "candidateRoot",
+    "sourceSha",
+    "sourceRoot",
+    "policyDigest",
+    "artifacts",
+    "issuedAt",
+    "expiresAt",
+    "artifactRoot",
+    "receiptRoot"
+  ],
+  "properties": {
+    "schema": { "const": "kungfu.buildchain.v4-publication-qualification/v1" },
+    "repository": { "type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$" },
+    "candidateRoot": { "$ref": "#/$defs/root" },
+    "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sourceRoot": { "$ref": "#/$defs/root" },
+    "policyDigest": { "$ref": "#/$defs/root" },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "issuedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "artifactRoot": { "$ref": "#/$defs/root" },
+    "receiptRoot": { "$ref": "#/$defs/root" }
+  },
+  "$defs": {
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "platform", "artifactRoot", "manifestRoot"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "platform": { "type": "string", "minLength": 1 },
+        "artifactRoot": { "$ref": "#/$defs/root" },
+        "manifestRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}

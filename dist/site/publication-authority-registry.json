@@ -731,6 +731,24 @@
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
       "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "artifact.publish",
+        "release.activate",
+        "released-evidence.synthesize",
+        "signed-channel.commit"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
     }
   ],
   "workflowFacts": [
@@ -1208,6 +1226,15 @@
       "classified": false
     },
     {
+      "path": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+      "signals": [
+        "write-permission",
+        "oidc",
+        "npm-publish"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/v4-public-consumer-dogfood.yml",
       "signals": [],
       "classified": false
@@ -1233,5 +1260,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "9c930540ed2366db36802ce03cac597657e45ff402c14ef13099c788ed4e2501"
+  "registryDigest": "4f60d125496eb73e47dc21ceafa340e5cd7c5fd840eabfa17044dbacedd97f5a"
 }

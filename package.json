@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "4.0.1-alpha.40",
+  "version": "4.0.1-alpha.41",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -48,6 +48,7 @@
     "./v4-tail-reseal": "./packages/core/v4-tail-reseal.js",
     "./v4-tail-reseal-receipt": "./packages/core/v4-tail-reseal-receipt.js",
     "./v4-publication-rehearsal": "./packages/core/v4-publication-rehearsal.js",
+    "./v4-publication-qualification": "./packages/core/v4-publication-qualification.js",
     "./adopter-delivery-gate": "./packages/core/adopter-delivery-gate.js",
     "./kfd-adopter-category-driver": "./packages/core/kfd-adopter-category-driver.js",
     "./buildchain-delivery-infrastructure": "./packages/core/buildchain-delivery-infrastructure.js",
@@ -114,6 +115,7 @@
     "./site/schemas/v4-publication-rehearsal-capsule-v1.schema.json": "./dist/site/schemas/v4-publication-rehearsal-capsule-v1.schema.json",
     "./site/schemas/v4-adopter-delivery-v1.schema.json": "./dist/site/schemas/v4-adopter-delivery-v1.schema.json",
     "./site/schemas/release-tail-capabilities-v1.schema.json": "./dist/site/schemas/release-tail-capabilities-v1.schema.json",
+    "./site/schemas/v4-publication-qualification-v1.schema.json": "./dist/site/schemas/v4-publication-qualification-v1.schema.json",
     "./site/buildchain-contract.json": "./dist/site/buildchain-contract.json",
     "./site/product-mechanism.json": "./dist/site/product-mechanism.json",
     "./site/release-provenance.json": "./dist/site/release-provenance.json",

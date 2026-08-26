@@ -9,6 +9,8 @@ import { pipeline } from "node:stream/promises";
 import { pathToFileURL } from "node:url";
 import { createResolvedPublicationSealedBundle } from "./publication-candidate-sealer.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
+import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
+import { v4PublicationQualificationRoot, validateV4PublicationQualificationReceipt } from "../packages/core/v4-publication-qualification.js";
 
 const DEFAULT_WORKFLOW_FILE = "build-surface-fixture.yml";
 
@@ -434,6 +436,42 @@ function findDownloadedFile(root, filename) {
   return "";
 }
 
+function resolveV4PublicationEvidence(passportDir, passport, outputPath) {
+  const stageCapsulesPath = findDownloadedFile(passportDir, "release-candidate-stage-capsules.json");
+  const publicationQualificationPath = findDownloadedFile(passportDir, "release-candidate-publication-qualification.json");
+  if (!passport.consumerPolicy?.receiptRoot) {
+    return {
+      paths: {
+        stageCapsules: stageCapsulesPath ? outputPath(stageCapsulesPath) : "",
+        publicationQualification: publicationQualificationPath ? outputPath(publicationQualificationPath) : "",
+      },
+      publicationQualificationRoot: "",
+    };
+  }
+  if (!stageCapsulesPath || !publicationQualificationPath) {
+    throw new Error("v4 release candidate is missing Stage Capsules or publication qualification receipt");
+  }
+  const stageCapsules = JSON.parse(fs.readFileSync(stageCapsulesPath, "utf8"));
+  const qualification = JSON.parse(fs.readFileSync(publicationQualificationPath, "utf8"));
+  validateV4PublicationQualificationReceipt(qualification, {
+    repository: passport.repository,
+    candidateRoot: `sha256:${passport.candidateHash}`,
+    sourceSha: passport.source.headSha,
+    sourceRoot: v4ContentRoot("candidate-identity", passport.source),
+    artifactRoot: v4PublicationQualificationRoot(stageCapsules.capsules.map(({ publicationArtifact }) => publicationArtifact)),
+    policyDigest: passport.consumerPolicy.receiptRoot,
+  });
+  if (stageCapsules.publicationQualificationRoot !== qualification.receiptRoot) throw new Error("Stage Capsules do not bind the publication qualification receipt");
+  if (stageCapsules.capsules.some(({ capsule }) => capsule.identity.qualificationRoot !== qualification.receiptRoot)) throw new Error("a Stage Capsule does not bind the publication qualification receipt");
+  return {
+    paths: {
+      stageCapsules: outputPath(stageCapsulesPath),
+      publicationQualification: outputPath(publicationQualificationPath),
+    },
+    publicationQualificationRoot: qualification.receiptRoot,
+  };
+}
+
 export async function resolveReleaseCandidateArtifacts({
   repository,
   targetRef,
@@ -667,6 +705,7 @@ export async function resolveReleaseCandidateArtifacts({
     throw new Error("downloaded release-candidate artifacts did not contain release-candidate-passport.json and build-summary.json");
   }
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
+  const v4Publication = resolveV4PublicationEvidence(passportDir, passport, outputPath);
   const platformManifestPaths = findDownloadedFiles(payloadDir, "manifest.json");
   const githubArtifactAttestationPolicyPaths = findDownloadedFiles(
     payloadDir,
@@ -722,6 +761,7 @@ export async function resolveReleaseCandidateArtifacts({
     paths: {
       passport: outputPath(passportPath),
       buildSummary: outputPath(buildSummaryPath),
+      ...v4Publication.paths,
       payloads: outputPath(payloadDir),
       platformManifests: platformManifestPaths.map(outputPath),
       githubArtifactAttestationPolicies: githubArtifactAttestationPolicyPaths.map(outputPath),
@@ -738,6 +778,7 @@ export async function resolveReleaseCandidateArtifacts({
     githubArtifactAttestationPolicyCount: githubArtifactAttestationPolicyPaths.length,
     npmTarballCount: npmTarballPaths.length,
     publishRequiredArtifacts: generatedRequiredArtifacts,
+    publicationQualificationRoot: v4Publication.publicationQualificationRoot,
   };
 }
 
@@ -766,6 +807,9 @@ export async function resolveReleaseCandidateArtifactsCli() {
     "promote-only-release-candidate": String(result.enabled === true),
     "release-candidate-passport-path": result.paths?.passport || "",
     "release-candidate-build-summary-path": result.paths?.buildSummary || "",
+    "release-candidate-stage-capsules-path": result.paths?.stageCapsules || "",
+    "release-candidate-publication-qualification-path": result.paths?.publicationQualification || "",
+    "release-candidate-publication-qualification-root": result.publicationQualificationRoot || "",
     "release-candidate-version": result.version || "",
     "release-candidate-source-sha": result.artifacts?.sourceSha || "",
     "release-candidate-artifact": result.artifacts?.passport || "",
