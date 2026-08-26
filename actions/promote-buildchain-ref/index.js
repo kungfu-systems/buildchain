@@ -211,15 +211,23 @@ async function publishReleaseTail({
   return release;
 }
 
+function readPromotionCompatibilityInputs() {
+  if (core.getBooleanInput("plan-before-target-advance"))
+    throw new Error("buildchain-v3-v4-public-surface-migration/v1: plan-before-target-advance cannot bypass the v4 source lock; use publication qualification against the exact protected candidate");
+  if (core.getInput("release-passport-adopter-delivery-json"))
+    throw new Error("buildchain-v3-v4-public-surface-migration/v1: release-passport-adopter-delivery-json is non-authoritative in v4; use release-passport-kfd-adopter-manifest-json with release-passport-kfd-product-gate-jsons");
+  if (core.getInput("release-passport-kfd-adopter-manifest-gate-json"))
+    throw new Error("buildchain-v3-v4-public-surface-migration/v1: v4 derives the adopter manifest gate; provide release-passport-kfd-adopter-manifest-json and release-passport-kfd-product-gate-jsons");
+  return core.getBooleanInput("dry-run");
+}
+
 async function main() {
   const token = core.getInput("token", { required: true });
   const sha = core.getInput("sha", { required: true });
   const targetRef = core.getInput("target-ref", { required: true });
   const tagInput = core.getInput("tags");
   const tags = tagInput ? parseTags(tagInput) : undefined;
-  const dryRun = core.getBooleanInput("dry-run");
-  if (core.getBooleanInput("plan-before-target-advance"))
-    throw new Error("buildchain-v3-v4-public-surface-migration/v1: plan-before-target-advance cannot bypass the v4 source lock; use publication qualification against the exact protected candidate");
+  const dryRun = readPromotionCompatibilityInputs();
   const requireGovernance = core.getBooleanInput("require-governance");
   const requireVersionState = core.getBooleanInput("require-version-state");
   const verificationCommand = core.getInput("verification-command");
@@ -286,10 +294,6 @@ async function main() {
   const releasePassportKfd3PrebuildWitnessJsons = core.getInput("release-passport-kfd-3-prebuild-witness-jsons");
   const releasePassportKfd3ArtifactWitnessJsons = core.getInput("release-passport-kfd-3-artifact-witness-jsons");
   const releasePassportKfd3ArtifactVerifyCommand = core.getInput("release-passport-kfd-3-artifact-verify-command");
-  if (core.getInput("release-passport-adopter-delivery-json"))
-    throw new Error("buildchain-v3-v4-public-surface-migration/v1: release-passport-adopter-delivery-json is non-authoritative in v4; use release-passport-kfd-adopter-manifest-json with release-passport-kfd-product-gate-jsons");
-  if (core.getInput("release-passport-kfd-adopter-manifest-gate-json"))
-    throw new Error("buildchain-v3-v4-public-surface-migration/v1: v4 derives the adopter manifest gate; provide release-passport-kfd-adopter-manifest-json and release-passport-kfd-product-gate-jsons");
   const releasePassportKfdAdopterManifestJson = core.getInput("release-passport-kfd-adopter-manifest-json");
   const releasePassportKfdSupportMatrixJson = core.getInput("release-passport-kfd-support-matrix-json");
   const releasePassportKfdProductGateJsons = core.getInput("release-passport-kfd-product-gate-jsons");

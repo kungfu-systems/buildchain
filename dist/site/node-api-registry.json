@@ -318,7 +318,7 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 131
+        "line": 167
       },
       "example": "import { createAdopterDeliveryPassportBinding } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
@@ -347,9 +347,38 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 151
+        "line": 187
       },
       "example": "import { normalizeAdopterDeliveryPassportBinding } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/adopter-delivery-passport.js#releasePassportKfdAdopterSourceSha",
+      "name": "releasePassportKfdAdopterSourceSha",
+      "kind": "function",
+      "signature": "function releasePassportKfdAdopterSourceSha({ passportSourceSha = \"\", release = undefined, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ passportSourceSha = \"\", release = undefined, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/adopter-delivery-passport.js",
+        "line": 12
+      },
+      "example": "import { releasePassportKfdAdopterSourceSha } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -376,7 +405,7 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 104
+        "line": 140
       },
       "example": "import { validateAdopterDeliveryGateResult } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
@@ -409,7 +438,7 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 158
+        "line": 194
       },
       "example": "import { validateAdopterDeliveryPassportBinding } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
@@ -438,7 +467,7 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 233
+        "line": 269
       },
       "example": "import { validateAdopterDeliveryReleaseEvidence } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
@@ -21541,7 +21570,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1614
+        "line": 1586
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21628,7 +21657,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2816
+        "line": 2788
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21657,7 +21686,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1314
+        "line": 1286
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21686,7 +21715,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2972
+        "line": 2944
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21835,7 +21864,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 3001
+        "line": 2973
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21896,7 +21925,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2888
+        "line": 2860
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21978,35 +22007,6 @@
       ]
     },
     {
-      "id": "packages/core/release-passport.js#releasePassportKfdAdopterSourceSha",
-      "name": "releasePassportKfdAdopterSourceSha",
-      "kind": "function",
-      "signature": "function releasePassportKfdAdopterSourceSha({ passportSourceSha = \"\", release = undefined, } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ passportSourceSha = \"\", release = undefined, } = {}"
-        }
-      ],
-      "returns": "unknown",
-      "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
-      ],
-      "sideEffects": [
-        "none-detected-by-static-source-scan"
-      ],
-      "source": {
-        "path": "packages/core/release-passport.js",
-        "line": 1265
-      },
-      "example": "import { releasePassportKfdAdopterSourceSha } from \"@kungfu-tech/buildchain/release-passport\";",
-      "maturity": "stable",
-      "audience": [
-        "developer",
-        "agent"
-      ]
-    },
-    {
       "id": "packages/core/release-passport.js#sha256File",
       "name": "sha256File",
       "kind": "function",
@@ -22080,7 +22080,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 3013
+        "line": 2985
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22109,7 +22109,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2937
+        "line": 2909
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -29764,18 +29764,19 @@
       "specifier": "@kungfu-tech/buildchain/adopter-delivery-passport",
       "export": "./adopter-delivery-passport",
       "target": "./packages/core/adopter-delivery-passport.js",
-      "digest": "sha256:794e6e14442b0673e3909cab1663c919c331db31ff1b2af538a22940c5ed2e41",
+      "digest": "sha256:1b41d346874a335ca68618d5f78456eefd050b267843f13700db17a1af5ee9af",
       "summary": "Non-authoritative adopter delivery Release Passport binding and substitution checks.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 6,
+      "symbolCount": 7,
       "symbolIds": [
         "packages/core/adopter-delivery-passport.js#ADOPTER_DELIVERY_PASSPORT_BINDING_CONTRACT",
         "packages/core/adopter-delivery-passport.js#createAdopterDeliveryPassportBinding",
         "packages/core/adopter-delivery-passport.js#normalizeAdopterDeliveryPassportBinding",
+        "packages/core/adopter-delivery-passport.js#releasePassportKfdAdopterSourceSha",
         "packages/core/adopter-delivery-passport.js#validateAdopterDeliveryGateResult",
         "packages/core/adopter-delivery-passport.js#validateAdopterDeliveryPassportBinding",
         "packages/core/adopter-delivery-passport.js#validateAdopterDeliveryReleaseEvidence"
@@ -30556,7 +30557,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:ba7aa6c57ec2696cc687d4fcc533e9a878bc48709bdb9d0c2f557ba02683b174",
+      "digest": "sha256:756c825d788725dafd5ad9d3d5e87a5066da513aff5c539a969a3d3a20be8616",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -30584,7 +30585,7 @@
         "packages/core/release-passport.js#RELEASE_CHECK_REPORT_CONTRACT",
         "packages/core/release-passport.js#RELEASE_EVIDENCE_ATTACHMENT_CONTRACT",
         "packages/core/release-passport.js#RELEASE_PASSPORT_CONTRACT",
-        "packages/core/release-passport.js#releasePassportKfdAdopterSourceSha",
+        "packages/core/adopter-delivery-passport.js#releasePassportKfdAdopterSourceSha",
         "packages/core/release-passport.js#sha256File",
         "packages/core/release-passport.js#sha256Text",
         "packages/core/release-passport.js#validateKnownReleasePassportContracts",
@@ -30896,7 +30897,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:8a3f50ac57ac961060af1d24bbd810f4ca75d6040f7446fe3648f089f6519e65"
+      "digest": "sha256:fbfa6187b2cb6994018f7c6bce63acff71b8663e43397df4576ba8aeb402d7ee"
     },
     {
       "id": "build-facts",
