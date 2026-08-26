@@ -18168,7 +18168,7 @@
         "evidence": {
           "path": "dist/site/buildchain-contract.json",
           "selector": "$",
-          "valueRoot": "sha256:567d135aa16d82f1e1a508e12c054d92321bb37bdf4efeca52e7e136cc473948"
+          "valueRoot": "sha256:ebc8a46686d0117c64c56d40e2470370f6a6faee8dd4bc692b7adfa88222dc31"
         }
       }
     },
@@ -102233,9 +102233,9 @@
     },
     "liveV4": {
       "branch": "origin/dev/v4/v4.0",
-      "commit": "731074a8c8d62d0b34b7f50d93000ee2ad0a89d5",
+      "commit": "fc24418c7ed7c9d7d1d73c1cda4b15ac49ac2b56",
       "role": "execution-time-protected-target",
-      "tree": "314376d11ac818ee73e4e8f40aab2ce37aa5eb6e"
+      "tree": "ca738e9577d0fb018c59874d29e842d553d11928"
     },
     "priorFamilyV3": {
       "branch": "origin/dev/v3/v3.0",

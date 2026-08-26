@@ -17,7 +17,7 @@ export const V3_V4_CAPABILITY_INVENTORY_CONTRACT =
 export const V3_V4_CAPABILITY_CUTS = Object.freeze({
   priorFamilyV3: "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
   liveV3: "88d089b9c69dd08be00f120d623447ae881f1374",
-  liveV4: "731074a8c8d62d0b34b7f50d93000ee2ad0a89d5",
+  liveV4: "fc24418c7ed7c9d7d1d73c1cda4b15ac49ac2b56",
 });
 
 const INVENTORY_PATH = "architecture/v3-v4-live-capability-inventory.json";
