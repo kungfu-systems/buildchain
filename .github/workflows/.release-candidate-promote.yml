@@ -1496,7 +1496,7 @@ jobs:
           INPUT_PROMOTION_RUNTIME_REF: ${{ inputs.promotion-runtime-ref }}
 
       - name: Install Buildchain runtime dependencies
-        run: corepack enable pnpm && corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+        run: corepack enable pnpm && corepack pnpm@11.7.0 install --dir .buildchain/runtime --frozen-lockfile --ignore-scripts
 
       - name: Verify transient runtime authorization handoff
         if: ${{ inputs.promotion-router-ref != '' }}
