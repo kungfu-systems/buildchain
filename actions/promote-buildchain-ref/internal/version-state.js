@@ -267,8 +267,8 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     try {
       const bridgePath = path.join(cwd, filePath);
       return fs.lstatSync(bridgePath).isSymbolicLink() &&
-        path.resolve(cwd, fs.readlinkSync(bridgePath)) ===
-          path.resolve(cwd, ".buildchain/runtime/node_modules");
+        fs.realpathSync(bridgePath) ===
+          fs.realpathSync(path.resolve(cwd, ".buildchain/runtime/node_modules"));
     } catch {
       return false;
     }
