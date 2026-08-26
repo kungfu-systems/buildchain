@@ -262,6 +262,17 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
         ? filePath.startsWith(allowedPath)
         : filePath === allowedPath,
     );
+  const isEphemeralRuntimeBridge = (status, filePath) => {
+    if (status !== "??" || filePath !== "node_modules") return false;
+    try {
+      const bridgePath = path.join(cwd, filePath);
+      return fs.lstatSync(bridgePath).isSymbolicLink() &&
+        path.resolve(cwd, fs.readlinkSync(bridgePath)) ===
+          path.resolve(cwd, ".buildchain/runtime/node_modules");
+    } catch {
+      return false;
+    }
+  };
   const unexpected = output
     .split(/\r?\n/)
     .filter(Boolean)
@@ -269,6 +280,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
       const status = line.slice(0, 2);
       const filePath = line.slice(3).trim();
       if (isEphemeralBuildchainEvidence(status, filePath)) return false;
+      if (isEphemeralRuntimeBridge(status, filePath)) return false;
       return !(allowed.has(filePath) && status !== "??" && !status.includes("D"));
     });
   if (unexpected.length > 0) {
