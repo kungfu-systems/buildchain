@@ -262,6 +262,11 @@ on:
         default: false
         type: boolean
         required: false
+      provider-failure-after-capability:
+        description: "Dogfood-only deterministic failure injection after one checkpointed provider capability"
+        default: ""
+        type: string
+        required: false
       github-release-title:
         description: "Optional GitHub Release title. Empty defaults to the public release tag."
         default: ""
@@ -837,6 +842,15 @@ jobs:
           path: .buildchain/runtime
           persist-credentials: false
 
+      - name: Admit v4 declarative promotion before planning
+        if: ${{ startsWith(inputs.buildchain-ref, 'v4') || startsWith(inputs.promotion-runtime-ref, 'v4') }}
+        shell: bash
+        env:
+          BUILDCHAIN_PROMOTION_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_RUNTIME_REF: ${{ inputs.promotion-runtime-ref || inputs.buildchain-ref }}
+          BUILDCHAIN_DECLARATIVE_RELEASE_TAIL: ${{ inputs.declarative-release-tail }}
+        run: node .buildchain/runtime/scripts/v4-declarative-promotion-admission.mjs
+
       - name: Checkout selected promotion workflow shell
         if: ${{ inputs.promotion-shell-ref != '' }}
         uses: actions/checkout@v7.0.0
@@ -1110,8 +1124,15 @@ jobs:
           fi
   publication-authority:
     name: Seal product publication capability
-    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
-    if: ${{ needs.preflight.outputs.action == 'promote' }}
+    needs:
+      [
+        preflight,
+        controller-plan,
+        release-candidate-preflight,
+        publication-plan,
+        qualification-plan,
+      ]
+    if: ${{ needs.preflight.outputs.action == 'promote' && !startsWith(inputs.promotion-shell-ref, 'v4') }}
     permissions:
       actions: read
       checks: read
@@ -1159,7 +1180,7 @@ jobs:
   qualification-plan:
     name: Bind consumer publication predicate
     needs: [preflight]
-    if: ${{ needs.preflight.outputs.action == 'promote' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && !startsWith(inputs.promotion-shell-ref, 'v4') }}
     runs-on: ubuntu-24.04
     permissions: {}
     outputs:
@@ -1201,8 +1222,9 @@ jobs:
 
   publication-qualification:
     name: Run consumer publication predicate
-    needs: [preflight, controller-plan, qualification-plan, publication-authority]
-    if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' }}
+    needs:
+      [preflight, controller-plan, qualification-plan, publication-authority]
+    if: ${{ needs.preflight.outputs.action == 'promote' && !startsWith(inputs.promotion-shell-ref, 'v4') && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -1296,10 +1318,117 @@ jobs:
           path: .buildchain/publication-qualification/
           if-no-files-found: error
 
-  promote:
+  v4-declarative-promote:
+    name: Promote sealed v4 candidate through Provider Plane
+    needs:
+      [
+        preflight,
+        controller-plan,
+        release-candidate-preflight,
+        publication-plan,
+      ]
+    if: ${{ needs.preflight.outputs.action == 'promote' && startsWith(inputs.promotion-shell-ref, 'v4') && !inputs.dry-run }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+    outputs:
+      promoted-sha: ${{ needs.preflight.outputs.requested-sha }}
+      built-source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
+      release-candidate-artifact: ${{ steps.rc.outputs.release-candidate-artifact }}
+      release-candidate-action: declarative-provider-plane
+      release-candidate-outcome: success
+      promotion-outcome: success
+      finalization-needed: "false"
+      release-tail-transaction-state: ${{ steps.provider.outputs.transaction-state || steps.resume.outputs.transaction-state }}
+      release-tail-declaration-root: ${{ steps.provider.outputs.declaration-root || steps.resume.outputs.declaration-root }}
+      release-tail-transaction-root: ${{ steps.provider.outputs.transaction-root || steps.resume.outputs.transaction-root }}
+      release-tail-state-root: ${{ steps.provider.outputs.state-root || steps.resume.outputs.state-root }}
+      release-tail-receipt-roots-json: ${{ steps.provider.outputs.receipt-roots-json || steps.resume.outputs.receipt-roots-json }}
+    steps:
+      - name: Checkout Buildchain provider runtime only
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ needs.controller-plan.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+      - name: Install exact provider runtime dependencies
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+      - name: Download and validate sealed release candidate
+        id: rc
+        run: node .buildchain/runtime/scripts/release-candidate-resolver.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_SHA: ${{ needs.preflight.outputs.requested-sha }}
+          BUILDCHAIN_TARGET_REF: ${{ needs.preflight.outputs.target-ref }}
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
+          BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS: ${{ inputs.github-release-payload-patterns }}
+          BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RC_WAIT_SECONDS: ${{ inputs.release-candidate-wait-seconds }}
+          BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
+          BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
+          BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
+          BUILDCHAIN_RC_DOWNLOAD: "true"
+          BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
+      - name: Execute Provider Plane with requested dogfood interruption
+        id: interrupted-provider
+        if: ${{ inputs.provider-failure-after-capability != '' }}
+        continue-on-error: true
+        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        with: &v4-provider-inputs
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          source-sha: ${{ steps.rc.outputs.release-candidate-source-sha }}
+          version: ${{ needs.publication-plan.outputs.version }}
+          tag: ${{ needs.publication-plan.outputs.exact-tag }}
+          channel: ${{ needs.preflight.outputs.channel }}
+          candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
+          stage-capsules-path: ${{ steps.rc.outputs.release-candidate-stage-capsules-path }}
+          publication-qualification-path: ${{ steps.rc.outputs.release-candidate-publication-qualification-path }}
+          artifact-paths: ${{ steps.rc.outputs.release-candidate-github-release-artifact-paths }}
+          state-path: .buildchain/release-tail/state.json
+          failure-after-capability: ${{ inputs.provider-failure-after-capability }}
+      - name: Execute Provider Plane
+        id: provider
+        if: ${{ inputs.provider-failure-after-capability == '' }}
+        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        with: *v4-provider-inputs
+      - name: Resume only the incomplete provider tail
+        id: resume
+        if: ${{ steps.interrupted-provider.outcome == 'failure' }}
+        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        with: *v4-provider-inputs
+      - name: Retain declarative promotion and resume evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v4-declarative-release-tail-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .buildchain/release-candidate/
+            .buildchain/release-passport/
+            .buildchain/release-tail/
+          include-hidden-files: true
+          if-no-files-found: error
+
+  legacy-promote:
     name: Promote release candidate
-    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification]
-    if: ${{ needs.preflight.outputs.action == 'promote' && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
+    needs:
+      [
+        preflight,
+        controller-plan,
+        release-candidate-preflight,
+        publication-plan,
+        publication-authority,
+        publication-qualification,
+      ]
+    if: ${{ needs.preflight.outputs.action == 'promote' && !startsWith(inputs.promotion-shell-ref, 'v4') && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -1972,7 +2101,7 @@ jobs:
           release-passport-v4-consumer-policy-certification-json: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-path }}
           release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}
           release-passport-v4-runtime-resume-evidence-json: ${{ inputs.release-passport-v4-runtime-resume-evidence-json || steps.rc.outputs.v4-runtime-resume-evidence-path }}
-          release-passport-v4-runtime-resume-evidence-command: ${{ steps.rc.outputs.v4-runtime-resume-finalize-command }}
+          release-passport-v4-runtime-resume-evidence-command: ${{ steps.rc.outputs.release-candidate-publication-qualification-path == '' && steps.rc.outputs.v4-runtime-resume-finalize-command || '' }}
           release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}
           release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
@@ -1994,6 +2123,7 @@ jobs:
           github-release-notes: ${{ inputs.github-release-notes }}
           promote-only-release-candidate: "true"
           release-candidate-passport-path: ${{ steps.rc.outputs.release-candidate-passport-path }}
+          v4-publication-qualification-path: ${{ steps.rc.outputs.release-candidate-publication-qualification-path }}
           release-candidate-build-summary-path: ${{ steps.rc.outputs.release-candidate-build-summary-path }}
           release-candidate-version: ${{ steps.rc.outputs.release-candidate-version }}
           release-candidate-family-evidence-required: ${{ inputs.release-candidate-family-evidence-required }}
@@ -2383,10 +2513,53 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
 
+  promote:
+    name: Select declarative or legacy promotion result
+    needs: [legacy-promote, v4-declarative-promote]
+    if: ${{ always() && (needs.legacy-promote.result == 'success' || needs.v4-declarative-promote.result == 'success') }}
+    runs-on: ubuntu-24.04
+    permissions: {}
+    outputs:
+      promoted-sha: ${{ needs.v4-declarative-promote.outputs.promoted-sha || needs.legacy-promote.outputs.promoted-sha }}
+      built-source-sha: ${{ needs.v4-declarative-promote.outputs.built-source-sha || needs.legacy-promote.outputs.built-source-sha }}
+      release-candidate-artifact: ${{ needs.v4-declarative-promote.outputs.release-candidate-artifact || needs.legacy-promote.outputs.release-candidate-artifact }}
+      release-candidate-action: ${{ needs.v4-declarative-promote.outputs.release-candidate-action || needs.legacy-promote.outputs.release-candidate-action }}
+      release-candidate-recovery-root: ${{ needs.legacy-promote.outputs.release-candidate-recovery-root }}
+      release-candidate-recovery-receipt-artifact: ${{ needs.legacy-promote.outputs.release-candidate-recovery-receipt-artifact }}
+      release-propagation-work-artifact: ${{ needs.legacy-promote.outputs.release-propagation-work-artifact }}
+      release-candidate-outcome: ${{ needs.v4-declarative-promote.outputs.release-candidate-outcome || needs.legacy-promote.outputs.release-candidate-outcome }}
+      promotion-outcome: ${{ needs.v4-declarative-promote.outputs.promotion-outcome || needs.legacy-promote.outputs.promotion-outcome }}
+      finalization-needed: ${{ needs.v4-declarative-promote.outputs.finalization-needed || needs.legacy-promote.outputs.finalization-needed }}
+      publication-commit-evidence-path: ${{ needs.legacy-promote.outputs.publication-commit-evidence-path }}
+      publication-commit-evidence-digest: ${{ needs.legacy-promote.outputs.publication-commit-evidence-digest }}
+      publication-commit-url: ${{ needs.legacy-promote.outputs.publication-commit-url }}
+      publication-commit-payload-root: ${{ needs.legacy-promote.outputs.publication-commit-payload-root }}
+      github-artifact-attestation-input-artifact: ${{ needs.legacy-promote.outputs.github-artifact-attestation-input-artifact }}
+      github-artifact-attestation-policy-json: ${{ needs.legacy-promote.outputs.github-artifact-attestation-policy-json }}
+      github-artifact-attestation-subject-relative-path: ${{ needs.legacy-promote.outputs.github-artifact-attestation-subject-relative-path }}
+      github-artifact-attestation-platform-manifest-relative-path: ${{ needs.legacy-promote.outputs.github-artifact-attestation-platform-manifest-relative-path }}
+      github-artifact-attestation-release-passport-relative-path: ${{ needs.legacy-promote.outputs.github-artifact-attestation-release-passport-relative-path }}
+      github-artifact-attestation-buildchain-ref: ${{ needs.legacy-promote.outputs.github-artifact-attestation-buildchain-ref }}
+      github-artifact-attestation-signer-ref: ${{ needs.legacy-promote.outputs.github-artifact-attestation-signer-ref }}
+      github-artifact-attestation-source-sha: ${{ needs.legacy-promote.outputs.github-artifact-attestation-source-sha }}
+      github-artifact-attestation-public-release-tag: ${{ needs.legacy-promote.outputs.github-artifact-attestation-public-release-tag }}
+      github-artifact-attestation-github-release-url: ${{ needs.legacy-promote.outputs.github-artifact-attestation-github-release-url }}
+      release-tail-declaration-root: ${{ needs.v4-declarative-promote.outputs.release-tail-declaration-root || needs.legacy-promote.outputs.release-tail-declaration-root }}
+      release-tail-transaction-state: ${{ needs.v4-declarative-promote.outputs.release-tail-transaction-state || needs.legacy-promote.outputs.release-tail-transaction-state }}
+      release-tail-transaction-root: ${{ needs.v4-declarative-promote.outputs.release-tail-transaction-root || needs.legacy-promote.outputs.release-tail-transaction-root }}
+      release-tail-state-root: ${{ needs.v4-declarative-promote.outputs.release-tail-state-root || needs.legacy-promote.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json: ${{ needs.v4-declarative-promote.outputs.release-tail-receipt-roots-json || needs.legacy-promote.outputs.release-tail-receipt-roots-json }}
+    steps:
+      - name: Confirm exactly one promotion implementation completed
+        env:
+          LEGACY_RESULT: ${{ needs.legacy-promote.result }}
+          V4_RESULT: ${{ needs.v4-declarative-promote.result }}
+        run: test "${LEGACY_RESULT}" = success -o "${V4_RESULT}" = success
+
   github-artifact-attestation:
     name: Sign Linux release artifact with GitHub OIDC
     needs: [promote]
-    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && needs.promote.result == 'success' }}
+    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !startsWith(inputs.promotion-shell-ref, 'v4') && !inputs.dry-run && needs.promote.result == 'success' }}
     permissions:
       actions: read
       artifact-metadata: write
@@ -2477,7 +2650,16 @@ jobs:
 
   controller-receipt:
     name: Record release-candidate promotion controller receipt
-    needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote, github-artifact-attestation, publish-github-artifact-attestation-evidence]
+    needs:
+      [
+        preflight,
+        controller-plan,
+        release-candidate-preflight,
+        publication-authority,
+        promote,
+        github-artifact-attestation,
+        publish-github-artifact-attestation-evidence,
+      ]
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:

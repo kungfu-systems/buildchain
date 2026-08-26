@@ -8,6 +8,7 @@ import { scanV4FloatingConsumerPolicy, v4ConsumerPolicyScannerRoot } from "../pa
 import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
 import { V4_STAGE_CAPSULE_CONTRACT, V4_STAGE_CAPSULE_IDENTITY_CONTRACT, v4StageCapsuleIdentityRoot, v4StageCapsuleRoot, validateV4StageCapsule } from "../packages/core/v4-stage-capsule.js";
 import { v4RuntimeResumeDocumentRoot } from "../packages/core/v4-runtime-ref-resume-authority.js";
+import { createV4PublicationQualificationReceipt } from "../packages/core/v4-publication-qualification.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 const env = (name, fallback = "") => process.env[name] || fallback;
@@ -32,7 +33,20 @@ export function createReleaseCandidateStageCapsules({
   const coordinateByPlatform = new Map(
     coordinates.artifacts.map((entry) => [entry.platformId, entry]),
   );
-  const qualificationRoot = passport.controllerReceipts?.[0]?.receiptDigest;
+  const qualificationArtifacts = passport.platformMatrix.map((platform) => {
+    const coordinate = coordinateByPlatform.get(platform.platformId);
+    if (!coordinate || coordinate.name !== platform.artifactName) throw new Error(`Stage Capsule coordinate missing for ${platform.platformId}`);
+    const manifest = readJsonFile(platform.manifestPath);
+    return { role: platform.artifactName, platform: platform.platformId, artifactRoot: coordinate.digest, manifestRoot: v4ContentRoot("stage-capsule-artifact-manifest", manifest) };
+  });
+  const qualificationExpiresAt = coordinates.artifacts.map((entry) => entry.expiresAt).sort((left, right) => Date.parse(left) - Date.parse(right))[0];
+  const qualificationReceipt = createV4PublicationQualificationReceipt({
+    repository: passport.repository, candidateRoot: `sha256:${passport.candidateHash}`,
+    sourceSha: passport.source.headSha, sourceRoot: v4ContentRoot("candidate-identity", passport.source),
+    policyDigest: passport.consumerPolicy.receiptRoot, artifacts: qualificationArtifacts,
+    issuedAt: passport.createdAt || new Date(Date.parse(qualificationExpiresAt) - 86_400_000).toISOString(), expiresAt: qualificationExpiresAt,
+  });
+  const qualificationRoot = qualificationReceipt.receiptRoot;
   const entries = passport.platformMatrix
     .map((platform) => {
       const coordinate = coordinateByPlatform.get(platform.platformId);
@@ -93,6 +107,9 @@ export function createReleaseCandidateStageCapsules({
         platform: platform.platformId,
         artifactName: coordinate.name,
         artifactDigest: coordinate.digest,
+        publicationArtifact: qualificationArtifacts.find(
+          ({ platform: platformId }) => platformId === platform.platformId,
+        ),
         artifact: coordinate,
         capsule,
       };
@@ -112,6 +129,8 @@ export function createReleaseCandidateStageCapsules({
       treeSha: passport.source.treeHash,
     },
     consumerPolicyReceiptRoot: passport.consumerPolicy.receiptRoot,
+    publicationQualificationRoot: qualificationRoot,
+    publicationQualificationReceipt: qualificationReceipt,
     capsules: entries,
   };
   return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
@@ -150,12 +169,16 @@ function writeReleaseCandidateStageCapsules({
     stageCapsulesPath,
     `${JSON.stringify(stageCapsules, null, 2)}\n`,
   );
+  const qualificationPath = path.join(path.dirname(outputPath), "release-candidate-publication-qualification.json");
+  fs.writeFileSync(qualificationPath, `${JSON.stringify(stageCapsules.publicationQualificationReceipt, null, 2)}\n`);
   return {
     path: path
       .relative(process.cwd(), stageCapsulesPath)
       .split(path.sep)
       .join("/"),
     root: stageCapsules.root,
+    qualificationPath: path.relative(process.cwd(), qualificationPath).split(path.sep).join("/"),
+    qualificationRoot: stageCapsules.publicationQualificationRoot,
   };
 }
 
@@ -246,6 +269,8 @@ export function generateReleaseCandidatePassportCli() {
     }),
     "release-candidate-stage-capsules-path": stageCapsules.path,
     "release-candidate-stage-capsules-root": stageCapsules.root,
+    "release-candidate-publication-qualification-path": stageCapsules.qualificationPath,
+    "release-candidate-publication-qualification-root": stageCapsules.qualificationRoot,
   });
   return passport;
 }

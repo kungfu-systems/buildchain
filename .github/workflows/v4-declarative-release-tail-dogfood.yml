@@ -1,0 +1,48 @@
+name: V4 Declarative Release Tail Dogfood
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-sha:
+        description: "Exact protected alpha/v4/v4.0 candidate SHA"
+        required: true
+        type: string
+      failure-after-capability:
+        description: "Checkpointed capability after which the first provider invocation is interrupted"
+        default: "artifact.publish"
+        required: false
+        type: string
+
+permissions:
+  actions: write
+  checks: write
+  contents: write
+  id-token: write
+  pull-requests: write
+
+jobs:
+  publish:
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4
+    with:
+      buildchain-repository: kungfu-systems/buildchain
+      buildchain-contract-lock-path: .buildchain/contract-lock.json
+      buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
+      buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
+      allow-repository: kungfu-systems/buildchain
+      channel: alpha
+      target-ref: alpha/v4/v4.0
+      target-sha: ${{ inputs.target-sha }}
+      package-manager: pnpm
+      artifact-name: buildchain-package
+      release-candidate-workflow-file: build.yml
+      release-candidate-workflow-name: Build
+      publish-target: github-release
+      github-release: true
+      declarative-release-tail: true
+      provider-failure-after-capability: ${{ inputs.failure-after-capability }}
+      publish-artifact-kind: npm
+      publish-package-main: "@kungfu-systems/buildchain"
+      release-passport: true
+      release-passport-product-name: Buildchain
+      dry-run: false
+    secrets: inherit

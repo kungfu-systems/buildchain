@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 76,
-    "actionCount": 7,
-    "sitePageCount": 82,
+    "workflowCount": 77,
+    "actionCount": 8,
+    "sitePageCount": 84,
     "docCommandRefCount": 1049,
     "failureCount": 0
   },
@@ -1029,6 +1029,7 @@
           "promotion-shell-ref",
           "promotion-shell-sha",
           "promotion-target-ref",
+          "provider-failure-after-capability",
           "publication-admission-json",
           "publication-authority-workflow-path",
           "publication-auto-admission",
@@ -1108,7 +1109,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 118,
+        "inputCount": 119,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2589,6 +2590,7 @@
           "github-release-payload-patterns",
           "github-release-title",
           "package-manager",
+          "provider-failure-after-capability",
           "publication-admission-json",
           "publication-auto-admission",
           "publication-auto-no-gate",
@@ -2667,7 +2669,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 103,
+        "inputCount": 104,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2936,6 +2938,17 @@
           "node-version"
         ],
         "inputCount": 5,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "v4-declarative-release-tail-dogfood",
+        "path": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -3253,6 +3266,21 @@
         "inputCount": 22
       },
       {
+        "id": "v4-release-candidate-promote",
+        "path": "actions/v4-release-candidate-promote/action.yml",
+        "inputs": [
+          "artifact-paths",
+          "candidate-passport-path",
+          "failure-after-capability",
+          "publication-qualification-path",
+          "repository",
+          "stage-capsules-path",
+          "state-path",
+          "token"
+        ],
+        "inputCount": 8
+      },
+      {
         "id": "validate-config",
         "path": "actions/validate-config/action.yml",
         "inputs": [
@@ -3286,6 +3314,10 @@
       },
       {
         "id": "action:run-lifecycle",
+        "category": "action"
+      },
+      {
+        "id": "action:v4-release-candidate-promote",
         "category": "action"
       },
       {
@@ -3550,6 +3582,10 @@
       },
       {
         "id": "manual:v4-compatibility-facts",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-declarative-release-tail-migration",
         "category": "manual"
       },
       {
@@ -8846,8 +8882,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "ea47a31ce7ef3577f23e22055ab7be7715c3af494bcef63f76b426f2883086aa",
-    "workflowRegistryDigest": "76b22aa244aaa08948ee9f8372cf8ef9fe2b7d8387a0808042cca3041894a490",
-    "pageRegistryDigest": "1c6ec0e488e5c2e36df00ab65984c067240dc24b84f57a0e1cd9e8681e52c076"
+    "workflowRegistryDigest": "c5a19280118c9b1a071f10cbf5f97305a112187653f04d51af57b8d64eeb8c78",
+    "pageRegistryDigest": "5b2382c05cbd6438509dfea4547a933d205f310de3a3354caab88528da8b6c33"
   },
   "comparison": {
     "missingCliRegistry": [],

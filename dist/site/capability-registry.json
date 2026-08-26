@@ -15,7 +15,7 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 4,
-        "pageCount": 17,
+        "pageCount": 18,
         "cliCommandCount": 9,
         "nodeApiCount": 0,
         "workflowCount": 0,
@@ -51,7 +51,7 @@
         "manualCount": 7,
         "pageCount": 8,
         "cliCommandCount": 27,
-        "nodeApiCount": 21,
+        "nodeApiCount": 22,
         "workflowCount": 4,
         "actionCount": 3
       },
@@ -295,11 +295,11 @@
       "maturity": "stable",
       "counts": {
         "manualCount": 3,
-        "pageCount": 11,
+        "pageCount": 12,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 47,
-        "actionCount": 1
+        "workflowCount": 48,
+        "actionCount": 2
       },
       "manuals": [
         "docs/cli.md",
