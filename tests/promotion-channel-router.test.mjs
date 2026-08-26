@@ -221,6 +221,7 @@ test("stable route calls the hidden advanced workflow through the current major 
       "publication-gate-controller-sha",
       "publication-authority-workflow-path",
       "publication-consumer-qualification-controller-sha",
+      "provider-failure-after-capability",
       "promotion-runtime-authorization-json",
       "promotion-runtime-authorization-root",
       "release-activation-command",
