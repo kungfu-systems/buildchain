@@ -131,36 +131,19 @@ test("v4 admission requires declarative mode while v3 remains compatible", () =>
 });
 
 test("v4 Provider Plane publishes the standard promotion controller evidence", () => {
-  const workflow = fs.readFileSync(
-    new URL(
-      "../.github/workflows/.release-candidate-promote.yml",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const declarativeJob = workflow.slice(
-    workflow.indexOf("\n  v4-declarative-promote:\n"),
-    workflow.indexOf("\n  legacy-promote:\n"),
-  );
+  const source = (file) =>
+    fs.readFileSync(new URL(file, import.meta.url), "utf8");
+  const declarativeJob = source(
+    "../.github/workflows/.release-candidate-promote.yml",
+  ).match(/\n  v4-declarative-promote:\n([\s\S]*?)\n  legacy-promote:\n/u)[1];
   assert.match(
     declarativeJob,
-    /name: Bundle declarative release-candidate-promotion controller evidence/u,
+    /name: buildchain-release-promotion-controller-evidence-[\s\S]*\.buildchain\/release-candidate\/[\s\S]*\.buildchain\/release-passport\/[\s\S]*\.buildchain\/release-tail\//u,
   );
+  assert.doesNotMatch(declarativeJob, /declarative-controller-evidence/u);
   assert.match(
-    declarativeJob,
-    /RELEASE_CANDIDATE_PASSPORT: \$\{\{ steps\.rc\.outputs\.release-candidate-passport-path \}\}/u,
-  );
-  assert.match(
-    declarativeJob,
-    /PUBLISH_EVIDENCE: \.buildchain\/release-tail\/publication-evidence\.json/u,
-  );
-  assert.match(
-    declarativeJob,
-    /RELEASE_PASSPORT: \$\{\{ steps\.provider\.outputs\.release-passport-path \|\| steps\.resume\.outputs\.release-passport-path \}\}/u,
-  );
-  assert.match(
-    declarativeJob,
-    /name: buildchain-release-promotion-controller-evidence-\$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/u,
+    source("../.github/workflows/.release-candidate-promote.yml"),
+    /promotion-evidence\/release-passport\/buildchain\.release\.json/u,
   );
 });
 

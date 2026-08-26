@@ -1413,33 +1413,11 @@ jobs:
         if: ${{ steps.interrupted-provider.outcome == 'failure' }}
         uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
         with: *v4-provider-inputs
-      - name: Bundle declarative release-candidate-promotion controller evidence
-        id: declarative-controller-evidence
-        if: ${{ always() && (steps.provider.outcome == 'success' || steps.resume.outcome == 'success') }}
-        shell: bash
-        env:
-          RELEASE_CANDIDATE_PASSPORT: ${{ steps.rc.outputs.release-candidate-passport-path }}
-          PUBLISH_EVIDENCE: .buildchain/release-tail/publication-evidence.json
-          RELEASE_PASSPORT: ${{ steps.provider.outputs.release-passport-path || steps.resume.outputs.release-passport-path }}
-        run: |
-          set -euo pipefail
-          evidence_dir=.buildchain/controller/promotion-evidence
-          mkdir -p "${evidence_dir}"
-          cp -- "${RELEASE_CANDIDATE_PASSPORT}" "${evidence_dir}/release-candidate-passport.json"
-          cp -- "${PUBLISH_EVIDENCE}" "${evidence_dir}/publish-evidence.json"
-          cp -- "${RELEASE_PASSPORT}" "${evidence_dir}/release-passport.json"
-      - name: Upload declarative release-candidate-promotion controller evidence
-        if: ${{ always() && steps.declarative-controller-evidence.outcome == 'success' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: buildchain-release-promotion-controller-evidence-${{ needs.preflight.outputs.requested-sha }}
-          path: .buildchain/controller/promotion-evidence/
-          if-no-files-found: error
       - name: Retain declarative promotion and resume evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: buildchain-v4-declarative-release-tail-${{ github.run_id }}-${{ github.run_attempt }}
+          name: buildchain-release-promotion-controller-evidence-${{ needs.preflight.outputs.requested-sha }}
           path: |
             .buildchain/release-candidate/
             .buildchain/release-passport/
@@ -2737,7 +2715,7 @@ jobs:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
             [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publication-authority","status":"${{ needs.promote.result == 'success' && 'success' || needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.result }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && needs.promote.outputs.finalization-needed == 'true' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"}]' || !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && needs.promote.outputs.finalization-needed == 'true' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/release-tail/publication-evidence.json"}]' || !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/release-tail/publication-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport/buildchain.release.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'promotion-dry-run' || needs.promote.outputs.finalization-needed == 'true' && 'promotion-finalization-pending' || needs.promote.result == 'success' && '' || needs.preflight.outputs.action == 'noop' && 'promotion-superseded' || 'promotion-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release-candidate promotion did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-release-promotion-controller-receipt-${{ needs.preflight.outputs.requested-sha }}
