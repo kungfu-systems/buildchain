@@ -100,8 +100,8 @@ function dependencyCycles(graph) {
 }
 
 function assertIndexShape(index) {
-  if (index?.schemaVersion !== 1) {
-    throw new Error("internal architecture index schemaVersion must be 1");
+  if (index?.schemaVersion !== 2) {
+    throw new Error("internal architecture index schemaVersion must be 2");
   }
   for (const field of [
     "coverageRoots",
@@ -209,7 +209,27 @@ function evaluateCapabilities(root, index) {
     if (!Array.isArray(capability.tests) || capability.tests.length === 0) {
       issues.push(`${capability.id}: test mapping is empty`);
     }
-    for (const field of ["implementation", "tests", "contracts"]) {
+    if (!Array.isArray(capability.generatedOutputs)) {
+      issues.push(`${capability.id}: generated output mapping is missing`);
+    }
+    if (
+      !Array.isArray(capability.validationCommands) ||
+      capability.validationCommands.length === 0
+    ) {
+      issues.push(`${capability.id}: validation command mapping is empty`);
+    } else if (
+      capability.validationCommands.some(
+        (command) => !String(command || "").trim(),
+      )
+    ) {
+      issues.push(`${capability.id}: validation command is empty`);
+    }
+    for (const field of [
+      "implementation",
+      "tests",
+      "contracts",
+      "generatedOutputs",
+    ]) {
       for (const relativePath of capability[field] || []) {
         if (!fs.existsSync(path.resolve(root, relativePath))) {
           issues.push(
