@@ -193,6 +193,11 @@ on:
         default: false
         type: boolean
         required: false
+      provider-failure-after-capability:
+        description: "Dogfood-only deterministic failure injection after one checkpointed provider capability"
+        default: ""
+        type: string
+        required: false
       github-release-title:
         description: "Optional GitHub Release title. Empty defaults to the public release tag."
         default: ""
@@ -1023,6 +1028,7 @@ jobs:
       publish-target: ${{ inputs.publish-target }}
       github-release: ${{ inputs.github-release }}
       declarative-release-tail: ${{ inputs.declarative-release-tail }}
+      provider-failure-after-capability: ${{ inputs.provider-failure-after-capability }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
       github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
@@ -1149,6 +1155,7 @@ jobs:
       publish-target: ${{ inputs.publish-target }}
       github-release: ${{ inputs.github-release }}
       declarative-release-tail: ${{ inputs.declarative-release-tail }}
+      provider-failure-after-capability: ${{ inputs.provider-failure-after-capability }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
       github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}

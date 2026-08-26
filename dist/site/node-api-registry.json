@@ -3285,7 +3285,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 981
+        "line": 1011
       },
       "example": "import { contractSummary } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3314,7 +3314,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 910
+        "line": 940
       },
       "example": "import { createBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3343,7 +3343,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 169
+        "line": 199
       },
       "example": "import { createBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3396,7 +3396,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 977
+        "line": 1007
       },
       "example": "import { evaluateBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3425,7 +3425,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 851
+        "line": 881
       },
       "example": "import { finalizeBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3502,7 +3502,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 966
+        "line": 996
       },
       "example": "import { readBuildchainContractLock } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3531,7 +3531,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 946
+        "line": 976
       },
       "example": "import { readBuildchainContractWorld } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -3560,7 +3560,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-contract.js",
-        "line": 996
+        "line": 1026
       },
       "example": "import { renderBuildchainContractDriftIssueBody } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5247,7 +5247,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 63
+        "line": 64
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5276,7 +5276,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 87
+        "line": 88
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25023,6 +25023,207 @@
       ]
     },
     {
+      "id": "packages/core/v4-publication-qualification.js#assertNoV4ExecutionFields",
+      "name": "assertNoV4ExecutionFields",
+      "kind": "function",
+      "signature": "function assertNoV4ExecutionFields(value, location = \"$\")",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        },
+        {
+          "name": "location",
+          "signature": "location = \"$\""
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-publication-qualification.js",
+        "line": 46
+      },
+      "example": "import { assertNoV4ExecutionFields } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-publication-qualification.js#assertV4DeclarativePromotionInputs",
+      "name": "assertV4DeclarativePromotionInputs",
+      "kind": "function",
+      "signature": "function assertV4DeclarativePromotionInputs(inputs)",
+      "parameters": [
+        {
+          "name": "inputs",
+          "signature": "inputs"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-publication-qualification.js",
+        "line": 207
+      },
+      "example": "import { assertV4DeclarativePromotionInputs } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-publication-qualification.js#createV4PublicationQualificationReceipt",
+      "name": "createV4PublicationQualificationReceipt",
+      "kind": "function",
+      "signature": "function createV4PublicationQualificationReceipt({ repository, candidateRoot, sourceSha, sourceRoot, policyDigest, artifacts, issuedAt, expiresAt, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ repository, candidateRoot, sourceSha, sourceRoot, policyDigest, artifacts, issuedAt, expiresAt, }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-publication-qualification.js",
+        "line": 112
+      },
+      "example": "import { createV4PublicationQualificationReceipt } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-publication-qualification.js#V4_PUBLICATION_QUALIFICATION_SCHEMA",
+      "name": "V4_PUBLICATION_QUALIFICATION_SCHEMA",
+      "kind": "constant",
+      "signature": "const V4_PUBLICATION_QUALIFICATION_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-publication-qualification.js",
+        "line": 3
+      },
+      "example": "import { V4_PUBLICATION_QUALIFICATION_SCHEMA } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-publication-qualification.js#V4PublicationQualificationError",
+      "name": "V4PublicationQualificationError",
+      "kind": "class",
+      "signature": "class V4PublicationQualificationError",
+      "parameters": [],
+      "returns": "V4PublicationQualificationError",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/v4-publication-qualification.js",
+        "line": 19
+      },
+      "example": "import { V4PublicationQualificationError } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-publication-qualification.js#v4PublicationQualificationRoot",
+      "name": "v4PublicationQualificationRoot",
+      "kind": "function",
+      "signature": "function v4PublicationQualificationRoot(value)",
+      "parameters": [
+        {
+          "name": "value",
+          "signature": "value"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-publication-qualification.js",
+        "line": 42
+      },
+      "example": "import { v4PublicationQualificationRoot } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-publication-qualification.js#validateV4PublicationQualificationReceipt",
+      "name": "validateV4PublicationQualificationReceipt",
+      "kind": "function",
+      "signature": "function validateV4PublicationQualificationReceipt(receipt, { repository, candidateRoot, sourceSha, sourceRoot, artifactRoot, policyDigest, evaluatedAt = new Date().toISOString(), } = {})",
+      "parameters": [
+        {
+          "name": "receipt",
+          "signature": "receipt"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ repository, candidateRoot, sourceSha, sourceRoot, artifactRoot, policyDigest, evaluatedAt = new Date().toISOString(), } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-publication-qualification.js",
+        "line": 152
+      },
+      "example": "import { validateV4PublicationQualificationReceipt } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/v4-publication-rehearsal.js#createV4PublicationRehearsalAuthority",
       "name": "createV4PublicationRehearsalAuthority",
       "kind": "function",
@@ -26024,14 +26225,14 @@
       "specifier": "@kungfu-tech/buildchain",
       "export": ".",
       "target": "./packages/core/index.js",
-      "digest": "sha256:133da9d5574d655a6ea618522aae12a3138c7ea647fda85fb0204373d55d4201",
+      "digest": "sha256:2cb7db3f5c833753ec2cbd496b7711a93c1874928a577a7e328128a53c2ace3e",
       "summary": "Root toolkit export for Buildchain's public Node API.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 629,
+      "symbolCount": 636,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -26054,8 +26255,10 @@
         "packages/core/artifact-signing.js#artifactSigningDigest",
         "packages/core/artifact-signing-result.js#artifactSigningEvidenceDigest",
         "packages/core/artifact-verification-envelope.js#artifactVerificationEnvelopeDigest",
+        "packages/core/v4-publication-qualification.js#assertNoV4ExecutionFields",
         "packages/core/package-manager.js#assertPackageManager",
         "packages/core/public-surface-audit.js#assertPublicSurfaceReverseAudit",
+        "packages/core/v4-publication-qualification.js#assertV4DeclarativePromotionInputs",
         "packages/core/kfd3-surface-register.js#auditKfd3Surfaces",
         "packages/core/v4-runtime-ref-resume-authority.js#authorizeV4RuntimeSelection",
         "packages/core/readme-badges.js#BADGE_BUNDLE_DEFAULT_CLAIMS",
@@ -26258,6 +26461,7 @@
         "packages/core/release-tail-provider-adapters.js#createSiteReleaseActivationAdapter",
         "packages/core/stable-candidate-ledger.js#createStableCandidateLedger",
         "packages/core/surface-manifest.js#createSurfaceTimestampPolicy",
+        "packages/core/v4-publication-qualification.js#createV4PublicationQualificationReceipt",
         "packages/core/v4-runtime-ref-resume-authority.js#createV4RuntimeResumeLineage",
         "packages/core/web-surface-publication-candidate.js#createWebSurfaceProductionDecision",
         "packages/core/web-surface-publication-candidate.js#createWebSurfacePublicationCandidate",
@@ -26594,11 +26798,14 @@
         "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_CERTIFICATION",
         "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_POLICY",
         "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_RECEIPT",
+        "packages/core/v4-publication-qualification.js#V4_PUBLICATION_QUALIFICATION_SCHEMA",
         "packages/core/v4-runtime-ref-resume-authority.js#V4_RUNTIME_AUTHORIZATION_CONTRACT",
         "packages/core/v4-runtime-ref-resume-authority.js#V4_RUNTIME_PERSISTENCE_SCAN_CONTRACT",
         "packages/core/v4-runtime-ref-resume-authority.js#V4_RUNTIME_RESUME_LINEAGE_CONTRACT",
         "packages/core/v4-floating-consumer-policy.js#v4ConsumerPolicyScannerRoot",
         "packages/core/v4-floating-consumer-evidence.js#v4FloatingConsumerDocumentRoot",
+        "packages/core/v4-publication-qualification.js#V4PublicationQualificationError",
+        "packages/core/v4-publication-qualification.js#v4PublicationQualificationRoot",
         "packages/core/v4-runtime-ref-resume-authority.js#v4RuntimeResumeDocumentRoot",
         "packages/core/diagnostics.js#validateAnchoredPackageRelease",
         "packages/core/artifact-signing.js#validateArtifactSigningReceipt",
@@ -26622,6 +26829,7 @@
         "packages/core/release-passport-contract.js#validateReleasePassportSchema",
         "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan",
         "packages/core/release-tail-provider-plane.js#validateReleaseTailTransaction",
+        "packages/core/v4-publication-qualification.js#validateV4PublicationQualificationReceipt",
         "packages/core/artifact-passport.js#verifyArtifactPassport",
         "packages/core/artifact-signing-result.js#verifyArtifactSigningResultFiles",
         "packages/core/artifact-verification-envelope.js#verifyArtifactVerificationEnvelope",
@@ -26751,14 +26959,14 @@
       "specifier": "@kungfu-tech/buildchain/core",
       "export": "./core",
       "target": "./packages/core/index.js",
-      "digest": "sha256:133da9d5574d655a6ea618522aae12a3138c7ea647fda85fb0204373d55d4201",
+      "digest": "sha256:2cb7db3f5c833753ec2cbd496b7711a93c1874928a577a7e328128a53c2ace3e",
       "summary": "Alias for the root public toolkit export.",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 629,
+      "symbolCount": 636,
       "symbolIds": [
         "packages/core/release-activation-transaction.js#abortReleaseActivationTransaction",
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
@@ -26781,8 +26989,10 @@
         "packages/core/artifact-signing.js#artifactSigningDigest",
         "packages/core/artifact-signing-result.js#artifactSigningEvidenceDigest",
         "packages/core/artifact-verification-envelope.js#artifactVerificationEnvelopeDigest",
+        "packages/core/v4-publication-qualification.js#assertNoV4ExecutionFields",
         "packages/core/package-manager.js#assertPackageManager",
         "packages/core/public-surface-audit.js#assertPublicSurfaceReverseAudit",
+        "packages/core/v4-publication-qualification.js#assertV4DeclarativePromotionInputs",
         "packages/core/kfd3-surface-register.js#auditKfd3Surfaces",
         "packages/core/v4-runtime-ref-resume-authority.js#authorizeV4RuntimeSelection",
         "packages/core/readme-badges.js#BADGE_BUNDLE_DEFAULT_CLAIMS",
@@ -26985,6 +27195,7 @@
         "packages/core/release-tail-provider-adapters.js#createSiteReleaseActivationAdapter",
         "packages/core/stable-candidate-ledger.js#createStableCandidateLedger",
         "packages/core/surface-manifest.js#createSurfaceTimestampPolicy",
+        "packages/core/v4-publication-qualification.js#createV4PublicationQualificationReceipt",
         "packages/core/v4-runtime-ref-resume-authority.js#createV4RuntimeResumeLineage",
         "packages/core/web-surface-publication-candidate.js#createWebSurfaceProductionDecision",
         "packages/core/web-surface-publication-candidate.js#createWebSurfacePublicationCandidate",
@@ -27321,11 +27532,14 @@
         "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_CERTIFICATION",
         "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_POLICY",
         "packages/core/v4-floating-consumer-evidence.js#V4_FLOATING_CONSUMER_RECEIPT",
+        "packages/core/v4-publication-qualification.js#V4_PUBLICATION_QUALIFICATION_SCHEMA",
         "packages/core/v4-runtime-ref-resume-authority.js#V4_RUNTIME_AUTHORIZATION_CONTRACT",
         "packages/core/v4-runtime-ref-resume-authority.js#V4_RUNTIME_PERSISTENCE_SCAN_CONTRACT",
         "packages/core/v4-runtime-ref-resume-authority.js#V4_RUNTIME_RESUME_LINEAGE_CONTRACT",
         "packages/core/v4-floating-consumer-policy.js#v4ConsumerPolicyScannerRoot",
         "packages/core/v4-floating-consumer-evidence.js#v4FloatingConsumerDocumentRoot",
+        "packages/core/v4-publication-qualification.js#V4PublicationQualificationError",
+        "packages/core/v4-publication-qualification.js#v4PublicationQualificationRoot",
         "packages/core/v4-runtime-ref-resume-authority.js#v4RuntimeResumeDocumentRoot",
         "packages/core/diagnostics.js#validateAnchoredPackageRelease",
         "packages/core/artifact-signing.js#validateArtifactSigningReceipt",
@@ -27349,6 +27563,7 @@
         "packages/core/release-passport-contract.js#validateReleasePassportSchema",
         "packages/core/release-tail-provider-plane.js#validateReleaseTailEffectPlan",
         "packages/core/release-tail-provider-plane.js#validateReleaseTailTransaction",
+        "packages/core/v4-publication-qualification.js#validateV4PublicationQualificationReceipt",
         "packages/core/artifact-passport.js#verifyArtifactPassport",
         "packages/core/artifact-signing-result.js#verifyArtifactSigningResultFiles",
         "packages/core/artifact-verification-envelope.js#verifyArtifactVerificationEnvelope",
@@ -27615,7 +27830,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:b9f85d83f8bf638fe967a2aef6ac2b5f3efbe0be46c5a176e03e38c9146c35e3",
+      "digest": "sha256:3a8e9c3c834af04e1e22807030106efeecf053bda7911e939055b2654c54cbd6",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -28589,6 +28804,35 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/v4-publication-qualification",
+      "export": "./v4-publication-qualification",
+      "target": "./packages/core/v4-publication-qualification.js",
+      "digest": "sha256:88df23b5a9e12838edab7c3a3c117fec2c145b7ded92f847d522051574214173",
+      "summary": "Sealed v4 candidate, source, artifact, policy, freshness, and command-free promotion admission APIs.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 7,
+      "symbolIds": [
+        "packages/core/v4-publication-qualification.js#assertNoV4ExecutionFields",
+        "packages/core/v4-publication-qualification.js#assertV4DeclarativePromotionInputs",
+        "packages/core/v4-publication-qualification.js#createV4PublicationQualificationReceipt",
+        "packages/core/v4-publication-qualification.js#V4_PUBLICATION_QUALIFICATION_SCHEMA",
+        "packages/core/v4-publication-qualification.js#V4PublicationQualificationError",
+        "packages/core/v4-publication-qualification.js#v4PublicationQualificationRoot",
+        "packages/core/v4-publication-qualification.js#validateV4PublicationQualificationReceipt"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/adopter-delivery-gate",
       "export": "./adopter-delivery-gate",
       "target": "./packages/core/adopter-delivery-gate.js",
@@ -29173,7 +29417,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:a8fe39184997624ebcbac7f8eaa48cee5182bd56ead0954d4af34853059379e2",
+      "digest": "sha256:9e35546655e3591e04f985c09b06f2ee4ee9c26bbf733cb807e49698f29c492c",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29910,7 +30154,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:e8a597dae50b7907221d6ae8ed21eccee94001c3463e8671b49ec010f12d2b68"
+      "digest": "sha256:750df1c7346b119f1654ef151e1814401d0f768b65a27051df12d33fa831981d"
     },
     {
       "id": "build-facts",

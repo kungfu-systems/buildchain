@@ -166,6 +166,36 @@ function declarativeAuditableDemoSurface(root, pkg, majorLine) {
   });
 }
 
+function v4ReleaseCandidatePromoteSurface(root, majorLine) {
+  return surface(root, {
+    id: "v4-release-candidate-promote-action",
+    kind: "action",
+    path: "actions/v4-release-candidate-promote/action.yml",
+    publicRef: `kungfu-systems/buildchain/actions/v4-release-candidate-promote@${majorLine}`,
+    requiredInputs: [
+      "token", "repository", "source-sha", "version", "tag", "channel",
+      "candidate-passport-path", "stage-capsules-path",
+      "publication-qualification-path",
+    ],
+    requiredOutputs: [
+      "release-passport-path", "release-passport-root", "transaction-state",
+      "declaration-root", "transaction-root", "state-root",
+      "receipt-roots-json",
+    ],
+    breakingDefaults: {
+      statePath: ".buildchain/release-tail/state.json",
+      executionBoundary: "built-in-provider-plane-only",
+    },
+    optionalInputs: ["artifact-paths", "state-path", "failure-after-capability"],
+    guarantees: [
+      "v4 promotion consumes only sealed candidate, Stage Capsule, qualification, and artifact evidence",
+      "GitHub Release, signed-channel commit, activation, readback, and released-evidence synthesis use built-in provider adapters",
+      "durable provider checkpoints resume completed capabilities without replay",
+      "no consumer command, script, shell, checkout, or executable tail hook is accepted",
+    ],
+  });
+}
+
 export function createBuildchainContractWorld({
   root = process.cwd(),
   packageJson = undefined,
@@ -484,7 +514,7 @@ export function createBuildchainContractWorld({
         "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment",
       ],
-    }), declarativeAuditableDemoSurface(root, pkg, majorLine),
+    }), declarativeAuditableDemoSurface(root, pkg, majorLine), v4ReleaseCandidatePromoteSurface(root, majorLine),
     surface(root, {
       id: "promote-buildchain-ref-action",
       kind: "action",

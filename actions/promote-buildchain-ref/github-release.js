@@ -21,6 +21,10 @@ import {
   reuseCompleteGitHubReleaseEvidence,
   uniqueReleaseAssets,
 } from "./reuse-complete-release.js";
+import {
+  createV4GitHubProviderAdapters,
+  extendV4GitHubReleaseDeclaration,
+} from "./v4-provider-plane.js";
 
 function assertFile(pathname, label) {
   if (
@@ -96,6 +100,7 @@ export function createDeclarativeGitHubReleasePlan({
   tag,
   channel,
   assetPaths,
+  qualificationRoot = "",
 } = {}) {
   if (!/^[^/\s]+\/[^/\s]+$/u.test(String(repository || ""))) {
     throw new Error("declarative GitHub Release requires owner/repository");
@@ -202,10 +207,17 @@ export function createDeclarativeGitHubReleasePlan({
       },
     ],
   };
+  const extended = extendV4GitHubReleaseDeclaration({
+    declaration,
+    transactionRoot,
+    targetRoot,
+    qualificationRoot,
+  });
   return {
     artifacts,
-    declaration,
-    plan: compileReleaseTailDeclaration(declaration),
+    declaration: extended.declaration,
+    documents: extended.documents,
+    plan: compileReleaseTailDeclaration(extended.declaration),
   };
 }
 
@@ -313,6 +325,8 @@ export async function publishDeclarativeGitHubReleaseEvidence({
   additionalAssetPaths = [],
   statePath,
   declarationPath,
+  qualificationRoot = "",
+  failureAfterCapability = "",
 } = {}) {
   const assetPaths = collectGitHubReleaseEvidenceAssets({
     publishEvidencePath,
@@ -327,6 +341,7 @@ export async function publishDeclarativeGitHubReleaseEvidence({
     tag,
     channel,
     assetPaths,
+    qualificationRoot,
   });
   const resolvedStatePath = path.resolve(statePath);
   const resolvedDeclarationPath = writeJsonFile(
@@ -357,9 +372,21 @@ export async function publishDeclarativeGitHubReleaseEvidence({
           return artifactByRole.get(role);
         },
       }),
+      ...createV4GitHubProviderAdapters(octokit, materialized.documents),
     }),
-    checkpoint: (checkpoint) =>
-      writeReleaseTailTransaction(resolvedStatePath, checkpoint),
+    checkpoint: (checkpoint) => {
+      writeReleaseTailTransaction(resolvedStatePath, checkpoint);
+      if (
+        failureAfterCapability &&
+        checkpoint.receipts.some(
+          ({ capabilityId }) => capabilityId === failureAfterCapability,
+        )
+      ) {
+        throw new Error(
+          `injected provider failure after ${failureAfterCapability}`,
+        );
+      }
+    },
   });
   if (transaction.state !== "complete") {
     throw new Error(

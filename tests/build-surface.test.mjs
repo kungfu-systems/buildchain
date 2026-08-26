@@ -1976,7 +1976,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
   );
   assert.match(
     workflow,
-    /needs: \[preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification\]/,
+    /legacy-promote:[\s\S]*needs:\s*\[\s*preflight,\s*controller-plan,\s*release-candidate-preflight,\s*publication-plan,\s*publication-authority,\s*publication-qualification,?\s*\]/,
   );
   assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
   assert.match(workflow, /name: Bind consumer publication predicate/);

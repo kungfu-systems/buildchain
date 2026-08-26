@@ -59,8 +59,8 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
     "utf8",
   );
   const promoteJob = workflow.slice(
+    workflow.indexOf("\n  legacy-promote:"),
     workflow.indexOf("\n  promote:"),
-    workflow.indexOf("\n  github-artifact-attestation:"),
   );
   const checkoutShell = promoteJob.indexOf(
     "path: .buildchain/runtime/promotion-shell",
