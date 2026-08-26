@@ -1058,21 +1058,25 @@
     },
     {
       "category": "action-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "action-input:promote-buildchain-ref#plan-before-target-advance",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "actions[id=\"promote-buildchain-ref\"].inputs[\"plan-before-target-advance\"]",
         "valueRoot": "sha256:20338395f7a0323b462254726a56b0a4ed7461ec11074dfa7d261720bf422705"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "action-input:promote-buildchain-ref#plan-before-target-advance",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "actions[id=\"promote-buildchain-ref\"].inputs[\"plan-before-target-advance\"]",
+          "valueRoot": "sha256:20338395f7a0323b462254726a56b0a4ed7461ec11074dfa7d261720bf422705"
+        }
+      }
     },
     {
       "category": "action-input",
@@ -1802,21 +1806,25 @@
     },
     {
       "category": "action-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "action-input:promote-buildchain-ref#release-passport-adopter-delivery-json",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "actions[id=\"promote-buildchain-ref\"].inputs[\"release-passport-adopter-delivery-json\"]",
         "valueRoot": "sha256:8aa74ba8fbacd16a188d406488bc5b811768d2181dd192f12f433e3661846432"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "action-input:promote-buildchain-ref#release-passport-adopter-delivery-json",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "actions[id=\"promote-buildchain-ref\"].inputs[\"release-passport-adopter-delivery-json\"]",
+          "valueRoot": "sha256:8aa74ba8fbacd16a188d406488bc5b811768d2181dd192f12f433e3661846432"
+        }
+      }
     },
     {
       "category": "action-input",
@@ -2128,21 +2136,25 @@
     },
     {
       "category": "action-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "action-input:promote-buildchain-ref#release-passport-kfd-adopter-manifest-gate-json",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "actions[id=\"promote-buildchain-ref\"].inputs[\"release-passport-kfd-adopter-manifest-gate-json\"]",
         "valueRoot": "sha256:a7122de0a072d2504643d6213186fe80a1ff88e7641bbd7acf621ddecb45aede"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "action-input:promote-buildchain-ref#release-passport-kfd-adopter-manifest-gate-json",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "actions[id=\"promote-buildchain-ref\"].inputs[\"release-passport-kfd-adopter-manifest-gate-json\"]",
+          "valueRoot": "sha256:a7122de0a072d2504643d6213186fe80a1ff88e7641bbd7acf621ddecb45aede"
+        }
+      }
     },
     {
       "category": "action-input",
@@ -2564,75 +2576,91 @@
     },
     {
       "category": "action-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "action-input:release-tail#capsule",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "actions[id=\"release-tail\"].inputs[\"capsule\"]",
         "valueRoot": "sha256:dd33c5e24436c040e2d871126841ab8338efa586ce768d114432ce1841938b07"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "action-input:release-tail#capsule",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "actions[id=\"release-tail\"].inputs[\"capsule\"]",
+          "valueRoot": "sha256:dd33c5e24436c040e2d871126841ab8338efa586ce768d114432ce1841938b07"
+        }
+      }
     },
     {
       "category": "action-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "action-input:release-tail#capsule-contract",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "actions[id=\"release-tail\"].inputs[\"capsule-contract\"]",
         "valueRoot": "sha256:a5b1f2e590fc2bada0aa0b6d19e0d31d9de006e3907faa050c46ac01c7ec242a"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "action-input:release-tail#capsule-contract",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "actions[id=\"release-tail\"].inputs[\"capsule-contract\"]",
+          "valueRoot": "sha256:a5b1f2e590fc2bada0aa0b6d19e0d31d9de006e3907faa050c46ac01c7ec242a"
+        }
+      }
     },
     {
       "category": "action-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "action-input:release-tail#capsule-root",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "actions[id=\"release-tail\"].inputs[\"capsule-root\"]",
         "valueRoot": "sha256:8c9e0b3110d6f102b4ab9222267c999eed41b759d0f2533de27c3288bf651c0f"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "action-input:release-tail#capsule-root",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "actions[id=\"release-tail\"].inputs[\"capsule-root\"]",
+          "valueRoot": "sha256:8c9e0b3110d6f102b4ab9222267c999eed41b759d0f2533de27c3288bf651c0f"
+        }
+      }
     },
     {
       "category": "action-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "action-input:release-tail#evidence-path",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "actions[id=\"release-tail\"].inputs[\"evidence-path\"]",
         "valueRoot": "sha256:b08afadca177e9990ef19ce4fb9ec353c60900c5db9ebc09d0a213224977d6d0"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "action-input:release-tail#evidence-path",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "actions[id=\"release-tail\"].inputs[\"evidence-path\"]",
+          "valueRoot": "sha256:b08afadca177e9990ef19ce4fb9ec353c60900c5db9ebc09d0a213224977d6d0"
+        }
+      }
     },
     {
       "category": "action-input",
@@ -7894,21 +7922,25 @@
     },
     {
       "category": "cli-option",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "cli-option:collect-github-release#--adopter-delivery-json",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/cli-registry.json",
         "selector": "commands[id=\"collect-github-release\"].options[\"--adopter-delivery-json\"]",
         "valueRoot": "sha256:6a1fc5ae4b3e88f0d14be3630358ed0dad9112b23f0c48fe4ddb835aecca29cc"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "cli-option:collect-github-release#--adopter-delivery-json",
+        "evidence": {
+          "path": "dist/site/cli-registry.json",
+          "selector": "commands[id=\"collect-github-release\"].options[\"--adopter-delivery-json\"]",
+          "valueRoot": "sha256:6a1fc5ae4b3e88f0d14be3630358ed0dad9112b23f0c48fe4ddb835aecca29cc"
+        }
+      }
     },
     {
       "category": "cli-option",
@@ -15194,21 +15226,25 @@
     },
     {
       "category": "cli-option",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "cli-option:release-tail#--capsule-root",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/cli-registry.json",
         "selector": "commands[id=\"release-tail\"].options[\"--capsule-root\"]",
         "valueRoot": "sha256:aeb0a8deb02114936a1d4366472ec92739c6c9f3e06b1ad833bf3dbfc1374375"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "cli-option:release-tail#--capsule-root",
+        "evidence": {
+          "path": "dist/site/cli-registry.json",
+          "selector": "commands[id=\"release-tail\"].options[\"--capsule-root\"]",
+          "valueRoot": "sha256:aeb0a8deb02114936a1d4366472ec92739c6c9f3e06b1ad833bf3dbfc1374375"
+        }
+      }
     },
     {
       "category": "cli-option",
@@ -15234,21 +15270,25 @@
     },
     {
       "category": "cli-option",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "cli-option:release-tail#--environment-json",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/cli-registry.json",
         "selector": "commands[id=\"release-tail\"].options[\"--environment-json\"]",
         "valueRoot": "sha256:09bf11371bda0de11db306659ca91d2df25722644725dece218e5164494b6c17"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "cli-option:release-tail#--environment-json",
+        "evidence": {
+          "path": "dist/site/cli-registry.json",
+          "selector": "commands[id=\"release-tail\"].options[\"--environment-json\"]",
+          "valueRoot": "sha256:09bf11371bda0de11db306659ca91d2df25722644725dece218e5164494b6c17"
+        }
+      }
     },
     {
       "category": "cli-option",
@@ -16456,7 +16496,7 @@
         "evidence": {
           "path": ".buildchain/promotion-shell-routing.json",
           "selector": "$",
-          "valueRoot": "sha256:a51d549213a02ff2a4b37e5bdffab4fb8e63c9c90de40c6ee17050933f7b999a"
+          "valueRoot": "sha256:fabb00aea01c20f84f0b4e7300010dbca1ba9b3cbce3fe27014ed9da8d394a55"
         }
       }
     },
@@ -17694,39 +17734,47 @@
     },
     {
       "category": "documented-module",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "documented-module:./publication-rehearsal-projection",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"]",
         "valueRoot": "sha256:a886965f69107bdafe3116a5d981bea7b712cf55045d59308666e68b0f629593"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "documented-module:./publication-rehearsal-projection",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"]",
+          "valueRoot": "sha256:01e30a4b297b5e1043b4efbcf1aeac1fcebdb963b4a42e409626c168a1f97590"
+        }
+      }
     },
     {
       "category": "documented-module",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "documented-module:./publication-rehearsal-runtime",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"]",
         "valueRoot": "sha256:f76a159334686f3dee362cc7b760fc5fd81d36762897739b8fd37807443bd685"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "documented-module:./publication-rehearsal-runtime",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"]",
+          "valueRoot": "sha256:920e674e370588ead2303ebabe25589dd83bd02f4d1c618746407aa88f952121"
+        }
+      }
     },
     {
       "category": "documented-module",
@@ -17922,7 +17970,7 @@
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "exports[export=\"./release-passport\"]",
-          "valueRoot": "sha256:ea713daab4a30ddc35b5b53eb182f5bbe4a4c1d93e3d3174b36d3c0469928525"
+          "valueRoot": "sha256:a71c9aa47d55d8870629c6e7b902f503e0bd5605c790cc77586475424faa1b12"
         }
       }
     },
@@ -18120,7 +18168,7 @@
         "evidence": {
           "path": "dist/site/buildchain-contract.json",
           "selector": "$",
-          "valueRoot": "sha256:bac192d40f43c2f807c26212a0431fcedb64354a853e688072d7e614eb6a2b27"
+          "valueRoot": "sha256:567d135aa16d82f1e1a508e12c054d92321bb37bdf4efeca52e7e136cc473948"
         }
       }
     },
@@ -18142,7 +18190,7 @@
         "evidence": {
           "path": "dist/site/capability-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:7b4c4d79e3c5fd00fe31f04045c18fb00a8ca31ce417edd41a2d165826854a3a"
+          "valueRoot": "sha256:05b57916a3cf097e4c78ee8b5a9122fde54acd143a221d48359202ec06cdb980"
         }
       }
     },
@@ -18164,7 +18212,7 @@
         "evidence": {
           "path": "dist/site/cli-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:40118823af1b358a043ac2b02ef8808a1a541587d974a957277fcda06fedd479"
+          "valueRoot": "sha256:0ebb167cb30c3b5862f14e1f7790e09eb809719c8b7e84903791db60b67c0d4f"
         }
       }
     },
@@ -18186,7 +18234,7 @@
         "evidence": {
           "path": "dist/site/controller-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:4a867c867e08c324f3c8f55ed16d666f15cf8d4fa80be0705bf78bd0f38395a9"
+          "valueRoot": "sha256:c2a7689dd9397d8ee5b34258c45cd7e75ff8c53bc2a283c8d26373be7043dc45"
         }
       }
     },
@@ -18208,7 +18256,7 @@
         "evidence": {
           "path": "dist/site/kfd-claims.json",
           "selector": "$",
-          "valueRoot": "sha256:b0567507ddff7625bea85b9e1736e031a18429c7ce34c38d220d9fb3485b200e"
+          "valueRoot": "sha256:55757e170b0fa799b294bb4dff999c133045d23cb709ca780ec0518b5ef1a465"
         }
       }
     },
@@ -18230,7 +18278,7 @@
         "evidence": {
           "path": "dist/site/manual-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:8c7a630fc511fb5ea4e0a49510d10686aef9160c495a79dd8f1054a4a6785a58"
+          "valueRoot": "sha256:bbf69ce902d03f4c19f3f3d7f752a09c54d1c8a0878246e9d2e039057fec461c"
         }
       }
     },
@@ -18252,7 +18300,7 @@
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:3830897da708b511a8870de72cab7e42ccb3b312ec85b3423410818a4b75436f"
+          "valueRoot": "sha256:e13408620bc6700566cba549cd30df71e4c9be093375e33c3ebae8b7a7b62fee"
         }
       }
     },
@@ -18274,7 +18322,7 @@
         "evidence": {
           "path": "dist/site/page-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:eea3ad24828b44ac76b93469c7ee846c3658199baf65752506f1d2ed03d27966"
+          "valueRoot": "sha256:d13aa1cfd509367f73b829e803291cc839deb5abac44aad7b63ab98d99bbe5e7"
         }
       }
     },
@@ -18296,7 +18344,7 @@
         "evidence": {
           "path": "dist/site/public-surface-audit.json",
           "selector": "$",
-          "valueRoot": "sha256:b1fa7b1f9b044d58233108027d8f28d8c9d73de360e0636da892bffc21cefd50"
+          "valueRoot": "sha256:23bce8f85266efc625f757f1b449c8204daf72f6fdcd9fca51a429401f536f0a"
         }
       }
     },
@@ -18516,7 +18564,7 @@
         "evidence": {
           "path": "dist/site/site-manifest.json",
           "selector": "$",
-          "valueRoot": "sha256:50c9837a7b96c1204f87a0b26122156acfecec17eaa06075106d165f0c07a949"
+          "valueRoot": "sha256:f643d4926b3eac8c7b64321a508cc7967ce5da11fb461c41ed124e868d612a3e"
         }
       }
     },
@@ -18538,7 +18586,7 @@
         "evidence": {
           "path": "dist/site/workflow-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:95907fb2719da772219a778594e54ceeae48ca3a1fe2e08796e278696f30edfd"
+          "valueRoot": "sha256:f29199c2fd3d066907784107988a66b4b7a4cade200c1e41ef096d3592b1a1a5"
         }
       }
     },
@@ -21476,39 +21524,47 @@
     },
     {
       "category": "node-export",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-export:./publication-rehearsal-projection",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "package.json",
         "selector": "exports[\"./publication-rehearsal-projection\"]",
         "valueRoot": "sha256:72b2b2a2c89e60554d6643457bb0e061ec6a8ac72bb26180e78f3f001249df6f"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-export:./publication-rehearsal-projection",
+        "evidence": {
+          "path": "package.json",
+          "selector": "exports[\"./publication-rehearsal-projection\"]",
+          "valueRoot": "sha256:72b2b2a2c89e60554d6643457bb0e061ec6a8ac72bb26180e78f3f001249df6f"
+        }
+      }
     },
     {
       "category": "node-export",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-export:./publication-rehearsal-runtime",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "package.json",
         "selector": "exports[\"./publication-rehearsal-runtime\"]",
         "valueRoot": "sha256:b1c001d2d606b2caf2c7cd73dbe1de0f17ad5836d49b1171e5a5701ba0381295"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-export:./publication-rehearsal-runtime",
+        "evidence": {
+          "path": "package.json",
+          "selector": "exports[\"./publication-rehearsal-runtime\"]",
+          "valueRoot": "sha256:b1c001d2d606b2caf2c7cd73dbe1de0f17ad5836d49b1171e5a5701ba0381295"
+        }
+      }
     },
     {
       "category": "node-export",
@@ -50244,435 +50300,531 @@
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#appendPublicationRehearsalToml",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"appendPublicationRehearsalToml\"]",
         "valueRoot": "sha256:0adfdc63ffc853103245f7422c9af0b2633594dfefb3ef2370d3e73d97be6a75"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#appendPublicationRehearsalToml",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"appendPublicationRehearsalToml\"]",
+          "valueRoot": "sha256:0adfdc63ffc853103245f7422c9af0b2633594dfefb3ef2370d3e73d97be6a75"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#assertPublicationRehearsalConfig",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"assertPublicationRehearsalConfig\"]",
         "valueRoot": "sha256:31c7ae9aff41e87595f99cbd154d3f6b87c21e08c9fd10dbac703a98671c1f4b"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#assertPublicationRehearsalConfig",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"assertPublicationRehearsalConfig\"]",
+          "valueRoot": "sha256:31c7ae9aff41e87595f99cbd154d3f6b87c21e08c9fd10dbac703a98671c1f4b"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#mergePublicationRehearsalAgentInstructions",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"mergePublicationRehearsalAgentInstructions\"]",
         "valueRoot": "sha256:0e23500ed663398030201a434c016b59c9dbe862301f09a1d631672450ac4016"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#mergePublicationRehearsalAgentInstructions",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"mergePublicationRehearsalAgentInstructions\"]",
+          "valueRoot": "sha256:0e23500ed663398030201a434c016b59c9dbe862301f09a1d631672450ac4016"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#projectPublicationRehearsalToml",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"projectPublicationRehearsalToml\"]",
         "valueRoot": "sha256:0b201bfb5daec3d12dfc1969130a1e552d69de1c2200bc71778789cc7aaf2e7c"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#projectPublicationRehearsalToml",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"projectPublicationRehearsalToml\"]",
+          "valueRoot": "sha256:0b201bfb5daec3d12dfc1969130a1e552d69de1c2200bc71778789cc7aaf2e7c"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#PUBLICATION_REHEARSAL_AGENT_SECTION_END",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"PUBLICATION_REHEARSAL_AGENT_SECTION_END\"]",
         "valueRoot": "sha256:36a53633f082e6e3d195c3bbb10055bd8d4165ed7daf7a2653c64a2b9b21a47a"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"PUBLICATION_REHEARSAL_AGENT_SECTION_END\"]",
+          "valueRoot": "sha256:36a53633f082e6e3d195c3bbb10055bd8d4165ed7daf7a2653c64a2b9b21a47a"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#PUBLICATION_REHEARSAL_AGENT_SECTION_START",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"PUBLICATION_REHEARSAL_AGENT_SECTION_START\"]",
         "valueRoot": "sha256:31b43d25776fe261e2f66c535481f278270076533e3851cb6a956a7aef76322b"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"PUBLICATION_REHEARSAL_AGENT_SECTION_START\"]",
+          "valueRoot": "sha256:31b43d25776fe261e2f66c535481f278270076533e3851cb6a956a7aef76322b"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#PUBLICATION_REHEARSAL_WORKFLOW_PATH",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"PUBLICATION_REHEARSAL_WORKFLOW_PATH\"]",
         "valueRoot": "sha256:7162f0aa8993f403833b72ff8f6edc9308a384746e1dc1585c00b07ae10d14e3"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"PUBLICATION_REHEARSAL_WORKFLOW_PATH\"]",
+          "valueRoot": "sha256:7162f0aa8993f403833b72ff8f6edc9308a384746e1dc1585c00b07ae10d14e3"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#publicationRehearsalAgentInstructions",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"publicationRehearsalAgentInstructions\"]",
         "valueRoot": "sha256:3a7698bf5fa0822c4549f0dac4da61d607db5bbd7dde715baa2fd4d5c1ad7b6c"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#publicationRehearsalAgentInstructions",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"publicationRehearsalAgentInstructions\"]",
+          "valueRoot": "sha256:3a7698bf5fa0822c4549f0dac4da61d607db5bbd7dde715baa2fd4d5c1ad7b6c"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#publicationRehearsalToml",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"publicationRehearsalToml\"]",
         "valueRoot": "sha256:ad286b154c2b5f618da4503c314e7d96dd2bb659b03f5a8652caba0f693780c9"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#publicationRehearsalToml",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"publicationRehearsalToml\"]",
+          "valueRoot": "sha256:ad286b154c2b5f618da4503c314e7d96dd2bb659b03f5a8652caba0f693780c9"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-projection#publicationRehearsalWorkflow",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"publicationRehearsalWorkflow\"]",
         "valueRoot": "sha256:c83e658cd10e5940382ee3fc00060110edee536319f717e0f142b2d4cbdf54a4"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-projection#publicationRehearsalWorkflow",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-projection\"].symbolIds[name=\"publicationRehearsalWorkflow\"]",
+          "valueRoot": "sha256:c83e658cd10e5940382ee3fc00060110edee536319f717e0f142b2d4cbdf54a4"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#createPublicationRehearsalCapsule",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"createPublicationRehearsalCapsule\"]",
         "valueRoot": "sha256:52fb49fe451bc184eec11d59fb4f4287f205209c859cd26b790cb32a871e5305"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#createPublicationRehearsalCapsule",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"createPublicationRehearsalCapsule\"]",
+          "valueRoot": "sha256:52fb49fe451bc184eec11d59fb4f4287f205209c859cd26b790cb32a871e5305"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#executePublicationRehearsal",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"executePublicationRehearsal\"]",
         "valueRoot": "sha256:ff93055a54892aade3f35ed955a78a651de314895688283d4987432438789309"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#executePublicationRehearsal",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"executePublicationRehearsal\"]",
+          "valueRoot": "sha256:ff93055a54892aade3f35ed955a78a651de314895688283d4987432438789309"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#normalizePublicationRehearsalCapsule",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"normalizePublicationRehearsalCapsule\"]",
         "valueRoot": "sha256:6d6ae63cc630ad3d979504bd7b7c1d19d8b398585e0566a4ec92f61dbb6abcb4"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#normalizePublicationRehearsalCapsule",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"normalizePublicationRehearsalCapsule\"]",
+          "valueRoot": "sha256:6d6ae63cc630ad3d979504bd7b7c1d19d8b398585e0566a4ec92f61dbb6abcb4"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PUBLICATION_REHEARSAL_CAPSULE_CONTRACT\"]",
         "valueRoot": "sha256:63ab222cf266bcd5bcc1bb9468b49cdb81fb1cce7a6e3bb5684fc78e66810b7d"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PUBLICATION_REHEARSAL_CAPSULE_CONTRACT\"]",
+          "valueRoot": "sha256:63ab222cf266bcd5bcc1bb9468b49cdb81fb1cce7a6e3bb5684fc78e66810b7d"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#PUBLICATION_REHEARSAL_COMMAND",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PUBLICATION_REHEARSAL_COMMAND\"]",
         "valueRoot": "sha256:8d4d92f1f0dc31ff88477398ee7742c4adac4883e2c22bf53f60359b871f81e5"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#PUBLICATION_REHEARSAL_COMMAND",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PUBLICATION_REHEARSAL_COMMAND\"]",
+          "valueRoot": "sha256:8d4d92f1f0dc31ff88477398ee7742c4adac4883e2c22bf53f60359b871f81e5"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT\"]",
         "valueRoot": "sha256:5408c3ddd2a45721df2647be12a69ecd0afd7726398e70742e64c012a8870085"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT\"]",
+          "valueRoot": "sha256:5408c3ddd2a45721df2647be12a69ecd0afd7726398e70742e64c012a8870085"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT\"]",
         "valueRoot": "sha256:fcada56f11967df99d4025bfcc66ac4ca197e0d1a652e8deaf78475d3291aada"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT\"]",
+          "valueRoot": "sha256:fcada56f11967df99d4025bfcc66ac4ca197e0d1a652e8deaf78475d3291aada"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#publicationRehearsalBindingRoot",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"publicationRehearsalBindingRoot\"]",
         "valueRoot": "sha256:2c64ab8df3f7b71b6713b869c42e22847ab65c2129cb9fda0c98c96833613078"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#publicationRehearsalBindingRoot",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"publicationRehearsalBindingRoot\"]",
+          "valueRoot": "sha256:2c64ab8df3f7b71b6713b869c42e22847ab65c2129cb9fda0c98c96833613078"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#publicationRehearsalDiagnostic",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"publicationRehearsalDiagnostic\"]",
         "valueRoot": "sha256:ec7079068a22fd2e344a3be341e500cf5e867ef99e6c99e24c3c418fe25d4aab"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#publicationRehearsalDiagnostic",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"publicationRehearsalDiagnostic\"]",
+          "valueRoot": "sha256:ec7079068a22fd2e344a3be341e500cf5e867ef99e6c99e24c3c418fe25d4aab"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#PublicationRehearsalError",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PublicationRehearsalError\"]",
         "valueRoot": "sha256:cb5b63bf4b730a70fa2a9f1409e41c9551c332a760c04fd88cb8412e84091fde"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#PublicationRehearsalError",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"PublicationRehearsalError\"]",
+          "valueRoot": "sha256:cb5b63bf4b730a70fa2a9f1409e41c9551c332a760c04fd88cb8412e84091fde"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"RELEASE_LOCAL_CONSTRUCTIBILITY_ADR\"]",
         "valueRoot": "sha256:c0c577df33e43a8c3a0135cf3e6548adf7f12e9da5baec9e72c9cae8a8387893"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"RELEASE_LOCAL_CONSTRUCTIBILITY_ADR\"]",
+          "valueRoot": "sha256:c0c577df33e43a8c3a0135cf3e6548adf7f12e9da5baec9e72c9cae8a8387893"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT\"]",
         "valueRoot": "sha256:3d2cc3f3bef40f13a9b5b97c01fe543329427d37583eab1bd5e592d036aac705"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT\"]",
+          "valueRoot": "sha256:3d2cc3f3bef40f13a9b5b97c01fe543329427d37583eab1bd5e592d036aac705"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#resolvePublicationRehearsalFile",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"resolvePublicationRehearsalFile\"]",
         "valueRoot": "sha256:1eca55c30f87e02bfddb0da384be77d584ceb3dae3e40dfb74d2e0119365e93e"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#resolvePublicationRehearsalFile",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"resolvePublicationRehearsalFile\"]",
+          "valueRoot": "sha256:1eca55c30f87e02bfddb0da384be77d584ceb3dae3e40dfb74d2e0119365e93e"
+        }
+      }
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./publication-rehearsal-runtime#verifyPublicationRehearsalCapsule",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"verifyPublicationRehearsalCapsule\"]",
         "valueRoot": "sha256:b46577851ed0007d681a5e457e45a6a611a61ee7bf6f0e45e978052a5e87e0da"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./publication-rehearsal-runtime#verifyPublicationRehearsalCapsule",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./publication-rehearsal-runtime\"].symbolIds[name=\"verifyPublicationRehearsalCapsule\"]",
+          "valueRoot": "sha256:b46577851ed0007d681a5e457e45a6a611a61ee7bf6f0e45e978052a5e87e0da"
+        }
+      }
     },
     {
       "category": "node-symbol",
@@ -52546,21 +52698,25 @@
     },
     {
       "category": "node-symbol",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "node-symbol:./release-passport#releasePassportKfdAdopterSourceSha",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./release-passport\"].symbolIds[name=\"releasePassportKfdAdopterSourceSha\"]",
         "valueRoot": "sha256:500227066543f5a86b2df6eebfb15356c9e837a4013a0cf30216e26e87063f66"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "node-symbol:./release-passport#releasePassportKfdAdopterSourceSha",
+        "evidence": {
+          "path": "dist/site/node-api-registry.json",
+          "selector": "exports[export=\"./release-passport\"].symbolIds[name=\"releasePassportKfdAdopterSourceSha\"]",
+          "valueRoot": "sha256:500227066543f5a86b2df6eebfb15356c9e837a4013a0cf30216e26e87063f66"
+        }
+      }
     },
     {
       "category": "node-symbol",
@@ -70054,39 +70210,47 @@
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:.build#buildchain-contract-expected-channel",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\".build\"].inputs[\"buildchain-contract-expected-channel\"]",
         "valueRoot": "sha256:54102d6722a58d4c4d3d0668866f19e73f2fc189cf5f4729a5ee540d695d1c1d"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:.build#buildchain-contract-expected-channel",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\".build\"].inputs[\"buildchain-contract-expected-channel\"]",
+          "valueRoot": "sha256:54102d6722a58d4c4d3d0668866f19e73f2fc189cf5f4729a5ee540d695d1c1d"
+        }
+      }
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:.build#buildchain-contract-expected-major",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\".build\"].inputs[\"buildchain-contract-expected-major\"]",
         "valueRoot": "sha256:d69f4535a5a8c6c9d36ec17041ae33fdd26bd084be3df19c32957e2775764003"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:.build#buildchain-contract-expected-major",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\".build\"].inputs[\"buildchain-contract-expected-major\"]",
+          "valueRoot": "sha256:d69f4535a5a8c6c9d36ec17041ae33fdd26bd084be3df19c32957e2775764003"
+        }
+      }
     },
     {
       "category": "workflow-input",
@@ -74930,21 +75094,25 @@
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:.release-candidate-promote#release-passport-adopter-delivery-json",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\".release-candidate-promote\"].inputs[\"release-passport-adopter-delivery-json\"]",
         "valueRoot": "sha256:8aa74ba8fbacd16a188d406488bc5b811768d2181dd192f12f433e3661846432"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:.release-candidate-promote#release-passport-adopter-delivery-json",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\".release-candidate-promote\"].inputs[\"release-passport-adopter-delivery-json\"]",
+          "valueRoot": "sha256:8aa74ba8fbacd16a188d406488bc5b811768d2181dd192f12f433e3661846432"
+        }
+      }
     },
     {
       "category": "workflow-input",
@@ -75234,21 +75402,25 @@
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:.release-candidate-promote#release-passport-kfd-adopter-manifest-gate-json",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\".release-candidate-promote\"].inputs[\"release-passport-kfd-adopter-manifest-gate-json\"]",
         "valueRoot": "sha256:a7122de0a072d2504643d6213186fe80a1ff88e7641bbd7acf621ddecb45aede"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:.release-candidate-promote#release-passport-kfd-adopter-manifest-gate-json",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\".release-candidate-promote\"].inputs[\"release-passport-kfd-adopter-manifest-gate-json\"]",
+          "valueRoot": "sha256:a7122de0a072d2504643d6213186fe80a1ff88e7641bbd7acf621ddecb45aede"
+        }
+      }
     },
     {
       "category": "workflow-input",
@@ -78002,39 +78174,47 @@
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:.web-surface#buildchain-contract-expected-channel",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\".web-surface\"].inputs[\"buildchain-contract-expected-channel\"]",
         "valueRoot": "sha256:54102d6722a58d4c4d3d0668866f19e73f2fc189cf5f4729a5ee540d695d1c1d"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:.web-surface#buildchain-contract-expected-channel",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\".web-surface\"].inputs[\"buildchain-contract-expected-channel\"]",
+          "valueRoot": "sha256:54102d6722a58d4c4d3d0668866f19e73f2fc189cf5f4729a5ee540d695d1c1d"
+        }
+      }
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:.web-surface#buildchain-contract-expected-major",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\".web-surface\"].inputs[\"buildchain-contract-expected-major\"]",
         "valueRoot": "sha256:d69f4535a5a8c6c9d36ec17041ae33fdd26bd084be3df19c32957e2775764003"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:.web-surface#buildchain-contract-expected-major",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\".web-surface\"].inputs[\"buildchain-contract-expected-major\"]",
+          "valueRoot": "sha256:d69f4535a5a8c6c9d36ec17041ae33fdd26bd084be3df19c32957e2775764003"
+        }
+      }
     },
     {
       "category": "workflow-input",
@@ -82636,21 +82816,25 @@
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:dev-pr-auto-merge#defer-landing",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"dev-pr-auto-merge\"].inputs[\"defer-landing\"]",
         "valueRoot": "sha256:1d68fe37b3e7d9d9a0cf90fe4b9312eeb6e50dcbdb5ef8b22adbab43d5d45ae8"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:dev-pr-auto-merge#defer-landing",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"dev-pr-auto-merge\"].inputs[\"defer-landing\"]",
+          "valueRoot": "sha256:1d68fe37b3e7d9d9a0cf90fe4b9312eeb6e50dcbdb5ef8b22adbab43d5d45ae8"
+        }
+      }
     },
     {
       "category": "workflow-input",
@@ -88220,21 +88404,25 @@
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:release-candidate-promote#release-passport-adopter-delivery-json",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"release-candidate-promote\"].inputs[\"release-passport-adopter-delivery-json\"]",
         "valueRoot": "sha256:8aa74ba8fbacd16a188d406488bc5b811768d2181dd192f12f433e3661846432"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:release-candidate-promote#release-passport-adopter-delivery-json",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"release-candidate-promote\"].inputs[\"release-passport-adopter-delivery-json\"]",
+          "valueRoot": "sha256:8aa74ba8fbacd16a188d406488bc5b811768d2181dd192f12f433e3661846432"
+        }
+      }
     },
     {
       "category": "workflow-input",
@@ -88524,21 +88712,25 @@
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:release-candidate-promote#release-passport-kfd-adopter-manifest-gate-json",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"release-candidate-promote\"].inputs[\"release-passport-kfd-adopter-manifest-gate-json\"]",
         "valueRoot": "sha256:a7122de0a072d2504643d6213186fe80a1ff88e7641bbd7acf621ddecb45aede"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:release-candidate-promote#release-passport-kfd-adopter-manifest-gate-json",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"release-candidate-promote\"].inputs[\"release-passport-kfd-adopter-manifest-gate-json\"]",
+          "valueRoot": "sha256:a7122de0a072d2504643d6213186fe80a1ff88e7641bbd7acf621ddecb45aede"
+        }
+      }
     },
     {
       "category": "workflow-input",
@@ -89576,75 +89768,91 @@
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:release-tail#capsule-contract",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"release-tail\"].inputs[\"capsule-contract\"]",
         "valueRoot": "sha256:a5b1f2e590fc2bada0aa0b6d19e0d31d9de006e3907faa050c46ac01c7ec242a"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:release-tail#capsule-contract",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"release-tail\"].inputs[\"capsule-contract\"]",
+          "valueRoot": "sha256:a5b1f2e590fc2bada0aa0b6d19e0d31d9de006e3907faa050c46ac01c7ec242a"
+        }
+      }
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:release-tail#capsule-path",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"release-tail\"].inputs[\"capsule-path\"]",
         "valueRoot": "sha256:7e15eebdc6930e2a9d25a0a6e54e8d32c966b7491813862015d9ff2e83cf18e7"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:release-tail#capsule-path",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"release-tail\"].inputs[\"capsule-path\"]",
+          "valueRoot": "sha256:7e15eebdc6930e2a9d25a0a6e54e8d32c966b7491813862015d9ff2e83cf18e7"
+        }
+      }
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:release-tail#capsule-root",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"release-tail\"].inputs[\"capsule-root\"]",
         "valueRoot": "sha256:8c9e0b3110d6f102b4ab9222267c999eed41b759d0f2533de27c3288bf651c0f"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:release-tail#capsule-root",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"release-tail\"].inputs[\"capsule-root\"]",
+          "valueRoot": "sha256:8c9e0b3110d6f102b4ab9222267c999eed41b759d0f2533de27c3288bf651c0f"
+        }
+      }
     },
     {
       "category": "workflow-input",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-input:release-tail#evidence-path",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"release-tail\"].inputs[\"evidence-path\"]",
         "valueRoot": "sha256:b08afadca177e9990ef19ce4fb9ec353c60900c5db9ebc09d0a213224977d6d0"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-input:release-tail#evidence-path",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"release-tail\"].inputs[\"evidence-path\"]",
+          "valueRoot": "sha256:b08afadca177e9990ef19ce4fb9ec353c60900c5db9ebc09d0a213224977d6d0"
+        }
+      }
     },
     {
       "category": "workflow-input",
@@ -97942,39 +98150,47 @@
     },
     {
       "category": "workflow-output",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-output:release-tail#binding-root",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"release-tail\"].outputs[\"binding-root\"]",
         "valueRoot": "sha256:e9244160206b7ebf46b780a9d9f5550b46448ce5fca7fa6899397c03d99c15c9"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-output:release-tail#binding-root",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"release-tail\"].outputs[\"binding-root\"]",
+          "valueRoot": "sha256:e9244160206b7ebf46b780a9d9f5550b46448ce5fca7fa6899397c03d99c15c9"
+        }
+      }
     },
     {
       "category": "workflow-output",
-      "disposition": "owned-missing",
+      "disposition": "v4-native",
       "id": "workflow-output:release-tail#evidence-root",
-      "negativeProbe": "removing the owner or changing the residual identity fails validation",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-      "positiveProbe": "residual identity and owner match the closed expected-residual set",
-      "residual": {
-        "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
-        "requiredOutcome": "add an executable v4 compatibility route or an explicit source-bound migration"
-      },
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "workflows[id=\"release-tail\"].outputs[\"evidence-root\"]",
         "valueRoot": "sha256:b2a14e6a4d79189b9a7c0f68ec5f10af0cb4e9765b1ad62d1df4525f794b023e"
       },
-      "v4Route": null
+      "v4Route": {
+        "capabilityId": "workflow-output:release-tail#evidence-root",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"release-tail\"].outputs[\"evidence-root\"]",
+          "valueRoot": "sha256:b2a14e6a4d79189b9a7c0f68ec5f10af0cb4e9765b1ad62d1df4525f794b023e"
+        }
+      }
     },
     {
       "category": "workflow-output",
@@ -102017,9 +102233,9 @@
     },
     "liveV4": {
       "branch": "origin/dev/v4/v4.0",
-      "commit": "08af14ed7dcfaa260401b517d1dd4b0c094b3add",
+      "commit": "731074a8c8d62d0b34b7f50d93000ee2ad0a89d5",
       "role": "execution-time-protected-target",
-      "tree": "88996cce206c2b900c703295d707914bb4980b99"
+      "tree": "314376d11ac818ee73e4e8f40aab2ce37aa5eb6e"
     },
     "priorFamilyV3": {
       "branch": "origin/dev/v3/v3.0",
@@ -102053,10 +102269,9 @@
     "dispositionCounts": {
       "compatibility-adapter": 12,
       "executable-migration": 6,
-      "owned-missing": 54,
-      "v4-native": 4576
+      "v4-native": 4630
     },
-    "residualCount": 54,
+    "residualCount": 0,
     "unknownCount": 0,
     "unownedCount": 0
   }

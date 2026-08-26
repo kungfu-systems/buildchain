@@ -20,7 +20,7 @@ test("live v3 inventory covers every declared category with no unknown or unowne
   assert.equal(inventory.reverseHistory.changedPathCount, 82);
   assert.equal(inventory.summary.unknownCount, 0);
   assert.equal(inventory.summary.unownedCount, 0);
-  assert.ok(inventory.summary.residualCount > 0);
+  assert.equal(inventory.summary.residualCount, 0);
   assert.ok(
     inventory.capabilities.every(
       (row) => row.positiveProbe && row.negativeProbe,
