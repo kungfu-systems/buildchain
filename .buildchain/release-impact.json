@@ -472,6 +472,13 @@
       "class": "release-governance",
       "rationale": "A successful registry publication that intentionally pauses for protected version-state finalization records a partial controller receipt without failing the promotion workflow; incomplete non-finalization paths remain fail-closed.",
       "source": ".github/workflows/.release-candidate-promote.yml"
+    },
+    {
+      "id": "declarative-demo-version-probe",
+      "impact": "patch",
+      "class": "release-verification",
+      "rationale": "The exact-tag declarative demo now probes the active v4 package major instead of the retired v3 line, and a repository test binds both pre-upload and captured version checks to package.json so future release-line drift fails before publication.",
+      "source": ".buildchain/auditable-demo.json"
     }
   ],
   "classification": "major",
