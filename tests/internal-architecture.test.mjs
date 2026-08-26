@@ -19,13 +19,13 @@ const index = JSON.parse(
 
 test("internal architecture index covers implementations, tests, and dependency direction", () => {
   assert.deepEqual(checkInternalArchitecture({ root, index }), {
-    schemaVersion: 1,
-    capabilities: 22,
-    implementations: 151,
-    repositorySources: 429,
-    ownedSources: 429,
+    schemaVersion: 2,
+    capabilities: 23,
+    implementations: 157,
+    repositorySources: 432,
+    ownedSources: 432,
     excludedSources: 0,
-    dependencyEdges: 365,
+    dependencyEdges: 366,
     dependencyRules: 4,
     dependencyCycles: 0,
   });
@@ -92,6 +92,24 @@ test("internal architecture check rejects a capability without regression tests"
   assert.throws(
     () => checkInternalArchitecture({ root, index: missingTests }),
     /promotion-policy: test mapping is empty/,
+  );
+});
+
+test("internal architecture check requires generated-output mappings", () => {
+  const missingOutputs = structuredClone(index);
+  delete missingOutputs.capabilities[0].generatedOutputs;
+  assert.throws(
+    () => checkInternalArchitecture({ root, index: missingOutputs }),
+    /promotion-policy: generated output mapping is missing/,
+  );
+});
+
+test("internal architecture check requires minimal validation commands", () => {
+  const missingValidation = structuredClone(index);
+  missingValidation.capabilities[0].validationCommands = [];
+  assert.throws(
+    () => checkInternalArchitecture({ root, index: missingValidation }),
+    /promotion-policy: validation command mapping is empty/,
   );
 });
 
