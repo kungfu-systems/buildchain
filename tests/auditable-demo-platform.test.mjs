@@ -214,6 +214,22 @@ function capture(t, demoId, transformScenario = null) {
   return { ...value, output };
 }
 
+test("repository demo version probes follow the active package major", () => {
+  const packageVersion = JSON.parse(
+    fs.readFileSync(path.join(ROOT, "package.json"), "utf8"),
+  ).version;
+  const declared = JSON.parse(
+    fs.readFileSync(path.join(ROOT, ".buildchain/auditable-demo.json"), "utf8"),
+  );
+  const expectedMajorProbe = `${packageVersion.split(".")[0]}.`;
+  const versionStep = declared.demos
+    .flatMap((demo) => demo.steps)
+    .find((step) => step.id === "verify-version");
+
+  assert.deepEqual(declared.transportSmoke.stdoutIncludes, [expectedMajorProbe]);
+  assert.deepEqual(versionStep?.stdoutIncludes, [expectedMajorProbe]);
+});
+
 test("scenario contract accepts multiple demos and rejects shell command authority", () => {
   const admitted = validateScenario(scenario());
   assert.deepEqual(admitted.demos.map((entry) => entry.id), ["shared-state", "independent"]);
