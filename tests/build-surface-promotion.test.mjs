@@ -223,7 +223,7 @@ test("recovered promotion exposes the pnpm shim before version-state verificatio
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
-  const promoteJob = workflow.slice(workflow.indexOf("  promote:"));
+  const promoteJob = workflow.slice(workflow.indexOf("  legacy-promote:"));
   const runtimeInstallIndex = promoteJob.indexOf(
     "- name: Install Buildchain runtime dependencies",
   );

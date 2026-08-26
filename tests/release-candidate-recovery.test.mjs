@@ -1129,7 +1129,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   );
   assert.match(
     advanced,
-    /release-passport-v4-runtime-resume-evidence-command: \$\{\{ steps\.rc\.outputs\.v4-runtime-resume-finalize-command \}\}/,
+    /release-passport-v4-runtime-resume-evidence-command: \$\{\{ steps\.rc\.outputs\.release-candidate-publication-qualification-path == '' && steps\.rc\.outputs\.v4-runtime-resume-finalize-command \|\| '' \}\}/,
   );
   assert.match(
     alphaPromotion,

@@ -14,19 +14,19 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:5de1c69386510b74b17eb70141b8bdd07063d62c504f91db5e84b67c6d4b64a2",
+    "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "8860ce0380d8cdfb4c90a668caa56f2a09d2a420202e797208e75236f5e6c6e4",
+    "sha256": "369ffb754bef728906cd78f6d9c29560645fbb1f8109b2c7c49c05a423450fad",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 76,
-      "actionCount": 7,
-      "sitePageCount": 82,
+      "workflowCount": 77,
+      "actionCount": 8,
+      "sitePageCount": 84,
       "docCommandRefCount": 1049,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "8860ce0380d8cdfb4c90a668caa56f2a09d2a420202e797208e75236f5e6c6e4",
+      "sha256": "369ffb754bef728906cd78f6d9c29560645fbb1f8109b2c7c49c05a423450fad",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 76,
-        "actionCount": 7,
-        "sitePageCount": 82,
+        "workflowCount": 77,
+        "actionCount": 8,
+        "sitePageCount": 84,
         "docCommandRefCount": 1049,
         "failureCount": 0
       },
@@ -362,6 +362,18 @@
           "kind": "documentation",
           "sourcePath": "actions/run-lifecycle/README.md",
           "evidencePath": "actions/run-lifecycle/README.md",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "plane": "action"
+        },
+        {
+          "id": "doc:actions/v4-release-candidate-promote/README.md",
+          "name": "actions/v4-release-candidate-promote/README.md",
+          "kind": "documentation",
+          "sourcePath": "actions/v4-release-candidate-promote/README.md",
+          "evidencePath": "actions/v4-release-candidate-promote/README.md",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -1675,6 +1687,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./v4-publication-rehearsal"
+        },
+        {
+          "id": "export:./v4-publication-qualification",
+          "name": "@kungfu-tech/buildchain/v4-publication-qualification",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-publication-qualification.js",
+          "evidencePath": "packages/core/v4-publication-qualification.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-publication-qualification"
         },
         {
           "id": "export:./adopter-delivery-gate",
@@ -4094,7 +4118,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 118,
+          "inputCount": 119,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4136,6 +4160,7 @@
             "promotion-shell-ref",
             "promotion-shell-sha",
             "promotion-target-ref",
+            "provider-failure-after-capability",
             "publication-admission-json",
             "publication-authority-workflow-path",
             "publication-auto-admission",
@@ -5477,7 +5502,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 103,
+          "inputCount": 104,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -5505,6 +5530,7 @@
             "github-release-payload-patterns",
             "github-release-title",
             "package-manager",
+            "provider-failure-after-capability",
             "publication-admission-json",
             "publication-auto-admission",
             "publication-auto-no-gate",
@@ -5796,6 +5822,20 @@
             "input-path",
             "node-version"
           ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:v4-declarative-release-tail-dogfood",
+          "name": "workflow:v4-declarative-release-tail-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+          "evidencePath": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -6165,6 +6205,29 @@
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
+          "id": "action:v4-release-candidate-promote",
+          "name": "action:v4-release-candidate-promote",
+          "kind": "action",
+          "sourcePath": "actions/v4-release-candidate-promote/action.yml",
+          "evidencePath": "actions/v4-release-candidate-promote/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 8,
+          "inputs": [
+            "artifact-paths",
+            "candidate-passport-path",
+            "failure-after-capability",
+            "publication-qualification-path",
+            "repository",
+            "stage-capsules-path",
+            "state-path",
+            "token"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:validate-config",
           "name": "action:validate-config",
           "kind": "action",
@@ -6245,6 +6308,18 @@
         {
           "id": "site-page:action:run-lifecycle",
           "name": "site-page:action:run-lifecycle",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
+          "id": "site-page:action:v4-release-candidate-promote",
+          "name": "site-page:action:v4-release-candidate-promote",
           "kind": "site-page",
           "sourcePath": "dist/site/page-registry.json",
           "evidencePath": "dist/site/page-registry.json",
@@ -7047,6 +7122,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-declarative-release-tail-migration",
+          "name": "site-page:manual:v4-declarative-release-tail-migration",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-delivery-warrant-read-candidate",
           "name": "site-page:manual:v4-delivery-warrant-read-candidate",
           "kind": "site-page",
@@ -7337,6 +7424,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 472
+    "publicSurfaceCount": 478
   }
 }

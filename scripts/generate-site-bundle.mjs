@@ -66,10 +66,15 @@ const RELEASE_TAIL_CAPABILITIES_SCHEMA =
   "schemas/release-tail-capabilities-v1.schema.json";
 const RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE =
   "contracts/release-tail-capabilities-v1.schema.json";
+const V4_PUBLICATION_QUALIFICATION_SCHEMA =
+  "schemas/v4-publication-qualification-v1.schema.json";
+const V4_PUBLICATION_QUALIFICATION_SCHEMA_SOURCE =
+  "contracts/v4-publication-qualification-v1.schema.json";
 const PUBLICATION_REHEARSAL_SITE_SCHEMAS = [
   V4_PUBLICATION_REHEARSAL_SCHEMA,
   V4_ADOPTER_DELIVERY_SCHEMA,
   RELEASE_TAIL_CAPABILITIES_SCHEMA,
+  V4_PUBLICATION_QUALIFICATION_SCHEMA,
 ];
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
@@ -102,6 +107,7 @@ function siteFileBytes(name, value) {
   if (name === DEV_DELIVERY_AUTHORITY_SCHEMA) return readText(DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE);
   if (name === V4_COMPATIBILITY_FACTS_SCHEMA) return readText(V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE);
   if (name === V4_PUBLICATION_REHEARSAL_SCHEMA) return readText(V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE);
+  if (name === V4_PUBLICATION_QUALIFICATION_SCHEMA) return readText(V4_PUBLICATION_QUALIFICATION_SCHEMA_SOURCE);
   if (name === V4_ADOPTER_DELIVERY_SCHEMA) return readText(V4_ADOPTER_DELIVERY_SCHEMA_SOURCE);
   if (name === RELEASE_TAIL_CAPABILITIES_SCHEMA) return readText(RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE);
   return stableJson(value);

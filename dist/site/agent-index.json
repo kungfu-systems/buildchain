@@ -24,6 +24,7 @@
     "schemas/v4-publication-rehearsal-capsule-v1.schema.json",
     "schemas/v4-adopter-delivery-v1.schema.json",
     "schemas/release-tail-capabilities-v1.schema.json",
+    "schemas/v4-publication-qualification-v1.schema.json",
     "buildchain-contract.json",
     "kfd-upstream-aggregate.json",
     "kfd-claims.json",
