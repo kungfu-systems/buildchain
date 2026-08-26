@@ -1028,7 +1028,8 @@ for (const requiredSnippet of [
   "resume-candidate-run-id:",
   "resume-expected-source-tree:",
   "resume-buildchain-runtime-sha:",
-  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
+  "uses: kungfu-systems/buildchain/.github/workflows/" +
+    "release-candidate-promote.yml@alpha/v4/v4.0",
   "release-passport-buildchain-self-kfd: true",
   "buildchain-channel: alpha",
   "release-passport-impact-json: .buildchain/release-impact.json",
@@ -1259,7 +1260,6 @@ if (/runs-on:\s*self-hosted/.test(binaryDistributionWorkflow)) {
 if (!selfHostedRunnerSmokeWorkflow.includes("BUILDCHAIN_RUNNER_KIND: self-hosted")) {
   throw new Error("self-hosted smoke must remain a release-passport compatibility fixture");
 }
-
 const inventory = JSON.parse(
   fs.readFileSync(path.join(root, "tests/buildchain-inventory.json"), "utf8")
 );
