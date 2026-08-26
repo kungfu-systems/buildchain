@@ -1500,9 +1500,6 @@ test("version verification allows only discovered version-state file changes", (
     "README.md": "fixture\n",
   });
   run(["git", "init"], cwd);
-  const excludesFile = path.join(cwd, ".git", "test-excludes");
-  fs.writeFileSync(excludesFile, "");
-  run(["git", "config", "core.excludesFile", excludesFile], cwd);
   run(["git", "add", "."], cwd);
   run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
 
@@ -1625,6 +1622,9 @@ test("version verification ignores generated buildchain evidence", () => {
 test("version verification allows only the exact self-runtime dependency bridge", () => {
   const cwd = makeTempWorkspace({ "package.json": { name: "example", version: "1.0.0" } });
   run(["git", "init"], cwd);
+  const excludesFile = path.join(cwd, ".git", "test-excludes");
+  fs.writeFileSync(excludesFile, "");
+  run(["git", "config", "core.excludesFile", excludesFile], cwd);
   run(["git", "add", "."], cwd);
   run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
   const bridge = path.join(cwd, "node_modules");
