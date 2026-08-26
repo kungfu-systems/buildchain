@@ -613,11 +613,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
   assert.match(
     workflow,
-    /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/,
+    /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ steps\.expected-identity\.outputs\.expected-channel \}\}/,
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/,
+    /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ steps\.expected-identity\.outputs\.expected-major \}\}/,
   );
   assert.match(workflow, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME:/);
   assert.doesNotMatch(workflow, /contract-lock-compatible=true/);

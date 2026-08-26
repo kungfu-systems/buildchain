@@ -42,7 +42,8 @@ export async function runReleaseTailCli(args = process.argv.slice(2)) {
   const [mode = "status", ...options] = args;
   if (mode === "rehearse") {
     const capsulePath = flag(options, "capsule");
-    const candidateRoot = flag(options, "candidate-root");
+    const candidateRoot =
+      flag(options, "candidate-root") || flag(options, "capsule-root");
     const statePath = flag(options, "state");
     const evidencePath = flag(options, "evidence");
     for (const [name, value] of Object.entries({
@@ -59,6 +60,22 @@ export async function runReleaseTailCli(args = process.argv.slice(2)) {
         "local rehearsal --mode must be simulate or replay; authorized provider rehearsal uses the reusable workflow",
       );
     try {
+      const environmentInput = flag(options, "environment-json");
+      const environment = environmentInput
+        ? readJson(environmentInput, "--environment-json")
+        : {};
+      if (
+        !environment ||
+        typeof environment !== "object" ||
+        Array.isArray(environment) ||
+        Object.keys(environment).length > 0
+      ) {
+        const error = new Error(
+          "--environment-json must be an empty object; v4 binds every semantic input into the source-bound capsule",
+        );
+        error.code = "ambient-environment-forbidden";
+        throw error;
+      }
       const result = await executeV4PublicationRehearsal({
         capsule: readJson(capsulePath, "--capsule"),
         candidateRoot,
@@ -143,7 +160,7 @@ export async function runReleaseTailCli(args = process.argv.slice(2)) {
     return report;
   }
   throw new Error(
-    "usage: buildchain release-tail <plan|init|status|verify|compat|rehearse> [--declaration <json-or-path>] [--capsule <absolute-path>] [--candidate-root <absolute-path>] [--mode <simulate|replay>] [--state <absolute-path>] [--evidence <absolute-path>] [--hooks-json <json-or-path>] [--output <path>]",
+    "usage: buildchain release-tail <plan|init|status|verify|compat|rehearse> [--declaration <json-or-path>] [--capsule <absolute-path>] [--candidate-root <absolute-path>|--capsule-root <absolute-path>] [--environment-json <empty-json-or-path>] [--mode <simulate|replay>] [--state <absolute-path>] [--evidence <absolute-path>] [--hooks-json <json-or-path>] [--output <path>]",
   );
 }
 

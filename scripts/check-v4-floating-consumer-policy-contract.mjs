@@ -126,10 +126,17 @@ export function checkV4FloatingConsumerPolicyContract() {
     "Enforce v4 floating consumer policy",
     "Validate consumer package manager contract",
   ]);
+  const buildWorkflow = read(".github/workflows/.build.yml");
   if (
-    !read(".github/workflows/.build.yml").includes(
-      "BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ inputs.buildchain-expected-channel }}",
-    )
+    !buildWorkflow.includes("Normalize v3 expected identity aliases") ||
+    !buildWorkflow.includes(
+      "buildchain-contract-expected-channel conflicts with buildchain-expected-channel",
+    ) ||
+    !buildWorkflow.includes(
+      "BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ steps.expected-identity.outputs.expected-channel }}",
+    ) ||
+    buildWorkflow.indexOf("Normalize v3 expected identity aliases") >
+      buildWorkflow.indexOf("Enforce v4 floating consumer policy")
   )
     fail("channel builds must disambiguate dual-channel caller invocations");
   assertTrustGatedJobs(read(".github/workflows/.build.yml"), [

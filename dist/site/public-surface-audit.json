@@ -690,6 +690,8 @@
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-expected-channel",
+          "buildchain-contract-expected-major",
           "buildchain-contract-lock-path",
           "buildchain-expected-channel",
           "buildchain-expected-major",
@@ -760,7 +762,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 91,
+        "inputCount": 93,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1071,6 +1073,7 @@
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-adopter-delivery-json",
           "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
@@ -1084,6 +1087,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-gate-json",
           "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
@@ -1109,7 +1113,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 119,
+        "inputCount": 121,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1398,6 +1402,8 @@
           "build-command",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-expected-channel",
+          "buildchain-contract-expected-major",
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
@@ -1435,7 +1441,7 @@
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 41,
+        "inputCount": 43,
         "secrets": [
           "production-release-app-private-key"
         ],
@@ -1601,6 +1607,8 @@
           "buildchain-channel",
           "buildchain-contract-compatibility-policy",
           "buildchain-contract-drift-issue-mode",
+          "buildchain-contract-expected-channel",
+          "buildchain-contract-expected-major",
           "buildchain-contract-lock-path",
           "buildchain-expected-channel",
           "buildchain-expected-major",
@@ -1672,7 +1680,7 @@
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 94,
+        "inputCount": 96,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -2063,6 +2071,7 @@
           "buildchain-ref",
           "buildchain-repository",
           "closure-root",
+          "defer-landing",
           "delivery-class",
           "delivery-priority",
           "delivery-warrant-mode",
@@ -2099,7 +2108,7 @@
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "inputCount": 43,
+        "inputCount": 44,
         "secrets": [
           "github-token"
         ],
@@ -2631,6 +2640,7 @@
           "release-candidate-workflow-file",
           "release-candidate-workflow-name",
           "release-passport",
+          "release-passport-adopter-delivery-json",
           "release-passport-attachment-command",
           "release-passport-buildchain-self-kfd",
           "release-passport-evidence-command",
@@ -2644,6 +2654,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-gate-json",
           "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
@@ -2669,7 +2680,7 @@
           "target-sha",
           "trusted-publishing"
         ],
-        "inputCount": 104,
+        "inputCount": 106,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2822,7 +2833,11 @@
         "inputs": [
           "buildchain-ref",
           "candidate-root",
+          "capsule-contract",
+          "capsule-path",
+          "capsule-root",
           "declaration-path",
+          "evidence-path",
           "execute",
           "provider-bindings-path",
           "rehearsal-authority-path",
@@ -2831,18 +2846,20 @@
           "rehearsal-mode",
           "state-path"
         ],
-        "inputCount": 10,
+        "inputCount": 14,
         "secrets": [
           "http-token"
         ],
         "secretCount": 1,
         "outputs": [
+          "binding-root",
+          "evidence-root",
           "rehearsal-evidence-root",
           "state-root",
           "transaction-root",
           "transaction-state"
         ],
-        "outputCount": 4
+        "outputCount": 6
       },
       {
         "id": "release-verify",
@@ -3095,6 +3112,7 @@
           "github-release-artifact-paths",
           "github-release-notes",
           "github-release-title",
+          "plan-before-target-advance",
           "promote-only-release-candidate",
           "publication-capability-json",
           "publication-gate-aggregate-json",
@@ -3128,6 +3146,7 @@
           "release-candidate-version",
           "release-material-sha",
           "release-passport",
+          "release-passport-adopter-delivery-json",
           "release-passport-attachment-command",
           "release-passport-build-summary-path",
           "release-passport-buildchain-self-kfd",
@@ -3142,6 +3161,7 @@
           "release-passport-kfd-3-artifact-verify-command",
           "release-passport-kfd-3-artifact-witness-jsons",
           "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-gate-json",
           "release-passport-kfd-adopter-manifest-json",
           "release-passport-kfd-product-gate-jsons",
           "release-passport-kfd-support-matrix-json",
@@ -3166,14 +3186,18 @@
           "transaction-state-path",
           "verification-command"
         ],
-        "inputCount": 84
+        "inputCount": 87
       },
       {
         "id": "release-tail",
         "path": "actions/release-tail/action.yml",
         "inputs": [
           "candidate-root",
+          "capsule",
+          "capsule-contract",
+          "capsule-root",
           "declaration",
+          "evidence-path",
           "execute",
           "github-token",
           "http-token",
@@ -3184,7 +3208,7 @@
           "rehearsal-mode",
           "state-path"
         ],
-        "inputCount": 11
+        "inputCount": 15
       },
       {
         "id": "report-buildchain-issue",
@@ -8881,9 +8905,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "ea47a31ce7ef3577f23e22055ab7be7715c3af494bcef63f76b426f2883086aa",
-    "workflowRegistryDigest": "c5a19280118c9b1a071f10cbf5f97305a112187653f04d51af57b8d64eeb8c78",
-    "pageRegistryDigest": "5b2382c05cbd6438509dfea4547a933d205f310de3a3354caab88528da8b6c33"
+    "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
+    "workflowRegistryDigest": "dae1e93e05e2dc005f7c27df15d95831163507e214e27dc4f3e3f13ce3481086",
+    "pageRegistryDigest": "5bc289dca54c1294cc09bdb620c6ec37133c6fc8135c0143ae883d4f74dc7ef1"
   },
   "comparison": {
     "missingCliRegistry": [],

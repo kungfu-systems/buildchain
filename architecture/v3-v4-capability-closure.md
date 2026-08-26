@@ -51,6 +51,7 @@ is added to the reviewed residual set with an owner Assignment. It also rejects
 unknown dispositions, unowned rows, missing source evidence, missing positive
 or negative probes, and non-residual rows without an executable v4 route.
 
-This inventory does not by itself claim compatibility, stable publication, or
-v3 retirement. The owned residuals feed the ordered public-surface, runtime,
-cross-platform adopter, stable-channel, and final reconciliation Assignments.
+This inventory does not by itself claim stable publication or v3 retirement.
+Its public-surface rows now bind the exact Child 2 implementation candidate;
+runtime, cross-platform adopter, stable-channel, and final reconciliation
+remain separate ordered Assignments.

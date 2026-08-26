@@ -51,6 +51,8 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
   buildchain release-tail rehearse --capsule <absolute-path>
                                       --candidate-root <absolute-path>
+                                      [--capsule-root <absolute-path>]
+                                      [--environment-json <empty-json-or-path>]
                                       --mode <simulate|replay>
                                       --state <absolute-path>
                                       --evidence <absolute-path>
@@ -70,6 +72,7 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain release <inspect|recover|finalize|abort> ...
   buildchain transaction inspect ...
   buildchain collect github-release --tag <tag> [--repository <owner/repo>]
+                                    [--adopter-delivery-json <legacy-json-or-path>]
                                     [--assets-dir <dir>] [--assets-json <json-or-path>]
                                     [--release-json <json-or-path>] [--package-set-json <json-or-path>]
                                     [--product-name <name>]

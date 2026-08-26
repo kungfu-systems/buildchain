@@ -426,6 +426,14 @@ on:
         description: "Product-owned command that emits KFD-3 artifact-side collaboration-interface witness JSON"
         default: ""
         type: string
+      release-passport-adopter-delivery-json:
+        description: "Compatibility-only v3 adopter delivery input; v4 requires adopter manifest plus product gates"
+        default: ""
+        type: string
+      release-passport-kfd-adopter-manifest-gate-json:
+        description: "Compatibility-only v3 producer gate input; v4 derives the gate from source-bound evidence"
+        default: ""
+        type: string
       release-passport-kfd-adopter-manifest-json:
         description: "Standard full-cut adopter conformance manifest JSON path"
         default: ""
@@ -2129,6 +2137,8 @@ jobs:
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
           release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+          release-passport-adopter-delivery-json: ${{ inputs.release-passport-adopter-delivery-json }}
+          release-passport-kfd-adopter-manifest-gate-json: ${{ inputs.release-passport-kfd-adopter-manifest-gate-json }}
           release-passport-kfd-adopter-manifest-json: ${{ inputs.release-passport-kfd-adopter-manifest-json }}
           release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}
           release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
