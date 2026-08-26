@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import {
   collectHistoryRows,
@@ -78,6 +79,40 @@ const HISTORY_MIGRATION_PATHS = new Map([
     "tests/v4-tail-reseal-parity.test.mjs",
   ],
 ]);
+
+function capabilityCutAvailable(root, revision) {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${revision}^{commit}`], {
+      cwd: root,
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function ensureCapabilityCutsAvailable(root) {
+  const revisions = Object.values(V3_V4_CAPABILITY_CUTS);
+  const missing = revisions.filter(
+    (revision) => !capabilityCutAvailable(root, revision),
+  );
+  if (missing.length) {
+    execFileSync(
+      "git",
+      ["fetch", "--no-tags", "--depth=128", "origin", ...missing],
+      { cwd: root, stdio: "ignore" },
+    );
+  }
+  const unavailable = revisions.filter(
+    (revision) => !capabilityCutAvailable(root, revision),
+  );
+  if (unavailable.length) {
+    throw new Error(
+      `v3/v4 capability cuts are unavailable after a bounded origin fetch: ${unavailable.join(", ")}`,
+    );
+  }
+}
 const RUNTIME_SYMBOLS = Object.freeze([
   "createPublicationRehearsalCapsule",
   "executePublicationRehearsal",
@@ -243,6 +278,7 @@ function sourceCut(root, commit, role) {
 }
 
 export function buildV3V4CapabilityInventory({ root = process.cwd() } = {}) {
+  ensureCapabilityCutsAvailable(root);
   git(root, [
     "merge-base",
     "--is-ancestor",
