@@ -1154,7 +1154,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   );
   assert.match(
     refPromotion,
-    /promote-stable:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| 'v4' \}\}/,
+    /promote-stable:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| inputs\['recover-durable-transaction'\] == true && github\.sha \|\| 'v4' \}\}/,
   );
   assert.match(
     publicWorkflow,
