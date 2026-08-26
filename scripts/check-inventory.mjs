@@ -1044,6 +1044,9 @@ if (
 ) {
   throw new Error("buildchain ref promotion bootstrap must route both jobs through protected alpha");
 }
+if ((buildchainRefPromotionWorkflow.match(/declarative-release-tail: true/g) || []).length !== 2) {
+  throw new Error("buildchain ref promotion must enable both declarative release tails");
+}
 const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
 for (const requiredSnippet of [
   "release-passport-kfd-1-witness-jsons:",

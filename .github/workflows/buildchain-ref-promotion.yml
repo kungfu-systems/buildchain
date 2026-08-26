@@ -176,6 +176,7 @@ jobs:
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
       artifact-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '' || 'buildchain-package-*' }}
       publish-rematerialize-on-resume: true
+      declarative-release-tail: true
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
       standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
@@ -251,6 +252,7 @@ jobs:
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
       artifact-patterns: ""
       publish-rematerialize-on-resume: ${{ startsWith(github.event.workflow_run.head_branch || inputs['target-ref'], 'release/') }}
+      declarative-release-tail: true
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
       standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
