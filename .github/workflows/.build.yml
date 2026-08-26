@@ -872,13 +872,33 @@ jobs:
           persist-credentials: false
           path: .buildchain/consumer
 
+      - name: Normalize v3 expected identity aliases
+        id: expected-identity
+        shell: bash
+        run: |
+          if [ -n "${LEGACY_EXPECTED_CHANNEL}" ] && [ -n "${CURRENT_EXPECTED_CHANNEL}" ] && [ "${LEGACY_EXPECTED_CHANNEL}" != "${CURRENT_EXPECTED_CHANNEL}" ]; then
+            echo "::error::buildchain-contract-expected-channel conflicts with buildchain-expected-channel"
+            exit 1
+          fi
+          if [ -n "${LEGACY_EXPECTED_MAJOR}" ] && [ -n "${CURRENT_EXPECTED_MAJOR}" ] && [ "${LEGACY_EXPECTED_MAJOR}" != "${CURRENT_EXPECTED_MAJOR}" ]; then
+            echo "::error::buildchain-contract-expected-major conflicts with buildchain-expected-major"
+            exit 1
+          fi
+          echo "expected-channel=${CURRENT_EXPECTED_CHANNEL:-${LEGACY_EXPECTED_CHANNEL}}" >> "${GITHUB_OUTPUT}"
+          echo "expected-major=${CURRENT_EXPECTED_MAJOR:-${LEGACY_EXPECTED_MAJOR}}" >> "${GITHUB_OUTPUT}"
+        env:
+          CURRENT_EXPECTED_CHANNEL: ${{ inputs.buildchain-expected-channel }}
+          LEGACY_EXPECTED_CHANNEL: ${{ inputs.buildchain-contract-expected-channel }}
+          CURRENT_EXPECTED_MAJOR: ${{ inputs.buildchain-expected-major }}
+          LEGACY_EXPECTED_MAJOR: ${{ inputs.buildchain-contract-expected-major }}
+
       - name: Enforce v4 floating consumer policy
         id: v4-policy
         shell: bash
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.buildchain-visible-workflow }}
-          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ inputs.buildchain-expected-channel || inputs.buildchain-contract-expected-channel }}
+          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ steps.expected-identity.outputs.expected-channel }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
@@ -910,14 +930,6 @@ jobs:
         id: contract-lock
         shell: bash
         run: |
-          if [ -n "${LEGACY_EXPECTED_CHANNEL}" ] && [ -n "${CURRENT_EXPECTED_CHANNEL}" ] && [ "${LEGACY_EXPECTED_CHANNEL}" != "${CURRENT_EXPECTED_CHANNEL}" ]; then
-            echo "::error::buildchain-contract-expected-channel conflicts with buildchain-expected-channel"
-            exit 1
-          fi
-          if [ -n "${LEGACY_EXPECTED_MAJOR}" ] && [ -n "${CURRENT_EXPECTED_MAJOR}" ] && [ "${LEGACY_EXPECTED_MAJOR}" != "${CURRENT_EXPECTED_MAJOR}" ]; then
-            echo "::error::buildchain-contract-expected-major conflicts with buildchain-expected-major"
-            exit 1
-          fi
           if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
             node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
           else
@@ -955,12 +967,8 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ steps.runtime.outputs.runtime-class }}
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ steps.runtime.outputs.workflow-shell-ref }}
-          CURRENT_EXPECTED_CHANNEL: ${{ inputs.buildchain-expected-channel }}
-          LEGACY_EXPECTED_CHANNEL: ${{ inputs.buildchain-contract-expected-channel }}
-          CURRENT_EXPECTED_MAJOR: ${{ inputs.buildchain-expected-major }}
-          LEGACY_EXPECTED_MAJOR: ${{ inputs.buildchain-contract-expected-major }}
-          BUILDCHAIN_EXPECTED_CHANNEL: ${{ inputs.buildchain-expected-channel || inputs.buildchain-contract-expected-channel }}
-          BUILDCHAIN_EXPECTED_MAJOR: ${{ inputs.buildchain-expected-major || inputs.buildchain-contract-expected-major }}
+          BUILDCHAIN_EXPECTED_CHANNEL: ${{ steps.expected-identity.outputs.expected-channel }}
+          BUILDCHAIN_EXPECTED_MAJOR: ${{ steps.expected-identity.outputs.expected-major }}
           BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ steps.runtime.outputs.runtime-override == 'true' || steps.runtime.outputs.runtime-trust-decision == 'pinned-self' }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
