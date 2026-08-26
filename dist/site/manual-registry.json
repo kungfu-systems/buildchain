@@ -9,7 +9,7 @@
       "title": "Buildchain documentation map",
       "path": "docs/MAP.md",
       "plane": "use",
-      "digest": "sha256:a04d321dbec562807cb29b748039839d097a97d2c9d2f0e76d6d22f2845055ba",
+      "digest": "sha256:cbbc69f9f88b6f7fe8c065de495aa15c30bae46208a81e757b254d43bc6d8ebe",
       "capabilityGroup": "getting-started",
       "audience": [
         "agent",
@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:e8a597dae50b7907221d6ae8ed21eccee94001c3463e8671b49ec010f12d2b68",
+      "digest": "sha256:750df1c7346b119f1654ef151e1814401d0f768b65a27051df12d33fa831981d",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",

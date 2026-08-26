@@ -1959,6 +1959,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "provider-failure-after-capability": {
+          "classification": "included",
+          "source": "workflow-call-input"
+        },
         "publication-admission-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -2313,7 +2317,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:3c83524f650a4d04004400d3821dbbd081b8802035dc6004464cdcfd0b5cdfc3"
+      "digest": "sha256:665f27b24c6aaf813f071da1182c27ccf487df42cc0caee85afd9b5fc1bfab05"
     },
     {
       "schemaVersion": 1,
@@ -2506,5 +2510,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:eb9eb918b763f303baf313e153076e9d3158ca28a2e6cc558834a06e49d9d9cf"
+  "digest": "sha256:5250c4437ad5b1bac03d283d62ccbc0335a3fb7cb2ffe538dd9e42c3a192548a"
 }

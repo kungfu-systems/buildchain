@@ -5,12 +5,12 @@
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
   "repositoryBudgets": {
     "baselineRevision": "858dbe00b6206a8f356b4a12d2659bee7a72e71b",
-    "maxHandMaintainedSourceFiles": 432,
-    "maxHandMaintainedSourceLines": 161355,
-    "maxWorkflowFiles": 76,
-    "maxWorkflowLines": 26320,
-    "latestTransition": "Agent maintainability hardening adds real Rust, test, and workflow gates plus a generated capability change map.",
-    "latestTransitionRationale": "Against the current protected base, the single new hand-maintained generator produces an indexed Agent change map from the governed capability contract. Task source growth is confined to deterministic Rust and workflow metrics, test and exception gates, and their validation surface. The exact repository ceilings contain no unrelated headroom.",
+    "maxHandMaintainedSourceFiles": 436,
+    "maxHandMaintainedSourceLines": 162210,
+    "maxWorkflowFiles": 77,
+    "maxWorkflowLines": 26557,
+    "latestTransition": "V4 release-candidate promotion closes through the declarative provider plane.",
+    "latestTransitionRationale": "Four bounded source surfaces add the sealed publication qualification contract, earliest declarative admission, the dedicated v4 promotion Action, and built-in GitHub document providers. One manual-only dogfood workflow proves floating v4 contract-lock consumption and checkpoint resume. The existing v3 action and legacy lane retain their prior inputs and implementation. These exact 436-file, 162210-source-line, 77-workflow-file and 26557-workflow-line ceilings contain no unrelated headroom.",
     "rationale": "Bounded modules separate candidate, evidence, native proof and execution, canonical failure verification, closed-set execution transfer, process-boundary verification, Warrant state and qualification, authority state, qualification, Landing acquisition, verified-attempt admission, Landing settlement and fence validation, provider attempt and heartbeat readback, sealed terminal evidence, hosted heartbeat, resume, store, options, command-specific adapters, and CLI orchestration responsibilities. The protected delivery workflow gives candidate and seal jobs no provider write credential, recursively rejects transfer drift, scopes every transfer artifact to the exact provider run attempt, chains every durable heartbeat state and receipt root on a distinct hosted runner domain, and permits qualification or exact failure settlement only after the finalizer verifies live jobs and the latest durable authority state. Public Landing admission and heartbeat always perform non-injectable fresh exact-attempt provider readback, tolerate only a not-yet-materialized seal job while retaining exact native and duplicate-job rejection, and heartbeat-loss coordination never invokes GitHub's run-scoped cancellation API where a successor rerun could race. The hosted process boundary anchors trust in the kernel-resolved versioned Runner.Worker path while accepting an equivalent argv-zero spelling with the same basename; its public boundary marker is allowed only at the one exact non-secret value, so a forged value under the same credential-like name still fails closed. The credentialless transfer seal validates the rooted native reuse decision against the Warrant-bound source, closure, dependency, toolchain, environment and command inputs; qualifiedBase stays in the proof and decision where it is rooted and later independently rechecked, rather than being assumed on the Warrant schema. V2 mutation cannot initialize a second empty authority beside a legacy ref: migration reads and roots the canonical live v1 ref, rechecks it, applies the explicit configured v2 policy, and atomically replaces its bytes through one expected-old non-force update, so old v1 controllers fail closed while the prior commit remains immutable history. Candidate ancestry classifies the GitHub artifact runtime token as credential authority. Every Landing settlement, including an unexpired fence, requires product-owned terminal readback. Terminal cleanup reads the immutable historical attempt, derives workflow and hosted Landing job identity from live run data, reads the exact protected ref head and compares containment against that immutable SHA, and seals merged only when the admitted merge-group head is contained by that protected base; a later different-head merge settles the old attempt as dequeued. Terminal normalization preserves transfer, finalizer boundary, native and seal job, admitted provider attempt, protected-base head, containment result, and terminal readback coordinates. The public reusable workflow truthfully retains its single-flight v1 authority without advertising v2 migration, while bounded v2 remains a separate opt-in CLI, Node API, and schema contract; the tracked self-caller stays on public v4-alpha with matching stable and alpha locks, and transient train selection is dispatch-only. Next-development parity adds one versioned transition authority, one durable controller, one bounded reservation adapter, and pure public-contract recovery evidence while retaining the existing thin floating-channel callers byte-for-byte. The floating-consumer gate reuses the existing contract-world evaluator so SHA drift passes only under the selected lock's compatibility policy, breaking surface drift still fails closed, and external certification reconstructs the receipt from the observed workflow SHA rather than the lock's historical evidence SHA. Tail reseal adds no Stage Capsule effect or general rebuild authority: it verifies the exact retained four-platform bytes, admits one known macOS tail failure through live provider readback, fences signing and finalization to explicit credentials and Warrant identity, and requires standard candidate Passport plus provider and protected readback. Compatibility Facts parity isolates canonical encoding, temporal verification, lifecycle validation, fixture projection, public authority projection, and CLI adaptation into bounded modules; legacy digest and proof arrays are derived only from exact current Fact lineage. Publication Rehearsal adds no production release authority: the content-addressed capsule contract binds source, candidate, manifest, config, canonical data-only provider bindings, provider policy, observations and core version separately from filesystem, runtime and rehearsal-only provider authority; simulate, replay and explicitly authorized provider rehearsal all reuse the release-tail planner, while same-commit local dogfood resolves the new reusable contract and exact current runtime before external callers remain on floating v4-alpha. Cross-runtime candidate recovery preserves original runtime and provider roots and creates resume lineage only after exact public ref, tag, ancestry, npm version and integrity readback. Adopter Delivery restores the reviewed public v3 gate, drivers, Passport binding, N-1 bootstrap and exact archive loader through one public v4 surface while keeping provider and release authority explicit non-claims. Floating Alpha bootstrap uses only the existing exact resolver and protected Alpha private shell to move an otherwise stale floating shell, retains public v4 stable promotion, and removes itself after protected readback. CI lane change-budget enforcement adds a bounded parser, evaluator, guard, and tests without creating another merge authority.",
     "governance": "legacy-debt-sunset-2026q4"
   },
@@ -126,8 +126,8 @@
   },
   "approvedExistingDebtTransitions": {
     "packages/core/index.js": {
-      "maxLines": 704,
-      "rationale": "The public facade exposes the bounded CI lane change-budget contract beside the existing v4 governance APIs without adding a second implementation or merge authority; this exact post-integration ceiling cannot grow implicitly.",
+      "maxLines": 705,
+      "rationale": "The public facade exposes both the bounded CI lane change-budget and v4 publication qualification contracts beside the existing v4 governance APIs without adding provider effects, a second implementation, or merge authority; this exact post-integration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "actions/promote-buildchain-ref/index.js": {
@@ -184,10 +184,10 @@
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 810,
-      "maxFunctionLines": 306,
+      "maxLines": 854,
+      "maxFunctionLines": 309,
       "maxFunctionComplexity": 63,
-      "rationale": "The shared candidate resolver selects the original Passport runtime, seals exact payloads under the existing publication bundle contract, streams GitHub archives to disk, and verifies size and sha256 with bounded-memory reads; the exact ceiling cannot grow implicitly.",
+      "rationale": "The shared candidate resolver retains bounded archive streaming, payload size and sha256 validation while additionally locating and validating the candidate-bound Stage Capsule aggregate and publication qualification receipt before exposing their exact paths. The validation is extracted from the main orchestration and does not execute consumer code; these exact ceilings cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/auditable-demo.mjs": {
@@ -1188,6 +1188,7 @@
           "promotion-shell-ref",
           "promotion-shell-sha",
           "promotion-target-ref",
+          "provider-failure-after-capability",
           "publication-admission-json",
           "publication-authority-workflow-path",
           "publication-auto-admission",
@@ -1310,7 +1311,7 @@
           "release-tail-transaction-state"
         ]
       },
-      "rationale": "The advanced promotion workflow preserves exact contract-lock and channel bindings while adding a trusted transient runtime authorization plus expected root and an optional final Passport resume attachment. Candidate, target tree, policy, scanner, dual-lock, provider and fresh-attempt lineage remain independently bound, and incomplete or mismatched evidence fails closed before heavy work.",
+      "rationale": "The advanced workflow preserves exact contract-lock, channel, trusted transient runtime, candidate, target tree, policy, scanner, provider and fresh-attempt bindings while adding an isolated v4-only declarative provider lane and optional dogfood failure checkpoint. V4 admits only sealed candidate, Stage Capsule and qualification evidence; legacy command inputs fail closed before planning and the provider resumes only incomplete capabilities.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "workflow:release-candidate-promote": {
@@ -1346,6 +1347,7 @@
           "github-release-payload-patterns",
           "github-release-title",
           "package-manager",
+          "provider-failure-after-capability",
           "publication-admission-json",
           "publication-auto-admission",
           "publication-auto-no-gate",
@@ -1479,7 +1481,7 @@
           "release-tail-transaction-state"
         ]
       },
-      "rationale": "The generated v4 promotion router preserves the opt-in declarative release-tail contract and exact contract-lock routing while forwarding one optional verified runtime-resume attachment through both existing channel jobs without changing default legacy publication behavior.",
+      "rationale": "The generated v4 promotion router preserves the opt-in declarative release-tail contract, exact contract-lock routing, and optional verified runtime-resume attachment while forwarding one optional dogfood provider checkpoint into the v4-only declarative lane. Existing v3 callers retain the same defaults, public inputs and legacy implementation, while v4 rejects command-shaped tail authority before planning.",
       "governance": "legacy-debt-sunset-2026q4"
     }
   },
@@ -1687,5 +1689,20 @@
     }
   },
   "approvedTestDebtTransitions": {},
-  "approvedWorkflowDebtTransitions": {}
+  "approvedWorkflowDebtTransitions": {
+    ".github/workflows/.release-candidate-promote.yml": {
+      "maxLines": 2727,
+      "maxJobs": 13,
+      "maxSteps": 99,
+      "maxStepsPerJob": 47,
+      "maxDecisions": 75,
+      "rationale": "The existing advanced promotion workflow adds one v4-only early declarative admission and provider lane while retaining the complete legacy v3 qualification and publication path behind mutually exclusive guards. These exact post-integration ceilings cannot grow implicitly.",
+      "governance": "legacy-debt-sunset-2026q4"
+    },
+    ".github/workflows/release-candidate-promote.yml": {
+      "maxLines": 1207,
+      "rationale": "The generated public wrapper forwards only the bounded declarative mode and provider checkpoint inputs while retaining its existing v3 surface. This exact generated ceiling cannot grow implicitly.",
+      "governance": "legacy-debt-sunset-2026q4"
+    }
+  }
 }

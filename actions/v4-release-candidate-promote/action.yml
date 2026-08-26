@@ -1,0 +1,49 @@
+name: "Promote a v4 declarative release candidate"
+author: "Keren Dong"
+description: "Validate sealed candidate evidence and execute the built-in four-capability Release Tail Provider Plane without consumer commands"
+inputs:
+  token:
+    {
+      required: true,
+      description: "GitHub token with release and contents write authority",
+    }
+  repository:
+    { required: true, description: "Exact owner/repo publication target" }
+  source-sha: { required: true, description: "Exact candidate source SHA" }
+  version: { required: true, description: "Exact publication version" }
+  tag: { required: true, description: "Exact publication tag" }
+  channel: { required: true, description: "alpha, release, or stable" }
+  candidate-passport-path:
+    { required: true, description: "Downloaded release candidate Passport" }
+  stage-capsules-path:
+    { required: true, description: "Downloaded Stage Capsule aggregate" }
+  publication-qualification-path:
+    { required: true, description: "Sealed publication qualification receipt" }
+  artifact-paths:
+    {
+      required: false,
+      description: "Newline-separated admitted release artifact files",
+    }
+  state-path:
+    {
+      default: ".buildchain/release-tail/state.json",
+      description: "Durable provider transaction checkpoint",
+    }
+  failure-after-capability:
+    {
+      default: "",
+      description: "Dogfood-only deterministic failure injection after a checkpointed capability",
+    }
+outputs:
+  release-passport-path:
+    { description: "Buildchain-aggregated Release Passport" }
+  release-passport-root: { description: "Release Passport content root" }
+  transaction-state: { description: "Final provider transaction state" }
+  declaration-root:
+    { description: "Root of the four-capability provider declaration" }
+  transaction-root: { description: "Stable provider transaction root" }
+  state-root: { description: "Final checkpoint root" }
+  receipt-roots-json: { description: "Standardized receipt roots" }
+runs:
+  using: "node24"
+  main: "dist/index.js"

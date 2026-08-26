@@ -1,6 +1,7 @@
 # Buildchain
 
 <!-- buildchain-auditable-demo:start -->
+
 ## Buildchain beginner bootstrap
 
 [![Buildchain beginner bootstrap](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo.gif)](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/public-evidence.json)
@@ -54,12 +55,12 @@ The same mechanism releases Buildchain itself.
 
 ## Choose Your Path
 
-| You are... | Start here | You will get... |
-| --- | --- | --- |
-| adopting Buildchain for the first time | [Golden Path](docs/getting-started.md) | an exact install, project declaration, validated config, reusable workflow, release dry-run, and Passport inspection |
-| looking up a CLI command | [Generated CLI Reference](docs/cli-reference.md) | governed syntax, options, aliases, and side-effect-free help paths |
-| writing JavaScript automation | [Generated Node API Reference](docs/node-api-reference.md) | every public subpath and symbol with source-derived signatures and behavior boundaries |
-| operating an advanced build or release | [Documentation Map](docs/MAP.md) | capability-, intent-, and maturity-based navigation to normative contracts |
+| You are...                             | Start here                                                 | You will get...                                                                                                      |
+| -------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| adopting Buildchain for the first time | [Golden Path](docs/getting-started.md)                     | an exact install, project declaration, validated config, reusable workflow, release dry-run, and Passport inspection |
+| looking up a CLI command               | [Generated CLI Reference](docs/cli-reference.md)           | governed syntax, options, aliases, and side-effect-free help paths                                                   |
+| writing JavaScript automation          | [Generated Node API Reference](docs/node-api-reference.md) | every public subpath and symbol with source-derived signatures and behavior boundaries                               |
+| operating an advanced build or release | [Documentation Map](docs/MAP.md)                           | capability-, intent-, and maturity-based navigation to normative contracts                                           |
 
 Production release operators should also read the
 [Buildchain v4 production release runbook](docs/v4-production-release.md).
@@ -290,6 +291,7 @@ direct consumer integration actions:
 - `actions/promote-buildchain-ref`
 - `actions/report-buildchain-issue`
 - `actions/release-tail`
+- `actions/v4-release-candidate-promote`
 
 Two additional release-authority components are also registered and versioned:
 
@@ -463,4 +465,5 @@ npm pack --dry-run --json --registry=https://registry.npmjs.org/
 - [Consumer issue reporting](docs/consumer-issue-reporting.md)
 - [Publish transaction](docs/publish-transaction.md)
 - [Declarative release-tail contract](docs/release-tail-contract.md)
+- [v4 declarative release-tail migration](docs/v4-declarative-release-tail-migration.md)
 - [Release governance](docs/release-governance.md)
