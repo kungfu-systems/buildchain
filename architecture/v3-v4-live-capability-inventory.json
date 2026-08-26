@@ -18168,7 +18168,7 @@
         "evidence": {
           "path": "dist/site/buildchain-contract.json",
           "selector": "$",
-          "valueRoot": "sha256:9e72428e269922191a9d9ca09dd312fe6df7b80e35ee759a51161eceddabda50"
+          "valueRoot": "sha256:0be2f0a1890d74703d46af946048cbedc9825832fcfcbc54d6be2a84def4efec"
         }
       }
     },
@@ -18234,7 +18234,7 @@
         "evidence": {
           "path": "dist/site/controller-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:c2a7689dd9397d8ee5b34258c45cd7e75ff8c53bc2a283c8d26373be7043dc45"
+          "valueRoot": "sha256:ef8dfd5a96f169f50e3c04eb8a785501c65d3dde5fccf39cd268ec50d796d8d1"
         }
       }
     },
@@ -18256,7 +18256,7 @@
         "evidence": {
           "path": "dist/site/kfd-claims.json",
           "selector": "$",
-          "valueRoot": "sha256:17aa5f6b2cb730a22654c2e653a41e797955c5d45db52f70216e20298136e9a8"
+          "valueRoot": "sha256:98485f6a0b9d308a442b29663b94a9456eeb50c3ca46d539a5ca92a96e7597af"
         }
       }
     },
@@ -18344,7 +18344,7 @@
         "evidence": {
           "path": "dist/site/public-surface-audit.json",
           "selector": "$",
-          "valueRoot": "sha256:11a87f74b02ff09fec1ed70ad9782d74eb9a73e0ac421c41e5f2f67c6bba324c"
+          "valueRoot": "sha256:2e1d30eb2ac0b7fd812d6589a5d7d4dcff74add81df41e399e4d1f79095dd23c"
         }
       }
     },
@@ -18586,7 +18586,7 @@
         "evidence": {
           "path": "dist/site/workflow-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:f29199c2fd3d066907784107988a66b4b7a4cade200c1e41ef096d3592b1a1a5"
+          "valueRoot": "sha256:62e43419ab14e309e697057a46a83585ff8a24c7bd53386a2e4ece6459f52603"
         }
       }
     },
@@ -102233,9 +102233,9 @@
     },
     "liveV4": {
       "branch": "origin/dev/v4/v4.0",
-      "commit": "335e7b486d90169ad1dc2f269338f26fbd6020a4",
+      "commit": "628d8d9582669ef7d8c36110de4764c2d586ef1a",
       "role": "execution-time-protected-target",
-      "tree": "1838ea297f13cb4455bc3f0ed96b9549625e907b"
+      "tree": "22fbdf58a1fa45c8aa4819f1cca4146d4a1b33dd"
     },
     "priorFamilyV3": {
       "branch": "origin/dev/v3/v3.0",
