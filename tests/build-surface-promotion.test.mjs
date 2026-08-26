@@ -695,7 +695,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): release v'\)/);
   assert.match(
     workflow,
-    /promote-stable:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| 'v4' \}\}/,
+    /promote-stable:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| inputs\['recover-durable-transaction'\] == true && github\.sha \|\| 'v4' \}\}/,
   );
   assert.match(workflow, /promote-alpha:[\s\S]*buildchain-channel: alpha/);
   assert.match(
