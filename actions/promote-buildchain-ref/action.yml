@@ -17,6 +17,9 @@ inputs:
   dry-run:
     description: "Explain the release-line promotion plan and report planned ref updates without writing refs"
     default: "false"
+  plan-before-target-advance:
+    description: "Compatibility-only input; true migrates to v4 command-free publication qualification and is rejected here"
+    default: "false"
   require-governance:
     description: "Require protected-channel PR lineage and release-from-alpha checks"
     default: "true"
@@ -181,6 +184,12 @@ inputs:
     default: ""
   release-passport-kfd-3-artifact-verify-command:
     description: "Product-owned command that emits a KFD-3 artifact-side collaboration-interface witness JSON document"
+    default: ""
+  release-passport-adopter-delivery-json:
+    description: "Compatibility-only non-authoritative v3 input; migrate to the v4 adopter manifest and product gates"
+    default: ""
+  release-passport-kfd-adopter-manifest-gate-json:
+    description: "Compatibility-only producer gate input; v4 derives the gate from the manifest and product-gate evidence"
     default: ""
   release-passport-kfd-adopter-manifest-json:
     description: "Standard full-cut adopter conformance manifest JSON path bound into the release passport"

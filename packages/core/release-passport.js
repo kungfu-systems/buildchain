@@ -1262,6 +1262,36 @@ function releaseField(release, camelKey, snakeKey, ...fallbacks) {
   return optionalString(firstTruthy(release[camelKey], release[snakeKey], ...fallbacks));
 }
 
+export function releasePassportKfdAdopterSourceSha({
+  passportSourceSha = "",
+  release = undefined,
+} = {}) {
+  const exactSha = (value) => /^[0-9a-f]{40}$/u.test(String(value || "").trim());
+  const candidateSourceSha = optionalString(release?.candidateSourceSha);
+  const builtSourceSha = optionalString(release?.builtSourceSha);
+  const promotionChannelSha = optionalString(release?.promotionChannelSha);
+  const candidateSourceTreeSha = optionalString(release?.candidateSourceTreeSha);
+  const builtSourceTreeSha = optionalString(release?.builtSourceTreeSha);
+  const promotionChannelTreeSha = optionalString(release?.promotionChannelTreeSha);
+  if (
+    release?.treeEquivalent !== true
+    || !exactSha(passportSourceSha)
+    || !exactSha(candidateSourceSha)
+    || !exactSha(builtSourceSha)
+    || !exactSha(promotionChannelSha)
+    || candidateSourceSha !== builtSourceSha
+    || promotionChannelSha !== passportSourceSha
+    || !exactSha(candidateSourceTreeSha)
+    || !exactSha(builtSourceTreeSha)
+    || !exactSha(promotionChannelTreeSha)
+    || candidateSourceTreeSha !== builtSourceTreeSha
+    || candidateSourceTreeSha !== promotionChannelTreeSha
+  ) {
+    return passportSourceSha;
+  }
+  return candidateSourceSha;
+}
+
 function optionalSections(entries) {
   return Object.fromEntries(entries.filter(([, value]) => value && (!Array.isArray(value) || value.length > 0)));
 }
