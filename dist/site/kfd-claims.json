@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "ec5f2615ef9d470968c84cce262ad3ce90d38bb431ded129f5a85577b1fd1bcb",
+    "sha256": "8eabaff8f1dc498f6adf8c65ec2c04f8879db0a0d29e88be7a44a91a1a7c92db",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 77,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "ec5f2615ef9d470968c84cce262ad3ce90d38bb431ded129f5a85577b1fd1bcb",
+      "sha256": "8eabaff8f1dc498f6adf8c65ec2c04f8879db0a0d29e88be7a44a91a1a7c92db",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 77,
@@ -1843,6 +1843,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./v4-adopter-delivery"
+        },
+        {
+          "id": "export:./v4-cross-platform-adopter-qualification",
+          "name": "@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-cross-platform-adopter-qualification.js",
+          "evidencePath": "packages/core/v4-cross-platform-adopter-qualification.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-cross-platform-adopter-qualification"
         },
         {
           "id": "export:./logging",
@@ -5853,12 +5865,15 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 8,
           "inputs": [
             "archive-path",
             "bootstrap-path",
             "consumer",
+            "consumer-ref",
+            "consumer-repository",
             "input-path",
+            "invocation-source-path",
             "node-version"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -7470,6 +7485,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 480
+    "publicSurfaceCount": 481
   }
 }

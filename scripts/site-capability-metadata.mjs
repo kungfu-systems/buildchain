@@ -243,6 +243,7 @@ export function nodeApiMeta(exportName) {
     "./adopter-delivery-passport": { group: "release-passport-trust", summary: "Non-authoritative adopter delivery Release Passport binding and substitution checks." },
     "./adopter-delivery-vectors": { group: "reusable-build", summary: "Rooted public adopter delivery conformance vector suite APIs." },
     "./v4-adopter-delivery": { group: "reusable-build", summary: "Public v4 adopter delivery runtime, exact readback, N-1 lineage, and published archive verification APIs." },
+    "./v4-cross-platform-adopter-qualification": { group: "reusable-build", summary: "Exact-source v3 capability matrix reports, executed failure and recovery evidence, and cross-platform public adopter qualification APIs." },
     "./release-candidate-recovery": { group: "release-passport-trust", summary: "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads." },
     "./release-train": { group: "governance-versioning", summary: "Frozen Release Cut identity, rooted Release Train transitions, Dev observations, supersession, replay, and legacy read compatibility APIs." },
     "./next-development-transition": { group: "governance-versioning", summary: "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs." },

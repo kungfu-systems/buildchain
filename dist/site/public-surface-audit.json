@@ -2951,10 +2951,13 @@
           "archive-path",
           "bootstrap-path",
           "consumer",
+          "consumer-ref",
+          "consumer-repository",
           "input-path",
+          "invocation-source-path",
           "node-version"
         ],
-        "inputCount": 5,
+        "inputCount": 8,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -8906,8 +8909,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "dae1e93e05e2dc005f7c27df15d95831163507e214e27dc4f3e3f13ce3481086",
-    "pageRegistryDigest": "b9d7eaa124051c743d01b98aff985dd3a51bc26fc21f16903d2baed01678dbbe"
+    "workflowRegistryDigest": "82e5b29c770b5a37c02ee540646233c01262ff8887229c9178b4b052b214764e",
+    "pageRegistryDigest": "d898e2ded3f04964c8f00318c05b75d616810db2297f3b4c7ea88ffe1f16ec9e"
   },
   "comparison": {
     "missingCliRegistry": [],

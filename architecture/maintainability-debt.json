@@ -2898,21 +2898,21 @@
       "tests/v4-floating-consumer-policy-contract.test.mjs": {
         "baseline": {
           "functions": {
-            "<anonymous@72>@72": {
+            "<anonymous@76>@76": {
               "lines": 292
             }
           }
         },
         "current": {
           "functions": {
-            "<anonymous@72>@72": {
+            "<anonymous@76>@76": {
               "lines": 292
             }
           }
         },
         "target": {
           "functions": {
-            "<anonymous@72>@72": {
+            "<anonymous@76>@76": {
               "lines": 180
             }
           }
@@ -3171,6 +3171,7 @@
   },
   "hotspots": [
     "tests/v4-floating-consumer-policy-contract.test.mjs",
+    ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/buildchain-ref-promotion.yml",
     "tests/release-candidate-recovery.test.mjs",
     ".github/workflows/.release-candidate-promote.yml",
@@ -3189,7 +3190,8 @@
     "tests/v4-floating-consumer-policy.test.mjs",
     "scripts/check-v4-floating-consumer-policy-contract.mjs",
     "tests/dev-delivery-warrant.test.mjs",
-    "actions/promote-buildchain-ref/internal/version-state.js"
+    "actions/promote-buildchain-ref/internal/version-state.js",
+    "scripts/buildchain-cli-help.mjs"
   ],
   "burnDownSlices": [
     {
