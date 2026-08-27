@@ -5,6 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const indexPath = "architecture/internal-capabilities.json";
+const debtPath = "architecture/maintainability-debt.json";
 const outputPath = "architecture/agent-change-map.md";
 
 function list(values) {
@@ -12,7 +13,35 @@ function list(values) {
   return values.map((value) => `- \`${value}\``).join("\n");
 }
 
-function generateAgentChangeMap(index) {
+function debtRouteSection(debt) {
+  if (!debt?.surfaces) return "";
+  const defaults = debt.defaults;
+  const governedPaths = Object.entries(debt.surfaces).flatMap(
+    ([domain, entries]) =>
+      Object.keys(entries).map((entry) => `${domain}: \`${entry}\``),
+  );
+  return `## Governed complexity debt routes
+
+Owner: ${defaults.owner}
+
+Capability: \`${defaults.capability}\`
+
+Invariant: ${defaults.invariant}
+
+Tests: ${defaults.tests.map((entry) => `\`${entry}\``).join(", ")}
+
+Safe change route: ${defaults.safeChangeRoute}
+
+### Oversized surfaces
+
+${governedPaths.map((entry) => `- ${entry}`).join("\n")}
+
+### Current top twenty maintenance hotspots
+
+${debt.hotspots.map((entry) => `- \`${entry}\``).join("\n")}`;
+}
+
+function generateAgentChangeMap(index, debt = null) {
   const capabilities = [...index.capabilities].sort((left, right) =>
     left.id.localeCompare(right.id),
   );
@@ -46,13 +75,16 @@ ${list(capability.validationCommands)}`,
 
 Use this index to identify the smallest implementation, contract, test, generated-output, and validation surface for a capability change. The machine-readable source of truth is \`${indexPath}\`.
 
+${debtRouteSection(debt)}
+
 ${sections.join("\n\n")}
 `;
 }
 
 function run({ root = process.cwd(), mode = "check" } = {}) {
   const index = JSON.parse(fs.readFileSync(path.join(root, indexPath), "utf8"));
-  const generated = generateAgentChangeMap(index);
+  const debt = JSON.parse(fs.readFileSync(path.join(root, debtPath), "utf8"));
+  const generated = generateAgentChangeMap(index, debt);
   const target = path.join(root, outputPath);
   if (mode === "write") {
     fs.writeFileSync(target, generated);

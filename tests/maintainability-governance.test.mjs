@@ -6,6 +6,7 @@ import {
   analyzeWorkflow,
 } from "../scripts/maintainability-metrics.mjs";
 import {
+  evaluateDebtAuthority,
   evaluateExceptionGovernance,
   evaluateTestBudgets,
   evaluateWorkflowBudgets,
@@ -191,5 +192,125 @@ test("Agent change map preserves every maintenance edge", () => {
     "node --test tests/fixture.test.mjs",
   ]) {
     assert.match(output, new RegExp(expected.replaceAll(".", "\\."), "u"));
+  }
+});
+
+test("complexity debt authority fails closed on missing, stale, widened, or split-only debt", () => {
+  const current = {
+    files: { "legacy.js": { lines: 10, functions: [] } },
+    tests: {},
+    workflows: {},
+  };
+  const policy = {
+    sourceBudgets: {
+      newFileLines: 5,
+      newFunctionLines: 3,
+      newFunctionComplexity: 2,
+    },
+    rustBudgets: {
+      newFileLines: 5,
+      newFunctionLines: 3,
+      newFunctionComplexity: 2,
+    },
+    testBudgets: {
+      newFileLines: 5,
+      newFunctionLines: 3,
+      newFunctionComplexity: 2,
+    },
+    workflowBudgets: {
+      maxLines: 5,
+      maxJobs: 1,
+      maxSteps: 2,
+      maxStepsPerJob: 2,
+      maxDecisions: 1,
+    },
+  };
+  const debt = {
+    schemaVersion: 1,
+    defaults: {
+      owner: "maintainers",
+      capability: "maintainability-governance",
+      expiry: "2099-12-31",
+      impact: "review radius",
+      recovery: "focused tests",
+      stopCondition: "behavior drift",
+      invariant: "no widening",
+      tests: ["fixture"],
+      safeChangeRoute: "reduce then ratchet",
+    },
+    surfaces: {
+      sources: {
+        "legacy.js": {
+          baseline: { lines: 11 },
+          current: { lines: 10 },
+          target: { lines: 5 },
+        },
+      },
+      rust: {},
+      tests: {},
+      workflows: {},
+    },
+    hotspots: ["legacy.js"],
+    burnDownSlices: [
+      {
+        domain: "sources",
+        path: "legacy.js",
+        metric: "lines",
+        baseline: 11,
+        current: 10,
+      },
+    ],
+  };
+  const evaluate = (value) =>
+    evaluateDebtAuthority({
+      current,
+      policy,
+      debt: value,
+      capabilityIds: new Set(["maintainability-governance"]),
+      hotspots: ["legacy.js"],
+    });
+  assert.deepEqual(evaluate(debt), []);
+  for (const [mutate, expected] of [
+    [(value) => delete value.surfaces.sources["legacy.js"], /undeclared/u],
+    [
+      (value) => {
+        value.surfaces.sources["legacy.js"].current.lines = 9;
+      },
+      /measurement is stale/u,
+    ],
+    [
+      (value) => {
+        value.defaults.capability = "missing";
+      },
+      /capability is unmapped/u,
+    ],
+    [
+      (value) => {
+        value.defaults.expiry = "2020-01-01";
+      },
+      /expiry is invalid or stale/u,
+    ],
+    [
+      (value) => {
+        value.surfaces.sources["legacy.js"].target.lines = 10;
+      },
+      /target must be lower/u,
+    ],
+    [
+      (value) => {
+        value.surfaces.sources["legacy.js"].baseline.lines = 9;
+      },
+      /widened beyond baseline/u,
+    ],
+    [
+      (value) => {
+        value.burnDownSlices[0].baseline = 10;
+      },
+      /split-only/u,
+    ],
+  ]) {
+    const fixture = structuredClone(debt);
+    mutate(fixture);
+    assert.ok(evaluate(fixture).some((issue) => expected.test(issue)));
   }
 });

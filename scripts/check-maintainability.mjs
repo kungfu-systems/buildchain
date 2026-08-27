@@ -11,10 +11,43 @@ import {
   isHandMaintainedSource,
 } from "./maintainability-metrics.mjs";
 import {
+  evaluateDebtAuthority,
   evaluateExceptionGovernance,
   evaluateTestBudgets,
   evaluateWorkflowBudgets,
 } from "./maintainability-governance.mjs";
+
+function collectHotspots(root, current, limit = 20) {
+  const maintained = new Set([
+    ...Object.keys(current.files || {}),
+    ...Object.keys(current.tests || {}),
+    ...Object.keys(current.workflows || {}),
+  ]);
+  const counts = new Map();
+  const record = (file) =>
+    maintained.has(file) && counts.set(file, (counts.get(file) || 0) + 1);
+  for (const file of gitOutput(root, [
+    "log",
+    "-n",
+    "500",
+    "--format=",
+    "--name-only",
+  ])
+    .split("\n")
+    .filter(Boolean))
+    record(file);
+  for (const file of gitOutput(root, ["diff", "--name-only"])
+    .split("\n")
+    .filter(Boolean))
+    record(file);
+  return [...counts]
+    .sort(
+      ([leftPath, left], [rightPath, right]) =>
+        right - left || leftPath.localeCompare(rightPath),
+    )
+    .slice(0, limit)
+    .map(([file]) => file);
+}
 
 function readJson(root, file) {
   return JSON.parse(fs.readFileSync(path.join(root, file), "utf8"));
@@ -435,6 +468,11 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     extendedCoverageRevision,
   );
   const current = collectMaintainabilityMetrics({ root });
+  const debt = readJson(root, "architecture/maintainability-debt.json");
+  const architecture = readJson(
+    root,
+    "architecture/internal-capabilities.json",
+  );
   const baselineFiles = sourceMetricsAtRevision(root, enforcementRevision);
   const extendedSourceFiles = sourceMetricsAtRevision(
     root,
@@ -449,6 +487,18 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     extendedCoverageRevision,
   );
   const issues = evaluateExceptionGovernance({ policy });
+  const hotspots = collectHotspots(root, current);
+  issues.push(
+    ...evaluateDebtAuthority({
+      current,
+      policy,
+      debt,
+      capabilityIds: new Set(
+        architecture.capabilities.map((entry) => entry.id),
+      ),
+      hotspots,
+    }),
+  );
   issues.push(...evaluateMaintainability({ current, baselineFiles, policy }));
   issues.push(
     ...evaluateTestBudgets({ current, baselineFiles: baselineTests, policy }),
@@ -479,6 +529,10 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     sourceFiles: current.repository.handMaintainedSourceFiles,
     publicSurface: current.publicSurface,
     hotspots: current.hotspots,
+    governedDebtSurfaces: Object.values(debt.surfaces).reduce(
+      (total, entries) => total + Object.keys(entries).length,
+      0,
+    ),
   };
 }
 
@@ -500,9 +554,11 @@ if (
 
 export {
   checkMaintainability,
+  collectHotspots,
   ensureMaintainabilityRevisionsAvailable,
   ensureRevisionAvailable,
   evaluateMaintainability,
+  evaluateDebtAuthority,
   evaluateExceptionGovernance,
   evaluateRepositoryBudgets,
   evaluateTestBudgets,
