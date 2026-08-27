@@ -1,0 +1,710 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-runtime-semantic-closure",
+  "sources": {
+    "v3Mechanisms": "architecture/v3-core-mechanism-inventory.json",
+    "v4Capabilities": "architecture/v4-capability-state-machine-manifest.json"
+  },
+  "requiredEvidence": [
+    "positive",
+    "negative",
+    "failure",
+    "recovery",
+    "idempotence"
+  ],
+  "capabilities": [
+    {
+      "id": "next-development-controller",
+      "sourceMechanismId": "next-development-controller",
+      "routeKind": "v4-native",
+      "stateAuthority": "single-writer-state-machine",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/next-development-controller.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "provider-specific durable-store retention and workflow wake policy remain caller-owned integration choices",
+          "resolution": "The atomic child store and explicit executor interfaces retain store and wake policy as bounded adapters while the v4 controller alone owns transitions and completion."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/next-development-controller.test.mjs",
+            "name": "completed Alpha schedules exactly one durable child and identical reruns reuse it"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/next-development-controller.test.mjs",
+            "name": "controller validation rejects a non-canonical protected Dev branch"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/next-development-controller.test.mjs",
+            "name": "fresh runner resumes a checkpoint after injected failure without rebuilding"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/next-development-controller.test.mjs",
+            "name": "lost materialization response reuses the operation on a fresh runner"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/next-development-controller.test.mjs",
+            "name": "completed Alpha schedules exactly one durable child and identical reruns reuse it"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dev-delivery-warrant",
+      "sourceMechanismId": "dev-delivery-warrant",
+      "routeKind": "v4-native",
+      "stateAuthority": "single-writer-state-machine",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/dev-delivery-warrant.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 durable store and lease authority are not yet selected",
+          "resolution": "The rooted Git-ref queue is the durable store and its expected-old state root plus fenced generation is the sole v4 lease authority."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/dev-delivery-warrant.test.mjs",
+            "name": "queue readback preserves native qualification metadata"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/dev-delivery-warrant.test.mjs",
+            "name": "queue identity and state roots fail closed on drift"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/dev-delivery-warrant.test.mjs",
+            "name": "terminal failure settlement closes the exact active Warrant and repeats idempotently"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/dev-delivery-warrant.test.mjs",
+            "name": "provisional lease expiry retains authority until fenced worker stop is proven"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/dev-delivery-warrant.test.mjs",
+            "name": "duplicate submission is idempotent and safe head repair retains queue age"
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-candidate-passport",
+      "sourceMechanismId": "release-candidate-passport",
+      "routeKind": "v4-native",
+      "stateAuthority": "bounded-protocol",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/release-candidate.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 canonical serialization boundary is not yet selected",
+          "resolution": "The Release Cut and candidate Passport roots use the canonical v4 release-candidate record boundary."
+        },
+        {
+          "source": "v4 Release Train authority remains deferred to the parity wave",
+          "resolution": "The v4 Release Train owns the rooted compare-and-swap transition chain and treats legacy patrol state as read-only."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/release-candidate.test.mjs",
+            "name": "release candidate passport records source lock, platform matrix, and build summary hash"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/release-candidate.test.mjs",
+            "name": "release candidate validation rejects stale source and summary evidence"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/release-candidate.test.mjs",
+            "name": "release candidate family validation fails closed on absence, mismatch, source drift, and invalidation"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/release-candidate.test.mjs",
+            "name": "release candidate resolver skips newer successful run without passport artifacts"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/release-train.test.mjs",
+            "name": "state transitions are rooted, compare-and-swap guarded and idempotent"
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-candidate-recovery",
+      "sourceMechanismId": "release-candidate-recovery",
+      "routeKind": "v4-native",
+      "stateAuthority": "bounded-protocol",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/release-candidate-recovery.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 provider adapter boundary is not yet selected",
+          "resolution": "Provider discovery and readback remain adapters; the v4 recovery planner alone validates identity and selects resume or repair-required."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/release-candidate-recovery.test.mjs",
+            "name": "recovery resolves an exact publication version without scanning historical state refs"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/release-candidate-recovery.test.mjs",
+            "name": "recovery rejects repository, workflow, and channel identity drift"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/release-candidate-recovery.test.mjs",
+            "name": "recovery rejects unrelated target advancement and conflicting transaction state"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/release-candidate-recovery.test.mjs",
+            "name": "cross-runtime recovery reuses only provider-bound original Stage Capsules"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/release-candidate-recovery.test.mjs",
+            "name": "recovery is deterministic and idempotent for a complete transaction"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stable-candidate-ledger",
+      "sourceMechanismId": "stable-candidate-ledger",
+      "routeKind": "v4-native",
+      "stateAuthority": "single-writer-state-machine",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/stable-candidate-ledger.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 scheduler and ledger store ownership are not yet selected",
+          "resolution": "The scheduler is an untrusted caller and the rooted candidate ledger is the single v4 selection authority."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/stable-candidate-ledger.test.mjs",
+            "name": "selection uses the newest qualified non-revoked candidate"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/stable-candidate-ledger.test.mjs",
+            "name": "hold blocks scheduled selection while release-now remains explicit"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/stable-candidate-patrol.test.mjs",
+            "name": "GitHub client fails closed when auto-merge GraphQL returns errors"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/stable-candidate-patrol.test.mjs",
+            "name": "first ledger run reconstructs an already consumed stable version"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/stable-candidate-patrol.test.mjs",
+            "name": "GitHub client reuses an exact-tree source-lock that already contains the stable target"
+          }
+        ]
+      }
+    },
+    {
+      "id": "publish-transaction",
+      "sourceMechanismId": "publish-transaction",
+      "routeKind": "v4-native",
+      "stateAuthority": "single-writer-state-machine",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/publish-transaction.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 transaction journal store and npm effect executor are not yet selected",
+          "resolution": "The release-state rooted transaction journal owns state while the npm executor applies only the sealed artifact plan and returns provider observations."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/publish-transaction.test.mjs",
+            "name": "npm publish transaction writes Buildchain evidence without real publish in dry-run mode"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/publish-transaction.test.mjs",
+            "name": "publish evidence fails closed on material drift and missing required artifacts"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/publish-transaction.test.mjs",
+            "name": "transaction recovery blocks repair and abandoned states unless override is explicit"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/publish-transaction.test.mjs",
+            "name": "artifact publish plan resumes missing artifacts and requires repair on conflicts"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/promote-buildchain-ref.test.mjs",
+            "name": "durable release transaction treats retried createRef as idempotent"
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-activation-transaction",
+      "sourceMechanismId": "release-activation-transaction",
+      "routeKind": "v4-native",
+      "stateAuthority": "single-writer-state-machine",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/release-activation-transaction.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 phase executor ownership is not yet selected",
+          "resolution": "The v4 activation transaction owns phase order and receipt settlement; executors can only return effect receipts for an admitted phase."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/release-activation-transaction.test.mjs",
+            "name": "shadow activation preserves order and never claims released use"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/release-activation-transaction.test.mjs",
+            "name": "activation fails closed on skipped phase and changed replay roots"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/release-activation-transaction.test.mjs",
+            "name": "partial failure, retry, abort, and rollback remain explicit"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/release-activation-transaction.test.mjs",
+            "name": "partial failure, retry, abort, and rollback remain explicit"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/release-activation-transaction.test.mjs",
+            "name": "activation fails closed on skipped phase and changed replay roots"
+          }
+        ]
+      }
+    },
+    {
+      "id": "publication-authority",
+      "sourceMechanismId": "publication-authority",
+      "routeKind": "v4-native",
+      "stateAuthority": "bounded-protocol",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/publication-authority.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 capability registry and provider-effect interface are not yet selected",
+          "resolution": "The publication authority registry admits exact capabilities and the provider interface can execute only a short-lived independently verified admission."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/publication-authority.test.mjs",
+            "name": "independent verifier issues an exact short-lived publication capability"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/publication-authority.test.mjs",
+            "name": "unknown and evidence-only workflows cannot obtain product publication capability"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/publication-authority.test.mjs",
+            "name": "runner downgrade and control-plane drift fail closed"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/publication-authority.test.mjs",
+            "name": "candidate reuse rebinds a qualifying Gate to an equivalent target tree"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/publication-authority.test.mjs",
+            "name": "consumer qualification emits a deterministic receipt over the full Gate handoff"
+          }
+        ]
+      }
+    },
+    {
+      "id": "github-governance-authority",
+      "sourceMechanismId": "github-governance-authority",
+      "routeKind": "v4-native",
+      "stateAuthority": "bounded-protocol",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/github-governance-authority.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 policy ownership boundary between core and GitHub adapter is not yet selected",
+          "resolution": "The core compiles and verifies effective policy roots while the GitHub adapter only observes or applies the exact reversible provider plan."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/github-governance-authority.test.mjs",
+            "name": "qualifying receipt binds policy, ownership, effective rules, authority, and freshness"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/github-governance-authority.test.mjs",
+            "name": "unadmitted targets, required-check removal, producer substitution, and strict drift deny"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/github-governance-authority.test.mjs",
+            "name": "latest-push review, Code Owner self-protection, bypass, and provider-read failures deny"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/github-governance-authority.test.mjs",
+            "name": "rollout plan requires frozen inventory and carries exact rollback"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/release-governance-reconciliation.test.mjs",
+            "name": "reconciliation is idempotent once the emitted aggregate is protected"
+          }
+        ]
+      }
+    },
+    {
+      "id": "engineering-housekeeper",
+      "sourceMechanismId": "engineering-housekeeper",
+      "routeKind": "v4-native",
+      "stateAuthority": "bounded-protocol",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/engineering-housekeeper.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "A future Rust migration would require a separately qualified writer cutover; v4 intentionally retains the TypeScript production authority.",
+          "resolution": "The TypeScript v4 authority remains the single production writer; no Rust fallback or second writer is admitted."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/engineering-housekeeper-github.test.mjs",
+            "name": "apply deletes an exact merged branch after current-state revalidation"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/engineering-housekeeper.test.mjs",
+            "name": "branch deletion requires exact ancestry, no open PR, and no protected or retained match"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/engineering-housekeeper-github.test.mjs",
+            "name": "head, target, active-PR, ancestry, and rename races fail closed"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/engineering-housekeeper-github.test.mjs",
+            "name": "replays are no-ops and provider failures remain explicit in rooted receipts"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/engineering-housekeeper.test.mjs",
+            "name": "plans and receipts are deterministic and repeated plans are no-ops"
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-passport-and-artifact-proof",
+      "sourceMechanismId": "release-passport-and-artifact-proof",
+      "routeKind": "v4-native",
+      "stateAuthority": "bounded-protocol",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/release-passport.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 proof graph storage and compatibility projection boundary are not yet selected",
+          "resolution": "The sealed Passport and sibling artifact evidence are the immutable proof graph; discovery adapters project locators without rewriting proof."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/release-passport.test.mjs",
+            "name": "release passport core verifies unified three-platform npm passport"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/release-passport.test.mjs",
+            "name": "artifact passport verification fails closed on digest mismatch"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/artifact-verification-envelope.test.mjs",
+            "name": "fails closed for expired and revoked envelopes"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/release-passport.test.mjs",
+            "name": "artifact passport discovery falls back to a custom locator after GitHub default miss"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/release-passport.test.mjs",
+            "name": "release passport verifies anchored derived version material"
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-propagation-work-control",
+      "sourceMechanismId": "release-propagation-work-control",
+      "routeKind": "v4-native",
+      "stateAuthority": "single-writer-state-machine",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/release-propagation-work-control.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "v4 Work persistence and external executor protocol are not yet selected",
+          "resolution": "The rooted Work document and ordered stage receipts are the persistence boundary; external executors can only return typed stage evidence."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/release-propagation.test.mjs",
+            "name": "agent-native propagation work binds Family State v2, exact WorkRefs, release lock, and execution authority"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/release-propagation.test.mjs",
+            "name": "release propagation rejects npm gitHead, exact tag, source SHA, and package version disagreement"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/release-propagation.test.mjs",
+            "name": "release propagation receipt keeps alpha truth independent from site visibility"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/release-propagation.test.mjs",
+            "name": "propagation work resumes retryable failure and completes only after online readback plus Work Control decision"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/release-propagation-pickup.test.mjs",
+            "name": "manual pickup only creates paused Work after explicit create and returns a true no-op"
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "sourceMechanismId": "release-tail-provider-plane",
+      "routeKind": "v4-native",
+      "stateAuthority": "single-writer-state-machine",
+      "legacyFallbackAllowed": false,
+      "providerDecisionAuthorityAllowed": false,
+      "implementation": ["packages/core/release-tail-provider-plane.js"],
+      "invariants": {
+        "exactHeadFence": true,
+        "immutableRootFence": true,
+        "providerReadbackBeforeRetry": true,
+        "idempotentReplay": true
+      },
+      "resolvedResiduals": [
+        {
+          "source": "consumer cutovers and production provider credentials remain separate reviewed changes",
+          "resolution": "Consumer cutover and credentials remain outside semantic authority; the v4 transaction accepts only declared provider observations and exact effect receipts."
+        }
+      ],
+      "evidence": {
+        "positive": [
+          {
+            "path": "tests/release-tail-provider-plane.test.mjs",
+            "name": "all capabilities settle through one transaction and standardized envelopes"
+          }
+        ],
+        "negative": [
+          {
+            "path": "tests/release-tail-provider-plane.test.mjs",
+            "name": "declaration parser rejects executable data and identity drift"
+          }
+        ],
+        "failure": [
+          {
+            "path": "tests/release-tail-provider-plane.test.mjs",
+            "name": "terminal provider conflicts fail closed"
+          }
+        ],
+        "recovery": [
+          {
+            "path": "tests/release-tail-provider-plane.test.mjs",
+            "name": "effect success with a lost response completes from post-effect readback"
+          }
+        ],
+        "idempotence": [
+          {
+            "path": "tests/release-tail-provider-plane.test.mjs",
+            "name": "duplicate invocation returns the settled transaction without provider effects"
+          }
+        ]
+      }
+    }
+  ]
+}

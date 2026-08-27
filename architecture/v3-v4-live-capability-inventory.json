@@ -18168,7 +18168,7 @@
         "evidence": {
           "path": "dist/site/buildchain-contract.json",
           "selector": "$",
-          "valueRoot": "sha256:0be2f0a1890d74703d46af946048cbedc9825832fcfcbc54d6be2a84def4efec"
+          "valueRoot": "sha256:aab40d1e1a71563aed2fa1beb163faf8db7a28c189974c01a6419ebda0849e75"
         }
       }
     },
@@ -68670,7 +68670,7 @@
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:dev-delivery-warrant",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68684,15 +68684,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:dev-delivery-warrant",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"dev-delivery-warrant\"]",
-          "valueRoot": "sha256:f2032f5c2077b076bb2d9863bf6e069261a836d016f4ff4bf30f34bcb94acb6d"
+          "valueRoot": "sha256:6bd32948671e95da76a25599bed1e8679f555bffe337d3bea85492b3b1c088e5"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:github-governance-authority",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68706,15 +68706,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:github-governance-authority",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"github-governance-authority\"]",
-          "valueRoot": "sha256:bff376805304d1f08a9174d95b3def0467414a8fafca88c1fa0300ac18ddb1de"
+          "valueRoot": "sha256:f6319dfad83fafdc0436134f3328f24acace3fa095337ab2a2efb02cc40ee96f"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:next-development-controller",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68728,15 +68728,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:next-development-controller",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"next-development-controller\"]",
-          "valueRoot": "sha256:7d09db059911bfdd0158f83983cc124f976996796495ab45ddabe351e172c2c6"
+          "valueRoot": "sha256:f7ea0e63709ee73b7f2e199a17a8c439f3449aa4bd468a7338a9bea30d2a15f1"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:publication-authority",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68750,15 +68750,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:publication-authority",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"publication-authority\"]",
-          "valueRoot": "sha256:a5274318aaef6c4c5f0a8c523db30dd6cc5a7a0bd112675abf4268bdb32b876b"
+          "valueRoot": "sha256:6bd1a2383feaa7318159754b01ec2416df34428205f91aa5129747aa9f6c5fe5"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:publish-transaction",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68772,15 +68772,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:publish-transaction",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"publish-transaction\"]",
-          "valueRoot": "sha256:7d3acc3cfd53ffc7615abcf27e6af3660443dea46c6163ec60898fce4e009b38"
+          "valueRoot": "sha256:4e24bcc1f070542ed22f3892d6f75f0d437e3242bfdee770c08788eca4407900"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:release-activation-transaction",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68794,15 +68794,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:release-activation-transaction",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"release-activation-transaction\"]",
-          "valueRoot": "sha256:4a23e79208974d87b95984cd5a86f0cec1cda163f685db6a6db36cf07dff48e7"
+          "valueRoot": "sha256:4d92f8212674a8f59df86e32198a3d117e449192db59a7335869e608c9038a7a"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:release-candidate-passport",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68816,15 +68816,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:release-candidate-passport",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"release-candidate-passport\"]",
-          "valueRoot": "sha256:f338a4885927db552ad46879551da76f1c6735b318d5c67b526a9b7efc56096d"
+          "valueRoot": "sha256:10c641a6fc70d5682d870b5a72f843b331ccf046913ab99b8de8c155ce0a4aae"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:release-candidate-recovery",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68838,15 +68838,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:release-candidate-recovery",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"release-candidate-recovery\"]",
-          "valueRoot": "sha256:5a12c78439ecc97fcd8fb1ca85e5751c5e04a3ec4efbb045b94fd858a439ad03"
+          "valueRoot": "sha256:912d1e62d3284eff423fa7e67776c5060b4b10ce8bbd87ae079d9675acb33cf1"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:release-passport-and-artifact-proof",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68860,15 +68860,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:release-passport-and-artifact-proof",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"release-passport-and-artifact-proof\"]",
-          "valueRoot": "sha256:df6303f033ee92d94ba6c7254734c282e97b16e292e06392da9b07934ed2d586"
+          "valueRoot": "sha256:66177b820238671fa89b2b504e84e936c146f2b778dc175089e6574f1c8786a9"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:release-propagation-work-control",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68882,15 +68882,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:release-propagation-work-control",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"release-propagation-work-control\"]",
-          "valueRoot": "sha256:79a0ae0a44292faf9d083da88b46fecf5cb8209fa8aea6c68c63b425d64bcde9"
+          "valueRoot": "sha256:915d5d1b2b5b8d029edc17c563250680da0750fea3677a1a8a5eb15a2f23762a"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:release-tail-provider-plane",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68904,15 +68904,15 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:release-tail-provider-plane",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"release-tail-provider-plane\"]",
-          "valueRoot": "sha256:28990f7e16b3ce9b867d4e4647e0624e13609fdc24f8137837bef216b375c462"
+          "valueRoot": "sha256:c1db2884d260fcfb541a6a593a270987675972e32a7f006e69489c05afc8d10e"
         }
       }
     },
     {
       "category": "release-delivery-recovery",
-      "disposition": "compatibility-adapter",
+      "disposition": "v4-native",
       "id": "release-delivery-recovery:stable-candidate-ledger",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-runtime-semantic-closure",
@@ -68926,9 +68926,9 @@
       "v4Route": {
         "capabilityId": "release-delivery-recovery:stable-candidate-ledger",
         "evidence": {
-          "path": "architecture/v4-capability-state-machine-manifest.json",
+          "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"stable-candidate-ledger\"]",
-          "valueRoot": "sha256:84ed6931401ba5473336e03f61111f4ff56f44fc0ff7fabfdf9a2265aa4a7fcc"
+          "valueRoot": "sha256:60207c39da5f14b07879e34be6388342a7e5ab6af814182c9c22d37611eb9ed2"
         }
       }
     },
@@ -102209,7 +102209,7 @@
       ".buildchain/*.{json,toml}",
       "dist/site/schemas/*.schema.json",
       "architecture/v3-core-mechanism-inventory.json",
-      "architecture/v4-capability-state-machine-manifest.json",
+      "architecture/v4-runtime-semantic-closure.json",
       ".github/workflows/*.{yml,yaml}",
       "git diff <prior-family-v3>..<live-v3>"
     ],
@@ -102233,9 +102233,9 @@
     },
     "liveV4": {
       "branch": "origin/dev/v4/v4.0",
-      "commit": "e54aea06424563d256631be2f1f6686f60d21f3e",
+      "commit": "b898305ba82e020ed959673be7f6e93b6b606342",
       "role": "execution-time-protected-target",
-      "tree": "b98d88ad29fd48a62846dc1477b042818dc86d10"
+      "tree": "878a2b34d91de8b2c0665b0d7e94c84a8a89c0e0"
     },
     "priorFamilyV3": {
       "branch": "origin/dev/v3/v3.0",
@@ -102267,9 +102267,8 @@
       "workflow-secret": 103
     },
     "dispositionCounts": {
-      "compatibility-adapter": 12,
       "executable-migration": 6,
-      "v4-native": 4630
+      "v4-native": 4642
     },
     "residualCount": 0,
     "unknownCount": 0,

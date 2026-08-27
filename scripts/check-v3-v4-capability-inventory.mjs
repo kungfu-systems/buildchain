@@ -17,7 +17,7 @@ export const V3_V4_CAPABILITY_INVENTORY_CONTRACT =
 export const V3_V4_CAPABILITY_CUTS = Object.freeze({
   priorFamilyV3: "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
   liveV3: "88d089b9c69dd08be00f120d623447ae881f1374",
-  liveV4: "e54aea06424563d256631be2f1f6686f60d21f3e",
+  liveV4: "b898305ba82e020ed959673be7f6e93b6b606342",
 });
 
 const INVENTORY_PATH = "architecture/v3-v4-live-capability-inventory.json";
@@ -92,6 +92,64 @@ function capabilityCutAvailable(root, revision) {
   }
 }
 
+export function assertCapabilityCutAncestor({
+  root = process.cwd(),
+  revision,
+  descendant = "HEAD",
+  label = "capability cut",
+} = {}) {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", revision, descendant], {
+      cwd: root,
+      stdio: "ignore",
+    });
+  } catch {
+    throw new Error(
+      `${label} ${revision} must be an ancestor of ${descendant}; regenerate the cut after rebasing instead of relying on a retained local object`,
+    );
+  }
+}
+
+function repositoryIsShallow(root) {
+  return (
+    execFileSync("git", ["rev-parse", "--is-shallow-repository"], {
+      cwd: root,
+      encoding: "utf8",
+    }).trim() === "true"
+  );
+}
+
+export function ensureCapabilityCutAncestor({
+  root = process.cwd(),
+  revision,
+  descendant = "HEAD",
+  label = "capability cut",
+} = {}) {
+  try {
+    assertCapabilityCutAncestor({ root, revision, descendant, label });
+    return;
+  } catch (error) {
+    if (!repositoryIsShallow(root)) throw error;
+  }
+  const descendantCommit = execFileSync(
+    "git",
+    ["rev-parse", `${descendant}^{commit}`],
+    { cwd: root, encoding: "utf8" },
+  ).trim();
+  try {
+    execFileSync(
+      "git",
+      ["fetch", "--no-tags", "--depth=128", "origin", descendantCommit],
+      { cwd: root, stdio: "ignore" },
+    );
+  } catch {
+    throw new Error(
+      `${label} ${revision} ancestry could not be hydrated from ${descendantCommit} through a bounded origin fetch`,
+    );
+  }
+  assertCapabilityCutAncestor({ root, revision, descendant, label });
+}
+
 function ensureCapabilityCutsAvailable(root) {
   const revisions = Object.values(V3_V4_CAPABILITY_CUTS);
   const missing = revisions.filter(
@@ -112,6 +170,11 @@ function ensureCapabilityCutsAvailable(root) {
       `v3/v4 capability cuts are unavailable after a bounded origin fetch: ${unavailable.join(", ")}`,
     );
   }
+  ensureCapabilityCutAncestor({
+    root,
+    revision: V3_V4_CAPABILITY_CUTS.liveV4,
+    label: "live v4 capability cut",
+  });
 }
 const RUNTIME_SYMBOLS = Object.freeze([
   "createPublicationRehearsalCapsule",
@@ -231,10 +294,7 @@ function rowFromCatalogEntry(source, targetCatalog) {
   let v4Route = null;
   let residual = null;
   if (direct) {
-    disposition =
-      source.category === "release-delivery-recovery"
-        ? "compatibility-adapter"
-        : "v4-native";
+    disposition = "v4-native";
     v4Route = { capabilityId: direct.id, evidence: direct.evidence };
   } else if (migrated) {
     disposition = "executable-migration";
@@ -342,7 +402,7 @@ export function buildV3V4CapabilityInventory({ root = process.cwd() } = {}) {
         ".buildchain/*.{json,toml}",
         "dist/site/schemas/*.schema.json",
         "architecture/v3-core-mechanism-inventory.json",
-        "architecture/v4-capability-state-machine-manifest.json",
+        "architecture/v4-runtime-semantic-closure.json",
         ".github/workflows/*.{yml,yaml}",
         "git diff <prior-family-v3>..<live-v3>",
       ],

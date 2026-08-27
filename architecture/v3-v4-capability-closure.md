@@ -52,6 +52,8 @@ unknown dispositions, unowned rows, missing source evidence, missing positive
 or negative probes, and non-residual rows without an executable v4 route.
 
 This inventory does not by itself claim stable publication or v3 retirement.
-Its public-surface rows now bind the exact Child 2 implementation candidate;
-runtime, cross-platform adopter, stable-channel, and final reconciliation
-remain separate ordered Assignments.
+Its public-surface rows bind the exact Child 2 implementation candidate, and
+its 13 runtime mechanism families bind the Child 3 semantic closure with
+positive, negative, failure, recovery, and idempotence evidence. Cross-platform
+adopter qualification, stable-channel closure, and final reconciliation remain
+separate ordered Assignments.
