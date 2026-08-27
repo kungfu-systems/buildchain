@@ -42,6 +42,12 @@
       "workflow": ".github/workflows/.release-candidate-promote.yml",
       "repository": "kungfu-systems/buildchain"
     },
+    "protectedAlphaPromotionBootstrap": {
+      "selector": "alpha/v4/v4.0",
+      "sourcePath": ".github/workflows/buildchain-ref-promotion.yml",
+      "workflow": ".github/workflows/release-candidate-promote.yml",
+      "repository": "kungfu-systems/buildchain"
+    },
     "trustedNonPersistentInput": true,
     "requiresSeparateAuthority": true,
     "requiresReadback": true,

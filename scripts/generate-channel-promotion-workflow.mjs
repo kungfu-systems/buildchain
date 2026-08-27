@@ -215,7 +215,8 @@ function consumerAdmissionJob() {
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: \${{ needs.resolve-promotion.outputs.channel }}
-          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/release-candidate-promote.yml
+          BUILDCHAIN_INVOKED_WORKFLOW: \${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}
+          BUILDCHAIN_INVOCATION_SOURCE_PATH: \${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository && '.github/workflows/buildchain-ref-promotion.yml' || '' }}
           BUILDCHAIN_WORKFLOW_SHA: \${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_RUNTIME_SHA: \${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: \${{ inputs.buildchain-stable-contract-lock-path }}
@@ -224,7 +225,6 @@ function consumerAdmissionJob() {
         run: >-
           node .buildchain/v4-policy-runtime/scripts/v4-consumer-policy.mjs scan
           --source-sha "\${{ inputs.target-sha || github.sha }}"
-
       - name: Upload rooted consumer admission receipt
         uses: actions/upload-artifact@v7.0.1
         with:

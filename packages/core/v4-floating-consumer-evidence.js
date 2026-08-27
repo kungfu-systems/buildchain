@@ -8,12 +8,18 @@ export const V4_FLOATING_CONSUMER_CERTIFICATION =
   "kungfu-buildchain-v4-floating-consumer-certification/v1";
 
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
-const ALPHA_RECOVERY_BOOTSTRAP = Object.freeze({
-  repository: "kungfu-systems/buildchain",
-  sourcePath: ".github/workflows/buildchain-ref-promotion-recovery.yml",
-  workflow: ".github/workflows/.release-candidate-promote.yml",
-  selector: "alpha/v4/v4.0",
-});
+export const isV4AlphaProtectedBootstrap = ({
+  repository,
+  sourcePath,
+  workflow,
+  selector,
+}) =>
+  repository === "kungfu-systems/buildchain" &&
+  selector === "alpha/v4/v4.0" &&
+  ((sourcePath === ".github/workflows/buildchain-ref-promotion-recovery.yml" &&
+    workflow === ".github/workflows/.release-candidate-promote.yml") ||
+    (sourcePath === ".github/workflows/buildchain-ref-promotion.yml" &&
+      workflow === ".github/workflows/release-candidate-promote.yml"));
 
 function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
@@ -116,10 +122,12 @@ function verifyAuthorityFields(value, expected, check, label) {
 
 function verifyFloatingSelector(value, check, label) {
   const bootstrap =
-    value?.caller?.repository === ALPHA_RECOVERY_BOOTSTRAP.repository &&
-    value?.invocation?.sourcePath === ALPHA_RECOVERY_BOOTSTRAP.sourcePath &&
-    value?.invocation?.workflow === ALPHA_RECOVERY_BOOTSTRAP.workflow &&
-    value?.invocation?.visibleSelector === ALPHA_RECOVERY_BOOTSTRAP.selector &&
+    isV4AlphaProtectedBootstrap({
+      repository: value?.caller?.repository,
+      sourcePath: value?.invocation?.sourcePath,
+      workflow: value?.invocation?.workflow,
+      selector: value?.invocation?.visibleSelector,
+    }) &&
     value?.invocation?.selectorClass === "protected-bootstrap" &&
     value?.invocation?.channel === "alpha";
   check(

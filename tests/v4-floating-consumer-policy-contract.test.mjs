@@ -59,7 +59,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
     root,
     repository: "kungfu-systems/buildchain",
     sourceSha: "a".repeat(40),
-    invokedWorkflow: ".github/workflows/.release-candidate-promote.yml", invocationSourcePath: ".github/workflows/buildchain-ref-promotion.yml",
+    invokedWorkflow: ".github/workflows/release-candidate-promote.yml", invocationSourcePath: ".github/workflows/buildchain-ref-promotion.yml",
     expectedInvocationChannel: "alpha",
     resolvedWorkflowSha: "b".repeat(40),
     resolvedRuntimeSha: "b".repeat(40),
@@ -68,8 +68,8 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
   });
 
   assert.equal(result.ok, true, JSON.stringify(result.failures));
-  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
-  assert.equal(result.receipt.invocation.selectorClass, "floating");
+  assert.equal(result.receipt.invocation.visibleSelector, "alpha/v4/v4.0");
+  assert.equal(result.receipt.invocation.selectorClass, "protected-bootstrap");
   assert.equal(result.receipt.invocation.channel, "alpha");
 });
 

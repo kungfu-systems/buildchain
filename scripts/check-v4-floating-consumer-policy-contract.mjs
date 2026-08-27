@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseYamlUses } from "../packages/core/workflow-yaml-contract.js";
+import { isV4AlphaProtectedBootstrap } from "../packages/core/v4-floating-consumer-evidence.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
@@ -83,11 +84,7 @@ function assertPersistedSelectors() {
       );
       if (!match) continue;
       const selector = match[2];
-      const protectedBootstrap =
-        relative ===
-          ".github/workflows/buildchain-ref-promotion-recovery.yml" &&
-        match[1] === ".github/workflows/.release-candidate-promote.yml" &&
-        selector === "alpha/v4/v4.0";
+      const protectedBootstrap = isV4AlphaProtectedBootstrap({ repository: "kungfu-systems/buildchain", sourcePath: relative, workflow: `.github/workflows/${match[1].replace(/^\.github\/workflows\//u, "")}`, selector });
       const isV4 =
         selector === "v4" ||
         selector === "v4-alpha" ||

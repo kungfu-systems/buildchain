@@ -1591,7 +1591,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
-      "auditDigest": "sha256:d9821bf071e83386e596e1d460c1adc46808451fce44b6586ae26fb11e535991"
+      "auditDigest": "sha256:4cbac1aabb76611a28dd7e3d16eb4e5e99eaa44296458744468832ab8a43bc86"
     },
     {
       "contractVersion": 1,
@@ -2257,7 +2257,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:e381804e46df51fe2ee5b71cd15c84d5af1f09df5712493e189231f755d1b8e6"
+      "auditDigest": "sha256:0dd322e490fb9757546c218947623b52744e3db212967bde95ccafc06b296683"
     },
     {
       "contractVersion": 1,
@@ -2279,7 +2279,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:fab5372c8f4ac974b708f5961342ebc1f527f4280ffeebfd37035ff520da04a9"
+      "auditDigest": "sha256:ffa0defcf1a7fc29a2605b4b60e33c1c5ba9ff2dc38039d70636ce60fbd8d8fa"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:c468c7046453ea18144eed408ac3c4ecc6593e6cf438ad1493e1aef699a3d618"
+  "contractDigest": "sha256:973b8933e485fae2ace037f783f19d63a2358c69b27af4c9d86d2dd9bc5fa77f"
 }
