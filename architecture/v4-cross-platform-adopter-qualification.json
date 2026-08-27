@@ -7,9 +7,16 @@
   "publicWorkflow": ".github/workflows/v4-adopter-delivery.yml",
   "sourceBinding": {
     "runtime": "job.workflow_sha",
-    "consumer": "github.sha",
+    "consumer": "exact checked-out consumer commit",
     "sameRuntimeAcrossMatrix": true,
+    "sameConsumerAcrossMatrix": true,
     "sameInventoryAcrossMatrix": true
+  },
+  "candidateDispatch": {
+    "externalRepositoryRequiresExactCommit": true,
+    "externalRepositoryRequiresPublicFloatingCaller": true,
+    "persistentSelectorsRemain": ["v4", "v4-alpha"],
+    "providerEffects": false
   },
   "platforms": ["linux-x64", "macos-arm64", "windows-x64"],
   "requiredConsumers": ["buildchain", "agent-hub-demo"],
