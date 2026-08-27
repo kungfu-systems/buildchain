@@ -91,8 +91,8 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `scripts/web-surface-core.mjs`
 - sources: `scripts/web-surface-production-release-pr.mjs`
 - sources: `scripts/web-surface.mjs`
+- sources: `actions/promote-buildchain-ref/internal/promotion-operations.js`
 - rust: `crates/buildchain-v4-bridge/src/main.rs`
-- rust: `crates/buildchain-v4-contracts/src/compatibility_facts/verifier.rs`
 - rust: `crates/buildchain-v4-contracts/src/main.rs`
 - rust: `crates/buildchain-v4-contracts/src/provider_operation_journal.rs`
 - rust: `crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs`
@@ -117,7 +117,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/native-artifact-signing-authority.test.mjs`
 - tests: `tests/paper.test.mjs`
 - tests: `tests/promote-buildchain-ref-governance.test.mjs`
-- tests: `tests/promote-buildchain-ref-recovery.test.mjs`
 - tests: `tests/promote-buildchain-ref.test.mjs`
 - tests: `tests/publication-authority.test.mjs`
 - tests: `tests/publish-transaction.test.mjs`
@@ -130,6 +129,13 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/v4-floating-consumer-policy.test.mjs`
 - tests: `tests/v4-publication-rehearsal.test.mjs`
 - tests: `tests/web-surface.test.mjs`
+- tests: `tests/build-surface-reusable-build.test.mjs`
+- tests: `tests/build-surface-reusable-build-signing.test.mjs`
+- tests: `tests/build-surface-reusable-build-artifacts.test.mjs`
+- tests: `tests/promote-buildchain-ref-durable-recovery.test.mjs`
+- tests: `tests/promote-buildchain-ref-major-promotion.test.mjs`
+- tests: `tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs`
+- tests: `tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs`
 - workflows: `.github/workflows/.build.yml`
 - workflows: `.github/workflows/.gate-profile.yml`
 - workflows: `.github/workflows/.publication-authority.yml`
@@ -147,6 +153,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 ### Current top twenty maintenance hotspots
 
+- `.github/workflows/.build.yml`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
@@ -165,6 +172,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `tests/promotion-channel-router.test.mjs`
 - `scripts/site-capability-metadata.mjs`
 - `tests/v4-floating-consumer-policy.test.mjs`
+- `scripts/buildchain-cli-help.mjs`
 - `scripts/check-v4-floating-consumer-policy-contract.mjs`
 - `tests/dev-delivery-warrant.test.mjs`
 - `actions/promote-buildchain-ref/internal/version-state.js`
@@ -402,6 +410,7 @@ Owner: Buildchain maintainers
 - `actions/promote-buildchain-ref/internal/durable-transaction-store.js`
 - `actions/promote-buildchain-ref/internal/durable-transaction-operations.js`
 - `actions/promote-buildchain-ref/internal/github-adapter.js`
+- `actions/promote-buildchain-ref/internal/promotion-operations.js`
 
 ### Contracts
 
@@ -478,7 +487,6 @@ Owner: Buildchain maintainers
 
 ### Implementation
 
-- `actions/promote-buildchain-ref/internal/existing-version-state.js`
 - `actions/promote-buildchain-ref/internal/version-state.js`
 - `actions/promote-buildchain-ref/internal/version-state-operations.js`
 
@@ -563,6 +571,7 @@ Owner: Buildchain workflow maintainers
 
 - `scripts/generate-channel-build-workflow.mjs`
 - `scripts/resolve-artifact-transfer-mode.mjs`
+- `scripts/resolve-build-summary-names.sh`
 - `scripts/run-lifecycle-core.mjs`
 
 ### Contracts
@@ -573,6 +582,8 @@ Owner: Buildchain workflow maintainers
 ### Tests
 
 - `tests/artifact-transfer-mode.test.mjs`
+- `tests/resolve-build-summary-names.test.mjs`
+- `tests/build-surface-reusable-build-artifacts.test.mjs`
 - `tests/build-surface.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
 - `tests/controller-evidence.test.mjs`
@@ -584,7 +595,7 @@ Owner: Buildchain workflow maintainers
 
 ### Minimal validation
 
-- `node --test tests/artifact-transfer-mode.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs`
+- `node --test tests/artifact-transfer-mode.test.mjs tests/resolve-build-summary-names.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs`
 
 ## reusable-workflow-call-contract
 

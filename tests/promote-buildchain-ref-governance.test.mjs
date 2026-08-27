@@ -47,7 +47,7 @@ const {
 } = await import("../packages/core/buildchain-config.js");
 const { sha256Json } = await import("../packages/core/release-candidate.js");
 const { resolveExistingVersionState } = await import(
-  "../actions/promote-buildchain-ref/internal/existing-version-state.js"
+  "../actions/promote-buildchain-ref/internal/version-state-operations.js"
 );
 
 const {

@@ -8,9 +8,9 @@
     "maxHandMaintainedSourceFiles": 443,
     "maxHandMaintainedSourceLines": 164424,
     "maxWorkflowFiles": 77,
-    "maxWorkflowLines": 26801,
-    "latestTransition": "Bind external adopter qualification to an exact candidate runtime and consumer source.",
-    "latestTransitionRationale": "The protected base contributes the sealed publication qualification contract, earliest declarative admission, dedicated v4 promotion Action, built-in GitHub document providers, and one manual-only dogfood workflow. One bounded catalog module and one bounded checker own exact live v3 classification, reverse-history recovery, executable routes, and residual assignment; the checker fetches the missing subset of the three declared immutable cuts in one bounded operation when a shallow consumer checkout lacks them. Two bounded compatibility modules restore historical publication-rehearsal names without adding production authority, while the reusable workflows, their generated channel routers, and the promotion Action accept only explicit legacy aliases and either normalize them into current v4 contract identity or return a rooted migration. One additional bounded checker requires all 13 runtime mechanism families to bind their exact reverse-scan residuals, v4 implementation routes, executable public surfaces, single-writer or bounded-protocol authority, disabled legacy fallback, disabled provider decision authority, and positive, negative, failure, recovery, and idempotence tests before the generated inventory can classify the runtime route as v4-native. The same checker now proves that the declared live v4 cut is an ancestor of the checked candidate, preventing a rebased but locally retained commit from passing while clean CI cannot fetch it. When a depth-one PR merge checkout already contains the cut object but not its connecting graph, one bounded exact-descendant fetch hydrates that graph before the same ancestry assertion is rerun; a genuinely unrelated cut still fails closed. Cross-platform adopter qualification adds one provider-free report and aggregate core, one public-workflow runner, and one evidence-only reconciliation lane. It binds every platform to the same exact runtime and 4,648-row inventory, executes tamper failure plus retry and terminal readback, and runs the protocol-neutral clean-room driver without granting stable publication authority. Candidate dispatch now accepts only a complete external repository, exact commit, and public floating caller-path tuple; admission records the observed consumer commit, every platform rechecks it, and the reports bind that commit beside the exact candidate runtime without persisting a candidate selector or granting provider effects. These exact 443-file, 164424-source-line, 77-workflow-file and 26801-workflow-line ceilings contain no unrelated headroom.",
+    "maxWorkflowLines": 26772,
+    "latestTransition": "Compatibility Facts verification is split into bounded validation stages.",
+    "latestTransitionRationale": "Bundle indexing and reference validation, query planning, relation-state checks, authority-proof selection, and path orchestration now have explicit private boundaries. load_bundle complexity falls from 38 to 12 and verify_path_inner falls from 216 lines and complexity 68 to 23 lines and complexity 7; every resulting function is within the default Rust budgets, verifier.rs falls from 553 to 551 lines, and no public receipt, fault, serialization, or authority contract changes.",
     "rationale": "Bounded modules separate candidate, evidence, native proof and execution, canonical failure verification, closed-set execution transfer, process-boundary verification, Warrant state and qualification, authority state, qualification, Landing acquisition, verified-attempt admission, Landing settlement and fence validation, provider attempt and heartbeat readback, sealed terminal evidence, hosted heartbeat, resume, store, options, command-specific adapters, and CLI orchestration responsibilities. The protected delivery workflow gives candidate and seal jobs no provider write credential, recursively rejects transfer drift, scopes every transfer artifact to the exact provider run attempt, chains every durable heartbeat state and receipt root on a distinct hosted runner domain, and permits qualification or exact failure settlement only after the finalizer verifies live jobs and the latest durable authority state. Public Landing admission and heartbeat always perform non-injectable fresh exact-attempt provider readback, tolerate only a not-yet-materialized seal job while retaining exact native and duplicate-job rejection, and heartbeat-loss coordination never invokes GitHub's run-scoped cancellation API where a successor rerun could race. The hosted process boundary anchors trust in the kernel-resolved versioned Runner.Worker path while accepting an equivalent argv-zero spelling with the same basename; its public boundary marker is allowed only at the one exact non-secret value, so a forged value under the same credential-like name still fails closed. The credentialless transfer seal validates the rooted native reuse decision against the Warrant-bound source, closure, dependency, toolchain, environment and command inputs; qualifiedBase stays in the proof and decision where it is rooted and later independently rechecked, rather than being assumed on the Warrant schema. V2 mutation cannot initialize a second empty authority beside a legacy ref: migration reads and roots the canonical live v1 ref, rechecks it, applies the explicit configured v2 policy, and atomically replaces its bytes through one expected-old non-force update, so old v1 controllers fail closed while the prior commit remains immutable history. Candidate ancestry classifies the GitHub artifact runtime token as credential authority. Every Landing settlement, including an unexpired fence, requires product-owned terminal readback. Terminal cleanup reads the immutable historical attempt, derives workflow and hosted Landing job identity from live run data, reads the exact protected ref head and compares containment against that immutable SHA, and seals merged only when the admitted merge-group head is contained by that protected base; a later different-head merge settles the old attempt as dequeued. Terminal normalization preserves transfer, finalizer boundary, native and seal job, admitted provider attempt, protected-base head, containment result, and terminal readback coordinates. The public reusable workflow truthfully retains its single-flight v1 authority without advertising v2 migration, while bounded v2 remains a separate opt-in CLI, Node API, and schema contract; the tracked self-caller stays on public v4-alpha with matching stable and alpha locks, and transient train selection is dispatch-only. Next-development parity adds one versioned transition authority, one durable controller, one bounded reservation adapter, and pure public-contract recovery evidence while retaining the existing thin floating-channel callers byte-for-byte. The floating-consumer gate reuses the existing contract-world evaluator so SHA drift passes only under the selected lock's compatibility policy, breaking surface drift still fails closed, and external certification reconstructs the receipt from the observed workflow SHA rather than the lock's historical evidence SHA. Tail reseal adds no Stage Capsule effect or general rebuild authority: it verifies the exact retained four-platform bytes, admits one known macOS tail failure through live provider readback, fences signing and finalization to explicit credentials and Warrant identity, and requires standard candidate Passport plus provider and protected readback. Compatibility Facts parity isolates canonical encoding, temporal verification, lifecycle validation, fixture projection, public authority projection, and CLI adaptation into bounded modules; legacy digest and proof arrays are derived only from exact current Fact lineage. Publication Rehearsal adds no production release authority: the content-addressed capsule contract binds source, candidate, manifest, config, canonical data-only provider bindings, provider policy, observations and core version separately from filesystem, runtime and rehearsal-only provider authority; simulate, replay and explicitly authorized provider rehearsal all reuse the release-tail planner, while same-commit local dogfood resolves the new reusable contract and exact current runtime before external callers remain on floating v4-alpha. Cross-runtime candidate recovery preserves original runtime and provider roots and creates resume lineage only after exact public ref, tag, ancestry, npm version and integrity readback. Adopter Delivery restores the reviewed public v3 gate, drivers, Passport binding, N-1 bootstrap and exact archive loader through one public v4 surface while keeping provider and release authority explicit non-claims. Floating Alpha bootstrap uses only the existing exact resolver and protected Alpha private shell to move an otherwise stale floating shell, retains public v4 stable promotion, and removes itself after protected readback. CI lane change-budget enforcement adds a bounded parser, evaluator, guard, and tests without creating another merge authority.",
     "governance": "legacy-debt-sunset-2026q4"
   },
@@ -21,6 +21,11 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
+    "actions/promote-buildchain-ref/internal/promotion-operations.js": {
+      "maxLines": 1320,
+      "rationale": "The exact ref-mutation and reconciliation factories move intact behind one injected internal boundary. Consolidating the one-consumer existing-version-state helper keeps repository file and source-line totals flat while the public facade falls by 1317 lines.",
+      "governance": "stage3-promotion-facade-reduction"
+    },
     "packages/core/next-development-transition.js": {
       "maxLines": 738,
       "rationale": "The single versioned authority keeps completed-Alpha identity, legal successor models, role-separated adapter bounds, materialization roots, compare-and-swap transitions and deterministic replay validation together. Anchored and manual initial state persists as waiting-anchor after reviewed input and exposes rooted anchor binding plus controller materialization recording; this exact reviewed ceiling cannot grow implicitly.",
@@ -136,9 +141,9 @@
       "governance": "legacy-debt-sunset-2026q4"
     },
     "actions/promote-buildchain-ref/lib.js": {
-      "maxLines": 4788,
-      "rationale": "Static promotion dependencies are isolated from request state, the option and operation contexts are grouped without changing keys or defaults, and top-level lexical gaps no longer inflate the audited facade. The existing responsibility factories preserve promotion, sealed-publication, and family-evidence behavior; the file ceiling drops from 6952 to 4788 and cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
+      "maxLines": 3471,
+      "rationale": "The stable facade injects exact ref-mutation and reconciliation dependencies into one internal module while retaining its exported factory, option defaults, operation order, public contracts and authority boundaries. The exact file ceiling falls from 4788 to 3471 and cannot grow implicitly.",
+      "governance": "stage3-promotion-facade-reduction"
     },
     "bin/buildchain.mjs": {
       "maxLines": 1946,
@@ -1638,15 +1643,27 @@
       "rationale": "The single transaction executor preserves bounded retry, pre-effect and post-effect readback, atomic checkpoints and provider non-authority from the reviewed v3 implementation; these exact ceilings cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "actions/promote-buildchain-ref/lib.js#createRefMutationOperations": {
+    "actions/promote-buildchain-ref/internal/promotion-operations.js#createRefMutationOperations": {
       "maxLines": 648,
-      "rationale": "Transplanted legacy ref and provider mutation operations; independently tested and prevented from growing beyond this exact extraction point.",
-      "governance": "legacy-debt-sunset-2026q4"
+      "rationale": "The ref and provider mutation factory is transplanted byte-for-byte behind explicit dependency injection; independently tested and prevented from growing beyond this exact extraction point.",
+      "governance": "stage3-promotion-facade-reduction"
     },
-    "actions/promote-buildchain-ref/lib.js#createReconciliationOperations": {
+    "actions/promote-buildchain-ref/internal/promotion-operations.js#updateBranch": {
+      "maxLines": 378,
+      "maxComplexity": 34,
+      "rationale": "The nested protected-ref update transaction retains exact readback, status-check, merge, PR fallback and non-fast-forward behavior under the extracted factory; these inherited ceilings cannot grow.",
+      "governance": "stage3-promotion-facade-reduction"
+    },
+    "actions/promote-buildchain-ref/internal/promotion-operations.js#createReconciliationOperations": {
       "maxLines": 672,
-      "rationale": "Transplanted legacy reconciliation operations; isolated from orchestration and prevented from growing beyond this exact extraction point.",
-      "governance": "legacy-debt-sunset-2026q4"
+      "rationale": "The reconciliation factory is transplanted byte-for-byte behind explicit dependency injection; isolated from orchestration and prevented from growing beyond this exact extraction point.",
+      "governance": "stage3-promotion-facade-reduction"
+    },
+    "actions/promote-buildchain-ref/internal/promotion-operations.js#assertReleasePrOrVersionStateParent": {
+      "maxLines": 335,
+      "maxComplexity": 42,
+      "rationale": "The nested release-lineage verifier retains exact PR, recovery, tree-equivalence and allowed-path ordering under the extracted factory; these inherited ceilings cannot grow.",
+      "governance": "stage3-promotion-facade-reduction"
     },
     "actions/promote-buildchain-ref/internal/version-state-operations.js#createVersionStateOperations": {
       "maxLines": 415,
@@ -1779,26 +1796,95 @@
       "expiresOn": "2026-12-31",
       "owner": "Buildchain architecture maintainers",
       "followUp": "Replace every legacy ceiling with the default budget or a lower net-debt target before this profile expires."
+    },
+    "stage1-test-split-net-reduction": {
+      "mode": "net-debt-reduction",
+      "metrics": {
+        "maxFunctionLines": {
+          "baseline": 872,
+          "target": 506
+        }
+      }
+    },
+    "stage2-workflow-yaml-reduction": {
+      "mode": "net-debt-reduction",
+      "metrics": {
+        "maxLines": {
+          "baseline": 3370,
+          "target": 3341
+        }
+      }
+    },
+    "stage3-promotion-facade-reduction": {
+      "mode": "net-debt-reduction",
+      "metrics": {
+        "maxLines": {
+          "baseline": 4788,
+          "target": 3471
+        }
+      }
     }
   },
   "approvedTestDebtTransitions": {
     "tests/build-surface.test.mjs": {
-      "maxLines": 4549,
-      "maxFunctionLines": 872,
-      "maxFunctionComplexity": 57,
-      "rationale": "A shared repository-text fixture removes repeated path and encoding assembly across the highest-churn build-surface test while preserving every assertion and exact fixture byte. Aggregate maintained test lines fall from 4639 to 4549 and this exact ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
+      "maxLines": 3680,
+      "maxFunctionLines": 506,
+      "maxFunctionComplexity": 13,
+      "rationale": "The reusable-build contract moved into three source, signing/cache, and artifact/summary scenario files, while shared repository and occurrence fixtures remove duplication. The maintained build-surface family falls from 4549 to 4543 lines and the largest remaining function falls from 872 to 506 lines without dropping assertions.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/build-surface-reusable-build.test.mjs": {
+      "maxFunctionLines": 342,
+      "maxFunctionComplexity": 16,
+      "rationale": "Extracted tests/build-surface-reusable-build.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/build-surface-reusable-build-signing.test.mjs": {
+      "maxFunctionLines": 266,
+      "maxFunctionComplexity": 16,
+      "rationale": "Extracted tests/build-surface-reusable-build-signing.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/build-surface-reusable-build-artifacts.test.mjs": {
+      "maxFunctionLines": 232,
+      "maxFunctionComplexity": 14,
+      "rationale": "Extracted tests/build-surface-reusable-build-artifacts.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/promote-buildchain-ref-durable-recovery.test.mjs": {
+      "maxFunctionLines": 219,
+      "maxFunctionComplexity": 2,
+      "rationale": "Extracted tests/promote-buildchain-ref-durable-recovery.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/promote-buildchain-ref-major-promotion.test.mjs": {
+      "maxFunctionLines": 228,
+      "maxFunctionComplexity": 2,
+      "rationale": "Extracted tests/promote-buildchain-ref-major-promotion.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs": {
+      "maxFunctionLines": 262,
+      "maxFunctionComplexity": 2,
+      "rationale": "Extracted tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs": {
+      "maxFunctionLines": 244,
+      "maxFunctionComplexity": 6,
+      "rationale": "Extracted tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
     }
   },
   "approvedWorkflowDebtTransitions": {
     ".github/workflows/.build.yml": {
-      "maxLines": 3370,
+      "maxLines": 3341,
       "maxJobs": 14,
       "maxSteps": 194,
       "maxStepsPerJob": 44,
       "maxDecisions": 113,
-      "rationale": "The reusable build workflow declares two historical contract-channel aliases and one pre-policy normalization step. The aliases can only select the same v4 contract identity, conflicts fail before build authority, and these exact ceilings contain no unrelated headroom.",
-      "governance": "legacy-debt-sunset-2026q4"
+      "rationale": "Pure release-candidate channel and summary-name computation runs in the exact checked-out Buildchain runtime script. Jobs, steps, decisions, permissions, credentials, outputs, uploads, publication authority and failure behavior are unchanged; YAML lines fall from 3370 to 3341 and cannot grow implicitly.",
+      "governance": "stage2-workflow-yaml-reduction"
     },
     ".github/workflows/.release-candidate-promote.yml": {
       "maxLines": 2708,

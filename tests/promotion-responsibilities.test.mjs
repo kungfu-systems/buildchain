@@ -14,6 +14,10 @@ import {
 import { promoteMajorChannel } from "../actions/promote-buildchain-ref/internal/promote-major-channel.js";
 import { promoteReleaseChannel } from "../actions/promote-buildchain-ref/internal/promote-release-channel.js";
 import { createDurableTransactionOperations as createDurableTransactionOperationsModule } from "../actions/promote-buildchain-ref/internal/durable-transaction-operations.js";
+import {
+  createReconciliationOperations as createReconciliationOperationsModule,
+  createRefMutationOperations as createRefMutationOperationsModule,
+} from "../actions/promote-buildchain-ref/internal/promotion-operations.js";
 import { createVersionStateOperations } from "../actions/promote-buildchain-ref/internal/version-state-operations.js";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -25,6 +29,8 @@ test("promotion facade delegates to independently owned channel modules", () => 
   assert.equal(typeof createVersionStateOperations, "function");
   assert.equal(typeof createDurableTransactionOperations, "function");
   assert.equal(typeof createDurableTransactionOperationsModule, "function");
+  assert.equal(typeof createRefMutationOperationsModule, "function");
+  assert.equal(typeof createReconciliationOperationsModule, "function");
   const facade = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/lib.js"),
     "utf8",
@@ -54,6 +60,11 @@ test("promotion facade delegates to independently owned channel modules", () => 
       `${channel} channel module is ${moduleLines} lines`,
     );
   }
+  assert.match(facade, /from "\.\/internal\/promotion-operations\.js"/);
+  assert.doesNotMatch(
+    facade,
+    /async function assertPromotionPrOrVersionStateParent/,
+  );
 });
 
 test("alpha recovery selects the exact advanced publication transaction before an older contained transaction", () => {
