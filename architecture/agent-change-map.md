@@ -153,6 +153,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 ### Current top twenty maintenance hotspots
 
+- `.github/workflows/.build.yml`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
@@ -569,6 +570,7 @@ Owner: Buildchain workflow maintainers
 
 - `scripts/generate-channel-build-workflow.mjs`
 - `scripts/resolve-artifact-transfer-mode.mjs`
+- `scripts/resolve-build-summary-names.sh`
 - `scripts/run-lifecycle-core.mjs`
 
 ### Contracts
@@ -579,6 +581,8 @@ Owner: Buildchain workflow maintainers
 ### Tests
 
 - `tests/artifact-transfer-mode.test.mjs`
+- `tests/resolve-build-summary-names.test.mjs`
+- `tests/build-surface-reusable-build-artifacts.test.mjs`
 - `tests/build-surface.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
 - `tests/controller-evidence.test.mjs`
@@ -590,7 +594,7 @@ Owner: Buildchain workflow maintainers
 
 ### Minimal validation
 
-- `node --test tests/artifact-transfer-mode.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs`
+- `node --test tests/artifact-transfer-mode.test.mjs tests/resolve-build-summary-names.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs`
 
 ## reusable-workflow-call-contract
 

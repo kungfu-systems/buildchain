@@ -2934,7 +2934,7 @@
         "current": {
           "functions": {
             "<anonymous@3>@3": {
-              "lines": 232
+              "lines": 230
             }
           }
         },
@@ -3049,7 +3049,7 @@
           "decisions": 113
         },
         "current": {
-          "lines": 3370,
+          "lines": 3341,
           "jobs": 14,
           "steps": 194,
           "maxStepsPerJob": 44,
@@ -3257,6 +3257,7 @@
     }
   },
   "hotspots": [
+    ".github/workflows/.build.yml",
     "tests/v4-floating-consumer-policy-contract.test.mjs",
     ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/buildchain-ref-promotion.yml",

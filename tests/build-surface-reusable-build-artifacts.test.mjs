@@ -129,10 +129,8 @@ test("reusable build workflow exposes artifact and summary contracts", () => {
   );
   assert.match(
     workflow,
-    /release-candidate-target-channel=\$\{rc_target_channel\}/,
+    /resolve-build-summary-names\.sh/,
   );
-  assert.match(workflow, /alpha\/\*\)/);
-  assert.match(workflow, /release\/\*\)/);
   assert.match(
     workflow,
     /if: \$\{\{ steps\.names\.outputs\.release-candidate-enabled == 'true' \}\}/,
