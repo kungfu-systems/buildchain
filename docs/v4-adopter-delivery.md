@@ -1,6 +1,6 @@
 ---
 status: preview
-period: 2026-08-16
+period: 2026-08-27
 theme: buildchain-v4-adopter-delivery
 doc_type: product-manual
 source_level: local-files
@@ -8,12 +8,12 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-16
+last_reviewed: 2026-08-27
 ai_provenance:
   model_family: GPT-5
   product: Codex
-  generated_at: 2026-08-16
-  visible_context: Exact protected v3 adopter-delivery cut, v4 pure contract core, published npm archive bytes, and public consumer policy.
+  generated_at: 2026-08-27
+  visible_context: Exact protected v3 adopter-delivery cut, v4 pure contract core, published npm archive bytes, public consumer policy, complete v3 capability inventory, and rooted cross-platform qualification reports.
   invisible_context_boundary: No credentials, provider mutations, signing operations, publication operations, or release authority were used.
 ---
 
@@ -123,6 +123,25 @@ The reusable workflow downloads exact public N-1 npm archives and uses the
 committed byte roots, semantic identity, and authority readback root. It has
 only `contents: read`; no provider credential or production writer is accepted
 or synthesized.
+
+## Cross-platform capability qualification
+
+The reusable workflow also produces a rooted report on `linux-x64`,
+`macos-arm64`, and `windows-x64`. Each report binds `job.workflow_sha`, the
+consumer source SHA, and the complete 4,648-row v3-to-v4 inventory. Source-only
+capabilities retain their raw category counts with an `exact-source-route`
+applicability; they are not mislabeled as operating-system executions.
+
+The executable boundary is exercised rather than inferred: a public run must
+pass, a substituted readback must fail, retry must reproduce the original root,
+terminal verification and N-1 bootstrap must pass, and the independent
+`ledger-specification-driver` clean-room test must pass without a KFD package.
+The workflow then reconciles one exact report from each platform. Final family
+qualification combines the Buildchain self-dogfood and `agent-hub-demo`
+matrices through the exported
+`@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification` aggregator.
+The report and aggregate explicitly grant no production, provider, release, or
+stable-publication authority.
 
 ## Offline vectors
 

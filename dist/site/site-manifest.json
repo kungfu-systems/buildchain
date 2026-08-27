@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:fbfa6187b2cb6994018f7c6bce63acff71b8663e43397df4576ba8aeb402d7ee"
+      "digest": "sha256:246ef4b3cfc157c02bdd1586004e86b16c1b5ae6150c3bcf3d40f920110bd620"
     },
     {
       "id": "build-facts",
@@ -301,7 +301,7 @@
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:c74a004657f64d29ba2a47f599223e5ab132daf2881cf0564c85c04b22a69e6e"
+      "digest": "sha256:aa8881cb2c9529aefd33147b5bd6f94e8f1ab567a4550bdbd01253252353465e"
     },
     {
       "id": "publish-transaction",
