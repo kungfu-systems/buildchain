@@ -4,156 +4,87 @@ import crypto from "node:crypto";
 import os from "node:os";
 import { execFileSync, execSync } from "node:child_process";
 import {
-  discoverConfiguredDerivedVersionMaterial,
-  getLifecycleStage,
-  getPublishContract,
-  getVersionStrategy,
-  loadConfiguredAnchorManifest,
-  loadBuildchainConfig,
-  runLifecycleStage,
+  discoverConfiguredDerivedVersionMaterial, getLifecycleStage, getPublishContract,
+  getVersionStrategy, loadConfiguredAnchorManifest, loadBuildchainConfig, runLifecycleStage,
 } from "../../packages/core/buildchain-config.js";
 import { spawnSyncCommand } from "../../packages/core/spawn-command.js";
 import {
-  DEFAULT_REPOSITORY,
-  LEGACY_MAJOR_GATE_REF,
-  MAJOR_GATE_REF,
-  assertPromotableRepository,
-  assertPromotableTargetRef,
-  assertSha,
-  expectedHeadRefForTarget,
-  getPromotionRule,
-  isAllowedReleaseLineRecoveryPath,
-  parsePublishGateChannelRef,
-  parseReleaseLineRecoveryRef,
-  parseReleaseLineRef,
-  parseRepository,
-  parseTags,
-  stripTagPrefix,
+  DEFAULT_REPOSITORY, LEGACY_MAJOR_GATE_REF, MAJOR_GATE_REF,
+  assertPromotableRepository, assertPromotableTargetRef, assertSha,
+  expectedHeadRefForTarget, getPromotionRule, isAllowedReleaseLineRecoveryPath,
+  parsePublishGateChannelRef, parseReleaseLineRecoveryRef, parseReleaseLineRef,
+  parseRepository, parseTags, stripTagPrefix,
 } from "./internal/promotion-policy.js";
 import {
-  alignMajorBootstrapReleaseImpact,
-  assertAllowedLocalChanges,
-  createTreeEquivalentReleaseImpact,
-  currentConfiguredVersion,
-  discoverVersionStateFiles,
-  resolveReleaseImpactInput,
-  runVersionVerification,
-  sha256Content,
-  uniquePaths,
-  updateVersionStateContents,
-  versionVerificationAllowedPathsForPromotion,
-  versionVerificationEnv,
-  writeJsonContent,
+  alignMajorBootstrapReleaseImpact, assertAllowedLocalChanges,
+  createTreeEquivalentReleaseImpact, currentConfiguredVersion, discoverVersionStateFiles,
+  resolveReleaseImpactInput, runVersionVerification, sha256Content, uniquePaths,
+  updateVersionStateContents, versionVerificationAllowedPathsForPromotion,
+  versionVerificationEnv, writeJsonContent,
 } from "./internal/version-state.js";
 import {
-  collectPromotionVersionMaterial,
-  collectRemoteVersionMaterial,
-  remoteVersionStateFilesMatch,
-  getGitCommitWithRetry,
-  getGitRefOrUndefined,
-  listPullRequestsAssociatedWithCommitWithRetry,
-  nonFastForwardUpdateRejected,
-  notFound,
-  retryGitHubOperation,
+  collectPromotionVersionMaterial, collectRemoteVersionMaterial, remoteVersionStateFilesMatch,
+  getGitCommitWithRetry, getGitRefOrUndefined, listPullRequestsAssociatedWithCommitWithRetry,
+  nonFastForwardUpdateRejected, notFound, retryGitHubOperation,
 } from "./internal/github-adapter.js";
 import {
-  persistDurableReleaseTransaction,
-  readDurableReleaseTransaction,
+  persistDurableReleaseTransaction, readDurableReleaseTransaction,
   restoreDurableReleaseTransaction,
 } from "./internal/durable-transaction-store.js";
 import {
-  attachReleaseTransactionSealedBundle,
-  assertTransactionIdentity,
-  createReleaseTransaction,
-  defaultPublishEvidencePath,
-  defaultReleaseStatePath,
-  planArtifactPublish,
-  releaseTransactionStateRef,
-  parsePublishArtifactsJson,
-  planTransactionRecovery,
-  readPublishEvidence,
-  readReleaseTransaction,
-  recordReleaseTransactionMilestone,
-  releaseTransactionPublicationState,
-  transitionReleaseTransaction,
-  validatePublishEvidence,
-  resolvePublishArtifactRequirements,
-  writeReleaseTransaction,
+  attachReleaseTransactionSealedBundle, assertTransactionIdentity, createReleaseTransaction,
+  defaultPublishEvidencePath, defaultReleaseStatePath, planArtifactPublish,
+  releaseTransactionStateRef, parsePublishArtifactsJson, planTransactionRecovery,
+  readPublishEvidence, readReleaseTransaction, recordReleaseTransactionMilestone,
+  releaseTransactionPublicationState, transitionReleaseTransaction, validatePublishEvidence,
+  resolvePublishArtifactRequirements, writeReleaseTransaction,
 } from "../../packages/core/publish-transaction.js";
 import { verifyPublicationSealedBundle } from "../../packages/core/publication-sealed-bundle.js";
 import {
-  collectGitHubReleasePassport,
-  verifyReleasePassport,
+  collectGitHubReleasePassport, verifyReleasePassport,
 } from "../../packages/core/release-passport.js";
 import { validateReleaseCandidatePassport } from "../../packages/core/release-candidate.js";
 import { validateReleaseCandidateRecoveryReceipt } from "../../packages/core/release-candidate-recovery.js";
 import { verifyPublicationQualificationReceipt } from "../../packages/core/publication-authority.js";
 import {
-  createBuildchainKfd1Witness,
-  createBuildchainKfd2Claims,
-  createBuildchainKfd3ArtifactWitness,
-  createBuildchainKfd3PrebuildWitness,
+  createBuildchainKfd1Witness, createBuildchainKfd2Claims,
+  createBuildchainKfd3ArtifactWitness, createBuildchainKfd3PrebuildWitness,
 } from "../../packages/core/buildchain-kfd-claims.js";
 import {
-  BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH,
-  BUILDCHAIN_KFD2_CLAIMS_DIR,
-  BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH,
-  BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
+  BUILDCHAIN_KFD1_CONTRACT_WORLD_WITNESS_PATH, BUILDCHAIN_KFD2_CLAIMS_DIR,
+  BUILDCHAIN_KFD3_ARTIFACT_WITNESS_PATH, BUILDCHAIN_KFD3_PREBUILD_WITNESS_PATH,
 } from "../../packages/core/buildchain-layout.js";
 import { promoteMajorChannel } from "./internal/promote-major-channel.js";
 import { promoteAlphaChannel } from "./internal/promote-alpha-channel.js";
 import { promoteReleaseChannel } from "./internal/promote-release-channel.js";
 import { createVersionStateOperations as createVersionStateOperationsModule } from "./internal/version-state-operations.js";
 import { createDurableTransactionOperations as createDurableTransactionOperationsModule, finalizationRequirements } from "./internal/durable-transaction-operations.js";
-
 const COMMIT_IDENTITY = {
   name: "Keren Dong",
   email: "keren.dong@kungfu.link",
 };
 const COMMIT_SIGN_OFF = `Signed-off-by: ${COMMIT_IDENTITY.name} <${COMMIT_IDENTITY.email}>`;
 const GITHUB_ACTIONS_APP_ID = 15368;
-
 function createVersionStateOperations(context) {
   return createVersionStateOperationsModule({
-    ...context,
-    COMMIT_IDENTITY,
-    alignMajorBootstrapReleaseImpact,
-    currentConfiguredVersion,
-    discoverConfiguredDerivedVersionMaterial,
-    discoverVersionStateFiles,
-    getGitCommitWithRetry,
-    getGitRefOrUndefined,
-    getLifecycleStage,
-    getVersionStrategy,
-    loadConfiguredAnchorManifest,
-    runVersionVerification,
-    sha256Content,
-    signedGeneratedCommitMessage,
-    uniquePaths,
-    updateVersionStateContents,
-    versionVerificationAllowedPathsForPromotion,
-    versionVerificationEnv,
+    ...context, COMMIT_IDENTITY, alignMajorBootstrapReleaseImpact,
+    currentConfiguredVersion, discoverConfiguredDerivedVersionMaterial,
+    discoverVersionStateFiles, getGitCommitWithRetry, getGitRefOrUndefined,
+    getLifecycleStage, getVersionStrategy, loadConfiguredAnchorManifest,
+    runVersionVerification, sha256Content, signedGeneratedCommitMessage,
+    uniquePaths, updateVersionStateContents,
+    versionVerificationAllowedPathsForPromotion, versionVerificationEnv,
   });
 }
-
 function createDurableTransactionOperations(context) {
   return createDurableTransactionOperationsModule({
-    ...context,
-    assertExpectedPublicationVersion,
-    beginTransactionFinalization,
-    collectAndPersistReleasePassport,
-    completeTransactionFinalization,
-    getLifecycleStage,
-    loadBuildchainConfig,
-    path,
-    publicReleaseTagForTransaction,
-    releaseTagForPublishedVersion,
-    releaseTransactionPublicationState,
-    runPublishTransaction,
-    splitPathList,
+    ...context, assertExpectedPublicationVersion, beginTransactionFinalization,
+    collectAndPersistReleasePassport, completeTransactionFinalization,
+    getLifecycleStage, loadBuildchainConfig, path, publicReleaseTagForTransaction,
+    releaseTagForPublishedVersion, releaseTransactionPublicationState,
+    runPublishTransaction, splitPathList,
   });
 }
-
 function signedGeneratedCommitMessage(message) {
   const normalized = String(message || "").trimEnd();
   if (normalized.split("\n").some((line) => line.trim() === COMMIT_SIGN_OFF)) {
@@ -161,7 +92,6 @@ function signedGeneratedCommitMessage(message) {
   }
   return `${normalized}\n\n${COMMIT_SIGN_OFF}`;
 }
-
 function runPublishCommand({ cwd, command, loadedConfig, env }) {
   const lifecyclePublish = getLifecycleStage(loadedConfig, "publish");
   if (command) {
@@ -185,7 +115,6 @@ function runPublishCommand({ cwd, command, loadedConfig, env }) {
   }
   return "none";
 }
-
 function rematerializedNpmPackEnvironment({ cwd, env, version, published = false }) {
   const packagePath = path.join(cwd, "package.json");
   if (!fs.existsSync(packagePath)) return undefined;
@@ -222,7 +151,6 @@ function rematerializedNpmPackEnvironment({ cwd, env, version, published = false
     throw error;
   }
 }
-
 function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, version, published = false }) {
   const discovered = discoverVersionStateFiles(cwd);
   const changedFiles = updateVersionStateContents(discovered.files, version);
@@ -268,7 +196,6 @@ function runRematerializedPublishCommand({ cwd, command, loadedConfig, env, vers
     }
   }
 }
-
 function runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishCommand, loadedConfig, context, version, published = false }) {
   if (existingNpmPromotion) {
     throw new Error(
@@ -289,24 +216,19 @@ function runResumeRematerializedPublish({ existingNpmPromotion, cwd, publishComm
   }
   return `resume-rematerialized:${source}`;
 }
-
 function npmPackageSpec(artifact) {
   return `${artifact.name}@${artifact.ref}`;
 }
-
 function isAlphaLikeVersion(version) {
   return /(?:^|[-.])alpha(?:[-.]|$)/i.test(String(version || ""));
 }
-
 function defaultDistTagForChannel(channel) {
   return channel === "alpha" ? "alpha" : "latest";
 }
-
 function releaseLineMajor(line) {
   const match = String(line || "").match(/^v(\d+)\.\d+$/);
   return match ? Number(match[1]) : undefined;
 }
-
 function alphaDistTagForPromotion({
   ownsMajorAlphaTag,
   line,
@@ -332,7 +254,6 @@ function alphaDistTagForPromotion({
   }
   return publishDistTag || `${line}-alpha`;
 }
-
 function resolvePublishContract({
   loadedConfig,
   channel,
@@ -393,7 +314,6 @@ function resolvePublishContract({
     mainPackage,
   };
 }
-
 function allRequiredArtifactsAreNpm(requiredArtifacts) {
   return (
     requiredArtifacts.length > 0 &&
@@ -402,7 +322,6 @@ function allRequiredArtifactsAreNpm(requiredArtifacts) {
     )
   );
 }
-
 function orderNpmArtifactsForPackageSet({ artifacts, contract }) {
   if (contract.packageSetOrder !== "platforms-first-main-last") {
     return artifacts;
@@ -413,7 +332,6 @@ function orderNpmArtifactsForPackageSet({ artifacts, contract }) {
     ...artifacts.filter((artifact) => artifact.role === "main" || artifact.name === mainPackage),
   ];
 }
-
 function validatePublishContractForArtifacts({ channel, contract, requiredArtifacts,
 }) {
   if (contract.mode === "promote-existing-version" && !allRequiredArtifactsAreNpm(requiredArtifacts)) {
@@ -438,7 +356,6 @@ function validatePublishContractForArtifacts({ channel, contract, requiredArtifa
     }
   }
 }
-
 function readExistingNpmIntegrity({ cwd, artifact }) {
   const spec = npmPackageSpec(artifact);
   try {
@@ -460,14 +377,12 @@ function readExistingNpmIntegrity({ cwd, artifact }) {
     throw new Error(`existing npm artifact is required for release promotion: ${spec}: ${message}`);
   }
 }
-
 function resolveExistingNpmArtifacts({ cwd, requiredArtifacts }) {
   return requiredArtifacts.map((artifact) => ({
     ...artifact,
     digest: readExistingNpmIntegrity({ cwd, artifact }),
   }));
 }
-
 function writeExistingNpmEvidence({
   evidencePath,
   version,
@@ -499,17 +414,14 @@ function writeExistingNpmEvidence({
     )}\n`,
   );
 }
-
 function writeJsonFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
   return filePath;
 }
-
 function toRepoRelative(cwd, filePath) {
   return path.relative(cwd, filePath).split(path.sep).join("/");
 }
-
 function readJsonFileIfExists(filePath) {
   if (!filePath || !fs.existsSync(filePath)) {
     return undefined;
@@ -520,12 +432,10 @@ function readJsonFileIfExists(filePath) {
     return undefined;
   }
 }
-
 function existingJsonObjectFile(filePath) {
   const content = readJsonFileIfExists(filePath);
   return content && typeof content === "object" && !Array.isArray(content) ? filePath : "";
 }
-
 function releasePassportArtifactFiles(outputDir) {
   if (!outputDir || !fs.existsSync(outputDir)) {
     return [];
@@ -557,7 +467,6 @@ function releasePassportArtifactFiles(outputDir) {
     })
     .sort((left, right) => left.path.localeCompare(right.path));
 }
-
 function backfillReleasePassportStateSha(outputDir, releaseStateSha) {
   if (!outputDir || !releaseStateSha) {
     return undefined;
@@ -574,7 +483,6 @@ function backfillReleasePassportStateSha(outputDir, releaseStateSha) {
   writeJsonFile(passportPath, passport);
   return passportPath;
 }
-
 function summarizeReleasePassportIssues(report) {
   return (Array.isArray(report?.issues) ? report.issues : [])
     .filter((entry) => entry?.level === "error")
@@ -585,7 +493,6 @@ function summarizeReleasePassportIssues(report) {
     })
     .join("; ");
 }
-
 async function verifyCollectedReleasePassport({ collected, cwd, phase = "generated",
 }) {
   const passportPath = path.join(collected.outputDir, "buildchain.release.json",
@@ -608,18 +515,15 @@ async function verifyCollectedReleasePassport({ collected, cwd, phase = "generat
   }
   return report;
 }
-
 function splitPathList(value = "") {
   return String(value || "")
     .split(/[\n,]/)
     .map((entry) => entry.trim())
     .filter(Boolean);
 }
-
 function releaseCandidateEvidenceChannel(publicationChannel) {
   return publicationChannel === "major" ? "release" : publicationChannel;
 }
-
 function validatePromotionReleaseCandidate({
   cwd,
   passportPath = ".buildchain/artifacts/release-candidate-passport.json",
@@ -716,17 +620,14 @@ function validatePromotionReleaseCandidate({
     publicationVersionBinding: recoveryReceiptValidation?.ok ? "recovery-receipt" : "candidate-passport",
   };
 }
-
 function resolveMaybeRelative(cwd, filePath) {
   return path.isAbsolute(filePath) ? filePath : path.resolve(cwd, filePath);
 }
-
 function existingFiles(paths = [], cwd = process.cwd()) {
   return paths
     .map((filePath) => resolveMaybeRelative(cwd, filePath))
     .filter((filePath) => fs.existsSync(filePath));
 }
-
 function platformManifestPathsFromBuildSummary(buildSummaryPath, cwd = process.cwd()) {
   const summary = readJsonFileIfExists(buildSummaryPath);
   if (!summary) {
@@ -738,7 +639,6 @@ function platformManifestPathsFromBuildSummary(buildSummaryPath, cwd = process.c
     .map((manifestPath) => resolveMaybeRelative(cwd, manifestPath))
     .filter((manifestPath) => fs.existsSync(manifestPath));
 }
-
 function packageSetFromArtifacts({ artifacts = [], contract = {}, registry = "https://registry.npmjs.org/",
 } = {}) {
   if (!artifacts.length || contract.packageSetOrder !== "platforms-first-main-last") {
@@ -767,7 +667,6 @@ function packageSetFromArtifacts({ artifacts = [], contract = {}, registry = "ht
     platforms: normalized,
   };
 }
-
 function writeDistTagPromotionEvidence({
   evidencePath,
   mode,
@@ -793,7 +692,6 @@ function writeDistTagPromotionEvidence({
     })),
   });
 }
-
 function findTransactionEvidencePath({ cwd, transaction, fallbackName }) {
   for (const entry of transaction?.evidence || []) {
     const normalized = String(entry || "");
@@ -803,12 +701,10 @@ function findTransactionEvidencePath({ cwd, transaction, fallbackName }) {
   }
   return "";
 }
-
 function npmTokenLooksConfigured() {
   return Boolean(process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN || process.env.npm_config__authToken,
   );
 }
-
 function execNpmSync(args, options) {
   const result = spawnSyncCommand("npm", args, options);
   if (result.error) throw result.error;
@@ -822,7 +718,6 @@ function execNpmSync(args, options) {
   }
   return result.stdout;
 }
-
 function preflightNpmTokenAuth({ cwd, registry = "https://registry.npmjs.org/",
 } = {}) {
   if (!npmTokenLooksConfigured()) {
@@ -841,7 +736,6 @@ function preflightNpmTokenAuth({ cwd, registry = "https://registry.npmjs.org/",
     );
   }
 }
-
 function npmDistTagAlreadyPoints({ cwd, artifact, distTag }) {
   try {
     const output = execNpmSync(
@@ -861,7 +755,6 @@ function npmDistTagAlreadyPoints({ cwd, artifact, distTag }) {
     return false;
   }
 }
-
 function promoteExistingNpmArtifacts({ cwd, artifacts, distTag }) {
   const promoted = new Set();
   for (const artifact of artifacts) {
@@ -883,20 +776,17 @@ function promoteExistingNpmArtifacts({ cwd, artifacts, distTag }) {
   }
   return "existing-npm-artifacts";
 }
-
 function materialErrorRequiresRepair(error) {
   return /release_material_sha mismatch|source_sha mismatch|release_sha mismatch|version mismatch|target_ref mismatch|artifact digest mismatch|artifact coordinate or provenance mismatch|artifact provenance mismatch|artifact.*verification|verification\.|required artifact missing|duplicate publish artifact/.test(
     error.message || "",
   );
 }
-
 function transactionHasPublishedMaterial(transaction) {
   return Boolean(
     (Array.isArray(transaction?.artifacts) && transaction.artifacts.length > 0) ||
     (Array.isArray(transaction?.evidence) && transaction.evidence.length > 0),
   );
 }
-
 function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
   if (!Array.isArray(requiredArtifacts) || requiredArtifacts.length === 0) {
     return true;
@@ -909,7 +799,6 @@ function transactionCoversRequiredArtifacts(transaction, requiredArtifacts) {
     existingArtifacts: transaction.artifacts || [],
   }).complete;
 }
-
 function ensureTransactionCanResume({
   existing,
   expected,
@@ -931,7 +820,6 @@ function ensureTransactionCanResume({
     throw new Error(`release transaction cannot resume: ${recovery.reason}`);
   }
 }
-
 async function canRebindPublishedTransactionExactTag({
   octokit,
   owner,
@@ -991,7 +879,6 @@ async function canRebindPublishedTransactionExactTag({
     !requestedTag?.object?.sha || acceptedRequestedTagShas.has(requestedTag.object.sha)
   );
 }
-
 function canReplaceStaleVersionStateTransaction({
   error,
   existing,
@@ -1025,7 +912,6 @@ function canReplaceStaleVersionStateTransaction({
   }
   return !["complete", "abandoned", "failed_permanently"].includes(existing.state || "");
 }
-
 function validateTransactionEvidence({
   evidencePath,
   version,
@@ -1057,7 +943,6 @@ function validateTransactionEvidence({
   }
   return validation;
 }
-
 async function releaseCommitIncludesTransactionHead({
   octokit,
   owner,
@@ -1093,7 +978,6 @@ async function releaseCommitIncludesTransactionHead({
   }
   return false;
 }
-
 async function releaseCommitMatchesTransactionMaterial({ octokit, owner, repo, releaseSha, transactionReleaseShas }) {
   const { data: releaseCommit } = await getGitCommitWithRetry({ octokit, owner, repo, commitSha: releaseSha });
   for (const transactionReleaseSha of uniqueShas(transactionReleaseShas)) {
@@ -1103,11 +987,9 @@ async function releaseCommitMatchesTransactionMaterial({ octokit, owner, repo, r
   }
   return false;
 }
-
 function uniqueShas(values) {
   return [...new Set(values.filter(Boolean))];
 }
-
 function transactionAcceptedExactTagShas(transaction, publicSha) {
   return uniqueShas([
     publicSha,
@@ -1116,7 +998,6 @@ function transactionAcceptedExactTagShas(transaction, publicSha) {
     transaction?.release_material_sha,
   ]);
 }
-
 async function materializeTransactionSourceWorkspace({
   octokit,
   owner,
@@ -1163,7 +1044,6 @@ async function materializeTransactionSourceWorkspace({
   fs.rmSync(archivePath, { force: true });
   return { root, workspace };
 }
-
 function releaseTagForPublishedVersion(version = "") {
   const value = String(version || "").trim();
   if (!value) {
@@ -1171,13 +1051,11 @@ function releaseTagForPublishedVersion(version = "") {
   }
   return value.startsWith("v") ? value : `v${value}`;
 }
-
 function publicReleaseTagForTransaction(transaction = {}) {
   return (
     releaseTagForPublishedVersion(transaction.version) || transaction.exact_tag || ""
   );
 }
-
 function sealedBundleRecoveryRoot(cwd, version, requestedRoot = "") {
   if (requestedRoot) {
     return path.resolve(cwd, requestedRoot);
@@ -1189,7 +1067,6 @@ function sealedBundleRecoveryRoot(cwd, version, requestedRoot = "") {
     String(version || "unknown").replace(/[^0-9A-Za-z._-]+/g, "-"),
   );
 }
-
 function readAndVerifySealedBundle({ cwd, bundleRoot, manifestPath = "", manifest }) {
   const resolvedRoot = path.resolve(cwd, bundleRoot);
   const resolvedManifest =
@@ -1202,7 +1079,6 @@ function readAndVerifySealedBundle({ cwd, bundleRoot, manifestPath = "", manifes
     manifest: resolvedManifest,
   });
 }
-
 function sealedBundleDurableFiles(verification) {
   if (!verification) {
     return [];
@@ -1216,7 +1092,6 @@ function sealedBundleDurableFiles(verification) {
     sourcePath: path.resolve(verification.bundleRoot, entry.path),
   }));
 }
-
 function preparePublishTransactionContext({
   octokit,
   owner,
@@ -1332,7 +1207,6 @@ function preparePublishTransactionContext({
     expectedTransactionId: String(expectedTransactionId || "").trim(),
   };
 }
-
 async function restorePublishTransactionContext(context) {
   const {
     octokit, owner, repo, cwd, version, channel, sourceSha, releaseSha, targetRef,
@@ -1410,7 +1284,6 @@ async function restorePublishTransactionContext(context) {
   }
   return { ...context, durableExisting, localExisting, existing, sealedBundleVerification, existingEvidence, existingValidation };
 }
-
 async function canFinalizePublishVersionState({ context, error, existing }) {
   const {
     allowVersionStateFinalization, explicitOverride, version, exactTag, targetRef,
@@ -1432,7 +1305,6 @@ async function canFinalizePublishVersionState({ context, error, existing }) {
   });
   return (await includesHead(existing.release_sha)) || (await includesHead(existing.release_material_sha));
 }
-
 async function resolvePublishTransactionResume(context) {
   const {
     octokit, owner, repo, cwd, version, exactTag, targetRef, channel, releaseSha,
@@ -1502,7 +1374,6 @@ async function resolvePublishTransactionResume(context) {
   }
   return { ...context, existing, existingEvidence, existingValidation, versionStateFinalization };
 }
-
 function publishTransactionEnvironment({
   version, channel, sourceSha, targetRef, resolvedStatePath, resolvedEvidencePath,
   releaseSha, expected, promotionGeneratedAt, sealedBundleVerification,
@@ -1540,12 +1411,10 @@ function publishTransactionEnvironment({
     BUILDCHAIN_PACKAGE_SET_MAIN_PACKAGE: publishContract.mainPackage,
   };
 }
-
 async function reopenValidatedRepair(transaction, durable, validation, explicitOverride, actor, runId, persist) {
   if (transaction.state !== "repair_required" || !explicitOverride || !validation?.valid) return { transaction, durable };
   return persist(transitionReleaseTransaction(transaction, "publishing", { actor, runId, failure: "" }));
 }
-
 async function runPublishTransaction(options) {
   const prepared = preparePublishTransactionContext(options);
   if (!prepared) return undefined;
@@ -1793,7 +1662,6 @@ async function runPublishTransaction(options) {
     throw error;
   }
 }
-
 async function persistTransactionResult(result, transaction) {
   const persisted = writeReleaseTransaction(result.statePath, transaction);
   const durable = await persistDurableReleaseTransaction({
@@ -1806,7 +1674,6 @@ async function persistTransactionResult(result, transaction) {
   });
   return { ...result, transaction: persisted, durable };
 }
-
 export async function recordGitHubReleaseTransactionCompletion({
   octokit,
   owner,
@@ -1844,7 +1711,6 @@ export async function recordGitHubReleaseTransactionCompletion({
     durable,
   };
 }
-
 function generateBuildchainSelfKfdInputs({ cwd, outputDir = ".buildchain/kfd", sourceSha = "" } = {}) {
   const resolvedOutputDir = path.resolve(cwd, outputDir);
   const outputPath = (canonicalPath) => path.join(resolvedOutputDir, path.relative(".buildchain/kfd", canonicalPath),
@@ -1884,7 +1750,6 @@ function generateBuildchainSelfKfdInputs({ cwd, outputDir = ".buildchain/kfd", s
     kfd3ArtifactWitnessJsons: [paths.kfd3ArtifactWitness],
   };
 }
-
 function generateReleaseEvidenceInputs({
   command,
   cwd,
@@ -1938,7 +1803,6 @@ function generateReleaseEvidenceInputs({
     return resolved;
   });
 }
-
 async function collectAndPersistReleasePassport({
   result,
   owner,
@@ -2215,7 +2079,6 @@ async function collectAndPersistReleasePassport({
     },
   };
 }
-
 async function beginTransactionFinalization(result, actor, runId) {
   if (!result?.transaction || result.transaction.state === "finalizing" || result.transaction.state === "complete") {
     return result;
@@ -2227,7 +2090,6 @@ async function beginTransactionFinalization(result, actor, runId) {
   );
   return persistTransactionResult(result, transaction);
 }
-
 async function completeTransactionFinalization(result, actor, runId, persist = true) {
   if (!result?.transaction) {
     return result;
@@ -2257,7 +2119,6 @@ async function completeTransactionFinalization(result, actor, runId, persist = t
   });
   return persist ? persistTransactionResult(result, transaction) : { ...result, transaction };
 }
-
 async function getCommitInfo(octokit, owner, repo, sha) {
   const { data } = await getGitCommitWithRetry({
     octokit,
@@ -2270,7 +2131,6 @@ async function getCommitInfo(octokit, owner, repo, sha) {
     parents: (data.parents || []).map((parent) => parent.sha),
   };
 }
-
 async function assertChannelPromotionPr({
   octokit,
   owner,
@@ -2324,7 +2184,6 @@ async function assertChannelPromotionPr({
   }
   return matchingPullRequest;
 }
-
 async function getMajorGateSource({
   octokit,
   owner,
@@ -2356,7 +2215,6 @@ async function getMajorGateSource({
     alphaTag: `v${source.major + 1}.0-alpha`,
   };
 }
-
 function protectedStatusCheckNames(protection = {}) {
   const checks = protection.required_status_checks;
   return [...new Set([...(checks?.contexts || []), ...((checks?.checks || []).map((check) => check.context || check.app_id,
@@ -2365,7 +2223,6 @@ function protectedStatusCheckNames(protection = {}) {
     ),
   ];
 }
-
 export function resolveProtectedStatusCheckContext({ protection = {}, requiredStatusCheck = "check",
 } = {}) {
   const declared = String(requiredStatusCheck || "").trim();
@@ -2377,7 +2234,6 @@ export function resolveProtectedStatusCheckContext({ protection = {}, requiredSt
   ];
   return emittedCandidates.length === 1 ? emittedCandidates[0] : declared;
 }
-
 async function assertProviderEnforcedChannelTransaction({
   octokit,
   owner,
@@ -2462,7 +2318,6 @@ async function assertProviderEnforcedChannelTransaction({
   }
   return resolvedStatusCheck;
 }
-
 async function assertProtectedChannel({
   octokit,
   owner,
@@ -2526,11 +2381,9 @@ async function assertProtectedChannel({
   }
   return resolvedStatusCheck;
 }
-
 function isManagedChannelBranch(ref) {
   return /^(dev|alpha|release)\/v\d+\/v\d+\.\d+$/.test(String(ref || ""));
 }
-
 function managedChannelStrictStatusChecks(branch, currentProtection) {
   if (/^(alpha|release)\//.test(String(branch || ""))) return false;
   if (currentProtection?.required_status_checks) {
@@ -2538,7 +2391,6 @@ function managedChannelStrictStatusChecks(branch, currentProtection) {
   }
   return true;
 }
-
 function parseBranchProtectionBypassList(value = "") {
   return [
     ...new Set(
@@ -2549,7 +2401,6 @@ function parseBranchProtectionBypassList(value = "") {
     ),
   ];
 }
-
 function branchProtectionBypassAllowances({
   apps = "",
   users = "",
@@ -2578,7 +2429,6 @@ function branchProtectionBypassAllowances({
   }
   return allowances;
 }
-
 async function ensureManagedChannelBranchProtection({
   octokit,
   owner,
@@ -2717,11 +2567,9 @@ async function ensureManagedChannelBranchProtection({
     },
   };
 }
-
 function latestAlphaForPatch(refs, releasePrefix, patch) {
   return alphaTagsForPatch(refs, releasePrefix, patch)[0];
 }
-
 function alphaTagsForPatch(refs, releasePrefix, patch) {
   return refs
     .map((ref) => {
@@ -2734,7 +2582,6 @@ function alphaTagsForPatch(refs, releasePrefix, patch) {
     .filter(Boolean)
     .sort((a, b) => b.prerelease - a.prerelease);
 }
-
 function ownsMajorAlphaChannel({ refs = [], major, minor }) {
   const floatingPattern = new RegExp(`^refs/tags/v${major}\\.(\\d+)-alpha$`);
   const exactPattern = new RegExp(
@@ -2750,7 +2597,6 @@ function ownsMajorAlphaChannel({ refs = [], major, minor }) {
   }
   return Number(minor) >= highestPublishedMinor;
 }
-
 function resolveTagsForTarget(targetRef, inputTags) {
   const rule = getPromotionRule(targetRef);
   if (rule.channel === "major" && (!inputTags || inputTags.length === 0)) {
@@ -2788,7 +2634,6 @@ function resolveTagsForTarget(targetRef, inputTags) {
   }
   return tags;
 }
-
 function parseReleasePatchTag(refName, releasePrefix) {
   const match = String(refName || "").match(
     new RegExp(`^refs/tags/${releasePrefix.replace(".", "\\.")}\\.(\\d+)$`),
@@ -2801,7 +2646,6 @@ function parseReleasePatchTag(refName, releasePrefix) {
     patch: Number(match[1]),
   };
 }
-
 function parseReleaseTransactionStateRef(refName, releasePrefix) {
   const statePrefix = releasePrefix.replace(/^v/, "").replaceAll(".", "-");
   const match = String(refName || "").match(
@@ -2816,7 +2660,6 @@ function parseReleaseTransactionStateRef(refName, releasePrefix) {
     occupied: true,
   };
 }
-
 function parseAlphaPrereleaseTag(refName, releasePrefix) {
   const match = String(refName || "").match(
     new RegExp(
@@ -2832,11 +2675,9 @@ function parseAlphaPrereleaseTag(refName, releasePrefix) {
     prerelease: Number(match[2]),
   };
 }
-
 function parseAlphaPrereleaseVersion(version, releasePrefix) {
   return parseAlphaPrereleaseTag(`refs/tags/v${version}`, releasePrefix);
 }
-
 function parseAlphaTransactionStateRef(refName, releasePrefix) {
   const statePrefix = releasePrefix.replace(/^v/, "").replaceAll(".", "-");
   const match = String(refName || "").match(
@@ -2854,7 +2695,6 @@ function parseAlphaTransactionStateRef(refName, releasePrefix) {
     occupied: true,
   };
 }
-
 function getVersionFileValue(file) {
   if (file.type === "json" || file.type === "toml") {
     return String(file.key || "")
@@ -2867,7 +2707,6 @@ function getVersionFileValue(file) {
   }
   return file.content?.version;
 }
-
 function currentAlphaVersionState({ cwd, refs, releasePrefix }) {
   const discovered = discoverVersionStateFiles(cwd);
   if (discovered.files.length === 0) {
@@ -2893,7 +2732,6 @@ function currentAlphaVersionState({ cwd, refs, releasePrefix }) {
     version: versions[0],
   };
 }
-
 function currentReleaseVersionState({ cwd, refs, releasePrefix }) {
   const discovered = discoverVersionStateFiles(cwd);
   if (discovered.files.length === 0) {
@@ -2924,7 +2762,6 @@ function currentReleaseVersionState({ cwd, refs, releasePrefix }) {
     version: versions[0],
   };
 }
-
 async function readDurableTransactionForVersion({ octokit, owner, repo, version,
 }) {
   if (!version) {
@@ -2945,7 +2782,6 @@ async function readDurableTransactionForVersion({ octokit, owner, repo, version,
     throw error;
   }
 }
-
 async function resumableAlphaTransactionState({
   octokit,
   owner,
@@ -3010,7 +2846,6 @@ async function resumableAlphaTransactionState({
   }
   return undefined;
 }
-
 async function resumableReleaseTransactionState({
   octokit,
   owner,
@@ -3084,7 +2919,6 @@ async function resumableReleaseTransactionState({
   }
   return undefined;
 }
-
 function parseAlphaPrereleaseRef(refName, releasePrefix) {
   const tag = parseAlphaPrereleaseTag(refName, releasePrefix);
   if (tag) {
@@ -3096,7 +2930,6 @@ function parseAlphaPrereleaseRef(refName, releasePrefix) {
   }
   return undefined;
 }
-
 function selectReleaseTag({ refs, releasePrefix, sha }) {
   const releaseTags = refs
     .map((ref) => {
@@ -3133,7 +2966,6 @@ function selectReleaseTag({ refs, releasePrefix, sha }) {
     exists: false,
   };
 }
-
 function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
   const alphaTags = refs
     .map((ref) => {
@@ -3237,7 +3069,6 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
     exists: false,
   };
 }
-
 function assertExpectedPublicationVersion(expectedVersion, actualVersion) {
   const expected = String(expectedVersion || "").trim();
   const actual = String(actualVersion || "").trim();
@@ -3248,8 +3079,6 @@ function assertExpectedPublicationVersion(expectedVersion, actualVersion) {
   }
   return actual;
 }
-
-
 function protectedBranchUpdateRejected(error) {
   const status = error?.status || error?.response?.status;
   const message = error?.response?.data?.message || error?.message || "";
@@ -3258,7 +3087,6 @@ function protectedBranchUpdateRejected(error) {
     /Changes must be made through a pull request|Required status check|approving review is required/i.test(message)
   );
 }
-
 function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
   const message = error?.response?.data?.message || error?.message || String(error || "");
   return new Error(
@@ -3266,7 +3094,6 @@ function protectedBranchDirectUpdateError({ branch, branchSha, error }) {
       "The promotion caller must enable Buildchain's protected version-state PR fallback or use an explicitly admitted release authority; do not weaken branch protection or bypass the repository's declared governance.",
   );
 }
-
 async function createGeneratedVersionStateChecks({
   octokit,
   owner,
@@ -3317,11 +3144,9 @@ async function createGeneratedVersionStateChecks({
   }
   return statusChecks;
 }
-
 function versionStateBranchName(branch, sha) {
   return `buildchain/version-state/${branch.replaceAll("/", "-")}/${sha.slice(0, 12)}`;
 }
-
 function parseVersionStateBranchName(branch) {
   const publishGateMajorMatch = String(branch || "").match(
     /^buildchain\/version-state\/publish-gate-major\/[0-9a-f]{12,40}$/,
@@ -3343,7 +3168,6 @@ function parseVersionStateBranchName(branch) {
   }
   return `${match[1]}/v${match[2]}/v${match[3]}`;
 }
-
 function createRefMutationOperations(context) {
   const {
     octokit,
@@ -3992,7 +3816,6 @@ function createRefMutationOperations(context) {
     updateDefaultBranch,
   };
 }
-
 function createReconciliationOperations(context) {
   const {
     octokit,
@@ -4665,100 +4488,63 @@ function createReconciliationOperations(context) {
     isSettledAlphaVersionState,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
+const PROMOTION_RUNTIME = {
+  COMMIT_IDENTITY, fs, path, alignMajorBootstrapReleaseImpact, alphaDistTagForPromotion,
+  alphaTagsForPatch, assertExpectedPublicationVersion, beginTransactionFinalization,
+  collectAndPersistReleasePassport, collectRemoteVersionMaterial, collectPromotionVersionMaterial,
+  remoteVersionStateFilesMatch, completeTransactionFinalization, currentAlphaVersionState,
+  currentConfiguredVersion, currentReleaseVersionState, discoverConfiguredDerivedVersionMaterial,
+  discoverVersionStateFiles, getCommitInfo, getGitCommitWithRetry, getGitRefOrUndefined,
+  getLifecycleStage, getMajorGateSource, getPublishContract, getVersionStrategy, latestAlphaForPatch,
+  loadConfiguredAnchorManifest, loadBuildchainConfig, materializeTransactionSourceWorkspace,
+  publicReleaseTagForTransaction, readDurableTransactionForVersion, releaseTagForPublishedVersion,
+  releaseCommitIncludesTransactionHead, releaseTransactionPublicationState,
+  resumableAlphaTransactionState, resumableReleaseTransactionState, selectAlphaTag,
+  selectReleaseTag, runPublishTransaction, runVersionVerification, sha256Content,
+  signedGeneratedCommitMessage, splitPathList, stripTagPrefix, transactionAcceptedExactTagShas,
+  transactionHasPublishedMaterial, uniquePaths, updateVersionStateContents,
+  versionVerificationAllowedPathsForPromotion, versionVerificationEnv,
+};
 async function promoteBuildchainRefs({
-  octokit,
-  owner,
-  repo,
-  sha,
-  targetRef,
-  tags,
-  dryRun = false,
-  allowRepository = DEFAULT_REPOSITORY,
-  cwd = process.cwd(),
-  versionState = true,
-  requireVersionState = false,
-  requireGovernance = false,
-  verificationCommand = "",
-  requiredStatusCheck = "check",
-  statusCheckOctokit = octokit,
-  pullRequestOctokit = octokit,
-  refUpdateOctokit = octokit,
-  tagUpdateOctokit = octokit,
-  branchProtectionBypassApps = "",
-  branchProtectionBypassUsers = "",
-  branchProtectionBypassTeams = "",
-  reconciliationWorkspace = "",
-  publishTransaction = false,
-  publishCommand = "",
-  publishEvidencePath = "",
-  transactionStatePath = "",
-  expectedTransactionId = "",
-  publishSealedBundleRoot = "",
-  publishSealedBundleManifest = "",
-  publishRequiredArtifactsJson = "",
-  releaseMaterialSha = "",
-  publishToolingSha = "",
-  publishMode = "",
-  publishAuth = "",
-  publishDistTag = "",
-  publishPackageSetOrder = "",
-  publishPackageMain = "",
+  octokit, owner, repo, sha, targetRef, tags,
+  dryRun = false, allowRepository = DEFAULT_REPOSITORY, cwd = process.cwd(),
+  versionState = true, requireVersionState = false, requireGovernance = false,
+  verificationCommand = "", requiredStatusCheck = "check",
+  statusCheckOctokit = octokit, pullRequestOctokit = octokit, refUpdateOctokit = octokit,
+  tagUpdateOctokit = octokit, branchProtectionBypassApps = "", branchProtectionBypassUsers = "",
+  branchProtectionBypassTeams = "", reconciliationWorkspace = "",
+  publishTransaction = false, publishCommand = "", publishEvidencePath = "",
+  transactionStatePath = "", expectedTransactionId = "",
+  publishSealedBundleRoot = "", publishSealedBundleManifest = "", publishRequiredArtifactsJson = "",
+  releaseMaterialSha = "", publishToolingSha = "", publishMode = "", publishAuth = "",
+  publishDistTag = "", publishPackageSetOrder = "", publishPackageMain = "",
   publishRematerializeOnResume = false,
-  expectedPublicationVersion = "",
-  requirePublicationQualification = false,
-  publicationCapabilityJson = "",
-  publicationGateAggregateJson = "",
-  publicationQualificationReceiptJson = "",
+  expectedPublicationVersion = "", requirePublicationQualification = false,
+  publicationCapabilityJson = "", publicationGateAggregateJson = "", publicationQualificationReceiptJson = "",
   publicationUsedQualificationNoncesJson = "[]",
-  publicationQualificationNow,
-  releasePassport = true,
+  publicationQualificationNow, releasePassport = true,
   releasePassportOutputDir = ".buildchain/release-passport",
   releasePassportProductName = "Buildchain",
   releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
-  releasePassportPlatformManifestPaths = "",
-  releasePassportImpactJson = "",
-  releasePassportPromotionRoutingJson = "",
+  releasePassportPlatformManifestPaths = "", releasePassportImpactJson = "", releasePassportPromotionRoutingJson = "",
   releasePassportV4ConsumerPolicyCertificationJson = "",
-  releasePassportV4ConsumerPolicyCertificationRoot = "",
-  releasePassportV4RuntimeResumeEvidenceJson = "",
+  releasePassportV4ConsumerPolicyCertificationRoot = "", releasePassportV4RuntimeResumeEvidenceJson = "",
   releasePassportV4RuntimeResumeEvidenceCommand = "",
-  releasePassportKfd1WitnessJsons = "",
-  releasePassportKfd2ClaimJsons = "",
-  releasePassportKfd3PrebuildWitnessJsons = "",
+  releasePassportKfd1WitnessJsons = "", releasePassportKfd2ClaimJsons = "", releasePassportKfd3PrebuildWitnessJsons = "",
   releasePassportKfd3ArtifactWitnessJsons = "",
   releasePassportKfd3ArtifactVerifyCommand = "",
-  releasePassportKfdAdopterManifestJson = "",
-  releasePassportKfdSupportMatrixJson = "",
-  releasePassportKfdProductGateJsons = "",
+  releasePassportKfdAdopterManifestJson = "", releasePassportKfdSupportMatrixJson = "", releasePassportKfdProductGateJsons = "",
   releasePassportInvariantPassportJsons = "",
-  releasePassportInvariantPassportCommand = "",
-  releasePassportEvidenceJsons = "",
-  releasePassportAttachmentCommand = "",
-  releasePassportBuildchainSelfKfd = false,
-  releasePassportGitHubArtifactAttestationPolicyJsons = "",
-  promoteOnlyReleaseCandidate = false,
+  releasePassportInvariantPassportCommand = "", releasePassportEvidenceJsons = "",
+  releasePassportAttachmentCommand = "", releasePassportBuildchainSelfKfd = false,
+  releasePassportGitHubArtifactAttestationPolicyJsons = "", promoteOnlyReleaseCandidate = false,
   releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
   releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
-  releaseCandidateVersion = "",
-  releaseCandidateRecoveryReceiptPath = "",
-  releaseCandidateFamilyEvidenceRequired = false,
+  releaseCandidateVersion = "", releaseCandidateRecoveryReceiptPath = "", releaseCandidateFamilyEvidenceRequired = false,
   releaseCandidateFamilyEvidenceRoot = "",
-  releaseCandidateFamilyInitiativeId = "",
-  releaseCandidateFamilyAssignmentId = "",
+  releaseCandidateFamilyInitiativeId = "", releaseCandidateFamilyAssignmentId = "",
   actor = process.env.GITHUB_ACTOR || process.env.USER || "",
-  runId = process.env.GITHUB_RUN_ID || "",
-  publishTransactionOverride = false,
+  runId = process.env.GITHUB_RUN_ID || "", publishTransactionOverride = false,
 }) {
   assertPromotableRepository(owner, repo, allowRepository);
   assertPromotableTargetRef(targetRef);
@@ -4893,146 +4679,42 @@ async function promoteBuildchainRefs({
   let reconciliationOperations;
   let versionOperations;
   const baseContext = {
-    octokit,
-    owner,
-    repo,
-    sha,
-    targetRef,
-    tags,
-    dryRun,
-    allowRepository,
-    cwd,
-    versionState,
-    requireVersionState,
-    requireGovernance,
-    verificationCommand,
-    requiredStatusCheck,
-    statusCheckOctokit,
-    pullRequestOctokit,
-    refUpdateOctokit,
-    tagUpdateOctokit,
-    branchProtectionBypassApps,
-    branchProtectionBypassUsers,
-    branchProtectionBypassTeams,
-    reconciliationWorkspace,
-    publishTransaction,
-    publishCommand,
-    publishEvidencePath,
-    transactionStatePath,
-    expectedTransactionId,
-    publishSealedBundleRoot,
-    publishSealedBundleManifest,
-    publishRequiredArtifactsJson,
-    releaseMaterialSha,
-    publishToolingSha,
-    publishMode,
-    publishAuth,
-    publishDistTag,
-    publishPackageSetOrder,
-    publishPackageMain,
-    publishRematerializeOnResume,
-    expectedPublicationVersion,
-    requirePublicationQualification,
-    publicationCapabilityJson,
-    publicationGateAggregateJson,
-    publicationQualificationReceiptJson,
-    publicationUsedQualificationNoncesJson,
-    publicationQualificationNow,
-    releasePassport,
-    releasePassportOutputDir,
-    releasePassportProductName,
-    releasePassportBuildSummaryPath,
-    releasePassportPlatformManifestPaths,
-    releasePassportImpactJson,
+    octokit, owner, repo, sha, targetRef, tags, dryRun, allowRepository, cwd,
+    versionState, requireVersionState, requireGovernance, verificationCommand,
+    requiredStatusCheck, statusCheckOctokit, pullRequestOctokit, refUpdateOctokit,
+    tagUpdateOctokit, branchProtectionBypassApps, branchProtectionBypassUsers,
+    branchProtectionBypassTeams, reconciliationWorkspace, publishTransaction,
+    publishCommand, publishEvidencePath, transactionStatePath, expectedTransactionId,
+    publishSealedBundleRoot, publishSealedBundleManifest, publishRequiredArtifactsJson,
+    releaseMaterialSha, publishToolingSha, publishMode, publishAuth, publishDistTag,
+    publishPackageSetOrder, publishPackageMain, publishRematerializeOnResume,
+    expectedPublicationVersion, requirePublicationQualification,
+    publicationCapabilityJson, publicationGateAggregateJson,
+    publicationQualificationReceiptJson, publicationUsedQualificationNoncesJson,
+    publicationQualificationNow, releasePassport, releasePassportOutputDir,
+    releasePassportProductName, releasePassportBuildSummaryPath,
+    releasePassportPlatformManifestPaths, releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
     releasePassportV4ConsumerPolicyCertificationJson,
     releasePassportV4ConsumerPolicyCertificationRoot,
     releasePassportV4RuntimeResumeEvidenceJson,
-    releasePassportV4RuntimeResumeEvidenceCommand,
-    releasePassportKfd1WitnessJsons,
-    releasePassportKfd2ClaimJsons,
-    releasePassportKfd3PrebuildWitnessJsons,
-    releasePassportKfd3ArtifactWitnessJsons,
-    releasePassportKfd3ArtifactVerifyCommand,
-    releasePassportKfdAdopterManifestJson,
-    releasePassportKfdSupportMatrixJson,
-    releasePassportKfdProductGateJsons,
-    releasePassportInvariantPassportJsons,
-    releasePassportInvariantPassportCommand,
-    releasePassportEvidenceJsons,
-    releasePassportAttachmentCommand,
-    releasePassportBuildchainSelfKfd,
-    releasePassportGitHubArtifactAttestationPolicyJsons,
-    promoteOnlyReleaseCandidate,
-    releaseCandidatePassportPath,
-    releaseCandidateBuildSummaryPath,
-    releaseCandidateVersion,
-    releaseCandidateRecoveryReceiptPath,
-    releaseCandidateFamilyEvidenceRequired,
-    releaseCandidateFamilyEvidenceRoot,
-    releaseCandidateFamilyInitiativeId,
-    releaseCandidateFamilyAssignmentId,
-    actor,
-    runId,
-    publishTransactionOverride,
-    rule,
-    assertPublicationQualification,
-    requestedTags,
-    updates,
-    promotionGeneratedAt,
-    releaseCandidateValidation,
+    releasePassportV4RuntimeResumeEvidenceCommand, releasePassportKfd1WitnessJsons,
+    releasePassportKfd2ClaimJsons, releasePassportKfd3PrebuildWitnessJsons,
+    releasePassportKfd3ArtifactWitnessJsons, releasePassportKfd3ArtifactVerifyCommand,
+    releasePassportKfdAdopterManifestJson, releasePassportKfdSupportMatrixJson,
+    releasePassportKfdProductGateJsons, releasePassportInvariantPassportJsons,
+    releasePassportInvariantPassportCommand, releasePassportEvidenceJsons,
+    releasePassportAttachmentCommand, releasePassportBuildchainSelfKfd,
+    releasePassportGitHubArtifactAttestationPolicyJsons, promoteOnlyReleaseCandidate,
+    releaseCandidatePassportPath, releaseCandidateBuildSummaryPath,
+    releaseCandidateVersion, releaseCandidateRecoveryReceiptPath,
+    releaseCandidateFamilyEvidenceRequired, releaseCandidateFamilyEvidenceRoot,
+    releaseCandidateFamilyInitiativeId, releaseCandidateFamilyAssignmentId,
+    actor, runId, publishTransactionOverride, rule, assertPublicationQualification,
+    requestedTags, updates, promotionGeneratedAt, releaseCandidateValidation,
     advancedPublicationTransaction,
     advancedChannelSha: advancedPublicationTransaction ? branchSha : "",
-    COMMIT_IDENTITY,
-    fs,
-    path,
-    alignMajorBootstrapReleaseImpact,
-    alphaDistTagForPromotion,
-    alphaTagsForPatch,
-    assertExpectedPublicationVersion,
-    beginTransactionFinalization,
-    collectAndPersistReleasePassport,
-    collectRemoteVersionMaterial,
-    collectPromotionVersionMaterial,
-    remoteVersionStateFilesMatch,
-    completeTransactionFinalization,
-    currentAlphaVersionState,
-    currentConfiguredVersion,
-    currentReleaseVersionState,
-    discoverConfiguredDerivedVersionMaterial,
-    discoverVersionStateFiles,
-    getCommitInfo,
-    getGitCommitWithRetry,
-    getGitRefOrUndefined,
-    getLifecycleStage,
-    getMajorGateSource,
-    getPublishContract,
-    getVersionStrategy,
-    latestAlphaForPatch,
-    loadConfiguredAnchorManifest,
-    loadBuildchainConfig,
-    materializeTransactionSourceWorkspace,
-    publicReleaseTagForTransaction,
-    readDurableTransactionForVersion,
-    releaseTagForPublishedVersion,
-    releaseCommitIncludesTransactionHead,
-    releaseTransactionPublicationState,
-    resumableAlphaTransactionState,
-    resumableReleaseTransactionState,
-    selectAlphaTag,
-    selectReleaseTag,
-    runPublishTransaction,
-    runVersionVerification,
-    sha256Content,
-    signedGeneratedCommitMessage,
-    splitPathList,
-    stripTagPrefix,
-    transactionAcceptedExactTagShas,
-    transactionHasPublishedMaterial,
-    uniquePaths,
-    updateVersionStateContents,
-    versionVerificationAllowedPathsForPromotion,
-    versionVerificationEnv,
+    ...PROMOTION_RUNTIME,
     getReconciliationOperations: () => reconciliationOperations,
     getVersionStateOperations: () => versionOperations,
   };
@@ -5083,49 +4765,23 @@ async function promoteBuildchainRefs({
   }
   return promoteReleaseChannel(lineContext);
 }
-
 export {
-  DEFAULT_REPOSITORY,
-  assertChannelPromotionPr,
-  assertAllowedLocalChanges,
-  assertProviderEnforcedChannelTransaction,
-  assertProtectedChannel,
-  assertPromotableRepository,
-  assertPromotableTargetRef,
-  ensureManagedChannelBranchProtection,
-  assertSha,
-  discoverVersionStateFiles,
-  expectedHeadRefForTarget,
-  getPromotionRule,
-  isAllowedReleaseLineRecoveryPath,
-  latestAlphaForPatch,
-  ownsMajorAlphaChannel,
-  parseReleaseLineRef,
-  parseAlphaPrereleaseTag,
-  parseRepository,
-  parseReleasePatchTag,
-  parseTags,
-  promoteBuildchainRefs,
-  persistDurableReleaseTransaction,
-  readDurableReleaseTransaction,
-  restoreDurableReleaseTransaction,
-  runPublishTransaction,
-  resolveTagsForTarget,
-  runVersionVerification,
-  selectAlphaTag,
-  selectReleaseTag,
-  assertExpectedPublicationVersion,
-  alphaDistTagForPromotion,
-  stripTagPrefix,
-  updateVersionStateContents,
-  alignMajorBootstrapReleaseImpact,
-  versionVerificationAllowedPathsForPromotion,
-  resolveReleaseImpactInput,
-  generateReleaseEvidenceInputs,
-  createTreeEquivalentReleaseImpact,
-  createDurableTransactionOperations,
-  finalizationRequirements,
-  createRefMutationOperations,
+  DEFAULT_REPOSITORY, assertChannelPromotionPr, assertAllowedLocalChanges,
+  assertProviderEnforcedChannelTransaction, assertProtectedChannel,
+  assertPromotableRepository, assertPromotableTargetRef,
+  ensureManagedChannelBranchProtection, assertSha, discoverVersionStateFiles,
+  expectedHeadRefForTarget, getPromotionRule, isAllowedReleaseLineRecoveryPath,
+  latestAlphaForPatch, ownsMajorAlphaChannel, parseReleaseLineRef,
+  parseAlphaPrereleaseTag, parseRepository, parseReleasePatchTag, parseTags,
+  promoteBuildchainRefs, persistDurableReleaseTransaction,
+  readDurableReleaseTransaction, restoreDurableReleaseTransaction,
+  runPublishTransaction, resolveTagsForTarget, runVersionVerification,
+  selectAlphaTag, selectReleaseTag, assertExpectedPublicationVersion,
+  alphaDistTagForPromotion, stripTagPrefix, updateVersionStateContents,
+  alignMajorBootstrapReleaseImpact, versionVerificationAllowedPathsForPromotion,
+  resolveReleaseImpactInput, generateReleaseEvidenceInputs,
+  createTreeEquivalentReleaseImpact, createDurableTransactionOperations,
+  finalizationRequirements, createRefMutationOperations,
   releaseCommitMatchesTransactionMaterial as testReleaseCommitMatchesTransactionMaterial,
   releasePassportArtifactFiles,
   validatePromotionReleaseCandidate,

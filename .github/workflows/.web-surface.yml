@@ -12,6 +12,16 @@ on:
         default: ""
         type: string
         required: false
+      buildchain-contract-expected-channel:
+        description: "Compatibility expected channel for the exact Buildchain contract lock"
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-expected-major:
+        description: "Compatibility expected major for the exact Buildchain contract lock"
+        default: ""
+        type: string
+        required: false
       buildchain-contract-lock-path:
         description: "Path to the consumer-accepted Buildchain runtime contract lock. Empty disables lock lookup."
         default: "buildchain.contract-lock.json"
@@ -789,6 +799,8 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.runtime.outputs.runtime-sha }}
           BUILDCHAIN_RUNTIME_CLASS: ${{ needs.runtime.outputs.runtime-class }}
           BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ job.workflow_ref }}
+          BUILDCHAIN_EXPECTED_CHANNEL: ${{ inputs.buildchain-contract-expected-channel }}
+          BUILDCHAIN_EXPECTED_MAJOR: ${{ inputs.buildchain-contract-expected-major }}
           BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: ${{ needs.runtime.outputs.runtime-override }}
           BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 

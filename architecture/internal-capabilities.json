@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "coverageRoots": [
     "actions/promote-buildchain-ref/internal",
     "bin/buildchain.mjs",
@@ -129,9 +129,17 @@
     "packages/core/published-delivery-authority.js",
     "packages/core/v4-adopter-delivery.js",
     "packages/core/v4-adopter-delivery-parity.js",
+    "packages/core/v4-cross-platform-adopter-qualification.js",
+    "scripts/v4-cross-platform-adopter-qualification.mjs",
     "crates/buildchain-v4-contracts/src/adopter_delivery.rs",
     "crates/buildchain-v4-contracts/src/compatibility_facts.rs",
-    "crates/buildchain-v4-contracts/src/compatibility_facts"
+    "crates/buildchain-v4-contracts/src/compatibility_facts",
+    "scripts/check-internal-architecture.mjs",
+    "scripts/check-maintainability.mjs",
+    "scripts/maintainability-metrics.mjs",
+    "scripts/generate-agent-change-map.mjs",
+    "scripts/maintainability-domain-metrics.mjs",
+    "scripts/maintainability-governance.mjs"
   ],
   "ownershipRules": [
     {
@@ -209,6 +217,10 @@
       "contracts": [
         "actions/promote-buildchain-ref/action.yml",
         "actions/promote-buildchain-ref/lib.js"
+      ],
+      "generatedOutputs": ["actions/promote-buildchain-ref/dist/index.js"],
+      "validationCommands": [
+        "node --test tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-governance.test.mjs tests/promotion-responsibilities.test.mjs"
       ]
     },
     {
@@ -227,6 +239,10 @@
       "contracts": [
         ".buildchain/release-impact.json",
         "actions/promote-buildchain-ref/lib.js"
+      ],
+      "generatedOutputs": ["actions/promote-buildchain-ref/dist/index.js"],
+      "validationCommands": [
+        "node --test tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-recovery.test.mjs tests/release-impact-contract.test.mjs"
       ]
     },
     {
@@ -242,7 +258,11 @@
         "tests/promote-buildchain-ref-recovery.test.mjs",
         "tests/promotion-responsibilities.test.mjs"
       ],
-      "contracts": ["actions/promote-buildchain-ref/lib.js"]
+      "contracts": ["actions/promote-buildchain-ref/lib.js"],
+      "generatedOutputs": ["actions/promote-buildchain-ref/dist/index.js"],
+      "validationCommands": [
+        "node --test tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-recovery.test.mjs tests/promotion-responsibilities.test.mjs"
+      ]
     },
     {
       "id": "promotion-channel-orchestration",
@@ -261,6 +281,10 @@
       "contracts": [
         "actions/promote-buildchain-ref/action.yml",
         "actions/promote-buildchain-ref/lib.js"
+      ],
+      "generatedOutputs": ["actions/promote-buildchain-ref/dist/index.js"],
+      "validationCommands": [
+        "node --test tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-recovery.test.mjs tests/promote-buildchain-ref-governance.test.mjs tests/promotion-responsibilities.test.mjs"
       ]
     },
     {
@@ -275,7 +299,11 @@
         "bin/internal/trust-release-verification-handlers.mjs"
       ],
       "tests": ["tests/cli.test.mjs", "tests/public-surface-audit.test.mjs"],
-      "contracts": ["bin/buildchain.mjs", "docs/cli.md"]
+      "contracts": ["bin/buildchain.mjs", "docs/cli.md"],
+      "generatedOutputs": [],
+      "validationCommands": [
+        "node --test tests/cli.test.mjs tests/public-surface-audit.test.mjs"
+      ]
     },
     {
       "id": "release-workflow-promotion-routing",
@@ -292,6 +320,10 @@
       "contracts": [
         ".github/workflows/.release-candidate-promote.yml",
         ".github/workflows/release-candidate-promote.yml"
+      ],
+      "generatedOutputs": [".github/workflows/release-candidate-promote.yml"],
+      "validationCommands": [
+        "node --test tests/promotion-routing-evidence.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs"
       ]
     },
     {
@@ -305,6 +337,10 @@
       "contracts": [
         "docs/release-passport.md",
         "dist/site/release-passport-check-manifest.json"
+      ],
+      "generatedOutputs": ["dist/site/release-passport-check-manifest.json"],
+      "validationCommands": [
+        "node --test tests/release-passport.test.mjs tests/release-passport-contract.test.mjs"
       ]
     },
     {
@@ -315,7 +351,11 @@
         "bin/internal/command-registry.mjs"
       ],
       "tests": ["tests/command-registry.test.mjs", "tests/cli.test.mjs"],
-      "contracts": ["docs/cli.md", "dist/site/cli-registry.json"]
+      "contracts": ["docs/cli.md", "dist/site/cli-registry.json"],
+      "generatedOutputs": ["dist/site/cli-registry.json"],
+      "validationCommands": [
+        "node --test tests/command-registry.test.mjs tests/cli.test.mjs"
+      ]
     },
     {
       "id": "reusable-build-orchestration",
@@ -334,6 +374,13 @@
       "contracts": [
         ".github/workflows/.build.yml",
         ".github/workflows/build.yml"
+      ],
+      "generatedOutputs": [
+        ".github/workflows/build.yml",
+        "actions/run-lifecycle/dist/index.js"
+      ],
+      "validationCommands": [
+        "node --test tests/artifact-transfer-mode.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs"
       ]
     },
     {
@@ -348,7 +395,11 @@
         "tests/web-surface.test.mjs",
         "tests/web-surface-publication-authority.test.mjs"
       ],
-      "contracts": [".github/workflows/.web-surface.yml"]
+      "contracts": [".github/workflows/.web-surface.yml"],
+      "generatedOutputs": [],
+      "validationCommands": [
+        "node --test tests/web-surface.test.mjs tests/web-surface-publication-authority.test.mjs"
+      ]
     },
     {
       "id": "shared-build-contract",
@@ -365,6 +416,10 @@
       "contracts": [
         "dist/site/buildchain-contract.json",
         "docs/runtime-train-validation.md"
+      ],
+      "generatedOutputs": ["dist/site/buildchain-contract.json"],
+      "validationCommands": [
+        "node --test tests/buildchain-contract.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs"
       ]
     },
     {
@@ -379,14 +434,22 @@
         "tests/workflow-call-contract.test.mjs",
         "tests/public-surface-audit.test.mjs"
       ],
-      "contracts": ["docs/release-governance.md"]
+      "contracts": ["docs/release-governance.md"],
+      "generatedOutputs": [],
+      "validationCommands": [
+        "node --test tests/workflow-call-contract.test.mjs tests/public-surface-audit.test.mjs"
+      ]
     },
     {
       "id": "promotion-runtime-override-authorization",
       "owner": "Buildchain release governance maintainers",
       "implementation": ["scripts/authorize-promotion-runtime-override.cjs"],
       "tests": ["tests/authorize-promotion-runtime-override.test.mjs"],
-      "contracts": [".github/workflows/release-candidate-promote.yml"]
+      "contracts": [".github/workflows/release-candidate-promote.yml"],
+      "generatedOutputs": [],
+      "validationCommands": [
+        "node --test tests/authorize-promotion-runtime-override.test.mjs"
+      ]
     },
     {
       "id": "paper-fleet-golden-path",
@@ -411,6 +474,13 @@
       "contracts": [
         "dist/site/cli-registry.json",
         "dist/site/node-api-registry.json"
+      ],
+      "generatedOutputs": [
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json"
+      ],
+      "validationCommands": [
+        "node --test tests/cli.test.mjs tests/paper.test.mjs tests/public-surface-audit.test.mjs"
       ]
     },
     {
@@ -431,6 +501,13 @@
         "docs/release-propagation.md",
         "dist/site/cli-registry.json",
         "dist/site/node-api-registry.json"
+      ],
+      "generatedOutputs": [
+        "dist/site/cli-registry.json",
+        "dist/site/node-api-registry.json"
+      ],
+      "validationCommands": [
+        "node --test tests/release-propagation.test.mjs tests/release-propagation-pickup.test.mjs"
       ]
     },
     {
@@ -451,6 +528,10 @@
         "contracts/engineering-housekeeper-v1.schema.json",
         "contracts/fixtures/engineering-housekeeper-v1/cases.json",
         "docs/engineering-housekeeper.md"
+      ],
+      "generatedOutputs": [],
+      "validationCommands": [
+        "node --test tests/engineering-housekeeper.test.mjs tests/engineering-housekeeper-github.test.mjs tests/engineering-housekeeper-workflow.test.mjs"
       ]
     },
     {
@@ -473,6 +554,10 @@
         ".github/workflows/release-tail.yml",
         "actions/release-tail/action.yml",
         "docs/release-tail-provider-plane.md"
+      ],
+      "generatedOutputs": ["actions/release-tail/dist/index.js"],
+      "validationCommands": [
+        "node --test tests/release-tail-provider-plane.test.mjs tests/release-tail-contract.test.mjs"
       ]
     },
     {
@@ -489,6 +574,10 @@
         "contracts/v4-publication-rehearsal-capsule-v1.schema.json",
         ".github/workflows/v4-publication-rehearsal-dogfood.yml",
         "docs/v4-publication-rehearsal.md"
+      ],
+      "generatedOutputs": [],
+      "validationCommands": [
+        "node --test tests/v4-publication-rehearsal.test.mjs"
       ]
     },
     {
@@ -551,6 +640,12 @@
         "templates/native-dev-delivery.yml",
         "docs/dev-delivery-warrant.md",
         "docs/dev-delivery-qualification-landing-adr.md"
+      ],
+      "generatedOutputs": [
+        "dist/site/schemas/dev-delivery-authority-v2.schema.json"
+      ],
+      "validationCommands": [
+        "node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/v4-delivery-authority-parity.test.mjs"
       ]
     },
     {
@@ -575,6 +670,12 @@
         "contracts/fixtures/v4-compatibility-facts-v1/shared.json",
         "dist/site/schemas/v4-compatibility-facts-v1.schema.json",
         "docs/v4-compatibility-facts.md"
+      ],
+      "generatedOutputs": [
+        "dist/site/schemas/v4-compatibility-facts-v1.schema.json"
+      ],
+      "validationCommands": [
+        "node --test tests/v4-compatibility-facts.test.mjs"
       ]
     },
     {
@@ -593,14 +694,19 @@
         "packages/core/published-delivery-authority.js",
         "packages/core/v4-adopter-delivery.js",
         "packages/core/v4-adopter-delivery-parity.js",
+        "packages/core/v4-cross-platform-adopter-qualification.js",
+        "scripts/v4-cross-platform-adopter-qualification.mjs",
         "crates/buildchain-v4-contracts/src/adopter_delivery.rs"
       ],
       "tests": [
         "tests/v4-adopter-delivery.test.mjs",
-        "tests/v4-adopter-delivery-parity.test.mjs"
+        "tests/v4-adopter-delivery-parity.test.mjs",
+        "tests/v4-cross-platform-adopter-qualification.test.mjs",
+        "tests/non-kfd-specification-driver-clean-room.test.mjs"
       ],
       "contracts": [
         "architecture/v4-adopter-delivery-parity.json",
+        "architecture/v4-cross-platform-adopter-qualification.json",
         "contracts/v4-adopter-delivery-v1.schema.json",
         "contracts/fixtures/v4-adopter-delivery-v1/archive-template.json",
         "contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json",
@@ -610,6 +716,10 @@
         ".github/workflows/v4-adopter-delivery.yml",
         ".github/workflows/v4-adopter-delivery-dogfood.yml",
         "docs/v4-adopter-delivery.md"
+      ],
+      "generatedOutputs": [],
+      "validationCommands": [
+        "node --test tests/v4-adopter-delivery.test.mjs tests/v4-adopter-delivery-parity.test.mjs tests/v4-cross-platform-adopter-qualification.test.mjs tests/non-kfd-specification-driver-clean-room.test.mjs"
       ]
     },
     {
@@ -708,6 +818,37 @@
         "docs/v4-stage-capsule.md",
         "docs/v4-runtime-ref-resume-authority.md",
         "docs/v4-tail-reseal.md"
+      ],
+      "generatedOutputs": [],
+      "validationCommands": [
+        "node --test tests/v4-architecture.test.mjs tests/v4-bridge.test.mjs tests/v4-provider-operation-journal.test.mjs tests/v4-provider-readback-idempotency.test.mjs tests/v4-release-activation-shadow.test.mjs tests/v4-stable-publication-fence.test.mjs tests/v4-partial-mutation-recovery-qualification.test.mjs tests/v4-stage-capsule.test.mjs tests/v4-stage-capsule-store.test.mjs tests/v4-platform-stage-checkpoints.test.mjs tests/v4-stage-capsule-qualification.test.mjs tests/v4-runtime-ref-resume-authority.test.mjs tests/v4-tail-reseal.test.mjs tests/v4-tail-reseal-parity.test.mjs"
+      ]
+    },
+    {
+      "id": "maintainability-governance",
+      "owner": "Buildchain architecture maintainers",
+      "implementation": [
+        "scripts/check-internal-architecture.mjs",
+        "scripts/check-maintainability.mjs",
+        "scripts/maintainability-metrics.mjs",
+        "scripts/generate-agent-change-map.mjs",
+        "scripts/maintainability-domain-metrics.mjs",
+        "scripts/maintainability-governance.mjs"
+      ],
+      "tests": [
+        "tests/internal-architecture.test.mjs",
+        "tests/maintainability.test.mjs",
+        "tests/maintainability-governance.test.mjs"
+      ],
+      "contracts": [
+        "architecture/internal-capabilities.json",
+        "architecture/maintainability-debt.json",
+        "architecture/maintainability-policy.json"
+      ],
+      "generatedOutputs": ["architecture/agent-change-map.md"],
+      "validationCommands": [
+        "node --test tests/internal-architecture.test.mjs tests/maintainability.test.mjs tests/maintainability-governance.test.mjs",
+        "node scripts/generate-agent-change-map.mjs"
       ]
     }
   ]

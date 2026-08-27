@@ -360,10 +360,10 @@ test("promotion commits consumer discovery authority only after public release a
     wrapper,
     /publication-commit-command requires standalone-binary-distribution=false/,
   );
-  assert.match(
-    wrapper,
-    /PUBLICATION_COMMIT_EVIDENCE.*publication-commit-evidence\.json/s,
-  );
+  const promotionEvidenceHelper = fs.readFileSync(
+    path.join(root, "scripts/promotion-routing-evidence.mjs"), "utf8");
+  assert.match(wrapper, /promotion-routing-evidence\.mjs bundle-controller-evidence/);
+  assert.match(promotionEvidenceHelper, /PUBLICATION_COMMIT_EVIDENCE.*publication-commit-evidence\.json/s);
   assert.match(
     wrapper,
     /Commit consumer publication authority last[\s\S]*?steps\.promote\.outputs\.finalization-needed != 'true'/,
@@ -373,7 +373,7 @@ test("promotion commits consumer discovery authority only after public release a
     /Bundle release-candidate-promotion controller evidence[\s\S]*?steps\.promote\.outcome == 'success'/,
   );
   assert.match(wrapper, /FINALIZATION_NEEDED: \$\{\{ steps\.promote\.outputs\.finalization-needed \}\}/);
-  assert.match(wrapper, /if \(!finalizationNeeded\) \{[\s\S]*?release-passport\.json/);
+  assert.match(promotionEvidenceHelper, /!finalizationNeeded[\s\S]*?release-passport\.json/);
   assert.match(
     wrapper,
     /needs\.promote\.outputs\.finalization-needed == 'true'[\s\S]*?release-candidate-passport[\s\S]*?publish-evidence[\s\S]*?needs\.promote\.result == 'success'[\s\S]*?release-passport/,
