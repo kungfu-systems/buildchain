@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import {
@@ -7,7 +10,12 @@ import {
   assertCapabilityCutAncestor,
   assertV3V4CapabilityInventory,
   buildV3V4CapabilityInventory,
+  ensureCapabilityCutAncestor,
 } from "../scripts/check-v3-v4-capability-inventory.mjs";
+
+function runGit(root, args) {
+  return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+}
 
 test("live v4 cut is reachable from the checked candidate", () => {
   assert.doesNotThrow(() =>
@@ -24,6 +32,43 @@ test("live v4 cut is reachable from the checked candidate", () => {
         label: "reversed test cut",
       }),
     /must be an ancestor/u,
+  );
+});
+
+test("live v4 ancestry is hydrated in a bounded shallow checkout", () => {
+  const sandbox = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-capability-cut-shallow-"),
+  );
+  const source = path.join(sandbox, "source");
+  const remote = path.join(sandbox, "remote.git");
+  const shallow = path.join(sandbox, "shallow");
+  fs.mkdirSync(source);
+  runGit(source, ["init", "--initial-branch=main"]);
+  runGit(source, ["config", "user.name", "Buildchain Test"]);
+  runGit(source, ["config", "user.email", "buildchain@example.invalid"]);
+  for (const value of ["base", "cut", "candidate"]) {
+    fs.writeFileSync(path.join(source, "state.txt"), `${value}\n`);
+    runGit(source, ["add", "state.txt"]);
+    runGit(source, ["commit", "-m", value]);
+  }
+  const cut = runGit(source, ["rev-parse", "HEAD^"]);
+  runGit(sandbox, ["init", "--bare", remote]);
+  runGit(source, ["remote", "add", "origin", remote]);
+  runGit(source, ["push", "origin", "main"]);
+  runGit(sandbox, [
+    "clone",
+    "--no-tags",
+    "--depth=1",
+    `file://${remote}`,
+    shallow,
+  ]);
+  runGit(shallow, ["fetch", "--no-tags", "--depth=1", "origin", cut]);
+  assert.throws(
+    () => assertCapabilityCutAncestor({ root: shallow, revision: cut }),
+    /must be an ancestor/u,
+  );
+  assert.doesNotThrow(() =>
+    ensureCapabilityCutAncestor({ root: shallow, revision: cut }),
   );
 });
 

@@ -99,16 +99,55 @@ export function assertCapabilityCutAncestor({
   label = "capability cut",
 } = {}) {
   try {
-    execFileSync(
-      "git",
-      ["merge-base", "--is-ancestor", revision, descendant],
-      { cwd: root, stdio: "ignore" },
-    );
+    execFileSync("git", ["merge-base", "--is-ancestor", revision, descendant], {
+      cwd: root,
+      stdio: "ignore",
+    });
   } catch {
     throw new Error(
       `${label} ${revision} must be an ancestor of ${descendant}; regenerate the cut after rebasing instead of relying on a retained local object`,
     );
   }
+}
+
+function repositoryIsShallow(root) {
+  return (
+    execFileSync("git", ["rev-parse", "--is-shallow-repository"], {
+      cwd: root,
+      encoding: "utf8",
+    }).trim() === "true"
+  );
+}
+
+export function ensureCapabilityCutAncestor({
+  root = process.cwd(),
+  revision,
+  descendant = "HEAD",
+  label = "capability cut",
+} = {}) {
+  try {
+    assertCapabilityCutAncestor({ root, revision, descendant, label });
+    return;
+  } catch (error) {
+    if (!repositoryIsShallow(root)) throw error;
+  }
+  const descendantCommit = execFileSync(
+    "git",
+    ["rev-parse", `${descendant}^{commit}`],
+    { cwd: root, encoding: "utf8" },
+  ).trim();
+  try {
+    execFileSync(
+      "git",
+      ["fetch", "--no-tags", "--depth=128", "origin", descendantCommit],
+      { cwd: root, stdio: "ignore" },
+    );
+  } catch {
+    throw new Error(
+      `${label} ${revision} ancestry could not be hydrated from ${descendantCommit} through a bounded origin fetch`,
+    );
+  }
+  assertCapabilityCutAncestor({ root, revision, descendant, label });
 }
 
 function ensureCapabilityCutsAvailable(root) {
@@ -131,7 +170,7 @@ function ensureCapabilityCutsAvailable(root) {
       `v3/v4 capability cuts are unavailable after a bounded origin fetch: ${unavailable.join(", ")}`,
     );
   }
-  assertCapabilityCutAncestor({
+  ensureCapabilityCutAncestor({
     root,
     revision: V3_V4_CAPABILITY_CUTS.liveV4,
     label: "live v4 capability cut",
