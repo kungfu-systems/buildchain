@@ -350,7 +350,7 @@ test("bounded alpha recovery calls the exact protected shell with current runtim
     /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/recovered-source/u,
   );
   assert.match(workflow, /--shell-ref alpha\/v4\/v4\.0/u);
-  assert.match(workflow, /--shell-call-ref alpha\/v4\/v4\.0/u);
+  assert.match(workflow, /--shell-call-ref v4-alpha/u);
   assert.match(workflow, /resume-buildchain-runtime-ref:/u);
   assert.match(
     workflow,
