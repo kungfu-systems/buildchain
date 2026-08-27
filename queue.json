@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 938,
+  "generation": 939,
   "fencingCounter": 145,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:c4f32eae4ce020e6035844ca08a39fae9482dcee9359b13943978b3a3112be3f",
@@ -57,8 +57,13 @@
     "issuedAt": "2026-08-27T02:37:59.227Z",
     "expiresAt": "2026-08-27T03:42:46.572Z",
     "fencingToken": "sha256:e5a149e552656dbf623576c456ffbd677ed68990a1cf3e1e52a7595c5db28dda",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-27T02:42:46.572Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-27T02:42:46.572Z",
+    "nativeProofRoot": "sha256:9cce96583cd1757957c5d0354c9a68ebe3e2f523d8394cece517015ebbb6aa80",
+    "nativeExecutionReceiptRoot": "sha256:f96858eaa54930012687663600c984740be0133a21e445a61b4768ee02eaf114",
+    "nativeProofReuseRoot": "sha256:76cf81ba38dd443f48556474911b59dc2fa1866065d708d8c3d13384ebc594e9",
+    "qualificationReceiptRoot": "sha256:2e5e7a5eceed5aa4453ae097ab1affa69c5768cf2c1d5ba0fb99cb71b072685c",
+    "qualifiedAt": "2026-08-27T02:43:11.285Z"
   },
   "candidates": [
     {
@@ -6676,10 +6681,10 @@
       "sourceWorkflowRunId": 33033139691,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-27T02:37:55.736Z",
-      "updatedAt": "2026-08-27T02:42:46.572Z",
+      "updatedAt": "2026-08-27T02:43:11.285Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "architecture/maintainability-policy.json",
@@ -6697,6 +6702,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-27T02:42:46.572Z",
-  "stateRoot": "sha256:d24bbbf0d0bc716c22ffe837e833fef0c782b7d481351623fce2df02ec71edbd"
+  "updatedAt": "2026-08-27T02:43:11.285Z",
+  "stateRoot": "sha256:bdad046b29f46eedd41fd2e11039da04478187ff15846bf2a16671380e6fc5c3"
 }
