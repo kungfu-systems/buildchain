@@ -306,7 +306,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:72466943bb459f6857f23ac6f92bcf4714dcd2f535c38a9f0e34864b36404e06"
+      "digest": "sha256:e47ecb91d66da0b05a249fe91f58bd3d5a20d8c053a72fd6d156ec315bea909a"
     },
     {
       "id": "release-tail-contract",

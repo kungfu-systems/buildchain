@@ -1320,14 +1320,14 @@ test("selectReleaseTag creates, increments, and reuses canonical v-prefixed rele
         { ref: "refs/tags/1.0.99", object: { sha: OTHER_SHA } },
         { ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } },
         {
-          ref: "refs/heads/buildchain/release-state/1-0-1",
+          ref: "refs/heads/publish-gate/release/v1/v1.0/1.0.2",
           object: { sha: OTHER_SHA },
         },
       ],
       releasePrefix: "v1.0",
       sha: SHA,
     }),
-    { tag: "v1.0.2", patch: 2, exists: false },
+    { tag: "v1.0.3", patch: 3, exists: false },
   );
 });
 
@@ -1368,14 +1368,14 @@ test("selectAlphaTag creates ABV-style prerelease tags for the minor line", () =
     selectAlphaTag({
       refs: [
         {
-          ref: "refs/heads/buildchain/release-state/1-0-1-alpha-0",
+          ref: "refs/heads/publish-gate/alpha/v1/v1.0/1.0.1-alpha.7",
           object: { sha: OTHER_SHA },
         },
       ],
       releasePrefix: "v1.0",
       sha: SHA,
     }),
-    { tag: "v1.0.1-alpha.1", patch: 1, prerelease: 1, exists: false },
+    { tag: "v1.0.1-alpha.8", patch: 1, prerelease: 8, exists: false },
   );
   assert.deepEqual(
     selectAlphaTag({
@@ -1860,7 +1860,7 @@ test("release promotion creates v-prefixed release tag and prepares next alpha t
     { tag: "v1.0-alpha", action: "updated", sha: SHA },
     { tag: "v1-alpha", action: "updated", sha: SHA },
   ]);
-  assert.deepEqual(calls, [
+  assert.deepEqual(calls.filter(([, ref]) => !ref?.startsWith("heads/publish-gate/")), [
     ["getRef", "heads/release/v1/v1.0"],
     ["listMatchingRefs", "tags/v1.0."],
     ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
@@ -1933,7 +1933,7 @@ test("alpha promotion creates exact prerelease tag and moves minor and major alp
         listMatchingRefs: async ({ ref }) => {
           calls.push(["listMatchingRefs", ref]);
           return {
-            data: [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }],
+            data: ref.startsWith("heads/publish-gate/") ? [{ ref: "refs/heads/publish-gate/alpha/v1/v1.0/1.0.1-alpha.0", object: { sha: OTHER_SHA } }] : [{ ref: "refs/tags/v1.0.0", object: { sha: OTHER_SHA } }],
           };
         },
         updateRef: async ({ ref, sha, force }) => {
@@ -1959,17 +1959,17 @@ test("alpha promotion creates exact prerelease tag and moves minor and major alp
   });
 
   assert.deepEqual(result.updates, [
-    { tag: "v1.0.1-alpha.0", action: "created", sha: SHA },
+    { tag: "v1.0.1-alpha.1", action: "created", sha: SHA },
     { tag: "v1.0-alpha", action: "updated", sha: SHA },
     { tag: "v1-alpha", action: "updated", sha: SHA },
   ]);
-  assert.deepEqual(calls, [
+  assert.deepEqual(calls.filter(([, ref]) => !ref?.startsWith("heads/publish-gate/")), [
     ["getRef", "heads/alpha/v1/v1.0"],
     ["listMatchingRefs", "tags/v1.0."],
     ["listMatchingRefs", "heads/buildchain/release-state/1-0-"],
     ["listMatchingRefs", "tags/v1."],
-    ["getRef", "tags/v1.0.1-alpha.0"],
-    ["createRef", "refs/tags/v1.0.1-alpha.0", SHA],
+    ["getRef", "tags/v1.0.1-alpha.1"],
+    ["createRef", "refs/tags/v1.0.1-alpha.1", SHA],
     ["getRef", "tags/v1.0-alpha"],
     ["updateRef", "tags/v1.0-alpha", SHA, true],
     ["getRef", "tags/v1-alpha"],
