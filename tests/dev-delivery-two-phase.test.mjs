@@ -9,9 +9,11 @@ import {
   createNativeQualificationProof,
   devDeliveryContentRoot,
   heartbeatDevDeliveryWarrant,
+  observeDevDeliveryQueue,
   qualifyDevDeliveryWarrant,
   recoverExpiredDevDeliveryWarrant,
   selectDevDeliveryWarrant,
+  settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
   verifyNativeProofReuseDecision,
   verifyNativeQualificationProof,
@@ -364,6 +366,66 @@ test("provisional heartbeat preserves order and expiry requires proven worker st
         now: "2026-08-11T00:04:02Z",
       }),
     /lease expired/u,
+  );
+});
+
+test("qualified terminal settlement persists and replays the exact successor wake", () => {
+  const selected = selectedQueue();
+  const proof = nativeProof();
+  const qualified = qualifyDevDeliveryWarrant(
+    selected.queue,
+    selected.warrant,
+    {
+      nativeProof: proof,
+      reuseDecision: createNativeProofReuseDecision({
+        proof,
+        current: current(),
+      }),
+      current: current(),
+      now: "2026-08-11T00:00:31Z",
+    },
+  );
+  const withSuccessor = submitDevDeliveryCandidate(
+    qualified.queue,
+    candidate(402, {
+      sourceHead: "c".repeat(40),
+      sourceIdentityRoot: ROOT("e"),
+    }),
+    { now: "2026-08-11T00:00:40Z" },
+  );
+  const terminalEvent = {
+    pullRequestNumber: 401,
+    sourceHead: SOURCE_HEAD,
+    fencingToken: qualified.warrant.fencingToken,
+    leaseGeneration: qualified.warrant.generation,
+    outcome: "dequeued",
+    evidenceRoot: ROOT("f"),
+    reason: "merge group was dequeued after a transient source failure",
+  };
+  const closed = settleDevDeliveryTerminalEvent(
+    withSuccessor.queue,
+    terminalEvent,
+    { now: "2026-08-11T00:01:00Z" },
+  );
+  assert.equal(closed.receipt.action, "terminal-closeout");
+  assert.equal(closed.receipt.successorWake.pullRequestNumber, 402);
+  assert.deepEqual(
+    closed.queue.candidates[0].terminal.successorWake,
+    closed.receipt.successorWake,
+  );
+
+  const repeated = settleDevDeliveryTerminalEvent(
+    closed.queue,
+    terminalEvent,
+    { now: "2026-08-11T00:01:01Z" },
+  );
+  assert.equal(repeated.receipt.action, "duplicate-terminal-event-noop");
+  assert.deepEqual(repeated.receipt.successorWake, closed.receipt.successorWake);
+  assert.deepEqual(
+    observeDevDeliveryQueue(closed.queue, {
+      now: "2026-08-11T00:01:01Z",
+    }).pendingSuccessorWakes[0].successorWake,
+    closed.receipt.successorWake,
   );
 });
 

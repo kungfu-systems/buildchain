@@ -440,6 +440,10 @@ export function closeDevDeliveryWarrant(
         ...(failureAuthority || {}),
       };
       queue.activeWarrant = null;
+      candidate.terminal.successorWake = createDevDeliverySuccessorWake(
+        queue,
+        currentTime,
+      );
       return { candidate, active };
     },
     currentTime,
@@ -456,10 +460,7 @@ export function closeDevDeliveryWarrant(
     ...(failureAuthority || {}),
     expectedOldStateRoot: transaction.expectedOldStateRoot,
     nextStateRoot: transaction.after.stateRoot,
-    successorWake: createDevDeliverySuccessorWake(
-      transaction.after,
-      currentTime,
-    ),
+    successorWake: transaction.result.candidate.terminal.successorWake,
     nextAction: "Select the next queued candidate, if any.",
   };
   return {
@@ -551,6 +552,14 @@ export function observeDevDeliveryQueue(
         ) || null
       : null,
     states,
+    pendingSuccessorWakes: queue.candidates
+      .filter((candidate) => candidate.terminal?.successorWake)
+      .map((candidate) => ({
+        pullRequestNumber: candidate.pullRequestNumber,
+        sourceHead: candidate.sourceHead,
+        outcome: candidate.status,
+        successorWake: candidate.terminal.successorWake,
+      })),
     queued: queued.map((entry, index) => ({
       position: index + 1,
       candidateId: entry.candidate.candidateId,

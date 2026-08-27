@@ -17149,14 +17149,14 @@
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "exports[export=\"./dev-delivery-warrant\"]",
-        "valueRoot": "sha256:6875b84c36e727f0f1d450d5b8386b8333be0374cbbdd983ac1347be541b99a7"
+        "valueRoot": "sha256:274a7b0664657b1e73a42d219ce4bafed43eeed475b3c6bb2897eb4cfcc2cdce"
       },
       "v4Route": {
         "capabilityId": "documented-module:./dev-delivery-warrant",
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "exports[export=\"./dev-delivery-warrant\"]",
-          "valueRoot": "sha256:ae36ffd3e0122c4b2022c35a3edf1a1468289fa4ec08894884ff0e3b529b509e"
+          "valueRoot": "sha256:78eff35f0dfcac21fbaf879fa87ea0b0557572586e49c28252fe2fd94de79104"
         }
       }
     },
@@ -18161,14 +18161,14 @@
       "sourceEvidence": {
         "path": "dist/site/buildchain-contract.json",
         "selector": "$",
-        "valueRoot": "sha256:840897f1db6ac6820435dc78aca1ebf18fafd0d3790097838293644f25549785"
+        "valueRoot": "sha256:e28669b07c1d3f8f4bba7978feff5705e0d8721f03d1c5d8418ea17639b595db"
       },
       "v4Route": {
         "capabilityId": "generated-contract:dist/site/buildchain-contract.json",
         "evidence": {
           "path": "dist/site/buildchain-contract.json",
           "selector": "$",
-          "valueRoot": "sha256:aab40d1e1a71563aed2fa1beb163faf8db7a28c189974c01a6419ebda0849e75"
+          "valueRoot": "sha256:5373a6b746a389305d55d58d93b9aebf1ca61e2b13e32aab309e98f41a89b13c"
         }
       }
     },
@@ -18190,7 +18190,7 @@
         "evidence": {
           "path": "dist/site/capability-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:05b57916a3cf097e4c78ee8b5a9122fde54acd143a221d48359202ec06cdb980"
+          "valueRoot": "sha256:46c6667328a999a4a24604c9e1927ef78159f282aab08f1238b9afa0165be41d"
         }
       }
     },
@@ -18249,14 +18249,14 @@
       "sourceEvidence": {
         "path": "dist/site/kfd-claims.json",
         "selector": "$",
-        "valueRoot": "sha256:36c8319c77abcaf79dd42f3dfae1f8ff6beadaac2f22e32d8924858533cc5b9f"
+        "valueRoot": "sha256:d182bdd926329af6a22d4246ed953074360eaf9dc6c50dcc69ef3519f1c54c04"
       },
       "v4Route": {
         "capabilityId": "generated-contract:dist/site/kfd-claims.json",
         "evidence": {
           "path": "dist/site/kfd-claims.json",
           "selector": "$",
-          "valueRoot": "sha256:98485f6a0b9d308a442b29663b94a9456eeb50c3ca46d539a5ca92a96e7597af"
+          "valueRoot": "sha256:94d546cec054e24f53841af5a46808cd452d0005f5bfcf8f7d370711ae446f0b"
         }
       }
     },
@@ -18271,14 +18271,14 @@
       "sourceEvidence": {
         "path": "dist/site/manual-registry.json",
         "selector": "$",
-        "valueRoot": "sha256:ea2a3e1f8c69f6e779bb60a85c9c11e06fe5d2f472ea7493b7c508310d5d1398"
+        "valueRoot": "sha256:180e3c901c163c8ca18ee162cf60cf64d3ffba597f9bb9dfb213c3de6379c15d"
       },
       "v4Route": {
         "capabilityId": "generated-contract:dist/site/manual-registry.json",
         "evidence": {
           "path": "dist/site/manual-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:41dd14fe468184ac6397025caae8b631d5e9f15816f25010047eab0cfa2b3882"
+          "valueRoot": "sha256:b446b41f1342623ad5189850985553a9044dd14f3c4a24aa44cfc54db95ce876"
         }
       }
     },
@@ -18293,14 +18293,14 @@
       "sourceEvidence": {
         "path": "dist/site/node-api-registry.json",
         "selector": "$",
-        "valueRoot": "sha256:6db4a6f7e7eab5e9fc8c43cfa9798c6a9647b46f1d5e20f2bb1bae7291f91df6"
+        "valueRoot": "sha256:17097f64e477ba2042441f09370b3b0d493174fe653305c444a167de61296ab7"
       },
       "v4Route": {
         "capabilityId": "generated-contract:dist/site/node-api-registry.json",
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:de37f268b21cec256d0fdab8a5cb3b81e930c5e46017f18a693f914adfdcf2fd"
+          "valueRoot": "sha256:9b173aa7390cc94d24b9a2b5711a367b15771b73773cd8f0a78f5c71ed054701"
         }
       }
     },
@@ -18315,14 +18315,14 @@
       "sourceEvidence": {
         "path": "dist/site/page-registry.json",
         "selector": "$",
-        "valueRoot": "sha256:1ed37c82d173092ddd2cd80c353bfaf55f8753c5639855b2c085049e4890a3cf"
+        "valueRoot": "sha256:9e4f41cb5665fb31c997c51a7bf24f29b1140acc0affe9d500e6cfa490feb3ea"
       },
       "v4Route": {
         "capabilityId": "generated-contract:dist/site/page-registry.json",
         "evidence": {
           "path": "dist/site/page-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:8c570b8a985c5a0b7e652241fc0807ccd5eb89c0d6ec16e308089aead60bc6dd"
+          "valueRoot": "sha256:e01f49540ad858f2289ed212bdae9dab01be495f6c57d7d14ab07d3639201d3f"
         }
       }
     },
@@ -18337,14 +18337,14 @@
       "sourceEvidence": {
         "path": "dist/site/public-surface-audit.json",
         "selector": "$",
-        "valueRoot": "sha256:3258244594a2d239ab6e823aec16d596b6a7791a27387d119133c758bef4300e"
+        "valueRoot": "sha256:4b905d2243a0d0d3cb79b14b8f6d6f52db722bbf688f505db6b636b0852e1520"
       },
       "v4Route": {
         "capabilityId": "generated-contract:dist/site/public-surface-audit.json",
         "evidence": {
           "path": "dist/site/public-surface-audit.json",
           "selector": "$",
-          "valueRoot": "sha256:2e1d30eb2ac0b7fd812d6589a5d7d4dcff74add81df41e399e4d1f79095dd23c"
+          "valueRoot": "sha256:dfdf7e6d38ea9b2cfec280831472ba61a825b88578437bc3b4965b61c656e0b1"
         }
       }
     },
@@ -18557,14 +18557,14 @@
       "sourceEvidence": {
         "path": "dist/site/site-manifest.json",
         "selector": "$",
-        "valueRoot": "sha256:e94c2f411c3c06849da3bc37e110284a0d175ee09824ff1ff187cb65acd98091"
+        "valueRoot": "sha256:e15dad2aa482a76a88dbc83437d711cfba6ab9f93f97a6e32cbacb8ef4f87e7c"
       },
       "v4Route": {
         "capabilityId": "generated-contract:dist/site/site-manifest.json",
         "evidence": {
           "path": "dist/site/site-manifest.json",
           "selector": "$",
-          "valueRoot": "sha256:99d97ffc9f0482673a303be3959ed0fd766852f647fe21775b5996dcfbd8dc5f"
+          "valueRoot": "sha256:52413ce389353ea7fd83598a6f5c2ebbb5a88f163cff60ec4227324384d96fd8"
         }
       }
     },
@@ -18579,14 +18579,14 @@
       "sourceEvidence": {
         "path": "dist/site/workflow-registry.json",
         "selector": "$",
-        "valueRoot": "sha256:641d6c94593a7d4c49e90490c162c01ece82b737b3615338195fe8ff048fd69f"
+        "valueRoot": "sha256:d26fbb9dbc3e065bf2b4447b2e2d86184a4a029575257bc0c14a8656134ffe59"
       },
       "v4Route": {
         "capabilityId": "generated-contract:dist/site/workflow-registry.json",
         "evidence": {
           "path": "dist/site/workflow-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:62e43419ab14e309e697057a46a83585ff8a24c7bd53386a2e4ece6459f52603"
+          "valueRoot": "sha256:590efe0d07ae20987f36056835f21e2a17fe40c242eb55032776b9bc4c0c7735"
         }
       }
     },
@@ -18712,6 +18712,27 @@
         "capabilityId": "path:.github/workflows/check.yml",
         "evidence": {
           "path": ".github/workflows/check.yml",
+          "selector": "$"
+        }
+      }
+    },
+    {
+      "category": "history-change",
+      "disposition": "v4-native",
+      "id": "history-change:.github/workflows/dev-delivery-warrant-close.yml",
+      "negativeProbe": "an absent or unclassified changed path fails validation",
+      "ownerAssignment": "2026-08-26-buildchain-v4-v3-retirement-reconciliation",
+      "positiveProbe": "the exact v3 history range includes the path and the exact v4 cut contains its route",
+      "residual": null,
+      "sourceEvidence": {
+        "path": ".github/workflows/dev-delivery-warrant-close.yml",
+        "selector": "git-diff-status:M",
+        "valueRoot": "sha256:1b2f7e1966757d9c4aa8c3d6407ad448b984943ec7cd85ecf06635d9dbf563d8"
+      },
+      "v4Route": {
+        "capabilityId": "path:.github/workflows/dev-delivery-warrant-close.yml",
+        "evidence": {
+          "path": ".github/workflows/dev-delivery-warrant-close.yml",
           "selector": "$"
         }
       }
@@ -19622,6 +19643,48 @@
     {
       "category": "history-change",
       "disposition": "v4-native",
+      "id": "history-change:packages/core/dev-delivery-warrant-settlement.js",
+      "negativeProbe": "an absent or unclassified changed path fails validation",
+      "ownerAssignment": "2026-08-26-buildchain-v4-v3-retirement-reconciliation",
+      "positiveProbe": "the exact v3 history range includes the path and the exact v4 cut contains its route",
+      "residual": null,
+      "sourceEvidence": {
+        "path": "packages/core/dev-delivery-warrant-settlement.js",
+        "selector": "git-diff-status:M",
+        "valueRoot": "sha256:7712f47adb8229354d2cac319e7ff588df2805bbdd7e208c8282cf2e9451ce0c"
+      },
+      "v4Route": {
+        "capabilityId": "path:packages/core/dev-delivery-warrant-settlement.js",
+        "evidence": {
+          "path": "packages/core/dev-delivery-warrant-settlement.js",
+          "selector": "$"
+        }
+      }
+    },
+    {
+      "category": "history-change",
+      "disposition": "v4-native",
+      "id": "history-change:packages/core/dev-delivery-warrant.js",
+      "negativeProbe": "an absent or unclassified changed path fails validation",
+      "ownerAssignment": "2026-08-26-buildchain-v4-v3-retirement-reconciliation",
+      "positiveProbe": "the exact v3 history range includes the path and the exact v4 cut contains its route",
+      "residual": null,
+      "sourceEvidence": {
+        "path": "packages/core/dev-delivery-warrant.js",
+        "selector": "git-diff-status:M",
+        "valueRoot": "sha256:74d8feae948457f0697168473c65f2d5661ff775a867f9a23c3fd5f656e0f5e9"
+      },
+      "v4Route": {
+        "capabilityId": "path:packages/core/dev-delivery-warrant.js",
+        "evidence": {
+          "path": "packages/core/dev-delivery-warrant.js",
+          "selector": "$"
+        }
+      }
+    },
+    {
+      "category": "history-change",
+      "disposition": "v4-native",
       "id": "history-change:packages/core/github-artifact-attestation.js",
       "negativeProbe": "an absent or unclassified changed path fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-v3-retirement-reconciliation",
@@ -20035,6 +20098,48 @@
         "capabilityId": "path:tests/ci-lane-change-budget.test.mjs",
         "evidence": {
           "path": "tests/ci-lane-change-budget.test.mjs",
+          "selector": "$"
+        }
+      }
+    },
+    {
+      "category": "history-change",
+      "disposition": "v4-native",
+      "id": "history-change:tests/dev-delivery-two-phase.test.mjs",
+      "negativeProbe": "an absent or unclassified changed path fails validation",
+      "ownerAssignment": "2026-08-26-buildchain-v4-v3-retirement-reconciliation",
+      "positiveProbe": "the exact v3 history range includes the path and the exact v4 cut contains its route",
+      "residual": null,
+      "sourceEvidence": {
+        "path": "tests/dev-delivery-two-phase.test.mjs",
+        "selector": "git-diff-status:M",
+        "valueRoot": "sha256:471f0b57e5b2280f263aa4ea7353d68277790568659bf44eb7471ac529ed5d5b"
+      },
+      "v4Route": {
+        "capabilityId": "path:tests/dev-delivery-two-phase.test.mjs",
+        "evidence": {
+          "path": "tests/dev-delivery-two-phase.test.mjs",
+          "selector": "$"
+        }
+      }
+    },
+    {
+      "category": "history-change",
+      "disposition": "v4-native",
+      "id": "history-change:tests/dev-delivery-warrant-command.test.mjs",
+      "negativeProbe": "an absent or unclassified changed path fails validation",
+      "ownerAssignment": "2026-08-26-buildchain-v4-v3-retirement-reconciliation",
+      "positiveProbe": "the exact v3 history range includes the path and the exact v4 cut contains its route",
+      "residual": null,
+      "sourceEvidence": {
+        "path": "tests/dev-delivery-warrant-command.test.mjs",
+        "selector": "git-diff-status:M",
+        "valueRoot": "sha256:9917c2177279620fa6b96c3da949ef160b6d7c6f17af35a00cea7a73ad4edfed"
+      },
+      "v4Route": {
+        "capabilityId": "path:tests/dev-delivery-warrant-command.test.mjs",
+        "evidence": {
+          "path": "tests/dev-delivery-warrant-command.test.mjs",
           "selector": "$"
         }
       }
@@ -95049,6 +95154,28 @@
     {
       "category": "workflow-output",
       "disposition": "v4-native",
+      "id": "workflow-output:dev-delivery-warrant-close#successor-wake-json",
+      "negativeProbe": "removing or substituting the declared v4 route fails validation",
+      "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
+      "positiveProbe": "the exact v4 cut contains the declared route evidence",
+      "residual": null,
+      "sourceEvidence": {
+        "path": "dist/site/workflow-registry.json",
+        "selector": "workflows[id=\"dev-delivery-warrant-close\"].outputs[\"successor-wake-json\"]",
+        "valueRoot": "sha256:0bcebe2914344ed8211d8831c331a2d73c602d320164a0687dc073dfa86629a9"
+      },
+      "v4Route": {
+        "capabilityId": "workflow-output:dev-delivery-warrant-close#successor-wake-json",
+        "evidence": {
+          "path": "dist/site/workflow-registry.json",
+          "selector": "workflows[id=\"dev-delivery-warrant-close\"].outputs[\"successor-wake-json\"]",
+          "valueRoot": "sha256:0bcebe2914344ed8211d8831c331a2d73c602d320164a0687dc073dfa86629a9"
+        }
+      }
+    },
+    {
+      "category": "workflow-output",
+      "disposition": "v4-native",
       "id": "workflow-output:dev-pr-auto-merge#action-count",
       "negativeProbe": "removing or substituting the declared v4 route fails validation",
       "ownerAssignment": "2026-08-26-buildchain-v4-public-surface-compatibility-closure",
@@ -102216,26 +102343,26 @@
     "unknownPolicy": "fail-closed"
   },
   "reverseHistory": {
-    "changedPathCount": 82,
-    "changedPathSetRoot": "sha256:a89fe02342036a9c7c39d08a65007fe917c09086a0a52e25c1c53c4ff7a58ead",
-    "commitCount": 87,
+    "changedPathCount": 87,
+    "changedPathSetRoot": "sha256:b85ecd81e21d41a6ce9c158bee1320e14843c29b98fbbb8a38564749935aeef6",
+    "commitCount": 92,
     "fromCommit": "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
-    "toCommit": "88d089b9c69dd08be00f120d623447ae881f1374",
+    "toCommit": "8493bf140a7f567e76aff3119f3d39ff026afc84",
     "unclassifiedPathCount": 0
   },
   "schemaVersion": 1,
   "sourceCuts": {
     "liveV3": {
       "branch": "origin/dev/v3/v3.0",
-      "commit": "88d089b9c69dd08be00f120d623447ae881f1374",
+      "commit": "8493bf140a7f567e76aff3119f3d39ff026afc84",
       "role": "execution-time-protected-read-only-reference",
-      "tree": "9560072135d76ba76f444918e9839e2dd69861c8"
+      "tree": "54ebdafc403c0d2c0b5c2b7de0164355c43e0ded"
     },
     "liveV4": {
       "branch": "origin/dev/v4/v4.0",
-      "commit": "b898305ba82e020ed959673be7f6e93b6b606342",
+      "commit": "97edd5b93eb67e5bf36ad55726e08231b47b70c0",
       "role": "execution-time-protected-target",
-      "tree": "878a2b34d91de8b2c0665b0d7e94c84a8a89c0e0"
+      "tree": "05b14410fd3350bc6a621fe2c1bef575fef9b5fd"
     },
     "priorFamilyV3": {
       "branch": "origin/dev/v3/v3.0",
@@ -102245,7 +102372,7 @@
     }
   },
   "summary": {
-    "capabilityCount": 4648,
+    "capabilityCount": 4654,
     "categoryCounts": {
       "action": 7,
       "action-input": 192,
@@ -102254,7 +102381,7 @@
       "config-contract": 7,
       "documented-module": 73,
       "generated-contract": 20,
-      "history-change": 82,
+      "history-change": 87,
       "node-export": 99,
       "node-symbol": 2093,
       "observable-evidence-contract": 2,
@@ -102263,12 +102390,12 @@
       "source-schema": 12,
       "workflow": 69,
       "workflow-input": 956,
-      "workflow-output": 371,
+      "workflow-output": 372,
       "workflow-secret": 103
     },
     "dispositionCounts": {
       "executable-migration": 6,
-      "v4-native": 4642
+      "v4-native": 4648
     },
     "residualCount": 0,
     "unknownCount": 0,
