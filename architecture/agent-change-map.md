@@ -148,6 +148,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 ### Current top twenty maintenance hotspots
 
 - `tests/v3-v4-capability-inventory.test.mjs`
+- `packages/core/v4-floating-consumer-policy.js`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
