@@ -17,29 +17,29 @@ import {
   evaluateWorkflowBudgets,
 } from "./maintainability-governance.mjs";
 
-function collectHotspots(root, current, limit = 20) {
+function collectHotspots(root, current, limit = 20, shallowFallback = []) {
   const maintained = new Set([
     ...Object.keys(current.files || {}),
     ...Object.keys(current.tests || {}),
     ...Object.keys(current.workflows || {}),
   ]);
+  // Shallow consumers cannot reproduce repository-wide churn ranking.
+  // Reuse the audited routes; full clones still re-rank them below.
+  // This keeps consumer verification deterministic without inventing history.
+  if (
+    gitOutput(root, ["rev-parse", "--is-shallow-repository"]).trim() === "true"
+  ) {
+    return shallowFallback.slice(0, limit);
+  }
   const counts = new Map();
   const record = (file) =>
     maintained.has(file) && counts.set(file, (counts.get(file) || 0) + 1);
-  for (const file of gitOutput(root, [
-    "log",
-    "-n",
-    "500",
-    "--format=",
-    "--name-only",
+  for (const args of [
+    ["log", "-n", "500", "--format=", "--name-only"],
+    ["diff", "--name-only"],
   ])
-    .split("\n")
-    .filter(Boolean))
-    record(file);
-  for (const file of gitOutput(root, ["diff", "--name-only"])
-    .split("\n")
-    .filter(Boolean))
-    record(file);
+    for (const file of gitOutput(root, args).split("\n").filter(Boolean))
+      record(file);
   return [...counts]
     .sort(
       ([leftPath, left], [rightPath, right]) =>
@@ -487,7 +487,7 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     extendedCoverageRevision,
   );
   const issues = evaluateExceptionGovernance({ policy });
-  const hotspots = collectHotspots(root, current);
+  const hotspots = collectHotspots(root, current, 20, debt.hotspots || []);
   issues.push(
     ...evaluateDebtAuthority({
       current,
