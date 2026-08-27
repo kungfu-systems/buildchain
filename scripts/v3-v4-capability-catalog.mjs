@@ -286,15 +286,15 @@ function addFileCatalog(catalog, root, revision, paths, pathSet) {
 function addMechanismCatalog(
   catalog,
   mechanismInventory,
-  capabilityManifest,
+  runtimeSemanticClosure,
   isLiveV3,
 ) {
   const mechanisms = isLiveV3
     ? mechanismInventory.mechanisms || []
-    : capabilityManifest.capabilities || [];
+    : runtimeSemanticClosure.capabilities || [];
   const relPath = isLiveV3
     ? "architecture/v3-core-mechanism-inventory.json"
-    : "architecture/v4-capability-state-machine-manifest.json";
+    : "architecture/v4-runtime-semantic-closure.json";
   for (const mechanism of mechanisms) {
     add(
       catalog,
@@ -353,11 +353,14 @@ export function collectRevisionCatalog({ root, revision, liveV3Revision }) {
     revision,
     "architecture/v3-core-mechanism-inventory.json",
   );
-  const capabilityManifest = gitJson(
-    root,
-    revision,
-    "architecture/v4-capability-state-machine-manifest.json",
-  );
+  const runtimeSemanticClosure =
+    revision === liveV3Revision
+      ? null
+      : gitJson(
+          root,
+          revision,
+          "architecture/v4-runtime-semantic-closure.json",
+        );
   addNodeCatalog(catalog, packageJson, nodeRegistry);
   addCliCatalog(catalog, cliRegistry);
   addWorkflowCatalog(catalog, workflowRegistry);
@@ -365,7 +368,7 @@ export function collectRevisionCatalog({ root, revision, liveV3Revision }) {
   addMechanismCatalog(
     catalog,
     mechanismInventory,
-    capabilityManifest,
+    runtimeSemanticClosure,
     revision === liveV3Revision,
   );
   addPlatformCatalog(catalog, root, revision, paths);

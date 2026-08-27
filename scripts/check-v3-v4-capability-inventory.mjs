@@ -231,10 +231,7 @@ function rowFromCatalogEntry(source, targetCatalog) {
   let v4Route = null;
   let residual = null;
   if (direct) {
-    disposition =
-      source.category === "release-delivery-recovery"
-        ? "compatibility-adapter"
-        : "v4-native";
+    disposition = "v4-native";
     v4Route = { capabilityId: direct.id, evidence: direct.evidence };
   } else if (migrated) {
     disposition = "executable-migration";
@@ -342,7 +339,7 @@ export function buildV3V4CapabilityInventory({ root = process.cwd() } = {}) {
         ".buildchain/*.{json,toml}",
         "dist/site/schemas/*.schema.json",
         "architecture/v3-core-mechanism-inventory.json",
-        "architecture/v4-capability-state-machine-manifest.json",
+        "architecture/v4-runtime-semantic-closure.json",
         ".github/workflows/*.{yml,yaml}",
         "git diff <prior-family-v3>..<live-v3>",
       ],
