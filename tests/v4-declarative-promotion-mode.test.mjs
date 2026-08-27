@@ -21,22 +21,35 @@ const protectedShellPredicate =
 test("protected alpha v4 recovery selects only the declarative Provider Plane", () => {
   assert.match(
     workflow,
-    new RegExp(`v4-declarative-promote:[\\s\\S]*?if: \\$\\{\\{[^\\n]*${protectedShellPredicate.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[^\\n]*\\}\\}`),
+    new RegExp(
+      `v4-declarative-promote:[\\s\\S]*?if: \\$\\{\\{[^\\n]*${protectedShellPredicate.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[^\\n]*\\}\\}`,
+    ),
   );
-  for (const legacyJob of ["publication-authority", "qualification-plan", "publication-qualification", "legacy-promote"]) {
+  for (const legacyJob of [
+    "publication-authority",
+    "qualification-plan",
+    "publication-qualification",
+    "legacy-promote",
+  ]) {
     assert.match(
       workflow,
-      new RegExp(`^  ${legacyJob}:[\\s\\S]*?^    if: [^\\n]*!\\(startsWith\\(inputs\\.promotion-shell-ref, 'v4'\\) \\|\\| inputs\\.promotion-shell-ref == 'alpha/v4/v4\\.0'\\)`, "m"),
+      new RegExp(
+        `^  ${legacyJob}:[\\s\\S]*?^    if: [^\\n]*!\\(startsWith\\(inputs\\.promotion-shell-ref, 'v4'\\) \\|\\| inputs\\.promotion-shell-ref == 'alpha/v4/v4\\.0'\\)`,
+        "m",
+      ),
     );
   }
 });
 
-test("bounded floating bootstrap uses the exact protected shell with a declarative built-in tail", () => {
+test("bounded floating bootstrap uses the legacy private shell with an exact protected binding and declarative built-in tail", () => {
   assert.match(
     recoveryWorkflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
   );
-  assert.match(recoveryWorkflow, /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u);
+  assert.match(
+    recoveryWorkflow,
+    /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u,
+  );
   assert.match(recoveryWorkflow, /declarative-release-tail: true/u);
   assert.doesNotMatch(recoveryWorkflow, /channel-finalization-recovery/u);
   assert.doesNotMatch(publicWorkflow, /channel-finalization-recovery/u);
