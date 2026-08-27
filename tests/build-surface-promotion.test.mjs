@@ -818,6 +818,26 @@ test("cross-runtime candidate preflight receives rooted transient authorization"
   assert.match(resolver, /verifyV4RuntimeAuthorizationReceipt/);
 });
 
+test("protected alpha v4 recovery selects only the declarative Provider Plane", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const protectedShellPredicate =
+    "startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0'";
+
+  assert.match(
+    workflow,
+    new RegExp(`v4-declarative-promote:[\\s\\S]*?if: \\$\\{\\{[^\\n]*${protectedShellPredicate.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[^\\n]*\\}\\}`),
+  );
+  for (const legacyJob of ["publication-authority", "qualification-plan", "publication-qualification", "legacy-promote"]) {
+    assert.match(
+      workflow,
+      new RegExp(`^  ${legacyJob}:[\\s\\S]*?^    if: [^\\n]*!\\(startsWith\\(inputs\\.promotion-shell-ref, 'v4'\\) \\|\\| inputs\\.promotion-shell-ref == 'alpha/v4/v4\\.0'\\)`, "m"),
+    );
+  }
+});
+
 test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   const action = fs.readFileSync(
     path.join(root, "actions/promote-buildchain-ref/action.yml"),
