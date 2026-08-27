@@ -1811,12 +1811,12 @@
       "governance": "legacy-debt-sunset-2026q4"
     },
     ".github/workflows/.release-candidate-promote.yml": {
-      "maxLines": 2708,
-      "maxJobs": 13,
-      "maxSteps": 99,
+      "maxLines": 2608,
+      "maxJobs": 12,
+      "maxSteps": 91,
       "maxStepsPerJob": 47,
-      "maxDecisions": 75,
-      "rationale": "The advanced promotion workflow retains its v4-only declarative provider lane and historical adopter inputs, while pure promotion-evidence bundling now runs in the exact checked-out workflow-shell helper. Jobs, permissions, credentials, outputs, mutation authority, failure behavior, and the 13/99/47/75 structural ceilings are unchanged; YAML lines fall from 2736 to 2708 and cannot grow implicitly.",
+      "maxDecisions": 70,
+      "rationale": "The advanced promotion workflow removes the partial v4-only tail lane and routes v3 and v4 through one complete product publication transaction whose v4 path still executes the declarative Provider Plane tail. The exact 12/91/47/70 ceilings reduce jobs, steps, decisions, and YAML lines without adding mutation authority or unrelated headroom.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     ".github/workflows/.web-surface.yml": {
