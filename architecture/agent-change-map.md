@@ -91,6 +91,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `scripts/web-surface-core.mjs`
 - sources: `scripts/web-surface-production-release-pr.mjs`
 - sources: `scripts/web-surface.mjs`
+- sources: `actions/promote-buildchain-ref/internal/promotion-operations.js`
 - rust: `crates/buildchain-v4-bridge/src/main.rs`
 - rust: `crates/buildchain-v4-contracts/src/compatibility_facts/verifier.rs`
 - rust: `crates/buildchain-v4-contracts/src/main.rs`
@@ -409,6 +410,7 @@ Owner: Buildchain maintainers
 - `actions/promote-buildchain-ref/internal/durable-transaction-store.js`
 - `actions/promote-buildchain-ref/internal/durable-transaction-operations.js`
 - `actions/promote-buildchain-ref/internal/github-adapter.js`
+- `actions/promote-buildchain-ref/internal/promotion-operations.js`
 
 ### Contracts
 
@@ -485,7 +487,6 @@ Owner: Buildchain maintainers
 
 ### Implementation
 
-- `actions/promote-buildchain-ref/internal/existing-version-state.js`
 - `actions/promote-buildchain-ref/internal/version-state.js`
 - `actions/promote-buildchain-ref/internal/version-state-operations.js`
 

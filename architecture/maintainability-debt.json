@@ -133,10 +133,10 @@
       "actions/promote-buildchain-ref/internal/version-state-operations.js": {
         "baseline": {
           "functions": {
-            "createVersionStateOperations@27": {
+            "createVersionStateOperations@131": {
               "lines": 415
             },
-            "createVersionStateCommit@141": {
+            "createVersionStateCommit@245": {
               "lines": 286,
               "complexity": 27
             }
@@ -144,10 +144,10 @@
         },
         "current": {
           "functions": {
-            "createVersionStateOperations@27": {
+            "createVersionStateOperations@131": {
               "lines": 415
             },
-            "createVersionStateCommit@141": {
+            "createVersionStateCommit@245": {
               "lines": 286,
               "complexity": 27
             }
@@ -155,10 +155,10 @@
         },
         "target": {
           "functions": {
-            "createVersionStateOperations@27": {
+            "createVersionStateOperations@131": {
               "lines": 180
             },
-            "createVersionStateCommit@141": {
+            "createVersionStateCommit@245": {
               "lines": 180,
               "complexity": 25
             }
@@ -169,72 +169,44 @@
         "baseline": {
           "lines": 5132,
           "functions": {
-            "resolvePublishContract@257": {
+            "resolvePublishContract@258": {
               "complexity": 30
             },
-            "validatePromotionReleaseCandidate@527": {
+            "validatePromotionReleaseCandidate@528": {
               "complexity": 27
             },
-            "runPublishTransaction@1418": {
+            "runPublishTransaction@1419": {
               "lines": 247,
               "complexity": 33
             },
-            "collectAndPersistReleasePassport@1806": {
+            "collectAndPersistReleasePassport@1807": {
               "lines": 276,
               "complexity": 60
             },
-            "createRefMutationOperations@3171": {
-              "lines": 648
-            },
-            "updateBranch@3401": {
-              "lines": 378,
-              "complexity": 34
-            },
-            "createReconciliationOperations@3819": {
-              "lines": 672
-            },
-            "assertReleasePrOrVersionStateParent@4126": {
-              "lines": 335,
-              "complexity": 42
-            },
-            "promoteBuildchainRefs@4508": {
+            "promoteBuildchainRefs@3191": {
               "lines": 407,
               "complexity": 46
             }
           }
         },
         "current": {
-          "lines": 4788,
+          "lines": 3471,
           "functions": {
-            "resolvePublishContract@257": {
+            "resolvePublishContract@258": {
               "complexity": 30
             },
-            "validatePromotionReleaseCandidate@527": {
+            "validatePromotionReleaseCandidate@528": {
               "complexity": 27
             },
-            "runPublishTransaction@1418": {
+            "runPublishTransaction@1419": {
               "lines": 247,
               "complexity": 33
             },
-            "collectAndPersistReleasePassport@1806": {
+            "collectAndPersistReleasePassport@1807": {
               "lines": 276,
               "complexity": 60
             },
-            "createRefMutationOperations@3171": {
-              "lines": 648
-            },
-            "updateBranch@3401": {
-              "lines": 378,
-              "complexity": 34
-            },
-            "createReconciliationOperations@3819": {
-              "lines": 672
-            },
-            "assertReleasePrOrVersionStateParent@4126": {
-              "lines": 335,
-              "complexity": 42
-            },
-            "promoteBuildchainRefs@4508": {
+            "promoteBuildchainRefs@3191": {
               "lines": 260,
               "complexity": 46
             }
@@ -243,35 +215,21 @@
         "target": {
           "lines": 600,
           "functions": {
-            "resolvePublishContract@257": {
+            "resolvePublishContract@258": {
               "complexity": 25
             },
-            "validatePromotionReleaseCandidate@527": {
+            "validatePromotionReleaseCandidate@528": {
               "complexity": 25
             },
-            "runPublishTransaction@1418": {
+            "runPublishTransaction@1419": {
               "lines": 180,
               "complexity": 25
             },
-            "collectAndPersistReleasePassport@1806": {
+            "collectAndPersistReleasePassport@1807": {
               "lines": 180,
               "complexity": 25
             },
-            "createRefMutationOperations@3171": {
-              "lines": 180
-            },
-            "updateBranch@3401": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "createReconciliationOperations@3819": {
-              "lines": 180
-            },
-            "assertReleasePrOrVersionStateParent@4126": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "promoteBuildchainRefs@4508": {
+            "promoteBuildchainRefs@3191": {
               "lines": 180,
               "complexity": 25
             }
@@ -2091,6 +2049,65 @@
             }
           }
         }
+      },
+      "actions/promote-buildchain-ref/internal/promotion-operations.js": {
+        "baseline": {
+          "lines": 1320,
+          "functions": {
+            "createRefMutationOperations@1": {
+              "lines": 648
+            },
+            "updateBranch@231": {
+              "lines": 378,
+              "complexity": 34
+            },
+            "createReconciliationOperations@649": {
+              "lines": 672
+            },
+            "assertReleasePrOrVersionStateParent@956": {
+              "lines": 335,
+              "complexity": 42
+            }
+          }
+        },
+        "current": {
+          "lines": 1320,
+          "functions": {
+            "createRefMutationOperations@1": {
+              "lines": 648
+            },
+            "updateBranch@231": {
+              "lines": 378,
+              "complexity": 34
+            },
+            "createReconciliationOperations@649": {
+              "lines": 672
+            },
+            "assertReleasePrOrVersionStateParent@956": {
+              "lines": 335,
+              "complexity": 42
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "createRefMutationOperations@1": {
+              "lines": 180
+            },
+            "updateBranch@231": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "createReconciliationOperations@649": {
+              "lines": 180
+            },
+            "assertReleasePrOrVersionStateParent@956": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
       }
     },
     "rust": {
@@ -3287,7 +3304,7 @@
       "path": "actions/promote-buildchain-ref/lib.js",
       "metric": "lines",
       "baseline": 5132,
-      "current": 4788
+      "current": 3471
     },
     {
       "domain": "tests",
