@@ -2054,36 +2054,24 @@
         "baseline": {
           "lines": 1320,
           "functions": {
-            "createRefMutationOperations@1": {
-              "lines": 648
-            },
-            "updateBranch@231": {
+            "updateBranch@158": {
               "lines": 378,
               "complexity": 34
             },
-            "createReconciliationOperations@649": {
-              "lines": 672
-            },
-            "assertReleasePrOrVersionStateParent@956": {
+            "assertReleasePrOrVersionStateParent@795": {
               "lines": 335,
               "complexity": 42
             }
           }
         },
         "current": {
-          "lines": 1320,
+          "lines": 1171,
           "functions": {
-            "createRefMutationOperations@1": {
-              "lines": 648
-            },
-            "updateBranch@231": {
+            "updateBranch@158": {
               "lines": 378,
               "complexity": 34
             },
-            "createReconciliationOperations@649": {
-              "lines": 672
-            },
-            "assertReleasePrOrVersionStateParent@956": {
+            "assertReleasePrOrVersionStateParent@795": {
               "lines": 335,
               "complexity": 42
             }
@@ -2092,17 +2080,11 @@
         "target": {
           "lines": 600,
           "functions": {
-            "createRefMutationOperations@1": {
-              "lines": 180
-            },
-            "updateBranch@231": {
+            "updateBranch@158": {
               "lines": 180,
               "complexity": 25
             },
-            "createReconciliationOperations@649": {
-              "lines": 180
-            },
-            "assertReleasePrOrVersionStateParent@956": {
+            "assertReleasePrOrVersionStateParent@795": {
               "lines": 180,
               "complexity": 25
             }
