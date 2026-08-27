@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 950,
+  "generation": 951,
   "fencingCounter": 146,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:38756eddbf8956c25349f2550738cf3ecb1d44b22dcfbf7fcbdf2964fc0f818a",
@@ -70,8 +70,13 @@
     "issuedAt": "2026-08-27T11:20:16.264Z",
     "expiresAt": "2026-08-27T12:24:34.898Z",
     "fencingToken": "sha256:3ca7bd4611cb5b1aba2ce460aa3dd79bf028eb571c5088b41bdd8b5bcc2e78a3",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-27T11:24:34.898Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-27T11:24:34.898Z",
+    "nativeProofRoot": "sha256:66fba77ad9a385180024fb7617b336c41b6e5e57ed28997e36b03c94c9a4aa4c",
+    "nativeExecutionReceiptRoot": "sha256:2c7375d00fb5c4a5a4704794a7de9234c646d7aab1e8c3a0c203d3ab389accea",
+    "nativeProofReuseRoot": "sha256:5aaef0da95aa6a2b8abf830845a80be04e400089ab277614b53d6fd7122858c4",
+    "qualificationReceiptRoot": "sha256:47cbb0e6af075aaf97f90b9637516a8e433b713ad99231c4fa898e19f2928de4",
+    "qualifiedAt": "2026-08-27T11:25:07.536Z"
   },
   "candidates": [
     {
@@ -6742,10 +6747,10 @@
       "sourceWorkflowRunId": 33065295421,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-27T11:20:12.179Z",
-      "updatedAt": "2026-08-27T11:24:34.898Z",
+      "updatedAt": "2026-08-27T11:25:07.536Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/dev-delivery-warrant-close.yml",
@@ -6776,6 +6781,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-27T11:24:34.898Z",
-  "stateRoot": "sha256:f6a50bbe61a3507645e47e85739174dc92fcf832017a6e5a93bacc52e9af6252"
+  "updatedAt": "2026-08-27T11:25:07.536Z",
+  "stateRoot": "sha256:7b624158b3827b8e1759449d8150228a52c0092478e5006aa12a44402bdc54ac"
 }
