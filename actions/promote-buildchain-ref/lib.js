@@ -2921,28 +2921,28 @@ async function resumableReleaseTransactionState({
 }
 function parseAlphaPrereleaseRef(refName, releasePrefix) {
   const tag = parseAlphaPrereleaseTag(refName, releasePrefix);
-  if (tag) {
-    return { ...tag, source: "tag" };
-  }
+  if (tag) return { ...tag, source: "tag" };
   const stateRef = parseAlphaTransactionStateRef(refName, releasePrefix);
-  if (stateRef) {
-    return { ...stateRef, source: "release-state" };
-  }
+  if (stateRef) return { ...stateRef, source: "release-state" };
+  const gateVersion = String(refName || "").match(new RegExp(`^refs/heads/publish-gate/alpha/v\\d+/${releasePrefix.replaceAll(".", "\\.")}/([^/]+)$`))?.[1];
+  const gate = gateVersion && parseAlphaPrereleaseVersion(gateVersion, releasePrefix);
+  if (gate) return { ...gate, source: "publish-gate", occupied: true };
   return undefined;
 }
 function selectReleaseTag({ refs, releasePrefix, sha }) {
   const releaseTags = refs
     .map((ref) => {
       const parsed = parseReleasePatchTag(ref.ref, releasePrefix);
-      if (!parsed) {
-        return undefined;
-      }
-      return { ...parsed, sha: ref.object?.sha };
+      return parsed ? { ...parsed, sha: ref.object?.sha } : undefined;
     })
     .filter(Boolean)
     .sort((a, b) => a.patch - b.patch);
   const occupiedReleaseStates = refs
-    .map((ref) => parseReleaseTransactionStateRef(ref.ref, releasePrefix))
+    .map((ref) => {
+      const gateVersion = String(ref.ref || "").match(new RegExp(`^refs/heads/publish-gate/release/v\\d+/${releasePrefix.replaceAll(".", "\\.")}/([^/]+)$`))?.[1];
+      return parseReleaseTransactionStateRef(ref.ref, releasePrefix) ||
+        (gateVersion && parseReleasePatchTag(`refs/tags/v${gateVersion}`, releasePrefix));
+    })
     .filter(Boolean)
     .sort((a, b) => a.patch - b.patch);
 
@@ -3259,16 +3259,16 @@ function createRefMutationOperations(context) {
   const listLineRefs = async (releasePrefix = rule.releasePrefix) => {
     const { data: tagRefs } = await octokit.rest.git.listMatchingRefs({
       owner,
-      repo,
-      ref: `tags/${releasePrefix}.`,
+      repo, ref: `tags/${releasePrefix}.`,
     });
     const statePrefix = releasePrefix.replace(/^v/, "").replaceAll(".", "-");
     const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({
       owner,
-      repo,
-      ref: `heads/buildchain/release-state/${statePrefix}-`,
+      repo, ref: `heads/buildchain/release-state/${statePrefix}-`,
     });
-    return [...tagRefs, ...stateRefs];
+    const line = targetRef?.startsWith(`${rule.channel}/`) ? targetRef.slice(`${rule.channel}/`.length) : "";
+    const gateRefs = ["alpha", "release"].includes(rule.channel) && line ? (await octokit.rest.git.listMatchingRefs({ owner, repo, ref: `heads/publish-gate/${rule.channel}/${line}/` })).data : [];
+    return [...tagRefs, ...stateRefs, ...gateRefs];
   };
 
   const majorAlphaRefCache = new Map();
