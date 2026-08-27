@@ -8,6 +8,7 @@ import {
   createNativeQualificationProof,
   devDeliveryContentRoot,
   heartbeatDevDeliveryWarrant,
+  observeDevDeliveryQueue,
   qualifyDevDeliveryWarrant,
   recoverExpiredDevDeliveryWarrant,
   selectDevDeliveryWarrant,
@@ -401,24 +402,31 @@ test("qualified dequeue closes the exact attempt and wakes its successor", () =>
     }),
     { now: "2026-08-11T00:00:40Z" },
   );
+  const terminalEvent = {
+    pullRequestNumber: 401,
+    sourceHead: SOURCE_HEAD,
+    fencingToken: qualified.warrant.fencingToken,
+    leaseGeneration: qualified.warrant.generation,
+    outcome: "dequeued",
+    evidenceRoot: ROOT("f"),
+    reason: "merge group was dequeued after a transient source failure",
+  };
   const closed = settleDevDeliveryTerminalEvent(
     withSuccessor.queue,
-    {
-      pullRequestNumber: 401,
-      sourceHead: SOURCE_HEAD,
-      fencingToken: qualified.warrant.fencingToken,
-      leaseGeneration: qualified.warrant.generation,
-      outcome: "dequeued",
-      evidenceRoot: ROOT("f"),
-      reason: "merge group was dequeued after a transient source failure",
-    },
+    terminalEvent,
     { now: "2026-08-11T00:01:00Z" },
   );
   assert.equal(closed.receipt.action, "terminal-closeout");
   assert.equal(closed.queue.candidates[0].status, "dequeued");
   assert.equal(closed.queue.activeWarrant, null);
+  assert.equal(closed.receipt.successorWake.pullRequestNumber, 402);
+  assert.deepEqual(closed.queue.candidates[0].terminal.successorWake, closed.receipt.successorWake);
+  const retry = settleDevDeliveryTerminalEvent(closed.queue, terminalEvent, { now: "2026-08-11T00:01:01Z" });
+  assert.equal(retry.receipt.action, "duplicate-terminal-event-noop");
+  assert.deepEqual(retry.receipt.successorWake, closed.receipt.successorWake);
+  assert.deepEqual(observeDevDeliveryQueue(closed.queue, { now: "2026-08-11T00:01:01Z" }).pendingSuccessorWakes[0].successorWake, closed.receipt.successorWake);
   const successor = selectDevDeliveryWarrant(closed.queue, {
-    now: "2026-08-11T00:01:01Z",
+    now: "2026-08-11T00:01:02Z",
   });
   assert.equal(successor.warrant.pullRequestNumber, 402);
 });

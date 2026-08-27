@@ -612,7 +612,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
         leaseGeneration: active.generation,
         ...(active.nativeProofRoot ? { nativeProofRoot: exactRoot(active.nativeProofRoot, "nativeProofRoot") } : {}),
       };
-      queue.activeWarrant = null;
+      queue.activeWarrant = null; candidate.terminal.successorWake = createDevDeliverySuccessorWake(queue, currentTime);
       return { candidate, active };
     },
     currentTime,
@@ -629,7 +629,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
     evidenceRoot: transaction.result.candidate.terminal.evidenceRoot,
     expectedOldStateRoot: transaction.expectedOldStateRoot,
     nextStateRoot: transaction.after.stateRoot,
-    nextAction: "Select the next queued candidate, if any.",
+    successorWake: transaction.result.candidate.terminal.successorWake, nextAction: "Select the next queued candidate, if any.",
   };
   return {
     queue: transaction.after,
@@ -637,7 +637,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
     receiptRoot: devDeliveryContentRoot(receipt),
   };
 }
-
+function createDevDeliverySuccessorWake(queue, now) { const next = rankDevDeliveryCandidates(queue, { now })[0]?.candidate; if (!next) return null; return { schema: "kungfu.buildchain.dev-delivery-wake/v1", targetBranch: queue.protectedBase, ...Object.fromEntries(["candidateId", "pullRequestNumber", "sourceHead", "assignmentRoot", "initiativeRoot", "sourceIdentityRoot", "sourcePatchRoot", "sourceProofRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot", "deliveryClass", "priority", "nativeCommandContract", "shardEvidenceRoots"].filter((field) => next[field] !== undefined).map((field) => [field, next[field]])), ...(next.environmentRoot ? { environmentRoot: next.environmentRoot } : {}), ...(next.affectedPaths ? { affectedPaths: next.affectedPaths } : {}), ...(Object.hasOwn(next, "sourceWorkflowRunId") ? { sourceWorkflowRunId: next.sourceWorkflowRunId } : {}), ...(next.releaseBlockerPriority ? { releaseBlockerPriority: next.releaseBlockerPriority } : {}) }; }
 const cancelQueuedDevDeliveryCandidateTransition = createCancelQueuedDevDeliveryCandidate(normalizeDevDeliveryQueue);
 export function cancelQueuedDevDeliveryCandidate(queueInput, input, options) {
   return cancelQueuedDevDeliveryCandidateTransition(queueInput, input, options);
@@ -663,7 +663,7 @@ export function observeDevDeliveryQueue(queueInput, { now = new Date().toISOStri
     generation: queue.generation,
     activeWarrant: queue.activeWarrant,
     activeCandidate: queue.activeWarrant ? queue.candidates.find((candidate) => candidate.candidateId === queue.activeWarrant.candidateId) || null : null,
-    states,
+    states, pendingSuccessorWakes: queue.candidates.filter((candidate) => candidate.terminal?.successorWake).map((candidate) => ({ pullRequestNumber: candidate.pullRequestNumber, sourceHead: candidate.sourceHead, outcome: candidate.status, successorWake: candidate.terminal.successorWake })),
     queued: queued.map((entry, index) => ({
       position: index + 1,
       candidateId: entry.candidate.candidateId,

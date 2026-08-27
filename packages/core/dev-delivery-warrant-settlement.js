@@ -31,7 +31,7 @@ function settleTerminalCandidate(queue, identity, candidate) {
     });
     return { queue, receipt, receiptRoot: devDeliveryContentRoot(receipt) };
   }
-  const receipt = noopReceipt(queue, identity, candidate, "duplicate-terminal-event-noop");
+  const receipt = noopReceipt(queue, identity, candidate, "duplicate-terminal-event-noop", { successorWake: candidate.terminal?.successorWake || null });
   return { queue, receipt, receiptRoot: devDeliveryContentRoot(receipt) };
 }
 
