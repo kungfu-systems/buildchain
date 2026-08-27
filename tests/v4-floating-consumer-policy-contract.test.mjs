@@ -73,7 +73,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
   assert.equal(result.receipt.invocation.channel, "alpha");
 });
 
-test("bounded alpha recovery admits the floating advanced shell before promotion", () => {
+test("bounded alpha recovery admits the old floating shell with current exact runtime binding", () => {
   const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
   const legacyRelative = ".github/workflows/release-candidate-promote.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
@@ -234,13 +234,13 @@ test("bounded alpha recovery admits the floating advanced shell before promotion
   }
 
   assert.equal(result.ok, true, JSON.stringify(result.failures));
-  assert.equal(result.receipt.invocation.visibleSelector, "alpha/v4/v4.0");
+  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
   assert.equal(result.receipt.invocation.selectorClass, "protected-bootstrap");
   assert.match(workflow, /^  workflow_dispatch:/mu);
   assert.doesNotMatch(workflow, /^  workflow_run:/mu);
   assert.match(
     workflow,
-    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
+    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@v4-alpha/u,
   );
   assert.match(
     workflow,
