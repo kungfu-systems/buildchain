@@ -1,0 +1,3217 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-maintainability-debt/v1",
+  "sourceCut": {
+    "baselineRevision": "4271eceaa2aa11dc98d2917dcb390f943ca42031",
+    "currentRevision": "working-tree"
+  },
+  "defaults": {
+    "owner": "Buildchain architecture maintainers",
+    "capability": "maintainability-governance",
+    "expiry": "2026-12-31",
+    "impact": "Oversized surfaces increase review ambiguity, regression radius, and Agent context cost.",
+    "recovery": "Use the generated Agent change map, focused mapped tests, and the exact lower ratchet before editing.",
+    "stopCondition": "Stop if a split changes public behavior, trust authority, evidence bytes, or fails to reduce aggregate debt.",
+    "invariant": "Every over-default surface remains exactly measured, owned, mapped, and unable to widen.",
+    "tests": [
+      "tests/maintainability.test.mjs",
+      "tests/maintainability-governance.test.mjs"
+    ],
+    "safeChangeRoute": "Reduce one owned responsibility behind the stable facade, run focused differential tests, regenerate this map, and lower the exact ceiling."
+  },
+  "surfaces": {
+    "sources": {
+      "actions/macos-credential-island/index.js": {
+        "baseline": {
+          "lines": 710,
+          "functions": {
+            "main@309": {
+              "lines": 394
+            }
+          }
+        },
+        "current": {
+          "lines": 710,
+          "functions": {
+            "main@309": {
+              "lines": 394
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "main@309": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "actions/macos-credential-island/lib.js": {
+        "baseline": {
+          "lines": 816
+        },
+        "current": {
+          "lines": 816
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "actions/promote-buildchain-ref/index.js": {
+        "baseline": {
+          "functions": {
+            "main@224": {
+              "lines": 280,
+              "complexity": 52
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "main@224": {
+              "lines": 280,
+              "complexity": 52
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "main@224": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "actions/promote-buildchain-ref/internal/durable-transaction-operations.js": {
+        "baseline": {
+          "functions": {
+            "createDurableTransactionOperations@11": {
+              "lines": 378
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "createDurableTransactionOperations@11": {
+              "lines": 378
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "createDurableTransactionOperations@11": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "actions/promote-buildchain-ref/internal/durable-transaction-store.js": {
+        "baseline": {
+          "functions": {
+            "persistDurableReleaseTransaction@176": {
+              "lines": 213
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "persistDurableReleaseTransaction@176": {
+              "lines": 213
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "persistDurableReleaseTransaction@176": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "actions/promote-buildchain-ref/internal/version-state-operations.js": {
+        "baseline": {
+          "functions": {
+            "createVersionStateOperations@27": {
+              "lines": 415
+            },
+            "createVersionStateCommit@141": {
+              "lines": 286,
+              "complexity": 27
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "createVersionStateOperations@27": {
+              "lines": 415
+            },
+            "createVersionStateCommit@141": {
+              "lines": 286,
+              "complexity": 27
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "createVersionStateOperations@27": {
+              "lines": 180
+            },
+            "createVersionStateCommit@141": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "actions/promote-buildchain-ref/lib.js": {
+        "baseline": {
+          "lines": 5132,
+          "functions": {
+            "resolvePublishContract@257": {
+              "complexity": 30
+            },
+            "validatePromotionReleaseCandidate@527": {
+              "complexity": 27
+            },
+            "runPublishTransaction@1418": {
+              "lines": 247,
+              "complexity": 33
+            },
+            "collectAndPersistReleasePassport@1806": {
+              "lines": 276,
+              "complexity": 60
+            },
+            "createRefMutationOperations@3171": {
+              "lines": 648
+            },
+            "updateBranch@3401": {
+              "lines": 378,
+              "complexity": 34
+            },
+            "createReconciliationOperations@3819": {
+              "lines": 672
+            },
+            "assertReleasePrOrVersionStateParent@4126": {
+              "lines": 335,
+              "complexity": 42
+            },
+            "promoteBuildchainRefs@4508": {
+              "lines": 407,
+              "complexity": 46
+            }
+          }
+        },
+        "current": {
+          "lines": 4788,
+          "functions": {
+            "resolvePublishContract@257": {
+              "complexity": 30
+            },
+            "validatePromotionReleaseCandidate@527": {
+              "complexity": 27
+            },
+            "runPublishTransaction@1418": {
+              "lines": 247,
+              "complexity": 33
+            },
+            "collectAndPersistReleasePassport@1806": {
+              "lines": 276,
+              "complexity": 60
+            },
+            "createRefMutationOperations@3171": {
+              "lines": 648
+            },
+            "updateBranch@3401": {
+              "lines": 378,
+              "complexity": 34
+            },
+            "createReconciliationOperations@3819": {
+              "lines": 672
+            },
+            "assertReleasePrOrVersionStateParent@4126": {
+              "lines": 335,
+              "complexity": 42
+            },
+            "promoteBuildchainRefs@4508": {
+              "lines": 260,
+              "complexity": 46
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "resolvePublishContract@257": {
+              "complexity": 25
+            },
+            "validatePromotionReleaseCandidate@527": {
+              "complexity": 25
+            },
+            "runPublishTransaction@1418": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "collectAndPersistReleasePassport@1806": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "createRefMutationOperations@3171": {
+              "lines": 180
+            },
+            "updateBranch@3401": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "createReconciliationOperations@3819": {
+              "lines": 180
+            },
+            "assertReleasePrOrVersionStateParent@4126": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "promoteBuildchainRefs@4508": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "bin/buildchain.mjs": {
+        "baseline": {
+          "lines": 1821,
+          "functions": {
+            "runKfd3Cli@359": {
+              "complexity": 30
+            },
+            "runKfd2Cli@544": {
+              "complexity": 41
+            },
+            "runKfdCli@794": {
+              "lines": 195,
+              "complexity": 60
+            }
+          }
+        },
+        "current": {
+          "lines": 1821,
+          "functions": {
+            "runKfd3Cli@359": {
+              "complexity": 30
+            },
+            "runKfd2Cli@544": {
+              "complexity": 41
+            },
+            "runKfdCli@794": {
+              "lines": 195,
+              "complexity": 60
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "runKfd3Cli@359": {
+              "complexity": 25
+            },
+            "runKfd2Cli@544": {
+              "complexity": 25
+            },
+            "runKfdCli@794": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/artifact-passport.js": {
+        "baseline": {
+          "lines": 847,
+          "functions": {
+            "resolveArtifactSubject@368": {
+              "complexity": 40
+            }
+          }
+        },
+        "current": {
+          "lines": 847,
+          "functions": {
+            "resolveArtifactSubject@368": {
+              "complexity": 40
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "resolveArtifactSubject@368": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/artifact-verification-envelope.js": {
+        "baseline": {
+          "functions": {
+            "verifyArtifactVerificationEnvelope@153": {
+              "complexity": 78
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "verifyArtifactVerificationEnvelope@153": {
+              "complexity": 78
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "verifyArtifactVerificationEnvelope@153": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/buildchain-config.js": {
+        "baseline": {
+          "lines": 1885
+        },
+        "current": {
+          "lines": 1885
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/buildchain-contract.js": {
+        "baseline": {
+          "lines": 1078,
+          "functions": {
+            "createBuildchainContractWorld@199": {
+              "lines": 681
+            }
+          }
+        },
+        "current": {
+          "lines": 1078,
+          "functions": {
+            "createBuildchainContractWorld@199": {
+              "lines": 681
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "createBuildchainContractWorld@199": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "packages/core/buildchain-kfd-claims.js": {
+        "baseline": {
+          "lines": 733,
+          "functions": {
+            "createBuildchainPublicClaimDefinitions@226": {
+              "lines": 184
+            }
+          }
+        },
+        "current": {
+          "lines": 733,
+          "functions": {
+            "createBuildchainPublicClaimDefinitions@226": {
+              "lines": 184
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "createBuildchainPublicClaimDefinitions@226": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery-execution-transfer.js": {
+        "baseline": {
+          "functions": {
+            "verifyNativeExecutionTransfer@469": {
+              "complexity": 36
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "verifyNativeExecutionTransfer@469": {
+              "complexity": 36
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "verifyNativeExecutionTransfer@469": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery-native-proof.js": {
+        "baseline": {
+          "functions": {
+            "validateActiveDevDeliveryWarrant@75": {
+              "complexity": 29
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "validateActiveDevDeliveryWarrant@75": {
+              "complexity": 29
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "validateActiveDevDeliveryWarrant@75": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery-process-boundary.js": {
+        "baseline": {
+          "functions": {
+            "createProviderFinalizerBoundary@305": {
+              "lines": 191,
+              "complexity": 33
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "createProviderFinalizerBoundary@305": {
+              "lines": 191,
+              "complexity": 33
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "createProviderFinalizerBoundary@305": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/diagnostics.js": {
+        "baseline": {
+          "lines": 1904,
+          "functions": {
+            "validateAnchoredPackageRelease@325": {
+              "complexity": 43
+            },
+            "createStructuredCacheEvidence@722": {
+              "lines": 199,
+              "complexity": 42
+            },
+            "summarizeProcessSamples@1254": {
+              "complexity": 30
+            },
+            "<anonymous@1828>@1828": {
+              "complexity": 32
+            }
+          }
+        },
+        "current": {
+          "lines": 1904,
+          "functions": {
+            "validateAnchoredPackageRelease@325": {
+              "complexity": 43
+            },
+            "createStructuredCacheEvidence@722": {
+              "lines": 199,
+              "complexity": 42
+            },
+            "summarizeProcessSamples@1254": {
+              "complexity": 30
+            },
+            "<anonymous@1828>@1828": {
+              "complexity": 32
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "validateAnchoredPackageRelease@325": {
+              "complexity": 25
+            },
+            "createStructuredCacheEvidence@722": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "summarizeProcessSamples@1254": {
+              "complexity": 25
+            },
+            "<anonymous@1828>@1828": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/engineering-housekeeper-github.js": {
+        "baseline": {
+          "lines": 707
+        },
+        "current": {
+          "lines": 707
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/github-artifact-attestation.js": {
+        "baseline": {
+          "lines": 642
+        },
+        "current": {
+          "lines": 642
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/github-governance-authority.js": {
+        "baseline": {
+          "lines": 1369,
+          "functions": {
+            "evaluateGithubGovernanceSnapshot@697": {
+              "lines": 189,
+              "complexity": 41
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1192": {
+              "complexity": 36
+            }
+          }
+        },
+        "current": {
+          "lines": 1369,
+          "functions": {
+            "evaluateGithubGovernanceSnapshot@697": {
+              "lines": 189,
+              "complexity": 41
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1192": {
+              "complexity": 36
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "evaluateGithubGovernanceSnapshot@697": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1192": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/index.js": {
+        "baseline": {
+          "lines": 705
+        },
+        "current": {
+          "lines": 705
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/issue-reporting.js": {
+        "baseline": {
+          "functions": {
+            "buildConsumerIssueReport@104": {
+              "complexity": 43
+            },
+            "buildWorkflowFrictionIssueReport@199": {
+              "complexity": 54
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "buildConsumerIssueReport@104": {
+              "complexity": 43
+            },
+            "buildWorkflowFrictionIssueReport@199": {
+              "complexity": 54
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "buildConsumerIssueReport@104": {
+              "complexity": 25
+            },
+            "buildWorkflowFrictionIssueReport@199": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/kfd-gate.js": {
+        "baseline": {
+          "lines": 1672,
+          "functions": {
+            "normalizeKfd3Surface@354": {
+              "complexity": 27
+            },
+            "normalizeKfd3AuditBoundary@574": {
+              "complexity": 33
+            },
+            "normalizeKfd3CollaborationInterfacePrebuildWitness@667": {
+              "complexity": 44
+            },
+            "normalizeKfd1ContractWorldWitness@897": {
+              "complexity": 30
+            },
+            "createKfd3CollaborationInterfaceReleaseGateEvidence@1132": {
+              "lines": 204
+            },
+            "<anonymous@1161>@1161": {
+              "complexity": 28
+            },
+            "validateKfd1ReleaseGateEvidence@1337": {
+              "complexity": 46
+            },
+            "validateKfd3CollaborationInterfaceReleaseGateEvidence@1470": {
+              "lines": 203,
+              "complexity": 62
+            }
+          }
+        },
+        "current": {
+          "lines": 1672,
+          "functions": {
+            "normalizeKfd3Surface@354": {
+              "complexity": 27
+            },
+            "normalizeKfd3AuditBoundary@574": {
+              "complexity": 33
+            },
+            "normalizeKfd3CollaborationInterfacePrebuildWitness@667": {
+              "complexity": 44
+            },
+            "normalizeKfd1ContractWorldWitness@897": {
+              "complexity": 30
+            },
+            "createKfd3CollaborationInterfaceReleaseGateEvidence@1132": {
+              "lines": 204
+            },
+            "<anonymous@1161>@1161": {
+              "complexity": 28
+            },
+            "validateKfd1ReleaseGateEvidence@1337": {
+              "complexity": 46
+            },
+            "validateKfd3CollaborationInterfaceReleaseGateEvidence@1470": {
+              "lines": 203,
+              "complexity": 62
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "normalizeKfd3Surface@354": {
+              "complexity": 25
+            },
+            "normalizeKfd3AuditBoundary@574": {
+              "complexity": 25
+            },
+            "normalizeKfd3CollaborationInterfacePrebuildWitness@667": {
+              "complexity": 25
+            },
+            "normalizeKfd1ContractWorldWitness@897": {
+              "complexity": 25
+            },
+            "createKfd3CollaborationInterfaceReleaseGateEvidence@1132": {
+              "lines": 180
+            },
+            "<anonymous@1161>@1161": {
+              "complexity": 25
+            },
+            "validateKfd1ReleaseGateEvidence@1337": {
+              "complexity": 25
+            },
+            "validateKfd3CollaborationInterfaceReleaseGateEvidence@1470": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/kfd-product-gates.js": {
+        "baseline": {
+          "functions": {
+            "evaluateKfdProductGate@419": {
+              "complexity": 31
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "evaluateKfdProductGate@419": {
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "evaluateKfdProductGate@419": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/kfd.js": {
+        "baseline": {
+          "lines": 966,
+          "functions": {
+            "checkKfdUpstreamFacts@798": {
+              "complexity": 35
+            }
+          }
+        },
+        "current": {
+          "lines": 966,
+          "functions": {
+            "checkKfdUpstreamFacts@798": {
+              "complexity": 35
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "checkKfdUpstreamFacts@798": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/kfd3-surface-register.js": {
+        "baseline": {
+          "lines": 924,
+          "functions": {
+            "queryKfd3Capabilities@824": {
+              "complexity": 33
+            }
+          }
+        },
+        "current": {
+          "lines": 924,
+          "functions": {
+            "queryKfd3Capabilities@824": {
+              "complexity": 33
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "queryKfd3Capabilities@824": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/next-development-controller.js": {
+        "baseline": {
+          "lines": 728
+        },
+        "current": {
+          "lines": 728
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/next-development-transition.js": {
+        "baseline": {
+          "lines": 738
+        },
+        "current": {
+          "lines": 738
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/paper-npm-bootstrap.js": {
+        "baseline": {
+          "functions": {
+            "executePaperNpmBootstrap@1": {
+              "lines": 490,
+              "complexity": 58
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "executePaperNpmBootstrap@1": {
+              "lines": 490,
+              "complexity": 58
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "executePaperNpmBootstrap@1": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/paper.js": {
+        "baseline": {
+          "lines": 2878,
+          "functions": {
+            "collectPaperStatus@1483": {
+              "lines": 190,
+              "complexity": 47
+            },
+            "validatePaperProvisioningAuthority@1674": {
+              "complexity": 45
+            }
+          }
+        },
+        "current": {
+          "lines": 2878,
+          "functions": {
+            "collectPaperStatus@1483": {
+              "lines": 190,
+              "complexity": 47
+            },
+            "validatePaperProvisioningAuthority@1674": {
+              "complexity": 45
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "collectPaperStatus@1483": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "validatePaperProvisioningAuthority@1674": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/publication-artifact.js": {
+        "baseline": {
+          "lines": 641
+        },
+        "current": {
+          "lines": 641
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/publication-authority.js": {
+        "baseline": {
+          "lines": 1163,
+          "functions": {
+            "validatePublicationEvidence@468": {
+              "lines": 262,
+              "complexity": 52
+            },
+            "verifyPublicationAdmission@791": {
+              "complexity": 35
+            }
+          }
+        },
+        "current": {
+          "lines": 1163,
+          "functions": {
+            "validatePublicationEvidence@468": {
+              "lines": 262,
+              "complexity": 52
+            },
+            "verifyPublicationAdmission@791": {
+              "complexity": 35
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "validatePublicationEvidence@468": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "verifyPublicationAdmission@791": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/publication-control-plane-audit.js": {
+        "baseline": {
+          "functions": {
+            "evaluatePublicationControlPlaneSnapshot@75": {
+              "complexity": 87
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "evaluatePublicationControlPlaneSnapshot@75": {
+              "complexity": 87
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "evaluatePublicationControlPlaneSnapshot@75": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/publication-reproducibility.js": {
+        "baseline": {
+          "lines": 947
+        },
+        "current": {
+          "lines": 947
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/publish-transaction.js": {
+        "baseline": {
+          "lines": 829,
+          "functions": {
+            "normalizePublishArtifact@407": {
+              "complexity": 37
+            }
+          }
+        },
+        "current": {
+          "lines": 829,
+          "functions": {
+            "normalizePublishArtifact@407": {
+              "complexity": 37
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "normalizePublishArtifact@407": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/readme-badges.js": {
+        "baseline": {
+          "lines": 893,
+          "functions": {
+            "summarizeKfdStandards@361": {
+              "complexity": 37
+            }
+          }
+        },
+        "current": {
+          "lines": 893,
+          "functions": {
+            "summarizeKfdStandards@361": {
+              "complexity": 37
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "summarizeKfdStandards@361": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release-candidate.js": {
+        "baseline": {
+          "functions": {
+            "normalizeFamilyReleaseEvidence@233": {
+              "complexity": 26
+            },
+            "createReleaseCandidatePassport@369": {
+              "complexity": 37
+            },
+            "validateReleaseCandidatePassport@475": {
+              "complexity": 38
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "normalizeFamilyReleaseEvidence@233": {
+              "complexity": 26
+            },
+            "createReleaseCandidatePassport@369": {
+              "complexity": 37
+            },
+            "validateReleaseCandidatePassport@475": {
+              "complexity": 38
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "normalizeFamilyReleaseEvidence@233": {
+              "complexity": 25
+            },
+            "createReleaseCandidatePassport@369": {
+              "complexity": 25
+            },
+            "validateReleaseCandidatePassport@475": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release-passport.js": {
+        "baseline": {
+          "lines": 2987,
+          "functions": {
+            "mergeAuthoritativePassportBase@411": {
+              "complexity": 29
+            },
+            "normalizeKfd2Claim@836": {
+              "complexity": 59
+            },
+            "createReleasePassport@1286": {
+              "lines": 268,
+              "complexity": 30
+            },
+            "collectGitHubReleasePassport@1586": {
+              "lines": 304,
+              "complexity": 43
+            },
+            "validateKfd2ReleaseTrustPassportAudit@1908": {
+              "complexity": 65
+            },
+            "validateReleaseEvidenceAttachments@2227": {
+              "complexity": 26
+            }
+          }
+        },
+        "current": {
+          "lines": 2987,
+          "functions": {
+            "mergeAuthoritativePassportBase@411": {
+              "complexity": 29
+            },
+            "normalizeKfd2Claim@836": {
+              "complexity": 59
+            },
+            "createReleasePassport@1286": {
+              "lines": 268,
+              "complexity": 30
+            },
+            "collectGitHubReleasePassport@1586": {
+              "lines": 304,
+              "complexity": 43
+            },
+            "validateKfd2ReleaseTrustPassportAudit@1908": {
+              "complexity": 65
+            },
+            "validateReleaseEvidenceAttachments@2227": {
+              "complexity": 26
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "mergeAuthoritativePassportBase@411": {
+              "complexity": 25
+            },
+            "normalizeKfd2Claim@836": {
+              "complexity": 25
+            },
+            "createReleasePassport@1286": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "collectGitHubReleasePassport@1586": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "validateKfd2ReleaseTrustPassportAudit@1908": {
+              "complexity": 25
+            },
+            "validateReleaseEvidenceAttachments@2227": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release-tail-provider-plane.js": {
+        "baseline": {
+          "lines": 1228,
+          "functions": {
+            "normalizeCapability@235": {
+              "lines": 255
+            },
+            "validateReleaseTailEffectPlan@602": {
+              "complexity": 30
+            },
+            "validateReleaseTailTransaction@744": {
+              "complexity": 33
+            },
+            "executeReleaseTailTransaction@1016": {
+              "lines": 190,
+              "complexity": 27
+            }
+          }
+        },
+        "current": {
+          "lines": 1228,
+          "functions": {
+            "normalizeCapability@235": {
+              "lines": 255
+            },
+            "validateReleaseTailEffectPlan@602": {
+              "complexity": 30
+            },
+            "validateReleaseTailTransaction@744": {
+              "complexity": 33
+            },
+            "executeReleaseTailTransaction@1016": {
+              "lines": 190,
+              "complexity": 27
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "normalizeCapability@235": {
+              "lines": 180
+            },
+            "validateReleaseTailEffectPlan@602": {
+              "complexity": 25
+            },
+            "validateReleaseTailTransaction@744": {
+              "complexity": 25
+            },
+            "executeReleaseTailTransaction@1016": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release-train.js": {
+        "baseline": {
+          "lines": 740
+        },
+        "current": {
+          "lines": 740
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/stable-release-gate.js": {
+        "baseline": {
+          "functions": {
+            "evaluateStableReleaseGate@121": {
+              "complexity": 26
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "evaluateStableReleaseGate@121": {
+              "complexity": 26
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "evaluateStableReleaseGate@121": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/v4-runtime-ref-resume-authority.js": {
+        "baseline": {
+          "lines": 625
+        },
+        "current": {
+          "lines": 625
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "scripts/audit-github-governance.mjs": {
+        "baseline": {
+          "functions": {
+            "collectGithubGovernanceAudit@286": {
+              "lines": 181,
+              "complexity": 35
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "collectGithubGovernanceAudit@286": {
+              "lines": 181,
+              "complexity": 35
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "collectGithubGovernanceAudit@286": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/audit-publication-control-plane.mjs": {
+        "baseline": {
+          "functions": {
+            "main@200": {
+              "lines": 322,
+              "complexity": 92
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "main@200": {
+              "lines": 322,
+              "complexity": 92
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "main@200": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/auditable-demo.mjs": {
+        "baseline": {
+          "lines": 1324
+        },
+        "current": {
+          "lines": 1324
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "scripts/build-contract-core.mjs": {
+        "baseline": {
+          "lines": 1229
+        },
+        "current": {
+          "lines": 1229
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "scripts/check-inventory.mjs": {
+        "baseline": {
+          "lines": 1497
+        },
+        "current": {
+          "lines": 1497
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "scripts/check-maintainability.mjs": {
+        "baseline": {
+          "functions": {
+            "evaluateMaintainability@350": {
+              "complexity": 29
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "evaluateMaintainability@350": {
+              "complexity": 29
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "evaluateMaintainability@350": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/dev-alpha-candidate-patrol.mjs": {
+        "baseline": {
+          "lines": 1197,
+          "functions": {
+            "normalizeDevAlphaPatrolOptions@240": {
+              "complexity": 33
+            },
+            "runDevAlphaCandidatePatrol@582": {
+              "lines": 333,
+              "complexity": 53
+            },
+            "createGitHubChannelCandidateClient@920": {
+              "lines": 208
+            }
+          }
+        },
+        "current": {
+          "lines": 1197,
+          "functions": {
+            "normalizeDevAlphaPatrolOptions@240": {
+              "complexity": 33
+            },
+            "runDevAlphaCandidatePatrol@582": {
+              "lines": 333,
+              "complexity": 53
+            },
+            "createGitHubChannelCandidateClient@920": {
+              "lines": 208
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "normalizeDevAlphaPatrolOptions@240": {
+              "complexity": 25
+            },
+            "runDevAlphaCandidatePatrol@582": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "createGitHubChannelCandidateClient@920": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "scripts/dev-delivery-authority.mjs": {
+        "baseline": {
+          "functions": {
+            "devDeliveryAuthorityCliOptions@241": {
+              "lines": 207
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "devDeliveryAuthorityCliOptions@241": {
+              "lines": 207
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "devDeliveryAuthorityCliOptions@241": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "scripts/dev-delivery-two-phase.mjs": {
+        "baseline": {
+          "functions": {
+            "runTwoPhaseDelivery@211": {
+              "lines": 200,
+              "complexity": 35
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "runTwoPhaseDelivery@211": {
+              "lines": 200,
+              "complexity": 35
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "runTwoPhaseDelivery@211": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/dev-delivery-warrant-options.mjs": {
+        "baseline": {
+          "functions": {
+            "devDeliveryCliOptions@36": {
+              "lines": 247
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "devDeliveryCliOptions@36": {
+              "lines": 247
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "devDeliveryCliOptions@36": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "scripts/dev-pr-auto-merge.mjs": {
+        "baseline": {
+          "lines": 1222,
+          "functions": {
+            "evaluatePullRequest@204": {
+              "complexity": 31
+            },
+            "runDevPrAdmission@764": {
+              "complexity": 32
+            },
+            "runDevPrAutoMerge@909": {
+              "lines": 186,
+              "complexity": 53
+            }
+          }
+        },
+        "current": {
+          "lines": 1222,
+          "functions": {
+            "evaluatePullRequest@204": {
+              "complexity": 31
+            },
+            "runDevPrAdmission@764": {
+              "complexity": 32
+            },
+            "runDevPrAutoMerge@909": {
+              "lines": 186,
+              "complexity": 53
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "evaluatePullRequest@204": {
+              "complexity": 25
+            },
+            "runDevPrAdmission@764": {
+              "complexity": 25
+            },
+            "runDevPrAutoMerge@909": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/finalize-native-artifact-signing-result.mjs": {
+        "baseline": {
+          "functions": {
+            "finalizeNativeArtifactSigningResult@58": {
+              "lines": 201
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "finalizeNativeArtifactSigningResult@58": {
+              "lines": 201
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "finalizeNativeArtifactSigningResult@58": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "scripts/generate-channel-promotion-workflow.mjs": {
+        "baseline": {
+          "functions": {
+            "generateChannelPromotionWorkflow@277": {
+              "lines": 282
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "generateChannelPromotionWorkflow@277": {
+              "lines": 282
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "generateChannelPromotionWorkflow@277": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "scripts/generate-site-bundle.mjs": {
+        "baseline": {
+          "lines": 1410,
+          "functions": {
+            "buildSiteBundle@719": {
+              "lines": 637
+            }
+          }
+        },
+        "current": {
+          "lines": 1410,
+          "functions": {
+            "buildSiteBundle@719": {
+              "lines": 637
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "buildSiteBundle@719": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "scripts/infra-contract-core.mjs": {
+        "baseline": {
+          "lines": 1032,
+          "functions": {
+            "verifyInfraContractEvidenceBundle@698": {
+              "complexity": 50
+            }
+          }
+        },
+        "current": {
+          "lines": 1032,
+          "functions": {
+            "verifyInfraContractEvidenceBundle@698": {
+              "complexity": 50
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "verifyInfraContractEvidenceBundle@698": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/infra-contract.mjs": {
+        "baseline": {
+          "functions": {
+            "infraContractCli@110": {
+              "lines": 227,
+              "complexity": 31
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "infraContractCli@110": {
+              "lines": 227,
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "infraContractCli@110": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/locked-source-checkout.mjs": {
+        "baseline": {
+          "functions": {
+            "lockedSourceCheckout@386": {
+              "lines": 194,
+              "complexity": 31
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "lockedSourceCheckout@386": {
+              "lines": 194,
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "lockedSourceCheckout@386": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/maintainability-domain-metrics.mjs": {
+        "baseline": {
+          "functions": {
+            "rustTokens@10": {
+              "complexity": 29
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "rustTokens@10": {
+              "complexity": 29
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "rustTokens@10": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/paper.mjs": {
+        "baseline": {
+          "lines": 644,
+          "functions": {
+            "humanSummary@102": {
+              "complexity": 28
+            }
+          }
+        },
+        "current": {
+          "lines": 644,
+          "functions": {
+            "humanSummary@102": {
+              "complexity": 28
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "humanSummary@102": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/publication-commit-evidence.mjs": {
+        "baseline": {
+          "functions": {
+            "validateInstallerBundle@85": {
+              "complexity": 42
+            },
+            "verifyInstallerBundleReadback@307": {
+              "complexity": 30
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "validateInstallerBundle@85": {
+              "complexity": 42
+            },
+            "verifyInstallerBundleReadback@307": {
+              "complexity": 30
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "validateInstallerBundle@85": {
+              "complexity": 25
+            },
+            "verifyInstallerBundleReadback@307": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/reconcile-github-governance.mjs": {
+        "baseline": {
+          "lines": 689
+        },
+        "current": {
+          "lines": 689
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "scripts/release-candidate-resolver.mjs": {
+        "baseline": {
+          "lines": 854,
+          "functions": {
+            "resolveReleaseCandidateArtifacts@475": {
+              "lines": 309,
+              "complexity": 62
+            },
+            "resolveReleaseCandidateArtifactsCli@785": {
+              "complexity": 29
+            }
+          }
+        },
+        "current": {
+          "lines": 854,
+          "functions": {
+            "resolveReleaseCandidateArtifacts@475": {
+              "lines": 309,
+              "complexity": 62
+            },
+            "resolveReleaseCandidateArtifactsCli@785": {
+              "complexity": 29
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "resolveReleaseCandidateArtifacts@475": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "resolveReleaseCandidateArtifactsCli@785": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/release-line-policy.mjs": {
+        "baseline": {
+          "functions": {
+            "getBumpKeyword@124": {
+              "complexity": 35
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "getBumpKeyword@124": {
+              "complexity": 35
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "getBumpKeyword@124": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/resume-from-candidate-run.mjs": {
+        "baseline": {
+          "lines": 1125
+        },
+        "current": {
+          "lines": 1125
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "scripts/run-lifecycle-core.mjs": {
+        "baseline": {
+          "lines": 885,
+          "functions": {
+            "runLifecycle@411": {
+              "lines": 471,
+              "complexity": 74
+            }
+          }
+        },
+        "current": {
+          "lines": 885,
+          "functions": {
+            "runLifecycle@411": {
+              "lines": 471,
+              "complexity": 74
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "runLifecycle@411": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/stable-candidate-patrol.mjs": {
+        "baseline": {
+          "functions": {
+            "runStableCandidatePatrol@141": {
+              "complexity": 31
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "runStableCandidatePatrol@141": {
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "runStableCandidatePatrol@141": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/stable-release-gate.mjs": {
+        "baseline": {
+          "functions": {
+            "resolveCanaryEvidence@130": {
+              "complexity": 56
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "resolveCanaryEvidence@130": {
+              "complexity": 56
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "resolveCanaryEvidence@130": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/v4-architecture.mjs": {
+        "baseline": {
+          "lines": 610
+        },
+        "current": {
+          "lines": 610
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "scripts/v4-warrant-shadow-plan.mjs": {
+        "baseline": {
+          "lines": 601,
+          "functions": {
+            "validatePlan@96": {
+              "lines": 182,
+              "complexity": 26
+            }
+          }
+        },
+        "current": {
+          "lines": 601,
+          "functions": {
+            "validatePlan@96": {
+              "lines": 182,
+              "complexity": 26
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "validatePlan@96": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/web-surface-core.mjs": {
+        "baseline": {
+          "lines": 2603,
+          "functions": {
+            "preflightWebSurfaceProduction@1331": {
+              "lines": 243,
+              "complexity": 54
+            },
+            "checkWebSurfaceHealth@1757": {
+              "lines": 276,
+              "complexity": 56
+            },
+            "deployBindingOperations@2034": {
+              "lines": 205,
+              "complexity": 28
+            }
+          }
+        },
+        "current": {
+          "lines": 2603,
+          "functions": {
+            "preflightWebSurfaceProduction@1331": {
+              "lines": 243,
+              "complexity": 54
+            },
+            "checkWebSurfaceHealth@1757": {
+              "lines": 276,
+              "complexity": 56
+            },
+            "deployBindingOperations@2034": {
+              "lines": 205,
+              "complexity": 28
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "preflightWebSurfaceProduction@1331": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "checkWebSurfaceHealth@1757": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "deployBindingOperations@2034": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/web-surface-production-release-pr.mjs": {
+        "baseline": {
+          "lines": 712,
+          "functions": {
+            "webSurfaceProductionReleasePrCli@558": {
+              "complexity": 38
+            }
+          }
+        },
+        "current": {
+          "lines": 712,
+          "functions": {
+            "webSurfaceProductionReleasePrCli@558": {
+              "complexity": 38
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "webSurfaceProductionReleasePrCli@558": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "scripts/web-surface.mjs": {
+        "baseline": {
+          "functions": {
+            "compactWebSurfaceApplyResult@188": {
+              "complexity": 27
+            },
+            "webSurfaceCli@229": {
+              "lines": 223,
+              "complexity": 58
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "compactWebSurfaceApplyResult@188": {
+              "complexity": 27
+            },
+            "webSurfaceCli@229": {
+              "lines": 223,
+              "complexity": 58
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "compactWebSurfaceApplyResult@188": {
+              "complexity": 25
+            },
+            "webSurfaceCli@229": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      }
+    },
+    "rust": {
+      "crates/buildchain-v4-bridge/src/main.rs": {
+        "baseline": {
+          "functions": {
+            "execute@222": {
+              "lines": 192
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "execute@222": {
+              "lines": 192
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "execute@222": {
+              "lines": 140
+            }
+          }
+        }
+      },
+      "crates/buildchain-v4-contracts/src/compatibility_facts/verifier.rs": {
+        "baseline": {
+          "functions": {
+            "load_bundle@159": {
+              "complexity": 38
+            },
+            "verify_path_inner@316": {
+              "lines": 216,
+              "complexity": 68
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "load_bundle@159": {
+              "complexity": 38
+            },
+            "verify_path_inner@316": {
+              "lines": 216,
+              "complexity": 68
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "load_bundle@159": {
+              "complexity": 30
+            },
+            "verify_path_inner@316": {
+              "lines": 140,
+              "complexity": 30
+            }
+          }
+        }
+      },
+      "crates/buildchain-v4-contracts/src/main.rs": {
+        "baseline": {
+          "functions": {
+            "run@482": {
+              "complexity": 32
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "run@482": {
+              "complexity": 32
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "run@482": {
+              "complexity": 30
+            }
+          }
+        }
+      },
+      "crates/buildchain-v4-contracts/src/provider_operation_journal.rs": {
+        "baseline": {
+          "functions": {
+            "validate@239": {
+              "complexity": 39
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "validate@239": {
+              "complexity": 39
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "validate@239": {
+              "complexity": 30
+            }
+          }
+        }
+      },
+      "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs": {
+        "baseline": {
+          "functions": {
+            "fold_provider_operation_journal@43": {
+              "lines": 176,
+              "complexity": 34
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "fold_provider_operation_journal@43": {
+              "lines": 176,
+              "complexity": 34
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "fold_provider_operation_journal@43": {
+              "lines": 140,
+              "complexity": 30
+            }
+          }
+        }
+      },
+      "crates/buildchain-v4-contracts/src/warrant.rs": {
+        "baseline": {
+          "functions": {
+            "validate@150": {
+              "complexity": 39
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "validate@150": {
+              "complexity": 39
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "validate@150": {
+              "complexity": 30
+            }
+          }
+        }
+      },
+      "crates/buildchain-v4-contracts/src/warrant/decision.rs": {
+        "baseline": {
+          "functions": {
+            "decide_delivery_warrant@126": {
+              "lines": 345,
+              "complexity": 36
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "decide_delivery_warrant@126": {
+              "lines": 345,
+              "complexity": 36
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "decide_delivery_warrant@126": {
+              "lines": 140,
+              "complexity": 30
+            }
+          }
+        }
+      }
+    },
+    "tests": {
+      "tests/auditable-demo-platform.test.mjs": {
+        "baseline": {
+          "lines": 712
+        },
+        "current": {
+          "lines": 712
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/auditable-demo.test.mjs": {
+        "baseline": {
+          "lines": 1389
+        },
+        "current": {
+          "lines": 1389
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/aws-windows-jit-controller.test.mjs": {
+        "baseline": {
+          "lines": 728,
+          "functions": {
+            "<anonymous@543>@543": {
+              "lines": 186
+            }
+          }
+        },
+        "current": {
+          "lines": 728,
+          "functions": {
+            "<anonymous@543>@543": {
+              "lines": 186
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@543>@543": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/build-surface-promotion.test.mjs": {
+        "baseline": {
+          "lines": 3181,
+          "functions": {
+            "<anonymous@2013>@2013": {
+              "lines": 206
+            }
+          }
+        },
+        "current": {
+          "lines": 3181,
+          "functions": {
+            "<anonymous@2013>@2013": {
+              "lines": 206
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@2013>@2013": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/build-surface.test.mjs": {
+        "baseline": {
+          "lines": 4639,
+          "functions": {
+            "<anonymous@170>@170": {
+              "lines": 195
+            },
+            "<anonymous@366>@366": {
+              "lines": 872,
+              "complexity": 57
+            },
+            "<anonymous@1426>@1426": {
+              "lines": 183
+            },
+            "<anonymous@1610>@1610": {
+              "lines": 506
+            },
+            "<anonymous@3022>@3022": {
+              "lines": 249
+            },
+            "<anonymous@4206>@4206": {
+              "lines": 188
+            }
+          }
+        },
+        "current": {
+          "lines": 4549,
+          "functions": {
+            "<anonymous@170>@170": {
+              "lines": 195
+            },
+            "<anonymous@366>@366": {
+              "lines": 872,
+              "complexity": 57
+            },
+            "<anonymous@1426>@1426": {
+              "lines": 183
+            },
+            "<anonymous@1610>@1610": {
+              "lines": 506
+            },
+            "<anonymous@3022>@3022": {
+              "lines": 249
+            },
+            "<anonymous@4206>@4206": {
+              "lines": 188
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@170>@170": {
+              "lines": 180
+            },
+            "<anonymous@366>@366": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "<anonymous@1426>@1426": {
+              "lines": 180
+            },
+            "<anonymous@1610>@1610": {
+              "lines": 180
+            },
+            "<anonymous@3022>@3022": {
+              "lines": 180
+            },
+            "<anonymous@4206>@4206": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/buildchain-config.test.mjs": {
+        "baseline": {
+          "lines": 1420
+        },
+        "current": {
+          "lines": 1420
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/cli.test.mjs": {
+        "baseline": {
+          "lines": 2840,
+          "functions": {
+            "<anonymous@2363>@2363": {
+              "lines": 253
+            }
+          }
+        },
+        "current": {
+          "lines": 2840,
+          "functions": {
+            "<anonymous@2363>@2363": {
+              "lines": 253
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@2363>@2363": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/dev-alpha-candidate-patrol.test.mjs": {
+        "baseline": {
+          "lines": 1422
+        },
+        "current": {
+          "lines": 1422
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/dev-delivery-authority.test.mjs": {
+        "baseline": {
+          "lines": 2458,
+          "functions": {
+            "<anonymous@893>@893": {
+              "lines": 253
+            },
+            "<anonymous@1323>@1323": {
+              "lines": 279
+            }
+          }
+        },
+        "current": {
+          "lines": 2458,
+          "functions": {
+            "<anonymous@893>@893": {
+              "lines": 253
+            },
+            "<anonymous@1323>@1323": {
+              "lines": 279
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@893>@893": {
+              "lines": 180
+            },
+            "<anonymous@1323>@1323": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/dev-delivery-process-boundary.test.mjs": {
+        "baseline": {
+          "lines": 806
+        },
+        "current": {
+          "lines": 806
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/dev-delivery-warrant-command.test.mjs": {
+        "baseline": {
+          "lines": 614
+        },
+        "current": {
+          "lines": 614
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/dev-delivery-warrant.test.mjs": {
+        "baseline": {
+          "lines": 841
+        },
+        "current": {
+          "lines": 841
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/dev-pr-auto-merge.test.mjs": {
+        "baseline": {
+          "lines": 1415
+        },
+        "current": {
+          "lines": 1415
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/github-governance-authority.test.mjs": {
+        "baseline": {
+          "lines": 1179,
+          "functions": {
+            "<anonymous@817>@817": {
+              "lines": 205
+            }
+          }
+        },
+        "current": {
+          "lines": 1179,
+          "functions": {
+            "<anonymous@817>@817": {
+              "lines": 205
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@817>@817": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/infra-contract.test.mjs": {
+        "baseline": {
+          "lines": 1056
+        },
+        "current": {
+          "lines": 1056
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/macos-credential-island.test.mjs": {
+        "baseline": {
+          "lines": 916
+        },
+        "current": {
+          "lines": 916
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/native-artifact-signing-authority.test.mjs": {
+        "baseline": {
+          "lines": 744,
+          "functions": {
+            "<anonymous@233>@233": {
+              "lines": 229
+            }
+          }
+        },
+        "current": {
+          "lines": 744,
+          "functions": {
+            "<anonymous@233>@233": {
+              "lines": 229
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@233>@233": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/paper.test.mjs": {
+        "baseline": {
+          "lines": 1202
+        },
+        "current": {
+          "lines": 1202
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/promote-buildchain-ref-governance.test.mjs": {
+        "baseline": {
+          "lines": 4220,
+          "functions": {
+            "<anonymous@2656>@2656": {
+              "lines": 195
+            },
+            "<anonymous@2852>@2852": {
+              "lines": 181
+            },
+            "<anonymous@3034>@3034": {
+              "lines": 184
+            },
+            "<anonymous@3348>@3348": {
+              "lines": 188
+            },
+            "<anonymous@3723>@3723": {
+              "lines": 204
+            }
+          }
+        },
+        "current": {
+          "lines": 4220,
+          "functions": {
+            "<anonymous@2656>@2656": {
+              "lines": 195
+            },
+            "<anonymous@2852>@2852": {
+              "lines": 181
+            },
+            "<anonymous@3034>@3034": {
+              "lines": 184
+            },
+            "<anonymous@3348>@3348": {
+              "lines": 188
+            },
+            "<anonymous@3723>@3723": {
+              "lines": 204
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@2656>@2656": {
+              "lines": 180
+            },
+            "<anonymous@2852>@2852": {
+              "lines": 180
+            },
+            "<anonymous@3034>@3034": {
+              "lines": 180
+            },
+            "<anonymous@3348>@3348": {
+              "lines": 180
+            },
+            "<anonymous@3723>@3723": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-recovery.test.mjs": {
+        "baseline": {
+          "lines": 4814,
+          "functions": {
+            "<anonymous@535>@535": {
+              "lines": 262
+            },
+            "<anonymous@1545>@1545": {
+              "lines": 252
+            },
+            "<anonymous@2248>@2248": {
+              "lines": 184
+            },
+            "<anonymous@3059>@3059": {
+              "lines": 219
+            },
+            "<anonymous@4096>@4096": {
+              "lines": 232
+            }
+          }
+        },
+        "current": {
+          "lines": 4814,
+          "functions": {
+            "<anonymous@535>@535": {
+              "lines": 262
+            },
+            "<anonymous@1545>@1545": {
+              "lines": 252
+            },
+            "<anonymous@2248>@2248": {
+              "lines": 184
+            },
+            "<anonymous@3059>@3059": {
+              "lines": 219
+            },
+            "<anonymous@4096>@4096": {
+              "lines": 232
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@535>@535": {
+              "lines": 180
+            },
+            "<anonymous@1545>@1545": {
+              "lines": 180
+            },
+            "<anonymous@2248>@2248": {
+              "lines": 180
+            },
+            "<anonymous@3059>@3059": {
+              "lines": 180
+            },
+            "<anonymous@4096>@4096": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref.test.mjs": {
+        "baseline": {
+          "lines": 4211,
+          "functions": {
+            "<anonymous@3165>@3165": {
+              "lines": 203
+            }
+          }
+        },
+        "current": {
+          "lines": 4211,
+          "functions": {
+            "<anonymous@3165>@3165": {
+              "lines": 203
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@3165>@3165": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/publication-authority.test.mjs": {
+        "baseline": {
+          "lines": 1034,
+          "functions": {
+            "fixture@94": {
+              "lines": 215
+            }
+          }
+        },
+        "current": {
+          "lines": 1034,
+          "functions": {
+            "fixture@94": {
+              "lines": 215
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "fixture@94": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/publish-transaction.test.mjs": {
+        "baseline": {
+          "lines": 849
+        },
+        "current": {
+          "lines": 849
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/release-candidate-recovery.test.mjs": {
+        "baseline": {
+          "lines": 1217
+        },
+        "current": {
+          "lines": 1217
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/release-candidate.test.mjs": {
+        "baseline": {
+          "lines": 1327
+        },
+        "current": {
+          "lines": 1327
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/release-passport.test.mjs": {
+        "baseline": {
+          "lines": 3135
+        },
+        "current": {
+          "lines": 3135
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/release-propagation.test.mjs": {
+        "baseline": {
+          "lines": 1355
+        },
+        "current": {
+          "lines": 1355
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/v4-delivery-authority-parity.test.mjs": {
+        "baseline": {
+          "lines": 1038,
+          "functions": {
+            "<anonymous@427>@427": {
+              "lines": 612,
+              "complexity": 43
+            }
+          }
+        },
+        "current": {
+          "lines": 1038,
+          "functions": {
+            "<anonymous@427>@427": {
+              "lines": 612,
+              "complexity": 43
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@427>@427": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "tests/v4-floating-consumer-policy-contract.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@72>@72": {
+              "lines": 292
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@72>@72": {
+              "lines": 292
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@72>@72": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/v4-floating-consumer-policy.test.mjs": {
+        "baseline": {
+          "lines": 714
+        },
+        "current": {
+          "lines": 714
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/v4-publication-rehearsal.test.mjs": {
+        "baseline": {
+          "lines": 773
+        },
+        "current": {
+          "lines": 773
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/web-surface.test.mjs": {
+        "baseline": {
+          "lines": 2231
+        },
+        "current": {
+          "lines": 2231
+        },
+        "target": {
+          "lines": 600
+        }
+      }
+    },
+    "workflows": {
+      ".github/workflows/.build.yml": {
+        "baseline": {
+          "lines": 3370,
+          "jobs": 14,
+          "steps": 194,
+          "maxStepsPerJob": 44,
+          "decisions": 113
+        },
+        "current": {
+          "lines": 3370,
+          "jobs": 14,
+          "steps": 194,
+          "maxStepsPerJob": 44,
+          "decisions": 113
+        },
+        "target": {
+          "lines": 600,
+          "jobs": 8,
+          "steps": 50,
+          "maxStepsPerJob": 20,
+          "decisions": 25
+        }
+      },
+      ".github/workflows/.gate-profile.yml": {
+        "baseline": {
+          "lines": 701,
+          "decisions": 30
+        },
+        "current": {
+          "lines": 701,
+          "decisions": 30
+        },
+        "target": {
+          "lines": 600,
+          "decisions": 25
+        }
+      },
+      ".github/workflows/.publication-authority.yml": {
+        "baseline": {
+          "lines": 1010,
+          "maxStepsPerJob": 30,
+          "decisions": 27
+        },
+        "current": {
+          "lines": 1010,
+          "maxStepsPerJob": 30,
+          "decisions": 27
+        },
+        "target": {
+          "lines": 600,
+          "maxStepsPerJob": 20,
+          "decisions": 25
+        }
+      },
+      ".github/workflows/.release-candidate-promote.yml": {
+        "baseline": {
+          "lines": 2736,
+          "jobs": 13,
+          "steps": 99,
+          "maxStepsPerJob": 47,
+          "decisions": 75
+        },
+        "current": {
+          "lines": 2708,
+          "jobs": 13,
+          "steps": 99,
+          "maxStepsPerJob": 47,
+          "decisions": 75
+        },
+        "target": {
+          "lines": 600,
+          "jobs": 8,
+          "steps": 50,
+          "maxStepsPerJob": 20,
+          "decisions": 25
+        }
+      },
+      ".github/workflows/.release-verify.yml": {
+        "baseline": {
+          "lines": 806,
+          "steps": 58,
+          "decisions": 47
+        },
+        "current": {
+          "lines": 806,
+          "steps": 58,
+          "decisions": 47
+        },
+        "target": {
+          "lines": 600,
+          "steps": 50,
+          "decisions": 25
+        }
+      },
+      ".github/workflows/.web-surface.yml": {
+        "baseline": {
+          "lines": 2020,
+          "jobs": 14,
+          "steps": 112,
+          "decisions": 35
+        },
+        "current": {
+          "lines": 2020,
+          "jobs": 14,
+          "steps": 112,
+          "decisions": 35
+        },
+        "target": {
+          "lines": 600,
+          "jobs": 8,
+          "steps": 50,
+          "decisions": 25
+        }
+      },
+      ".github/workflows/build.yml": {
+        "baseline": {
+          "lines": 1218
+        },
+        "current": {
+          "lines": 1218
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      ".github/workflows/check.yml": {
+        "baseline": {
+          "maxStepsPerJob": 22
+        },
+        "current": {
+          "maxStepsPerJob": 22
+        },
+        "target": {
+          "maxStepsPerJob": 20
+        }
+      },
+      ".github/workflows/dev-pr-auto-merge.yml": {
+        "baseline": {
+          "lines": 1529,
+          "decisions": 28
+        },
+        "current": {
+          "lines": 1529,
+          "decisions": 28
+        },
+        "target": {
+          "lines": 600,
+          "decisions": 25
+        }
+      },
+      ".github/workflows/paper-release-sealed.yml": {
+        "baseline": {
+          "lines": 688
+        },
+        "current": {
+          "lines": 688
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      ".github/workflows/paper-release.yml": {
+        "baseline": {
+          "lines": 858,
+          "maxStepsPerJob": 23
+        },
+        "current": {
+          "lines": 858,
+          "maxStepsPerJob": 23
+        },
+        "target": {
+          "lines": 600,
+          "maxStepsPerJob": 20
+        }
+      },
+      ".github/workflows/publication-artifact.yml": {
+        "baseline": {
+          "lines": 701,
+          "maxStepsPerJob": 23
+        },
+        "current": {
+          "lines": 701,
+          "maxStepsPerJob": 23
+        },
+        "target": {
+          "lines": 600,
+          "maxStepsPerJob": 20
+        }
+      },
+      ".github/workflows/release-candidate-promote.yml": {
+        "baseline": {
+          "lines": 1218
+        },
+        "current": {
+          "lines": 1218
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      ".github/workflows/release-propagation.yml": {
+        "baseline": {
+          "lines": 732,
+          "maxStepsPerJob": 29
+        },
+        "current": {
+          "lines": 732,
+          "maxStepsPerJob": 29
+        },
+        "target": {
+          "lines": 600,
+          "maxStepsPerJob": 20
+        }
+      }
+    }
+  },
+  "hotspots": [
+    "tests/v4-floating-consumer-policy-contract.test.mjs",
+    ".github/workflows/buildchain-ref-promotion.yml",
+    "tests/release-candidate-recovery.test.mjs",
+    ".github/workflows/.release-candidate-promote.yml",
+    "tests/build-surface-promotion.test.mjs",
+    ".github/workflows/buildchain-ref-promotion-recovery.yml",
+    "tests/build-surface.test.mjs",
+    "tests/internal-architecture.test.mjs",
+    "scripts/resume-from-candidate-run.mjs",
+    "scripts/check-v3-v4-capability-inventory.mjs",
+    ".github/workflows/release-candidate-promote.yml",
+    "actions/promote-buildchain-ref/lib.js",
+    "scripts/check-inventory.mjs",
+    "tests/promote-buildchain-ref.test.mjs",
+    "tests/promotion-channel-router.test.mjs",
+    "scripts/site-capability-metadata.mjs",
+    "tests/v4-floating-consumer-policy.test.mjs",
+    "scripts/check-v4-floating-consumer-policy-contract.mjs",
+    "tests/dev-delivery-warrant.test.mjs",
+    "actions/promote-buildchain-ref/internal/version-state.js"
+  ],
+  "burnDownSlices": [
+    {
+      "domain": "sources",
+      "path": "actions/promote-buildchain-ref/lib.js",
+      "metric": "lines",
+      "baseline": 5132,
+      "current": 4788
+    },
+    {
+      "domain": "tests",
+      "path": "tests/build-surface.test.mjs",
+      "metric": "lines",
+      "baseline": 4639,
+      "current": 4549
+    },
+    {
+      "domain": "workflows",
+      "path": ".github/workflows/.release-candidate-promote.yml",
+      "metric": "lines",
+      "baseline": 2736,
+      "current": 2708
+    }
+  ]
+}

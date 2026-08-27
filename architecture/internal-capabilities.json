@@ -835,6 +835,7 @@
       ],
       "contracts": [
         "architecture/internal-capabilities.json",
+        "architecture/maintainability-debt.json",
         "architecture/maintainability-policy.json"
       ],
       "generatedOutputs": ["architecture/agent-change-map.md"],

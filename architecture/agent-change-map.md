@@ -3,6 +3,171 @@
 
 Use this index to identify the smallest implementation, contract, test, generated-output, and validation surface for a capability change. The machine-readable source of truth is `architecture/internal-capabilities.json`.
 
+## Governed complexity debt routes
+
+Owner: Buildchain architecture maintainers
+
+Capability: `maintainability-governance`
+
+Invariant: Every over-default surface remains exactly measured, owned, mapped, and unable to widen.
+
+Tests: `tests/maintainability.test.mjs`, `tests/maintainability-governance.test.mjs`
+
+Safe change route: Reduce one owned responsibility behind the stable facade, run focused differential tests, regenerate this map, and lower the exact ceiling.
+
+### Oversized surfaces
+
+- sources: `actions/macos-credential-island/index.js`
+- sources: `actions/macos-credential-island/lib.js`
+- sources: `actions/promote-buildchain-ref/index.js`
+- sources: `actions/promote-buildchain-ref/internal/durable-transaction-operations.js`
+- sources: `actions/promote-buildchain-ref/internal/durable-transaction-store.js`
+- sources: `actions/promote-buildchain-ref/internal/version-state-operations.js`
+- sources: `actions/promote-buildchain-ref/lib.js`
+- sources: `bin/buildchain.mjs`
+- sources: `packages/core/artifact-passport.js`
+- sources: `packages/core/artifact-verification-envelope.js`
+- sources: `packages/core/buildchain-config.js`
+- sources: `packages/core/buildchain-contract.js`
+- sources: `packages/core/buildchain-kfd-claims.js`
+- sources: `packages/core/dev-delivery-execution-transfer.js`
+- sources: `packages/core/dev-delivery-native-proof.js`
+- sources: `packages/core/dev-delivery-process-boundary.js`
+- sources: `packages/core/diagnostics.js`
+- sources: `packages/core/engineering-housekeeper-github.js`
+- sources: `packages/core/github-artifact-attestation.js`
+- sources: `packages/core/github-governance-authority.js`
+- sources: `packages/core/index.js`
+- sources: `packages/core/issue-reporting.js`
+- sources: `packages/core/kfd-gate.js`
+- sources: `packages/core/kfd-product-gates.js`
+- sources: `packages/core/kfd.js`
+- sources: `packages/core/kfd3-surface-register.js`
+- sources: `packages/core/next-development-controller.js`
+- sources: `packages/core/next-development-transition.js`
+- sources: `packages/core/paper-npm-bootstrap.js`
+- sources: `packages/core/paper.js`
+- sources: `packages/core/publication-artifact.js`
+- sources: `packages/core/publication-authority.js`
+- sources: `packages/core/publication-control-plane-audit.js`
+- sources: `packages/core/publication-reproducibility.js`
+- sources: `packages/core/publish-transaction.js`
+- sources: `packages/core/readme-badges.js`
+- sources: `packages/core/release-candidate.js`
+- sources: `packages/core/release-passport.js`
+- sources: `packages/core/release-tail-provider-plane.js`
+- sources: `packages/core/release-train.js`
+- sources: `packages/core/stable-release-gate.js`
+- sources: `packages/core/v4-runtime-ref-resume-authority.js`
+- sources: `scripts/audit-github-governance.mjs`
+- sources: `scripts/audit-publication-control-plane.mjs`
+- sources: `scripts/auditable-demo.mjs`
+- sources: `scripts/build-contract-core.mjs`
+- sources: `scripts/check-inventory.mjs`
+- sources: `scripts/check-maintainability.mjs`
+- sources: `scripts/dev-alpha-candidate-patrol.mjs`
+- sources: `scripts/dev-delivery-authority.mjs`
+- sources: `scripts/dev-delivery-two-phase.mjs`
+- sources: `scripts/dev-delivery-warrant-options.mjs`
+- sources: `scripts/dev-pr-auto-merge.mjs`
+- sources: `scripts/finalize-native-artifact-signing-result.mjs`
+- sources: `scripts/generate-channel-promotion-workflow.mjs`
+- sources: `scripts/generate-site-bundle.mjs`
+- sources: `scripts/infra-contract-core.mjs`
+- sources: `scripts/infra-contract.mjs`
+- sources: `scripts/locked-source-checkout.mjs`
+- sources: `scripts/maintainability-domain-metrics.mjs`
+- sources: `scripts/paper.mjs`
+- sources: `scripts/publication-commit-evidence.mjs`
+- sources: `scripts/reconcile-github-governance.mjs`
+- sources: `scripts/release-candidate-resolver.mjs`
+- sources: `scripts/release-line-policy.mjs`
+- sources: `scripts/resume-from-candidate-run.mjs`
+- sources: `scripts/run-lifecycle-core.mjs`
+- sources: `scripts/stable-candidate-patrol.mjs`
+- sources: `scripts/stable-release-gate.mjs`
+- sources: `scripts/v4-architecture.mjs`
+- sources: `scripts/v4-warrant-shadow-plan.mjs`
+- sources: `scripts/web-surface-core.mjs`
+- sources: `scripts/web-surface-production-release-pr.mjs`
+- sources: `scripts/web-surface.mjs`
+- rust: `crates/buildchain-v4-bridge/src/main.rs`
+- rust: `crates/buildchain-v4-contracts/src/compatibility_facts/verifier.rs`
+- rust: `crates/buildchain-v4-contracts/src/main.rs`
+- rust: `crates/buildchain-v4-contracts/src/provider_operation_journal.rs`
+- rust: `crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs`
+- rust: `crates/buildchain-v4-contracts/src/warrant.rs`
+- rust: `crates/buildchain-v4-contracts/src/warrant/decision.rs`
+- tests: `tests/auditable-demo-platform.test.mjs`
+- tests: `tests/auditable-demo.test.mjs`
+- tests: `tests/aws-windows-jit-controller.test.mjs`
+- tests: `tests/build-surface-promotion.test.mjs`
+- tests: `tests/build-surface.test.mjs`
+- tests: `tests/buildchain-config.test.mjs`
+- tests: `tests/cli.test.mjs`
+- tests: `tests/dev-alpha-candidate-patrol.test.mjs`
+- tests: `tests/dev-delivery-authority.test.mjs`
+- tests: `tests/dev-delivery-process-boundary.test.mjs`
+- tests: `tests/dev-delivery-warrant-command.test.mjs`
+- tests: `tests/dev-delivery-warrant.test.mjs`
+- tests: `tests/dev-pr-auto-merge.test.mjs`
+- tests: `tests/github-governance-authority.test.mjs`
+- tests: `tests/infra-contract.test.mjs`
+- tests: `tests/macos-credential-island.test.mjs`
+- tests: `tests/native-artifact-signing-authority.test.mjs`
+- tests: `tests/paper.test.mjs`
+- tests: `tests/promote-buildchain-ref-governance.test.mjs`
+- tests: `tests/promote-buildchain-ref-recovery.test.mjs`
+- tests: `tests/promote-buildchain-ref.test.mjs`
+- tests: `tests/publication-authority.test.mjs`
+- tests: `tests/publish-transaction.test.mjs`
+- tests: `tests/release-candidate-recovery.test.mjs`
+- tests: `tests/release-candidate.test.mjs`
+- tests: `tests/release-passport.test.mjs`
+- tests: `tests/release-propagation.test.mjs`
+- tests: `tests/v4-delivery-authority-parity.test.mjs`
+- tests: `tests/v4-floating-consumer-policy-contract.test.mjs`
+- tests: `tests/v4-floating-consumer-policy.test.mjs`
+- tests: `tests/v4-publication-rehearsal.test.mjs`
+- tests: `tests/web-surface.test.mjs`
+- workflows: `.github/workflows/.build.yml`
+- workflows: `.github/workflows/.gate-profile.yml`
+- workflows: `.github/workflows/.publication-authority.yml`
+- workflows: `.github/workflows/.release-candidate-promote.yml`
+- workflows: `.github/workflows/.release-verify.yml`
+- workflows: `.github/workflows/.web-surface.yml`
+- workflows: `.github/workflows/build.yml`
+- workflows: `.github/workflows/check.yml`
+- workflows: `.github/workflows/dev-pr-auto-merge.yml`
+- workflows: `.github/workflows/paper-release-sealed.yml`
+- workflows: `.github/workflows/paper-release.yml`
+- workflows: `.github/workflows/publication-artifact.yml`
+- workflows: `.github/workflows/release-candidate-promote.yml`
+- workflows: `.github/workflows/release-propagation.yml`
+
+### Current top twenty maintenance hotspots
+
+- `tests/v4-floating-consumer-policy-contract.test.mjs`
+- `.github/workflows/buildchain-ref-promotion.yml`
+- `tests/release-candidate-recovery.test.mjs`
+- `.github/workflows/.release-candidate-promote.yml`
+- `tests/build-surface-promotion.test.mjs`
+- `.github/workflows/buildchain-ref-promotion-recovery.yml`
+- `tests/build-surface.test.mjs`
+- `tests/internal-architecture.test.mjs`
+- `scripts/resume-from-candidate-run.mjs`
+- `scripts/check-v3-v4-capability-inventory.mjs`
+- `.github/workflows/release-candidate-promote.yml`
+- `actions/promote-buildchain-ref/lib.js`
+- `scripts/check-inventory.mjs`
+- `tests/promote-buildchain-ref.test.mjs`
+- `tests/promotion-channel-router.test.mjs`
+- `scripts/site-capability-metadata.mjs`
+- `tests/v4-floating-consumer-policy.test.mjs`
+- `scripts/check-v4-floating-consumer-policy-contract.mjs`
+- `tests/dev-delivery-warrant.test.mjs`
+- `actions/promote-buildchain-ref/internal/version-state.js`
+
 ## cli-command-registry
 
 Owner: Buildchain CLI maintainers
@@ -141,6 +306,7 @@ Owner: Buildchain architecture maintainers
 ### Contracts
 
 - `architecture/internal-capabilities.json`
+- `architecture/maintainability-debt.json`
 - `architecture/maintainability-policy.json`
 
 ### Tests

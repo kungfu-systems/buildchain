@@ -2373,35 +2373,7 @@ jobs:
           RELEASED_PRODUCT_EVIDENCE: ${{ steps.release-evidence.outputs.evidence-path }}
           RELEASE_PROPAGATION_CAPTURE: ${{ steps.capture-release-propagation.outcome == 'success' && '.buildchain/release-propagation-capture/capture-result.json' || '' }}
         run: |
-          node <<'NODE'
-          const fs = require("node:fs");
-          const path = require("node:path");
-          const finalizationNeeded = process.env.FINALIZATION_NEEDED === "true";
-          const files = [
-            [process.env.RELEASE_CANDIDATE_PASSPORT, "release-candidate-passport.json"],
-            [process.env.PUBLISH_EVIDENCE, "publish-evidence.json"],
-          ];
-          if (!finalizationNeeded) {
-            files.push([process.env.RELEASE_PASSPORT, "release-passport.json"]);
-          }
-          if (process.env.PUBLICATION_COMMIT_ENABLED === "true" && !finalizationNeeded) {
-            files.push([process.env.PUBLICATION_COMMIT_EVIDENCE, "publication-commit-evidence.json"]);
-          }
-          if (process.env.RELEASE_ACTIVATION_RECEIPTS && !finalizationNeeded) {
-            files.push([process.env.RELEASE_ACTIVATION_RECEIPTS, "release-activation-receipt-set.json"]);
-          }
-          if (process.env.RELEASED_PRODUCT_EVIDENCE && !finalizationNeeded) {
-            files.push([process.env.RELEASED_PRODUCT_EVIDENCE, "released-product-evidence.json"]);
-          }
-          if (process.env.RELEASE_PROPAGATION_CAPTURE && !finalizationNeeded) {
-            files.push([process.env.RELEASE_PROPAGATION_CAPTURE, "release-propagation-capture.json"]);
-          }
-          fs.mkdirSync(".buildchain/controller/promotion-evidence", { recursive: true });
-          for (const [source, name] of files) {
-            if (!source || !fs.existsSync(source)) throw new Error(`promotion controller evidence is missing: ${source || name}`);
-            fs.copyFileSync(source, path.join(".buildchain/controller/promotion-evidence", name));
-          }
-          NODE
+          node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs bundle-controller-evidence
 
       - name: Upload release-candidate-promotion controller evidence
         if: ${{ always() && steps.controller-evidence.outcome == 'success' }}
