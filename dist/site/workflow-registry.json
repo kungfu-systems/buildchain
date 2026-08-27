@@ -1849,9 +1849,10 @@
       "outputs": [
         "close-receipt-root",
         "final-state-root",
-        "integration-proof-root"
+        "integration-proof-root",
+        "successor-wake-json"
       ],
-      "outputCount": 3,
+      "outputCount": 4,
       "surface": "repository-workflow",
       "capabilityGroup": "governance-versioning",
       "status": "active",
