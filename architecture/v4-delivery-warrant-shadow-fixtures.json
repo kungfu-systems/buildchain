@@ -66,7 +66,7 @@
           "now": "2026-08-07T00:02:00Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:da58eec588414e16781ffad1b92d3733b207b43e2c7846f6b659c71b150d964d"
+      "expectedLegacyProjectionRoot": "sha256:d43159c2ea0d0ea97fb81eb9a2cf262411954d1ce81514c590587e858e95f275"
     },
     {
       "id": "lease-expiry-and-stale-fence",
@@ -134,7 +134,7 @@
           "now": "2026-08-07T01:02:03Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:24cf52c9108393b268cb40943f540c0e9a000a782e59251e3a9b6d5a63c1eb06"
+      "expectedLegacyProjectionRoot": "sha256:7798efdf136e97afbc65f5e41c8be918a7d00da566716c861c7b1dedb2092f97"
     },
     {
       "id": "settlement-idempotence",
@@ -183,7 +183,7 @@
           "now": "2026-08-07T02:02:00Z"
         }
       ],
-      "expectedLegacyProjectionRoot": "sha256:60fead53ff605fcd81934e6d752ea5f2b4951c57addcec1c1df87fb6dec9b7ba"
+      "expectedLegacyProjectionRoot": "sha256:f1ec1dcd97eb65cc8258bdcf4e17f08311cc23a20acd05f9112a2cef7c685685"
     },
     {
       "id": "queued-cancellation-idempotence",
