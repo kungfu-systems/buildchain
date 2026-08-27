@@ -271,10 +271,10 @@ test("alpha route calls the matching current-major advanced shell", () => {
   const generated = generateChannelPromotionWorkflow(advanced, { major: 4, shellRouting });
 
   assert.match(generated, /ALPHA_SHELL_REF: v4-alpha/);
-  assert.match(generated, /ALPHA_SHELL_CALL_REF: alpha\/v4\/v4\.0/u);
+  assert.match(generated, /ALPHA_SHELL_CALL_REF: v4-alpha/u);
   assert.match(
     generated,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
   );
 });
 
