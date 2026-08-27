@@ -2519,10 +2519,10 @@
       },
       "tests/dev-delivery-warrant-command.test.mjs": {
         "baseline": {
-          "lines": 614
+          "lines": 626
         },
         "current": {
-          "lines": 614
+          "lines": 626
         },
         "target": {
           "lines": 600
@@ -3170,6 +3170,7 @@
     }
   },
   "hotspots": [
+    "tests/v3-v4-capability-inventory.test.mjs",
     "tests/v4-floating-consumer-policy-contract.test.mjs",
     ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/buildchain-ref-promotion.yml",
