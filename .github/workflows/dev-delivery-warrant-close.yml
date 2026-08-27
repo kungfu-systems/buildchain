@@ -93,6 +93,8 @@ on:
         value: ${{ jobs.close.outputs.close-receipt-root }}
       final-state-root:
         value: ${{ jobs.close.outputs.final-state-root }}
+      successor-wake-json:
+        value: ${{ jobs.close.outputs.successor-wake-json }}
 
 permissions:
   contents: write
@@ -105,6 +107,7 @@ jobs:
       integration-proof-root: ${{ steps.evidence.outputs.integration-proof-root }}
       close-receipt-root: ${{ steps.close.outputs.close-receipt-root }}
       final-state-root: ${{ steps.close.outputs.final-state-root }}
+      successor-wake-json: ${{ steps.close.outputs.successor-wake-json }}
     steps:
       - name: Validate terminal intent
         shell: bash
@@ -242,8 +245,11 @@ jobs:
             args+=(--evidence-root "${EVIDENCE_ROOT}")
           fi
           node .buildchain/runtime/scripts/dev-delivery-warrant.mjs "${args[@]}"
-          echo "close-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/close.json)" >> "${GITHUB_OUTPUT}"
-          echo "final-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/close.json)" >> "${GITHUB_OUTPUT}"
+          {
+            echo "close-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/close.json)"
+            echo "final-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/close.json)"
+            echo "successor-wake-json=$(jq -c '.receipt.successorWake // null' .buildchain/dev-delivery/close.json)"
+          } >> "${GITHUB_OUTPUT}"
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
@@ -253,6 +259,19 @@ jobs:
           EVIDENCE_ROOT: ${{ steps.evidence.outputs.evidence-root }}
           REASON: ${{ inputs.reason }}
           SETTLEMENT_MODE: ${{ steps.settlement.outputs.mode }}
+
+      - name: Wake exact queued successor
+        if: steps.close.outcome == 'success' && steps.close.outputs.successor-wake-json != 'null'
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -cn --argjson candidate "${SUCCESSOR_WAKE}" \
+            '{event_type: "buildchain-dev-delivery-wake", client_payload: {candidate: $candidate}}' > .buildchain/dev-delivery/successor-dispatch.json
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/dispatches" \
+            --input .buildchain/dev-delivery/successor-dispatch.json
+        env:
+          GH_TOKEN: ${{ secrets.github-token || github.token }}
+          SUCCESSOR_WAKE: ${{ steps.close.outputs.successor-wake-json }}
 
       - name: Upload terminal Warrant evidence
         if: always()

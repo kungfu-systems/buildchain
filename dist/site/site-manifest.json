@@ -1,10 +1,9 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-08-26T18:28:16.451Z",
-  "publishedAt": "2026-08-26T18:28:16.451Z",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
   "reproducible": true,
-  "timestampPolicy": "ci-injected",
+  "timestampPolicy": "source-date-epoch",
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
@@ -13,13 +12,11 @@
     "packages/core/README.md",
     "package.json#exports",
     "tests/buildchain-inventory.json",
-    "sourceRevision",
     "sourceDateEpoch",
     "package content",
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "397157d56c21a06578d1d91cee89fdf1e683b821",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -245,7 +242,7 @@
       "path": "docs/cli-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ec16f350596692989cf5eade945e7bbeee157a661c6d8faa55c8249b14ef5632"
+      "digest": "sha256:1be0e552967733d9d6e5bf460c84b866fdfb60966ac16177b43370c1367de321"
     },
     {
       "id": "node-api-reference",
@@ -253,7 +250,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:ae06170cf105f702b5ea2ce8d32847a175f06d653f197e4b1a2f57d18995e17a"
+      "digest": "sha256:b5b92af47668cfccc94f120c1199e7600417c81e5e841e18ede593371f6c4717"
     },
     {
       "id": "build-facts",
@@ -301,7 +298,7 @@
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:c74a004657f64d29ba2a47f599223e5ab132daf2881cf0564c85c04b22a69e6e"
+      "digest": "sha256:aa8881cb2c9529aefd33147b5bd6f94e8f1ab567a4550bdbd01253252353465e"
     },
     {
       "id": "publish-transaction",

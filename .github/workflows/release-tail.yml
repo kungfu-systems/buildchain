@@ -7,6 +7,26 @@ on:
         description: "Exact Buildchain SHA or qualified train ref"
         type: string
         required: true
+      capsule-contract:
+        description: "Compatibility input: must name the current source-bound v4 rehearsal capsule contract"
+        type: string
+        default: ""
+        required: false
+      capsule-path:
+        description: "Compatibility alias for rehearsal-capsule-path"
+        type: string
+        default: ""
+        required: false
+      capsule-root:
+        description: "Compatibility alias for candidate-root"
+        type: string
+        default: ""
+        required: false
+      evidence-path:
+        description: "Compatibility alias for rehearsal-evidence-path"
+        type: string
+        default: ""
+        required: false
       declaration-path:
         description: "Versioned release-tail declaration in the caller checkout"
         type: string
@@ -67,6 +87,12 @@ on:
       rehearsal-evidence-root:
         description: "Root of non-authoritative Publication Rehearsal evidence"
         value: ${{ jobs.release-tail.outputs.rehearsal-evidence-root }}
+      binding-root:
+        description: "Compatibility output bound to the exact v4 capsule root"
+        value: ${{ jobs.release-tail.outputs.binding-root }}
+      evidence-root:
+        description: "Compatibility alias for rehearsal-evidence-root"
+        value: ${{ jobs.release-tail.outputs.evidence-root }}
 
 # Permission-neutral: production callers grant provider authority explicitly.
 
@@ -79,6 +105,8 @@ jobs:
       transaction-root: ${{ steps.release-tail.outputs.transaction-root }}
       state-root: ${{ steps.release-tail.outputs.state-root }}
       rehearsal-evidence-root: ${{ steps.release-tail.outputs.rehearsal-evidence-root }}
+      binding-root: ${{ steps.release-tail.outputs.binding-root }}
+      evidence-root: ${{ steps.release-tail.outputs.evidence-root }}
     steps:
       - name: Check out caller source
         uses: actions/checkout@v7.0.0
@@ -97,11 +125,12 @@ jobs:
         with:
           declaration: ${{ inputs.declaration-path }}
           provider-bindings: ${{ inputs.provider-bindings-path }}
-          rehearsal-capsule: ${{ inputs.rehearsal-capsule-path }}
-          candidate-root: ${{ github.workspace }}/${{ inputs.candidate-root }}
+          capsule-contract: ${{ inputs.capsule-contract }}
+          rehearsal-capsule: ${{ inputs.rehearsal-capsule-path || inputs.capsule-path }}
+          candidate-root: ${{ github.workspace }}/${{ inputs.candidate-root || inputs.capsule-root }}
           rehearsal-mode: ${{ inputs.rehearsal-mode }}
           rehearsal-authority: ${{ inputs.rehearsal-authority-path }}
-          rehearsal-evidence-path: ${{ inputs.rehearsal-evidence-path }}
+          rehearsal-evidence-path: ${{ inputs.rehearsal-evidence-path || inputs.evidence-path }}
           state-path: ${{ inputs.state-path }}
           github-token: ${{ github.token }}
           http-token: ${{ secrets.http-token }}
@@ -115,4 +144,4 @@ jobs:
           if-no-files-found: error
           path: |
             ${{ inputs.state-path }}
-            ${{ inputs.rehearsal-evidence-path }}
+            ${{ inputs.rehearsal-evidence-path || inputs.evidence-path }}

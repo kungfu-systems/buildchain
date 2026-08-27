@@ -1262,6 +1262,8 @@ function releaseField(release, camelKey, snakeKey, ...fallbacks) {
   return optionalString(firstTruthy(release[camelKey], release[snakeKey], ...fallbacks));
 }
 
+export { releasePassportKfdAdopterSourceSha } from "./adopter-delivery-passport.js";
+
 function optionalSections(entries) {
   return Object.fromEntries(entries.filter(([, value]) => value && (!Array.isArray(value) || value.length > 0)));
 }
