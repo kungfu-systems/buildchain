@@ -204,7 +204,7 @@ function evaluateRunnerPolicy(runner) {
     runner.selfHostedAuthorized === false;
 }
 
-export function evaluatePublicationControlPlaneSnapshot(options = {}) {
+function evaluatePublicationControlPlaneSnapshotOptions(options) {
   const {
     repository,
     workflowPath,
@@ -240,4 +240,8 @@ export function evaluatePublicationControlPlaneSnapshot(options = {}) {
   return createPublicationControlPlaneAudit({
     repository, workflowPath, publisherWorkflowPath, environment, facts, observedAt, expiresAt,
   });
+}
+
+export function evaluatePublicationControlPlaneSnapshot({ repository, workflowPath, publisherWorkflowPath = workflowPath, environment, branch, packageName, publisherMode = "npm-trusted-publisher", requiredStatusCheck = "check", snapshot, observedAt, expiresAt, } = {}) {
+  return evaluatePublicationControlPlaneSnapshotOptions({ repository, workflowPath, publisherWorkflowPath, environment, branch, packageName, publisherMode, requiredStatusCheck, snapshot, observedAt, expiresAt });
 }
