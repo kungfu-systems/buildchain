@@ -56,6 +56,7 @@
       "./adopter-delivery-passport": "./packages/core/adopter-delivery-passport.js",
       "./adopter-delivery-vectors": "./packages/core/adopter-delivery-vectors.js",
       "./v4-adopter-delivery": "./packages/core/v4-adopter-delivery.js",
+      "./v4-cross-platform-adopter-qualification": "./packages/core/v4-cross-platform-adopter-qualification.js",
       "./logging": "./packages/core/logging.js",
       "./portable-dev-cache": "./packages/core/portable-dev-cache.js",
       "./publication-artifact": "./packages/core/publication-artifact.js",

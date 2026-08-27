@@ -180,9 +180,64 @@ jobs:
           node .buildchain/v4-runtime/bin/buildchain.mjs adopter-delivery archive
           --input "${{ inputs.archive-path }}"
           --output .buildchain/adopter-delivery/archive.json
+      - name: Exercise failure, retry, terminal and protocol-neutral qualification
+        run: >-
+          node .buildchain/v4-runtime/scripts/v4-cross-platform-adopter-qualification.mjs run
+          --runtime-root .buildchain/v4-runtime
+          --consumer-root .
+          --platform "${{ matrix.platform }}"
+          --consumer "${{ inputs.consumer }}"
+          --runtime-sha "${{ steps.runtime.outputs.sha }}"
+          --consumer-sha "${{ github.sha }}"
+          --input "${{ inputs.input-path }}"
+          --bootstrap "${{ inputs.bootstrap-path }}"
+          --output ".buildchain/adopter-delivery/${{ matrix.platform }}/qualification-report.json"
       - name: Upload exact offline conformance evidence
         uses: actions/upload-artifact@v7.0.1
         with:
           name: v4-adopter-delivery-${{ inputs.consumer }}-${{ matrix.platform }}-${{ github.sha }}
-          path: .buildchain/adopter-delivery/*.json
+          path: .buildchain/adopter-delivery/**/*.json
+          if-no-files-found: error
+
+  qualification:
+    name: Reconcile exact three-platform qualification
+    needs: conformance
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Resolve exact called-workflow runtime
+        id: runtime
+        shell: bash
+        env:
+          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${BUILDCHAIN_WORKFLOW_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::job.workflow_sha is not an exact commit SHA"
+            exit 1
+          fi
+          printf 'sha=%s\n' "$(printf '%s' "${BUILDCHAIN_WORKFLOW_SHA}" | tr '[:upper:]' '[:lower:]')" >> "${GITHUB_OUTPUT}"
+      - name: Checkout exact Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ steps.runtime.outputs.sha }}
+          path: .buildchain/v4-runtime
+          persist-credentials: false
+      - name: Download raw platform reports
+        uses: actions/download-artifact@v7.0.0
+        with:
+          pattern: v4-adopter-delivery-${{ inputs.consumer }}-*-${{ github.sha }}
+          path: .buildchain/platform-reports
+      - name: Require one exact report from every platform
+        shell: bash
+        run: >-
+          node .buildchain/v4-runtime/scripts/v4-cross-platform-adopter-qualification.mjs aggregate
+          --reports-root .buildchain/platform-reports
+          --consumer "${{ inputs.consumer }}"
+          --output .buildchain/adopter-delivery-qualification.json
+      - name: Upload rooted cross-platform qualification
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-adopter-delivery-qualification-${{ inputs.consumer }}-${{ github.sha }}
+          path: .buildchain/adopter-delivery-qualification.json
           if-no-files-found: error
