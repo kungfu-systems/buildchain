@@ -904,29 +904,6 @@
           }
         }
       },
-      "packages/core/publication-control-plane-audit.js": {
-        "baseline": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
-              "complexity": 87
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
-              "complexity": 87
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
-              "complexity": 25
-            }
-          }
-        }
-      },
       "packages/core/publication-reproducibility.js": {
         "baseline": {
           "lines": 947
@@ -1799,31 +1776,13 @@
       },
       "scripts/run-lifecycle-core.mjs": {
         "baseline": {
-          "lines": 885,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 471,
-              "complexity": 74
-            }
-          }
+          "lines": 885
         },
         "current": {
-          "lines": 885,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 471,
-              "complexity": 74
-            }
-          }
+          "lines": 850
         },
         "target": {
-          "lines": 600,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
+          "lines": 600
         }
       },
       "scripts/stable-candidate-patrol.mjs": {
