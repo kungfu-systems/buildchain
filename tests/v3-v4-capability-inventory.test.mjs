@@ -81,9 +81,9 @@ test("live v3 inventory covers every declared category with no unknown or unowne
   );
   assert.equal(
     inventory.reverseHistory.toCommit,
-    "88d089b9c69dd08be00f120d623447ae881f1374",
+    "8493bf140a7f567e76aff3119f3d39ff026afc84",
   );
-  assert.equal(inventory.reverseHistory.changedPathCount, 82);
+  assert.equal(inventory.reverseHistory.changedPathCount, 87);
   assert.equal(inventory.summary.unknownCount, 0);
   assert.equal(inventory.summary.unownedCount, 0);
   assert.equal(inventory.summary.residualCount, 0);
