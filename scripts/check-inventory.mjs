@@ -1021,12 +1021,14 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
   "resume-candidate-run-id:",
   "resume-expected-source-tree:",
   "resume-buildchain-runtime-sha:",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
   "release-passport-buildchain-self-kfd: true",
   "buildchain-channel: alpha",
   "release-passport-impact-json: .buildchain/release-impact.json",
@@ -1034,13 +1036,6 @@ for (const requiredSnippet of [
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
   }
-}
-if (
-  (buildchainRefPromotionWorkflow.match(
-    /release-candidate-promote\.yml@alpha\/v4\/v4\.0/g,
-  ) || []).length !== 2
-) {
-  throw new Error("buildchain ref promotion bootstrap must route both jobs through protected alpha");
 }
 const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
 for (const requiredSnippet of [
