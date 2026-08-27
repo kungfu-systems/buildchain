@@ -1323,6 +1323,7 @@ test("selectReleaseTag creates, increments, and reuses canonical v-prefixed rele
           ref: "refs/heads/publish-gate/release/v1/v1.0/1.0.2",
           object: { sha: OTHER_SHA },
         },
+        { ref: "refs/heads/publish-gate/release/v1/v1.0/1.0.3", object: { sha: SHA } },
       ],
       releasePrefix: "v1.0",
       sha: SHA,
@@ -1367,15 +1368,14 @@ test("selectAlphaTag creates ABV-style prerelease tags for the minor line", () =
   assert.deepEqual(
     selectAlphaTag({
       refs: [
-        {
-          ref: "refs/heads/publish-gate/alpha/v1/v1.0/1.0.1-alpha.7",
-          object: { sha: OTHER_SHA },
-        },
+        { ref: "refs/heads/publish-gate/alpha/v1/v1.0/1.0.1-alpha.7", object: { sha: OTHER_SHA } },
+        // Same-source locks remain reusable after authority planning.
+        { ref: "refs/heads/publish-gate/alpha/v1/v1.0/1.0.1-alpha.8", object: { sha: SHA } },
       ],
       releasePrefix: "v1.0",
       sha: SHA,
     }),
-    { tag: "v1.0.1-alpha.8", patch: 1, prerelease: 8, exists: false },
+    { tag: "v1.0.1-alpha.8", patch: 1, prerelease: 8, sha: SHA, exists: false },
   );
   assert.deepEqual(
     selectAlphaTag({

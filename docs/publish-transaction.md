@@ -100,7 +100,9 @@ of reusing or overwriting that failed transaction slot.
 The immutable `publish-gate/{alpha,release}/.../<version>` source lock also
 reserves its exact version when a failure happens before durable transaction
 state can be created. A later candidate with a different source SHA advances to
-the next version; it never rebinds or overwrites the earlier source lock.
+the next version; it never rebinds or overwrites the earlier source lock. The
+same source SHA reuses its own lock so authority planning and mutation stay on
+one exact version.
 
 `release-candidate-promote.yml` can establish or restore this state from an
 older successful candidate run through the documented fresh-event recovery

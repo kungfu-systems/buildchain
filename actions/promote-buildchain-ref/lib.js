@@ -2932,8 +2932,8 @@ function parseAlphaPrereleaseRef(refName, releasePrefix) {
 function selectReleaseTag({ refs, releasePrefix, sha }) {
   const releaseTags = refs
     .map((ref) => {
-      const parsed = parseReleasePatchTag(ref.ref, releasePrefix);
-      return parsed ? { ...parsed, sha: ref.object?.sha } : undefined;
+      const gateVersion = String(ref.ref || "").match(new RegExp(`^refs/heads/publish-gate/release/v\\d+/${releasePrefix.replaceAll(".", "\\.")}/([^/]+)$`))?.[1]; const parsed = parseReleasePatchTag(ref.ref, releasePrefix) || (gateVersion && parseReleasePatchTag(`refs/tags/v${gateVersion}`, releasePrefix));
+      return parsed ? { ...parsed, sha: ref.object?.sha, source: gateVersion ? "publish-gate" : "tag" } : undefined;
     })
     .filter(Boolean)
     .sort((a, b) => a.patch - b.patch);
@@ -2951,7 +2951,7 @@ function selectReleaseTag({ refs, releasePrefix, sha }) {
     return {
       tag: existingForSha.tag,
       patch: existingForSha.patch,
-      exists: true,
+      exists: existingForSha.source === "tag",
     };
   }
   const latestPatch = Math.max(
@@ -2975,7 +2975,7 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
       }
       return {
         ...parsed,
-        sha: parsed.source === "tag" ? ref.object?.sha : undefined,
+        sha: parsed.source !== "release-state" ? ref.object?.sha : undefined,
       };
     })
     .filter(Boolean)
@@ -2986,7 +2986,7 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
       (tag) => tag.patch === patchAfterRelease,
     );
     const existingForSha = samePatchTags.find(
-      (tag) => tag.source === "tag" && tag.sha === sha,
+      (tag) => tag.source !== "release-state" && tag.sha === sha,
     );
     if (existingForSha) {
       return {
@@ -2994,7 +2994,7 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
         patch: existingForSha.patch,
         prerelease: existingForSha.prerelease,
         sha: existingForSha.sha,
-        exists: true,
+        exists: existingForSha.source === "tag",
       };
     }
     const prepared = samePatchTags
@@ -3023,7 +3023,7 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
   }
 
   const existingForSha = alphaTags.find(
-    (tag) => tag.source === "tag" && tag.sha === sha,
+    (tag) => tag.source !== "release-state" && tag.sha === sha,
   );
   if (existingForSha) {
     return {
@@ -3031,7 +3031,7 @@ function selectAlphaTag({ refs, releasePrefix, sha, patchAfterRelease }) {
       patch: existingForSha.patch,
       prerelease: existingForSha.prerelease,
       sha: existingForSha.sha,
-      exists: true,
+      exists: existingForSha.source === "tag",
     };
   }
 
