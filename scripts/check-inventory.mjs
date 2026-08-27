@@ -285,6 +285,10 @@ const channelPromotionWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/release-candidate-promote.yml"),
   "utf8",
 );
+const boundedAlphaRecoveryWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
+  "utf8",
+);
 const promotionShellRouting = parsePromotionShellRouting(
   fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
   { major: Number(selfDogfoodMajor) },
@@ -294,6 +298,20 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
   shellRouting: promotionShellRouting,
 })) {
   throw new Error("generated channel promotion workflow is stale");
+}
+for (const requiredSnippet of [
+  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha",
+  "promotion-shell-ref: ${{ needs.consumer-admission.outputs.shell-call-ref }}",
+  "declarative-release-tail: true",
+]) {
+  if (!boundedAlphaRecoveryWorkflow.includes(requiredSnippet)) {
+    throw new Error(`bounded alpha recovery missing bootstrap contract: ${requiredSnippet}`);
+  }
+}
+for (const workflowSource of [boundedAlphaRecoveryWorkflow, channelPromotionWorkflow]) {
+  if (workflowSource.includes("channel-finalization-recovery")) {
+    throw new Error("Buildchain-only alpha bootstrap must not add a public or recovery workflow input");
+  }
 }
 for (const requiredSnippet of [
   "buildchain-channel:",

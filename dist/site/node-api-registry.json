@@ -24984,7 +24984,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 428
+        "line": 432
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -28654,7 +28654,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:63025628454a130404894dd3a08906098c6cdd57ed33aff85264da6548348e42",
+      "digest": "sha256:0a51003264330504dd9a08bd898f2f7c13cfb15b22a34d29ec0417e5369f90d7",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -30154,7 +30154,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:750df1c7346b119f1654ef151e1814401d0f768b65a27051df12d33fa831981d"
+      "digest": "sha256:ae06170cf105f702b5ea2ce8d32847a175f06d653f197e4b1a2f57d18995e17a"
     },
     {
       "id": "build-facts",
