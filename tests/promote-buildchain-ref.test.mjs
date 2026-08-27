@@ -1616,7 +1616,7 @@ test("version verification ignores generated buildchain evidence", () => {
   );
 });
 
-test("version verification allows only the exact self-runtime dependency bridge", () => {
+test("version verification rejects foreign dependency bridges and allows installed dependencies", () => {
   const cwd = makeTempWorkspace({ "package.json": { name: "example", version: "1.0.0" } });
   run(["git", "init"], cwd);
   fs.writeFileSync(path.join(cwd, ".git/info/exclude"), "node_modules/\n");
@@ -1629,10 +1629,10 @@ test("version verification allows only the exact self-runtime dependency bridge"
   fs.unlinkSync(bridge);
   fs.symlinkSync(path.join(cwd, ".buildchain/runtime"), bridge, "junction");
   assert.throws(() => assertAllowedLocalChanges(cwd, ["package.json"]), /\?\? node_modules/);
-  fs.rmSync(path.join(cwd, ".buildchain/runtime"), { recursive: true });
-  assert.throws(() => assertAllowedLocalChanges(cwd, ["package.json"]), /\?\? node_modules/);
+  fs.unlinkSync(bridge);
+  fs.mkdirSync(bridge);
+  assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
 });
-
 test("version-state lifecycle can materialize declared derived files before verification", () => {
   const cwd = makeTempWorkspace({
     "buildchain.toml": `
