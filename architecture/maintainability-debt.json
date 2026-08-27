@@ -2356,44 +2356,36 @@
             "<anonymous@170>@170": {
               "lines": 195
             },
-            "<anonymous@366>@366": {
-              "lines": 872,
-              "complexity": 57
-            },
-            "<anonymous@1426>@1426": {
+            "<anonymous@553>@553": {
               "lines": 183
             },
-            "<anonymous@1610>@1610": {
+            "<anonymous@737>@737": {
               "lines": 506
             },
-            "<anonymous@3022>@3022": {
+            "<anonymous@2153>@2153": {
               "lines": 249
             },
-            "<anonymous@4206>@4206": {
+            "<anonymous@3337>@3337": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 4549,
+          "lines": 3680,
           "functions": {
             "<anonymous@170>@170": {
               "lines": 195
             },
-            "<anonymous@366>@366": {
-              "lines": 872,
-              "complexity": 57
-            },
-            "<anonymous@1426>@1426": {
+            "<anonymous@553>@553": {
               "lines": 183
             },
-            "<anonymous@1610>@1610": {
+            "<anonymous@737>@737": {
               "lines": 506
             },
-            "<anonymous@3022>@3022": {
+            "<anonymous@2153>@2153": {
               "lines": 249
             },
-            "<anonymous@4206>@4206": {
+            "<anonymous@3337>@3337": {
               "lines": 188
             }
           }
@@ -2404,20 +2396,16 @@
             "<anonymous@170>@170": {
               "lines": 180
             },
-            "<anonymous@366>@366": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "<anonymous@1426>@1426": {
+            "<anonymous@553>@553": {
               "lines": 180
             },
-            "<anonymous@1610>@1610": {
+            "<anonymous@737>@737": {
               "lines": 180
             },
-            "<anonymous@3022>@3022": {
+            "<anonymous@2153>@2153": {
               "lines": 180
             },
-            "<anonymous@4206>@4206": {
+            "<anonymous@3337>@3337": {
               "lines": 180
             }
           }
@@ -2697,68 +2685,6 @@
           }
         }
       },
-      "tests/promote-buildchain-ref-recovery.test.mjs": {
-        "baseline": {
-          "lines": 4814,
-          "functions": {
-            "<anonymous@535>@535": {
-              "lines": 262
-            },
-            "<anonymous@1545>@1545": {
-              "lines": 252
-            },
-            "<anonymous@2248>@2248": {
-              "lines": 184
-            },
-            "<anonymous@3059>@3059": {
-              "lines": 219
-            },
-            "<anonymous@4096>@4096": {
-              "lines": 232
-            }
-          }
-        },
-        "current": {
-          "lines": 4814,
-          "functions": {
-            "<anonymous@535>@535": {
-              "lines": 262
-            },
-            "<anonymous@1545>@1545": {
-              "lines": 252
-            },
-            "<anonymous@2248>@2248": {
-              "lines": 184
-            },
-            "<anonymous@3059>@3059": {
-              "lines": 219
-            },
-            "<anonymous@4096>@4096": {
-              "lines": 232
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "<anonymous@535>@535": {
-              "lines": 180
-            },
-            "<anonymous@1545>@1545": {
-              "lines": 180
-            },
-            "<anonymous@2248>@2248": {
-              "lines": 180
-            },
-            "<anonymous@3059>@3059": {
-              "lines": 180
-            },
-            "<anonymous@4096>@4096": {
-              "lines": 180
-            }
-          }
-        }
-      },
       "tests/promote-buildchain-ref.test.mjs": {
         "baseline": {
           "lines": 4211,
@@ -2949,6 +2875,167 @@
         },
         "target": {
           "lines": 600
+        }
+      },
+      "tests/build-surface-reusable-build.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 342
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 342
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/build-surface-reusable-build-signing.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 266
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 266
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/build-surface-reusable-build-artifacts.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 232
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 232
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-durable-recovery.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 219
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 219
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-major-promotion.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@291>@291": {
+              "lines": 228
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@291>@291": {
+              "lines": 228
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@291>@291": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 262
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 262
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 244
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 244
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
         }
       }
     },
@@ -3206,7 +3293,7 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 4549
+      "current": 3680
     },
     {
       "domain": "workflows",

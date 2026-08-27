@@ -1779,15 +1779,66 @@
       "expiresOn": "2026-12-31",
       "owner": "Buildchain architecture maintainers",
       "followUp": "Replace every legacy ceiling with the default budget or a lower net-debt target before this profile expires."
+    },
+    "stage1-test-split-net-reduction": {
+      "mode": "net-debt-reduction",
+      "metrics": {
+        "maxFunctionLines": {
+          "baseline": 872,
+          "target": 506
+        }
+      }
     }
   },
   "approvedTestDebtTransitions": {
     "tests/build-surface.test.mjs": {
-      "maxLines": 4549,
-      "maxFunctionLines": 872,
-      "maxFunctionComplexity": 57,
-      "rationale": "A shared repository-text fixture removes repeated path and encoding assembly across the highest-churn build-surface test while preserving every assertion and exact fixture byte. Aggregate maintained test lines fall from 4639 to 4549 and this exact ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
+      "maxLines": 3680,
+      "maxFunctionLines": 506,
+      "maxFunctionComplexity": 13,
+      "rationale": "The reusable-build contract moved into three source, signing/cache, and artifact/summary scenario files, while shared repository and occurrence fixtures remove duplication. The maintained build-surface family falls from 4549 to 4543 lines and the largest remaining function falls from 872 to 506 lines without dropping assertions.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/build-surface-reusable-build.test.mjs": {
+      "maxFunctionLines": 342,
+      "maxFunctionComplexity": 16,
+      "rationale": "Extracted tests/build-surface-reusable-build.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/build-surface-reusable-build-signing.test.mjs": {
+      "maxFunctionLines": 266,
+      "maxFunctionComplexity": 16,
+      "rationale": "Extracted tests/build-surface-reusable-build-signing.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/build-surface-reusable-build-artifacts.test.mjs": {
+      "maxFunctionLines": 232,
+      "maxFunctionComplexity": 14,
+      "rationale": "Extracted tests/build-surface-reusable-build-artifacts.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/promote-buildchain-ref-durable-recovery.test.mjs": {
+      "maxFunctionLines": 219,
+      "maxFunctionComplexity": 2,
+      "rationale": "Extracted tests/promote-buildchain-ref-durable-recovery.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/promote-buildchain-ref-major-promotion.test.mjs": {
+      "maxFunctionLines": 228,
+      "maxFunctionComplexity": 2,
+      "rationale": "Extracted tests/promote-buildchain-ref-major-promotion.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs": {
+      "maxFunctionLines": 262,
+      "maxFunctionComplexity": 2,
+      "rationale": "Extracted tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
+    },
+    "tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs": {
+      "maxFunctionLines": 244,
+      "maxFunctionComplexity": 6,
+      "rationale": "Extracted tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
+      "governance": "stage1-test-split-net-reduction"
     }
   },
   "approvedWorkflowDebtTransitions": {
