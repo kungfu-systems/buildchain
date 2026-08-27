@@ -228,7 +228,6 @@
       "id": "promotion-version-state",
       "owner": "Buildchain maintainers",
       "implementation": [
-        "actions/promote-buildchain-ref/internal/existing-version-state.js",
         "actions/promote-buildchain-ref/internal/version-state.js",
         "actions/promote-buildchain-ref/internal/version-state-operations.js"
       ],
@@ -252,7 +251,8 @@
       "implementation": [
         "actions/promote-buildchain-ref/internal/durable-transaction-store.js",
         "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
-        "actions/promote-buildchain-ref/internal/github-adapter.js"
+        "actions/promote-buildchain-ref/internal/github-adapter.js",
+        "actions/promote-buildchain-ref/internal/promotion-operations.js"
       ],
       "tests": [
         "tests/promote-buildchain-ref.test.mjs",
