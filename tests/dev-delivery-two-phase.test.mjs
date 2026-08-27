@@ -12,6 +12,7 @@ import {
   qualifyDevDeliveryWarrant,
   recoverExpiredDevDeliveryWarrant,
   selectDevDeliveryWarrant,
+  settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
   verifyNativeProofReuseDecision,
   verifyNativeQualificationProof,
@@ -348,11 +349,29 @@ test("provisional heartbeat preserves order and expiry requires proven worker st
   assert.equal(heartbeat.queue.activeWarrant.phase, "provisional");
   assert.equal(heartbeat.queue.candidates[0].status, "proving");
 
-  const recovered = recoverExpiredDevDeliveryWarrant(heartbeat.queue, {
+  const retained = settleDevDeliveryTerminalEvent(
+    heartbeat.queue,
+    {
+      pullRequestNumber: 401,
+      sourceHead: SOURCE_HEAD,
+      fencingToken: selected.warrant.fencingToken,
+      leaseGeneration: selected.warrant.generation,
+      outcome: "dequeued",
+      evidenceRoot: ROOT("f"),
+      reason: "native worker still requires fenced stop",
+    },
+    { now: "2026-08-11T00:01:01Z" },
+  );
+  assert.equal(
+    retained.receipt.action,
+    "transient-dequeue-retained-active-warrant",
+  );
+
+  const recovered = recoverExpiredDevDeliveryWarrant(retained.queue, {
     now: "2026-08-11T00:04:00Z",
   });
   assert.equal(recovered.receipt.action, "expired-lease-fenced-stop-required");
-  assert.equal(recovered.queue.stateRoot, heartbeat.queue.stateRoot);
+  assert.equal(recovered.queue.stateRoot, retained.queue.stateRoot);
   const blocked = selectDevDeliveryWarrant(recovered.queue, {
     now: "2026-08-11T00:04:01Z",
   });
@@ -365,6 +384,51 @@ test("provisional heartbeat preserves order and expiry requires proven worker st
       }),
     /lease expired/u,
   );
+});
+
+test("qualified dequeue closes the exact attempt and wakes its successor", () => {
+  const selected = selectedQueue();
+  const proof = nativeProof();
+  const reuse = createNativeProofReuseDecision({ proof, current: current() });
+  const qualified = qualifyDevDeliveryWarrant(
+    selected.queue,
+    selected.warrant,
+    {
+      nativeProof: proof,
+      reuseDecision: reuse,
+      current: current(),
+      now: "2026-08-11T00:00:31Z",
+    },
+  );
+  const withSuccessor = submitDevDeliveryCandidate(
+    qualified.queue,
+    candidate(402, {
+      sourceHead: "c".repeat(40),
+      sourceIdentityRoot: ROOT("e"),
+    }),
+    { now: "2026-08-11T00:00:40Z" },
+  );
+  const closed = settleDevDeliveryTerminalEvent(
+    withSuccessor.queue,
+    {
+      pullRequestNumber: 401,
+      sourceHead: SOURCE_HEAD,
+      fencingToken: qualified.warrant.fencingToken,
+      leaseGeneration: qualified.warrant.generation,
+      outcome: "dequeued",
+      evidenceRoot: ROOT("f"),
+      reason: "merge group was dequeued after a transient source failure",
+    },
+    { now: "2026-08-11T00:01:00Z" },
+  );
+  assert.equal(closed.receipt.action, "terminal-closeout");
+  assert.equal(closed.queue.candidates[0].status, "dequeued");
+  assert.equal(closed.queue.activeWarrant, null);
+  assert.equal(closed.receipt.successorWake.pullRequestNumber, 402);
+  const successor = selectDevDeliveryWarrant(closed.queue, {
+    now: "2026-08-11T00:01:01Z",
+  });
+  assert.equal(successor.warrant.pullRequestNumber, 402);
 });
 
 test("native proof timestamp is observational while semantic evidence is rooted", () => {
