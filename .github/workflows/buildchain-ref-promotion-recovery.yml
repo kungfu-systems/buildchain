@@ -150,7 +150,7 @@ jobs:
           --router-ref "${{ inputs['resume-buildchain-runtime-ref'] }}"
           --router-sha "${{ inputs['resume-buildchain-runtime-sha'] }}"
           --shell-ref alpha/v4/v4.0
-          --shell-call-ref alpha/v4/v4.0
+          --shell-call-ref v4-alpha
           --runtime-ref "${{ steps.route.outputs.runtime-ref }}"
 
       - name: Bind governed recovery ref to exact runtime B
