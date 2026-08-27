@@ -28,6 +28,12 @@ const policy = JSON.parse(
 const baseline = JSON.parse(
   fs.readFileSync(path.join(root, policy.baseline), "utf8"),
 );
+const debt = JSON.parse(
+  fs.readFileSync(
+    path.join(root, "architecture", "maintainability-debt.json"),
+    "utf8",
+  ),
+);
 
 function git(cwd, args) {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
@@ -151,6 +157,10 @@ test("exact-head maintainability baseline is reproducible", () => {
   assert.equal(report.hotspots.promoteBuildchainRefs.complexity, 26);
   assert.equal(report.hotspots.createReleaseCheckReport.lines, 65);
   assert.equal(report.hotspots.createReleaseCheckReport.complexity, 5);
+  assert.ok(
+    debt.hotspots.includes("scripts/buildchain-cli-help.mjs"),
+    "the public CLI help hotspot must retain an audited change route across PR checkout shapes",
+  );
 });
 
 test("AST complexity proxy counts bounded decisions without charging nested functions twice", () => {
