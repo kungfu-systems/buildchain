@@ -167,6 +167,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/check-v4-floating-consumer-policy-contract.mjs`
 - `tests/dev-delivery-warrant.test.mjs`
 - `actions/promote-buildchain-ref/internal/version-state.js`
+- `scripts/buildchain-cli-help.mjs`
 
 ## cli-command-registry
 
