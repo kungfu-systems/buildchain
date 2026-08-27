@@ -41,7 +41,11 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/v4-adopter-delivery-dogfood\.yml' \|\| '' \}\}/u,
+    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ inputs\['invocation-source-path'\] \|\| \(github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/v4-adopter-delivery-dogfood\.yml' \|\| ''\) \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /--repository "\$\{\{ inputs\['consumer-repository'\] \|\| github\.repository \}\}"\n\s+--source-sha "\$\{\{ steps\.consumer-source\.outputs\.sha \}\}"/u,
   );
   assert.doesNotMatch(workflow, /github\.event_name == 'workflow_dispatch'/u);
 });
