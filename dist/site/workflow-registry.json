@@ -398,6 +398,7 @@
       "reusable": true,
       "inputs": [
         "admission-json",
+        "authority-job-id",
         "authority-workflow-path",
         "auto-admission",
         "auto-admission-kind",
@@ -435,7 +436,7 @@
         "target-ref",
         "used-nonces-json"
       ],
-      "inputCount": 37,
+      "inputCount": 38,
       "secrets": [
         "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
         "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
