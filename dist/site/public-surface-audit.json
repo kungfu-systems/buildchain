@@ -1993,9 +1993,10 @@
         "outputs": [
           "close-receipt-root",
           "final-state-root",
-          "integration-proof-root"
+          "integration-proof-root",
+          "successor-wake-json"
         ],
-        "outputCount": 3
+        "outputCount": 4
       },
       {
         "id": "dev-merge-queue-governance",
@@ -8373,8 +8374,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "613ca42d3fe36e953603221d1cf16478ba84e6cf27dd6d11ddb2c1caea42ec3b",
-    "workflowRegistryDigest": "bf320eb0f5c4aab99adf17b7b4f2375c805509165f79e6e5f693e740e1814d58",
-    "pageRegistryDigest": "890980c737e6ddae717971befc23dd62e560a3f8c690baf72ce4e16c929ab09a"
+    "workflowRegistryDigest": "e7fa3c39298338db8271345fed49efaab7d9522e15c4a9ccc7b1fd74aed2b667",
+    "pageRegistryDigest": "324d9b4a933988d6da8e7f49a6db0ff81665dddea293cc47266c45de64223deb"
   },
   "comparison": {
     "missingCliRegistry": [],

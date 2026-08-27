@@ -200,18 +200,7 @@ function submissionReceipt({ before, after, candidate, action, now }) {
     schema: DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA,
     repository: after.repository,
     protectedBase: after.protectedBase,
-    candidateId: candidate.candidateId,
-    pullRequestNumber: candidate.pullRequestNumber,
-    sourceHead: candidate.sourceHead,
-    assignmentRoot: candidate.assignmentRoot,
-    initiativeRoot: candidate.initiativeRoot,
-    sourceIdentityRoot: candidate.sourceIdentityRoot,
-    sourcePatchRoot: candidate.sourcePatchRoot,
-    sourceProofRoot: candidate.sourceProofRoot,
-    planRoot: candidate.planRoot,
-    closureRoot: candidate.closureRoot,
-    dependencyRoot: candidate.dependencyRoot,
-    toolchainRoot: candidate.toolchainRoot, ...(candidate.environmentRoot ? { environmentRoot: candidate.environmentRoot } : {}),
+    ...candidateRootProjection(candidate),
     ...(Object.hasOwn(candidate, "affectedPaths") ? { affectedPaths: candidate.affectedPaths } : {}),
     sourceWorkflowRunId: candidate.sourceWorkflowRunId,
     ...(Object.hasOwn(candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: candidate.releaseBlockerPriority } : {}),
@@ -421,18 +410,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
         schema: DEV_DELIVERY_WARRANT_SCHEMA,
         repository: next.repository,
         protectedBase: next.protectedBase,
-        candidateId: candidate.candidateId,
-        pullRequestNumber: candidate.pullRequestNumber,
-        sourceHead: candidate.sourceHead,
-        assignmentRoot: candidate.assignmentRoot,
-        initiativeRoot: candidate.initiativeRoot,
-        sourceIdentityRoot: candidate.sourceIdentityRoot,
-        sourcePatchRoot: candidate.sourcePatchRoot,
-        sourceProofRoot: candidate.sourceProofRoot,
-        planRoot: candidate.planRoot,
-        closureRoot: candidate.closureRoot,
-        dependencyRoot: candidate.dependencyRoot,
-        toolchainRoot: candidate.toolchainRoot, ...(candidate.environmentRoot ? { environmentRoot: candidate.environmentRoot } : {}),
+        ...candidateRootProjection(candidate),
         ...(Object.hasOwn(candidate, "affectedPaths") ? { affectedPaths: candidate.affectedPaths } : {}),
         sourceWorkflowRunId: candidate.sourceWorkflowRunId,
         ...(Object.hasOwn(candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: candidate.releaseBlockerPriority } : {}),
@@ -459,18 +437,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
     reason: selected.priority.releaseBlocker ? "release-blocker-bounded-priority" : selected.priority.agingBoost > 0 ? "fifo-aging-bounded-priority" : "fifo-bounded-priority",
     repository: transaction.after.repository,
     protectedBase: transaction.after.protectedBase,
-    candidateId: transaction.result.candidate.candidateId,
-    pullRequestNumber: transaction.result.candidate.pullRequestNumber,
-    sourceHead: transaction.result.candidate.sourceHead,
-    assignmentRoot: transaction.result.candidate.assignmentRoot,
-    initiativeRoot: transaction.result.candidate.initiativeRoot,
-    sourceIdentityRoot: transaction.result.candidate.sourceIdentityRoot,
-    sourcePatchRoot: transaction.result.candidate.sourcePatchRoot,
-    sourceProofRoot: transaction.result.candidate.sourceProofRoot,
-    planRoot: transaction.result.candidate.planRoot,
-    closureRoot: transaction.result.candidate.closureRoot,
-    dependencyRoot: transaction.result.candidate.dependencyRoot,
-    toolchainRoot: transaction.result.candidate.toolchainRoot, ...(transaction.result.candidate.environmentRoot ? { environmentRoot: transaction.result.candidate.environmentRoot } : {}),
+    ...candidateRootProjection(transaction.result.candidate),
     sourceWorkflowRunId: transaction.result.candidate.sourceWorkflowRunId,
     ...(Object.hasOwn(transaction.result.candidate, "releaseBlockerPriority")
       ? {
@@ -589,7 +556,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
   if (!TERMINAL_STATES.has(normalizedOutcome)) {
     throw new Error(`outcome must be one of ${[...TERMINAL_STATES].join(", ")}`);
   }
-  if (normalizedOutcome === "dequeued") {
+  if (normalizedOutcome === "dequeued" && queueInput.activeWarrant?.phase === "provisional") {
     throw new Error("transient dequeue cannot close an active Delivery Warrant");
   }
   const transaction = transition(
@@ -613,6 +580,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
         ...(active.nativeProofRoot ? { nativeProofRoot: exactRoot(active.nativeProofRoot, "nativeProofRoot") } : {}),
       };
       queue.activeWarrant = null;
+      candidate.terminal.successorWake = createDevDeliverySuccessorWake(queue, currentTime);
       return { candidate, active };
     },
     currentTime,
@@ -629,6 +597,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
     evidenceRoot: transaction.result.candidate.terminal.evidenceRoot,
     expectedOldStateRoot: transaction.expectedOldStateRoot,
     nextStateRoot: transaction.after.stateRoot,
+    successorWake: transaction.result.candidate.terminal.successorWake,
     nextAction: "Select the next queued candidate, if any.",
   };
   return {
@@ -637,7 +606,29 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
     receiptRoot: devDeliveryContentRoot(receipt),
   };
 }
-
+const CANDIDATE_ROOT_FIELDS = "candidateId pullRequestNumber sourceHead assignmentRoot initiativeRoot sourceIdentityRoot sourcePatchRoot sourceProofRoot planRoot closureRoot dependencyRoot toolchainRoot".split(" ");
+function candidateRootProjection(candidate) {
+  return {
+    ...Object.fromEntries(CANDIDATE_ROOT_FIELDS.map((field) => [field, candidate[field]])),
+    ...(candidate.environmentRoot ? { environmentRoot: candidate.environmentRoot } : {}),
+  };
+}
+function createDevDeliverySuccessorWake(queue, now) {
+  const next = rankDevDeliveryCandidates(queue, { now })[0]?.candidate;
+  if (!next) return null;
+  return {
+    schema: "kungfu.buildchain.dev-delivery-wake/v1",
+    targetBranch: queue.protectedBase,
+    ...candidateRootProjection(next),
+    deliveryClass: next.deliveryClass,
+    priority: next.priority,
+    ...(next.nativeCommandContract ? { nativeCommandContract: next.nativeCommandContract } : {}),
+    ...(next.shardEvidenceRoots ? { shardEvidenceRoots: next.shardEvidenceRoots } : {}),
+    ...(next.affectedPaths ? { affectedPaths: next.affectedPaths } : {}),
+    ...(Object.hasOwn(next, "sourceWorkflowRunId") ? { sourceWorkflowRunId: next.sourceWorkflowRunId } : {}),
+    ...(next.releaseBlockerPriority ? { releaseBlockerPriority: next.releaseBlockerPriority } : {}),
+  };
+}
 const cancelQueuedDevDeliveryCandidateTransition = createCancelQueuedDevDeliveryCandidate(normalizeDevDeliveryQueue);
 export function cancelQueuedDevDeliveryCandidate(queueInput, input, options) {
   return cancelQueuedDevDeliveryCandidateTransition(queueInput, input, options);
@@ -664,6 +655,14 @@ export function observeDevDeliveryQueue(queueInput, { now = new Date().toISOStri
     activeWarrant: queue.activeWarrant,
     activeCandidate: queue.activeWarrant ? queue.candidates.find((candidate) => candidate.candidateId === queue.activeWarrant.candidateId) || null : null,
     states,
+    pendingSuccessorWakes: queue.candidates
+      .filter((candidate) => candidate.terminal?.successorWake)
+      .map((candidate) => ({
+        pullRequestNumber: candidate.pullRequestNumber,
+        sourceHead: candidate.sourceHead,
+        outcome: candidate.status,
+        successorWake: candidate.terminal.successorWake,
+      })),
     queued: queued.map((entry, index) => ({
       position: index + 1,
       candidateId: entry.candidate.candidateId,

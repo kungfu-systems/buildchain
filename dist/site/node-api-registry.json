@@ -7545,7 +7545,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 642
+        "line": 633
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7582,7 +7582,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 586
+        "line": 553
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7864,7 +7864,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 508
+        "line": 475
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7930,7 +7930,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 652
+        "line": 643
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -7967,7 +7967,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 545
+        "line": 512
       },
       "example": "import { qualifyDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8000,7 +8000,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 339
+        "line": 328
       },
       "example": "import { rankDevDeliveryCandidates } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8033,7 +8033,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 548
+        "line": 515
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8066,7 +8066,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 363
+        "line": 352
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8090,7 +8090,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 645
+        "line": 636
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8127,7 +8127,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 245
+        "line": 234
       },
       "example": "import { submitDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -26534,7 +26534,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:4728c4f947b88a07ee9aff4cff2fd24f1c79796cfcb64de6ac37d305d78ae068",
+      "digest": "sha256:cbc3eeb4f118f96d196e35592121559a53832d9aaf3a49f72d0d47db16658c58",
       "summary": "Durable single-flight Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -28346,7 +28346,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:393ace4bd5878717374a92b30d8bc3a6301dcbb36339476ed194c12843fec68d"
+      "digest": "sha256:f26a07eab2491f99796a560482b482b40bb3164eab9833e3e4286bc08df2d56e"
     },
     {
       "id": "build-facts",

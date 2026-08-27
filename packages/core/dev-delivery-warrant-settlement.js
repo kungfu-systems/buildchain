@@ -31,7 +31,7 @@ function settleTerminalCandidate(queue, identity, candidate) {
     });
     return { queue, receipt, receiptRoot: devDeliveryContentRoot(receipt) };
   }
-  const receipt = noopReceipt(queue, identity, candidate, "duplicate-terminal-event-noop");
+  const receipt = noopReceipt(queue, identity, candidate, "duplicate-terminal-event-noop", { successorWake: candidate.terminal?.successorWake || null });
   return { queue, receipt, receiptRoot: devDeliveryContentRoot(receipt) };
 }
 
@@ -76,9 +76,9 @@ export function createDevDeliveryTerminalSettler({ normalizeQueue, closeWarrant,
       const leaseGeneration = positiveInteger(input?.leaseGeneration, "leaseGeneration");
       if (fencingToken !== queue.activeWarrant.fencingToken) throw new Error("stale fencing token");
       if (leaseGeneration !== queue.activeWarrant.generation) throw new Error("stale lease generation");
-      if (identity.outcome === "dequeued") {
+      const terminalKey = identity.outcome + queue.activeWarrant.phase;
+      if (terminalKey === "dequeuedprovisional")
         return retainDequeuedWarrant(queue, identity, candidate, fencingToken, leaseGeneration, now);
-      }
       return closeWarrant(
         queue,
         {

@@ -1,5 +1,4 @@
 name: Dev Delivery Warrant Close
-
 on:
   workflow_call:
     inputs:
@@ -93,10 +92,10 @@ on:
         value: ${{ jobs.close.outputs.close-receipt-root }}
       final-state-root:
         value: ${{ jobs.close.outputs.final-state-root }}
-
+      successor-wake-json:
+        value: ${{ jobs.close.outputs.successor-wake-json }}
 permissions:
   contents: write
-
 jobs:
   close:
     name: Close exact fenced delivery attempt
@@ -105,6 +104,7 @@ jobs:
       integration-proof-root: ${{ steps.evidence.outputs.integration-proof-root }}
       close-receipt-root: ${{ steps.close.outputs.close-receipt-root }}
       final-state-root: ${{ steps.close.outputs.final-state-root }}
+      successor-wake-json: ${{ steps.close.outputs.successor-wake-json }}
     steps:
       - name: Validate terminal intent
         shell: bash
@@ -131,7 +131,6 @@ jobs:
           OUTCOME: ${{ inputs.outcome }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
-
       - name: Checkout Buildchain runtime
         uses: actions/checkout@v7.0.0
         with:
@@ -139,11 +138,9 @@ jobs:
           ref: ${{ inputs.buildchain-ref || 'v3' }}
           path: .buildchain/runtime
           persist-credentials: false
-
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
-
       - name: Observe active Warrant authority
         run: >-
           node .buildchain/runtime/scripts/dev-delivery-warrant.mjs observe
@@ -153,7 +150,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
-
       - name: Resolve terminal settlement mode
         id: settlement
         shell: bash
@@ -194,7 +190,6 @@ jobs:
           TARGET_BRANCH: ${{ inputs.target-branch }}
           EXPECTED_PR: ${{ inputs.expected-pr-number }}
           EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
-
       - name: Seal exact terminal evidence
         id: evidence
         if: steps.settlement.outputs.mode != 'stale-dequeued' && (steps.settlement.outputs.mode == 'active' || inputs.outcome != 'merged')
@@ -233,7 +228,6 @@ jobs:
           MERGE_GROUP_TREE: ${{ inputs.merge-group-tree-sha }}
           CONTEXT_ROOTS: ${{ inputs.required-context-roots-json }}
           TERMINAL_EVIDENCE_ROOT: ${{ inputs.terminal-evidence-root }}
-
       - name: Settle terminal delivery event
         id: close
         if: steps.settlement.outputs.mode != 'stale-dequeued'
@@ -241,28 +235,22 @@ jobs:
         run: |
           set -euo pipefail
           args=(
-            settle
-            --repository "${GITHUB_REPOSITORY}"
-            --branch "${TARGET_BRANCH}"
-            --pull-request "${EXPECTED_PR}"
-            --expected-source-head "${EXPECTED_HEAD}"
-            --outcome "${OUTCOME}"
-            --reason "${REASON}"
-            --execute
-            --output .buildchain/dev-delivery/close.json
+            settle --repository "${GITHUB_REPOSITORY}" --branch "${TARGET_BRANCH}"
+            --pull-request "${EXPECTED_PR}" --expected-source-head "${EXPECTED_HEAD}" --outcome "${OUTCOME}"
+            --reason "${REASON}" --execute --output .buildchain/dev-delivery/close.json
           )
           if [ "${SETTLEMENT_MODE}" = "active" ]; then
-            args+=(
-              --fencing-token "$(jq -er '.observation.activeWarrant.fencingToken' .buildchain/dev-delivery/observation.json)"
-              --lease-generation "$(jq -er '.observation.activeWarrant.generation' .buildchain/dev-delivery/observation.json)"
-            )
+            args+=(--fencing-token "$(jq -er '.observation.activeWarrant.fencingToken' .buildchain/dev-delivery/observation.json)" --lease-generation "$(jq -er '.observation.activeWarrant.generation' .buildchain/dev-delivery/observation.json)")
           fi
           if [ -n "${EVIDENCE_ROOT}" ]; then
             args+=(--evidence-root "${EVIDENCE_ROOT}")
           fi
           node .buildchain/runtime/scripts/dev-delivery-warrant.mjs "${args[@]}"
-          echo "close-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/close.json)" >> "${GITHUB_OUTPUT}"
-          echo "final-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/close.json)" >> "${GITHUB_OUTPUT}"
+          {
+            echo "close-receipt-root=$(jq -er '.receiptRoot' .buildchain/dev-delivery/close.json)"
+            echo "final-state-root=$(jq -er '.after.stateRoot' .buildchain/dev-delivery/close.json)"
+            echo "successor-wake-json=$(jq -c '.receipt.successorWake // null' .buildchain/dev-delivery/close.json)"
+          } >> "${GITHUB_OUTPUT}"
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           TARGET_BRANCH: ${{ inputs.target-branch }}
@@ -272,7 +260,18 @@ jobs:
           EVIDENCE_ROOT: ${{ steps.evidence.outputs.evidence-root }}
           REASON: ${{ inputs.reason }}
           SETTLEMENT_MODE: ${{ steps.settlement.outputs.mode }}
-
+      - name: Wake exact queued successor
+        if: steps.close.outcome == 'success' && steps.close.outputs.successor-wake-json != 'null'
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -cn --argjson candidate "${SUCCESSOR_WAKE}" \
+            '{event_type: "buildchain-dev-delivery-wake", client_payload: {candidate: $candidate}}' > .buildchain/dev-delivery/successor-dispatch.json
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/dispatches" \
+            --input .buildchain/dev-delivery/successor-dispatch.json
+        env:
+          GH_TOKEN: ${{ secrets.github-token || github.token }}
+          SUCCESSOR_WAKE: ${{ steps.close.outputs.successor-wake-json }}
       - name: Upload terminal Warrant evidence
         if: always()
         uses: actions/upload-artifact@v7.0.1

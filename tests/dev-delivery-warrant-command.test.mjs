@@ -279,6 +279,9 @@ test("terminal workflow resolves active fencing or an explicit settlement no-op"
   assert.match(workflow, /activeCandidate\.candidateId == \.observation\.activeWarrant\.candidateId/u);
   assert.match(workflow, /dev-delivery-warrant\.mjs "\$\{args\[@\]\}"/u);
   assert.match(workflow, /settle[\s\S]*--pull-request "\$\{EXPECTED_PR\}"[\s\S]*--expected-source-head "\$\{EXPECTED_HEAD\}"/u);
+  assert.match(workflow, /successor-wake-json=.*\.receipt\.successorWake \/\/ null/u);
+  assert.match(workflow, /if: steps\.close\.outcome == 'success' && steps\.close\.outputs\.successor-wake-json != 'null'/u);
+  assert.match(workflow, /name: Wake exact queued successor[\s\S]*buildchain-dev-delivery-wake[\s\S]*repos\/\$\{GITHUB_REPOSITORY\}\/dispatches/u);
 });
 
 test("queued cancellation persists once and repeats as an exact no-op", async () => {
