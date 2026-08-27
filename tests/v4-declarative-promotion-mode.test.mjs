@@ -22,3 +22,14 @@ test("protected alpha v4 recovery selects only the declarative Provider Plane", 
     );
   }
 });
+
+test("declarative promotion receipt reads the retained passport hierarchy", () => {
+  assert.match(
+    workflow,
+    /promotion-evidence\/release-candidate\/passport\/release-candidate-passport\.json/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /promotion-evidence\/release-candidate\/release-candidate-passport\.json/,
+  );
+});
