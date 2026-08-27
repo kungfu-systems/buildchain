@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-cross-platform-adopter-qualification",
+  "inventoryAuthority": "architecture/v3-v4-live-capability-inventory.json",
+  "implementation": "packages/core/v4-cross-platform-adopter-qualification.js",
+  "runner": "scripts/v4-cross-platform-adopter-qualification.mjs",
+  "publicWorkflow": ".github/workflows/v4-adopter-delivery.yml",
+  "sourceBinding": {
+    "runtime": "job.workflow_sha",
+    "consumer": "github.sha",
+    "sameRuntimeAcrossMatrix": true,
+    "sameInventoryAcrossMatrix": true
+  },
+  "platforms": ["linux-x64", "macos-arm64", "windows-x64"],
+  "requiredConsumers": ["buildchain", "agent-hub-demo"],
+  "protocolNeutralDriver": {
+    "id": "ledger-specification-driver",
+    "fixture": "fixtures/ledger-specification-driver",
+    "test": "tests/non-kfd-specification-driver-clean-room.test.mjs",
+    "platformCoverage": ["linux-x64", "macos-arm64", "windows-x64"],
+    "kfdDependencyAllowed": false
+  },
+  "capabilityMatrix": {
+    "rawRowsRequired": true,
+    "everyCategoryRequired": true,
+    "sourceOnlyApplicability": "exact-source-route",
+    "residualMaximum": 0,
+    "unknownMaximum": 0,
+    "unownedMaximum": 0
+  },
+  "executedScenarios": [
+    "public-run",
+    "tampered-readback-failure",
+    "public-run-retry",
+    "terminal-exact-verify",
+    "n-minus-one-bootstrap",
+    "protocol-neutral-clean-room"
+  ],
+  "authority": {
+    "productionWrites": false,
+    "providerEffects": false,
+    "releaseEffects": false,
+    "stablePublication": false
+  }
+}

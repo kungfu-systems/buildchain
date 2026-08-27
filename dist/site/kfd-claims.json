@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "97347acd0ad7584a1bfccaf14c70570e3322c98a8dfcd4a7416790742a9972eb",
+    "sha256": "6246e6468276ebe91b3796aed2b23669174d533aa7bb4d52443ff45426780243",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 77,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "97347acd0ad7584a1bfccaf14c70570e3322c98a8dfcd4a7416790742a9972eb",
+      "sha256": "6246e6468276ebe91b3796aed2b23669174d533aa7bb4d52443ff45426780243",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 77,
@@ -1843,6 +1843,18 @@
           "participantFacing": true,
           "public": true,
           "packageExport": "./v4-adopter-delivery"
+        },
+        {
+          "id": "export:./v4-cross-platform-adopter-qualification",
+          "name": "@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification",
+          "kind": "package-export",
+          "sourcePath": "packages/core/v4-cross-platform-adopter-qualification.js",
+          "evidencePath": "packages/core/v4-cross-platform-adopter-qualification.js",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "packageExport": "./v4-cross-platform-adopter-qualification"
         },
         {
           "id": "export:./logging",
@@ -7470,6 +7482,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 480
+    "publicSurfaceCount": 481
   }
 }

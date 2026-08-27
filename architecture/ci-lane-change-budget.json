@@ -234,6 +234,23 @@
         "expectedContributionSeconds": 0,
         "rationale": "The explicit dogfood run proves hosted provider publication and checkpoint resume without joining pull-request checks."
       }
+    },
+    {
+      "laneId": ".github/workflows/v4-adopter-delivery.yml#qualification",
+      "authorityClass": "evidence",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "public adopter qualification completion latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The lane only reconciles already-produced rooted platform reports and grants no provider, release, or stable publication authority."
+      }
     }
   ]
 }

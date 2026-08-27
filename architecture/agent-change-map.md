@@ -689,11 +689,14 @@ Owner: Buildchain adopter delivery maintainers
 - `packages/core/published-delivery-authority.js`
 - `packages/core/v4-adopter-delivery.js`
 - `packages/core/v4-adopter-delivery-parity.js`
+- `packages/core/v4-cross-platform-adopter-qualification.js`
+- `scripts/v4-cross-platform-adopter-qualification.mjs`
 - `crates/buildchain-v4-contracts/src/adopter_delivery.rs`
 
 ### Contracts
 
 - `architecture/v4-adopter-delivery-parity.json`
+- `architecture/v4-cross-platform-adopter-qualification.json`
 - `contracts/v4-adopter-delivery-v1.schema.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/archive-template.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json`
@@ -708,6 +711,8 @@ Owner: Buildchain adopter delivery maintainers
 
 - `tests/v4-adopter-delivery.test.mjs`
 - `tests/v4-adopter-delivery-parity.test.mjs`
+- `tests/v4-cross-platform-adopter-qualification.test.mjs`
+- `tests/non-kfd-specification-driver-clean-room.test.mjs`
 
 ### Generated outputs
 
@@ -715,7 +720,7 @@ Owner: Buildchain adopter delivery maintainers
 
 ### Minimal validation
 
-- `node --test tests/v4-adopter-delivery.test.mjs tests/v4-adopter-delivery-parity.test.mjs`
+- `node --test tests/v4-adopter-delivery.test.mjs tests/v4-adopter-delivery-parity.test.mjs tests/v4-cross-platform-adopter-qualification.test.mjs tests/non-kfd-specification-driver-clean-room.test.mjs`
 
 ## v4-architecture-governance
 

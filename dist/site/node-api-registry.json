@@ -25421,6 +25421,218 @@
       ]
     },
     {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#createV4CrossPlatformAdopterReport",
+      "name": "createV4CrossPlatformAdopterReport",
+      "kind": "function",
+      "signature": "function createV4CrossPlatformAdopterReport(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 259
+      },
+      "example": "import { createV4CrossPlatformAdopterReport } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#qualifyV4CrossPlatformAdopters",
+      "name": "qualifyV4CrossPlatformAdopters",
+      "kind": "function",
+      "signature": "function qualifyV4CrossPlatformAdopters({ reports, consumers })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ reports, consumers }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 270
+      },
+      "example": "import { qualifyV4CrossPlatformAdopters } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#summarizeV3V4CapabilityInventory",
+      "name": "summarizeV3V4CapabilityInventory",
+      "kind": "function",
+      "signature": "function summarizeV3V4CapabilityInventory(inventory)",
+      "parameters": [
+        {
+          "name": "inventory",
+          "signature": "inventory"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 39
+      },
+      "example": "import { summarizeV3V4CapabilityInventory } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_PLATFORMS",
+      "name": "V4_CROSS_PLATFORM_ADOPTER_PLATFORMS",
+      "kind": "constant",
+      "signature": "const V4_CROSS_PLATFORM_ADOPTER_PLATFORMS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 7
+      },
+      "example": "import { V4_CROSS_PLATFORM_ADOPTER_PLATFORMS } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT",
+      "name": "V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 5
+      },
+      "example": "import { V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT",
+      "name": "V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 3
+      },
+      "example": "import { V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_NEUTRAL_DRIVER",
+      "name": "V4_CROSS_PLATFORM_NEUTRAL_DRIVER",
+      "kind": "constant",
+      "signature": "const V4_CROSS_PLATFORM_NEUTRAL_DRIVER",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 12
+      },
+      "example": "import { V4_CROSS_PLATFORM_NEUTRAL_DRIVER } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#validateV4CrossPlatformAdopterReport",
+      "name": "validateV4CrossPlatformAdopterReport",
+      "kind": "function",
+      "signature": "function validateV4CrossPlatformAdopterReport(report)",
+      "parameters": [
+        {
+          "name": "report",
+          "signature": "report"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 222
+      },
+      "example": "import { validateV4CrossPlatformAdopterReport } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/v4-floating-consumer-evidence.js#certifyV4FloatingConsumerPolicyReceipt",
       "name": "certifyV4FloatingConsumerPolicyReceipt",
       "kind": "function",
@@ -29851,6 +30063,36 @@
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     },
     {
+      "specifier": "@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification",
+      "export": "./v4-cross-platform-adopter-qualification",
+      "target": "./packages/core/v4-cross-platform-adopter-qualification.js",
+      "digest": "sha256:5632da352725ecd3f06e06bd7772ede824c76fffeb91c123495be2f6818ea8e8",
+      "summary": "Exact-source v3 capability matrix reports, executed failure and recovery evidence, and cross-platform public adopter qualification APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 8,
+      "symbolIds": [
+        "packages/core/v4-cross-platform-adopter-qualification.js#createV4CrossPlatformAdopterReport",
+        "packages/core/v4-cross-platform-adopter-qualification.js#qualifyV4CrossPlatformAdopters",
+        "packages/core/v4-cross-platform-adopter-qualification.js#summarizeV3V4CapabilityInventory",
+        "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_PLATFORMS",
+        "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT",
+        "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT",
+        "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_NEUTRAL_DRIVER",
+        "packages/core/v4-cross-platform-adopter-qualification.js#validateV4CrossPlatformAdopterReport"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
       "specifier": "@kungfu-tech/buildchain/logging",
       "export": "./logging",
       "target": "./packages/core/logging.js",
@@ -30897,7 +31139,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:fbfa6187b2cb6994018f7c6bce63acff71b8663e43397df4576ba8aeb402d7ee"
+      "digest": "sha256:246ef4b3cfc157c02bdd1586004e86b16c1b5ae6150c3bcf3d40f920110bd620"
     },
     {
       "id": "build-facts",
