@@ -17,7 +17,7 @@ export const V3_V4_CAPABILITY_INVENTORY_CONTRACT =
 export const V3_V4_CAPABILITY_CUTS = Object.freeze({
   priorFamilyV3: "6b96bdad8d9f8ccf9275f27d9370a226a9c78465",
   liveV3: "88d089b9c69dd08be00f120d623447ae881f1374",
-  liveV4: "ccf17396f5347a609e57045b9e7d94a2758bd17c",
+  liveV4: "b898305ba82e020ed959673be7f6e93b6b606342",
 });
 
 const INVENTORY_PATH = "architecture/v3-v4-live-capability-inventory.json";
@@ -92,6 +92,25 @@ function capabilityCutAvailable(root, revision) {
   }
 }
 
+export function assertCapabilityCutAncestor({
+  root = process.cwd(),
+  revision,
+  descendant = "HEAD",
+  label = "capability cut",
+} = {}) {
+  try {
+    execFileSync(
+      "git",
+      ["merge-base", "--is-ancestor", revision, descendant],
+      { cwd: root, stdio: "ignore" },
+    );
+  } catch {
+    throw new Error(
+      `${label} ${revision} must be an ancestor of ${descendant}; regenerate the cut after rebasing instead of relying on a retained local object`,
+    );
+  }
+}
+
 function ensureCapabilityCutsAvailable(root) {
   const revisions = Object.values(V3_V4_CAPABILITY_CUTS);
   const missing = revisions.filter(
@@ -112,6 +131,11 @@ function ensureCapabilityCutsAvailable(root) {
       `v3/v4 capability cuts are unavailable after a bounded origin fetch: ${unavailable.join(", ")}`,
     );
   }
+  assertCapabilityCutAncestor({
+    root,
+    revision: V3_V4_CAPABILITY_CUTS.liveV4,
+    label: "live v4 capability cut",
+  });
 }
 const RUNTIME_SYMBOLS = Object.freeze([
   "createPublicationRehearsalCapsule",

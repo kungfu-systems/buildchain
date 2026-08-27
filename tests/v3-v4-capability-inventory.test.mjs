@@ -3,9 +3,29 @@ import fs from "node:fs";
 import test from "node:test";
 
 import {
+  V3_V4_CAPABILITY_CUTS,
+  assertCapabilityCutAncestor,
   assertV3V4CapabilityInventory,
   buildV3V4CapabilityInventory,
 } from "../scripts/check-v3-v4-capability-inventory.mjs";
+
+test("live v4 cut is reachable from the checked candidate", () => {
+  assert.doesNotThrow(() =>
+    assertCapabilityCutAncestor({
+      revision: V3_V4_CAPABILITY_CUTS.liveV4,
+      label: "live v4 capability cut",
+    }),
+  );
+  assert.throws(
+    () =>
+      assertCapabilityCutAncestor({
+        revision: "HEAD",
+        descendant: V3_V4_CAPABILITY_CUTS.liveV4,
+        label: "reversed test cut",
+      }),
+    /must be an ancestor/u,
+  );
+});
 
 test("live v3 inventory covers every declared category with no unknown or unowned capability", () => {
   const inventory = buildV3V4CapabilityInventory({ root: process.cwd() });
