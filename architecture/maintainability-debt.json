@@ -1351,10 +1351,10 @@
       },
       "scripts/check-inventory.mjs": {
         "baseline": {
-          "lines": 1497
+          "lines": 1515
         },
         "current": {
-          "lines": 1497
+          "lines": 1515
         },
         "target": {
           "lines": 600

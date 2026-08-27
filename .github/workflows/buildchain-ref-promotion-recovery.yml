@@ -34,7 +34,6 @@ on:
         description: "Exact durable publication transaction identity; required only when resuming a sealed candidate"
       release-passport-v4-runtime-resume-evidence-json:
         description: "Optional precomputed runtime A+B Stage Capsule resume evidence JSON"
-
 permissions:
   contents: read
 jobs:
@@ -228,8 +227,8 @@ jobs:
   promote-alpha-recovery:
     name: Resume sealed v4 candidate through the advanced shell
     needs: consumer-admission
-    # Bounded bootstrap: the advanced shell authorizes an exact runtime while durable consumers stay floating.
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0
+    # Bounded bootstrap: v4-alpha retains the schema-compatible legacy channel transaction until floating readback converges.
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write
@@ -261,6 +260,7 @@ jobs:
       buildchain-contract-lock-path: ${{ needs.consumer-admission.outputs.contract-lock-path }}
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
+      declarative-release-tail: true
       channel: ${{ needs.consumer-admission.outputs.publication-channel }}
       target-ref: ${{ inputs['target-ref'] }}
       target-sha: ${{ inputs.sha }}

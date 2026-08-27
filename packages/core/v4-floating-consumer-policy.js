@@ -27,7 +27,7 @@ const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
 const BUILDCHAIN_REPOSITORY = "kungfu-systems/buildchain";
 const CHANNELS = Object.freeze({ v4: "stable", "v4-alpha": "alpha" });
 const ALPHA_RECOVERY_BOOTSTRAP = Object.freeze({
-  selector: "alpha/v4/v4.0",
+  selector: "v4-alpha",
   sourcePath: ".github/workflows/buildchain-ref-promotion-recovery.yml",
   workflow: ".github/workflows/.release-candidate-promote.yml",
 });
@@ -295,14 +295,18 @@ function classifyBuildchainUses(records, failures, { repository } = {}) {
       EXACT_SHA.test(parsed.selector.toLowerCase()) ||
       parsed.selector.includes("${{");
     if (!v4Candidate) continue;
-    const protectedBootstrap =
-      repository === BUILDCHAIN_REPOSITORY &&
+    const bootstrapShape =
       normalizeWorkflowPath(parsed.path) ===
         ALPHA_RECOVERY_BOOTSTRAP.workflow &&
       record.sourcePath === ALPHA_RECOVERY_BOOTSTRAP.sourcePath &&
       parsed.selector === ALPHA_RECOVERY_BOOTSTRAP.selector;
+    const protectedBootstrap =
+      repository === BUILDCHAIN_REPOSITORY && bootstrapShape;
+    const unauthorizedBootstrap =
+      repository !== BUILDCHAIN_REPOSITORY && bootstrapShape;
     const channel =
-      CHANNELS[parsed.selector] || (protectedBootstrap ? "alpha" : "");
+      !unauthorizedBootstrap &&
+      (CHANNELS[parsed.selector] || (protectedBootstrap ? "alpha" : ""));
     uses.push({
       ...record,
       ...parsed,
