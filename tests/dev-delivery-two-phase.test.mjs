@@ -431,6 +431,43 @@ test("qualified dequeue closes the exact attempt and wakes its successor", () =>
   assert.equal(successor.warrant.pullRequestNumber, 402);
 });
 
+test("historical phase-less dequeue closes instead of inheriting provisional retention", () => {
+  const initial = createDevDeliveryQueue({
+    repository: "kungfu-systems/buildchain",
+    protectedBase: "dev/v3/v3.0",
+    policy: { leaseSeconds: 120 },
+    now: "2026-08-11T00:00:00Z",
+  });
+  const submitted = submitDevDeliveryCandidate(
+    initial,
+    candidate(403, {
+      deliveryClass: "non-native-fast",
+      environmentRoot: undefined,
+      nativeCommandContract: undefined,
+    }),
+    { now: "2026-08-11T00:00:01Z" },
+  );
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-11T00:00:02Z",
+  });
+  assert.equal(Object.hasOwn(selected.warrant, "phase"), false);
+  const closed = settleDevDeliveryTerminalEvent(
+    selected.queue,
+    {
+      pullRequestNumber: 403,
+      sourceHead: SOURCE_HEAD,
+      fencingToken: selected.warrant.fencingToken,
+      leaseGeneration: selected.warrant.generation,
+      outcome: "dequeued",
+      evidenceRoot: ROOT("f"),
+      reason: "historical phase-less transient dequeue",
+    },
+    { now: "2026-08-11T00:01:00Z" },
+  );
+  assert.equal(closed.receipt.action, "terminal-closeout");
+  assert.equal(closed.queue.activeWarrant, null);
+});
+
 test("native proof timestamp is observational while semantic evidence is rooted", () => {
   const first = nativeProof();
   const second = nativeProof({ qualifiedAt: "2026-08-11T00:00:45Z" });

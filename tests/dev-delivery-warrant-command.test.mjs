@@ -338,7 +338,7 @@ test("terminal workflow resolves active fencing or an explicit settlement no-op"
   assert.match(workflow, /dev-delivery-warrant\.mjs "\$\{args\[@\]\}"/u);
   assert.match(
     workflow,
-    /settle[\s\S]*--pull-request "\$\{EXPECTED_PR\}"[\s\S]*--expected-source-head "\$\{EXPECTED_HEAD\}"/u,
+    /settle[\s\S]*--pull-request "\$\{EXPECTED_PR\}"[\s\S]*--expected-source-head "\$\{EXPECTED_HEAD\}"[\s\S]*successor-wake-json=.*\.receipt\.successorWake \/\/ null[\s\S]*name: Wake exact queued successor[\s\S]*buildchain-dev-delivery-wake[\s\S]*repos\/\$\{GITHUB_REPOSITORY\}\/dispatches/u,
   );
 });
 
