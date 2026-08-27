@@ -2134,41 +2134,6 @@
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/compatibility_facts/verifier.rs": {
-        "baseline": {
-          "functions": {
-            "load_bundle@159": {
-              "complexity": 38
-            },
-            "verify_path_inner@316": {
-              "lines": 216,
-              "complexity": 68
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "load_bundle@159": {
-              "complexity": 38
-            },
-            "verify_path_inner@316": {
-              "lines": 216,
-              "complexity": 68
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "load_bundle@159": {
-              "complexity": 30
-            },
-            "verify_path_inner@316": {
-              "lines": 140,
-              "complexity": 30
-            }
-          }
-        }
-      },
       "crates/buildchain-v4-contracts/src/main.rs": {
         "baseline": {
           "functions": {
