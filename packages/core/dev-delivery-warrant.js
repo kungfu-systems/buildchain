@@ -589,7 +589,7 @@ export function closeDevDeliveryWarrant(queueInput, warrant, { outcome, evidence
   if (!TERMINAL_STATES.has(normalizedOutcome)) {
     throw new Error(`outcome must be one of ${[...TERMINAL_STATES].join(", ")}`);
   }
-  if (normalizedOutcome === "dequeued") {
+  if (normalizedOutcome === "dequeued" && queueInput.activeWarrant?.phase !== "qualified") {
     throw new Error("transient dequeue cannot close an active Delivery Warrant");
   }
   const transaction = transition(
