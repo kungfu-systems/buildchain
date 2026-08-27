@@ -11,6 +11,15 @@ export const OTHER_SHA = "b".repeat(40);
 export const signedGeneratedCommitMessage = (message) =>
   `${message}\n\n${GENERATED_COMMIT_SIGN_OFF}`;
 
+export function packageManifest(version, overrides = {}) {
+  return {
+    name: "@kungfu-tech/buildchain",
+    version,
+    packageManager: "pnpm@11.7.0",
+    ...overrides,
+  };
+}
+
 export function productionImpactJson({
   tag = "v1.0.0",
   line = "v1.0",
@@ -120,10 +129,13 @@ export function createGitMock({ refs = new Map(), orderFile = "" } = {}) {
         },
         createTree: async ({ tree, base_tree: baseTree }) => {
           const sha = `tree-created-${++treeCount}`;
-          const entries = baseTree && trees.has(baseTree) ? [...trees.get(baseTree)] : [];
+          const entries =
+            baseTree && trees.has(baseTree) ? [...trees.get(baseTree)] : [];
           for (const entry of tree) {
             const nextEntry = { ...entry };
-            const index = entries.findIndex((existing) => existing.path === nextEntry.path);
+            const index = entries.findIndex(
+              (existing) => existing.path === nextEntry.path,
+            );
             if (index >= 0) {
               entries[index] = nextEntry;
             } else {
@@ -171,7 +183,9 @@ export function makeTempWorkspace(files) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(
       filePath,
-      typeof content === "string" ? content : JSON.stringify(content, null, 2) + "\n",
+      typeof content === "string"
+        ? content
+        : JSON.stringify(content, null, 2) + "\n",
     );
   }
   return cwd;

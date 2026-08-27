@@ -42,6 +42,7 @@
     "scripts/paper-work-fleet-cli.mjs",
     "scripts/run-lifecycle-core.mjs",
     "scripts/resolve-artifact-transfer-mode.mjs",
+    "scripts/resolve-build-summary-names.sh",
     "scripts/release-propagation.mjs",
     "scripts/engineering-housekeeper-workflow.mjs",
     "scripts/release-tail.mjs",
@@ -227,7 +228,6 @@
       "id": "promotion-version-state",
       "owner": "Buildchain maintainers",
       "implementation": [
-        "actions/promote-buildchain-ref/internal/existing-version-state.js",
         "actions/promote-buildchain-ref/internal/version-state.js",
         "actions/promote-buildchain-ref/internal/version-state-operations.js"
       ],
@@ -251,7 +251,8 @@
       "implementation": [
         "actions/promote-buildchain-ref/internal/durable-transaction-store.js",
         "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
-        "actions/promote-buildchain-ref/internal/github-adapter.js"
+        "actions/promote-buildchain-ref/internal/github-adapter.js",
+        "actions/promote-buildchain-ref/internal/promotion-operations.js"
       ],
       "tests": [
         "tests/promote-buildchain-ref.test.mjs",
@@ -363,10 +364,13 @@
       "implementation": [
         "scripts/generate-channel-build-workflow.mjs",
         "scripts/resolve-artifact-transfer-mode.mjs",
+        "scripts/resolve-build-summary-names.sh",
         "scripts/run-lifecycle-core.mjs"
       ],
       "tests": [
         "tests/artifact-transfer-mode.test.mjs",
+        "tests/resolve-build-summary-names.test.mjs",
+        "tests/build-surface-reusable-build-artifacts.test.mjs",
         "tests/build-surface.test.mjs",
         "tests/build-surface-promotion.test.mjs",
         "tests/controller-evidence.test.mjs"
@@ -380,7 +384,7 @@
         "actions/run-lifecycle/dist/index.js"
       ],
       "validationCommands": [
-        "node --test tests/artifact-transfer-mode.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs"
+        "node --test tests/artifact-transfer-mode.test.mjs tests/resolve-build-summary-names.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs"
       ]
     },
     {
