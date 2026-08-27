@@ -117,7 +117,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/native-artifact-signing-authority.test.mjs`
 - tests: `tests/paper.test.mjs`
 - tests: `tests/promote-buildchain-ref-governance.test.mjs`
-- tests: `tests/promote-buildchain-ref-recovery.test.mjs`
 - tests: `tests/promote-buildchain-ref.test.mjs`
 - tests: `tests/publication-authority.test.mjs`
 - tests: `tests/publish-transaction.test.mjs`
@@ -130,6 +129,13 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/v4-floating-consumer-policy.test.mjs`
 - tests: `tests/v4-publication-rehearsal.test.mjs`
 - tests: `tests/web-surface.test.mjs`
+- tests: `tests/build-surface-reusable-build.test.mjs`
+- tests: `tests/build-surface-reusable-build-signing.test.mjs`
+- tests: `tests/build-surface-reusable-build-artifacts.test.mjs`
+- tests: `tests/promote-buildchain-ref-durable-recovery.test.mjs`
+- tests: `tests/promote-buildchain-ref-major-promotion.test.mjs`
+- tests: `tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs`
+- tests: `tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs`
 - workflows: `.github/workflows/.build.yml`
 - workflows: `.github/workflows/.gate-profile.yml`
 - workflows: `.github/workflows/.publication-authority.yml`
