@@ -118,11 +118,11 @@ function qualifyingInput(overrides = {}) {
 test("authority descriptor freezes the TCB, baseline, plan boundary, and non-claims", () => {
   const descriptor = BUILDCHAIN_GITHUB_GOVERNANCE_AUTHORITY;
   assert.equal(descriptor.organization, "kungfu-systems");
-  assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 16);
+  assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 17);
   assert.deepEqual(descriptor.repositoryAdmission.managedVisibilities, ["public"]);
-  assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 16);
+  assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 17);
   assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 0);
-  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 49);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 52);
   assert.deepEqual(descriptor.planCapability.privateRepositories, []);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
@@ -417,14 +417,14 @@ test("authoritative target registry detects default drift and constrains private
     "release/v0/v0.1",
   ]);
 
-  const runtimeImageTargets = resolveGithubGovernanceTargetRefs({
+  const taoluTargets = resolveGithubGovernanceTargetRefs({
     repository: {
-      fullName: "kungfu-systems/runtime-images",
+      fullName: "kungfu-systems/taolu",
       visibility: "public",
       defaultBranch: "dev/v1/v1.0",
     },
   });
-  assert.deepEqual(runtimeImageTargets, ["alpha/v1/v1.0", "dev/v1/v1.0"]);
+  assert.deepEqual(taoluTargets, ["alpha/v1/v1.0", "dev/v1/v1.0", "release/v1/v1.0"]);
 
   const organizationProfileTargets = resolveGithubGovernanceTargetRefs({
     repository: {
