@@ -1643,20 +1643,10 @@
       "rationale": "The single transaction executor preserves bounded retry, pre-effect and post-effect readback, atomic checkpoints and provider non-authority from the reviewed v3 implementation; these exact ceilings cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "actions/promote-buildchain-ref/internal/promotion-operations.js#createRefMutationOperations": {
-      "maxLines": 648,
-      "rationale": "The ref and provider mutation factory is transplanted byte-for-byte behind explicit dependency injection; independently tested and prevented from growing beyond this exact extraction point.",
-      "governance": "stage3-promotion-facade-reduction"
-    },
     "actions/promote-buildchain-ref/internal/promotion-operations.js#updateBranch": {
       "maxLines": 378,
       "maxComplexity": 34,
       "rationale": "The nested protected-ref update transaction retains exact readback, status-check, merge, PR fallback and non-fast-forward behavior under the extracted factory; these inherited ceilings cannot grow.",
-      "governance": "stage3-promotion-facade-reduction"
-    },
-    "actions/promote-buildchain-ref/internal/promotion-operations.js#createReconciliationOperations": {
-      "maxLines": 672,
-      "rationale": "The reconciliation factory is transplanted byte-for-byte behind explicit dependency injection; isolated from orchestration and prevented from growing beyond this exact extraction point.",
       "governance": "stage3-promotion-facade-reduction"
     },
     "actions/promote-buildchain-ref/internal/promotion-operations.js#assertReleasePrOrVersionStateParent": {
@@ -1706,8 +1696,8 @@
   "selectedFunctionBudgets": {
     "promoteBuildchainRefs": {
       "file": "actions/promote-buildchain-ref/lib.js",
-      "lines": 260,
-      "complexity": 46
+      "lines": 3,
+      "complexity": 1
     },
     "createReleaseCheckReport": {
       "file": "packages/core/release-passport.js",

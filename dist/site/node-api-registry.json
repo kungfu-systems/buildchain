@@ -18501,7 +18501,7 @@
       ],
       "source": {
         "path": "packages/core/publication-control-plane-audit.js",
-        "line": 75
+        "line": 245
       },
       "example": "import { evaluatePublicationControlPlaneSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -30375,7 +30375,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
       "export": "./publication-control-plane-audit",
       "target": "./packages/core/publication-control-plane-audit.js",
-      "digest": "sha256:a2d207047837abddf9d1f2b728b5a730467917444cbcb2221310f8c45fe0ce5d",
+      "digest": "sha256:42e9a3877827801ed97b8940382f0780826bc148611077e30b314dcfda8a76ee",
       "summary": "Read-only publication control-plane snapshot evaluation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -31139,7 +31139,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:b5b92af47668cfccc94f120c1199e7600417c81e5e841e18ede593371f6c4717"
+      "digest": "sha256:c3e96c32dcc1a7790ad0a4a13edc0b5add38845950e9e4b7155e2f1aaa8f722c"
     },
     {
       "id": "build-facts",

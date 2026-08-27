@@ -1804,244 +1804,205 @@ function generateReleaseEvidenceInputs({
     return resolved;
   });
 }
-async function collectAndPersistReleasePassport({
-  result,
-  owner,
-  repo,
-  cwd,
-  sourceSha,
-  targetRef,
-  channel,
-  line,
-  packageName,
-  outputDir,
-  productName,
-  buildSummaryPath,
-  platformManifestPaths = [],
-  impactJson = "",
-  promotionRoutingJson = "",
-  v4ConsumerPolicyCertificationJson = "",
-  v4ConsumerPolicyCertificationRoot = "",
-  v4RuntimeResumeEvidenceJson = "",
-  v4RuntimeResumeEvidenceCommand = "",
-  v4RuntimeResumeEvidenceCommandCwd = cwd,
-  kfd1WitnessJsons = [],
-  kfd2ClaimJsons = [],
-  kfd3PrebuildWitnessJsons = [],
-  kfd3ArtifactWitnessJsons = [],
-  kfd3ArtifactVerifyCommand = "",
-  kfdAdopterManifestJson = "",
-  kfdSupportMatrixJson = "",
-  kfdProductGateJsons = [],
-  invariantPassportJsons = [],
-  invariantPassportCommand = "",
-  releaseEvidenceJsons = [],
-  releaseEvidenceCommand = "",
-  buildchainSelfKfd = false,
-  githubArtifactAttestationPolicyJsons = [],
-  enabled = true,
-  releaseCandidateValidation = undefined,
-}) {
-  if (!enabled || !result?.transaction || result.transaction.state !== "complete") {
-    return result;
-  }
-  if (!result.evidencePath || !fs.existsSync(result.evidencePath)) {
-    return result;
-  }
-  const resolvedOutputDir = path.resolve(cwd, outputDir || ".buildchain/release-passport",
-  );
-  const resolvedBuildSummary = buildSummaryPath
-    ? resolveMaybeRelative(cwd, buildSummaryPath)
-    : path.resolve(cwd, ".buildchain/artifacts/build-summary.json");
-  const configuredManifests = existingFiles(platformManifestPaths, cwd);
-  const buildSummaryJson = existingJsonObjectFile(resolvedBuildSummary);
-  const derivedManifests = buildSummaryJson
-    ? platformManifestPathsFromBuildSummary(buildSummaryJson, cwd)
-    : [];
-  const platformManifests = [...new Set([...configuredManifests, ...derivedManifests]),
-  ];
-  const loadedConfig = loadBuildchainConfig(cwd);
-  const anchorManifest = loadConfiguredAnchorManifest(cwd, loadedConfig);
-  const anchorManifestPath = anchorManifest?.path ? path.resolve(cwd, anchorManifest.path) : "";
-  const transactionJson = {
-    command: "finalize",
-    transaction: result.transaction,
-    validation: result.validation || { valid: true, errors: [] },
+function normalizeReleasePassportOptions(options) {
+  const normalized = { ...options };
+  const defaults = {
+    platformManifestPaths: [], impactJson: "", promotionRoutingJson: "",
+    v4ConsumerPolicyCertificationJson: "", v4ConsumerPolicyCertificationRoot: "",
+    v4RuntimeResumeEvidenceJson: "", v4RuntimeResumeEvidenceCommand: "", kfd1WitnessJsons: [],
+    kfd2ClaimJsons: [], kfd3PrebuildWitnessJsons: [], kfd3ArtifactWitnessJsons: [],
+    kfd3ArtifactVerifyCommand: "", kfdAdopterManifestJson: "", kfdSupportMatrixJson: "",
+    kfdProductGateJsons: [], invariantPassportJsons: [], invariantPassportCommand: "",
+    releaseEvidenceJsons: [], releaseEvidenceCommand: "", buildchainSelfKfd: false,
+    githubArtifactAttestationPolicyJsons: [], enabled: true,
   };
-  const passportSourceSha = result.transaction.source_sha || sourceSha;
+  for (const [key, value] of Object.entries(defaults)) {
+    if (normalized[key] === undefined) normalized[key] = value;
+  }
+  if (normalized.v4RuntimeResumeEvidenceCommandCwd === undefined) {
+    normalized.v4RuntimeResumeEvidenceCommandCwd = normalized.cwd;
+  }
+  return normalized;
+}
+function parsePromotionRouting(cwd, value) {
+  if (!String(value || "").trim()) return undefined;
+  const candidate = resolveMaybeRelative(cwd, value);
+  return fs.existsSync(candidate)
+    ? JSON.parse(fs.readFileSync(candidate, "utf8"))
+    : JSON.parse(value);
+}
+function configuredOrGenerated(configured, generated = []) {
+  return configured.length > 0 ? configured : generated;
+}
+function prepareReleasePassport(options) {
+  const result = options.result;
+  const resolvedOutputDir = path.resolve(options.cwd, options.outputDir || ".buildchain/release-passport");
+  const resolvedBuildSummary = options.buildSummaryPath
+    ? resolveMaybeRelative(options.cwd, options.buildSummaryPath)
+    : path.resolve(options.cwd, ".buildchain/artifacts/build-summary.json");
+  const buildSummaryJson = existingJsonObjectFile(resolvedBuildSummary);
+  const configuredManifests = existingFiles(options.platformManifestPaths, options.cwd);
+  const derivedManifests = buildSummaryJson
+    ? platformManifestPathsFromBuildSummary(buildSummaryJson, options.cwd)
+    : [];
+  const platformManifests = [...new Set([...configuredManifests, ...derivedManifests])];
+  const anchorManifest = loadConfiguredAnchorManifest(options.cwd, loadBuildchainConfig(options.cwd));
+  const anchorManifestPath = anchorManifest?.path ? path.resolve(options.cwd, anchorManifest.path) : "";
+  const passportSourceSha = result.transaction.source_sha || options.sourceSha;
   const internalVersion = stripTagPrefix(result.transaction.exact_tag || "");
   const publishedVersion = result.transaction.version || internalVersion;
   const publicReleaseTag = publicReleaseTagForTransaction(result.transaction);
-  const generatedReleaseEvidenceJsons = generateReleaseEvidenceInputs({
-    command: releaseEvidenceCommand,
-    cwd,
+  const releaseCoordinates = {
     sourceSha: passportSourceSha,
     tag: publicReleaseTag,
-    channel,
+    channel: options.channel,
     version: publishedVersion,
-    deploymentCoordinate: `github-release:${owner}/${repo}@${publicReleaseTag}`,
-    targetRef,
+    deploymentCoordinate: `github-release:${options.owner}/${options.repo}@${publicReleaseTag}`,
+    targetRef: options.targetRef,
     outputDir: resolvedOutputDir,
-  });
+  };
+  const generatedReleaseEvidenceJsons = generateReleaseEvidenceInputs({ command: options.releaseEvidenceCommand, cwd: options.cwd, ...releaseCoordinates });
   const generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs({
-    command: v4RuntimeResumeEvidenceCommand,
-    cwd: v4RuntimeResumeEvidenceCommandCwd,
-    sourceSha: passportSourceSha,
-    tag: publicReleaseTag,
-    channel,
-    version: publishedVersion,
-    deploymentCoordinate: `github-release:${owner}/${repo}@${publicReleaseTag}`,
-    targetRef,
-    outputDir: resolvedOutputDir,
+    command: options.v4RuntimeResumeEvidenceCommand,
+    cwd: options.v4RuntimeResumeEvidenceCommandCwd,
+    ...releaseCoordinates,
     extraEnv: {
-      BUILDCHAIN_V4_RUNTIME_RESUME_MATERIAL: path.resolve(
-        v4RuntimeResumeEvidenceCommandCwd,
-        ".buildchain/release-candidate/v4-runtime-resume-material.json",
-      ),
+      BUILDCHAIN_V4_RUNTIME_RESUME_MATERIAL: path.resolve(options.v4RuntimeResumeEvidenceCommandCwd, ".buildchain/release-candidate/v4-runtime-resume-material.json"),
       BUILDCHAIN_RELEASE_TRANSACTION_JSON: JSON.stringify(result.transaction),
     },
   });
   if (generatedV4RuntimeResumeEvidence.length > 1) {
-    throw new Error(
-      "v4 runtime resume finalization must emit exactly one evidence file",
-    );
+    throw new Error("v4 runtime resume finalization must emit exactly one evidence file");
   }
   const inferredImpactJson = createTreeEquivalentReleaseImpact({
-    channel,
+    channel: options.channel,
     version: publishedVersion,
     tag: publicReleaseTag,
-    line,
-    releaseCandidateValidation,
+    line: options.line,
+    releaseCandidateValidation: options.releaseCandidateValidation,
   });
   const resolvedImpactJson = resolveReleaseImpactInput({
-    cwd,
-    impactJson: String(impactJson || "").trim() || inferredImpactJson,
+    cwd: options.cwd,
+    impactJson: String(options.impactJson || "").trim() || inferredImpactJson,
     version: publishedVersion,
-    line,
+    line: options.line,
   });
-  const promotionRouting = String(promotionRoutingJson || "").trim()
-    ? (() => {
-        const candidate = resolveMaybeRelative(cwd, promotionRoutingJson);
-        return fs.existsSync(candidate)
-          ? JSON.parse(fs.readFileSync(candidate, "utf8"))
-          : JSON.parse(promotionRoutingJson);
-      })()
+  const selfKfd = options.buildchainSelfKfd
+    ? generateBuildchainSelfKfdInputs({ cwd: options.cwd, sourceSha: passportSourceSha })
     : undefined;
-  const selfKfd = buildchainSelfKfd
-    ? generateBuildchainSelfKfdInputs({
-        cwd,
-        sourceSha: passportSourceSha,
-      })
-    : undefined;
-  const resolvedKfd1WitnessJsons = kfd1WitnessJsons.length > 0
-    ? kfd1WitnessJsons
-    : selfKfd?.kfd1WitnessJsons || [];
-  const resolvedKfd2ClaimJsons = kfd2ClaimJsons.length > 0
-    ? kfd2ClaimJsons
-    : selfKfd?.kfd2ClaimJsons || [];
-  const resolvedKfd3PrebuildWitnessJsons = kfd3PrebuildWitnessJsons.length > 0
-    ? kfd3PrebuildWitnessJsons
-    : selfKfd?.kfd3PrebuildWitnessJsons || [];
-  const resolvedKfd3ArtifactWitnessJsons = kfd3ArtifactWitnessJsons.length > 0
-    ? kfd3ArtifactWitnessJsons
-    : selfKfd?.kfd3ArtifactWitnessJsons || [];
-  const collected = collectGitHubReleasePassport({
-    cwd,
-    tag: publicReleaseTag,
-    repository: `${owner}/${repo}`,
-    sourceSha: passportSourceSha,
-    line,
-    outputDir: resolvedOutputDir,
-    productName: productName || "Buildchain",
-    packageName: packageName || result.packageSet?.main?.name || "@kungfu-tech/buildchain",
+  return {
+    resolvedOutputDir, buildSummaryJson, platformManifests, anchorManifestPath,
+    passportSourceSha, internalVersion, publishedVersion, publicReleaseTag,
+    generatedReleaseEvidenceJsons, generatedV4RuntimeResumeEvidence, resolvedImpactJson,
+    promotionRouting: parsePromotionRouting(options.cwd, options.promotionRoutingJson),
+    resolvedKfd1WitnessJsons: configuredOrGenerated(options.kfd1WitnessJsons, selfKfd?.kfd1WitnessJsons),
+    resolvedKfd2ClaimJsons: configuredOrGenerated(options.kfd2ClaimJsons, selfKfd?.kfd2ClaimJsons),
+    resolvedKfd3PrebuildWitnessJsons: configuredOrGenerated(options.kfd3PrebuildWitnessJsons, selfKfd?.kfd3PrebuildWitnessJsons),
+    resolvedKfd3ArtifactWitnessJsons: configuredOrGenerated(options.kfd3ArtifactWitnessJsons, selfKfd?.kfd3ArtifactWitnessJsons),
+  };
+}
+function trustedPublishingJson(result) {
+  if (result.publishContract?.auth !== "trusted-publishing") return "";
+  return JSON.stringify({
+    provider: "npm",
+    enabled: true,
+    auth: "trusted-publishing",
+    workflowRunId: result.transaction.run_id || "",
+  });
+}
+function releasePassportExtra(options, material) {
+  const validation = options.releaseCandidateValidation;
+  return JSON.stringify({
+    channel: options.channel,
+    targetRef: options.targetRef,
+    publicTag: material.publicReleaseTag,
+    internalTag: options.result.transaction.exact_tag,
+    internalVersion: material.internalVersion,
+    publishedVersion: material.publishedVersion,
+    versionLabel: material.publishedVersion || options.result.transaction.exact_tag,
+    releaseSha: options.result.transaction.release_sha,
+    releaseMaterialSha: options.result.transaction.release_material_sha,
+    ...(validation
+      ? {
+          builtSourceSha: validation.builtSourceSha,
+          builtSourceTreeSha: validation.builtSourceTreeSha,
+          promotionChannelSha: validation.promotionChannelSha,
+          promotionChannelTreeSha: validation.promotionChannelTreeSha,
+          treeEquivalent: validation.treeEquivalent,
+          ...(validation.gateProfileEvidence ? { gateProfileEvidence: validation.gateProfileEvidence } : {}),
+        }
+      : {}),
+    publishToolingSha: options.result.transaction.publish_tooling_sha,
+    releaseStateRef: `refs/heads/${options.result.transaction.state_ref}`,
+    ...(material.promotionRouting ? { promotionRouting: material.promotionRouting } : {}),
+  });
+}
+function releasePassportWorkflow(result) {
+  return {
+    name: process.env.GITHUB_WORKFLOW || "",
+    runId: result.transaction.run_id || "",
+    runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
+    url: process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && result.transaction.run_id
+      ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${result.transaction.run_id}`
+      : "",
+    runnerKind: process.env.BUILDCHAIN_RUNNER_KIND || "github-hosted",
+    runnerOs: process.env.RUNNER_OS || process.platform,
+    runnerArch: process.env.RUNNER_ARCH || process.arch,
+    runnerImage: process.env.ImageOS || "",
+  };
+}
+function collectReleasePassport(options, material) {
+  const result = options.result;
+  const transactionJson = { command: "finalize", transaction: result.transaction, validation: result.validation || { valid: true, errors: [] } };
+  return collectGitHubReleasePassport({
+    cwd: options.cwd,
+    tag: material.publicReleaseTag,
+    repository: `${options.owner}/${options.repo}`,
+    sourceSha: material.passportSourceSha,
+    line: options.line,
+    outputDir: material.resolvedOutputDir,
+    productName: options.productName || "Buildchain",
+    packageName: options.packageName || result.packageSet?.main?.name || "@kungfu-tech/buildchain",
     packageVersion: result.transaction.version,
     packageSetJson: result.packageSet ? JSON.stringify(result.packageSet) : "",
     publishEvidenceJson: result.evidencePath,
-    trustedPublishingJson: result.publishContract?.auth === "trusted-publishing"
-      ? JSON.stringify({
-          provider: "npm",
-          enabled: true,
-          auth: "trusted-publishing",
-          workflowRunId: result.transaction.run_id || "",
-        })
-      : "",
+    trustedPublishingJson: trustedPublishingJson(result),
     transactionJson: JSON.stringify(transactionJson),
-    anchorManifestJson: anchorManifestPath && fs.existsSync(anchorManifestPath) ? anchorManifestPath : "",
-    versionMaterialJson: result.versionMaterial
-      ? JSON.stringify(result.versionMaterial)
-      : "",
-    impactJson: resolvedImpactJson,
-    kfd1WitnessJsons: resolvedKfd1WitnessJsons,
-    kfd2ClaimJsons: resolvedKfd2ClaimJsons,
-    kfd3PrebuildWitnessJsons: resolvedKfd3PrebuildWitnessJsons,
-    kfd3ArtifactWitnessJsons: resolvedKfd3ArtifactWitnessJsons,
-    kfd3ArtifactVerifyCommand,
-    kfdAdopterManifestJson,
-    kfdSupportMatrixJson,
-    kfdProductGateJsons,
-    invariantPassportJsons,
-    invariantPassportCommand,
-    releaseEvidenceJsons: [
-      ...releaseEvidenceJsons,
-      ...generatedReleaseEvidenceJsons,
-    ],
-    v4ConsumerPolicyCertificationJson,
-    v4ConsumerPolicyCertificationRoot,
-    v4RuntimeResumeEvidenceJson:
-      generatedV4RuntimeResumeEvidence[0] || v4RuntimeResumeEvidenceJson,
-    githubArtifactAttestationPolicyJsons,
-    buildSummaryJson,
-    platformManifestJsons: platformManifests,
+    anchorManifestJson: material.anchorManifestPath && fs.existsSync(material.anchorManifestPath) ? material.anchorManifestPath : "",
+    versionMaterialJson: result.versionMaterial ? JSON.stringify(result.versionMaterial) : "",
+    impactJson: material.resolvedImpactJson,
+    kfd1WitnessJsons: material.resolvedKfd1WitnessJsons,
+    kfd2ClaimJsons: material.resolvedKfd2ClaimJsons,
+    kfd3PrebuildWitnessJsons: material.resolvedKfd3PrebuildWitnessJsons,
+    kfd3ArtifactWitnessJsons: material.resolvedKfd3ArtifactWitnessJsons,
+    kfd3ArtifactVerifyCommand: options.kfd3ArtifactVerifyCommand,
+    kfdAdopterManifestJson: options.kfdAdopterManifestJson,
+    kfdSupportMatrixJson: options.kfdSupportMatrixJson,
+    kfdProductGateJsons: options.kfdProductGateJsons,
+    invariantPassportJsons: options.invariantPassportJsons,
+    invariantPassportCommand: options.invariantPassportCommand,
+    releaseEvidenceJsons: [...options.releaseEvidenceJsons, ...material.generatedReleaseEvidenceJsons],
+    v4ConsumerPolicyCertificationJson: options.v4ConsumerPolicyCertificationJson,
+    v4ConsumerPolicyCertificationRoot: options.v4ConsumerPolicyCertificationRoot,
+    v4RuntimeResumeEvidenceJson: material.generatedV4RuntimeResumeEvidence[0] || options.v4RuntimeResumeEvidenceJson,
+    githubArtifactAttestationPolicyJsons: options.githubArtifactAttestationPolicyJsons,
+    buildSummaryJson: material.buildSummaryJson,
+    platformManifestJsons: material.platformManifests,
     distTagEvidenceJson: existingJsonObjectFile(result.distTagEvidencePath),
-    controllerReceiptReferences: releaseCandidateValidation?.controllerReceipts || [],
-    releaseJsonExtra: JSON.stringify({
-      channel,
-      targetRef,
-      publicTag: publicReleaseTag,
-      internalTag: result.transaction.exact_tag,
-      internalVersion,
-      publishedVersion,
-      versionLabel: publishedVersion || result.transaction.exact_tag,
-      releaseSha: result.transaction.release_sha,
-      releaseMaterialSha: result.transaction.release_material_sha,
-      ...(releaseCandidateValidation
-        ? {
-            builtSourceSha: releaseCandidateValidation.builtSourceSha,
-            builtSourceTreeSha: releaseCandidateValidation.builtSourceTreeSha,
-            promotionChannelSha: releaseCandidateValidation.promotionChannelSha,
-            promotionChannelTreeSha: releaseCandidateValidation.promotionChannelTreeSha,
-            treeEquivalent: releaseCandidateValidation.treeEquivalent,
-            ...(releaseCandidateValidation.gateProfileEvidence
-              ? {
-                  gateProfileEvidence: releaseCandidateValidation.gateProfileEvidence,
-                }
-              : {}),
-          }
-        : {}),
-      publishToolingSha: result.transaction.publish_tooling_sha,
-      releaseStateRef: `refs/heads/${result.transaction.state_ref}`,
-      ...(promotionRouting ? { promotionRouting } : {}),
-    }),
+    controllerReceiptReferences: options.releaseCandidateValidation?.controllerReceipts || [],
+    releaseJsonExtra: releasePassportExtra(options, material),
     publishJson: JSON.stringify({
       auth: result.publishContract?.auth || "",
       distTag: result.publishContract?.distTag || "",
       packageSetOrder: result.publishContract?.packageSetOrder || "",
       registry: "https://registry.npmjs.org/",
     }),
-    workflow: {
-      name: process.env.GITHUB_WORKFLOW || "",
-      runId: result.transaction.run_id || "",
-      runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
-      url: process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && result.transaction.run_id
-        ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${result.transaction.run_id}`
-        : "",
-      runnerKind: process.env.BUILDCHAIN_RUNNER_KIND || "github-hosted",
-      runnerOs: process.env.RUNNER_OS || process.platform,
-      runnerArch: process.env.RUNNER_ARCH || process.arch,
-      runnerImage: process.env.ImageOS || "",
-    },
+    workflow: releasePassportWorkflow(result),
   });
-  await verifyCollectedReleasePassport({ collected, cwd, phase: "generated" });
+}
+async function persistReleasePassport(options, material, collected) {
+  const result = options.result;
+  await verifyCollectedReleasePassport({ collected, cwd: options.cwd, phase: "generated" });
   const durable = await persistDurableReleaseTransaction({
     octokit: result.octokit,
     owner: result.owner,
@@ -2052,7 +2013,7 @@ async function collectAndPersistReleasePassport({
     extraFiles: releasePassportArtifactFiles(collected.outputDir),
   });
   backfillReleasePassportStateSha(collected.outputDir, durable?.sha || "");
-  await verifyCollectedReleasePassport({ collected, cwd, phase: "backfilled" });
+  await verifyCollectedReleasePassport({ collected, cwd: options.cwd, phase: "backfilled" });
   const finalDurable = await persistDurableReleaseTransaction({
     octokit: result.octokit,
     owner: result.owner,
@@ -2062,14 +2023,11 @@ async function collectAndPersistReleasePassport({
     evidencePath: result.evidencePath,
     extraFiles: releasePassportArtifactFiles(collected.outputDir),
   });
-  const persistedTransaction = writeReleaseTransaction(
-    result.statePath,
-    result.transaction,
-  );
+  const persistedTransaction = writeReleaseTransaction(result.statePath, result.transaction);
   return {
     ...result,
     transaction: persistedTransaction,
-    publicReleaseTag,
+    publicReleaseTag: material.publicReleaseTag,
     durable: finalDurable || durable,
     releasePassport: {
       outputDir: collected.outputDir,
@@ -2079,6 +2037,17 @@ async function collectAndPersistReleasePassport({
       files: collected.files,
     },
   };
+}
+async function collectAndPersistReleasePassport(rawOptions) {
+  const options = normalizeReleasePassportOptions(rawOptions);
+  const result = options.result;
+  if (!options.enabled || !result?.transaction || result.transaction.state !== "complete") {
+    return result;
+  }
+  if (!result.evidencePath || !fs.existsSync(result.evidencePath)) return result;
+  const material = prepareReleasePassport(options);
+  const collected = collectReleasePassport(options, material);
+  return persistReleasePassport(options, material, collected);
 }
 async function beginTransactionFinalization(result, actor, runId) {
   if (!result?.transaction || result.transaction.state === "finalizing" || result.transaction.state === "complete") {
@@ -3188,134 +3157,194 @@ const PROMOTION_RUNTIME = {
   transactionHasPublishedMaterial, uniquePaths, updateVersionStateContents,
   versionVerificationAllowedPathsForPromotion, versionVerificationEnv,
 };
-async function promoteBuildchainRefs({
-  octokit, owner, repo, sha, targetRef, tags,
-  dryRun = false, allowRepository = DEFAULT_REPOSITORY, cwd = process.cwd(),
-  versionState = true, requireVersionState = false, requireGovernance = false,
-  verificationCommand = "", requiredStatusCheck = "check",
-  statusCheckOctokit = octokit, pullRequestOctokit = octokit, refUpdateOctokit = octokit,
-  tagUpdateOctokit = octokit, branchProtectionBypassApps = "", branchProtectionBypassUsers = "",
-  branchProtectionBypassTeams = "", reconciliationWorkspace = "",
-  publishTransaction = false, publishCommand = "", publishEvidencePath = "",
-  transactionStatePath = "", expectedTransactionId = "",
-  publishSealedBundleRoot = "", publishSealedBundleManifest = "", publishRequiredArtifactsJson = "",
-  releaseMaterialSha = "", publishToolingSha = "", publishMode = "", publishAuth = "",
-  publishDistTag = "", publishPackageSetOrder = "", publishPackageMain = "",
-  publishRematerializeOnResume = false,
-  expectedPublicationVersion = "", requirePublicationQualification = false,
-  publicationCapabilityJson = "", publicationGateAggregateJson = "", publicationQualificationReceiptJson = "",
-  publicationUsedQualificationNoncesJson = "[]",
-  publicationQualificationNow, releasePassport = true,
-  releasePassportOutputDir = ".buildchain/release-passport",
-  releasePassportProductName = "Buildchain",
-  releasePassportBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
-  releasePassportPlatformManifestPaths = "", releasePassportImpactJson = "", releasePassportPromotionRoutingJson = "",
-  releasePassportV4ConsumerPolicyCertificationJson = "",
-  releasePassportV4ConsumerPolicyCertificationRoot = "", releasePassportV4RuntimeResumeEvidenceJson = "",
-  releasePassportV4RuntimeResumeEvidenceCommand = "",
-  releasePassportKfd1WitnessJsons = "", releasePassportKfd2ClaimJsons = "", releasePassportKfd3PrebuildWitnessJsons = "",
-  releasePassportKfd3ArtifactWitnessJsons = "",
-  releasePassportKfd3ArtifactVerifyCommand = "",
-  releasePassportKfdAdopterManifestJson = "", releasePassportKfdSupportMatrixJson = "", releasePassportKfdProductGateJsons = "",
-  releasePassportInvariantPassportJsons = "",
-  releasePassportInvariantPassportCommand = "", releasePassportEvidenceJsons = "",
-  releasePassportAttachmentCommand = "", releasePassportBuildchainSelfKfd = false,
-  releasePassportGitHubArtifactAttestationPolicyJsons = "", promoteOnlyReleaseCandidate = false,
-  releaseCandidatePassportPath = ".buildchain/artifacts/release-candidate-passport.json",
-  releaseCandidateBuildSummaryPath = ".buildchain/artifacts/build-summary.json",
-  releaseCandidateVersion = "", releaseCandidateRecoveryReceiptPath = "", releaseCandidateFamilyEvidenceRequired = false,
-  releaseCandidateFamilyEvidenceRoot = "",
-  releaseCandidateFamilyInitiativeId = "", releaseCandidateFamilyAssignmentId = "",
-  actor = process.env.GITHUB_ACTOR || process.env.USER || "",
-  runId = process.env.GITHUB_RUN_ID || "", publishTransactionOverride = false,
-}) {
+function normalizePromotionOptions(options) {
+  const normalized = { ...options };
+  const defaults = {
+    dryRun: false, allowRepository: DEFAULT_REPOSITORY, cwd: process.cwd(),
+    versionState: true, requireVersionState: false, requireGovernance: false,
+    verificationCommand: "", requiredStatusCheck: "check",
+    branchProtectionBypassApps: "", branchProtectionBypassUsers: "",
+    branchProtectionBypassTeams: "", reconciliationWorkspace: "",
+    publishTransaction: false, publishCommand: "", publishEvidencePath: "",
+    transactionStatePath: "", expectedTransactionId: "", publishSealedBundleRoot: "",
+    publishSealedBundleManifest: "", publishRequiredArtifactsJson: "", releaseMaterialSha: "",
+    publishToolingSha: "", publishMode: "", publishAuth: "", publishDistTag: "",
+    publishPackageSetOrder: "", publishPackageMain: "", publishRematerializeOnResume: false,
+    expectedPublicationVersion: "", requirePublicationQualification: false,
+    publicationCapabilityJson: "", publicationGateAggregateJson: "",
+    publicationQualificationReceiptJson: "", publicationUsedQualificationNoncesJson: "[]",
+    releasePassport: true, releasePassportOutputDir: ".buildchain/release-passport",
+    releasePassportProductName: "Buildchain",
+    releasePassportBuildSummaryPath: ".buildchain/artifacts/build-summary.json",
+    releasePassportPlatformManifestPaths: "", releasePassportImpactJson: "",
+    releasePassportPromotionRoutingJson: "", releasePassportV4ConsumerPolicyCertificationJson: "",
+    releasePassportV4ConsumerPolicyCertificationRoot: "", releasePassportV4RuntimeResumeEvidenceJson: "",
+    releasePassportV4RuntimeResumeEvidenceCommand: "", releasePassportKfd1WitnessJsons: "",
+    releasePassportKfd2ClaimJsons: "", releasePassportKfd3PrebuildWitnessJsons: "",
+    releasePassportKfd3ArtifactWitnessJsons: "", releasePassportKfd3ArtifactVerifyCommand: "",
+    releasePassportKfdAdopterManifestJson: "", releasePassportKfdSupportMatrixJson: "",
+    releasePassportKfdProductGateJsons: "", releasePassportInvariantPassportJsons: "",
+    releasePassportInvariantPassportCommand: "", releasePassportEvidenceJsons: "",
+    releasePassportAttachmentCommand: "", releasePassportBuildchainSelfKfd: false,
+    releasePassportGitHubArtifactAttestationPolicyJsons: "", promoteOnlyReleaseCandidate: false,
+    releaseCandidatePassportPath: ".buildchain/artifacts/release-candidate-passport.json",
+    releaseCandidateBuildSummaryPath: ".buildchain/artifacts/build-summary.json",
+    releaseCandidateVersion: "", releaseCandidateRecoveryReceiptPath: "",
+    releaseCandidateFamilyEvidenceRequired: false, releaseCandidateFamilyEvidenceRoot: "",
+    releaseCandidateFamilyInitiativeId: "", releaseCandidateFamilyAssignmentId: "",
+    actor: process.env.GITHUB_ACTOR || process.env.USER || "",
+    runId: process.env.GITHUB_RUN_ID || "", publishTransactionOverride: false,
+  };
+  for (const [key, value] of Object.entries(defaults)) {
+    if (normalized[key] === undefined) normalized[key] = value;
+  }
+  for (const key of ["statusCheckOctokit", "pullRequestOctokit", "refUpdateOctokit", "tagUpdateOctokit"]) {
+    if (normalized[key] === undefined) normalized[key] = normalized.octokit;
+  }
+  return normalized;
+}
+async function promoteBuildchainRefs(options) {
+  return runPromotion(normalizePromotionOptions(options));
+}
+function parsePublicationQualificationJson(value, label) {
+  if (!String(value || "").trim()) throw new Error(`${label} is required before provider mutation`);
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    throw new Error(`${label} must be valid JSON: ${error.message}`);
+  }
+}
+function createPublicationQualificationAssert(options, rule) {
+  return ({ version = options.expectedPublicationVersion, channel = rule.channel } = {}) => {
+    if (!options.requirePublicationQualification || options.dryRun) return;
+    verifyPublicationQualificationReceipt({
+      receipt: parsePublicationQualificationJson(options.publicationQualificationReceiptJson, "publication-qualification-receipt-json"),
+      capability: parsePublicationQualificationJson(options.publicationCapabilityJson, "publication-capability-json"),
+      gateAggregate: parsePublicationQualificationJson(options.publicationGateAggregateJson, "publication-gate-aggregate-json"),
+      usedNonces: parsePublicationQualificationJson(options.publicationUsedQualificationNoncesJson || "[]", "publication-used-qualification-nonces-json"),
+      expected: {
+        sourceSha: options.sha, channel,
+        ...(version ? { version } : {}),
+        ...(options.publishPackageMain ? { target: `npm:${options.publishPackageMain}` } : {}),
+      },
+      now: options.publicationQualificationNow || new Date(),
+    });
+  };
+}
+function publicationEnabledForPromotion(options) {
+  return Boolean(options.publishTransaction || options.publishCommand || getLifecycleStage(loadBuildchainConfig(options.cwd), "publish"));
+}
+async function readResumableAdvancedTransaction(options, rule, branchSha) {
+  const statePrefix = rule.releasePrefix.replace(/^v/, "").replaceAll(".", "-");
+  const { data: stateRefs } = await options.octokit.rest.git.listMatchingRefs({
+    owner: options.owner, repo: options.repo, ref: `heads/buildchain/release-state/${statePrefix}-`,
+  });
+  const resumeResolver = rule.channel === "alpha"
+    ? resumableAlphaTransactionState
+    : rule.channel === "release"
+      ? resumableReleaseTransactionState
+      : undefined;
+  const resumable = resumeResolver && await resumeResolver({
+    octokit: options.octokit, owner: options.owner, repo: options.repo, cwd: options.cwd,
+    refs: stateRefs, releasePrefix: rule.releasePrefix, targetRef: options.targetRef, sourceSha: options.sha,
+    expectedVersion: options.expectedPublicationVersion,
+  });
+  if (!resumable) throw new Error(`Ref ${options.targetRef} advanced to ${branchSha}, but no exact resumable transaction accepts requested SHA ${options.sha}`);
+  return resumable.transaction;
+}
+function supersededPromotionResult(options, branchSha, comparisonStatus) {
+  return {
+    owner: options.owner, repo: options.repo, sourceSha: options.sha, sha: branchSha,
+    targetRef: options.targetRef, superseded: true,
+    updates: [{
+      action: "superseded-promotion", ref: options.targetRef, requestedSha: options.sha,
+      currentSha: branchSha, comparisonStatus, reason: "target-ref-advanced", sha: branchSha,
+    }],
+  };
+}
+async function resolvePromotionHead(options, rule) {
+  const { data: branchRef } = await options.octokit.rest.git.getRef({
+    owner: options.owner, repo: options.repo, ref: `heads/${options.targetRef}`,
+  });
+  const branchSha = branchRef.object.sha;
+  if (branchSha === options.sha) return { branchSha };
+  let advancedPublicationTransaction;
+  if (options.requireGovernance && !options.dryRun) {
+    const { data: comparison } = await options.octokit.rest.repos.compareCommitsWithBasehead({
+      owner: options.owner, repo: options.repo, basehead: `${options.sha}...${branchSha}`,
+    });
+    if (comparison.status !== "ahead") throw new Error(`Ref ${options.targetRef} moved incompatibly from requested SHA ${options.sha} to ${branchSha} (${comparison.status})`);
+    const publicationEnabled = publicationEnabledForPromotion(options);
+    advancedPublicationTransaction = publicationEnabled && options.expectedPublicationVersion
+      ? await readDurableTransactionForVersion({
+          octokit: options.octokit, owner: options.owner, repo: options.repo,
+          version: options.expectedPublicationVersion,
+        })
+      : undefined;
+    let targetAdvancedByExactPublication =
+      advancedPublicationTransaction?.source_sha === options.sha &&
+      advancedPublicationTransaction?.target_ref === options.targetRef &&
+      advancedPublicationTransaction?.release_sha === branchSha &&
+      advancedPublicationTransaction?.version === options.expectedPublicationVersion &&
+      !["abandoned", "failed_permanently"].includes(advancedPublicationTransaction?.state || "");
+    if (!targetAdvancedByExactPublication && options.publishTransactionOverride && publicationEnabled) {
+      advancedPublicationTransaction = await readResumableAdvancedTransaction(options, rule, branchSha);
+      targetAdvancedByExactPublication = true;
+    }
+    if (!targetAdvancedByExactPublication) {
+      return { branchSha, superseded: supersededPromotionResult(options, branchSha, comparison.status) };
+    }
+  } else if (options.dryRun && options.publishTransactionOverride && publicationEnabledForPromotion(options)) {
+    const { data: comparison } = await options.octokit.rest.repos.compareCommitsWithBasehead({
+      owner: options.owner, repo: options.repo, basehead: `${options.sha}...${branchSha}`,
+    });
+    if (comparison.status !== "ahead") throw new Error(`Ref ${options.targetRef} moved incompatibly from requested SHA ${options.sha} to ${branchSha} (${comparison.status})`);
+    advancedPublicationTransaction = await readResumableAdvancedTransaction(options, rule, branchSha);
+  }
+  if (!advancedPublicationTransaction) throw new Error(`Ref ${options.targetRef} points at ${branchSha}, not requested SHA ${options.sha}`);
+  return { branchSha, advancedPublicationTransaction };
+}
+async function validatePromotionCandidate(options, rule, updates) {
+  if (!options.promoteOnlyReleaseCandidate) return undefined;
+  const targetCommitInfo = await getCommitInfo(options.octokit, options.owner, options.repo, options.sha);
+  const validation = validatePromotionReleaseCandidate({
+    cwd: options.cwd,
+    passportPath: options.releaseCandidatePassportPath,
+    buildSummaryPath: options.releaseCandidateBuildSummaryPath,
+    repository: `${options.owner}/${options.repo}`,
+    targetChannel: rule.channel,
+    version: options.releaseCandidateRecoveryReceiptPath ? options.expectedPublicationVersion : options.releaseCandidateVersion,
+    recoveryReceiptPath: options.releaseCandidateRecoveryReceiptPath,
+    targetRef: options.targetRef,
+    sourceHeadSha: options.sha,
+    sourceTreeSha: targetCommitInfo.treeSha,
+    requireFamilyEvidence: options.releaseCandidateFamilyEvidenceRequired,
+    familyEvidenceRoot: options.releaseCandidateFamilyEvidenceRoot,
+    familyInitiativeId: options.releaseCandidateFamilyInitiativeId,
+    familyAssignmentId: options.releaseCandidateFamilyAssignmentId,
+  });
+  updates.push({
+    action: "verified-release-candidate",
+    sha: options.sha,
+    candidateHash: validation.candidateHash,
+    platformCount: validation.platformCount,
+    passportPath: path.relative(options.cwd, validation.passportPath).split(path.sep).join("/"),
+    publicationVersionBinding: validation.publicationVersionBinding,
+  });
+  return validation;
+}
+async function runPromotion(options) {
+  let { requiredStatusCheck } = options;
+  const { octokit, owner, repo, sha, targetRef, tags, dryRun, allowRepository, cwd, versionState, requireVersionState, requireGovernance, verificationCommand, statusCheckOctokit, pullRequestOctokit, refUpdateOctokit, tagUpdateOctokit, branchProtectionBypassApps, branchProtectionBypassUsers, branchProtectionBypassTeams, reconciliationWorkspace, publishTransaction, publishCommand, publishEvidencePath, transactionStatePath, expectedTransactionId, publishSealedBundleRoot, publishSealedBundleManifest, publishRequiredArtifactsJson, releaseMaterialSha, publishToolingSha, publishMode, publishAuth, publishDistTag, publishPackageSetOrder, publishPackageMain, publishRematerializeOnResume, expectedPublicationVersion, requirePublicationQualification, publicationCapabilityJson, publicationGateAggregateJson, publicationQualificationReceiptJson, publicationUsedQualificationNoncesJson, publicationQualificationNow, releasePassport, releasePassportOutputDir, releasePassportProductName, releasePassportBuildSummaryPath, releasePassportPlatformManifestPaths, releasePassportImpactJson, releasePassportPromotionRoutingJson, releasePassportV4ConsumerPolicyCertificationJson, releasePassportV4ConsumerPolicyCertificationRoot, releasePassportV4RuntimeResumeEvidenceJson, releasePassportV4RuntimeResumeEvidenceCommand, releasePassportKfd1WitnessJsons, releasePassportKfd2ClaimJsons, releasePassportKfd3PrebuildWitnessJsons, releasePassportKfd3ArtifactWitnessJsons, releasePassportKfd3ArtifactVerifyCommand, releasePassportKfdAdopterManifestJson, releasePassportKfdSupportMatrixJson, releasePassportKfdProductGateJsons, releasePassportInvariantPassportJsons, releasePassportInvariantPassportCommand, releasePassportEvidenceJsons, releasePassportAttachmentCommand, releasePassportBuildchainSelfKfd, releasePassportGitHubArtifactAttestationPolicyJsons, promoteOnlyReleaseCandidate, releaseCandidatePassportPath, releaseCandidateBuildSummaryPath, releaseCandidateVersion, releaseCandidateRecoveryReceiptPath, releaseCandidateFamilyEvidenceRequired, releaseCandidateFamilyEvidenceRoot, releaseCandidateFamilyInitiativeId, releaseCandidateFamilyAssignmentId, actor, runId, publishTransactionOverride } = options;
   assertPromotableRepository(owner, repo, allowRepository);
   assertPromotableTargetRef(targetRef);
   assertSha(sha);
   const rule = getPromotionRule(targetRef);
-  const assertPublicationQualification = ({ version = expectedPublicationVersion, channel = rule.channel } = {}) => {
-    if (!requirePublicationQualification || dryRun) return;
-    const parseQualificationJson = (value, label) => {
-      if (!String(value || "").trim()) {
-        throw new Error(`${label} is required before provider mutation`);
-      }
-      try {
-        return JSON.parse(value);
-      } catch (error) {
-        throw new Error(`${label} must be valid JSON: ${error.message}`);
-      }
-    };
-    verifyPublicationQualificationReceipt({
-      receipt: parseQualificationJson(publicationQualificationReceiptJson, "publication-qualification-receipt-json"),
-      capability: parseQualificationJson(publicationCapabilityJson, "publication-capability-json"),
-      gateAggregate: parseQualificationJson(publicationGateAggregateJson, "publication-gate-aggregate-json"),
-      usedNonces: parseQualificationJson(publicationUsedQualificationNoncesJson || "[]", "publication-used-qualification-nonces-json"),
-      expected: {
-        sourceSha: sha,
-        channel,
-        ...(version ? { version } : {}),
-        ...(publishPackageMain ? { target: `npm:${publishPackageMain}` } : {}),
-      },
-      now: publicationQualificationNow || new Date(),
-    });
-  };
-  assertPublicationQualification(); const requestedTags = tags ? resolveTagsForTarget(targetRef, tags) : undefined;
-  const { data: branchRef } = await octokit.rest.git.getRef({
-    owner,
-    repo,
-    ref: `heads/${targetRef}`,
-  });
-  const branchSha = branchRef.object.sha; let advancedPublicationTransaction;
-  if (branchSha !== sha) {
-    if (requireGovernance && !dryRun) {
-      const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
-        owner,
-        repo,
-        basehead: `${sha}...${branchSha}`,
-      });
-      if (comparison.status !== "ahead") {
-        throw new Error(`Ref ${targetRef} moved incompatibly from requested SHA ${sha} to ${branchSha} (${comparison.status})`);
-      }
-      const publicationEnabled = Boolean(publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"));
-      advancedPublicationTransaction =
-        publicationEnabled && expectedPublicationVersion
-          ? await readDurableTransactionForVersion({
-              octokit,
-              owner,
-              repo,
-              version: expectedPublicationVersion,
-            })
-          : undefined;
-      let targetAdvancedByExactPublication = advancedPublicationTransaction?.source_sha === sha && advancedPublicationTransaction?.target_ref === targetRef && advancedPublicationTransaction?.release_sha === branchSha && advancedPublicationTransaction?.version === expectedPublicationVersion && !["abandoned", "failed_permanently"].includes(advancedPublicationTransaction?.state || "");
-      if (!targetAdvancedByExactPublication && publishTransactionOverride && publicationEnabled) { const statePrefix = rule.releasePrefix.replace(/^v/, "").replaceAll(".", "-"); const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({ owner, repo, ref: `heads/buildchain/release-state/${statePrefix}-` }); const resumeResolver = rule.channel === "alpha" ? resumableAlphaTransactionState : rule.channel === "release" ? resumableReleaseTransactionState : undefined; const resumable = resumeResolver && await resumeResolver({ octokit, owner, repo, cwd, refs: stateRefs, releasePrefix: rule.releasePrefix, targetRef, sourceSha: sha, expectedVersion: expectedPublicationVersion }); if (!resumable) throw new Error(`Ref ${targetRef} advanced to ${branchSha}, but no exact resumable transaction accepts requested SHA ${sha}`); advancedPublicationTransaction = resumable.transaction; targetAdvancedByExactPublication = true; }
-      if (!targetAdvancedByExactPublication) {
-        return {
-          owner,
-          repo,
-          sourceSha: sha,
-          sha: branchSha,
-          targetRef,
-          superseded: true,
-          updates: [
-            {
-              action: "superseded-promotion",
-              ref: targetRef,
-              requestedSha: sha,
-              currentSha: branchSha,
-              comparisonStatus: comparison.status,
-              reason: "target-ref-advanced",
-              sha: branchSha,
-            },
-          ],
-        };
-      }
-    } else if (dryRun && publishTransactionOverride && Boolean(publishTransaction || publishCommand || getLifecycleStage(loadBuildchainConfig(cwd), "publish"))) {
-      const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${sha}...${branchSha}` }); const statePrefix = rule.releasePrefix.replace(/^v/, "").replaceAll(".", "-"); const { data: stateRefs } = await octokit.rest.git.listMatchingRefs({ owner, repo, ref: `heads/buildchain/release-state/${statePrefix}-` }); const resumeResolver = rule.channel === "alpha" ? resumableAlphaTransactionState : rule.channel === "release" ? resumableReleaseTransactionState : undefined; const resumable = resumeResolver && await resumeResolver({ octokit, owner, repo, cwd, refs: stateRefs, releasePrefix: rule.releasePrefix, targetRef, sourceSha: sha, expectedVersion: expectedPublicationVersion }); if (comparison.status !== "ahead") throw new Error(`Ref ${targetRef} moved incompatibly from requested SHA ${sha} to ${branchSha} (${comparison.status})`); if (!resumable) throw new Error(`Ref ${targetRef} advanced to ${branchSha}, but no exact resumable transaction accepts requested SHA ${sha}`); advancedPublicationTransaction = resumable.transaction;
-    }
-    if (!advancedPublicationTransaction) {
-      throw new Error(`Ref ${targetRef} points at ${branchSha}, not requested SHA ${sha}`);
-    }
-  }
+  const assertPublicationQualification = createPublicationQualificationAssert(options, rule);
+  assertPublicationQualification();
+  const requestedTags = tags ? resolveTagsForTarget(targetRef, tags) : undefined;
+  const { branchSha, advancedPublicationTransaction, superseded } = await resolvePromotionHead(options, rule);
+  if (superseded) return superseded;
 
   const updates = []; if (advancedPublicationTransaction) {
     updates.push({
@@ -3328,36 +3357,7 @@ async function promoteBuildchainRefs({
       sha: branchSha,
     });
   }
-  const promotionGeneratedAt = new Date().toISOString(); let releaseCandidateValidation;
-  if (promoteOnlyReleaseCandidate) {
-    const targetCommitInfo = await getCommitInfo(octokit, owner, repo, sha);
-    releaseCandidateValidation = validatePromotionReleaseCandidate({
-      cwd,
-      passportPath: releaseCandidatePassportPath,
-      buildSummaryPath: releaseCandidateBuildSummaryPath,
-      repository: `${owner}/${repo}`,
-      targetChannel: rule.channel,
-      version: releaseCandidateRecoveryReceiptPath
-        ? expectedPublicationVersion
-        : releaseCandidateVersion,
-      recoveryReceiptPath: releaseCandidateRecoveryReceiptPath,
-      targetRef,
-      sourceHeadSha: sha,
-      sourceTreeSha: targetCommitInfo.treeSha,
-      requireFamilyEvidence: releaseCandidateFamilyEvidenceRequired,
-      familyEvidenceRoot: releaseCandidateFamilyEvidenceRoot,
-      familyInitiativeId: releaseCandidateFamilyInitiativeId,
-      familyAssignmentId: releaseCandidateFamilyAssignmentId,
-    });
-    updates.push({
-      action: "verified-release-candidate",
-      sha,
-      candidateHash: releaseCandidateValidation.candidateHash,
-      platformCount: releaseCandidateValidation.platformCount,
-      passportPath: path.relative(cwd, releaseCandidateValidation.passportPath).split(path.sep).join("/"),
-      publicationVersionBinding: releaseCandidateValidation.publicationVersionBinding,
-    });
-  }
+  const promotionGeneratedAt = new Date().toISOString(); const releaseCandidateValidation = await validatePromotionCandidate(options, rule, updates);
 
   let reconciliationOperations;
   let versionOperations;

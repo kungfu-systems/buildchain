@@ -49,7 +49,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `packages/core/paper.js`
 - sources: `packages/core/publication-artifact.js`
 - sources: `packages/core/publication-authority.js`
-- sources: `packages/core/publication-control-plane-audit.js`
 - sources: `packages/core/publication-reproducibility.js`
 - sources: `packages/core/publish-transaction.js`
 - sources: `packages/core/readme-badges.js`

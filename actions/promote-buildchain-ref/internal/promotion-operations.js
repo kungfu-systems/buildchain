@@ -1,92 +1,12 @@
-export function createRefMutationOperations(context, runtime) { const { COMMIT_IDENTITY, createGeneratedVersionStateChecks, ensureManagedChannelBranchProtection, execFileSync, fs, getGitCommitWithRetry, getGitRefOrUndefined, nonFastForwardUpdateRejected, notFound, ownsMajorAlphaChannel, path, protectedBranchDirectUpdateError, protectedBranchUpdateRejected, releaseCommitIncludesTransactionHead, retryGitHubOperation, signedGeneratedCommitMessage, uniqueShas, versionStateBranchName } = runtime;
-  const {
-    octokit,
-    owner,
-    repo,
-    sha,
-    targetRef,
-    tags,
-    dryRun,
-    allowRepository,
-    cwd,
-    versionState,
-    requireVersionState,
-    requireGovernance,
-    verificationCommand,
-    requiredStatusCheck,
-    statusCheckOctokit,
-    pullRequestOctokit,
-    refUpdateOctokit,
-    branchProtectionBypassApps,
-    branchProtectionBypassUsers,
-    branchProtectionBypassTeams,
-    reconciliationWorkspace,
-    publishTransaction,
-    publishCommand,
-    publishEvidencePath,
-    transactionStatePath,
-    publishSealedBundleRoot,
-    publishSealedBundleManifest,
-    publishRequiredArtifactsJson,
-    releaseMaterialSha,
-    publishToolingSha,
-    publishMode,
-    publishAuth,
-    publishDistTag,
-    publishPackageSetOrder,
-    publishPackageMain,
-    publishRematerializeOnResume,
-    expectedPublicationVersion,
-    requirePublicationQualification,
-    publicationCapabilityJson,
-    publicationGateAggregateJson,
-    publicationQualificationReceiptJson,
-    publicationUsedQualificationNoncesJson,
-    publicationQualificationNow,
-    releasePassport,
-    releasePassportOutputDir,
-    releasePassportProductName,
-    releasePassportBuildSummaryPath,
-    releasePassportPlatformManifestPaths,
-    releasePassportImpactJson,
-    releasePassportPromotionRoutingJson,
-    releasePassportKfd1WitnessJsons,
-    releasePassportKfd2ClaimJsons,
-    releasePassportKfd3PrebuildWitnessJsons,
-    releasePassportKfd3ArtifactWitnessJsons,
-    releasePassportKfd3ArtifactVerifyCommand,
-    releasePassportKfdAdopterManifestJson,
-    releasePassportKfdSupportMatrixJson,
-    releasePassportKfdProductGateJsons,
-    releasePassportInvariantPassportJsons,
-    releasePassportInvariantPassportCommand,
-    releasePassportEvidenceJsons,
-    releasePassportAttachmentCommand,
-    releasePassportBuildchainSelfKfd,
-    releasePassportGitHubArtifactAttestationPolicyJsons,
-    promoteOnlyReleaseCandidate,
-    releaseCandidatePassportPath,
-    releaseCandidateBuildSummaryPath,
-    releaseCandidateVersion,
-    releaseCandidateFamilyEvidenceRequired,
-    releaseCandidateFamilyEvidenceRoot,
-    releaseCandidateFamilyInitiativeId,
-    releaseCandidateFamilyAssignmentId,
-    actor,
-    runId,
-    publishTransactionOverride,
-    rule,
-    assertPublicationQualification,
-    requestedTags,
-    updates,
-    promotionGeneratedAt,
-    releaseCandidateValidation,
-    advancedPublicationTransaction,
-    lineRefs,
-    getReconciliationOperations,
-    getVersionStateOperations,
-  } = context;
-  const listLineRefs = async (releasePrefix = rule.releasePrefix) => {
+function bindOperations(instance, names) {
+  return Object.fromEntries(
+    names.map((name) => [name, instance[name].bind(instance)]),
+  );
+}
+
+class RefMutationOperations {
+  async listLineRefs(releasePrefix = this.rule.releasePrefix) {
+    const { octokit, owner, repo } = this;
     const { data: tagRefs } = await octokit.rest.git.listMatchingRefs({
       owner,
       repo,
@@ -99,10 +19,10 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       ref: `heads/buildchain/release-state/${statePrefix}-`,
     });
     return [...tagRefs, ...stateRefs];
-  };
+  }
 
-  const majorAlphaRefCache = new Map();
-  const listMajorAlphaRefs = async (major = rule.major) => {
+  async listMajorAlphaRefs(major = this.rule.major) {
+    const { majorAlphaRefCache, octokit, owner, repo } = this;
     if (!majorAlphaRefCache.has(major)) {
       majorAlphaRefCache.set(
         major,
@@ -114,17 +34,21 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       );
     }
     return majorAlphaRefCache.get(major);
-  };
+  }
 
-  const ownsMajorAlphaFloatingTag = async ({
-    major = rule.major,
-    minor = rule.minor } = {}) => ownsMajorAlphaChannel({
-    refs: await listMajorAlphaRefs(major),
+  async ownsMajorAlphaFloatingTag({
+    major = this.rule.major,
+    minor = this.rule.minor } = {}) {
+    const { ownsMajorAlphaChannel } = this;
+    return ownsMajorAlphaChannel({
+    refs: await this.listMajorAlphaRefs(major),
     major,
     minor,
   });
+  }
 
-  const ensureTag = async (tag, tagSha = sha, options = {}) => {
+  async ensureTag(tag, tagSha = this.sha, options = {}) {
+    const { context, dryRun, notFound, octokit, owner, releaseCommitIncludesTransactionHead, repo, uniqueShas, updates } = this;
     const acceptedExistingShas = uniqueShas([
       tagSha,
       ...(options.acceptedExistingShas || [])]);
@@ -170,9 +94,10 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       });
       updates.push({ tag, action: "created", sha: tagSha });
     }
-  };
+  }
 
-  const updateTag = async (tag, tagSha = sha) => {
+  async updateTag(tag, tagSha = this.sha) {
+    const { context, dryRun, getGitRefOrUndefined, notFound, octokit, owner, repo, updates } = this;
     if (dryRun) {
       updates.push({ tag, action: "dry-run", sha: tagSha });
       return;
@@ -199,15 +124,16 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       });
       updates.push({ tag, action: "created", sha: tagSha });
     }
-  };
+  }
 
-  const updateMajorAlphaFloatingTag = async ({
-    major = rule.major,
-    minor = rule.minor,
-    sha: tagSha = sha } = {}) => {
+  async updateMajorAlphaFloatingTag({
+    major = this.rule.major,
+    minor = this.rule.minor,
+    sha: tagSha = this.sha } = {}) {
+    const { updates } = this;
     const tag = `v${major}-alpha`;
-    if (await ownsMajorAlphaFloatingTag({ major, minor })) {
-      await updateTag(tag, tagSha);
+    if (await this.ownsMajorAlphaFloatingTag({ major, minor })) {
+      await this.updateTag(tag, tagSha);
       return true;
     }
     updates.push({
@@ -216,9 +142,10 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       sha: tagSha,
     });
     return false;
-  };
+  }
 
-  const readRefSha = async (ref) => {
+  async readRefSha(ref) {
+    const { getGitRefOrUndefined, octokit, owner, repo } = this;
     const refData = await getGitRefOrUndefined({
       octokit,
       owner,
@@ -226,9 +153,9 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       ref,
     });
     return refData?.object?.sha;
-  };
+  }
 
-  const updateBranch = async (branch, branchSha, action = "updated", protectedUpdate) => {
+  async updateBranch(branch, branchSha, action = "updated", protectedUpdate) { const { COMMIT_IDENTITY, branchProtectionBypassApps, branchProtectionBypassTeams, branchProtectionBypassUsers, createGeneratedVersionStateChecks, cwd, dryRun, ensureManagedChannelBranchProtection, execFileSync, fs, getGitCommitWithRetry, getReconciliationOperations, getVersionStateOperations, nonFastForwardUpdateRejected, notFound, octokit, owner, path, protectedBranchDirectUpdateError, protectedBranchUpdateRejected, pullRequestOctokit, reconciliationWorkspace, refUpdateOctokit, repo, requiredStatusCheck, retryGitHubOperation, signedGeneratedCommitMessage, statusCheckOctokit, updates, versionStateBranchName } = this;
     if (dryRun) {
       updates.push({ ref: branch, action: "dry-run", sha: branchSha });
       return { updated: true };
@@ -239,7 +166,7 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       if (policyEvidence) updates.push(policyEvidence);
       return policyEvidence;
     };
-    const currentSha = await readRefSha(`heads/${branch}`);
+    const currentSha = await this.readRefSha(`heads/${branch}`);
     const protectionPolicy = currentSha
       ? await ensureChannelProtection()
       : undefined;
@@ -252,7 +179,7 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       ? versionStateBranchName(branch, branchSha)
       : "";
     const generatedVersionStateSha = generatedVersionStateBranch
-      ? await readRefSha(`heads/${generatedVersionStateBranch}`)
+      ? await this.readRefSha(`heads/${generatedVersionStateBranch}`)
       : undefined;
     if (
       currentSha &&
@@ -291,7 +218,7 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       }
       const versionStateBranch = versionStateBranchName(branch, pendingSha);
       const versionStateRef = `heads/${versionStateBranch}`;
-      const existingVersionStateSha = await readRefSha(versionStateRef);
+      const existingVersionStateSha = await this.readRefSha(versionStateRef);
       if (existingVersionStateSha && existingVersionStateSha !== pendingSha) {
         throw new Error(
           `Buildchain generated version-state branch ${versionStateBranch} points at ${existingVersionStateSha}, not ${pendingSha}`);
@@ -605,9 +532,10 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       await ensureChannelProtection();
       return { updated: true };
     }
-  };
+  }
 
-  const updateDefaultBranch = async (branch) => {
+  async updateDefaultBranch(branch) {
+    const { dryRun, octokit, owner, repo, updates } = this;
     if (dryRun) {
       updates.push({ ref: branch, action: "dry-run-default-branch" });
       return;
@@ -633,108 +561,12 @@ export function createRefMutationOperations(context, runtime) { const { COMMIT_I
       default_branch: branch,
     });
     updates.push({ ref: branch, action: "updated-default-branch" });
-  };
-  return {
-    listLineRefs,
-    listMajorAlphaRefs,
-    ownsMajorAlphaFloatingTag,
-    ensureTag,
-    updateTag,
-    updateMajorAlphaFloatingTag,
-    readRefSha,
-    updateBranch,
-    updateDefaultBranch,
-  };
+  }
 }
-export function createReconciliationOperations(context, runtime) { const { RELEASE_LINE_RECOVERY_PATHS, alphaTagsForPatch, assertChannelPromotionPr, getCommitInfo, getGitCommitWithRetry, isAllowedReleaseLineRecoveryPath, listPullRequestsAssociatedWithCommitWithRetry, parseReleaseLineRecoveryRef, parseVersionStateBranchName, releaseCommitIncludesTransactionHead, retryGitHubOperation } = runtime;
-  const {
-    octokit,
-    owner,
-    repo,
-    sha,
-    targetRef,
-    tags,
-    dryRun,
-    allowRepository,
-    cwd,
-    versionState,
-    requireVersionState,
-    requireGovernance,
-    verificationCommand,
-    requiredStatusCheck,
-    statusCheckOctokit,
-    pullRequestOctokit,
-    refUpdateOctokit,
-    branchProtectionBypassApps,
-    branchProtectionBypassUsers,
-    branchProtectionBypassTeams,
-    reconciliationWorkspace,
-    publishTransaction,
-    publishCommand,
-    publishEvidencePath,
-    transactionStatePath,
-    publishRequiredArtifactsJson,
-    releaseMaterialSha,
-    publishToolingSha,
-    publishMode,
-    publishAuth,
-    publishDistTag,
-    publishPackageSetOrder,
-    publishPackageMain,
-    publishRematerializeOnResume,
-    expectedPublicationVersion,
-    requirePublicationQualification,
-    publicationCapabilityJson,
-    publicationGateAggregateJson,
-    publicationQualificationReceiptJson,
-    publicationUsedQualificationNoncesJson,
-    publicationQualificationNow,
-    releasePassport,
-    releasePassportOutputDir,
-    releasePassportProductName,
-    releasePassportBuildSummaryPath,
-    releasePassportPlatformManifestPaths,
-    releasePassportImpactJson,
-    releasePassportPromotionRoutingJson,
-    releasePassportKfd1WitnessJsons,
-    releasePassportKfd2ClaimJsons,
-    releasePassportKfd3PrebuildWitnessJsons,
-    releasePassportKfd3ArtifactWitnessJsons,
-    releasePassportKfd3ArtifactVerifyCommand,
-    releasePassportKfdAdopterManifestJson,
-    releasePassportKfdSupportMatrixJson,
-    releasePassportKfdProductGateJsons,
-    releasePassportInvariantPassportJsons,
-    releasePassportInvariantPassportCommand,
-    releasePassportBuildchainSelfKfd,
-    releasePassportGitHubArtifactAttestationPolicyJsons,
-    promoteOnlyReleaseCandidate,
-    releaseCandidatePassportPath,
-    releaseCandidateBuildSummaryPath,
-    releaseCandidateVersion,
-    actor,
-    runId,
-    publishTransactionOverride,
-    rule,
-    assertPublicationQualification,
-    requestedTags,
-    updates,
-    promotionGeneratedAt,
-    releaseCandidateValidation,
-    advancedPublicationTransaction,
-    lineRefs,
-    listLineRefs,
-    listMajorAlphaRefs,
-    ownsMajorAlphaFloatingTag,
-    ensureTag,
-    updateTag,
-    updateMajorAlphaFloatingTag,
-    readRefSha,
-    updateBranch,
-    updateDefaultBranch,
-  } = context;
-  const assertOnlyAllowedChangesBetween = async ({ baseSha, headSha, allowedPaths }) => {
-    const changedPaths = await listChangedPathsBetweenTrees({
+
+class ReconciliationOperations {
+  async assertOnlyAllowedChangesBetween({ baseSha, headSha, allowedPaths }) {
+    const changedPaths = await this.listChangedPathsBetweenTrees({
       baseSha,
       headSha,
     });
@@ -743,8 +575,10 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
       throw new Error(
         `Version-state PR changed files outside declared version state: ${unexpected.join(", ")}`);
     }
-  };
-  const listChangedPathsBetweenTrees = async ({ baseSha, headSha }) => {
+  }
+
+  async listChangedPathsBetweenTrees({ baseSha, headSha }) {
+    const { getGitCommitWithRetry, octokit, owner, repo, retryGitHubOperation } = this;
     const [baseCommitResult, headCommitResult] = await Promise.all([
       getGitCommitWithRetry({ octokit, owner, repo, commitSha: baseSha }),
       getGitCommitWithRetry({ octokit, owner, repo, commitSha: headSha }),
@@ -787,12 +621,13 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
     return [...paths]
       .filter((file) => baseEntries.get(file) !== headEntries.get(file))
       .sort();
-  };
+  }
 
-  const assertOnlyAllowedReleaseRecoveryChangesBetween = async ({
+  async assertOnlyAllowedReleaseRecoveryChangesBetween({
     baseSha,
     headSha,
-    allowedPaths = [] }) => {
+    allowedPaths = [] }) {
+    const { RELEASE_LINE_RECOVERY_PATHS, isAllowedReleaseLineRecoveryPath, octokit, owner, repo } = this;
     const { data: comparison } = await octokit.rest.repos.compareCommitsWithBasehead({
       owner,
       repo,
@@ -810,9 +645,10 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
           `Open a follow-up exact line-scoped recovery PR that contains this candidate and changes only: ${recoveryScope}`,
       );
     }
-  };
+  }
 
-  const findMatchingReleaseRecoveryPullRequest = async ({ commitSha, targetRef }) => {
+  async findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef }) {
+    const { listPullRequestsAssociatedWithCommitWithRetry, octokit, owner, parseReleaseLineRecoveryRef, repo } = this;
     const { data: pullRequests } =
       await listPullRequestsAssociatedWithCommitWithRetry({
         octokit,
@@ -830,9 +666,10 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
         recovery?.targetRef === targetRef &&
         headRepo === `${owner}/${repo}`;
     });
-  };
+  }
 
-  const findMatchingTargetPullRequest = async ({ commitSha, targetRef }) => {
+  async findMatchingTargetPullRequest({ commitSha, targetRef }) {
+    const { listPullRequestsAssociatedWithCommitWithRetry, octokit, owner, repo } = this;
     const { data: pullRequests } =
       await listPullRequestsAssociatedWithCommitWithRetry({
         octokit,
@@ -847,13 +684,14 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
         baseRef === targetRef &&
         headRepo === `${owner}/${repo}`;
     });
-  };
+  }
 
-  const findAlphaMaterialFromPromotionPullRequest = async ({ commitSha, targetRef, releasePrefix, patch, refs }) => {
+  async findAlphaMaterialFromPromotionPullRequest({ commitSha, targetRef, releasePrefix, patch, refs }) {
+    const { alphaTagsForPatch, octokit, owner, releaseCommitIncludesTransactionHead, repo } = this;
     if (typeof octokit.rest.repos?.listPullRequestsAssociatedWithCommit !== "function") {
       return undefined;
     }
-    const pullRequest = await findMatchingTargetPullRequest({
+    const pullRequest = await this.findMatchingTargetPullRequest({
       commitSha,
       targetRef,
     });
@@ -882,9 +720,10 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
       }
     }
     return undefined;
-  };
+  }
 
-  const assertPromotionPrOrVersionStateParent = async ({ commitSha, targetRef, allowedPaths }) => {
+  async assertPromotionPrOrVersionStateParent({ commitSha, targetRef, allowedPaths }) {
+    const { assertChannelPromotionPr, getCommitInfo, listPullRequestsAssociatedWithCommitWithRetry, octokit, owner, parseVersionStateBranchName, repo } = this;
     try {
       await assertChannelPromotionPr({
         octokit,
@@ -918,7 +757,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
       if (matchingVersionStatePullRequest) {
         for (const parentSha of commit.parents) {
           try {
-            await assertOnlyAllowedChangesBetween({
+            await this.assertOnlyAllowedChangesBetween({
               baseSha: parentSha,
               headSha: commitSha,
               allowedPaths,
@@ -939,7 +778,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
             sha: parentSha,
             targetRef,
           });
-          await assertOnlyAllowedChangesBetween({
+          await this.assertOnlyAllowedChangesBetween({
             baseSha: parentSha,
             headSha: commitSha,
             allowedPaths,
@@ -951,9 +790,9 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
       }
       throw directError;
     }
-  };
+  }
 
-  const assertReleasePrOrVersionStateParent = async ({
+  async assertReleasePrOrVersionStateParent({
     commitSha,
     targetRef,
     alphaSha,
@@ -961,7 +800,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
     alphaTreeSha,
     allowedPaths,
     allowDirectAllowedChanges = false,
-    exactReleaseCandidateSource }) => {
+    exactReleaseCandidateSource }) { const { assertChannelPromotionPr, getCommitInfo, octokit, owner, parseReleaseLineRecoveryRef, repo, updates } = this;
     const commit = await getCommitInfo(octokit, owner, repo, commitSha);
     if (
       exactReleaseCandidateSource?.treeEquivalent === true &&
@@ -978,7 +817,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
           targetRef,
         });
       } catch (error) {
-        promotionPullRequest = await findMatchingTargetPullRequest({
+        promotionPullRequest = await this.findMatchingTargetPullRequest({
           commitSha,
           targetRef,
         });
@@ -1022,7 +861,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
         }
       } catch (error) {
         const matchingReleaseRecoveryPullRequest =
-          await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef,
+          await this.findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef,
         });
         if (!matchingReleaseRecoveryPullRequest) {
           throw error;
@@ -1048,7 +887,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
           targetRef,
         });
         validPromotionPr = true;
-        await assertOnlyAllowedChangesBetween({
+        await this.assertOnlyAllowedChangesBetween({
           baseSha: alphaSha,
           headSha: commitSha,
           allowedPaths,
@@ -1059,12 +898,12 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
           throw error;
         }
       }
-      const matchingTargetPullRequest = await findMatchingTargetPullRequest({
+      const matchingTargetPullRequest = await this.findMatchingTargetPullRequest({
         commitSha,
         targetRef,
       });
       if (matchingTargetPullRequest) {
-        await assertOnlyAllowedChangesBetween({
+        await this.assertOnlyAllowedChangesBetween({
           baseSha: alphaSha,
           headSha: commitSha,
           allowedPaths,
@@ -1073,7 +912,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
       }
     }
     const matchingCurrentReleaseRecoveryPullRequest =
-      await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
+      await this.findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
     if (matchingCurrentReleaseRecoveryPullRequest) {
       const recoveryBaseSha =
         matchingCurrentReleaseRecoveryPullRequest.base?.sha;
@@ -1098,13 +937,13 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
           throw new Error(
             `Release-line recovery PR head tree ${recoveryHead.treeSha} must equal promotion tree ${commit.treeSha}`);
         }
-        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+        await this.assertOnlyAllowedReleaseRecoveryChangesBetween({
           baseSha: recoveryBaseSha,
           headSha: recoveryHeadSha,
           allowedPaths,
         });
       } else {
-        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+        await this.assertOnlyAllowedReleaseRecoveryChangesBetween({
           baseSha: alphaSha,
           headSha: commitSha,
           allowedPaths,
@@ -1146,7 +985,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
           }
         } catch (error) {
           const matchingReleaseRecoveryPullRequest =
-            await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef,
+            await this.findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef,
           });
           if (!matchingReleaseRecoveryPullRequest) {
             throw error;
@@ -1159,7 +998,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
             targetRef,
           });
         }
-        await assertOnlyAllowedChangesBetween({
+        await this.assertOnlyAllowedChangesBetween({
           baseSha: parentSha,
           headSha: commitSha,
           allowedPaths,
@@ -1167,7 +1006,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
         return;
       }
       const matchingReleaseRecoveryPullRequest =
-        await findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef,
+        await this.findMatchingReleaseRecoveryPullRequest({ commitSha: parentSha, targetRef,
       });
       if (matchingReleaseRecoveryPullRequest) {
         const recoveryBaseSha = matchingReleaseRecoveryPullRequest.base?.sha;
@@ -1192,12 +1031,12 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
             throw new Error(
               `Release-line recovery PR head tree ${recoveryHead.treeSha} must equal exact release candidate tree ${parent.treeSha}`);
           }
-          await assertOnlyAllowedReleaseRecoveryChangesBetween({
+          await this.assertOnlyAllowedReleaseRecoveryChangesBetween({
             baseSha: recoveryBaseSha,
             headSha: recoveryHeadSha,
             allowedPaths,
           });
-          await assertOnlyAllowedChangesBetween({
+          await this.assertOnlyAllowedChangesBetween({
             baseSha: parentSha,
             headSha: commitSha,
             allowedPaths,
@@ -1216,12 +1055,12 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
           });
           return;
         }
-        await assertOnlyAllowedReleaseRecoveryChangesBetween({
+        await this.assertOnlyAllowedReleaseRecoveryChangesBetween({
           baseSha: alphaSha,
           headSha: parentSha,
           allowedPaths,
         });
-        await assertOnlyAllowedChangesBetween({
+        await this.assertOnlyAllowedChangesBetween({
           baseSha: parentSha,
           headSha: commitSha,
           allowedPaths,
@@ -1247,7 +1086,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
             targetRef,
           });
         } catch (error) {
-          promotionPullRequest = await findMatchingTargetPullRequest({
+          promotionPullRequest = await this.findMatchingTargetPullRequest({
             commitSha: parentSha,
             targetRef,
           });
@@ -1255,7 +1094,7 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
             throw error;
           }
         }
-        await assertOnlyAllowedChangesBetween({
+        await this.assertOnlyAllowedChangesBetween({
           baseSha: parentSha,
           headSha: commitSha,
           allowedPaths,
@@ -1276,9 +1115,9 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
       }
     }
     const matchingReleaseRecoveryPullRequest =
-      await findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
+      await this.findMatchingReleaseRecoveryPullRequest({ commitSha, targetRef });
     if (matchingReleaseRecoveryPullRequest) {
-      await assertOnlyAllowedReleaseRecoveryChangesBetween({
+      await this.assertOnlyAllowedReleaseRecoveryChangesBetween({
         baseSha: alphaSha,
         headSha: commitSha,
         allowedPaths,
@@ -1287,9 +1126,10 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
     }
     throw new Error(
       `Release source ${commitSha} must have the same tree as ${alphaTag}, except declared version-state files`);
-  };
+  }
 
-  const isSettledAlphaVersionState = async (selectedAlpha) => {
+  async isSettledAlphaVersionState(selectedAlpha) {
+    const { ownsMajorAlphaFloatingTag, readRefSha, rule, sha } = this;
     if (!selectedAlpha?.exists || selectedAlpha.sha !== sha) {
       return false;
     }
@@ -1301,20 +1141,31 @@ export function createReconciliationOperations(context, runtime) { const { RELEA
       readRefSha(`tags/${rule.alphaTag}`),
       ownsMajorAlphaTag ? readRefSha(`tags/${rule.majorAlphaTag}`) : undefined,
     ]);
-    return devSha === sha &&
-      exactAlphaTagSha === sha &&
-      floatingAlphaTagSha === sha &&
-      (!ownsMajorAlphaTag || majorFloatingAlphaTagSha === sha);
-  };
-  return {
-    assertOnlyAllowedChangesBetween,
-    listChangedPathsBetweenTrees,
-    assertOnlyAllowedReleaseRecoveryChangesBetween,
-    findMatchingReleaseRecoveryPullRequest,
-    findMatchingTargetPullRequest,
-    findAlphaMaterialFromPromotionPullRequest,
-    assertPromotionPrOrVersionStateParent,
-    assertReleasePrOrVersionStateParent,
-    isSettledAlphaVersionState,
-  };
+    return [
+      devSha === sha,
+      exactAlphaTagSha === sha,
+      floatingAlphaTagSha === sha,
+      ownsMajorAlphaTag ? majorFloatingAlphaTagSha === sha : true,
+    ].every(Boolean);
+  }
+}
+
+export function createRefMutationOperations(context, runtime) {
+  const instance = Object.assign(
+    Object.create(RefMutationOperations.prototype),
+    context,
+    runtime,
+    { context, majorAlphaRefCache: new Map() },
+  );
+  return bindOperations(instance, ["listLineRefs","listMajorAlphaRefs","ownsMajorAlphaFloatingTag","ensureTag","updateTag","updateMajorAlphaFloatingTag","readRefSha","updateBranch","updateDefaultBranch"]);
+}
+
+export function createReconciliationOperations(context, runtime) {
+  const instance = Object.assign(
+    Object.create(ReconciliationOperations.prototype),
+    context,
+    runtime,
+    { context },
+  );
+  return bindOperations(instance, ["assertOnlyAllowedChangesBetween","listChangedPathsBetweenTrees","assertOnlyAllowedReleaseRecoveryChangesBetween","findMatchingReleaseRecoveryPullRequest","findMatchingTargetPullRequest","findAlphaMaterialFromPromotionPullRequest","assertPromotionPrOrVersionStateParent","assertReleasePrOrVersionStateParent","isSettledAlphaVersionState"]);
 }

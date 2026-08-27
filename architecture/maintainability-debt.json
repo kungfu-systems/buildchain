@@ -178,14 +178,6 @@
             "runPublishTransaction@1419": {
               "lines": 247,
               "complexity": 33
-            },
-            "collectAndPersistReleasePassport@1807": {
-              "lines": 276,
-              "complexity": 60
-            },
-            "promoteBuildchainRefs@3191": {
-              "lines": 407,
-              "complexity": 46
             }
           }
         },
@@ -201,14 +193,6 @@
             "runPublishTransaction@1419": {
               "lines": 247,
               "complexity": 33
-            },
-            "collectAndPersistReleasePassport@1807": {
-              "lines": 276,
-              "complexity": 60
-            },
-            "promoteBuildchainRefs@3191": {
-              "lines": 260,
-              "complexity": 46
             }
           }
         },
@@ -222,14 +206,6 @@
               "complexity": 25
             },
             "runPublishTransaction@1419": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "collectAndPersistReleasePassport@1807": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "promoteBuildchainRefs@3191": {
               "lines": 180,
               "complexity": 25
             }
@@ -923,29 +899,6 @@
               "complexity": 25
             },
             "verifyPublicationAdmission@791": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/publication-control-plane-audit.js": {
-        "baseline": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
-              "complexity": 87
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
-              "complexity": 87
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
               "complexity": 25
             }
           }
@@ -1823,31 +1776,13 @@
       },
       "scripts/run-lifecycle-core.mjs": {
         "baseline": {
-          "lines": 885,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 471,
-              "complexity": 74
-            }
-          }
+          "lines": 885
         },
         "current": {
-          "lines": 885,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 471,
-              "complexity": 74
-            }
-          }
+          "lines": 850
         },
         "target": {
-          "lines": 600,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
+          "lines": 600
         }
       },
       "scripts/stable-candidate-patrol.mjs": {
@@ -2054,36 +1989,24 @@
         "baseline": {
           "lines": 1320,
           "functions": {
-            "createRefMutationOperations@1": {
-              "lines": 648
-            },
-            "updateBranch@231": {
+            "updateBranch@158": {
               "lines": 378,
               "complexity": 34
             },
-            "createReconciliationOperations@649": {
-              "lines": 672
-            },
-            "assertReleasePrOrVersionStateParent@956": {
+            "assertReleasePrOrVersionStateParent@795": {
               "lines": 335,
               "complexity": 42
             }
           }
         },
         "current": {
-          "lines": 1320,
+          "lines": 1171,
           "functions": {
-            "createRefMutationOperations@1": {
-              "lines": 648
-            },
-            "updateBranch@231": {
+            "updateBranch@158": {
               "lines": 378,
               "complexity": 34
             },
-            "createReconciliationOperations@649": {
-              "lines": 672
-            },
-            "assertReleasePrOrVersionStateParent@956": {
+            "assertReleasePrOrVersionStateParent@795": {
               "lines": 335,
               "complexity": 42
             }
@@ -2092,17 +2015,11 @@
         "target": {
           "lines": 600,
           "functions": {
-            "createRefMutationOperations@1": {
-              "lines": 180
-            },
-            "updateBranch@231": {
+            "updateBranch@158": {
               "lines": 180,
               "complexity": 25
             },
-            "createReconciliationOperations@649": {
-              "lines": 180
-            },
-            "assertReleasePrOrVersionStateParent@956": {
+            "assertReleasePrOrVersionStateParent@795": {
               "lines": 180,
               "complexity": 25
             }
@@ -2609,39 +2526,39 @@
         "baseline": {
           "lines": 4220,
           "functions": {
-            "<anonymous@2656>@2656": {
+            "<anonymous@2569>@2569": {
               "lines": 195
             },
-            "<anonymous@2852>@2852": {
+            "<anonymous@2765>@2765": {
               "lines": 181
             },
-            "<anonymous@3034>@3034": {
+            "<anonymous@2947>@2947": {
               "lines": 184
             },
-            "<anonymous@3348>@3348": {
+            "<anonymous@3261>@3261": {
               "lines": 188
             },
-            "<anonymous@3723>@3723": {
+            "<anonymous@3636>@3636": {
               "lines": 204
             }
           }
         },
         "current": {
-          "lines": 4220,
+          "lines": 4133,
           "functions": {
-            "<anonymous@2656>@2656": {
+            "<anonymous@2569>@2569": {
               "lines": 195
             },
-            "<anonymous@2852>@2852": {
+            "<anonymous@2765>@2765": {
               "lines": 181
             },
-            "<anonymous@3034>@3034": {
+            "<anonymous@2947>@2947": {
               "lines": 184
             },
-            "<anonymous@3348>@3348": {
+            "<anonymous@3261>@3261": {
               "lines": 188
             },
-            "<anonymous@3723>@3723": {
+            "<anonymous@3636>@3636": {
               "lines": 204
             }
           }
@@ -2649,19 +2566,19 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@2656>@2656": {
+            "<anonymous@2569>@2569": {
               "lines": 180
             },
-            "<anonymous@2852>@2852": {
+            "<anonymous@2765>@2765": {
               "lines": 180
             },
-            "<anonymous@3034>@3034": {
+            "<anonymous@2947>@2947": {
               "lines": 180
             },
-            "<anonymous@3348>@3348": {
+            "<anonymous@3261>@3261": {
               "lines": 180
             },
-            "<anonymous@3723>@3723": {
+            "<anonymous@3636>@3636": {
               "lines": 180
             }
           }
@@ -2671,15 +2588,15 @@
         "baseline": {
           "lines": 4211,
           "functions": {
-            "<anonymous@3165>@3165": {
+            "<anonymous@3080>@3080": {
               "lines": 203
             }
           }
         },
         "current": {
-          "lines": 4211,
+          "lines": 4126,
           "functions": {
-            "<anonymous@3165>@3165": {
+            "<anonymous@3080>@3080": {
               "lines": 203
             }
           }
@@ -2687,7 +2604,7 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@3165>@3165": {
+            "<anonymous@3080>@3080": {
               "lines": 180
             }
           }
