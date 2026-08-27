@@ -26534,7 +26534,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:ddea6520fd14aef74475663c9b27f47e6809f79f513b1c4567c8c69d4a877de8",
+      "digest": "sha256:80dfcaa66693125d7212121975f0640391494b3cda0f57fbcfbc54a53f6533bf",
       "summary": "Durable single-flight Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
