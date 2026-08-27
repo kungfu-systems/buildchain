@@ -10618,7 +10618,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 420
+        "line": 422
       },
       "example": "import { codeownersForPath } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10647,7 +10647,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 314
+        "line": 316
       },
       "example": "import { compileEffectiveGithubGovernancePolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10671,7 +10671,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 453
+        "line": 455
       },
       "example": "import { createBuildchainGithubGovernanceAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10787,7 +10787,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 428
+        "line": 430
       },
       "example": "import { evaluateCodeownersAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10941,7 +10941,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 166
+        "line": 168
       },
       "example": "import { githubGovernanceDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11057,7 +11057,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 404
+        "line": 406
       },
       "example": "import { parseCodeowners } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -30425,7 +30425,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:2aea877b54d6fc147ce08faf8c49448ecc2e6a1fda14689b41cb107496110b97",
+      "digest": "sha256:4eb7b9a3616b16178062cc88d430f0fb3bd11c16c8e926ebc9fd98396859732c",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -31139,7 +31139,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:c3e96c32dcc1a7790ad0a4a13edc0b5add38845950e9e4b7155e2f1aaa8f722c"
+      "digest": "sha256:bd90fcd3f1d4f86bd2ed90670442120d1bf597197bd4e6a838a5dc7e4c0cbb6c"
     },
     {
       "id": "build-facts",
