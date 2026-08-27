@@ -92,6 +92,10 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+function readRepoText(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), "utf8");
+}
+
 test("every workflow v2 token is explicitly governed and no ungoverned runtime default remains", () => {
   const inventory = JSON.parse(
     fs.readFileSync(
@@ -135,7 +139,7 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
       `${entry.path} must declare a sunset condition`,
     );
 
-    const source = fs.readFileSync(path.join(root, entry.path), "utf8");
+    const source = readRepoText(entry.path);
     assert.equal(
       source.split(entry.token).length - 1,
       entry.expectedOccurrences,
@@ -176,7 +180,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     ".github/workflows/release-propagation.yml",
   ];
   for (const workflow of workflows) {
-    const source = fs.readFileSync(path.join(root, workflow), "utf8");
+    const source = readRepoText(workflow);
     assert.match(
       source,
       /controller-plan-artifact:/,
@@ -240,20 +244,14 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     );
   }
 
-  const gateEnvelope = fs.readFileSync(
-    path.join(root, ".github/workflows/.gate-profile.yml"),
-    "utf8",
-  );
+  const gateEnvelope = readRepoText(".github/workflows/.gate-profile.yml");
   assert.match(gateEnvelope, /shifu-gate-aggregate/);
   assert.doesNotMatch(
     gateEnvelope,
     /BUILDCHAIN_CONTROLLER_(?:GATE_IDS|GATE_RESULTS)/,
   );
 
-  const channelRouter = fs.readFileSync(
-    path.join(root, ".github/workflows/build.yml"),
-    "utf8",
-  );
+  const channelRouter = readRepoText(".github/workflows/build.yml");
   assert.match(
     channelRouter,
     /router-repository: \$\{\{ steps\.router\.outputs\.repository \}\}/,
@@ -282,9 +280,8 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(channelRouter, /Enforce public channel router aggregate/);
 
-  const governanceReconciliation = fs.readFileSync(
-    path.join(root, ".github/workflows/release-governance-reconcile.yml"),
-    "utf8",
+  const governanceReconciliation = readRepoText(
+    ".github/workflows/release-governance-reconcile.yml",
   );
   assert.match(governanceReconciliation, /workflow_call:/);
   assert.match(governanceReconciliation, /workflow_dispatch:/);
@@ -295,19 +292,15 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(governanceReconciliation, /args\+\=\(--apply\)/);
   assert.match(governanceReconciliation, /persist-credentials: false/);
 
-  const libnodeConsumer = fs.readFileSync(
-    path.join(root, "fixtures/libnode-shaped/.github/workflows/build.yml"),
-    "utf8",
+  const libnodeConsumer = readRepoText(
+    "fixtures/libnode-shaped/.github/workflows/build.yml",
   );
   assert.match(
     libnodeConsumer,
     /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/,
   );
 
-  const reusableBuild = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
+  const reusableBuild = readRepoText(".github/workflows/.build.yml");
   assert.match(reusableBuild, /Checkout build controller workflow shell/);
   assert.match(
     reusableBuild,
@@ -330,13 +323,9 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/,
   );
 
-  const paperRelease = fs.readFileSync(
-    path.join(root, ".github/workflows/paper-release.yml"),
-    "utf8",
-  );
-  const promotion = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
+  const paperRelease = readRepoText(".github/workflows/paper-release.yml");
+  const promotion = readRepoText(
+    ".github/workflows/.release-candidate-promote.yml",
   );
   const promotionAuthority = promotion.slice(
     promotion.indexOf("  publication-authority:"),
@@ -375,14 +364,8 @@ test("public reusable controllers expose source-bound plan and always-aggregated
 });
 
 test("reusable build workflow exposes the required surface contract", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-  const router = fs.readFileSync(
-    path.join(root, ".github/workflows/build.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/.build.yml");
+  const router = readRepoText(".github/workflows/build.yml");
   const summarizeJob = workflow.slice(
     workflow.indexOf("  summarize:"),
     workflow.indexOf(
@@ -613,11 +596,11 @@ test("reusable build workflow exposes the required surface contract", () => {
   assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
   assert.match(
     workflow,
-    /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/,
+    /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ steps\.expected-identity\.outputs\.expected-channel \}\}/,
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/,
+    /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ steps\.expected-identity\.outputs\.expected-major \}\}/,
   );
   assert.match(workflow, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME:/);
   assert.doesNotMatch(workflow, /contract-lock-compatible=true/);
@@ -1254,13 +1237,9 @@ test("reusable build workflow exposes the required surface contract", () => {
 });
 
 test("publication artifact workflow exposes paper artifact contract", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/publication-artifact.yml"),
-    "utf8",
-  );
-  const reproducibility = fs.readFileSync(
-    path.join(root, "packages/core/publication-reproducibility.js"),
-    "utf8",
+  const workflow = readRepoText(".github/workflows/publication-artifact.yml");
+  const reproducibility = readRepoText(
+    "packages/core/publication-reproducibility.js",
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
@@ -1330,18 +1309,11 @@ test("publication artifact workflow exposes paper artifact contract", () => {
 });
 
 test("paper release workflow publishes declared npm package with source lock and GitHub Release", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/paper-release.yml"),
-    "utf8",
+  const workflow = readRepoText(".github/workflows/paper-release.yml");
+  const sealedWorkflow = readRepoText(
+    ".github/workflows/paper-release-sealed.yml",
   );
-  const sealedWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/paper-release-sealed.yml"),
-    "utf8",
-  );
-  const docs = fs.readFileSync(
-    path.join(root, "docs/publication-artifacts.md"),
-    "utf8",
-  );
+  const docs = readRepoText("docs/publication-artifacts.md");
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
@@ -1636,13 +1608,11 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
 });
 
 test("release-candidate promote workflow is promote-only and never schedules a heavy build", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
+  const workflow = readRepoText(
+    ".github/workflows/.release-candidate-promote.yml",
   );
-  const publicWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
-    "utf8",
+  const publicWorkflow = readRepoText(
+    ".github/workflows/release-candidate-promote.yml",
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(
@@ -2145,10 +2115,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
 });
 
 test("sealed publication authority verifier is independent and credential-free", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.publication-authority.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/.publication-authority.yml");
   assert.match(workflow, /name: Independently verify publication admission/);
   assert.match(workflow, /verifyPublicationAdmission/);
   assert.match(workflow, /contents: read/);
@@ -2253,10 +2220,7 @@ test("sealed publication authority verifier is independent and credential-free",
 });
 
 test("self-publication admission assembly binds downloaded evidence without publication credentials", () => {
-  const script = fs.readFileSync(
-    path.join(root, "scripts/assemble-self-publication-admission.mjs"),
-    "utf8",
-  );
+  const script = readRepoText("scripts/assemble-self-publication-admission.mjs");
   assert.match(script, /createPublicationArtifactManifestSet/);
   assert.match(script, /createPublicationGateDecision/);
   assert.match(script, /createRunnerProvenance/);
@@ -2275,19 +2239,15 @@ test("self-publication admission assembly binds downloaded evidence without publ
 });
 
 test("publication artifact admission uses validated Gate policy bindings", () => {
-  const script = fs.readFileSync(
-    path.join(root, "scripts/assemble-publication-artifact-admission.mjs"),
-    "utf8",
+  const script = readRepoText(
+    "scripts/assemble-publication-artifact-admission.mjs",
   );
   assert.match(script, /policyDigest: gateBindings\.policyDigest/);
   assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
 });
 
 test("publication control-plane audit defers npm OIDC authorization to the publish transaction", () => {
-  const script = fs.readFileSync(
-    path.join(root, "scripts/audit-publication-control-plane.mjs"),
-    "utf8",
-  );
+  const script = readRepoText("scripts/audit-publication-control-plane.mjs");
   assert.match(script, /provider-at-transaction/);
   assert.match(script, /authorizationDeferred: true/);
   assert.match(script, /configurationRead: false/);
@@ -2319,10 +2279,7 @@ test("legacy release workflows fail closed instead of bypassing publish-gate sou
     ".wheel-release.yml",
   ];
   for (const workflowName of retiredReleaseWorkflows) {
-    const workflow = fs.readFileSync(
-      path.join(root, ".github/workflows", workflowName),
-      "utf8",
-    );
+    const workflow = readRepoText(`.github/workflows/${workflowName}`);
     assert.match(workflow, /release path is retired/);
     assert.match(workflow, /release-candidate-promote\.yml@v3/);
     assert.match(workflow, /publish-gate source-lock enforcement/);
@@ -2335,10 +2292,7 @@ test("legacy release workflows fail closed instead of bypassing publish-gate sou
 });
 
 test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/dev-pr-auto-merge.yml");
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /target-branch:/);
   assert.match(workflow, /expected-pr-number:/);
@@ -2411,10 +2365,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
     /\$legacyBinding\.stateRoot == \.observation\.stateRoot/,
   );
 
-  const verify = fs.readFileSync(
-    path.join(root, ".github/workflows/verify.yml"),
-    "utf8",
-  );
+  const verify = readRepoText(".github/workflows/verify.yml");
   assert.match(verify, /pull_request:/);
   assert.match(verify, /merge_group:/);
   assert.match(verify, /types: \[checks_requested\]/);
@@ -2422,9 +2373,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
 });
 
 test("queued Warrant cancellation workflow binds exact terminal event authority", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/dev-delivery-warrant-cancel.yml"),
-    "utf8",
+  const workflow = readRepoText(
+    ".github/workflows/dev-delivery-warrant-cancel.yml",
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /expected-candidate-id:/);
@@ -2440,10 +2390,7 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
 });
 
 test("Buildchain self-delivery exposes the complete two-phase Warrant caller", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-dev-delivery.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/buildchain-dev-delivery.yml");
   const stableLock = JSON.parse(
     fs.readFileSync(path.join(root, ".buildchain/contract-lock.json"), "utf8"),
   );
@@ -2584,14 +2531,8 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
 });
 
 test("PR-controlled native delivery and provider finalization use distinct hosted jobs", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
-    "utf8",
-  );
-  const template = fs.readFileSync(
-    path.join(root, "templates/native-dev-delivery.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/dev-pr-auto-merge.yml");
+  const template = readRepoText("templates/native-dev-delivery.yml");
   assert.match(
     workflow,
     /buildchain-ref:\n\s+description: "Explicit Buildchain v4 runtime ref[^\n]+\n\s+default: "v4"/u,
@@ -2768,9 +2709,8 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
 });
 
 test("declared merge queue governance reconciles automatically on dev changes", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/dev-merge-queue-governance.yml"),
-    "utf8",
+  const workflow = readRepoText(
+    ".github/workflows/dev-merge-queue-governance.yml",
   );
   assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
   assert.match(workflow, /\.buildchain\/buildchain\.toml/);
@@ -2783,33 +2723,18 @@ test("declared merge queue governance reconciles automatically on dev changes", 
 });
 
 test("patrol workflow family exposes daily weekly monthly reusable entries and dogfood schedules", () => {
-  const engine = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-patrol.yml"),
-    "utf8",
+  const engine = readRepoText(".github/workflows/buildchain-patrol.yml");
+  const daily = readRepoText(".github/workflows/patrol-daily.yml");
+  const weekly = readRepoText(".github/workflows/patrol-weekly.yml");
+  const monthly = readRepoText(".github/workflows/patrol-monthly.yml");
+  const dogfoodDaily = readRepoText(
+    ".github/workflows/buildchain-patrol-daily.yml",
   );
-  const daily = fs.readFileSync(
-    path.join(root, ".github/workflows/patrol-daily.yml"),
-    "utf8",
+  const dogfoodWeekly = readRepoText(
+    ".github/workflows/buildchain-patrol-weekly.yml",
   );
-  const weekly = fs.readFileSync(
-    path.join(root, ".github/workflows/patrol-weekly.yml"),
-    "utf8",
-  );
-  const monthly = fs.readFileSync(
-    path.join(root, ".github/workflows/patrol-monthly.yml"),
-    "utf8",
-  );
-  const dogfoodDaily = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-patrol-daily.yml"),
-    "utf8",
-  );
-  const dogfoodWeekly = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-patrol-weekly.yml"),
-    "utf8",
-  );
-  const dogfoodMonthly = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-patrol-monthly.yml"),
-    "utf8",
+  const dogfoodMonthly = readRepoText(
+    ".github/workflows/buildchain-patrol-monthly.yml",
   );
 
   assert.match(engine, /workflow_call:/);
@@ -2978,14 +2903,8 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
 });
 
 test("check workflow preserves verify mode and exposes source-check mode", () => {
-  const reusable = fs.readFileSync(
-    path.join(root, ".github/workflows/check.yml"),
-    "utf8",
-  );
-  const verify = fs.readFileSync(
-    path.join(root, ".github/workflows/verify.yml"),
-    "utf8",
-  );
+  const reusable = readRepoText(".github/workflows/check.yml");
+  const verify = readRepoText(".github/workflows/verify.yml");
 
   assert.match(reusable, /workflow_call:/);
   assert.match(reusable, /mode:/);
@@ -3047,10 +2966,7 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(reusable, /dev-delivery-source-proof-reuse\.mjs seal/);
   assert.match(reusable, /buildchain-source-qualification-proof-/);
   assert.match(reusable, /retention-days: 14/);
-  const lifecycleDocs = fs.readFileSync(
-    path.join(root, "docs/lifecycle-protocol.md"),
-    "utf8",
-  );
+  const lifecycleDocs = readRepoText("docs/lifecycle-protocol.md");
   assert.match(lifecycleDocs, /BUILDCHAIN_CHECK_MODE=source/);
   assert.match(lifecycleDocs, /BUILDCHAIN_CHECK_MODE=verify/);
   assert.match(verify, /Checkout Buildchain runtime/);
@@ -3104,10 +3020,7 @@ test("source-check fixture executes only install and check", () => {
 });
 
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.web-surface.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/.web-surface.yml");
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /permissions:\n  actions: read\n  contents: read/);
   assert.match(workflow, /buildchain-ref:/);
@@ -3357,10 +3270,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
 });
 
 test("web-surface side-effect jobs and sealed production paths have explicit authority", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.web-surface.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/.web-surface.yml");
   const job = (id) => {
     const match = workflow.match(
       new RegExp(`^  ${id}:\\n([\\s\\S]*?)(?=^  [a-z0-9-]+:\\n|\\Z)`, "m"),

@@ -185,6 +185,11 @@ async function handleCollectCommand({ args, runScript, packageVersion }) {
     runnerArch: process.env.RUNNER_ARCH || process.arch,
     runnerImage: process.env.ImageOS || "",
   };
+  if (readFlag(collectArgs, "adopter-delivery-json", "")) {
+    throw new Error(
+      "buildchain-v3-v4-public-surface-migration/v1: --adopter-delivery-json is non-authoritative in v4; use --kfd-adopter-manifest-json with --kfd-product-gate-json",
+    );
+  }
   const result = collectGitHubReleasePassport({
     cwd: readFlag(collectArgs, "cwd", process.cwd()),
     tag: readFlag(collectArgs, "tag", ""),

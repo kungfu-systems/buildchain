@@ -21,6 +21,7 @@ import {
   createSiteReleaseActivationAdapter,
 } from "../../packages/core/release-tail-provider-adapters.js";
 import {
+  V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
   executeV4PublicationRehearsal,
   resolveV4PublicationRehearsalProviderBindings,
 } from "../../packages/core/v4-publication-rehearsal.js";
@@ -29,6 +30,16 @@ const BINDINGS_SCHEMA = "kungfu.buildchain.release-tail.provider-bindings/v1";
 
 function input(name, required = false) {
   return core.getInput(name, { required }).trim();
+}
+
+function compatibilityInput(currentName, legacyName) {
+  const current = input(currentName);
+  const legacy = input(legacyName);
+  if (current && legacy && current !== legacy)
+    throw new Error(
+      `${legacyName} conflicts with its v4 replacement ${currentName}`,
+    );
+  return current || legacy;
 }
 
 function readJson(value, label) {
@@ -308,16 +319,33 @@ export async function executeAction({
 }
 
 async function main() {
-  const rehearsalCapsuleInput = input("rehearsal-capsule");
+  const rehearsalCapsuleInput = compatibilityInput(
+    "rehearsal-capsule",
+    "capsule",
+  );
   if (rehearsalCapsuleInput) {
+    const capsuleContract = input("capsule-contract");
+    if (
+      capsuleContract &&
+      capsuleContract !== V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT
+    )
+      throw new Error(
+        `buildchain-v3-v4-public-surface-migration/v1: capsule-contract must migrate to ${V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT}`,
+      );
     const capsule = readJson(rehearsalCapsuleInput, "rehearsal-capsule");
-    const candidateRoot = path.resolve(input("candidate-root", true));
+    const candidateRootInput = compatibilityInput(
+      "candidate-root",
+      "capsule-root",
+    );
+    if (!candidateRootInput)
+      throw new Error("candidate-root or capsule-root is required");
+    const candidateRoot = path.resolve(candidateRootInput);
     const rehearsalMode = input("rehearsal-mode") || "simulate";
     const statePath = path.resolve(
       input("state-path") || ".buildchain/publication-rehearsal/state.json",
     );
     const evidencePath = path.resolve(
-      input("rehearsal-evidence-path") ||
+      compatibilityInput("rehearsal-evidence-path", "evidence-path") ||
         ".buildchain/publication-rehearsal/evidence.json",
     );
     const bindingsInput = input("provider-bindings");
@@ -360,6 +388,9 @@ async function main() {
     core.setOutput("state-root", result.transaction.stateRoot);
     core.setOutput("state-path", statePath);
     core.setOutput("rehearsal-evidence-root", result.evidence.evidenceRoot);
+    core.setOutput("binding-root", result.evidence.capsuleRoot);
+    core.setOutput("evidence-root", result.evidence.evidenceRoot);
+    core.setOutput("evidence-path", evidencePath);
     core.setOutput(
       "receipt-roots-json",
       JSON.stringify(

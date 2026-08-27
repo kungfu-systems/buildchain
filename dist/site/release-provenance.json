@@ -45,6 +45,8 @@
       "./v4-tail-reseal": "./packages/core/v4-tail-reseal.js",
       "./v4-tail-reseal-receipt": "./packages/core/v4-tail-reseal-receipt.js",
       "./v4-publication-rehearsal": "./packages/core/v4-publication-rehearsal.js",
+      "./publication-rehearsal-runtime": "./packages/core/publication-rehearsal-runtime.js",
+      "./publication-rehearsal-projection": "./packages/core/publication-rehearsal-projection.js",
       "./v4-publication-qualification": "./packages/core/v4-publication-qualification.js",
       "./adopter-delivery-gate": "./packages/core/adopter-delivery-gate.js",
       "./kfd-adopter-category-driver": "./packages/core/kfd-adopter-category-driver.js",

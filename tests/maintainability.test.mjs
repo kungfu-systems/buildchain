@@ -10,6 +10,7 @@ import {
   isHandMaintainedSource,
 } from "../scripts/maintainability-metrics.mjs";
 import {
+  collectHotspots,
   ensureMaintainabilityRevisionsAvailable,
   ensureRevisionAvailable,
   evaluatePublicSurface,
@@ -317,6 +318,15 @@ test("missing maintainability revisions are hydrated in bounded shallow fetches"
   assert.equal(git(shallow, ["cat-file", "-t", enforcementRevision]), "commit");
   assert.equal(ensureRevisionAvailable(shallow, baselineRevision), false);
   assert.equal(ensureRevisionAvailable(shallow, enforcementRevision), false);
+  assert.deepEqual(
+    collectHotspots(
+      shallow,
+      { files: { "fixture.txt": {} }, tests: {}, workflows: {} },
+      20,
+      ["fixture.txt"],
+    ),
+    ["fixture.txt"],
+  );
 });
 
 test("public surface lifecycle metadata preserves baseline contracts", () => {

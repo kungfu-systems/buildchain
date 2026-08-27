@@ -7,6 +7,42 @@ export const ADOPTER_DELIVERY_PASSPORT_BINDING_CONTRACT =
   "kungfu-buildchain-adopter-delivery-passport-binding";
 
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
+const EXACT_SHA_PATTERN = /^[0-9a-f]{40}$/u;
+
+export function releasePassportKfdAdopterSourceSha({
+  passportSourceSha = "",
+  release = undefined,
+} = {}) {
+  const exactSha = (value) =>
+    EXACT_SHA_PATTERN.test(String(value || "").trim());
+  const candidateSourceSha = String(release?.candidateSourceSha || "").trim();
+  const builtSourceSha = String(release?.builtSourceSha || "").trim();
+  const promotionChannelSha = String(release?.promotionChannelSha || "").trim();
+  const candidateSourceTreeSha = String(
+    release?.candidateSourceTreeSha || "",
+  ).trim();
+  const builtSourceTreeSha = String(release?.builtSourceTreeSha || "").trim();
+  const promotionChannelTreeSha = String(
+    release?.promotionChannelTreeSha || "",
+  ).trim();
+  if (
+    release?.treeEquivalent !== true ||
+    !exactSha(passportSourceSha) ||
+    !exactSha(candidateSourceSha) ||
+    !exactSha(builtSourceSha) ||
+    !exactSha(promotionChannelSha) ||
+    candidateSourceSha !== builtSourceSha ||
+    promotionChannelSha !== passportSourceSha ||
+    !exactSha(candidateSourceTreeSha) ||
+    !exactSha(builtSourceTreeSha) ||
+    !exactSha(promotionChannelTreeSha) ||
+    candidateSourceTreeSha !== builtSourceTreeSha ||
+    candidateSourceTreeSha !== promotionChannelTreeSha
+  ) {
+    return passportSourceSha;
+  }
+  return candidateSourceSha;
+}
 
 function issue(code, message, details = {}) {
   return { code, message, details };
