@@ -27,8 +27,8 @@ test("live v4 cut is reachable from the checked candidate", () => {
   assert.throws(
     () =>
       assertCapabilityCutAncestor({
-        revision: "HEAD",
-        descendant: V3_V4_CAPABILITY_CUTS.liveV4,
+        revision: V3_V4_CAPABILITY_CUTS.liveV4,
+        descendant: `${V3_V4_CAPABILITY_CUTS.liveV4}^`,
         label: "reversed test cut",
       }),
     /must be an ancestor/u,
