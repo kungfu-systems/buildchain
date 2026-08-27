@@ -60,10 +60,7 @@ test("promotion facade delegates to independently owned channel modules", () => 
       `${channel} channel module is ${moduleLines} lines`,
     );
   }
-  assert.match(
-    facade,
-    /from "\.\/internal\/promotion-operations\.js"/,
-  );
+  assert.match(facade, /from "\.\/internal\/promotion-operations\.js"/);
   assert.doesNotMatch(
     facade,
     /async function assertPromotionPrOrVersionStateParent/,
