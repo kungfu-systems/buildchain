@@ -7,6 +7,14 @@ const workflow = fs.readFileSync(
   path.resolve(".github/workflows/.release-candidate-promote.yml"),
   "utf8",
 );
+const publicWorkflow = fs.readFileSync(
+  path.resolve(".github/workflows/release-candidate-promote.yml"),
+  "utf8",
+);
+const recoveryWorkflow = fs.readFileSync(
+  path.resolve(".github/workflows/buildchain-ref-promotion-recovery.yml"),
+  "utf8",
+);
 const protectedShellPredicate =
   "startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0'";
 
@@ -21,6 +29,17 @@ test("protected alpha v4 recovery selects only the declarative Provider Plane", 
       new RegExp(`^  ${legacyJob}:[\\s\\S]*?^    if: [^\\n]*!\\(startsWith\\(inputs\\.promotion-shell-ref, 'v4'\\) \\|\\| inputs\\.promotion-shell-ref == 'alpha/v4/v4\\.0'\\)`, "m"),
     );
   }
+});
+
+test("bounded floating bootstrap uses the old private shell with a declarative built-in tail", () => {
+  assert.match(
+    recoveryWorkflow,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
+  );
+  assert.match(recoveryWorkflow, /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u);
+  assert.match(recoveryWorkflow, /declarative-release-tail: true/u);
+  assert.doesNotMatch(recoveryWorkflow, /channel-finalization-recovery/u);
+  assert.doesNotMatch(publicWorkflow, /channel-finalization-recovery/u);
 });
 
 test("declarative promotion receipt reads the retained passport hierarchy", () => {
