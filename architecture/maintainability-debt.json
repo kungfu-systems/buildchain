@@ -178,14 +178,6 @@
             "runPublishTransaction@1419": {
               "lines": 247,
               "complexity": 33
-            },
-            "collectAndPersistReleasePassport@1807": {
-              "lines": 276,
-              "complexity": 60
-            },
-            "promoteBuildchainRefs@3191": {
-              "lines": 407,
-              "complexity": 46
             }
           }
         },
@@ -201,14 +193,6 @@
             "runPublishTransaction@1419": {
               "lines": 247,
               "complexity": 33
-            },
-            "collectAndPersistReleasePassport@1807": {
-              "lines": 276,
-              "complexity": 60
-            },
-            "promoteBuildchainRefs@3191": {
-              "lines": 260,
-              "complexity": 46
             }
           }
         },
@@ -222,14 +206,6 @@
               "complexity": 25
             },
             "runPublishTransaction@1419": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "collectAndPersistReleasePassport@1807": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "promoteBuildchainRefs@3191": {
               "lines": 180,
               "complexity": 25
             }

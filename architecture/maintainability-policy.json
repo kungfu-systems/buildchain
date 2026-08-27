@@ -1696,8 +1696,8 @@
   "selectedFunctionBudgets": {
     "promoteBuildchainRefs": {
       "file": "actions/promote-buildchain-ref/lib.js",
-      "lines": 260,
-      "complexity": 46
+      "lines": 3,
+      "complexity": 1
     },
     "createReleaseCheckReport": {
       "file": "packages/core/release-passport.js",
