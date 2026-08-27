@@ -67,7 +67,7 @@ function report(platform, consumer = "buildchain") {
 }
 
 test("raw v3 inventory produces the complete exact-source matrix", () => {
-  assert.equal(inventoryEvidence.summary.capabilityCount, 4648);
+  assert.equal(inventoryEvidence.summary.capabilityCount, 4654);
   assert.equal(inventoryEvidence.categories.length, 18);
   assert.deepEqual(inventoryEvidence.summary, inventory.summary);
   const substituted = structuredClone(inventory);
@@ -87,7 +87,7 @@ test("two public adopters and the neutral driver reconcile across all platforms"
   );
   const qualification = qualifyV4CrossPlatformAdopters({ reports, consumers });
   assert.equal(qualification.reports.length, 6);
-  assert.equal(qualification.capabilityMatrix.capabilityCount, 4648);
+  assert.equal(qualification.capabilityMatrix.capabilityCount, 4654);
   assert.equal(qualification.neutralDriver.status, "passed");
   assert.equal(qualification.authority.stablePublication, false);
 });
