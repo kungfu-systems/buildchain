@@ -62,7 +62,9 @@ test("live v4 ancestry is hydrated in a bounded shallow checkout", () => {
     `file://${remote}`,
     shallow,
   ]);
+  const candidate = runGit(shallow, ["rev-parse", "HEAD"]);
   runGit(shallow, ["fetch", "--no-tags", "--depth=1", "origin", cut]);
+  runGit(shallow, ["fetch", "--no-tags", "--depth=1", "origin", candidate]);
   assert.throws(
     () => assertCapabilityCutAncestor({ root: shallow, revision: cut }),
     /must be an ancestor/u,
