@@ -27,7 +27,7 @@ const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
 const BUILDCHAIN_REPOSITORY = "kungfu-systems/buildchain";
 const CHANNELS = Object.freeze({ v4: "stable", "v4-alpha": "alpha" });
 const ALPHA_RECOVERY_BOOTSTRAP = Object.freeze({
-  selector: "v4-alpha",
+  selector: "alpha/v4/v4.0",
   sourcePath: ".github/workflows/buildchain-ref-promotion-recovery.yml",
   workflow: ".github/workflows/.release-candidate-promote.yml",
 });

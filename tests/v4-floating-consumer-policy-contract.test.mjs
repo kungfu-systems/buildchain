@@ -69,7 +69,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
   assert.equal(result.receipt.invocation.channel, "alpha");
 });
 
-test("bounded alpha recovery admits the old floating shell with current exact runtime binding", () => {
+test("bounded alpha recovery calls the exact protected shell with current runtime binding", () => {
   const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
   const legacyRelative = ".github/workflows/release-candidate-promote.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
@@ -190,9 +190,12 @@ test("bounded alpha recovery admits the old floating shell with current exact ru
       JSON.stringify(externalEvidencePersistence.failures),
     );
 
+    const foreignInvocationRoot = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-foreign-recovery-"));
+    fs.mkdirSync(path.join(foreignInvocationRoot, ".github/workflows"), { recursive: true });
+    fs.writeFileSync(path.join(foreignInvocationRoot, relative), workflow);
     const foreignRepository = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
-      invocationRoot: root,
+      invocationRoot: foreignInvocationRoot,
       repository: "kungfu-systems/consumer",
       sourceSha: "a".repeat(40),
       invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
@@ -210,6 +213,7 @@ test("bounded alpha recovery admits the old floating shell with current exact ru
       ),
       true,
     );
+    fs.rmSync(foreignInvocationRoot, { recursive: true, force: true });
 
     result = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
@@ -230,13 +234,13 @@ test("bounded alpha recovery admits the old floating shell with current exact ru
   }
 
   assert.equal(result.ok, true, JSON.stringify(result.failures));
-  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+  assert.equal(result.receipt.invocation.visibleSelector, "alpha/v4/v4.0");
   assert.equal(result.receipt.invocation.selectorClass, "protected-bootstrap");
   assert.match(workflow, /^  workflow_dispatch:/mu);
   assert.doesNotMatch(workflow, /^  workflow_run:/mu);
   assert.match(
     workflow,
-    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@v4-alpha/u,
+    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@alpha\/v4\/v4\.0[\s\S]*declarative-release-tail: true/u,
   );
   assert.match(
     workflow,

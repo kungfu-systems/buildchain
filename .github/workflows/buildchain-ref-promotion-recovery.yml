@@ -227,8 +227,8 @@ jobs:
   promote-alpha-recovery:
     name: Resume sealed v4 candidate through the advanced shell
     needs: consumer-admission
-    # Bounded bootstrap: v4-alpha retains the schema-compatible legacy channel transaction until floating readback converges.
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    # Bounded bootstrap: call the protected alpha shell whose exact SHA was admitted above.
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0
     permissions:
       actions: write
       artifact-metadata: write
