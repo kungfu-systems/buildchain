@@ -261,7 +261,7 @@ jobs:
           REASON: ${{ inputs.reason }}
           SETTLEMENT_MODE: ${{ steps.settlement.outputs.mode }}
       - name: Wake exact queued successor
-        if: steps.close.outputs.successor-wake-json != 'null'
+        if: steps.close.outcome == 'success' && steps.close.outputs.successor-wake-json != 'null'
         shell: bash
         run: |
           set -euo pipefail
