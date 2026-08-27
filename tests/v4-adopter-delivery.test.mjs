@@ -309,3 +309,52 @@ test("CLI and public self-dogfood workflow expose the same public boundary", () 
   );
   assert.doesNotMatch(caller, /(?:uses:\s*\.\/|runs-on:|steps:|BUILDCHAIN_)/);
 });
+
+test("candidate dispatch binds an external adopter to one exact source cut", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/v4-adopter-delivery.yml"),
+    "utf8",
+  );
+  assert.equal(
+    (workflow.match(/^      consumer-repository:$/gmu) || []).length,
+    2,
+  );
+  assert.equal((workflow.match(/^      consumer-ref:$/gmu) || []).length, 2);
+  assert.equal(
+    (workflow.match(/^      invocation-source-path:$/gmu) || []).length,
+    2,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /repository: \$\{\{ inputs\['consumer-repository'\] \|\| github\.repository \}\}/gu,
+      ) || []
+    ).length,
+    2,
+  );
+  assert.equal(
+    (
+      workflow.match(
+        /ref: \$\{\{ inputs\['consumer-ref'\] \|\| github\.sha \}\}/gu,
+      ) || []
+    ).length,
+    2,
+  );
+  assert.match(
+    workflow,
+    /consumer-source-sha: \$\{\{ steps\.consumer-source\.outputs\.sha \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /EXPECTED_CONSUMER_SHA: \$\{\{ needs\.consumer-admission\.outputs\.consumer-source-sha \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /--source-sha "\$\{\{ steps\.consumer-source\.outputs\.sha \}\}"/u,
+  );
+  assert.match(
+    workflow,
+    /--consumer-sha "\$\{\{ steps\.consumer-source\.outputs\.sha \}\}"/u,
+  );
+  assert.doesNotMatch(workflow, /--consumer-sha "\$\{\{ github\.sha \}\}"/u);
+});
