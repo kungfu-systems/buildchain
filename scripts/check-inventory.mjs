@@ -300,7 +300,7 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
   throw new Error("generated channel promotion workflow is stale");
 }
 for (const requiredSnippet of [
-  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha",
+  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0",
   "promotion-shell-ref: ${{ needs.consumer-admission.outputs.shell-call-ref }}",
   "declarative-release-tail: true",
 ]) {
