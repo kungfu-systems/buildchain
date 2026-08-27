@@ -3016,11 +3016,11 @@
           "decisions": 75
         },
         "current": {
-          "lines": 2708,
-          "jobs": 13,
-          "steps": 99,
+          "lines": 2608,
+          "jobs": 12,
+          "steps": 91,
           "maxStepsPerJob": 47,
-          "decisions": 75
+          "decisions": 70
         },
         "target": {
           "lines": 600,
@@ -3216,7 +3216,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 2708
+      "current": 2608
     }
   ]
 }

@@ -130,20 +130,20 @@ test("v4 admission requires declarative mode while v3 remains compatible", () =>
   );
 });
 
-test("v4 Provider Plane publishes the standard promotion controller evidence", () => {
+test("v4 complete promotion publishes the standard promotion controller evidence", () => {
   const source = (file) =>
     fs.readFileSync(new URL(file, import.meta.url), "utf8");
-  const declarativeJob = source(
+  const promotionJob = source(
     "../.github/workflows/.release-candidate-promote.yml",
-  ).match(/\n  v4-declarative-promote:\n([\s\S]*?)\n  legacy-promote:\n/u)[1];
+  ).match(/\n  legacy-promote:\n([\s\S]*?)\n  promote:\n/u)[1];
   assert.match(
-    declarativeJob,
-    /name: buildchain-release-promotion-controller-evidence-[\s\S]*\.buildchain\/release-candidate\/[\s\S]*\.buildchain\/release-passport\/[\s\S]*\.buildchain\/release-tail\//u,
+    promotionJob,
+    /promotion-routing-evidence\.mjs bundle-controller-evidence[\s\S]*name: buildchain-release-promotion-controller-evidence-/u,
   );
-  assert.doesNotMatch(declarativeJob, /declarative-controller-evidence/u);
+  assert.doesNotMatch(promotionJob, /declarative-controller-evidence/u);
   assert.match(
     source("../.github/workflows/.release-candidate-promote.yml"),
-    /promotion-evidence\/release-passport\/buildchain\.release\.json/u,
+    /promotion-evidence\/release-tail\/publication-evidence\.json[\s\S]*promotion-evidence\/release-passport\/buildchain\.release\.json/u,
   );
 });
 
