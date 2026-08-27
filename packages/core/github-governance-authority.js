@@ -110,6 +110,8 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   "site-libkungfu-dev": [
     target("main", [check("web-surface / Record web-surface controller receipt")], false),
   ],
+  taolu: ["dev", "alpha", "release"].map((family) => target(`${family}/v1/v1.0`,
+    [check("build / Summarize build contract"), check("stage-capsule / Reconcile exact three-platform evidence")], false)),
 });
 const PUBLIC_REPOSITORIES = Object.freeze(Object.keys(PUBLIC_REPOSITORY_TARGETS).sort());
 const PROTECTED_AUTHORITY_PATHS = Object.freeze([
@@ -497,10 +499,8 @@ export function createBuildchainGithubGovernanceAuthority() {
       privateRepositoryPolicy: "excluded-from-managed-zone",
       unknownRepositoryPolicy: "non-authoritative-until-explicit-admission",
       baseline: {
-        observedOn: "2026-07-30",
-        repositoryCount: 16,
-        publicCount: 16,
-        privateCount: 0,
+        observedOn: "2026-08-28", repositoryCount: 17,
+        publicCount: 17, privateCount: 0,
         authoritativePublicTargetCount: Object.values(PUBLIC_REPOSITORY_TARGETS)
           .reduce((count, targets) => count + targets.length, 0),
       },
