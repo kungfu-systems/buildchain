@@ -43,10 +43,10 @@ test("protected v4 promotion preserves product publication before the declarativ
   );
 });
 
-test("bounded floating bootstrap uses the exact protected shell with a declarative built-in tail", () => {
+test("bounded floating bootstrap uses the legacy private shell with an exact protected binding and declarative built-in tail", () => {
   assert.match(
     recoveryWorkflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
   );
   assert.match(
     recoveryWorkflow,
