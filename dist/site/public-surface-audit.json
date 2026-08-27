@@ -934,6 +934,7 @@
         "reusable": true,
         "inputs": [
           "admission-json",
+          "authority-job-id",
           "authority-workflow-path",
           "auto-admission",
           "auto-admission-kind",
@@ -971,7 +972,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 37,
+        "inputCount": 38,
         "secrets": [
           "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
@@ -8910,7 +8911,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "f1a010d6d2cfd58857eda936bb0b0befaa0d5dc373f3ab62efcc01c635c273ad",
+    "workflowRegistryDigest": "07e5cd4213d93966b5233fbd257f3d4734612736dcf18cb7fab0692f48e17595",
     "pageRegistryDigest": "b5fa311e69ac62f6de1911e798933fcf075e5b23ff1f260feb630398a95e409f"
   },
   "comparison": {

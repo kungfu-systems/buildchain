@@ -1171,6 +1171,7 @@ jobs:
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
+      authority-job-id: legacy-promote
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
@@ -1382,7 +1383,6 @@ jobs:
         with:
           name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
           path: .buildchain/controller
-
       - name: Checkout promotion channel commit
         uses: actions/checkout@v7.0.0
         with:
