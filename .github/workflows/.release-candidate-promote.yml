@@ -724,7 +724,6 @@ concurrency:
 
 permissions:
   contents: read
-
 jobs:
   preflight:
     name: Revalidate promotion intent
@@ -1140,7 +1139,7 @@ jobs:
         publication-plan,
         qualification-plan,
       ]
-    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' }}
     permissions:
       actions: read
       checks: read
@@ -1171,6 +1170,7 @@ jobs:
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
+      authority-job-id: legacy-promote
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
@@ -1188,7 +1188,7 @@ jobs:
   qualification-plan:
     name: Bind consumer publication predicate
     needs: [preflight]
-    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' }}
     runs-on: ubuntu-24.04
     permissions: {}
     outputs:
@@ -1231,7 +1231,7 @@ jobs:
     name: Run consumer publication predicate
     needs:
       [preflight, controller-plan, qualification-plan, publication-authority]
-    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -1334,7 +1334,7 @@ jobs:
         release-candidate-preflight,
         publication-plan,
       ]
-    if: ${{ needs.preflight.outputs.action == 'promote' && (startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability != '' && (startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -1435,7 +1435,7 @@ jobs:
         publication-authority,
         publication-qualification,
       ]
-    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -2539,7 +2539,7 @@ jobs:
   github-artifact-attestation:
     name: Sign Linux release artifact with GitHub OIDC
     needs: [promote]
-    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run && needs.promote.result == 'success' }}
+    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && needs.promote.result == 'success' }}
     permissions:
       actions: read
       artifact-metadata: write
