@@ -11,6 +11,24 @@ const recovery = fs.readFileSync(
   path.resolve(".github/workflows/buildchain-ref-promotion-recovery.yml"),
   "utf8",
 );
+const publicPromotion = fs.readFileSync(
+  path.resolve(".github/workflows/release-candidate-promote.yml"),
+  "utf8",
+);
+
+function nestedKeys(source, marker) {
+  const lines = source.split("\n");
+  const start = lines.findIndex((line) => line === marker);
+  assert.notEqual(start, -1, `missing ${marker.trim()} block`);
+  const indent = marker.match(/^ */u)[0].length;
+  const keys = [];
+  for (const line of lines.slice(start + 1)) {
+    if (line.trim() && line.match(/^ */u)[0].length <= indent) break;
+    const match = line.match(new RegExp(`^ {${indent + 2}}([a-z0-9-]+):(?:\\s|$)`, "u"));
+    if (match) keys.push(match[1]);
+  }
+  return keys;
+}
 
 test("alpha convergence retains one standalone recovery adapter", () => {
   assert.match(
@@ -24,5 +42,14 @@ test("alpha convergence retains one standalone recovery adapter", () => {
   assert.match(
     recovery,
     /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion-recovery\.yml/,
+  );
+});
+
+test("stable recovery forwards only inputs declared by the floating publisher", () => {
+  const declaredInputs = new Set(nestedKeys(publicPromotion, "    inputs:"));
+  const forwardedInputs = nestedKeys(recovery, "    with:");
+  assert.deepEqual(
+    forwardedInputs.filter((name) => !declaredInputs.has(name)),
+    [],
   );
 });
