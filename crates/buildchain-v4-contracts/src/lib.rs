@@ -10,6 +10,7 @@ mod partial_mutation_recovery;
 mod provider_operation_journal;
 mod provider_readback_idempotency;
 mod release_activation_shadow;
+mod release_invocation;
 mod stable_publication_fence;
 mod stage_capsule;
 mod stage_capsule_resume;
@@ -49,6 +50,10 @@ pub use release_activation_shadow::{
     ReleaseActivationPlanStep, ReleaseActivationProjection, ReleaseActivationRequest,
     ReleaseActivationState, ReleaseActivationStep, ReleaseActivationStepState,
     project_release_activation, project_release_activation_bytes,
+};
+pub use release_invocation::{
+    RELEASE_INVOCATION_CONTRACT, ReleaseInvocation, ReleaseInvocationProjection,
+    project_release_invocation, project_release_invocation_bytes,
 };
 pub use stable_publication_fence::{
     STABLE_PUBLICATION_FENCE_CONTRACT, STABLE_PUBLICATION_PLAN_CONTRACT,
@@ -150,6 +155,14 @@ const ROOT_DOMAINS: &[&str] = &[
     "stable-publication-fence",
     "partial-mutation-recovery-checkpoint",
     "partial-mutation-recovery-plan",
+    "release-invocation-publisher",
+    "release-invocation-runtime",
+    "release-invocation-candidate",
+    "release-invocation-target",
+    "release-invocation-authority",
+    "release-invocation",
+    "release-transaction",
+    "release-receipt",
     "adopter-delivery-parity",
 ];
 

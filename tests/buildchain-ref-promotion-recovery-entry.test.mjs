@@ -12,19 +12,17 @@ const recovery = fs.readFileSync(
   "utf8",
 );
 
-test("stable recovery preserves the npm-trusted top-level workflow identity", () => {
+test("alpha convergence retains one standalone recovery adapter", () => {
   assert.match(
     promotion,
-    /recover-stable-candidate:[\s\S]*uses: \.\/\.github\/workflows\/buildchain-ref-promotion-recovery\.yml[\s\S]*resume-expected-source-tree:/,
+    /^  promote:[\s\S]*\.release-candidate-promote\.yml@v4-alpha/m,
   );
-  assert.match(
-    promotion,
-    /promote-stable:[\s\S]*inputs\['resume-candidate-run-id'\] == ''/,
-  );
-  assert.match(recovery, /^  workflow_call:/mu);
-  assert.doesNotMatch(recovery, /^  workflow_dispatch:/mu);
+  assert.doesNotMatch(promotion, /^  recover-stable-candidate:/mu);
+  assert.doesNotMatch(promotion, /^  promote-stable:/mu);
+  assert.match(recovery, /^  workflow_dispatch:/mu);
+  assert.doesNotMatch(recovery, /^  workflow_call:/mu);
   assert.match(
     recovery,
-    /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml/,
+    /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion-recovery\.yml/,
   );
 });

@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 67965,
-    "current": 59904
+    "measuredExcess": 64292,
+    "current": 56231
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1270,7 +1270,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1515
+          "lines": 1483
         },
         "target": {
           "lines": 600
@@ -1499,7 +1499,7 @@
         "current": {
           "functions": {
             "generateChannelPromotionWorkflow@277": {
-              "lines": 282
+              "lines": 240
             }
           }
         },
@@ -1659,38 +1659,6 @@
           "lines": 600,
           "functions": {
             "humanSummary@102": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/publication-commit-evidence.mjs": {
-        "baseline": {
-          "functions": {
-            "validateInstallerBundle@85": {
-              "complexity": 42
-            },
-            "verifyInstallerBundleReadback@307": {
-              "complexity": 30
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "validateInstallerBundle@85": {
-              "complexity": 42
-            },
-            "verifyInstallerBundleReadback@307": {
-              "complexity": 30
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "validateInstallerBundle@85": {
-              "complexity": 25
-            },
-            "verifyInstallerBundleReadback@307": {
               "complexity": 25
             }
           }
@@ -2231,15 +2199,15 @@
         "baseline": {
           "lines": 3181,
           "functions": {
-            "<anonymous@2013>@2013": {
+            "<anonymous@1559>@1559": {
               "lines": 206
             }
           }
         },
         "current": {
-          "lines": 3181,
+          "lines": 2727,
           "functions": {
-            "<anonymous@2013>@2013": {
+            "<anonymous@1559>@1559": {
               "lines": 206
             }
           }
@@ -2247,7 +2215,7 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@2013>@2013": {
+            "<anonymous@1559>@1559": {
               "lines": 180
             }
           }
@@ -2260,36 +2228,30 @@
             "<anonymous@170>@170": {
               "lines": 195
             },
-            "<anonymous@553>@553": {
+            "<anonymous@544>@544": {
               "lines": 183
             },
-            "<anonymous@737>@737": {
-              "lines": 506
-            },
-            "<anonymous@2153>@2153": {
+            "<anonymous@1678>@1678": {
               "lines": 249
             },
-            "<anonymous@3337>@3337": {
+            "<anonymous@2684>@2684": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 3680,
+          "lines": 3027,
           "functions": {
             "<anonymous@170>@170": {
-              "lines": 195
+              "lines": 186
             },
-            "<anonymous@553>@553": {
+            "<anonymous@544>@544": {
               "lines": 183
             },
-            "<anonymous@737>@737": {
-              "lines": 506
-            },
-            "<anonymous@2153>@2153": {
+            "<anonymous@1678>@1678": {
               "lines": 249
             },
-            "<anonymous@3337>@3337": {
+            "<anonymous@2684>@2684": {
               "lines": 188
             }
           }
@@ -2300,16 +2262,13 @@
             "<anonymous@170>@170": {
               "lines": 180
             },
-            "<anonymous@553>@553": {
+            "<anonymous@544>@544": {
               "lines": 180
             },
-            "<anonymous@737>@737": {
+            "<anonymous@1678>@1678": {
               "lines": 180
             },
-            "<anonymous@2153>@2153": {
-              "lines": 180
-            },
-            "<anonymous@3337>@3337": {
+            "<anonymous@2684>@2684": {
               "lines": 180
             }
           }
@@ -2452,7 +2411,7 @@
           }
         },
         "current": {
-          "lines": 1179,
+          "lines": 1178,
           "functions": {
             "<anonymous@817>@817": {
               "lines": 205
@@ -2655,7 +2614,7 @@
           "lines": 1217
         },
         "current": {
-          "lines": 1217
+          "lines": 1126
         },
         "target": {
           "lines": 600
@@ -2688,7 +2647,7 @@
           "lines": 1355
         },
         "current": {
-          "lines": 1355
+          "lines": 1270
         },
         "target": {
           "lines": 600
@@ -2719,29 +2678,6 @@
             "<anonymous@427>@427": {
               "lines": 180,
               "complexity": 25
-            }
-          }
-        }
-      },
-      "tests/v4-floating-consumer-policy-contract.test.mjs": {
-        "baseline": {
-          "functions": {
-            "<anonymous@77>@77": {
-              "lines": 292
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "<anonymous@77>@77": {
-              "lines": 292
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "<anonymous@77>@77": {
-              "lines": 180
             }
           }
         }
@@ -2998,25 +2934,13 @@
       },
       ".github/workflows/.release-candidate-promote.yml": {
         "baseline": {
-          "lines": 2736,
-          "jobs": 13,
-          "steps": 99,
-          "maxStepsPerJob": 47,
-          "decisions": 75
+          "lines": 2736
         },
         "current": {
-          "lines": 2678,
-          "jobs": 13,
-          "steps": 99,
-          "maxStepsPerJob": 47,
-          "decisions": 75
+          "lines": 1085
         },
         "target": {
-          "lines": 600,
-          "jobs": 8,
-          "steps": 50,
-          "maxStepsPerJob": 20,
-          "decisions": 25
+          "lines": 600
         }
       },
       ".github/workflows/.release-verify.yml": {
@@ -3136,7 +3060,7 @@
           "lines": 1218
         },
         "current": {
-          "lines": 1216
+          "lines": 1094
         },
         "target": {
           "lines": 600
@@ -3178,6 +3102,7 @@
     "tests/promotion-channel-router.test.mjs",
     "scripts/site-capability-metadata.mjs",
     "tests/v4-floating-consumer-policy.test.mjs",
+    "tests/v4-declarative-promotion-mode.test.mjs",
     "scripts/buildchain-cli-help.mjs",
     "scripts/check-v4-floating-consumer-policy-contract.mjs",
     "tests/dev-delivery-warrant.test.mjs",
@@ -3200,14 +3125,14 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 3680
+      "current": 3027
     },
     {
       "domain": "workflows",
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 2678
+      "current": 1085
     },
     {
       "domain": "sources",

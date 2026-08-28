@@ -1029,54 +1029,25 @@ test("recovery binds an additional product payload manifest to candidate, summar
   expectCode("artifact-manifest-mismatch", input);
 });
 
-test("workflow recovery is a fresh-event path and statically excludes product installation", async () => {
+test("workflow recovery resumes through the same canonical publisher transaction", async () => {
   const fs = await import("node:fs");
   const advanced = fs.readFileSync(
-    new URL(
-      "../.github/workflows/.release-candidate-promote.yml",
-      import.meta.url,
-    ),
+    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
     "utf8",
   );
   const publicWorkflow = fs.readFileSync(
-    new URL(
-      "../.github/workflows/release-candidate-promote.yml",
-      import.meta.url,
-    ),
+    new URL("../.github/workflows/release-candidate-promote.yml", import.meta.url),
+    "utf8",
+  );
+  const recovery = fs.readFileSync(
+    new URL("../.github/workflows/buildchain-ref-promotion-recovery.yml", import.meta.url),
     "utf8",
   );
   const refPromotion = fs.readFileSync(
-    new URL(
-      "../.github/workflows/buildchain-ref-promotion.yml",
-      import.meta.url,
-    ),
+    new URL("../.github/workflows/buildchain-ref-promotion.yml", import.meta.url),
     "utf8",
   );
-  const dogfoodFailure = fs.readFileSync(
-    new URL(
-      "../.github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const alphaPromotion = fs.readFileSync(
-    new URL(
-      "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const durableOperations = fs.readFileSync(
-    new URL(
-      "../actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const promoteLib = fs.readFileSync(
-    new URL("../actions/promote-buildchain-ref/lib.js", import.meta.url),
-    "utf8",
-  );
+
   for (const input of [
     "resume-candidate-repository",
     "resume-candidate-run-id",
@@ -1089,84 +1060,22 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   ]) {
     assert.match(advanced, new RegExp(`${input}:`));
     assert.match(publicWorkflow, new RegExp(`${input}:`));
+    assert.match(recovery, new RegExp(`${input}:`));
   }
-  assert.match(advanced, /Preflight PR[^]*pnpm@11[^]*resume-from-candidate-run/);
-  assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
+
+  assert.match(recovery, /^  resume:/m);
   assert.match(
-    advanced,
-    /name: Bridge Buildchain self-runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' && github\.repository == inputs\.buildchain-repository \}\}/,
+    recovery,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
   );
-  assert.match(advanced, /ln -s \.buildchain\/runtime\/node_modules node_modules/);
-  assert.match(advanced, /test ! -d \.buildchain\/runtime\/promotion-shell\/actions\/promote-buildchain-ref \|\| cp -R \.buildchain\/runtime\/promotion-shell\/actions\/promote-buildchain-ref\/\. \.buildchain\/runtime\/actions\/promote-buildchain-ref\//);
-  assert.match(advanced, /name: Install exact publication planning dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
-  assert.match(advanced, /name: Resolve exact publication transaction version\n\s+id: plan\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
-  assert.match(advanced, /name: Reuse sealed candidate publication version/);
-  assert.match(advanced, /release-candidate-publication-version/);
-  assert.match(
-    advanced,
-    /BUILDCHAIN_RECOVERED_CANDIDATE_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.version \}\}/,
-  );
-  assert.match(
-    advanced,
-    /BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.publication-version \}\}/,
-  );
-  assert.match(advanced, /planned-publication-version=\$\{BUILDCHAIN_RECOVERED_PUBLICATION_VERSION\}/);
-  assert.match(advanced, /planned-release-candidate-version=\$\{BUILDCHAIN_RECOVERED_CANDIDATE_VERSION\}/);
-  assert.match(advanced, /publish-sealed-bundle-root: \$\{\{ steps\.rc\.outputs\.publish-sealed-bundle-root \}\}/);
-  assert.match(
-    advanced,
-    /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/,
-  );
-  assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
-  assert.equal(
-    advanced.match(/BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME: \$\{\{ inputs\.publish-rematerialize-on-resume \}\}/g)?.length,
-    2,
-  );
-  assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
-  assert.match(
-    advanced,
-    /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\.release-passport-v4-runtime-resume-evidence-json \|\| steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}/,
-  );
-  assert.match(
-    advanced,
-    /release-passport-v4-runtime-resume-evidence-command: \$\{\{ steps\.rc\.outputs\.release-candidate-publication-qualification-path == '' && steps\.rc\.outputs\.v4-runtime-resume-finalize-command \|\| '' \}\}/,
-  );
-  assert.match(
-    alphaPromotion,
-    /updateTag\(context\.rule\.alphaTag,[\s\S]*?markComplete\(\)/,
-  );
-  assert.match(
-    durableOperations,
-    /completeTransactionFinalization\([\s\S]*?collectAndPersistReleasePassport\(/,
-  );
-  assert.match(
-    promoteLib,
-    /generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs[\s\S]*?collectGitHubReleasePassport\(/,
-  );
-  assert.match(advanced, /if \[ -f "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" \]; then/);
-  assert.match(
-    advanced,
-    /cp "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" "\$\{RELEASE_PASSPORT_OUTPUT_DIR\}\//,
-  );
+  assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
+  assert.match(advanced, /node \.buildchain\/runtime\/scripts\/resume-from-candidate-run\.mjs/);
+  assert.match(advanced, /Resume the same transaction journal/);
   assert.match(
     refPromotion,
-    /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
+    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/m,
   );
-  assert.match(
-    refPromotion,
-    /promote-stable:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| inputs\['recover-durable-transaction'\] == true && github\.sha \|\| 'v4' \}\}/,
-  );
-  assert.match(
-    publicWorkflow,
-    /stable:[\s\S]*resume-candidate-repository: \$\{\{ inputs\.resume-candidate-repository \}\}[\s\S]*resume-candidate-run-id: \$\{\{ inputs\.resume-candidate-run-id \}\}[\s\S]*resume-expected-source-tree: \$\{\{ inputs\.resume-expected-source-tree \}\}[\s\S]*resume-expected-candidate-runtime-sha: \$\{\{ inputs\.resume-expected-candidate-runtime-sha \}\}[\s\S]*resume-buildchain-runtime-sha: \$\{\{ inputs\.resume-buildchain-runtime-sha \}\}/,
-  );
-  assert.match(
-    refPromotion,
-    /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/,
-  );
-  assert.doesNotMatch(refPromotion, /^\s+github-release-payload-patterns: "\*\.tgz"$/m);
-  assert.match(dogfoodFailure, /workflow_dispatch:/);
-  assert.match(dogfoodFailure, /__candidate-recovery-dogfood-missing\.yml@v3-alpha/);
+  assert.doesNotMatch(refPromotion, /^  promote-stable:/m);
   assert.doesNotMatch(advanced, /gh run rerun/);
 });
 

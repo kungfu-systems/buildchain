@@ -1591,7 +1591,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
-      "auditDigest": "sha256:1f4cbca5a542eefbd6dc113a46408063943958f62406f93d22744fac5db8dc4f"
+      "auditDigest": "sha256:e74c133c5cc71e47f26046241523604050de8ec78a7807e790dddc8ada673331"
     },
     {
       "contractVersion": 1,
@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:41af00a559e2807da095b268f0832f9356772b9a270c56a45360eac07e99ea0e",
+      "auditDigest": "sha256:f37525da5b47da39d1b86b1efa94e4839663210e819c49012a1d1341632d0ea4",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1863,7 +1863,7 @@
         "no consumer command, script, shell, checkout, or executable tail hook is accepted"
       ],
       "breakingDigest": "sha256:9229eb3a000fb408feb6b8793c209c77afbf9327026467d68954470e22e4f8f4",
-      "auditDigest": "sha256:83fd394419851e6da877c50018e879b447497db52b0ac871dfd83e074f5459a8"
+      "auditDigest": "sha256:5693994b0cbfe831332f9ad71649811d2e5f70e3c8fe7f194047eb7dc460b976"
     },
     {
       "contractVersion": 1,
@@ -5173,7 +5173,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:41af00a559e2807da095b268f0832f9356772b9a270c56a45360eac07e99ea0e"
+      "auditDigest": "sha256:f37525da5b47da39d1b86b1efa94e4839663210e819c49012a1d1341632d0ea4"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:a8ca6b8582efe5be96d72142daa9e2ba6fdb6dd38f8afa5ce2b70d9bc7e4fb72"
+  "contractDigest": "sha256:2c7b9baa76f0629858d47eea1ab6e9da153c19f6e0341e9396d8065afd054309"
 }

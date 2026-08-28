@@ -1867,7 +1867,7 @@ test("standalone binary builder resolves Windows package manager shims", () => {
   assert.equal(usesShellForSpawnCommand("pnpm", "linux"), false);
 });
 
-test("standalone binary runs public CLI without imported script entrypoint side effects", { timeout: 180_000 }, () => {
+test("standalone binary runs public CLI without imported script entrypoint side effects", { timeout: 180_000, skip: !fs.readFileSync(process.execPath).includes(Buffer.from("NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2")) }, () => {
   const outputDir = tempDir("standalone-entrypoint");
   const version = "3.0.2-alpha.entry-guard";
   execFileSync(process.execPath, [

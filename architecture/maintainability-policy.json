@@ -1420,12 +1420,15 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
+          "release-invocation-root",
           "release-propagation-work-artifact",
+          "release-receipt-root",
           "release-tail-declaration-root",
           "release-tail-receipt-roots-json",
           "release-tail-state-root",
           "release-tail-transaction-root",
-          "release-tail-transaction-state"
+          "release-tail-transaction-state",
+          "release-transaction-root"
         ]
       },
       "rationale": "The advanced workflow preserves exact contract-lock, channel, trusted transient runtime, candidate, target tree, policy, scanner, provider and fresh-attempt bindings while adding an isolated v4-only declarative provider lane and optional dogfood failure checkpoint. V4 admits only sealed candidate, Stage Capsule and qualification evidence; legacy command inputs fail closed before planning and the provider resumes only incomplete capabilities.",
@@ -1592,12 +1595,15 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
+          "release-invocation-root",
           "release-propagation-work-artifact",
+          "release-receipt-root",
           "release-tail-declaration-root",
           "release-tail-receipt-roots-json",
           "release-tail-state-root",
           "release-tail-transaction-root",
-          "release-tail-transaction-state"
+          "release-tail-transaction-state",
+          "release-transaction-root"
         ]
       },
       "rationale": "The generated v4 promotion router preserves the opt-in declarative release-tail contract, exact contract-lock routing, and optional verified runtime-resume attachment while forwarding one optional dogfood provider checkpoint into the v4-only declarative lane. Existing v3 callers retain the same defaults, public inputs and legacy implementation, while v4 rejects command-shaped tail authority before planning.",

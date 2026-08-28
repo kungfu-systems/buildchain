@@ -176,7 +176,6 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     ".github/workflows/.web-surface.yml",
     ".github/workflows/publication-artifact.yml",
     ".github/workflows/paper-release.yml",
-    ".github/workflows/.release-candidate-promote.yml",
     ".github/workflows/release-propagation.yml",
   ];
   for (const workflow of workflows) {
@@ -327,39 +326,31 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   const promotion = readRepoText(
     ".github/workflows/.release-candidate-promote.yml",
   );
-  const promotionAuthority = promotion.slice(
-    promotion.indexOf("  publication-authority:"),
-    promotion.indexOf(
-      "\n  promote:",
-      promotion.indexOf("  publication-authority:"),
-    ),
-  );
   assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
-  assert.match(promotion, /!inputs\.dry-run.*controller-receipt-qualifying/);
   assert.match(
     promotion,
-    /"id":"publication-authority","status":"\$\{\{ needs\.promote\.result == 'success' && 'success' \|\| needs\.publication-authority\.result \}\}"/,
-    "a successful promotion must preserve its already-enforced publication authority result",
+    /^  qualify:\n[\s\S]*^  apply:\n[\s\S]*^  settle:/m,
+    "the canonical publisher must expose exactly the QUALIFY, APPLY, and SETTLE phases",
   );
   assert.match(
     promotion,
-    /runtime-sha: \$\{\{ steps\.controller-runtime\.outputs\.sha \}\}/,
-    "promotion controller planning must expose the resolved immutable runtime SHA",
+    /publisher-workflow-sha: \$\{\{ needs\.qualify\.outputs\.publisher-sha \}\}/,
+    "APPLY must consume the qualified immutable publisher SHA",
   );
   assert.match(
-    promotionAuthority,
-    /buildchain-ref: \$\{\{ needs\.controller-plan\.outputs\.runtime-sha \}\}/,
-    "publication authority must consume the resolved immutable runtime SHA",
+    promotion,
+    /runtime-commit: \$\{\{ needs\.qualify\.outputs\.runtime-sha \}\}/,
+    "APPLY must consume the qualified immutable runtime SHA",
   );
   assert.match(
-    promotionAuthority,
-    /required-status-check: \$\{\{ inputs\.required-status-check \}\}/,
-    "publication authority must audit the exact protected-branch status check",
+    promotion,
+    /controller-receipt-digest: \$\{\{ steps\.verify\.outputs\.receipt-root \}\}/,
+    "SETTLE must expose the verified terminal receipt root",
   );
   assert.doesNotMatch(
-    promotionAuthority,
-    /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| 'v2' \}\}/,
-    "publication authority must not receive a floating caller ref",
+    promotion,
+    /^  (?:publication-authority|promote|stable):/m,
+    "legacy publisher jobs must not remain parallel mutation paths",
   );
 });
 
@@ -734,7 +725,7 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
   }
 });
 
-test("release-candidate promote workflow is promote-only and never schedules a heavy build", () => {
+test("release-candidate promotion converges on one canonical v4 publisher", () => {
   const workflow = readRepoText(
     ".github/workflows/.release-candidate-promote.yml",
   );
@@ -742,503 +733,37 @@ test("release-candidate promote workflow is promote-only and never schedules a h
     ".github/workflows/release-candidate-promote.yml",
   );
   assert.match(workflow, /workflow_call:/);
+  assert.match(workflow, /^  qualify:/m);
+  assert.match(workflow, /^  apply:/m);
+  assert.match(workflow, /^  settle:/m);
+  assert.match(
+    workflow,
+    /name: QUALIFY canonical v4 release invocation inputs/,
+  );
+  assert.match(workflow, /name: APPLY one rooted provider transaction/);
+  assert.match(workflow, /name: SETTLE terminal ReleaseReceipt projection/);
+  assert.match(
+    workflow,
+    /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /npm run build|cargo build|publication-commit-evidence\.mjs/,
+  );
+  assert.match(publicWorkflow, /^  consumer-admission:/m);
+  assert.match(publicWorkflow, /^  invoke:/m);
   assert.match(
     publicWorkflow,
-    /publication-consumer-qualification-controller-sha:/,
+    /needs: \[resolve-promotion, consumer-admission\]/,
   );
   assert.match(
     publicWorkflow,
-    /publication-consumer-qualification-controller-sha: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
-  assert.match(
+  assert.doesNotMatch(
     publicWorkflow,
-    /publication-authority-workflow-path: \.github\/workflows\/\.release-candidate-promote\.yml/,
+    /publish-github-artifact-attestation-evidence|capture-package-release-propagation/,
   );
-  assert.match(workflow, /release-candidate-resolver\.mjs/);
-  assert.match(workflow, /release-candidate-workflow-file:/);
-  assert.match(workflow, /default: "build\.yml"/);
-  assert.match(workflow, /release-candidate-workflow-name:/);
-  assert.match(workflow, /default: "Build"/);
-  assert.match(workflow, /buildchain-contract-lock-path:/);
-  assert.match(workflow, /buildchain-expected-channel:/);
-  assert.match(workflow, /buildchain-expected-major:/);
-  assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
-  assert.match(workflow, /Resolve checked out Buildchain runtime/);
-  assert.match(workflow, /Check Buildchain contract lock/);
-  assert.match(
-    workflow,
-    /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/,
-  );
-  assert.match(workflow, /Report consumer Buildchain contract drift/);
-  assert.match(workflow, /allow-repository:/);
-  assert.match(workflow, /default: ""/);
-  assert.match(workflow, /required-status-check:/);
-  assert.match(
-    workflow,
-    /required-status-check:\n\s+description: "Exact required protected-branch status check context"\n\s+default: "check \/ check"/,
-  );
-  assert.match(workflow, /target-sha:/);
-  assert.match(workflow, /publish-mode:/);
-  assert.match(workflow, /publish-dist-tag:/);
-  assert.match(workflow, /publish-package-set-order:/);
-  assert.match(workflow, /publish-package-main:/);
-  assert.match(workflow, /publish-rematerialize-on-resume:/);
-  assert.match(
-    workflow,
-    /publish-rematerialize-on-resume: \$\{\{ inputs\.publish-rematerialize-on-resume \}\}/,
-  );
-  assert.match(workflow, /github-release:/);
-  assert.match(
-    workflow,
-    /github-release:\n\s+description: "Create\/update the public GitHub Release and upload Buildchain release passport\/evidence assets after a complete release transaction"\n\s+default: true/,
-  );
-  assert.match(workflow, /github-release-title:/);
-  assert.match(workflow, /github-release-notes:/);
-  assert.match(workflow, /release-passport-product-name:/);
-  assert.match(workflow, /release-passport-impact-json:/);
-  assert.match(
-    workflow,
-    /release-passport-impact-json: \$\{\{ inputs\.release-passport-impact-json \}\}/,
-  );
-  assert.match(workflow, /release-passport-kfd-1-witness-jsons:/);
-  assert.match(
-    workflow,
-    /release-passport-kfd-1-witness-jsons: \$\{\{ inputs\.release-passport-kfd-1-witness-jsons \}\}/,
-  );
-  assert.match(workflow, /release-passport-kfd-2-claim-jsons:/);
-  assert.match(
-    workflow,
-    /release-passport-kfd-2-claim-jsons: \$\{\{ inputs\.release-passport-kfd-2-claim-jsons \}\}/,
-  );
-  assert.match(workflow, /release-passport-kfd-3-prebuild-witness-jsons:/);
-  assert.match(
-    workflow,
-    /release-passport-kfd-3-prebuild-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-prebuild-witness-jsons \}\}/,
-  );
-  assert.match(workflow, /release-passport-kfd-3-artifact-witness-jsons:/);
-  assert.match(
-    workflow,
-    /release-passport-kfd-3-artifact-witness-jsons: \$\{\{ inputs\.release-passport-kfd-3-artifact-witness-jsons \}\}/,
-  );
-  assert.match(workflow, /release-passport-kfd-3-artifact-verify-command:/);
-  assert.match(workflow, /release-passport-kfd-adopter-manifest-json:/);
-  assert.match(
-    workflow,
-    /release-passport-kfd-adopter-manifest-json: \$\{\{ inputs\.release-passport-kfd-adopter-manifest-json \}\}/,
-  );
-  assert.match(workflow, /release-passport-kfd-support-matrix-json:/);
-  assert.match(
-    workflow,
-    /release-passport-kfd-support-matrix-json: \$\{\{ inputs\.release-passport-kfd-support-matrix-json \}\}/,
-  );
-  assert.match(workflow, /release-passport-kfd-product-gate-jsons:/);
-  assert.match(
-    workflow,
-    /release-passport-kfd-product-gate-jsons: \$\{\{ inputs\.release-passport-kfd-product-gate-jsons \}\}/,
-  );
-  assert.match(workflow, /release-passport-invariant-passport-jsons:/);
-  assert.match(
-    workflow,
-    /release-passport-invariant-passport-jsons: \$\{\{ inputs\.release-passport-invariant-passport-jsons \}\}/,
-  );
-  assert.match(workflow, /release-passport-invariant-passport-command:/);
-  assert.match(
-    workflow,
-    /release-passport-invariant-passport-command: \$\{\{ inputs\.release-passport-invariant-passport-command \}\}/,
-  );
-  assert.match(workflow, /release-passport-evidence-jsons:/);
-  assert.match(
-    workflow,
-    /release-passport-evidence-jsons: \$\{\{ inputs\.release-passport-evidence-jsons \}\}/,
-  );
-  assert.match(workflow, /release-passport-attachment-command:/);
-  assert.match(
-    workflow,
-    /release-passport-attachment-command: \$\{\{ inputs\.release-passport-attachment-command \}\}/,
-  );
-  assert.match(workflow, /release-passport-buildchain-self-kfd:/);
-  assert.match(
-    workflow,
-    /release-passport-buildchain-self-kfd: \$\{\{ inputs\.release-passport-buildchain-self-kfd \}\}/,
-  );
-  assert.match(workflow, /github-artifact-attestation-policy-json:/);
-  assert.match(
-    workflow,
-    /release-passport-github-artifact-attestation-policy-jsons: \$\{\{ steps\.attestation-policy\.outputs\.path \}\}/,
-  );
-  assert.match(workflow, /name: Resolve GitHub artifact attestation policy/);
-  assert.match(
-    workflow,
-    /release-candidate-github-artifact-attestation-policy-paths/,
-  );
-  assert.match(
-    workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/github-artifact-attestation\.yml@v4/,
-  );
-  assert.doesNotMatch(workflow, /github-artifact-attestation\.yml@v3/);
-  assert.match(
-    workflow,
-    /buildchain-ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-signer-ref \}\}/,
-  );
-  assert.match(
-    workflow,
-    /ref: \$\{\{ needs\.promote\.outputs\.github-artifact-attestation-buildchain-ref \}\}/,
-  );
-  assert.match(workflow, /artifact-metadata: write/);
-  assert.match(workflow, /attestations: write/);
-  assert.match(
-    workflow,
-    /name: Publish verified attestation evidence to GitHub Release/,
-  );
-  assert.match(workflow, /publish-github-artifact-attestation-evidence\.mjs/);
-  assert.match(workflow, /DRY_RUN: \$\{\{ inputs\.dry-run \}\}/);
-  assert.match(workflow, /const dryRun = process\.env\.DRY_RUN === "true"/);
-  assert.match(
-    workflow,
-    /if \(dryRun\) \{\s+core\.notice\(`Dry-run would lock/,
-  );
-  assert.match(workflow, /core\.setOutput\("locked", "true"\)/);
-  assert.match(workflow, /require-publish-source-lock: "true"/);
-  assert.match(
-    workflow,
-    /publish-source-ref: \$\{\{ steps\.publish-gate\.outputs\.ref \}\}/,
-  );
-  assert.match(
-    workflow,
-    /publish-source-sha: \$\{\{ steps\.publish-gate\.outputs\.sha \}\}/,
-  );
-  assert.match(
-    workflow,
-    /publish-source-locked: \$\{\{ steps\.publish-gate\.outputs\.locked \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_ARTIFACT_NAME: \$\{\{ inputs\.artifact-name \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_ARTIFACT_PATTERNS: \$\{\{ inputs\.artifact-patterns \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_RC_WORKFLOW_FILE: \$\{\{ inputs\.release-candidate-workflow-file \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_RC_WORKFLOW_NAME: \$\{\{ inputs\.release-candidate-workflow-name \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: \$\{\{ inputs\.required-artifact-count \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_PUBLISH_PACKAGE_MAIN: \$\{\{ inputs\.publish-package-main \}\}/,
-  );
-  assert.match(
-    workflow,
-    /concurrency:\n\s+group: buildchain-release-promotion-\$\{\{ github\.repository \}\}\n\s+cancel-in-progress: false/,
-  );
-  assert.match(workflow, /name: Revalidate promotion intent/);
-  assert.match(workflow, /name: Revalidate queued promotion intent/);
-  assert.match(workflow, /name: Preflight PR-stage release candidate evidence/);
-  assert.match(workflow, /name: Plan exact publication version/);
-  assert.match(
-    workflow,
-    /name: Install exact publication planning dependencies/,
-  );
-  const publicationPlanStart = workflow.indexOf("  publication-plan:");
-  const publicationAuthorityStart = workflow.indexOf(
-    "  publication-authority:",
-  );
-  const publicationPlan = workflow.slice(
-    publicationPlanStart,
-    publicationAuthorityStart,
-  );
-  assert.ok(
-    publicationPlan.indexOf(
-      "name: Install exact publication planning dependencies",
-    ) <
-      publicationPlan.indexOf(
-        "name: Resolve exact publication transaction version",
-      ),
-    "exact publication planning must install source dependencies before version-state verification",
-  );
-  assert.match(
-    publicationPlan,
-    /name: Validate consumer package manager contract/,
-  );
-  assert.match(
-    publicationPlan,
-    /publish-transaction-override: \$\{\{ inputs\.publish-transaction-override \}\}/,
-  );
-  assert.match(publicationPlan, /corepack pnpm install --frozen-lockfile/);
-  assert.doesNotMatch(publicationPlan, /corepack pnpm@11\.7\.0/);
-  assert.match(
-    publicationPlan,
-    /yarn install --immutable \|\| yarn install --frozen-lockfile/,
-  );
-  assert.match(publicationPlan, /npm ci/);
-  assert.match(
-    publicationPlan,
-    /Skipping dependency install for custom package manager/,
-  );
-  assert.match(workflow, /planned-publication-version/);
-  assert.match(
-    workflow,
-    /publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/,
-  );
-  assert.match(
-    workflow,
-    /PUBLICATION_VERSION: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/,
-  );
-  assert.match(
-    workflow,
-    /expected-publication-version: \$\{\{ needs\.publication-plan\.outputs\.version \}\}/,
-  );
-  assert.match(workflow, /BUILDCHAIN_RC_DOWNLOAD: "false"/);
-  assert.match(
-    workflow,
-    /failure\(\) && !inputs\.dry-run && steps\.rc\.outcome != ''/,
-  );
-  assert.match(workflow, /compareCommitsWithBasehead/);
-  assert.match(
-    workflow,
-    /INPUT_PUBLISH_TRANSACTION_OVERRIDE: \$\{\{ inputs\.publish-transaction-override \}\}/,
-  );
-  assert.match(
-    workflow,
-    /const recoverableAdvance = durableRecovery && comparisonStatus === "ahead"/,
-  );
-  assert.match(
-    workflow,
-    /const superseded = !dryRun && !recoverableAdvance && comparisonStatus === "ahead"/,
-  );
-  assert.match(workflow, /!superseded && !recoverableAdvance/);
-  assert.match(workflow, /moved incompatibly/);
-  assert.match(workflow, /const action = superseded \? "noop" : "promote"/);
-  assert.match(workflow, /"durable-transaction-recovery"/);
-  assert.match(workflow, /publication-admission-json:/);
-  assert.match(workflow, /publication-control-plane-audit-json:/);
-  assert.match(workflow, /publication-gate-aggregate-json:/);
-  assert.match(workflow, /publication-gate-command:/);
-  assert.match(workflow, /publication-gate-controller-sha:/);
-  assert.match(workflow, /publication-consumer-qualification-controller-sha:/);
-  assert.match(workflow, /publication-authority-workflow-path:/);
-  assert.match(workflow, /release-candidate-wait-seconds:/);
-  assert.match(workflow, /publication-auto-admission:/);
-  assert.match(
-    workflow,
-    /auto-admission: \$\{\{ inputs\.publication-auto-admission \}\}/,
-  );
-  assert.match(workflow, /publication-auto-no-gate:/);
-  assert.match(
-    workflow,
-    /auto-no-gate: \$\{\{ inputs\.publication-auto-no-gate \}\}/,
-  );
-  assert.match(
-    workflow,
-    /consumer-gate-command: \$\{\{ inputs\.publication-gate-command \}\}/,
-  );
-  assert.match(
-    workflow,
-    /consumer-gate-controller-sha: \$\{\{ inputs\.publication-gate-controller-sha \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_RC_WAIT_SECONDS: \$\{\{ inputs\.release-candidate-wait-seconds \}\}/,
-  );
-  assert.match(
-    workflow,
-    /source-sha: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/,
-  );
-  assert.match(
-    workflow,
-    /publisher-workflow-path: \$\{\{ inputs\.publication-publisher-workflow-path \}\}/,
-  );
-  assert.match(
-    workflow,
-    /authority-workflow-path: \$\{\{ inputs\.publication-authority-workflow-path \}\}/,
-  );
-  assert.match(workflow, /evidence-run-id:/);
-  assert.match(workflow, /evidence-manifest-pattern:/);
-  assert.match(workflow, /name: Seal product publication capability/);
-  assert.match(
-    workflow,
-    /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
-  );
-  assert.match(
-    workflow,
-    /legacy-promote:[\s\S]*needs:\s*\[\s*preflight,\s*controller-plan,\s*release-candidate-preflight,\s*publication-plan,\s*publication-authority,\s*publication-qualification,?\s*\]/,
-  );
-  assert.match(workflow, /needs\.publication-authority\.result == 'success'/);
-  assert.match(workflow, /name: Bind consumer publication predicate/);
-  assert.match(
-    workflow,
-    /name: Resolve exact v4 policy caller source[\s\S]*passport\.consumerPolicy\?\.receipt\?\.caller\?\.sourceSha/,
-  );
-  assert.match(
-    workflow,
-    /name: Checkout exact v4 policy caller source[\s\S]*ref: \$\{\{ steps\.v4-policy-caller\.outputs\.source-sha \}\}[\s\S]*path: \.buildchain\/runtime\/policy-caller/,
-  );
-  assert.match(
-    workflow,
-    /name: Run consumer publication predicate[\s\S]*BUILDCHAIN_EXPECTED_CALLER_SOURCE_SHA: \$\{\{ steps\.v4-policy-caller\.outputs\.source-sha \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: \$\{\{ inputs\.publication-consumer-qualification-controller-sha \}\}/,
-  );
-  assert.match(
-    workflow,
-    /const controllerSha = explicitControllerSha \|\| gateControllerSha \|\| sourceSha/,
-  );
-  assert.match(workflow, /update\(`\$\{command\}\\0\$\{controllerSha\}`\)/);
-  assert.match(workflow, /controller-sha=\$\{command \? controllerSha : ""\}/);
-  assert.match(
-    workflow,
-    /ref: \$\{\{ needs\.qualification-plan\.outputs\.controller-sha \}\}/,
-  );
-  assert.match(workflow, /permissions: \{\}/);
-  assert.match(workflow, /BUILDCHAIN_PUBLICATION_GATE_AGGREGATE_PATH/);
-  assert.match(workflow, /BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH/);
-  assert.match(workflow, /createPublicationQualificationReceipt/);
-  assert.ok(
-    workflow.indexOf("Run consumer-owned qualification predicate") <
-      workflow.indexOf("Restore sealed handoff before receipt sealing") &&
-      workflow.indexOf("Restore sealed handoff before receipt sealing") <
-        workflow.indexOf("Seal deterministic qualification receipt"),
-    "consumer code must not be able to replace the authority handoff used for receipt sealing",
-  );
-  assert.match(
-    workflow,
-    /require-publication-qualification: \$\{\{ needs\.publication-qualification\.outputs\.required \}\}/,
-  );
-  assert.match(
-    workflow,
-    /publication-qualification-receipt-json: \$\{\{ needs\.publication-qualification\.outputs\.receipt-json \}\}/,
-  );
-  assert.match(
-    workflow,
-    /^ {4}environment: \$\{\{ inputs\.github-artifact-attestation-environment \}\}$/m,
-  );
-  assert.match(workflow, /token: \$\{\{ github\.token \}\}/);
-  assert.match(
-    workflow,
-    /generated-ref-update-token: \$\{\{ github\.token \}\}/,
-  );
-  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.match(
-    workflow,
-    /if: \$\{\{ needs\.preflight\.outputs\.action == 'promote' \}\}/,
-  );
-  assert.match(
-    workflow,
-    /ref: \$\{\{ needs\.preflight\.outputs\.requested-sha \}\}/,
-  );
-  assert.match(workflow, /INPUT_TARGET_SHA: \$\{\{ inputs\.target-sha \}\}/);
-  assert.match(workflow, /Install promotion dependencies/);
-  assert.match(
-    workflow,
-    /PACKAGE_MANAGER: \$\{\{ inputs\.package-manager \}\}/,
-  );
-  assert.match(workflow, /corepack enable/);
-  assert.match(workflow, /corepack pnpm install --frozen-lockfile/);
-  assert.match(
-    workflow,
-    /cd "\$\{RECONCILIATION_WORKSPACE\}"[\s\S]*corepack pnpm install --frozen-lockfile/,
-  );
-  assert.match(workflow, /Resolve post-release reconciliation checkout/);
-  assert.match(
-    workflow,
-    /Checkout current development channel for reconciliation/,
-  );
-  assert.match(workflow, /Install reconciliation dependencies/);
-  assert.match(workflow, /workspace=\.buildchain\/reconciliation\/dev/);
-  assert.match(
-    workflow,
-    /reconciliation-workspace: \$\{\{ steps\.reconciliation\.outputs\.workspace \}\}/,
-  );
-  assert.match(workflow, /promote-only-release-candidate: "true"/);
-  assert.match(workflow, /release-candidate-passport-path:/);
-  assert.match(workflow, /release-candidate-build-summary-path:/);
-  assert.match(workflow, /release-candidate-family-evidence-required:/);
-  assert.match(workflow, /release-candidate-family-evidence-root:/);
-  assert.match(workflow, /release-candidate-family-initiative-id:/);
-  assert.match(workflow, /release-candidate-family-assignment-id:/);
-  assert.match(
-    workflow,
-    /required-status-check: \$\{\{ inputs\.required-status-check \}\}/,
-  );
-  assert.match(
-    workflow,
-    /allow-repository: \$\{\{ inputs\.allow-repository \|\| github\.repository \}\}/,
-  );
-  assert.match(
-    workflow,
-    /publish-required-artifacts-json: \$\{\{ inputs\.publish-required-artifacts-json \}\}/,
-  );
-  assert.match(
-    workflow,
-    /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/,
-  );
-  assert.match(
-    workflow,
-    /publish-dist-tag: \$\{\{ inputs\.publish-dist-tag \}\}/,
-  );
-  assert.match(
-    workflow,
-    /publish-package-set-order: \$\{\{ inputs\.publish-package-set-order \}\}/,
-  );
-  assert.match(
-    workflow,
-    /release-passport-platform-manifest-paths: \$\{\{ inputs\.release-passport-platform-manifest-paths \|\| steps\.rc\.outputs\.release-candidate-platform-manifest-paths \}\}/,
-  );
-  assert.match(workflow, /github-release: \$\{\{ inputs\.github-release \}\}/);
-  assert.match(
-    workflow,
-    /github-release-title: \$\{\{ inputs\.github-release-title \}\}/,
-  );
-  assert.match(
-    workflow,
-    /github-release-notes: \$\{\{ inputs\.github-release-notes \}\}/,
-  );
-  assert.match(workflow, /Ensure publish-gate ref locks promotion commit/);
-  assert.match(workflow, /id: promote/);
-  assert.ok(
-    workflow.indexOf("Revalidate queued promotion intent") <
-      workflow.indexOf("Install promotion dependencies"),
-  );
-  assert.ok(
-    workflow.indexOf("Preflight PR-stage release candidate evidence") <
-      workflow.indexOf("Install promotion dependencies"),
-  );
-  assert.ok(
-    workflow.indexOf("Seal product publication capability") <
-      workflow.indexOf("Install promotion dependencies"),
-  );
-  assert.ok(
-    workflow.indexOf("Run consumer-owned qualification predicate") <
-      workflow.indexOf("Ensure publish-gate ref locks promotion commit"),
-  );
-  assert.ok(
-    workflow.indexOf("Revalidate queued promotion intent") <
-      workflow.indexOf("Resolve PR-stage release candidate"),
-  );
-  assert.ok(
-    workflow.indexOf("Revalidate queued promotion intent") <
-      workflow.indexOf("Ensure publish-gate ref locks promotion commit"),
-  );
-  assert.doesNotMatch(workflow, /Publish GitHub Release evidence/);
-  assert.doesNotMatch(workflow, /gh release upload/);
-  assert.doesNotMatch(workflow, /\.github\/workflows\/\.build\.yml/);
-  assert.doesNotMatch(workflow, /build-native:/);
-  assert.doesNotMatch(workflow, /build-linux-container:/);
-  assert.doesNotMatch(workflow, /fromJSON\(needs\.resolve-contract\.outputs/);
 });
 
 test("sealed publication authority verifier is independent and credential-free", () => {
@@ -3114,226 +2639,48 @@ test("binary distribution blocks invalid release uploads before the build matrix
   assert.match(workflow, /needs: \[preflight, binary\]/);
 });
 
-test("binary evidence and product publication are isolated by the sealed asset workflow", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/binary-distribution.yml"),
-    "utf8",
+test("binary evidence publication remains isolated from the canonical v4 publisher", () => {
+  const evidence = readRepoText(".github/workflows/binary-distribution.yml");
+  const publication = readRepoText(".github/workflows/.binary-release-assets.yml");
+  const publicPublication = readRepoText(
+    ".github/workflows/binary-release-assets.yml",
   );
-  const publication = fs.readFileSync(
-    path.join(root, ".github/workflows/.binary-release-assets.yml"),
-    "utf8",
+  const promotion = readRepoText(
+    ".github/workflows/.release-candidate-promote.yml",
   );
-  const publicPublication = fs.readFileSync(
-    path.join(root, ".github/workflows/binary-release-assets.yml"),
-    "utf8",
-  );
-  const authority = fs.readFileSync(
-    path.join(root, ".github/workflows/.publication-authority.yml"),
-    "utf8",
-  );
-  const promotion = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  const assembler = fs.readFileSync(
-    path.join(root, "scripts/assemble-binary-release-admission.mjs"),
-    "utf8",
-  );
-  assert.match(workflow, /Fetch durable release-state passport/);
-  assert.match(workflow, /name: Write checksums[\s\S]*?! -name checksums\.txt/);
-  assert.match(
-    workflow,
-    /refs\/heads\/\$\{ref\}:refs\/remotes\/origin\/\$\{ref\}/,
-  );
-  assert.match(workflow, /authoritative-release-state-passport\.json/);
-  assert.match(workflow, /authoritative-release-state-impact\.json/);
-  assert.match(workflow, /durable release-state passport KFD base: ok/);
-  assert.match(workflow, /durable release-state impact: ok/);
-  assert.match(workflow, /kfd-1/);
-  assert.match(workflow, /kfd-2/);
-  assert.match(workflow, /kfd-3/);
-  assert.doesNotMatch(
-    workflow.slice(
-      workflow.indexOf("Fetch durable release-state passport"),
-      workflow.indexOf("Collect release passport"),
-    ),
-    /verify release-passport/,
-  );
-  assert.match(
-    workflow,
-    /--base-passport-json \.buildchain\/release-passport\/authoritative-release-state-passport\.json/,
-  );
-  assert.match(
-    workflow,
-    /--impact-json \.buildchain\/release-evidence\/authoritative-release-state-impact\.json/,
-  );
-  assert.match(workflow, /--require-base-kfd/);
-  assert.doesNotMatch(workflow, /scripts\/ensure-github-release\.mjs/);
-  assert.doesNotMatch(workflow, /gh release upload/);
-  assert.match(
-    publication,
-    /uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
-  );
-  assert.match(
-    publication,
-    /name: Seal binary release asset capability\n    permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read/,
-  );
-  assert.match(publication, /needs: publication-authority/);
+  assert.doesNotMatch(evidence, /gh release create|gh release upload/);
+  assert.match(evidence, /Dispatch sealed binary asset publication/);
   assert.match(publication, /environment: buildchain-release-assets/);
   assert.match(publication, /scripts\/ensure-github-release\.mjs/);
-  assert.match(publication, /name: Write public binary checksums/);
-  assert.match(publication, /! -name checksums\.txt/);
-  assert.match(publication, /dist\/binary\/\*/);
-  assert.match(publication, /--repository "\$\{\{ github\.repository \}\}"/);
-  assert.match(publication, /--tag "\$RELEASE_TAG"/);
   assert.match(publication, /gh release upload "\$RELEASE_TAG"/);
-  assert.match(publication, /capability\.artifactDigest !== actualArtifact/);
-  assert.match(workflow, /BUILDCHAIN_CONTROLLER_ID: binary-distribution/);
-  assert.match(workflow, /buildchain-controller-binary-distribution/);
-  assert.match(workflow, /controller-receipt-qualifying != 'true'/);
-  assert.match(workflow, /name: Dispatch sealed binary asset publication/);
-  assert.match(workflow, /needs: passport/);
-  assert.match(
-    workflow,
-    /name: Dispatch exact evidence run to Binary Release Assets/,
-  );
-  assert.match(workflow, /gh workflow run binary-release-assets\.yml/);
-  assert.match(workflow, /-f evidence-run-id="\$\{GITHUB_RUN_ID\}"/);
-  assert.doesNotMatch(publicPublication, /workflow_run:/);
   assert.match(
     publicPublication,
-    /uses: \.\/\.github\/workflows\/\.binary-release-assets\.yml\n    permissions:\n      actions: read\n      checks: read\n      contents: write\n      pull-requests: read\n    secrets: inherit/,
+    /uses: \.\/\.github\/workflows\/\.binary-release-assets\.yml/,
   );
-  assert.match(
-    publication,
-    /uses: \.\/\.github\/workflows\/\.publication-authority\.yml\n    secrets: inherit/,
-  );
-  assert.match(
-    publicPublication,
-    /Binary Distribution source \$source_sha does not match \$release_tag/,
-  );
-  assert.match(
-    publicPublication,
-    /manual buildchain-ref must equal the exact workflow source SHA/,
-  );
-  assert.match(authority, /--allow-release-reconciliation/);
-  assert.match(
-    authority,
-    /--environment-ref "v\$\{\{ inputs\.publication-version \}\}"/,
-  );
-  assert.match(authority, /--environment-ref-type tag/);
-  assert.match(
-    authority,
-    /BUILDCHAIN_AUTHORITY_REF: \$\{\{ inputs\.buildchain-ref \}\}/,
-  );
-  assert.match(authority, /actualRuntimeSha !== expectedAuthorityRuntimeSha/);
-  assert.match(
-    authority,
-    /BUILDCHAIN_AUTO_ADMISSION_KIND !== "binary-release-assets"[\s\S]*?capability\.runtimeSha !== actualRuntimeSha/,
-  );
-  assert.match(publicPublication, /auto-admission: true/);
-  assert.match(publication, /auto-admission-kind: binary-release-assets/);
-  assert.match(publication, /gate-aggregate-json:/);
-  assert.match(
+  assert.doesNotMatch(
     promotion,
-    /Dispatch standalone binary distribution for the exact public tag/,
-  );
-  assert.match(promotion, /gh workflow run binary-distribution\.yml/);
-  assert.match(
-    promotion,
-    /steps\.promote\.outputs\.finalization-needed != 'true'[\s\S]*?steps\.promote\.outputs\.public-release-tag != ''/,
-  );
-  assert.match(
-    promotion,
-    /name: Preflight PR-stage release candidate evidence[\s\S]*?permissions:\n      actions: read\n      contents: read/,
-  );
-  assert.match(
-    promotion,
-    /name: Promote release candidate[\s\S]*?permissions:\n      actions: write\n      checks: write/,
-  );
-  assert.match(assembler, /validateControllerReceipt/);
-  assert.match(assembler, /validateControllerPlan/);
-  assert.match(assembler, /oneFile\(controllerRoot, "plan\.json"\)/);
-  assert.match(assembler, /plan: controllerPlan/);
-  assert.doesNotMatch(assembler, /expectedRuntimeSha: runtimeSha/);
-  assert.match(assembler, /buildchain-aarch64-apple-darwin\.tar\.gz/);
-  assert.match(assembler, /buildchain-x86_64-unknown-linux-gnu\.tar\.gz/);
-  assert.match(assembler, /buildchain-x86_64-pc-windows-msvc\.zip/);
-  assert.doesNotMatch(workflow, /gh release create/);
-});
-
-test("npm-only promotion does not require a standalone binary workflow", () => {
-  const promotion = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  const selfPromotion = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
-    "utf8",
-  );
-  const selfPromotionRecovery = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
-    "utf8",
-  );
-  assert.match(
-    promotion,
-    /standalone-binary-distribution:\n\s+description: "Dispatch binary-distribution\.yml after promotion; enable only when the caller repository provides that workflow"\n\s+default: false/,
-  );
-  assert.match(
-    promotion,
-    /if: \$\{\{ inputs\.standalone-binary-distribution && !inputs\.dry-run && steps\.promote\.outcome == 'success'/,
-  );
-  assert.match(
-    selfPromotion,
-    /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/,
-  );
-  assert.match(
-    selfPromotion,
-    /promote-alpha:[\s\S]*publish-rematerialize-on-resume: true/,
-  );
-  assert.match(
-    selfPromotionRecovery,
-    /--channel auto[\s\S]*--target-ref "\$\{\{ inputs\['target-ref'\] \}\}"/,
-  );
-  assert.match(
-    selfPromotionRecovery,
-    /buildchain-ref: \$\{\{ needs\.consumer-admission\.outputs\.runtime-sha \}\}[\s\S]*release-passport-v4-runtime-resume-evidence-json:/,
-  );
-  assert.match(
-    selfPromotion,
-    /promote-stable:[\s\S]*publish-rematerialize-on-resume:.*release\//,
-  );
-  const stableJob = selfPromotion.slice(
-    selfPromotion.indexOf("\n  promote-stable:\n"),
-  );
-  const stableCondition = stableJob.slice(0, stableJob.indexOf("\n    uses:"));
-  assert.match(stableCondition, /inputs\['resume-candidate-run-id'\] == ''/);
-  assert.match(
-    stableJob,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4/,
-  );
-  assert.match(
-    selfPromotion,
-    /recover-durable-transaction:[\s\S]*?type: boolean/,
-  );
-  assert.match(
-    selfPromotion,
-    /recover-durable-transaction'\] == true && inputs\.sha != ''/,
-  );
-  assert.match(
-    selfPromotion,
-    /publication-auto-admission: \$\{\{ github\.event_name == 'workflow_run' \|\| inputs\['recover-durable-transaction'\] == true \|\| inputs\['resume-candidate-run-id'\] != '' \}\}/,
-  );
-  assert.match(
-    selfPromotion,
-    /recover-durable-transaction:[\s\S]*?Recover an existing durable transaction from its exact original source SHA/,
-  );
-  assert.match(
-    selfPromotion,
-    /reject-invalid-durable-recovery:[\s\S]*?Durable transaction recovery requires the exact original transaction source SHA/,
+    /Dispatch standalone binary distribution|gh workflow run binary-distribution\.yml/,
   );
 });
-
+test("canonical v4 alpha publication does not retain a binary or stable publisher", () => {
+  const promotion = readRepoText(
+    ".github/workflows/.release-candidate-promote.yml",
+  );
+  const selfPromotion = readRepoText(
+    ".github/workflows/buildchain-ref-promotion.yml",
+  );
+  const recovery = readRepoText(
+    ".github/workflows/buildchain-ref-promotion-recovery.yml",
+  );
+  assert.match(promotion, /^  apply:/m);
+  assert.doesNotMatch(promotion, /gh workflow run binary-distribution\.yml/);
+  assert.match(selfPromotion, /^  promote:/m);
+  assert.doesNotMatch(selfPromotion, /^  promote-stable:/m);
+  assert.match(
+    recovery,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+  );
+});
 test("runtime selection accepts official channels and gates train or SHA overrides", () => {
   assert.deepEqual(
     resolveRuntimeSelection({

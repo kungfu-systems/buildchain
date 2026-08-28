@@ -61,6 +61,14 @@ const ROOT_DOMAINS = new Set([
   "tail-reseal-artifact-files",
   "tail-reseal-receipt",
   "release-candidate-passport",
+  "release-invocation-publisher",
+  "release-invocation-runtime",
+  "release-invocation-candidate",
+  "release-invocation-target",
+  "release-invocation-authority",
+  "release-invocation",
+  "release-transaction",
+  "release-receipt",
 ]);
 const FAULT_CLASSES = new Set([
   "validation",

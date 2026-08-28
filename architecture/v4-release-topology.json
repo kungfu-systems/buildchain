@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-release-topology/v1",
+  "sourceCut": {
+    "branch": "dev/v4/v4.0",
+    "commit": "30cbbc46870871a0eacbe952935ea753e473ff25",
+    "tree": "b86fea30cb92a32215206f159708a8ea1d10d462"
+  },
+  "enforcement": "converged",
+  "closedWorld": {
+    "workflowPaths": [
+      ".github/workflows/.publication-authority.yml",
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.release-elastic-beanstalk.yml",
+      ".github/workflows/.release-new-version.yml",
+      ".github/workflows/.sam-release.yml",
+      ".github/workflows/.wheel-release.yml",
+      ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      ".github/workflows/buildchain-ref-promotion.yml",
+      ".github/workflows/npm-publish.yml",
+      ".github/workflows/paper-release-sealed.yml",
+      ".github/workflows/paper-release.yml",
+      ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/release-new-version.yml",
+      ".github/workflows/release-tail.yml",
+      ".github/workflows/v4-declarative-release-tail-dogfood.yml"
+    ],
+    "unknownTopologyPolicy": "fail-closed"
+  },
+  "semanticScope": {
+    "workflowPaths": [
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/buildchain-ref-promotion-recovery.yml",
+      ".github/workflows/buildchain-ref-promotion.yml",
+      ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/v4-declarative-release-tail-dogfood.yml"
+    ],
+    "excludedMechanisms": [
+      "Paper product release",
+      "npm dry-run",
+      "v3 rollback workflows",
+      "retired compatibility workflows"
+    ]
+  },
+  "baselineMetrics": {
+    "workflowCount": 15,
+    "jobCount": 38,
+    "reusableEdgeCount": 11,
+    "mutationRelevantNodeCount": 25,
+    "contentsWriteJobCount": 10,
+    "oidcWriteJobCount": 9,
+    "semanticMutationRelevantNodeCount": 17
+  },
+  "targetBudgets": {
+    "semanticBoundaries": ["QUALIFY", "APPLY", "SETTLE"],
+    "maximumMutationRelevantNodeCount": 8,
+    "contentsWriteJobCount": 1,
+    "oidcWriteJobCount": 1,
+    "publisherIdentityCount": 1,
+    "runtimeIdentityCount": 1,
+    "terminalReceiptAuthorityCount": 1
+  },
+  "authorityClassification": {
+    "publisher": {
+      "current": [
+        ".github/workflows/.release-candidate-promote.yml#legacy-promote",
+        ".github/workflows/.release-candidate-promote.yml#v4-declarative-promote"
+      ],
+      "target": ".github/workflows/.release-candidate-promote.yml#apply"
+    },
+    "runtimeSelectors": {
+      "discoveryOnly": ["v4-alpha", "v4", "alpha/v4/v4.0"],
+      "postAdmissionPolicy": "exact-sha-only"
+    },
+    "engines": {
+      "current": ["legacy-promote", "v4-declarative-promote"],
+      "target": "release-transaction"
+    },
+    "terminalProjections": {
+      "current": ["promote", "controller-receipt", "release-tail receipt"],
+      "target": "ReleaseReceipt"
+    }
+  },
+  "observedTopology": {
+    "jobRecordFields": [
+      "id",
+      "kind",
+      "uses",
+      "contentsPermission",
+      "oidcPermission",
+      "carriers",
+      "mutationSignals"
+    ],
+    "workflows": [
+      {
+        "path": ".github/workflows/.publication-authority.yml",
+        "triggers": ["workflow_call"],
+        "jobs": [
+          "verify|runner|-|read|-|artifactDownload,artifactUpload,jobOutput|-"
+        ],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/.release-candidate-promote.yml",
+        "triggers": ["workflow_call"],
+        "jobs": [
+          "apply|runner|-|write|write|artifactDownload,artifactUpload|contents-write,oidc-write,promotion-runtime",
+          "qualify|runner|-|read|-|artifactUpload,jobOutput|-",
+          "settle|runner|-|read|-|artifactDownload,artifactUpload,jobOutput|-"
+        ],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/.release-elastic-beanstalk.yml",
+        "triggers": ["workflow_call"],
+        "jobs": ["retired|runner|-|-|-|-|-"],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/.release-new-version.yml",
+        "triggers": ["workflow_call"],
+        "jobs": ["retired|runner|-|-|-|-|-"],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/.sam-release.yml",
+        "triggers": ["workflow_call"],
+        "jobs": ["retired|runner|-|-|-|-|-"],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/.wheel-release.yml",
+        "triggers": ["workflow_call"],
+        "jobs": ["retired|runner|-|-|-|-|-"],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+        "triggers": ["workflow_dispatch"],
+        "jobs": [
+          "resume|reusable-call|kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write"
+        ],
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha"
+        ]
+      },
+      {
+        "path": ".github/workflows/buildchain-ref-promotion.yml",
+        "triggers": ["workflow_dispatch", "workflow_run:completed"],
+        "jobs": [
+          "promote|reusable-call|kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write",
+          "reject-invalid-candidate-recovery|runner|-|read|-|-|-",
+          "reject-invalid-durable-recovery|runner|-|read|-|-|-",
+          "reject-manual-apply|runner|-|read|-|-|-"
+        ],
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha"
+        ]
+      },
+      {
+        "path": ".github/workflows/npm-publish.yml",
+        "triggers": ["workflow_dispatch"],
+        "jobs": ["dry-run|runner|-|-|-|-|direct-publication-command"],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/paper-release-sealed.yml",
+        "triggers": ["workflow_call"],
+        "jobs": [
+          "publication-authority|reusable-call|./.github/workflows/.publication-authority.yml|read|-|-|-",
+          "publication-candidate|reusable-call|./.github/workflows/publication-artifact.yml|read|-|-|-",
+          "publish|runner|-|read|write|artifactDownload,artifactUpload,jobOutput|contents-write,oidc-write,promotion-runtime"
+        ],
+        "reusableEdges": [
+          "./.github/workflows/.publication-authority.yml",
+          "./.github/workflows/publication-artifact.yml"
+        ]
+      },
+      {
+        "path": ".github/workflows/paper-release.yml",
+        "triggers": ["workflow_call"],
+        "jobs": [
+          "paper-release|runner|-|write|write|artifactUpload,jobOutput|contents-write,oidc-write,promotion-runtime",
+          "publication-authority|reusable-call|./.github/workflows/.publication-authority.yml|read|-|-|-"
+        ],
+        "reusableEdges": ["./.github/workflows/.publication-authority.yml"]
+      },
+      {
+        "path": ".github/workflows/release-candidate-promote.yml",
+        "triggers": ["workflow_call"],
+        "jobs": [
+          "consumer-admission|runner|-|read|-|artifactUpload|-",
+          "invoke|reusable-call|kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write",
+          "resolve-promotion|runner|-|read|-|jobOutput|-"
+        ],
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha"
+        ]
+      },
+      {
+        "path": ".github/workflows/release-new-version.yml",
+        "triggers": ["pull_request:closed"],
+        "jobs": ["buildchain-self-release|runner|-|-|-|-|-"],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/release-tail.yml",
+        "triggers": ["workflow_call"],
+        "jobs": ["release-tail|runner|-|-|-|artifactUpload|-"],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+        "triggers": ["workflow_dispatch"],
+        "jobs": [
+          "publish|reusable-call|kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha|-|-|-|-"
+        ],
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha"
+        ]
+      }
+    ],
+    "metrics": {
+      "workflowCount": 15,
+      "jobCount": 25,
+      "reusableEdgeCount": 7,
+      "mutationRelevantNodeCount": 16,
+      "contentsWriteJobCount": 6,
+      "oidcWriteJobCount": 6
+    },
+    "semanticMetrics": {
+      "workflowCount": 5,
+      "mutationRelevantNodeCount": 8,
+      "contentsWriteJobCount": 1,
+      "oidcWriteJobCount": 1
+    }
+  }
+}

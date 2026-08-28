@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "fe2d06363e9f10adf2ed1ebd6505c9301f808059694dfca7eaaf13a909c443da",
+    "sha256": "90936cf6dbfc5b5ae8435fbb2fc44faa1e3895dbe41b45ef5f55158380be700f",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 77,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "fe2d06363e9f10adf2ed1ebd6505c9301f808059694dfca7eaaf13a909c443da",
+      "sha256": "90936cf6dbfc5b5ae8435fbb2fc44faa1e3895dbe41b45ef5f55158380be700f",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 77,
@@ -4915,21 +4915,8 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
-          "inputs": [
-            "dry-run",
-            "release-passport-v4-runtime-resume-evidence-json",
-            "resume-buildchain-runtime-ref",
-            "resume-buildchain-runtime-sha",
-            "resume-candidate-repository",
-            "resume-candidate-run-id",
-            "resume-expected-candidate-root",
-            "resume-expected-candidate-runtime-sha",
-            "resume-expected-source-tree",
-            "resume-transaction-id",
-            "sha",
-            "target-ref"
-          ],
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -6288,13 +6275,16 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 8,
+          "inputCount": 11,
           "inputs": [
             "artifact-paths",
             "candidate-passport-path",
             "failure-after-capability",
             "publication-qualification-path",
+            "publisher-workflow-sha",
             "repository",
+            "runtime-commit",
+            "runtime-tree",
             "stage-capsules-path",
             "state-path",
             "token"

@@ -19,6 +19,12 @@ inputs:
     { required: true, description: "Downloaded Stage Capsule aggregate" }
   publication-qualification-path:
     { required: true, description: "Sealed publication qualification receipt" }
+  publisher-workflow-sha:
+    { required: true, description: "Exact canonical publisher workflow SHA" }
+  runtime-commit:
+    { required: true, description: "Exact admitted Buildchain runtime commit" }
+  runtime-tree:
+    { required: true, description: "Exact admitted Buildchain runtime tree" }
   artifact-paths:
     {
       required: false,
@@ -44,6 +50,14 @@ outputs:
   transaction-root: { description: "Stable provider transaction root" }
   state-root: { description: "Final checkpoint root" }
   receipt-roots-json: { description: "Standardized receipt roots" }
+  release-invocation-path: { description: "Canonical ReleaseInvocation path" }
+  release-invocation-root: { description: "Canonical ReleaseInvocation root" }
+  release-transaction-path:
+    { description: "Three-phase ReleaseTransaction path" }
+  release-transaction-root:
+    { description: "Three-phase ReleaseTransaction root" }
+  release-receipt-path: { description: "Single terminal ReleaseReceipt path" }
+  release-receipt-root: { description: "Single terminal ReleaseReceipt root" }
 runs:
   using: "node24"
   main: "dist/index.js"

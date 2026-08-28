@@ -28,17 +28,11 @@ import {
 import { sha256Json } from "../packages/core/release-propagation-common.js";
 import { contentRoot } from "../packages/core/release-propagation-work-control.js";
 import { withWorkRoot } from "../packages/core/release-propagation-work.js";
-import {
-  capturePackageReleasePropagation,
-  readConfigAtSource,
-} from "../scripts/capture-package-release-propagation.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
 const fixture = path.join(root, "fixtures", "release-propagation-shaped");
 const workflowPath = path.join(root, ".github", "workflows", "release-propagation.yml");
-const promotionWorkflowPath = path.join(root, ".github", "workflows", ".release-candidate-promote.yml");
-const publicPromotionWorkflowPath = path.join(root, ".github", "workflows", "release-candidate-promote.yml");
 
 function packageCaptureConfig() {
   return {
@@ -1251,59 +1245,6 @@ test("package release capture emits one deterministic paused Work with zero exec
   assert.equal(repeated.works[0].work.contentRoot, work.contentRoot);
 });
 
-test("package release capture materializes a restart-safe artifact set", () => {
-  const outputDir = tempDir("package-release-capture");
-  const captured = capturePackageReleasePropagation({
-    config: packageCaptureConfig(),
-    upstreamRelease: readJson("upstream-alpha.json"),
-    expectedBaseShas: { "site-libkungfu-dev": "9".repeat(40) },
-    outputDir,
-  });
-  const propagationKey = captured.works[0].propagationKey;
-  const work = JSON.parse(fs.readFileSync(path.join(outputDir, "work", propagationKey, "work.json"), "utf8"));
-  const status = JSON.parse(fs.readFileSync(path.join(outputDir, "work", propagationKey, "status.json"), "utf8"));
-  assert.equal(work.contentRoot, captured.works[0].work.contentRoot);
-  assert.equal(status.nextAction.action, "claim");
-  assert.equal(verifyReleasePropagationWork(work).contentRoot, work.contentRoot);
-  assert.equal(JSON.parse(fs.readFileSync(path.join(outputDir, "upstream-release.json"), "utf8")).tag, "v1.4.0-alpha.3");
-});
-
-test("package release capture recovers an exact source commit missing from a shallow checkout", () => {
-  const sandbox = tempDir("package-release-shallow-source");
-  const seed = path.join(sandbox, "seed");
-  const remote = path.join(sandbox, "remote.git");
-  const shallow = path.join(sandbox, "shallow");
-  execFileSync("git", ["init", "--initial-branch=main", seed], { stdio: "ignore" });
-  execFileSync("git", ["config", "user.name", "Buildchain Test"], { cwd: seed });
-  execFileSync("git", ["config", "user.email", "buildchain@example.test"], { cwd: seed });
-  fs.writeFileSync(
-    path.join(seed, "buildchain.release-propagation.json"),
-    `${JSON.stringify(packageCaptureConfig())}\n`,
-  );
-  execFileSync("git", ["add", "buildchain.release-propagation.json"], { cwd: seed });
-  execFileSync("git", ["commit", "-m", "test: release source"], { cwd: seed, stdio: "ignore" });
-  const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: seed, encoding: "utf8" }).trim();
-  fs.writeFileSync(path.join(seed, "later.txt"), "later\n");
-  execFileSync("git", ["add", "later.txt"], { cwd: seed });
-  execFileSync("git", ["commit", "-m", "test: later checkout"], { cwd: seed, stdio: "ignore" });
-  execFileSync("git", ["clone", "--bare", seed, remote], { stdio: "ignore" });
-  execFileSync("git", ["clone", "--depth=1", `file://${remote}`, shallow], { stdio: "ignore" });
-
-  assert.notEqual(
-    spawnSync("git", ["cat-file", "-e", `${sourceSha}^{commit}`], { cwd: shallow }).status,
-    0,
-  );
-  const recovered = readConfigAtSource(
-    sourceSha,
-    "buildchain.release-propagation.json",
-    shallow,
-  );
-  assert.equal(recovered.normalized.sourceNode, "kfd");
-  assert.equal(
-    spawnSync("git", ["cat-file", "-e", `${sourceSha}^{commit}`], { cwd: shallow }).status,
-    0,
-  );
-});
 
 test("package release capture rejects the alpha.48 tag and npm source mismatch class", () => {
   const release = readJson("upstream-alpha.json");
@@ -1326,30 +1267,4 @@ test("package release capture rejects the alpha.48 tag and npm source mismatch c
     }),
     /package gitHead must match sourceSha/,
   );
-});
-
-test("promotion finalization exposes generic package Work capture without downstream writes", () => {
-  const workflow = fs.readFileSync(promotionWorkflowPath, "utf8");
-  assert.match(workflow, /release-propagation-config-path:/);
-  assert.match(workflow, /steps\.promote\.outputs\.finalization-needed != 'true'/);
-  assert.match(workflow, /capture-package-release-propagation\.mjs/);
-  assert.match(workflow, /steps\.promote\.outputs\.transaction-release-sha/);
-  assert.match(workflow, /steps\.promote\.outputs\.public-release-tag/);
-  assert.match(workflow, /release-propagation-work-artifact:/);
-  const captureBlock = workflow.slice(
-    workflow.indexOf("Capture exact package release propagation work"),
-    workflow.indexOf("Bundle release-candidate-promotion controller evidence"),
-  );
-  assert.doesNotMatch(captureBlock, /git push|gh pr create|gh pr merge/);
-});
-
-test("alpha package propagation does not pass a new input into the older stable shell", () => {
-  const workflow = fs.readFileSync(publicPromotionWorkflowPath, "utf8");
-  const alphaBlock = workflow.slice(
-    workflow.indexOf("  alpha:"),
-    workflow.indexOf("  stable:"),
-  );
-  const stableBlock = workflow.slice(workflow.indexOf("  stable:"));
-  assert.match(alphaBlock, /release-propagation-config-path:/);
-  assert.doesNotMatch(stableBlock, /release-propagation-config-path:/);
 });

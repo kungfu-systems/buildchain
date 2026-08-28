@@ -1150,14 +1150,17 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
+          "release-invocation-root",
           "release-propagation-work-artifact",
+          "release-receipt-root",
           "release-tail-declaration-root",
           "release-tail-receipt-roots-json",
           "release-tail-state-root",
           "release-tail-transaction-root",
-          "release-tail-transaction-state"
+          "release-tail-transaction-state",
+          "release-transaction-root"
         ],
-        "outputCount": 28
+        "outputCount": 31
       },
       {
         "id": ".release-docker",
@@ -1850,22 +1853,9 @@
       {
         "id": "buildchain-ref-promotion-recovery",
         "path": ".github/workflows/buildchain-ref-promotion-recovery.yml",
-        "reusable": true,
-        "inputs": [
-          "dry-run",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "resume-buildchain-runtime-ref",
-          "resume-buildchain-runtime-sha",
-          "resume-candidate-repository",
-          "resume-candidate-run-id",
-          "resume-expected-candidate-root",
-          "resume-expected-candidate-runtime-sha",
-          "resume-expected-source-tree",
-          "resume-transaction-id",
-          "sha",
-          "target-ref"
-        ],
-        "inputCount": 12,
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -2743,14 +2733,17 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
+          "release-invocation-root",
           "release-propagation-work-artifact",
+          "release-receipt-root",
           "release-tail-declaration-root",
           "release-tail-receipt-roots-json",
           "release-tail-state-root",
           "release-tail-transaction-root",
-          "release-tail-transaction-state"
+          "release-tail-transaction-state",
+          "release-transaction-root"
         ],
-        "outputCount": 40
+        "outputCount": 43
       },
       {
         "id": "release-governance-reconcile",
@@ -3314,12 +3307,15 @@
           "candidate-passport-path",
           "failure-after-capability",
           "publication-qualification-path",
+          "publisher-workflow-sha",
           "repository",
+          "runtime-commit",
+          "runtime-tree",
           "stage-capsules-path",
           "state-path",
           "token"
         ],
-        "inputCount": 8
+        "inputCount": 11
       },
       {
         "id": "validate-config",
@@ -8928,7 +8924,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "95bb3dca892cfa66318d433298b9ce94e8499f79c5d5e3a86f24a00bb0a4b8b3",
+    "workflowRegistryDigest": "c78ddc0c55d79df3f6bbf2e170c0de7885376aad1504df6ef4a8875202282463",
     "pageRegistryDigest": "148e713304e9aa4a109cd18f31f4414eff4230eb633ffdcf98c1186208e16a48"
   },
   "comparison": {
