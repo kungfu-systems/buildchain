@@ -103,7 +103,9 @@ async function transactionContainedInRelease(context, transaction) {
 function containedReleaseExecutionIdentity(context, state) {
   const transaction =
     state.containsPublishedMaterial &&
-    context.advancedPublicationTransaction?.state === "complete"
+    ["published", "finalizing", "complete"].includes(
+      context.advancedPublicationTransaction?.state || "",
+    )
       ? context.advancedPublicationTransaction
       : undefined;
   return {
@@ -233,10 +235,11 @@ async function createReleasePromotionCommit(context, state) {
       state.containsPublishedMaterial,
     ),
   });
-  const containedCompleteTransaction =
-    state.containsPublishedMaterial &&
-    context.advancedPublicationTransaction?.state === "complete";
-  const releaseSha = containedCompleteTransaction
+  const containedPublicationTransaction = containedReleaseExecutionIdentity(
+    context,
+    state,
+  ).transaction;
+  const releaseSha = containedPublicationTransaction
     ? context.advancedChannelSha || context.sha
     : releaseCommit.sha;
   if (context.requireGovernance && !context.dryRun) {
@@ -289,7 +292,7 @@ async function createReleasePromotionCommit(context, state) {
 
 async function finalizeReleasePublication(context, state) {
   const execution = containedReleaseExecutionIdentity(context, state);
-  const containedCompleteTransaction = execution.transaction;
+  const containedPublicationTransaction = execution.transaction;
   await context.executePublishTransaction({
     version: state.releaseCommit.publishVersion || state.releaseVersion,
     exactTag: state.selectedReleaseCandidate.tag,
@@ -306,7 +309,7 @@ async function finalizeReleasePublication(context, state) {
     ),
     allowVersionStateFinalization: state.releaseCommit.action === "existing",
   });
-  if (context.versionState && !containedCompleteTransaction) {
+  if (context.versionState && !containedPublicationTransaction) {
     await context.markFinalizing();
     const targetUpdate = await context.updateBranch(
       context.targetRef,
