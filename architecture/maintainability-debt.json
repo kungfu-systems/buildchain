@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64306,
-    "current": 56245
+    "measuredExcess": 64292,
+    "current": 56231
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1398,21 +1398,21 @@
       "scripts/dev-delivery-warrant-options.mjs": {
         "baseline": {
           "functions": {
-            "devDeliveryCliOptions@36": {
+            "devDeliveryCliOptions@61": {
               "lines": 247
             }
           }
         },
         "current": {
           "functions": {
-            "devDeliveryCliOptions@36": {
-              "lines": 247
+            "devDeliveryCliOptions@61": {
+              "lines": 233
             }
           }
         },
         "target": {
           "functions": {
-            "devDeliveryCliOptions@36": {
+            "devDeliveryCliOptions@61": {
               "lines": 180
             }
           }
