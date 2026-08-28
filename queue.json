@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 983,
+  "generation": 984,
   "fencingCounter": 152,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:5de75571e1d3a7d97b5d0bf317b1fd2cabdfaff48e55ad701893fbe0da002ff7",
@@ -53,8 +53,13 @@
     "issuedAt": "2026-08-28T11:10:30.985Z",
     "expiresAt": "2026-08-28T12:11:19.884Z",
     "fencingToken": "sha256:b85daf0249cb94fe22ee0f071dd1e7a30951352cb9b86c4e9bb912896d92d36f",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-28T11:11:19.884Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-28T11:11:19.884Z",
+    "nativeProofRoot": "sha256:93a41e5328da57fe0736187589302b117ee3c390b99978abf02adb0c23989fbc",
+    "nativeExecutionReceiptRoot": "sha256:ec67f5a7b3ffac560b34c3f6247d6a199901c78046ac337c9eaaa01ee8c169f8",
+    "nativeProofReuseRoot": "sha256:f371007115487bf8fa45ea33b54c669b5f4bdccdb77569bf79f57ce0f50e4e9f",
+    "qualificationReceiptRoot": "sha256:1ba16001974889a2c55176ea32a8d7a5241e283d25c8171e1cbdf155070034c8",
+    "qualifiedAt": "2026-08-28T11:11:44.636Z"
   },
   "candidates": [
     {
@@ -7097,10 +7102,10 @@
       "sourceWorkflowRunId": 33165204670,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-28T11:10:28.061Z",
-      "updatedAt": "2026-08-28T11:11:19.884Z",
+      "updatedAt": "2026-08-28T11:11:44.636Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/.publication-authority.yml",
@@ -7114,6 +7119,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-28T11:11:19.884Z",
-  "stateRoot": "sha256:fd8541ae2097087d7abe0cd257b616d91a9b9037233af9a42207f2d7d8f8bbc3"
+  "updatedAt": "2026-08-28T11:11:44.636Z",
+  "stateRoot": "sha256:d2d93c563eb54fc3ff5c41c9f4ccd015884f5fa3f266ddd66a4c1655cdcfaa39"
 }
