@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 67973,
-    "current": 59912
+    "measuredExcess": 67972,
+    "current": 59911
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -3005,7 +3005,7 @@
           "decisions": 75
         },
         "current": {
-          "lines": 2679,
+          "lines": 2678,
           "jobs": 13,
           "steps": 99,
           "maxStepsPerJob": 47,
@@ -3209,7 +3209,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 2679
+      "current": 2678
     },
     {
       "domain": "sources",
