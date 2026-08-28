@@ -117,14 +117,14 @@ jobs:
           exit 1
 
   reject-invalid-candidate-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && (!startsWith(inputs['target-ref'], 'alpha/') || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || (inputs['resume-expected-source-tree'] == '' && inputs['resume-expected-candidate-root'] == '')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && ((!startsWith(inputs['target-ref'], 'alpha/') && !startsWith(inputs['target-ref'], 'release/')) || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || inputs['resume-expected-source-tree'] == '') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
       - name: Require exact candidate recovery identity
         run: |
-          echo "::error::Candidate recovery requires exact inputs and stable recovery must use buildchain-ref-promotion-recovery.yml."
+          echo "::error::Candidate recovery requires an exact channel, source, candidate, tree, and runtime identity."
           exit 1
 
   promote:
