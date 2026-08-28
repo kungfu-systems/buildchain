@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "74451a8a6e729c51d3e5a7aac9ab14755d2dab44e8b25fe7949b16038cc79a73",
+    "sha256": "fe2d06363e9f10adf2ed1ebd6505c9301f808059694dfca7eaaf13a909c443da",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 77,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "74451a8a6e729c51d3e5a7aac9ab14755d2dab44e8b25fe7949b16038cc79a73",
+      "sha256": "fe2d06363e9f10adf2ed1ebd6505c9301f808059694dfca7eaaf13a909c443da",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 77,
@@ -4915,8 +4915,21 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 0,
-          "inputs": [],
+          "inputCount": 12,
+          "inputs": [
+            "dry-run",
+            "release-passport-v4-runtime-resume-evidence-json",
+            "resume-buildchain-runtime-ref",
+            "resume-buildchain-runtime-sha",
+            "resume-candidate-repository",
+            "resume-candidate-run-id",
+            "resume-expected-candidate-root",
+            "resume-expected-candidate-runtime-sha",
+            "resume-expected-source-tree",
+            "resume-transaction-id",
+            "sha",
+            "target-ref"
+          ],
           "reverseAuditSource": ".github/workflows"
         },
         {

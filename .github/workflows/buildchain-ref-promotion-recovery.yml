@@ -1,39 +1,19 @@
 name: Buildchain Ref Promotion Recovery
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      sha:
-        description: "Exact protected v4 channel commit that owns the recovery"
-        required: true
-      target-ref:
-        description: "Exact protected v4 alpha or stable channel branch"
-        required: true
-        default: "alpha/v4/v4.0"
-      dry-run:
-        description: "Only print planned publication changes"
-        required: true
-        default: true
-        type: boolean
-      resume-candidate-repository:
-        description: "Repository that owns the sealed candidate run; empty rematerializes a fresh candidate"
-      resume-candidate-run-id:
-        description: "Exact successful Build Surface Fixture run ID; empty rematerializes a fresh candidate"
-      resume-expected-source-tree:
-        description: "Exact Git tree recorded for the sealed candidate"
-      resume-expected-candidate-root:
-        { description: "Optional exact candidate root" }
-      resume-expected-candidate-runtime-sha:
-        description: "Exact Buildchain runtime SHA recorded by the candidate"
-      resume-buildchain-runtime-ref:
-        description: "Approved v4 channel, train, or authority ref containing the fresh recovery runtime"
-        required: true
-      resume-buildchain-runtime-sha:
-        description: "Exact commit resolved from the fresh recovery runtime ref"
-        required: true
-      resume-transaction-id:
-        description: "Exact durable publication transaction identity; required only when resuming a sealed candidate"
-      release-passport-v4-runtime-resume-evidence-json:
-        description: "Optional precomputed runtime A+B Stage Capsule resume evidence JSON"
+      sha: { required: true, type: string }
+      target-ref: { required: true, type: string }
+      dry-run: { required: true, type: boolean }
+      resume-candidate-repository: { required: false, default: "", type: string }
+      resume-candidate-run-id: { required: false, default: "", type: string }
+      resume-expected-source-tree: { required: false, default: "", type: string }
+      resume-expected-candidate-root: { required: false, default: "", type: string }
+      resume-expected-candidate-runtime-sha: { required: false, default: "", type: string }
+      resume-buildchain-runtime-ref: { required: true, type: string }
+      resume-buildchain-runtime-sha: { required: true, type: string }
+      resume-transaction-id: { required: false, default: "", type: string }
+      release-passport-v4-runtime-resume-evidence-json: { required: false, default: "", type: string }
 permissions:
   contents: read
 jobs:
@@ -296,7 +276,7 @@ jobs:
       release-passport-v4-runtime-resume-evidence-json: ${{ inputs['release-passport-v4-runtime-resume-evidence-json'] }}
       publication-auto-admission: true
       publication-auto-no-gate: true
-      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion-recovery.yml
+      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
       publication-authority-workflow-path: .github/workflows/.release-candidate-promote.yml
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain

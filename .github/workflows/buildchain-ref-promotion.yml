@@ -117,15 +117,42 @@ jobs:
           exit 1
 
   reject-invalid-candidate-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && (!startsWith(inputs['target-ref'], 'alpha/') || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || (inputs['resume-expected-source-tree'] == '' && inputs['resume-expected-candidate-root'] == '')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && ((!startsWith(inputs['target-ref'], 'alpha/') && !startsWith(inputs['target-ref'], 'release/')) || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || inputs['resume-expected-source-tree'] == '') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
       - name: Require exact candidate recovery identity
         run: |
-          echo "::error::Candidate recovery requires exact inputs and stable recovery must use buildchain-ref-promotion-recovery.yml."
+          echo "::error::Candidate recovery requires an exact channel, source, candidate, tree, and runtime identity."
           exit 1
+
+  recover-stable-candidate:
+    if: ${{ github.event_name == 'workflow_dispatch' && startsWith(inputs['target-ref'], 'release/') && inputs['resume-candidate-run-id'] != '' && inputs.sha != '' && inputs['resume-candidate-repository'] != '' && inputs['resume-buildchain-runtime-ref'] != '' && inputs['resume-buildchain-runtime-sha'] != '' && inputs['resume-expected-candidate-runtime-sha'] != '' && inputs['resume-expected-source-tree'] != '' }}
+    uses: ./.github/workflows/buildchain-ref-promotion-recovery.yml
+    permissions:
+      actions: write
+      artifact-metadata: write
+      attestations: write
+      checks: write
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+    secrets: inherit
+    with:
+      sha: ${{ inputs.sha }}
+      target-ref: ${{ inputs['target-ref'] }}
+      dry-run: ${{ inputs['dry-run'] == 'true' }}
+      resume-candidate-repository: ${{ inputs['resume-candidate-repository'] }}
+      resume-candidate-run-id: ${{ inputs['resume-candidate-run-id'] }}
+      resume-expected-source-tree: ${{ inputs['resume-expected-source-tree'] }}
+      resume-expected-candidate-root: ${{ inputs['resume-expected-candidate-root'] }}
+      resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
+      resume-buildchain-runtime-ref: ${{ inputs['resume-buildchain-runtime-ref'] }}
+      resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
+      resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
+      release-passport-v4-runtime-resume-evidence-json: ${{ inputs['release-passport-v4-runtime-resume-evidence-json'] }}
 
   promote-alpha:
     if: >-
@@ -212,6 +239,7 @@ jobs:
         (
           github.event_name == 'workflow_dispatch' &&
           !startsWith(inputs['target-ref'], 'alpha/') &&
+          inputs['resume-candidate-run-id'] == '' &&
           (
             inputs['dry-run'] == 'true' ||
             inputs['publication-admission-json'] != '' ||
