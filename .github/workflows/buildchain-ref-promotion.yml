@@ -127,6 +127,7 @@ jobs:
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain
       publication-package-name: "@kungfu-tech/buildchain"
+      declarative-release-tail: true
       dry-run: ${{ inputs['dry-run'] == 'true' }}
 
   promote-stable:
