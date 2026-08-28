@@ -1199,7 +1199,6 @@ jobs:
     steps:
       - name: Seal exact predicate identity
         id: plan
-        shell: bash
         env:
           BUILDCHAIN_CONSUMER_PREDICATE_COMMAND: ${{ inputs.publication-consumer-qualification-command }}
           BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: ${{ inputs.publication-consumer-qualification-controller-sha }}

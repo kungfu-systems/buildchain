@@ -11,7 +11,10 @@ import {
   isHandMaintainedSource,
 } from "./maintainability-metrics.mjs";
 import {
+  calculateDebtMeasuredExcess,
   evaluateDebtAuthority,
+  evaluateDebtBudget,
+  evaluateExceptionBudget,
   evaluateExceptionGovernance,
   evaluateTestBudgets,
   evaluateWorkflowBudgets,
@@ -487,6 +490,7 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     extendedCoverageRevision,
   );
   const issues = evaluateExceptionGovernance({ policy });
+  issues.push(...evaluateExceptionBudget({ policy }));
   const hotspots = collectHotspots(root, current, 20, debt.hotspots || []);
   issues.push(
     ...evaluateDebtAuthority({
@@ -499,6 +503,7 @@ function checkMaintainability({ root = process.cwd() } = {}) {
       hotspots,
     }),
   );
+  issues.push(...evaluateDebtBudget({ debt, policy }));
   issues.push(...evaluateMaintainability({ current, baselineFiles, policy }));
   issues.push(
     ...evaluateTestBudgets({ current, baselineFiles: baselineTests, policy }),
@@ -553,12 +558,15 @@ if (
 }
 
 export {
+  calculateDebtMeasuredExcess,
   checkMaintainability,
   collectHotspots,
   ensureMaintainabilityRevisionsAvailable,
   ensureRevisionAvailable,
   evaluateMaintainability,
   evaluateDebtAuthority,
+  evaluateDebtBudget,
+  evaluateExceptionBudget,
   evaluateExceptionGovernance,
   evaluateRepositoryBudgets,
   evaluateTestBudgets,

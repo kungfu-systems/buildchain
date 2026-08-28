@@ -3,6 +3,27 @@
   "contract": "kungfu-buildchain-maintainability-policy",
   "baseline": "architecture/maintainability-baseline.json",
   "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+  "debtBudget": {
+    "metric": "calibrated-full-dimensional-excess-v1",
+    "baselineProtectedHead": "2381db294325a367b6d2bfe7ee72c246f8469a51",
+    "baselineMeasuredExcess": 74773,
+    "baselineTotalExcess": 66712,
+    "maxTotalExcess": 59953,
+    "targetExclusive": 60000,
+    "rationale": "Preserve the accepted 66,712 governance ledger at the exact protected Wave 4 cut while charging every subsequent source, Rust, test, and workflow line, function, job, step, and decision excess one-for-one. The fixed calibration offset cannot hide new debt because both the measured ledger and calibrated total are recomputed from the complete exact debt map."
+  },
+  "exceptionBudget": {
+    "maxTotal": 94,
+    "maxByCollection": {
+      "approvedExistingDebtTransitions": 19,
+      "approvedNewFileTransitions": 21,
+      "approvedExtractedDebt": 20,
+      "approvedPublicSurfaceTransitions": 19,
+      "approvedTestDebtTransitions": 9,
+      "approvedWorkflowDebtTransitions": 6
+    },
+    "rationale": "Wave 4 freezes both the aggregate exception inventory and every exception class at the exact protected baseline; reductions may ratchet these ceilings downward, but entries cannot be moved between classes to create hidden headroom."
+  },
   "repositoryBudgets": {
     "baselineRevision": "858dbe00b6206a8f356b4a12d2659bee7a72e71b",
     "maxHandMaintainedSourceFiles": 443,
@@ -1882,12 +1903,12 @@
       "governance": "stage2-workflow-yaml-reduction"
     },
     ".github/workflows/.release-candidate-promote.yml": {
-      "maxLines": 2708,
+      "maxLines": 2707,
       "maxJobs": 13,
       "maxSteps": 99,
       "maxStepsPerJob": 47,
       "maxDecisions": 75,
-      "rationale": "The advanced promotion workflow retains its v4-only declarative provider lane and historical adopter inputs, while pure promotion-evidence bundling now runs in the exact checked-out workflow-shell helper. Jobs, permissions, credentials, outputs, mutation authority, failure behavior, and the 13/99/47/75 structural ceilings are unchanged; YAML lines fall from 2736 to 2708 and cannot grow implicitly.",
+      "rationale": "The advanced promotion workflow retains its v4-only declarative provider lane and historical adopter inputs. The qualification-plan Node heredoc uses the Ubuntu runner's existing Bash default instead of redeclaring the same shell, while consumer execution, sealed-handoff restoration, receipt sealing, jobs, permissions, credentials, outputs, and mutation boundaries remain unchanged; the exact workflow falls to 2707 lines.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     ".github/workflows/.web-surface.yml": {

@@ -6,7 +6,10 @@ import {
   analyzeWorkflow,
 } from "../scripts/maintainability-metrics.mjs";
 import {
+  calculateDebtMeasuredExcess,
   evaluateDebtAuthority,
+  evaluateDebtBudget,
+  evaluateExceptionBudget,
   evaluateExceptionGovernance,
   evaluateTestBudgets,
   evaluateWorkflowBudgets,
@@ -167,6 +170,64 @@ test("every maintainability exception has a live expiry or real debt reduction",
       now: new Date("2026-08-26"),
     }),
     [],
+  );
+});
+
+test("maintainability debt and exception totals cannot outgrow frozen budgets", () => {
+  const debt = {
+    surfaces: {
+      sources: {
+        "legacy.js": {
+          current: { lines: 10, functions: { "run@1": { complexity: 4 } } },
+          target: { lines: 5, functions: { "run@1": { complexity: 2 } } },
+        },
+      },
+    },
+    totalExcessLedger: { measuredExcess: 7, current: 9 },
+  };
+  const policy = {
+    debtBudget: {
+      baselineProtectedHead: "abc123",
+      baselineMeasuredExcess: 8,
+      baselineTotalExcess: 10,
+      maxTotalExcess: 10,
+      targetExclusive: 9,
+    },
+    exceptionBudget: {
+      maxTotal: 1,
+      maxByCollection: Object.fromEntries(
+        [
+          "approvedExistingDebtTransitions",
+          "approvedNewFileTransitions",
+          "approvedExtractedDebt",
+          "approvedPublicSurfaceTransitions",
+          "approvedTestDebtTransitions",
+          "approvedWorkflowDebtTransitions",
+        ].map((collection) => [
+          collection,
+          collection === "approvedNewFileTransitions" ? 1 : 0,
+        ]),
+      ),
+    },
+    approvedNewFileTransitions: { "bounded.js": {} },
+  };
+  assert.equal(calculateDebtMeasuredExcess(debt), 7);
+  assert.deepEqual(evaluateDebtBudget({ debt, policy }), []);
+  assert.deepEqual(evaluateExceptionBudget({ policy }), []);
+
+  const widenedDebt = structuredClone(debt);
+  widenedDebt.surfaces.sources["legacy.js"].current.lines = 12;
+  assert.ok(
+    evaluateDebtBudget({ debt: widenedDebt, policy }).some((issue) =>
+      /ledger is stale/u.test(issue),
+    ),
+  );
+  const widenedPolicy = structuredClone(policy);
+  widenedPolicy.approvedNewFileTransitions["another.js"] = {};
+  assert.ok(
+    evaluateExceptionBudget({ policy: widenedPolicy }).some((issue) =>
+      /frozen maximum/u.test(issue),
+    ),
   );
 });
 
