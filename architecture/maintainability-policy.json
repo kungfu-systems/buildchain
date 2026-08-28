@@ -1204,6 +1204,7 @@
         "reusable": true,
         "inputs": [
           "admission-json",
+          "authority-job-id",
           "authority-workflow-path",
           "auto-admission",
           "auto-admission-kind",
@@ -1253,7 +1254,7 @@
           "gate-aggregate-json"
         ]
       },
-      "rationale": "The sealed read-only authority preserves the dedicated auditor App while adding an isolated governance-read token mapped from the existing caller credential only at the authority boundary. It independently checks out the immutable publication subject and controller, verifies both SHAs and the subject tree, and binds controller repository, SHA, and command digest into the qualifying aggregate without granting new provider write permission.",
+      "rationale": "The sealed read-only authority preserves the dedicated auditor App while adding an isolated governance-read token mapped from the existing caller credential only at the authority boundary. It independently checks out the immutable publication subject and controller, verifies both SHAs and the subject tree, and binds controller repository, SHA, command digest, and the optional exact audited authority job into the qualifying aggregate without granting new provider write permission.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "workflow:.release-candidate-promote": {

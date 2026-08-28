@@ -128,30 +128,6 @@ function assertRecoveredVersionStateTransition(context) {
   );
 }
 
-function allowsStableRecoveryVersionState(context) {
-  const candidate = String(context.releaseCandidateVersion || "").match(
-    /^(\d+\.\d+\.\d+)-alpha\.\d+$/u,
-  );
-  return context.recoveredCandidate === true &&
-    context.channel === "release" &&
-    context.publishRematerializeOnResume === true &&
-    context.expectedPublicationVersion === context.version &&
-    candidate?.[1] === context.version;
-}
-
-function assertRecoveredVersionStateTransition(context) {
-  if (
-    context.recoveredCandidate !== true ||
-    context.changedFiles.length === 0 ||
-    allowsStableRecoveryVersionState(context)
-  ) {
-    return;
-  }
-  throw new Error(
-    `Candidate recovery cannot rewrite version state for ${context.version}: ${context.changedFiles.map((file) => file.path).join(", ")}. Create a new candidate explicitly; recovery never rebuilds or rematerializes product state.`,
-  );
-}
-
 function createVersionStateOperations(context) {
   const {
     octokit,

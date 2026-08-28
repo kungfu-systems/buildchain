@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 68014,
-    "current": 59953
+    "measuredExcess": 68011,
+    "current": 59950
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -2986,7 +2986,7 @@
           "decisions": 27
         },
         "current": {
-          "lines": 1010,
+          "lines": 1007,
           "maxStepsPerJob": 30,
           "decisions": 27
         },
@@ -3185,6 +3185,7 @@
     "packages/core/v4-floating-consumer-release-passport.js",
     "packages/core/release-passport.js",
     "tests/promote-buildchain-ref-governance.test.mjs",
+    "tests/v4-declarative-promotion-mode.test.mjs",
     "scripts/buildchain-cli-help.mjs"
   ],
   "burnDownSlices": [

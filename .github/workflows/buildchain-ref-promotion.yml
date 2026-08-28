@@ -142,7 +142,7 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write
@@ -154,11 +154,9 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
+      buildchain-channel: alpha
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
-      buildchain-expected-channel: alpha
-      buildchain-expected-major: "4"
-      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
+      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-sha'] || 'v4-alpha' }}
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}

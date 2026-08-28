@@ -178,6 +178,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `packages/core/v4-floating-consumer-release-passport.js`
 - `packages/core/release-passport.js`
 - `tests/promote-buildchain-ref-governance.test.mjs`
+- `tests/v4-declarative-promotion-mode.test.mjs`
 - `scripts/buildchain-cli-help.mjs`
 
 ## cli-command-registry
