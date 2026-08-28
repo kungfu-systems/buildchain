@@ -200,7 +200,6 @@ jobs:
       publication-package-name: "@kungfu-tech/buildchain"
       declarative-release-tail: true
       dry-run: ${{ inputs['dry-run'] == 'true' }}
-
   promote-stable:
     if: >-
       ${{
