@@ -25652,7 +25652,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 210
+        "line": 202
       },
       "example": "import { certifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25753,7 +25753,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 146
+        "line": 138
       },
       "example": "import { v4FloatingConsumerDocumentRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25782,7 +25782,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 295
+        "line": 287
       },
       "example": "import { verifyV4FloatingConsumerPolicyCertification } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25811,7 +25811,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-evidence.js",
-        "line": 150
+        "line": 142
       },
       "example": "import { verifyV4FloatingConsumerPolicyReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25840,7 +25840,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 85
+        "line": 89
       },
       "example": "import { resolveV4FloatingConsumerPolicyAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25869,7 +25869,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 425
+        "line": 429
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25898,7 +25898,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 72
+        "line": 76
       },
       "example": "import { v4ConsumerPolicyScannerRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -29539,7 +29539,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:ef10166b0416d4727f10d1b9293b5a512a64931768f182a94745bb06526489a7",
+      "digest": "sha256:95136fbc5d53bfd37b39b3e2fb331fbbb518ef51d5362cc65c5df4d2ea0fee35",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -31139,7 +31139,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:8edb0b1cbad2ac26a85c097e59dc91e99a7f94c982d97c6a2c0c659d3ab95bb4"
+      "digest": "sha256:e687d5b608e0b4db7f85132272e1e6cbbcc1782142308623a7ec594efae2b72e"
     },
     {
       "id": "build-facts",

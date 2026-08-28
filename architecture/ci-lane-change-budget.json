@@ -202,6 +202,23 @@
       }
     },
     {
+      "laneId": ".github/workflows/buildchain-ref-promotion.yml#alpha-recovery-admission",
+      "authorityClass": "release",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "manual alpha recovery admission latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "This manual-only lane roots the historical floating caller and issues a transient governed runtime authorization; it performs no provider mutation by itself."
+      }
+    },
+    {
       "laneId": ".github/workflows/v4-declarative-release-tail-dogfood.yml#publish",
       "authorityClass": "release",
       "triggerClass": "manual",

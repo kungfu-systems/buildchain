@@ -1150,7 +1150,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   );
   assert.match(
     refPromotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0/,
+    /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
   assert.match(
     refPromotion,

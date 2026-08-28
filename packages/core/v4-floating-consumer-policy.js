@@ -9,7 +9,6 @@ import { parseYamlUses } from "./workflow-yaml-contract.js";
 import {
   V4_FLOATING_CONSUMER_POLICY,
   V4_FLOATING_CONSUMER_RECEIPT,
-  isV4AlphaProtectedBootstrap,
   v4FloatingConsumerDocumentRoot,
 } from "./v4-floating-consumer-evidence.js";
 
@@ -27,6 +26,11 @@ const EXACT_SHA = /^[0-9a-f]{40}$/u;
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
 const BUILDCHAIN_REPOSITORY = "kungfu-systems/buildchain";
 const CHANNELS = Object.freeze({ v4: "stable", "v4-alpha": "alpha" });
+const ALPHA_RECOVERY_BOOTSTRAP = Object.freeze({
+  selector: "alpha/v4/v4.0",
+  sourcePath: ".github/workflows/buildchain-ref-promotion-recovery.yml",
+  workflow: ".github/workflows/.release-candidate-promote.yml",
+});
 const DEFAULT_STABLE_LOCK_PATH = ".buildchain/contract-lock.json";
 const DEFAULT_ALPHA_LOCK_PATH = ".buildchain/alpha-contract-lock.json";
 const TRANSIENT_ACTION =
@@ -287,17 +291,17 @@ function classifyBuildchainUses(records, failures, { repository } = {}) {
       parsed.selector === "v4" ||
       parsed.selector === "v4-alpha" ||
       /^v4(?:[./-]|$)/u.test(parsed.selector) ||
-      parsed.selector === "alpha/v4/v4.0" ||
+      parsed.selector === ALPHA_RECOVERY_BOOTSTRAP.selector ||
       EXACT_SHA.test(parsed.selector.toLowerCase()) ||
       parsed.selector.includes("${{");
     if (!v4Candidate) continue;
-    const bootstrapShape = isV4AlphaProtectedBootstrap({
-      repository,
-      sourcePath: record.sourcePath,
-      workflow: normalizeWorkflowPath(parsed.path),
-      selector: parsed.selector,
-    });
-    const protectedBootstrap = bootstrapShape;
+    const bootstrapShape =
+      normalizeWorkflowPath(parsed.path) ===
+        ALPHA_RECOVERY_BOOTSTRAP.workflow &&
+      record.sourcePath === ALPHA_RECOVERY_BOOTSTRAP.sourcePath &&
+      parsed.selector === ALPHA_RECOVERY_BOOTSTRAP.selector;
+    const protectedBootstrap =
+      repository === BUILDCHAIN_REPOSITORY && bootstrapShape;
     const channel =
       CHANNELS[parsed.selector] || (protectedBootstrap ? "alpha" : "");
     uses.push({
