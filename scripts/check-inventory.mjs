@@ -1045,7 +1045,7 @@ for (const requiredSnippet of [
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
   "resume-candidate-run-id:",
   "resume-expected-source-tree:",
-  "resume-buildchain-runtime-sha:",
+  "resume-buildchain-runtime-ref:",
   "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
   "release-passport-buildchain-self-kfd: true",
   "buildchain-channel: alpha",

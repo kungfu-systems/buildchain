@@ -73,7 +73,7 @@ test("recovery resolves an exact publication version without scanning historical
   assert.match(calls[0], /contents\/state\.json\?ref=buildchain%2Frelease-state%2F4-0-1-alpha-18$/u);
 });
 
-test("recovery scans historical state refs only when the exact publication version is absent", async () => {
+test("recovery scans historical state refs when the candidate version belongs to another transaction", async () => {
   const transaction = {
     id: "transaction-fallback",
     version: "4.0.1-alpha.18",
@@ -82,7 +82,7 @@ test("recovery scans historical state refs only when the exact publication versi
   const fetchImpl = async (url) => {
     calls.push(url);
     if (url.includes("contents/state.json?ref=buildchain%2Frelease-state%2F4-0-1-alpha-19")) {
-      return new Response(JSON.stringify({ message: "Not Found" }), { status: 404 });
+      return new Response(JSON.stringify({ type: "file", encoding: "base64", content: Buffer.from(JSON.stringify({ ...transaction, id: "transaction-candidate" })).toString("base64") }), { status: 200 });
     }
     if (url.includes("git/matching-refs/heads/buildchain/release-state/")) {
       return new Response(JSON.stringify([{
@@ -610,7 +610,7 @@ test("candidate recovery excludes credential-island manifests outside the Passpo
 
 test("recovery accepts a target advanced by the same explicit durable transaction", () => {
   const input = fixture();
-  const existingTransaction = durableTransaction(input, "complete");
+  const existingTransaction = durableTransaction(input, "publish_failed");
   const observedTargetSha = "a".repeat(40);
   assert.deepEqual(validateRecoveryTargetRef({
     targetSha: input.targetSha,
@@ -1150,7 +1150,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
   );
   assert.match(
     refPromotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
   );
   assert.match(
     refPromotion,

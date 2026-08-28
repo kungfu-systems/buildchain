@@ -685,10 +685,10 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
 
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
+    /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha\n    permissions:\n      actions: write\n      artifact-metadata: write\n      attestations: write/,
   );
   assert.match(workflow, /promote-stable:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4/);
-  assert.doesNotMatch(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0/);
+  assert.doesNotMatch(workflow, /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@alpha\/v4\/v4\.0/);
   assert.match(workflow, /github\.event\.workflow_run\.event == 'push'/);
   assert.match(workflow, /startsWith\(github\.event\.workflow_run\.head_branch, 'alpha\/'\)/);
   assert.match(workflow, /!startsWith\(github\.event\.workflow_run\.display_title, 'chore\(release\): prepare v'\)/);
@@ -697,11 +697,11 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /promote-stable:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| inputs\['recover-durable-transaction'\] == true && github\.sha \|\| 'v4' \}\}/,
   );
-  assert.match(workflow, /promote-alpha:[\s\S]*buildchain-channel: alpha/);
   assert.match(
     workflow,
-    /promote-alpha:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| 'v4-alpha' \}\}/,
+    /promote-alpha:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-ref'\] \|\| 'v4-alpha' \}\}/,
   );
+  assert.match(workflow, /promote-alpha:[\s\S]*buildchain-channel: alpha[\s\S]*resume-buildchain-runtime-sha:/);
   assert.match(
     workflow,
     /promote-alpha:[\s\S]*buildchain-alpha-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/,
@@ -767,7 +767,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,
-    /release-passport-v4-runtime-resume-evidence-json:\n\s+description: "Verified runtime A\+B Stage Capsule resume evidence JSON"/,
+    /release-passport-v4-runtime-resume-evidence-json:[^\n]*description: "Verified runtime A\+B Stage Capsule resume evidence JSON"/,
   );
   assert.doesNotMatch(
     workflow,
@@ -1869,9 +1869,9 @@ test("Buildchain self-dogfoods the current major through floating public promoti
 
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
   );
-  assert.match(promotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| 'v4-alpha' \}\}/);
+  assert.match(promotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-ref'\] \|\| 'v4-alpha' \}\}/);
   assert.doesNotMatch(promotion, /buildchain-ref: [0-9a-f]{40}/);
 });
 
@@ -2216,7 +2216,6 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
-
 test("runLifecycle binds platform signing declarations outside upload paths", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-signing-lifecycle-"),
@@ -2295,7 +2294,6 @@ platforms = ["macos-arm64"]
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
-
 test("runLifecycle command override inherits declared stage shell and lifecycle env", () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-command-override-"));
   const fixture = path.join(workspace, "fixture");
@@ -2356,7 +2354,6 @@ test("runLifecycle applies a clear fallback timeout to commands and configured s
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
-
 test("reusable build bounds matrix jobs and lifecycle actions with one timeout input", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
   const action = fs.readFileSync(path.join(root, "actions/run-lifecycle/action.yml"), "utf8");
