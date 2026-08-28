@@ -180,7 +180,7 @@
     },
     "scripts/check-inventory.mjs": {
       "maxLines": 1515,
-      "rationale": "Inventory retains the complete recovery and publication authority set and additionally locks the bounded v4-alpha private-shell bootstrap, declarative built-in tail, and absence of a new public recovery input; this exact post-integration ceiling cannot grow implicitly.",
+      "rationale": "Inventory retains the complete recovery and publication authority set and additionally locks the bounded protected-Alpha private-shell bootstrap, declarative built-in tail, and absence of a new public recovery input; this exact post-integration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/generate-channel-promotion-workflow.mjs": {

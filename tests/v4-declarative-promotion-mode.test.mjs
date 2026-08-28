@@ -34,7 +34,7 @@ test("protected alpha v4 recovery selects only the declarative Provider Plane", 
 test("bounded floating bootstrap uses the old private shell with a declarative built-in tail", () => {
   assert.match(
     recoveryWorkflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
   );
   assert.match(recoveryWorkflow, /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u);
   assert.match(recoveryWorkflow, /declarative-release-tail: true/u);

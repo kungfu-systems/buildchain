@@ -234,13 +234,13 @@ test("bounded alpha recovery admits the old floating shell with current exact ru
   }
 
   assert.equal(result.ok, true, JSON.stringify(result.failures));
-  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+  assert.equal(result.receipt.invocation.visibleSelector, "alpha/v4/v4.0");
   assert.equal(result.receipt.invocation.selectorClass, "protected-bootstrap");
   assert.match(workflow, /^  workflow_dispatch:/mu);
   assert.doesNotMatch(workflow, /^  workflow_run:/mu);
   assert.match(
     workflow,
-    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@v4-alpha/u,
+    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
   );
   assert.match(
     workflow,
@@ -346,7 +346,7 @@ test("bounded alpha recovery admits the old floating shell with current exact ru
     /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/recovered-source/u,
   );
   assert.match(workflow, /--shell-ref alpha\/v4\/v4\.0/u);
-  assert.match(workflow, /--shell-call-ref v4-alpha/u);
+  assert.match(workflow, /--shell-call-ref alpha\/v4\/v4\.0/u);
   assert.match(workflow, /resume-buildchain-runtime-ref:/u);
   assert.match(
     workflow,
