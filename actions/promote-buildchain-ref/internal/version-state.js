@@ -263,13 +263,12 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
         : filePath === allowedPath,
     );
   const runtimeBridgePath = path.join(cwd, "node_modules");
-  let runtimeBridgeIsSymbolicLink = false;
+  let runtimeBridgePresent = false;
   let isExactRuntimeBridge = false;
   try {
-    runtimeBridgeIsSymbolicLink = fs.lstatSync(runtimeBridgePath).isSymbolicLink();
-    isExactRuntimeBridge = runtimeBridgeIsSymbolicLink &&
-      fs.realpathSync(runtimeBridgePath) ===
-        fs.realpathSync(path.resolve(cwd, ".buildchain/runtime/node_modules"));
+    runtimeBridgePresent = Boolean(fs.lstatSync(runtimeBridgePath));
+    isExactRuntimeBridge = fs.realpathSync(runtimeBridgePath) ===
+      fs.realpathSync(path.resolve(cwd, ".buildchain/runtime/node_modules"));
   } catch { /* Missing paths are not the exact runtime bridge. */ }
   const unexpected = output
     .split(/\r?\n/)
@@ -281,12 +280,13 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
       if (status === "??" && filePath === "node_modules" && isExactRuntimeBridge) return false;
       return !(allowed.has(filePath) && status !== "??" && !status.includes("D"));
     });
-  if (runtimeBridgeIsSymbolicLink && !isExactRuntimeBridge &&
+  if (runtimeBridgePresent && !isExactRuntimeBridge &&
     !unexpected.includes("?? node_modules")) {
     unexpected.push("?? node_modules");
   }
   if (unexpected.length) throw new Error(`Unexpected version changes: ${unexpected.join(", ")}`);
 }
+
 function applyLocalVersionState(cwd, changedFiles) {
   for (const file of changedFiles) {
     fs.writeFileSync(path.join(cwd, file.path), file.content);
