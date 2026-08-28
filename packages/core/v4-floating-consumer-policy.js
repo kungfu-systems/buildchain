@@ -302,11 +302,8 @@ function classifyBuildchainUses(records, failures, { repository } = {}) {
       parsed.selector === ALPHA_RECOVERY_BOOTSTRAP.selector;
     const protectedBootstrap =
       repository === BUILDCHAIN_REPOSITORY && bootstrapShape;
-    const unauthorizedBootstrap =
-      repository !== BUILDCHAIN_REPOSITORY && bootstrapShape;
     const channel =
-      !unauthorizedBootstrap &&
-      (CHANNELS[parsed.selector] || (protectedBootstrap ? "alpha" : ""));
+      CHANNELS[parsed.selector] || (protectedBootstrap ? "alpha" : "");
     uses.push({
       ...record,
       ...parsed,

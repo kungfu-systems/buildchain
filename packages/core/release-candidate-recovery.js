@@ -47,6 +47,7 @@ const TRUSTED_ASSOCIATIONS = new Set(["COLLABORATOR", "MEMBER", "OWNER"]);
 const RESUMABLE_TRANSACTION_STATES = new Set([
   "sealed",
   "publishing",
+  "publish_failed",
   "published",
   "package-published",
   "finalizing",

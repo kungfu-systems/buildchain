@@ -20668,7 +20668,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 584
+        "line": 585
       },
       "example": "import { recoveryFailure } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20716,7 +20716,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 56
+        "line": 57
       },
       "example": "import { ReleaseCandidateRecoveryError } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20745,7 +20745,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 134
+        "line": 135
       },
       "example": "import { validateRecoveryTargetRef } from \"@kungfu-tech/buildchain/release-candidate-recovery\";",
       "maturity": "stable",
@@ -20774,7 +20774,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 176
+        "line": 177
       },
       "example": "import { validateReleaseCandidateRecoveryReceipt } from \"@kungfu-tech/buildchain/release-candidate-recovery\";",
       "maturity": "stable",
@@ -20803,7 +20803,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 443
+        "line": 444
       },
       "example": "import { verifyReleaseCandidateRecovery } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -25869,7 +25869,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 432
+        "line": 429
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -29539,7 +29539,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:df1b9d27dc28324fc89dc5af7838d8d1b57aa91355e43653882286070ff2308c",
+      "digest": "sha256:95136fbc5d53bfd37b39b3e2fb331fbbb518ef51d5362cc65c5df4d2ea0fee35",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -30598,7 +30598,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
       "export": "./release-candidate-recovery",
       "target": "./packages/core/release-candidate-recovery.js",
-      "digest": "sha256:6034a75aeb4e3e14330f43b4d8c72f3a0a9823a20ce03a578ea6eac33000d31e",
+      "digest": "sha256:c8e5ddfbbed9bca96d6dde3ad945da438eaed977d4bc93c3ff13780f85f6f35a",
       "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -31139,7 +31139,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:f407beeb42a0464bbcc9a7bee6e6c2159f3f30f65215b703d5752a8ce28cbd9c"
+      "digest": "sha256:482746056fcb4f71daf69513fc03e6faa60fc89bd2bb3d79c5c7130b04443592"
     },
     {
       "id": "build-facts",

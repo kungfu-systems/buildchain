@@ -1,5 +1,4 @@
 name: Buildchain Ref Promotion
-
 on:
   workflow_run:
     workflows: ["Verify"]
@@ -80,6 +79,10 @@ on:
         description: "Exact current Buildchain tooling SHA used by this recovery run"
         required: false
         default: ""
+      resume-buildchain-runtime-ref:
+        description: "Approved v4 train or authority ref resolving to the recovery runtime SHA"
+        required: false
+        default: ""
       resume-transaction-id:
         description: "Optional existing durable transaction identity"
         required: false
@@ -113,7 +116,7 @@ jobs:
           exit 1
 
   reject-invalid-candidate-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && (!startsWith(inputs['target-ref'], 'alpha/') || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || (inputs['resume-expected-source-tree'] == '' && inputs['resume-expected-candidate-root'] == '')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && (!startsWith(inputs['target-ref'], 'alpha/') || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || (inputs['resume-expected-source-tree'] == '' && inputs['resume-expected-candidate-root'] == '')) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -123,23 +126,108 @@ jobs:
           echo "::error::Candidate recovery requires exact inputs and stable recovery must use buildchain-ref-promotion-recovery.yml."
           exit 1
 
+  alpha-recovery-admission:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      shell-sha: ${{ steps.identities.outputs.shell-sha }}
+      runtime-sha: ${{ steps.identities.outputs.runtime-sha }}
+      contract-lock-digest: ${{ steps.identities.outputs.contract-lock-digest }}
+      runtime-authorization-json: ${{ steps.runtime-authority.outputs.runtime-authorization-json }}
+      runtime-authorization-root: ${{ steps.runtime-authority.outputs.runtime-authorization-root }}
+    steps:
+      - name: Checkout exact recovered consumer source
+        uses: actions/checkout@v7.0.0
+        with: { ref: "${{ inputs.sha }}", path: .buildchain/consumer, persist-credentials: false }
+      - name: Checkout exact recovery runtime
+        uses: actions/checkout@v7.0.0
+        with: { repository: kungfu-systems/buildchain, ref: "${{ inputs['resume-buildchain-runtime-sha'] }}", path: .buildchain/runtime, persist-credentials: false }
+      - name: Resolve and bind immutable alpha recovery identities
+        id: identities
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/promotion-identity-resolver.mjs \
+            --repository kungfu-systems/buildchain \
+            --router-ref "${{ inputs['resume-buildchain-runtime-ref'] }}" \
+            --router-sha "${{ inputs['resume-buildchain-runtime-sha'] }}" \
+            --shell-ref v4-alpha --shell-call-ref v4-alpha \
+            --runtime-ref "${{ inputs['resume-buildchain-runtime-ref'] }}"
+          test "$(git -C .buildchain/runtime rev-parse HEAD)" = "${{ inputs['resume-buildchain-runtime-sha'] }}"
+          echo "contract-lock-digest=sha256:$(shasum -a 256 .buildchain/consumer/.buildchain/alpha-contract-lock.json | awk '{print $1}')" >> "${GITHUB_OUTPUT}"
+      - name: Enforce the historical floating caller before runtime recovery
+        id: policy
+        env:
+          BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
+          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: alpha
+          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/.release-candidate-promote.yml
+          BUILDCHAIN_INVOCATION_SOURCE_PATH: .github/workflows/buildchain-ref-promotion.yml
+          BUILDCHAIN_WORKFLOW_SHA: ${{ steps.identities.outputs.shell-sha }}
+          BUILDCHAIN_RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
+        run: >-
+          node .buildchain/runtime/scripts/v4-consumer-policy.mjs scan
+          --source-sha "${{ inputs.sha }}"
+      - name: Authorize transient governed runtime selection
+        id: runtime-authority
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH: .buildchain/consumer/.buildchain/evidence/v4-runtime-authorization.json
+        with:
+          script: |
+            const script = require(process.env.GITHUB_WORKSPACE + "/.buildchain/runtime/scripts/authorize-promotion-runtime-override.cjs");
+            const result = await script.authorizePromotionRuntimeOverride({
+              github, context,
+              request: {
+                consumerRoot: process.env.GITHUB_WORKSPACE + "/.buildchain/consumer",
+                runtimeModulePath: process.env.GITHUB_WORKSPACE + "/.buildchain/runtime/packages/core/v4-runtime-ref-resume-authority.js",
+                runtimeRepository: "kungfu-systems/buildchain",
+                consumerPolicyReceiptPath: process.env.GITHUB_WORKSPACE + "/.buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json",
+                consumerPolicyReceiptRoot: "${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}",
+                sourceSha: "${{ inputs.sha }}", requestedRef: "${{ inputs['resume-buildchain-runtime-ref'] }}",
+                resolvedRuntimeSha: "${{ steps.identities.outputs.runtime-sha }}", mode: "resume",
+                reason: "bounded alpha candidate recovery ${{ inputs['resume-candidate-run-id'] }}",
+                outputPath: process.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_PATH,
+              },
+            });
+            core.setOutput("runtime-authorization-json", JSON.stringify({ receipt: result.receipt, receiptRoot: result.receiptRoot }));
+            core.setOutput("runtime-authorization-root", result.receiptRoot);
+
+      - name: Upload rooted alpha recovery admission receipts
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-consumer-policy-buildchain-alpha-recovery-${{ github.run_id }}
+          path: |
+            .buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json
+            .buildchain/consumer/.buildchain/evidence/v4-runtime-authorization.json
+          if-no-files-found: error
+
   promote-alpha:
+    needs: alpha-recovery-admission
     if: >-
       ${{
+        always() &&
         (
-          github.event_name == 'workflow_dispatch' &&
-          startsWith(inputs['target-ref'], 'alpha/') &&
-          (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
-          inputs.sha != ''
-        ) ||
-        (
-          github.event_name == 'workflow_run' &&
-          github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.event == 'push' &&
-          startsWith(github.event.workflow_run.head_branch, 'alpha/') &&
-          !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
-          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
-          !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
+          (
+            github.event_name == 'workflow_dispatch' &&
+            startsWith(inputs['target-ref'], 'alpha/') &&
+            (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
+            inputs.sha != '' &&
+            (inputs['resume-candidate-run-id'] == '' || needs.alpha-recovery-admission.result == 'success')
+          ) ||
+          (
+            github.event_name == 'workflow_run' &&
+            github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.event == 'push' &&
+            startsWith(github.event.workflow_run.head_branch, 'alpha/') &&
+            !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
+            !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
+            !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
+          )
         )
       }}
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
@@ -155,9 +243,22 @@ jobs:
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
+      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && needs.alpha-recovery-admission.outputs.runtime-sha || 'v4-alpha' }}
       buildchain-expected-channel: alpha
       buildchain-expected-major: "4"
+      promotion-router-ref: ${{ inputs['resume-buildchain-runtime-ref'] }}
+      promotion-router-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
+      promotion-shell-ref: v4-alpha
+      promotion-shell-sha: ${{ needs.alpha-recovery-admission.outputs.shell-sha }}
+      promotion-runtime-ref: ${{ inputs['resume-buildchain-runtime-ref'] }}
+      promotion-runtime-sha: ${{ needs.alpha-recovery-admission.outputs.runtime-sha }}
+      promotion-contract-lock-path: .buildchain/alpha-contract-lock.json
+      promotion-contract-lock-digest: ${{ needs.alpha-recovery-admission.outputs.contract-lock-digest }}
+      promotion-publication-channel: ${{ inputs['resume-candidate-run-id'] != '' && 'alpha' || '' }}
+      promotion-target-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['target-ref'] || '' }}
+      promotion-override-used: ${{ inputs['resume-candidate-run-id'] != '' }}
+      promotion-runtime-authorization-json: ${{ needs.alpha-recovery-admission.outputs.runtime-authorization-json }}
+      promotion-runtime-authorization-root: ${{ needs.alpha-recovery-admission.outputs.runtime-authorization-root }}
       buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
