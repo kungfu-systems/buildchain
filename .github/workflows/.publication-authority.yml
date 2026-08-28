@@ -116,11 +116,7 @@ on:
         type: string
         required: false
         default: ""
-      authority-workflow-path:
-        description: "Buildchain product-publication workflow path bound by the admission"
-        type: string
-        required: false
-        default: ""
+      authority-workflow-path: { description: "Buildchain product-publication workflow path bound by the admission", type: string, required: false, default: "" }
       product:
         type: string
         required: false
