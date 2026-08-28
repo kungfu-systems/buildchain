@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:1b505fd44a452b01e0516c9da45994cf7edb33c7f4c3bc01b2f3155ed3d3feb0",
+      "auditDigest": "sha256:1b77b563669a70c8e0a7c6d335f2ddcef9a95178d08e742ecf4aaf66652e7b4f",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -5173,7 +5173,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:1b505fd44a452b01e0516c9da45994cf7edb33c7f4c3bc01b2f3155ed3d3feb0"
+      "auditDigest": "sha256:1b77b563669a70c8e0a7c6d335f2ddcef9a95178d08e742ecf4aaf66652e7b4f"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:05075fa4dd7d92acdbbd56c57bf7605b7c4693f84be42c0c1166abf075a70779"
+  "contractDigest": "sha256:438ab9614f33fcd8e25f390672e73aca9eb5a76368ff9e724d181d95f92c2fe9"
 }
