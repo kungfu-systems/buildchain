@@ -52,3 +52,10 @@ test("declarative promotion receipt reads the retained passport hierarchy", () =
     /promotion-evidence\/release-candidate\/release-candidate-passport\.json/,
   );
 });
+
+test("publication authority delegates to the exact legacy mutation job", () => {
+  assert.match(
+    workflow,
+    /promote:\n    name: Select declarative or legacy promotion result\n    # buildchain-publication-authority-job: legacy-promote/u,
+  );
+});

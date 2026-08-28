@@ -1132,14 +1132,7 @@ jobs:
           fi
   publication-authority:
     name: Seal product publication capability
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-plan,
-        qualification-plan,
-      ]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
     permissions:
       actions: read
@@ -1327,13 +1320,7 @@ jobs:
 
   v4-declarative-promote:
     name: Promote sealed v4 candidate through Provider Plane
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-plan,
-      ]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' && (startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run }}
     runs-on: ubuntu-24.04
     permissions:
@@ -2495,6 +2482,7 @@ jobs:
 
   promote:
     name: Select declarative or legacy promotion result
+    # buildchain-publication-authority-job: legacy-promote
     needs: [legacy-promote, v4-declarative-promote]
     if: ${{ always() && (needs.legacy-promote.result == 'success' || needs.v4-declarative-promote.result == 'success') }}
     runs-on: ubuntu-24.04
