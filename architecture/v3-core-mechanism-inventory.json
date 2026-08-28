@@ -629,7 +629,8 @@
       ],
       "testPaths": [
         "tests/publish-transaction.test.mjs",
-        "tests/promote-buildchain-ref.test.mjs"
+        "tests/promote-buildchain-ref.test.mjs",
+        "tests/promote-buildchain-ref-facade-contracts.test.mjs"
       ],
       "migrationDisposition": "primary-rust-authority-with-v3-record-reader",
       "unresolved": [

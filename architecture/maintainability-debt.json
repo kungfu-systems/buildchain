@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 68060,
-    "current": 59999
+    "measuredExcess": 68014,
+    "current": 59953
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -826,23 +826,23 @@
         "baseline": {
           "lines": 2878,
           "functions": {
-          "collectPaperStatus@1117": {
+            "collectPaperStatus@1117": {
               "lines": 190,
               "complexity": 47
             },
-          "validatePaperProvisioningAuthority@1308": {
+            "validatePaperProvisioningAuthority@1308": {
               "complexity": 45
             }
           }
         },
         "current": {
-        "lines": 2512,
+          "lines": 2512,
           "functions": {
-          "collectPaperStatus@1117": {
+            "collectPaperStatus@1117": {
               "lines": 190,
               "complexity": 47
             },
-          "validatePaperProvisioningAuthority@1308": {
+            "validatePaperProvisioningAuthority@1308": {
               "complexity": 45
             }
           }
@@ -850,11 +850,11 @@
         "target": {
           "lines": 600,
           "functions": {
-          "collectPaperStatus@1117": {
+            "collectPaperStatus@1117": {
               "lines": 180,
               "complexity": 25
             },
-          "validatePaperProvisioningAuthority@1308": {
+            "validatePaperProvisioningAuthority@1308": {
               "complexity": 25
             }
           }
@@ -1017,49 +1017,49 @@
         "baseline": {
           "lines": 2987,
           "functions": {
-          "mergeAuthoritativePassportBase@405": {
+            "mergeAuthoritativePassportBase@407": {
               "complexity": 29
             },
-          "normalizeKfd2Claim@830": {
+            "normalizeKfd2Claim@832": {
               "complexity": 59
             },
-          "createReleasePassport@1163": {
+            "createReleasePassport@1165": {
               "lines": 268,
               "complexity": 30
             },
-          "collectGitHubReleasePassport@1463": {
+            "collectGitHubReleasePassport@1465": {
               "lines": 304,
               "complexity": 43
             },
-          "validateKfd2ReleaseTrustPassportAudit@1796": {
+            "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 65
             },
-          "validateReleaseEvidenceAttachments@2115": {
+            "validateReleaseEvidenceAttachments@2105": {
               "complexity": 26
             }
           }
         },
         "current": {
-        "lines": 2816,
+          "lines": 2883,
           "functions": {
-          "mergeAuthoritativePassportBase@405": {
+            "mergeAuthoritativePassportBase@407": {
               "complexity": 29
             },
-          "normalizeKfd2Claim@830": {
+            "normalizeKfd2Claim@832": {
               "complexity": 59
             },
-          "createReleasePassport@1163": {
+            "createReleasePassport@1165": {
               "lines": 268,
               "complexity": 30
             },
-          "collectGitHubReleasePassport@1463": {
+            "collectGitHubReleasePassport@1465": {
               "lines": 304,
               "complexity": 43
             },
-          "validateKfd2ReleaseTrustPassportAudit@1796": {
+            "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 65
             },
-          "validateReleaseEvidenceAttachments@2115": {
+            "validateReleaseEvidenceAttachments@2105": {
               "complexity": 26
             }
           }
@@ -1067,24 +1067,24 @@
         "target": {
           "lines": 600,
           "functions": {
-          "mergeAuthoritativePassportBase@405": {
+            "mergeAuthoritativePassportBase@407": {
               "complexity": 25
             },
-          "normalizeKfd2Claim@830": {
+            "normalizeKfd2Claim@832": {
               "complexity": 25
             },
-          "createReleasePassport@1163": {
+            "createReleasePassport@1165": {
               "lines": 180,
               "complexity": 25
             },
-          "collectGitHubReleasePassport@1463": {
+            "collectGitHubReleasePassport@1465": {
               "lines": 180,
               "complexity": 25
             },
-          "validateKfd2ReleaseTrustPassportAudit@1796": {
+            "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 25
             },
-          "validateReleaseEvidenceAttachments@2115": {
+            "validateReleaseEvidenceAttachments@2105": {
               "complexity": 25
             }
           }
@@ -2531,39 +2531,39 @@
         "baseline": {
           "lines": 4220,
           "functions": {
-          "<anonymous@4>@4": {
+            "<anonymous@4>@4": {
               "lines": 195
             },
-          "<anonymous@200>@200": {
+            "<anonymous@200>@200": {
               "lines": 181
             },
-          "<anonymous@382>@382": {
+            "<anonymous@382>@382": {
               "lines": 184
             },
-          "<anonymous@696>@696": {
+            "<anonymous@696>@696": {
               "lines": 188
             },
-          "<anonymous@1017>@1017": {
+            "<anonymous@904>@904": {
               "lines": 204
             }
           }
         },
         "current": {
-        "lines": 1484,
+          "lines": 1371,
           "functions": {
-          "<anonymous@4>@4": {
+            "<anonymous@4>@4": {
               "lines": 195
             },
-          "<anonymous@200>@200": {
+            "<anonymous@200>@200": {
               "lines": 181
             },
-          "<anonymous@382>@382": {
+            "<anonymous@382>@382": {
               "lines": 184
             },
-          "<anonymous@696>@696": {
+            "<anonymous@696>@696": {
               "lines": 188
             },
-          "<anonymous@1017>@1017": {
+            "<anonymous@904>@904": {
               "lines": 204
             }
           }
@@ -2571,19 +2571,19 @@
         "target": {
           "lines": 600,
           "functions": {
-          "<anonymous@4>@4": {
+            "<anonymous@4>@4": {
               "lines": 180
             },
-          "<anonymous@200>@200": {
+            "<anonymous@200>@200": {
               "lines": 180
             },
-          "<anonymous@382>@382": {
+            "<anonymous@382>@382": {
               "lines": 180
             },
-          "<anonymous@696>@696": {
+            "<anonymous@696>@696": {
               "lines": 180
             },
-          "<anonymous@1017>@1017": {
+            "<anonymous@904>@904": {
               "lines": 180
             }
           }
@@ -2593,21 +2593,21 @@
         "baseline": {
           "lines": 4211,
           "functions": {
-          "<anonymous@62>@62": {
+            "<anonymous@62>@62": {
               "lines": 203
             }
           }
         },
         "current": {
-        "functions": {
-          "<anonymous@62>@62": {
+          "functions": {
+            "<anonymous@62>@62": {
               "lines": 203
             }
           }
         },
         "target": {
-        "functions": {
-          "<anonymous@62>@62": {
+          "functions": {
+            "<anonymous@62>@62": {
               "lines": 180
             }
           }
@@ -3005,11 +3005,11 @@
           "decisions": 75
         },
         "current": {
-        "lines": 2707,
+          "lines": 2707,
           "jobs": 13,
-        "steps": 99,
+          "steps": 99,
           "maxStepsPerJob": 47,
-        "decisions": 75
+          "decisions": 75
         },
         "target": {
           "lines": 600,
@@ -3182,6 +3182,9 @@
     "scripts/check-v4-floating-consumer-policy-contract.mjs",
     "tests/dev-delivery-warrant.test.mjs",
     "actions/promote-buildchain-ref/internal/version-state.js",
+    "packages/core/v4-floating-consumer-release-passport.js",
+    "packages/core/release-passport.js",
+    "tests/promote-buildchain-ref-governance.test.mjs",
     "scripts/buildchain-cli-help.mjs"
   ],
   "burnDownSlices": [
@@ -3211,7 +3214,7 @@
       "path": "packages/core/release-passport.js",
       "metric": "lines",
       "baseline": 2987,
-      "current": 2816
+      "current": 2883
     },
     {
       "domain": "sources",

@@ -35,7 +35,9 @@ import {
 } from "./github-artifact-attestation.js";
 import { verifyV4FloatingConsumerPolicyCertification } from "./v4-floating-consumer-evidence.js";
 import {
-  createV4ReleasePassportOperations,
+  normalizePromotionEvidence,
+  normalizePromotionRouting,
+  normalizeV4RuntimeResumeEvidence,
   isV4PromotionRouting,
   releasePassportCertificationVerificationOptions,
   requireV4ConsumerPolicyCertification,
@@ -1768,18 +1770,6 @@ export function collectGitHubReleasePassport({
 function issue(level, code, message, details = {}) {
   return { level, code, message, details };
 }
-const {
-  normalizePromotionEvidence,
-  normalizePromotionRouting,
-  normalizeV4RuntimeResumeEvidence,
-  parseV4ConsumerPolicyCertification,
-  v4RuntimeResumeSourceSha,
-  validateV4ConsumerPolicyPassportSection,
-  validateV4RuntimeResumePassportSection,
-} = createV4ReleasePassportOperations({
-  issue, parseJsonInputWithMeta, releaseField,
-});
-
 function validateContract(value, expectedContract, label, issues) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     issues.push(issue("error", `${label}.object`, `${label} must be a JSON object`));
@@ -2813,4 +2803,81 @@ export function makeReleasePassportFixtureAssets(dir) {
 
 export function validateKnownReleasePassportContracts() {
   return [...CONTRACTS];
+}
+function parseV4ConsumerPolicyCertification(input, cwd) {
+  return parseJsonInputWithMeta(input, undefined, {
+    cwd,
+    label: "v4ConsumerPolicyCertificationJson",
+  });
+}
+
+function v4RuntimeResumeSourceSha(release, fallback = "") {
+  const builtSourceSha = releaseField(
+    release || {},
+    "builtSourceSha",
+    "built_source_sha",
+  );
+  return release?.treeEquivalent === true && builtSourceSha
+    ? builtSourceSha
+    : fallback;
+}
+
+
+function validateV4ConsumerPolicyPassportSection({ passport, issues }) {
+  const routing = passport?.promotionRouting;
+  const evidence = passport?.v4ConsumerPolicy;
+  if (isV4PromotionRouting(routing) && !evidence) {
+    issues.push(issue(
+      "error",
+      "v4ConsumerPolicy.missing",
+      "Buildchain v4 Release Passport requires an external floating consumer policy certification",
+    ));
+    return;
+  }
+  if (!evidence) return;
+  const verification = verifyV4FloatingConsumerPolicyCertification(
+    releasePassportCertificationVerificationOptions({
+      evidence,
+      passport,
+      routing,
+    }),
+  );
+  for (const failure of verification.failures) {
+    issues.push(issue("error", `v4ConsumerPolicy.${failure.code}`, failure.message));
+  }
+}
+
+function validateV4RuntimeResumePassportSection({ passport, issues }) {
+  const evidence = passport?.v4RuntimeResume;
+  if (!evidence) return;
+  const consumerPolicyReceiptRoot = passport?.v4ConsumerPolicy?.certification?.receiptRoot || "";
+  const authorization = verifyV4RuntimeAuthorizationReceipt({
+    receipt: evidence.authorization,
+    receiptRoot: evidence.authorizationRoot,
+    repository: passport?.product?.repository || "",
+    sourceSha: v4RuntimeResumeSourceSha(passport?.release, passport?.release?.sourceSha || ""),
+    runtimeSha: passport?.promotionRouting?.runtime?.resolvedSha || "",
+    consumerPolicyReceiptRoot,
+  });
+  for (const failure of authorization.failures) {
+    issues.push(issue("error", `v4RuntimeResume.authorization.${failure}`, failure));
+  }
+  const lineage = verifyV4RuntimeResumeLineage({
+    lineage: evidence.lineage,
+    lineageRoot: evidence.lineageRoot,
+    repository: passport?.product?.repository || "",
+    sourceSha: v4RuntimeResumeSourceSha(passport?.release, passport?.release?.sourceSha || ""),
+    resumeRuntimeSha: passport?.promotionRouting?.runtime?.resolvedSha || "",
+    consumerPolicyReceiptRoot,
+  });
+  for (const failure of lineage.failures) {
+    issues.push(issue("error", `v4RuntimeResume.lineage.${failure}`, failure));
+  }
+  if (evidence.lineage?.authorizationRoot !== evidence.authorizationRoot) {
+    issues.push(issue(
+      "error",
+      "v4RuntimeResume.authorization-root-mismatch",
+      "runtime resume lineage must bind the embedded authorization receipt root",
+    ));
+  }
 }
