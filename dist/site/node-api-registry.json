@@ -16578,7 +16578,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2425
+        "line": 2059
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16607,7 +16607,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1483
+        "line": 1117
       },
       "example": "import { collectPaperStatus } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16636,7 +16636,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2667
+        "line": 2301
       },
       "example": "import { createPaperAlphaPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16665,7 +16665,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2604
+        "line": 2238
       },
       "example": "import { createPaperBuildPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16687,14 +16687,14 @@
       ],
       "returns": "unknown",
       "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 524
+        "line": 525
       },
       "example": "import { createPaperProvisioningAuthority } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16723,7 +16723,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2725
+        "line": 2359
       },
       "example": "import { createPaperResumePlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16752,7 +16752,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2852
+        "line": 2486
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16776,7 +16776,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 95
+        "line": 96
       },
       "example": "import { PAPER_ALPHA_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16800,7 +16800,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 94
+        "line": 95
       },
       "example": "import { PAPER_BUILD_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16824,7 +16824,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 87
+        "line": 88
       },
       "example": "import { PAPER_MIGRATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16848,7 +16848,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 90
+        "line": 91
       },
       "example": "import { PAPER_NPM_BOOTSTRAP_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16872,7 +16872,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 88
+        "line": 89
       },
       "example": "import { PAPER_PREFLIGHT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16896,7 +16896,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 92
+        "line": 93
       },
       "example": "import { PAPER_PROVISIONING_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16920,7 +16920,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 96
+        "line": 97
       },
       "example": "import { PAPER_RESUME_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16944,7 +16944,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 86
+        "line": 87
       },
       "example": "import { PAPER_SCAFFOLD_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16968,7 +16968,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 99
+        "line": 100
       },
       "example": "import { PAPER_STATE_ORDER } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16992,7 +16992,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 89
+        "line": 90
       },
       "example": "import { PAPER_STATUS_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17016,7 +17016,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 97
+        "line": 98
       },
       "example": "import { PAPER_VISIBILITY_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17028,24 +17028,19 @@
     {
       "id": "packages/core/paper.js#planPaperMigration",
       "name": "planPaperMigration",
-      "kind": "function",
-      "signature": "function planPaperMigration({ cwd = process.cwd(), buildchainRoot = process.cwd(), buildchainVersion = \"\", buildchainSha = \"\", } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), buildchainRoot = process.cwd(), buildchainVersion = \"\", buildchainSha = \"\", } = {}"
-        }
-      ],
+      "kind": "value",
+      "signature": "planPaperMigration",
+      "parameters": [],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "No narrower error contract was mechanically discoverable."
       ],
       "sideEffects": [
-        "none-detected-by-static-source-scan"
+        "unknown"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1024
+        "line": 1
       },
       "example": "import { planPaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17057,24 +17052,19 @@
     {
       "id": "packages/core/paper.js#planPaperScaffold",
       "name": "planPaperScaffold",
-      "kind": "function",
-      "signature": "function planPaperScaffold({ cwd = process.cwd(), buildchainRoot = process.cwd(), buildchainVersion = \"\", buildchainRef = \"v3\", buildchainSha = \"\", name = path.basename(path.resolve(cwd)), title = \"\", packageName = \"\", repository = \"\", version = \"0.1.0-alpha.0\", siteBaseUrl = \"\", } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), buildchainRoot = process.cwd(), buildchainVersion = \"\", buildchainRef = \"v3\", buildchainSha = \"\", name = path.basename(path.resolve(cwd)), title = \"\", packageName = \"\", repository = \"\", version = \"0.1.0-alpha.0\", siteBaseUrl = \"\", } = {}"
-        }
-      ],
+      "kind": "value",
+      "signature": "planPaperScaffold",
+      "parameters": [],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "No narrower error contract was mechanically discoverable."
       ],
       "sideEffects": [
-        "none-detected-by-static-source-scan"
+        "unknown"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 707
+        "line": 1
       },
       "example": "import { planPaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17107,7 +17097,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 250
+        "line": 251
       },
       "example": "import { resolvePaperRuntimeGitSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -17119,24 +17109,19 @@
     {
       "id": "packages/core/paper.js#writePaperMigration",
       "name": "writePaperMigration",
-      "kind": "function",
-      "signature": "function writePaperMigration(plan)",
-      "parameters": [
-        {
-          "name": "plan",
-          "signature": "plan"
-        }
-      ],
+      "kind": "value",
+      "signature": "writePaperMigration",
+      "parameters": [],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "No narrower error contract was mechanically discoverable."
       ],
       "sideEffects": [
-        "local-filesystem-write"
+        "unknown"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1141
+        "line": 1
       },
       "example": "import { writePaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17148,24 +17133,19 @@
     {
       "id": "packages/core/paper.js#writePaperScaffold",
       "name": "writePaperScaffold",
-      "kind": "function",
-      "signature": "function writePaperScaffold(plan)",
-      "parameters": [
-        {
-          "name": "plan",
-          "signature": "plan"
-        }
-      ],
+      "kind": "value",
+      "signature": "writePaperScaffold",
+      "parameters": [],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "No narrower error contract was mechanically discoverable."
       ],
       "sideEffects": [
-        "local-filesystem-write"
+        "unknown"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 852
+        "line": 1
       },
       "example": "import { writePaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18501,7 +18481,7 @@
       ],
       "source": {
         "path": "packages/core/publication-control-plane-audit.js",
-        "line": 75
+        "line": 245
       },
       "example": "import { evaluatePublicationControlPlaneSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21517,7 +21497,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 51
+        "line": 54
       },
       "example": "import { AGENT_INDEX_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21541,7 +21521,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 49
+        "line": 52
       },
       "example": "import { ARTIFACT_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21570,7 +21550,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1586
+        "line": 1465
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21599,7 +21579,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1249
+        "line": 1128
       },
       "example": "import { createArtifactEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21628,7 +21608,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 220
+        "line": 223
       },
       "example": "import { createInvariantPassportGate } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -21657,7 +21637,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2788
+        "line": 2607
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21686,7 +21666,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1286
+        "line": 1165
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21715,7 +21695,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2944
+        "line": 2763
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21739,7 +21719,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 50
+        "line": 53
       },
       "example": "import { IMPACT_LEDGER_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21763,7 +21743,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 56
+        "line": 59
       },
       "example": "import { INVARIANT_PASSPORT_GATE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -21787,7 +21767,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 57
+        "line": 60
       },
       "example": "import { KFD_AGENT_HUB_RELEASE_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -21811,7 +21791,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 54
+        "line": 57
       },
       "example": "import { KFD2_RELEASE_TRUST_PASSPORT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21835,7 +21815,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 55
+        "line": 58
       },
       "example": "import { KFD2_TRUST_PROOF_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21864,7 +21844,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2973
+        "line": 2792
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21888,7 +21868,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 52
+        "line": 55
       },
       "example": "import { PRODUCT_MECHANISM_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21925,7 +21905,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2860
+        "line": 2679
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21973,7 +21953,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 53
+        "line": 56
       },
       "example": "import { RELEASE_EVIDENCE_ATTACHMENT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22027,7 +22007,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 235
+        "line": 238
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22056,7 +22036,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 157
+        "line": 160
       },
       "example": "import { sha256Text } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22080,7 +22060,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2985
+        "line": 2804
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -22109,7 +22089,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2909
+        "line": 2728
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -30259,7 +30239,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:de724d5a0774b98c4a12a1d1f7921c82bcb87102fc622b3ff4505de28cc75001",
+      "digest": "sha256:762f10b7e0f99422ecdc73e717f721a22c940989edaa7b1011b3ba551db2b37e",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -30375,7 +30355,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
       "export": "./publication-control-plane-audit",
       "target": "./packages/core/publication-control-plane-audit.js",
-      "digest": "sha256:a2d207047837abddf9d1f2b728b5a730467917444cbcb2221310f8c45fe0ce5d",
+      "digest": "sha256:42e9a3877827801ed97b8940382f0780826bc148611077e30b314dcfda8a76ee",
       "summary": "Read-only publication control-plane snapshot evaluation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -30799,7 +30779,7 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:756c825d788725dafd5ad9d3d5e87a5066da513aff5c539a969a3d3a20be8616",
+      "digest": "sha256:4932b0ef2ea1c62101347789ef233c77142630a69762d325688269fe29c230c5",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -31139,7 +31119,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:482746056fcb4f71daf69513fc03e6faa60fc89bd2bb3d79c5c7130b04443592"
+      "digest": "sha256:e9683e04409d60ee1a4e60f89766c158586cf1eb91fc890f0b2660814f05dbdb"
     },
     {
       "id": "build-facts",
