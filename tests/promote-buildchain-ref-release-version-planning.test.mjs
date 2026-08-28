@@ -420,13 +420,14 @@ test("version verification ignores generated buildchain evidence", () => {
   );
 });
 
-test("version verification allows only the exact self-runtime dependency bridge", () => {
+test("version verification allows local dependencies and only the exact self-runtime bridge", () => {
   const cwd = makeTempWorkspace({ "package.json": { name: "example", version: "1.0.0" } });
   run(["git", "init"], cwd);
   fs.writeFileSync(path.join(cwd, ".git/info/exclude"), "node_modules/\n");
   run(["git", "add", "."], cwd);
   run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "init"], cwd);
   const bridge = path.join(cwd, "node_modules");
+  fs.mkdirSync(bridge); assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"])); fs.rmdirSync(bridge);
   fs.mkdirSync(path.join(cwd, ".buildchain/runtime/node_modules"), { recursive: true });
   fs.symlinkSync(path.join(cwd, ".buildchain/runtime/node_modules"), bridge, "junction");
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
