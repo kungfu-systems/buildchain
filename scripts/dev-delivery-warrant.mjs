@@ -15,6 +15,7 @@ import {
   settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
+import { recoverLegacyTerminalDevDeliveryQueue } from "../packages/core/dev-delivery-warrant-legacy-recovery.js";
 import { runV4DeliveryWarrantReadCandidate } from "../packages/core/v4-delivery-warrant-read-candidate.js";
 
 import { GitHubDevDeliveryStore } from "./dev-delivery-warrant-store.mjs";
@@ -80,7 +81,9 @@ function reconcileTerminalEvidenceCommand(queue, options) {
 
 function requireTerminalEvidenceCas(options) {
   if (
-    options.command === "reconcile-terminal-evidence" &&
+    ["reconcile-terminal-evidence", "recover-legacy-terminal"].includes(
+      options.command,
+    ) &&
     options.execute &&
     !options.expectedOldStateRoot
   ) {
@@ -267,6 +270,13 @@ function transitionFor(command, queue, options) {
   }
   if (command === "recover")
     return recoverExpiredDevDeliveryWarrant(queue, { now: options.now });
+  if (command === "recover-legacy-terminal") {
+    return recoverLegacyTerminalDevDeliveryQueue(
+      queue,
+      jsonFile(options.legacyTerminalRecoveryPath, "legacy terminal recovery"),
+      { now: options.now },
+    );
+  }
   if (command === "close") {
     return closeDevDeliveryWarrant(queue, warrantIdentity(queue, options), {
       outcome: options.outcome,
@@ -416,7 +426,9 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     stateRef: options.stateRef,
     protectedBase: options.branch,
     now: options.now,
-    allowLegacyV3Readback: options.command === "observe",
+    allowLegacyV3Readback: ["observe", "recover-legacy-terminal"].includes(
+      options.command,
+    ),
   });
   if (
     options.expectedOldStateRoot &&
@@ -496,7 +508,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|qualify|recover|close|settle|reconcile-terminal-evidence|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n\nRead candidate:\n  observe --read-mode v4 --read-qualification FILE --read-qualification-root sha256:... --read-typescript-revision SHA --read-rust-revision SHA --read-validator-version TOKEN [--read-evidence-output FILE]\n";
+  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|qualify|recover|recover-legacy-terminal|close|settle|reconcile-terminal-evidence|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n\nLegacy terminal recovery:\n  recover-legacy-terminal --expected-old sha256:... --legacy-terminal-recovery FILE [--execute]\n\nRead candidate:\n  observe --read-mode v4 --read-qualification FILE --read-qualification-root sha256:... --read-typescript-revision SHA --read-rust-revision SHA --read-validator-version TOKEN [--read-evidence-output FILE]\n";
 }
 
 async function main() {
@@ -513,6 +525,7 @@ async function main() {
       "heartbeat",
       "qualify",
       "recover",
+      "recover-legacy-terminal",
       "close",
       "settle",
       "reconcile-terminal-evidence",

@@ -7,7 +7,7 @@
     "workflowCount": 77,
     "actionCount": 8,
     "sitePageCount": 84,
-    "docCommandRefCount": 1049,
+    "docCommandRefCount": 1050,
     "failureCount": 0
   },
   "enumerated": {
@@ -934,7 +934,6 @@
         "reusable": true,
         "inputs": [
           "admission-json",
-          "authority-job-id",
           "authority-workflow-path",
           "auto-admission",
           "auto-admission-kind",
@@ -972,7 +971,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 38,
+        "inputCount": 37,
         "secrets": [
           "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
@@ -5002,6 +5001,11 @@
       {
         "id": "dev",
         "path": "docs/dev-delivery-warrant.md",
+        "command": "buildchain dev warrant recover-legacy-terminal"
+      },
+      {
+        "id": "dev",
+        "path": "docs/dev-delivery-warrant.md",
         "command": "buildchain dev proof source"
       },
       {
@@ -8911,8 +8915,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "4f366ddf2f48ba5f7b0fc11ed1186640b28def2150260c7a04defdc8f5282d02",
-    "pageRegistryDigest": "82bd43842f419ff14cb2d1931a194647cf427fe3b18b6388efd5b50552c13351"
+    "workflowRegistryDigest": "63cbd30a11e11c5524f17ca7bc37202fd8f0cbefd9e73ab37398cd899294a345",
+    "pageRegistryDigest": "148e713304e9aa4a109cd18f31f4414eff4230eb633ffdcf98c1186208e16a48"
   },
   "comparison": {
     "missingCliRegistry": [],

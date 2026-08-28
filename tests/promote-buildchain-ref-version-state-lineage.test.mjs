@@ -120,7 +120,7 @@ test("release channel admission rejects a recovery PR for another line", async (
       sha: SHA,
       targetRef: "release/v2/v2.14",
     }),
-    /exact line-scoped channel recovery PR/,
+    /exact line-scoped release recovery PR/,
   );
 });
 
@@ -595,3 +595,4 @@ test("strict alpha promotion returns a pending dev version-state PR after alpha 
   assert.equal(result.pendingPullRequest, createdPullRequest.html_url);
   assert.equal(refs.has("tags/v1.0.1-alpha.0"), false);
 });
+

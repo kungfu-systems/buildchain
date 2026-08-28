@@ -143,7 +143,7 @@ test("v4 Provider Plane publishes the standard promotion controller evidence", (
   assert.doesNotMatch(declarativeJob, /declarative-controller-evidence/u);
   assert.match(
     source("../.github/workflows/.release-candidate-promote.yml"),
-    /promotion-evidence\/release-passport\.json/u,
+    /promotion-evidence\/release-passport\/buildchain\.release\.json/u,
   );
 });
 

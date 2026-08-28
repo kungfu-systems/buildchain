@@ -97,13 +97,6 @@ state for `vX.Y.Z-alpha.N` and cannot resume it with the same transaction
 identity, alpha version selection must advance to the next prerelease instead
 of reusing or overwriting that failed transaction slot.
 
-The immutable `publish-gate/{alpha,release}/.../<version>` source lock also
-reserves its exact version when a failure happens before durable transaction
-state can be created. A later candidate with a different source SHA advances to
-the next version; it never rebinds or overwrites the earlier source lock. The
-same source SHA reuses its own lock so authority planning and mutation stay on
-one exact version.
-
 `release-candidate-promote.yml` can establish or restore this state from an
 older successful candidate run through the documented fresh-event recovery
 inputs. The recovery receipt and sealed bundle are verified before the action
@@ -258,10 +251,10 @@ Example reused OCI evidence entry (the pre-publish requirement may omit
 
 Buildchain distinguishes two npm release modes:
 
-| Mode                       | Use                                   | Auth                 | npm operation                                   |
-| -------------------------- | ------------------------------------- | -------------------- | ----------------------------------------------- |
-| `publish-final-version`    | normal alpha or stable publication    | `trusted-publishing` | `npm publish --tag <alpha\|vX.Y-alpha\|latest>` |
-| `promote-existing-version` | same-version alpha-to-latest recovery | `npm-token`          | `npm dist-tag add <pkg>@<version> latest`       |
+| Mode | Use | Auth | npm operation |
+| --- | --- | --- | --- |
+| `publish-final-version` | normal alpha or stable publication | `trusted-publishing` | `npm publish --tag <alpha|vX.Y-alpha|latest>` |
+| `promote-existing-version` | same-version alpha-to-latest recovery | `npm-token` | `npm dist-tag add <pkg>@<version> latest` |
 
 The normal libnode path is `publish-final-version`: publish an alpha package set
 such as `22.22.3-kf.3-alpha.0` with the `alpha` dist-tag, then publish a

@@ -175,11 +175,9 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/check-v4-floating-consumer-policy-contract.mjs`
 - `tests/dev-delivery-warrant.test.mjs`
 - `actions/promote-buildchain-ref/internal/version-state.js`
-- `packages/core/v4-floating-consumer-policy.js`
 - `packages/core/v4-floating-consumer-release-passport.js`
 - `packages/core/release-passport.js`
 - `tests/promote-buildchain-ref-governance.test.mjs`
-- `tests/v4-declarative-promotion-mode.test.mjs`
 - `scripts/buildchain-cli-help.mjs`
 
 ## cli-command-registry
@@ -894,6 +892,7 @@ Owner: Buildchain protected delivery maintainers
 - `packages/core/dev-delivery-warrant.js`
 - `packages/core/dev-delivery-warrant-state.js`
 - `packages/core/dev-delivery-warrant-qualification.js`
+- `packages/core/dev-delivery-warrant-legacy-recovery.js`
 - `packages/core/dev-delivery-native-proof.js`
 - `packages/core/dev-delivery-native-execution.js`
 - `packages/core/dev-delivery-execution-failure.js`
@@ -940,6 +939,7 @@ Owner: Buildchain protected delivery maintainers
 
 - `tests/dev-delivery-warrant.test.mjs`
 - `tests/dev-delivery-warrant-command.test.mjs`
+- `tests/dev-delivery-warrant-legacy-recovery.test.mjs`
 - `tests/dev-delivery-two-phase.test.mjs`
 - `tests/dev-delivery-two-phase-run.test.mjs`
 - `tests/dev-delivery-native-run.test.mjs`
@@ -956,7 +956,7 @@ Owner: Buildchain protected delivery maintainers
 
 ### Minimal validation
 
-- `node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/v4-delivery-authority-parity.test.mjs`
+- `node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-warrant-legacy-recovery.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/v4-delivery-authority-parity.test.mjs`
 
 ## v4-publication-rehearsal
 

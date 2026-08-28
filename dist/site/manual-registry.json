@@ -362,7 +362,7 @@
       "title": "Generated Node API reference",
       "path": "docs/node-api-reference.md",
       "plane": "use",
-      "digest": "sha256:e9683e04409d60ee1a4e60f89766c158586cf1eb91fc890f0b2660814f05dbdb",
+      "digest": "sha256:33cfa0ae8569929fd30d7ff468d970515a5c6f3a4aa82029000f5b98eee06ca8",
       "capabilityGroup": "api-cli-reference",
       "audience": [
         "agent",
@@ -462,7 +462,7 @@
       "title": "Publish transaction",
       "path": "docs/publish-transaction.md",
       "plane": "verify",
-      "digest": "sha256:635de0da30769e4e6f956748ec9758338a1ae7921bce73268c2d914ae240693d",
+      "digest": "sha256:72466943bb459f6857f23ac6f92bcf4714dcd2f535c38a9f0e34864b36404e06",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "release-operator"

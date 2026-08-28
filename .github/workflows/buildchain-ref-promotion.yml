@@ -1,4 +1,5 @@
 name: Buildchain Ref Promotion
+
 on:
   workflow_run:
     workflows: ["Verify"]
@@ -10,25 +11,83 @@ on:
     types: [completed]
   workflow_dispatch:
     inputs:
-      sha: { description: "Verified alpha/release commit to promote. Defaults to the current workflow ref SHA.", required: false, default: "" }
-      target-ref: { description: "Buildchain channel branch to promote", required: true, default: "alpha/v4/v4.0" }
-      dry-run: { description: "Only print planned tag updates", required: true, default: "true" }
-      recover-durable-transaction: { description: "Recover an existing durable transaction from its exact original source SHA using fresh GitHub-hosted admission", required: true, default: false, type: boolean }
-      publication-admission-json: { description: "Fresh sealed admission JSON required for manual apply", required: false, default: "" }
-      publication-runner-provenance-json: { description: "Runner provenance receipt JSON bound by the admission", required: false, default: "" }
-      publication-control-plane-audit-json: { description: "Fresh external control-plane audit receipt JSON", required: false, default: "" }
-      publication-gate-aggregate-json: { description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision", required: false, default: "" }
-      publication-expected-json: { description: "Independent exact publication bindings JSON", required: false, default: "" }
-      publication-used-nonces-json: { description: "JSON array of consumed admission nonces", required: false, default: "[]" }
-      release-passport-v4-runtime-resume-evidence-json: { description: "Verified runtime A+B Stage Capsule resume evidence JSON", required: false, default: "" }
-      resume-candidate-repository: { description: "Repository that owns the sealed candidate run", required: false, default: "" }
-      resume-candidate-run-id: { description: "Exact successful Build Surface Fixture run ID to recover", required: false, default: "" }
-      resume-expected-source-tree: { description: "Exact Git tree recorded for the candidate", required: false, default: "" }
-      resume-expected-candidate-root: { description: "Optional exact sha256 Release Candidate root", required: false, default: "" }
-      resume-expected-candidate-runtime-sha: { description: "Exact Buildchain runtime SHA recorded in the candidate Passport", required: false, default: "" }
-      resume-buildchain-runtime-sha: { description: "Exact current Buildchain tooling SHA used by this recovery run", required: false, default: "" }
-      resume-buildchain-runtime-ref: { description: "Approved v4 train or authority ref resolving to the recovery runtime SHA", required: false, default: "" }
-      resume-transaction-id: { description: "Optional existing durable transaction identity", required: false, default: "" }
+      sha:
+        description: "Verified alpha/release commit to promote. Defaults to the current workflow ref SHA."
+        required: false
+        default: ""
+      target-ref:
+        description: "Buildchain channel branch to promote"
+        required: true
+        default: "alpha/v4/v4.0"
+      dry-run:
+        description: "Only print planned tag updates"
+        required: true
+        default: "true"
+      recover-durable-transaction:
+        description: "Recover an existing durable transaction from its exact original source SHA using fresh GitHub-hosted admission"
+        required: true
+        default: false
+        type: boolean
+      publication-admission-json:
+        description: "Fresh sealed admission JSON required for manual apply"
+        required: false
+        default: ""
+      publication-runner-provenance-json:
+        description: "Runner provenance receipt JSON bound by the admission"
+        required: false
+        default: ""
+      publication-control-plane-audit-json:
+        description: "Fresh external control-plane audit receipt JSON"
+        required: false
+        default: ""
+      publication-gate-aggregate-json:
+        description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
+        required: false
+        default: ""
+      publication-expected-json:
+        description: "Independent exact publication bindings JSON"
+        required: false
+        default: ""
+      publication-used-nonces-json:
+        description: "JSON array of consumed admission nonces"
+        required: false
+        default: "[]"
+      release-passport-v4-runtime-resume-evidence-json:
+        description: "Verified runtime A+B Stage Capsule resume evidence JSON"
+        required: false
+        default: ""
+      resume-candidate-repository:
+        description: "Repository that owns the sealed candidate run"
+        required: false
+        default: ""
+      resume-candidate-run-id:
+        description: "Exact successful Build Surface Fixture run ID to recover"
+        required: false
+        default: ""
+      resume-expected-source-tree:
+        description: "Exact Git tree recorded for the candidate"
+        required: false
+        default: ""
+      resume-expected-candidate-root:
+        description: "Optional exact sha256 Release Candidate root"
+        required: false
+        default: ""
+      resume-expected-candidate-runtime-sha:
+        description: "Exact Buildchain runtime SHA recorded in the candidate Passport"
+        required: false
+        default: ""
+      resume-buildchain-runtime-sha:
+        description: "Exact current Buildchain tooling SHA used by this recovery run"
+        required: false
+        default: ""
+      resume-buildchain-runtime-ref:
+        description: "Approved v4 train or authority ref resolving to the recovery runtime SHA"
+        required: false
+        default: ""
+      resume-transaction-id:
+        description: "Optional existing durable transaction identity"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -69,7 +128,24 @@ jobs:
           exit 1
 
   promote-alpha:
-    if: "${{ (github.event_name == 'workflow_dispatch' && startsWith(inputs['target-ref'], 'alpha/') && (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) && inputs.sha != '') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && startsWith(github.event.workflow_run.head_branch, 'alpha/') && !startsWith(github.event.workflow_run.display_title, 'Prepare v') && !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') && !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')) }}"
+    if: >-
+      ${{
+        (
+          github.event_name == 'workflow_dispatch' &&
+          startsWith(inputs['target-ref'], 'alpha/') &&
+          (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
+          inputs.sha != ''
+        ) ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          startsWith(github.event.workflow_run.head_branch, 'alpha/') &&
+          !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
+          !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
+        )
+      }}
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
@@ -129,6 +205,7 @@ jobs:
       publication-package-name: "@kungfu-tech/buildchain"
       declarative-release-tail: true
       dry-run: ${{ inputs['dry-run'] == 'true' }}
+
   promote-stable:
     if: >-
       ${{

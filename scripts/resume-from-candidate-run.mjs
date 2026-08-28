@@ -831,7 +831,7 @@ export async function resolveRecoveryTransaction({
         version: publicationVersion,
       })
     : undefined;
-  if (transactionId && transaction?.id !== transactionId) {
+  if (!transaction) {
     transaction = transactionId
       ? await readExistingTransactionById({ repoInfo, apiUrl, token, fetchImpl, transactionId })
       : undefined;

@@ -767,7 +767,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.match(
     workflow,
-    /release-passport-v4-runtime-resume-evidence-json:[^\n]*description: "Verified runtime A\+B Stage Capsule resume evidence JSON"/,
+    /release-passport-v4-runtime-resume-evidence-json:\n\s+description: "Verified runtime A\+B Stage Capsule resume evidence JSON"/,
   );
   assert.doesNotMatch(
     workflow,
@@ -2216,6 +2216,7 @@ test("runLifecycle writes deterministic artifact manifest", () => {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
 test("runLifecycle binds platform signing declarations outside upload paths", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-signing-lifecycle-"),
@@ -2294,6 +2295,7 @@ platforms = ["macos-arm64"]
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
 test("runLifecycle command override inherits declared stage shell and lifecycle env", () => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-command-override-"));
   const fixture = path.join(workspace, "fixture");
@@ -2354,6 +2356,7 @@ test("runLifecycle applies a clear fallback timeout to commands and configured s
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
 test("reusable build bounds matrix jobs and lifecycle actions with one timeout input", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
   const action = fs.readFileSync(path.join(root, "actions/run-lifecycle/action.yml"), "utf8");

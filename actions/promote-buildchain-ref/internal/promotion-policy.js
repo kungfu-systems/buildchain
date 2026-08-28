@@ -180,24 +180,22 @@ function parseReleaseLineRef(ref) {
 
 function parseReleaseLineRecoveryRef(ref) {
   const match = String(ref || "").match(
-    /^fix\/(alpha|release)-line-v(\d+)-v(\d+)\.(\d+)-[0-9A-Za-z._-]+$/,
+    /^fix\/release-line-v(\d+)-v(\d+)\.(\d+)-[0-9A-Za-z._-]+$/,
   );
   if (!match) {
     return undefined;
   }
-  const channel = match[1];
-  const major = Number(match[2]);
-  const minorMajor = Number(match[3]);
-  const minor = Number(match[4]);
+  const major = Number(match[1]);
+  const minorMajor = Number(match[2]);
+  const minor = Number(match[3]);
   if (major !== minorMajor) {
-    throw new Error(`Channel recovery ref major mismatch: ${ref}`);
+    throw new Error(`Release recovery ref major mismatch: ${ref}`);
   }
   return {
     ref,
-    channel,
     major,
     minor,
-    targetRef: `${channel}/v${major}/v${major}.${minor}`,
+    targetRef: `release/v${major}/v${major}.${minor}`,
   };
 }
 

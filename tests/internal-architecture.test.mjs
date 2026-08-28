@@ -21,11 +21,11 @@ test("internal architecture index covers implementations, tests, and dependency 
   assert.deepEqual(checkInternalArchitecture({ root, index }), {
     schemaVersion: 2,
     capabilities: 23,
-    implementations: 160,
-    repositorySources: 443,
-    ownedSources: 443,
+    implementations: 161,
+    repositorySources: 444,
+    ownedSources: 444,
     excludedSources: 0,
-    dependencyEdges: 378,
+    dependencyEdges: 379,
     dependencyRules: 4,
     dependencyCycles: 0,
   });

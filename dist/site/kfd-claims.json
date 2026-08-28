@@ -21,13 +21,13 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "30c8e88ae85d74d86246d86d56073170355ded519c04c8e075b9ec664df68d3e",
+    "sha256": "74451a8a6e729c51d3e5a7aac9ab14755d2dab44e8b25fe7949b16038cc79a73",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 77,
       "actionCount": 8,
       "sitePageCount": 84,
-      "docCommandRefCount": 1049,
+      "docCommandRefCount": 1050,
       "failureCount": 0
     },
     "auditBoundary": {
@@ -246,13 +246,13 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "30c8e88ae85d74d86246d86d56073170355ded519c04c8e075b9ec664df68d3e",
+      "sha256": "74451a8a6e729c51d3e5a7aac9ab14755d2dab44e8b25fe7949b16038cc79a73",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 77,
         "actionCount": 8,
         "sitePageCount": 84,
-        "docCommandRefCount": 1049,
+        "docCommandRefCount": 1050,
         "failureCount": 0
       },
       "auditBoundary": {
@@ -4104,10 +4104,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 38,
+          "inputCount": 37,
           "inputs": [
             "admission-json",
-            "authority-job-id",
             "authority-workflow-path",
             "auto-admission",
             "auto-admission-kind",

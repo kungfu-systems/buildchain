@@ -724,6 +724,7 @@ concurrency:
 
 permissions:
   contents: read
+
 jobs:
   preflight:
     name: Revalidate promotion intent
@@ -1132,7 +1133,7 @@ jobs:
   publication-authority:
     name: Seal product publication capability
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
     permissions:
       actions: read
       checks: read
@@ -1163,7 +1164,6 @@ jobs:
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
-      authority-job-id: legacy-promote
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
@@ -1181,7 +1181,7 @@ jobs:
   qualification-plan:
     name: Bind consumer publication predicate
     needs: [preflight]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
     runs-on: ubuntu-24.04
     permissions: {}
     outputs:
@@ -1222,8 +1222,9 @@ jobs:
 
   publication-qualification:
     name: Run consumer publication predicate
-    needs: [preflight, controller-plan, qualification-plan, publication-authority]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' }}
+    needs:
+      [preflight, controller-plan, qualification-plan, publication-authority]
+    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -1320,7 +1321,7 @@ jobs:
   v4-declarative-promote:
     name: Promote sealed v4 candidate through Provider Plane
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability != '' && (startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && (startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -1413,7 +1414,7 @@ jobs:
   legacy-promote:
     name: Promote release candidate
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -1472,7 +1473,7 @@ jobs:
           registry-url: "https://registry.npmjs.org/"
 
       - name: Install promotion dependencies
-        if: ${{ inputs.resume-candidate-run-id == '' && github.repository != inputs.buildchain-repository }}
+        if: ${{ inputs.resume-candidate-run-id == '' }}
         shell: bash
         run: |
           case "${PACKAGE_MANAGER}" in
@@ -1650,7 +1651,7 @@ jobs:
           NODE
 
       - name: Bridge Buildchain self-runtime dependencies
-        if: ${{ github.repository == inputs.buildchain-repository }}
+        if: ${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository }}
         shell: bash
         run: |
           test ! -e node_modules
@@ -2350,7 +2351,7 @@ jobs:
           RELEASED_PRODUCT_EVIDENCE: ${{ steps.release-evidence.outputs.evidence-path }}
           RELEASE_PROPAGATION_CAPTURE: ${{ steps.capture-release-propagation.outcome == 'success' && '.buildchain/release-propagation-capture/capture-result.json' || '' }}
         run: |
-          node .buildchain/runtime/scripts/promotion-routing-evidence.mjs bundle-controller-evidence
+          node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs bundle-controller-evidence
 
       - name: Upload release-candidate-promotion controller evidence
         if: ${{ always() && steps.controller-evidence.outcome == 'success' }}
@@ -2518,7 +2519,7 @@ jobs:
   github-artifact-attestation:
     name: Sign Linux release artifact with GitHub OIDC
     needs: [promote]
-    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && needs.promote.result == 'success' }}
+    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run && needs.promote.result == 'success' }}
     permissions:
       actions: read
       artifact-metadata: write
@@ -2656,7 +2657,7 @@ jobs:
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
           BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
             [{"id":"preflight","status":"${{ needs.preflight.result }}"},{"id":"admit-release-candidate","status":"${{ needs.release-candidate-preflight.result == 'success' && needs.promote.outputs.release-candidate-outcome || needs.release-candidate-preflight.result }}"},{"id":"publication-authority","status":"${{ needs.promote.result == 'success' && 'success' || needs.publication-authority.result }}"},{"id":"publish","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"passport","status":"${{ inputs.dry-run && 'skipped' || needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.outputs.promotion-outcome || needs.promote.result }}"},{"id":"aggregate","status":"${{ needs.promote.outputs.finalization-needed == 'true' && 'partial' || needs.promote.result }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && needs.promote.outputs.finalization-needed == 'true' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"}]' || !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/publish-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport.json"}]' || '[]' }}
+          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ !inputs.dry-run && needs.promote.result == 'success' && needs.promote.outputs.finalization-needed == 'true' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate/passport/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/release-tail/publication-evidence.json"}]' || !inputs.dry-run && needs.promote.result == 'success' && '[{"kind":"release-candidate-passport","path":".buildchain/controller/promotion-evidence/release-candidate/passport/release-candidate-passport.json"},{"kind":"publish-evidence","path":".buildchain/controller/promotion-evidence/release-tail/publication-evidence.json"},{"kind":"release-passport","path":".buildchain/controller/promotion-evidence/release-passport/buildchain.release.json"}]' || '[]' }}
           BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ inputs.dry-run && 'promotion-dry-run' || needs.promote.outputs.finalization-needed == 'true' && 'promotion-finalization-pending' || needs.promote.result == 'success' && '' || needs.preflight.outputs.action == 'noop' && 'promotion-superseded' || 'promotion-incomplete' }}
           BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Release-candidate promotion did not complete successfully
           BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-release-promotion-controller-receipt-${{ needs.preflight.outputs.requested-sha }}

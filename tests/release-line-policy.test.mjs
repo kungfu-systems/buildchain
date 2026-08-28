@@ -186,28 +186,6 @@ test("release-line recovery PRs are valid only for the same release line", () =>
   });
 });
 
-test("alpha-line recovery PRs are valid only for the same alpha line", () => {
-  withPackageVersion("4.0.1-alpha.42", (cwd) => {
-    assert.equal(
-      getBumpKeyword({
-        cwd,
-        headRef: "fix/alpha-line-v4-v4.0-wave4-reconciliation",
-        baseRef: "alpha/v4/v4.0",
-      }),
-      "prerelease",
-    );
-    assert.throws(
-      () =>
-        getBumpKeyword({
-          cwd,
-          headRef: "fix/alpha-line-v4-v4.0-wave4-reconciliation",
-          baseRef: "release/v4/v4.0",
-        }),
-      /Versions not match/,
-    );
-  });
-});
-
 test("release to publish-gate/major is the only major bump channel", () => {
   withPackageVersion("1.0.5", (cwd) => {
     assert.equal(
