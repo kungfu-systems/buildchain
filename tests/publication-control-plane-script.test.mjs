@@ -13,8 +13,10 @@ const HEAD_SHA = "b".repeat(40);
 const BRANCH_HEAD_SHA = "c".repeat(40);
 const MERGE_SHA = "d".repeat(40);
 
-function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit) {
-  const workflow = `permissions:\n  contents: read\njobs:\n  promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: read\n      id-token: write\n`;
+function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit, delegatedAuthority) {
+  const workflow = delegatedAuthority
+    ? `permissions:\n  contents: read\njobs:\n  promote:\n    # buildchain-publication-authority-job: legacy-promote\n    runs-on: ubuntu-24.04\n    permissions: {}\n  legacy-promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: write\n      id-token: write\n`
+    : `permissions:\n  contents: read\njobs:\n  promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: read\n      id-token: write\n`;
   const responses = {
     "repos/kungfu-systems/buildchain/contents/.github/workflows/release-candidate-promote.yml": {
       content: Buffer.from(workflow).toString("base64"),
@@ -104,12 +106,12 @@ function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCom
   return `#!/usr/bin/env node\nconst responses = ${JSON.stringify(responses)};\nconst route = process.argv[3];\nif (process.env.FAIL_PRIMARY_PUBLIC_READ === "1" && route.includes("/contents/") && process.env.GH_TOKEN !== "public-read-token") { console.error("primary public read unavailable"); process.exit(1); }\nif (process.env.FAIL_PRIMARY_AUTHORITY_READ === "1" && route.includes("/rulesets?") && process.env.GH_TOKEN !== "public-read-token") { console.error("primary authority read unavailable"); process.exit(1); }\nif (!(route in responses)) { console.error(\`missing fake route: \${route}\`); process.exit(1); }\nprocess.stdout.write(JSON.stringify(responses[route]));\n`;
 }
 
-function runAudit({ requiredCheckConclusion = "success", historicalSource = false, largeSourceCommit = false, failPrimaryPublicRead = false, failPrimaryAuthorityRead = false } = {}) {
+function runAudit({ requiredCheckConclusion = "success", historicalSource = false, largeSourceCommit = false, failPrimaryPublicRead = false, failPrimaryAuthorityRead = false, delegatedAuthority = false } = {}) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-control-plane-"));
   const bin = path.join(cwd, "bin");
   fs.mkdirSync(bin);
   const gh = path.join(bin, "gh");
-  materializeCommandShim(gh, fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit));
+  materializeCommandShim(gh, fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit, delegatedAuthority));
   const result = spawnSync(process.execPath, [
     path.join(root, "scripts/audit-publication-control-plane.mjs"),
     "--repository", "kungfu-systems/buildchain",
@@ -167,4 +169,11 @@ test("publication control-plane audit queries the exact required check and retri
   const authorityFailure = runAudit({ failPrimaryAuthorityRead: true });
   assert.equal(authorityFailure.status, 1);
   assert.match(authorityFailure.stderr, /repository rulesets is unavailable/);
+});
+
+test("publication control-plane audit follows one explicit authority job delegation", () => {
+  const result = runAudit({ delegatedAuthority: true });
+  assert.equal(result.status, 0, result.stderr);
+  const receipt = JSON.parse(result.stdout);
+  assert.equal(receipt.facts.find((entry) => entry.id === "oidc-policy").status, "pass");
 });

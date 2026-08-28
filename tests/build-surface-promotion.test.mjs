@@ -699,7 +699,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
   assert.match(
     workflow,
-    /promote-alpha:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-ref'\] \|\| 'v4-alpha' \}\}/,
+    /promote-alpha:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-ref'\] \|\| inputs\['recover-durable-transaction'\] == true && github\.sha \|\| 'v4-alpha' \}\}/,
   );
   assert.match(workflow, /promote-alpha:[\s\S]*buildchain-expected-channel: alpha[\s\S]*resume-buildchain-runtime-sha:/);
   assert.match(
@@ -1871,7 +1871,7 @@ test("Buildchain self-dogfoods the current major through floating public promoti
     promotion,
     /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
-  assert.match(promotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-ref'\] \|\| 'v4-alpha' \}\}/);
+  assert.match(promotion, /buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-ref'\] \|\| inputs\['recover-durable-transaction'\] == true && github\.sha \|\| 'v4-alpha' \}\}/);
   assert.doesNotMatch(promotion, /buildchain-ref: [0-9a-f]{40}/);
 });
 
