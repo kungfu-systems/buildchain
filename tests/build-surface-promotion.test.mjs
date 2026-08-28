@@ -703,7 +703,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   assert.match(workflow, /alpha-recovery-admission:[\s\S]*BUILDCHAIN_INVOKED_WORKFLOW: \.github\/workflows\/\.release-candidate-promote\.yml[\s\S]*authorize-promotion-runtime-override\.cjs/);
   assert.match(
     workflow,
-    /promote-alpha:[\s\S]*buildchain-alpha-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/,
+    /promote-alpha:[\s\S]*buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json[\s\S]*buildchain-alpha-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/,
   );
   assert.match(workflow, /promote-stable:[\s\S]*buildchain-contract-lock-path: \.buildchain\/contract-lock\.json/);
   assert.match(workflow, /target-ref: \$\{\{ github\.event\.workflow_run\.head_branch \|\| inputs\['target-ref'\] \}\}/);

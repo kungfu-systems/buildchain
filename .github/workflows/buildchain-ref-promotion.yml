@@ -1,5 +1,4 @@
 name: Buildchain Ref Promotion
-
 on:
   workflow_run:
     workflows: ["Verify"]
@@ -260,6 +259,7 @@ jobs:
       promotion-override-used: ${{ inputs['resume-candidate-run-id'] != '' }}
       promotion-runtime-authorization-json: ${{ needs.alpha-recovery-admission.outputs.runtime-authorization-json }}
       promotion-runtime-authorization-root: ${{ needs.alpha-recovery-admission.outputs.runtime-authorization-root }}
+      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
