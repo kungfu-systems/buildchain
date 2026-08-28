@@ -154,6 +154,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 - `tests/v3-v4-capability-inventory.test.mjs`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
+- `packages/core/v4-floating-consumer-policy.js`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
 - `tests/release-candidate-recovery.test.mjs`
