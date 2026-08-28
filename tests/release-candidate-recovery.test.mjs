@@ -6,17 +6,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import {
-  createReleaseCandidatePassport,
-  sha256Json,
-} from "../packages/core/release-candidate.js";
+import { createReleaseCandidatePassport, sha256Json } from "../packages/core/release-candidate.js";
 import { releaseTransactionId } from "../packages/core/publish-transaction.js";
-import {
-  ReleaseCandidateRecoveryError,
-  validateRecoveryTargetRef,
-  validateReleaseCandidateRecoveryReceipt,
-  verifyReleaseCandidateRecovery,
-} from "../packages/core/release-candidate-recovery.js";
+import { ReleaseCandidateRecoveryError, validateRecoveryTargetRef, validateReleaseCandidateRecoveryReceipt, verifyReleaseCandidateRecovery } from "../packages/core/release-candidate-recovery.js";
 import {
   candidateArtifactNames,
   createRecoveredPublication,
@@ -49,11 +41,14 @@ test("recovery resolves an exact publication version without scanning historical
   const fetchImpl = async (url) => {
     calls.push(url);
     assert.doesNotMatch(url, /matching-refs/u);
-    return new Response(JSON.stringify({
-      type: "file",
-      encoding: "base64",
-      content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
-    }), { status: 200 });
+    return new Response(
+      JSON.stringify({
+        type: "file",
+        encoding: "base64",
+        content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
+      }),
+      { status: 200 },
+    );
   };
 
   const result = await resolveRecoveryTransaction({
@@ -85,15 +80,23 @@ test("recovery scans historical state refs when the candidate version belongs to
       return new Response(JSON.stringify({ type: "file", encoding: "base64", content: Buffer.from(JSON.stringify({ ...transaction, id: "transaction-candidate" })).toString("base64") }), { status: 200 });
     }
     if (url.includes("git/matching-refs/heads/buildchain/release-state/")) {
-      return new Response(JSON.stringify([{
-        ref: "refs/heads/buildchain/release-state/4-0-1-alpha-18",
-      }]), { status: 200 });
+      return new Response(
+        JSON.stringify([
+          {
+            ref: "refs/heads/buildchain/release-state/4-0-1-alpha-18",
+          },
+        ]),
+        { status: 200 },
+      );
     }
-    return new Response(JSON.stringify({
-      type: "file",
-      encoding: "base64",
-      content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
-    }), { status: 200 });
+    return new Response(
+      JSON.stringify({
+        type: "file",
+        encoding: "base64",
+        content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
+      }),
+      { status: 200 },
+    );
   };
 
   const result = await resolveRecoveryTransaction({
@@ -153,15 +156,17 @@ function fixture(overrides = {}) {
     git: { repository: "kungfu-systems/buildchain", sha: SOURCE_SHA, treeSha: TREE, runId: "100", runAttempt: "1" },
     runtime: { ref: "train/v3/v3.0/resume-candidate-run", sha: RUNTIME_SHA },
     publishSource: { channel: "alpha", ref: "alpha/v3/v3.0", sha: SOURCE_SHA, consumerVersion: "3.1.0-alpha.1" },
-    platforms: [{
-      platform: { id: "linux-x64" },
-      artifactName: "buildchain-package",
-      summary: {
-        fileCount: platformFiles.length,
-        totalBytes: platformFiles.reduce((total, file) => total + file.size, 0),
-        files: platformFiles,
+    platforms: [
+      {
+        platform: { id: "linux-x64" },
+        artifactName: "buildchain-package",
+        summary: {
+          fileCount: platformFiles.length,
+          totalBytes: platformFiles.reduce((total, file) => total + file.size, 0),
+          files: platformFiles,
+        },
       },
-    }],
+    ],
   };
   const passport = createReleaseCandidatePassport({
     repository: "kungfu-systems/buildchain",
@@ -215,23 +220,29 @@ function fixture(overrides = {}) {
     passport,
     buildSummary,
     controllerReceipts: [],
-    platformManifests: [{
-      artifactName: "buildchain-package",
-      files: platformFiles,
-    }],
-    platformManifestEvidence: [{
-      artifactName: "buildchain-package",
-      files: [{ path: "diagnostics.json", size: payloadFiles[1].size, sha256: payloadFiles[1].sha256 }],
-    }],
+    platformManifests: [
+      {
+        artifactName: "buildchain-package",
+        files: platformFiles,
+      },
+    ],
+    platformManifestEvidence: [
+      {
+        artifactName: "buildchain-package",
+        files: [{ path: "diagnostics.json", size: payloadFiles[1].size, sha256: payloadFiles[1].sha256 }],
+      },
+    ],
     productPayloadManifests: [],
-    artifacts: [{
-      name: "buildchain-package",
-      size: 11,
-      downloadedSize: 11,
-      digest: ARCHIVE_DIGEST,
-      downloadedDigest: ARCHIVE_DIGEST,
-      files: payloadFiles,
-    }],
+    artifacts: [
+      {
+        name: "buildchain-package",
+        size: 11,
+        downloadedSize: 11,
+        digest: ARCHIVE_DIGEST,
+        downloadedDigest: ARCHIVE_DIGEST,
+        files: payloadFiles,
+      },
+    ],
     currentToolingSha: RUNTIME_SHA,
     recoveryRunId: "200",
   };
@@ -239,12 +250,15 @@ function fixture(overrides = {}) {
 }
 
 function expectCode(code, input) {
-  assert.throws(() => verifyReleaseCandidateRecovery(input), (error) => {
-    assert.ok(error instanceof ReleaseCandidateRecoveryError);
-    assert.equal(error.code, code);
-    assert.ok(error.nextAction);
-    return true;
-  });
+  assert.throws(
+    () => verifyReleaseCandidateRecovery(input),
+    (error) => {
+      assert.ok(error instanceof ReleaseCandidateRecoveryError);
+      assert.equal(error.code, code);
+      assert.ok(error.nextAction);
+      return true;
+    },
+  );
 }
 
 function durableTransaction(input, state = "complete") {
@@ -269,9 +283,7 @@ function durableTransaction(input, state = "complete") {
 }
 
 test("cross-runtime recovery reuses only provider-bound original Stage Capsules", () => {
-  const workspace = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-release-candidate-capsule-"),
-  );
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-candidate-capsule-"));
   try {
     const manifestPath = path.join(workspace, "manifest.json");
     fs.writeFileSync(
@@ -388,9 +400,7 @@ test("cross-runtime recovery reuses only provider-bound original Stage Capsules"
             buildSummary: {},
             coordinates: {
               ...coordinates,
-              artifacts: [
-                { ...coordinate, digest: `sha256:${"e".repeat(64)}` },
-              ],
+              artifacts: [{ ...coordinate, digest: `sha256:${"e".repeat(64)}` }],
             },
           }),
           passport,
@@ -404,9 +414,7 @@ test("cross-runtime recovery reuses only provider-bound original Stage Capsules"
 });
 
 test("runtime persistence scan is rooted at the checked-out recovery runtime", () => {
-  const workspace = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-runtime-persistence-scan-"),
-  );
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-runtime-persistence-scan-"));
   try {
     const workflowPath = path.join(workspace, ".github/workflows/recovery.yml");
     fs.mkdirSync(path.dirname(workflowPath), { recursive: true });
@@ -450,20 +458,27 @@ test("resume public readback preserves exact history while the protected alpha c
       "4.0.1-alpha.8": { dist: { integrity: "sha512-current" } },
     },
   };
-  const valid = { targetRef, targetSha, targetVersion: "4.0.1-alpha.8", alphaSha, exactTagSha,
-    tagLineage: { status: "ahead" }, runtimeLineage: { status: "ahead" }, floatingTargetLineage: { status: "ahead" }, runtimeSha, version, transaction, main, npm };
+  const valid = {
+    targetRef,
+    targetSha,
+    targetVersion: "4.0.1-alpha.8",
+    alphaSha,
+    exactTagSha,
+    tagLineage: { status: "ahead" },
+    runtimeLineage: { status: "ahead" },
+    floatingTargetLineage: { status: "ahead" },
+    runtimeSha,
+    version,
+    transaction,
+    main,
+    npm,
+  };
   assert.doesNotThrow(() => validateV4RuntimeResumePublicReadback(valid));
-  assert.throws(
-    () => validateV4RuntimeResumePublicReadback({ ...valid, tagLineage: { status: "diverged" } }),
-    /does not match durable publication/,
-  );
+  assert.throws(() => validateV4RuntimeResumePublicReadback({ ...valid, tagLineage: { status: "diverged" } }), /does not match durable publication/);
   const regressed = structuredClone(npm);
   regressed["dist-tags"].alpha = "4.0.1-alpha.5";
   regressed.versions["4.0.1-alpha.5"] = { dist: { integrity: "sha512-regressed" } };
-  assert.throws(
-    () => validateV4RuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }),
-    /does not match durable publication/,
-  );
+  assert.throws(() => validateV4RuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }), /does not match durable publication/);
 });
 
 test("resume public readback follows runtime A while runtime B remains transient", () => {
@@ -525,7 +540,10 @@ test("custom-product recovery uses Passport version and manifests without treati
     assert.equal(publication.candidateVersion, "4.0.0-alpha.1");
     assert.equal(publication.manifest, undefined);
     assert.deepEqual(publication.npmArtifacts, []);
-    assert.deepEqual(publication.releaseAssets.map((entry) => path.basename(entry.absolutePath)), [path.basename(first)]);
+    assert.deepEqual(
+      publication.releaseAssets.map((entry) => path.basename(entry.absolutePath)),
+      [path.basename(first)],
+    );
     assert.equal(publication.publishRequiredArtifacts.length, 2);
     assert.ok(publication.publishRequiredArtifacts.every((entry) => entry.kind === "kungfu-product"));
   } finally {
@@ -534,30 +552,42 @@ test("custom-product recovery uses Passport version and manifests without treati
 });
 
 test("stable rematerialized recovery preserves candidate bytes but selects the final release version", () => {
-  assert.equal(resolveRecoveredPublicationVersion({
-    artifactVersion: "4.0.1-alpha.31",
-    channel: "release",
-    rematerializeOnResume: true,
-  }), "4.0.1");
-  assert.equal(resolveRecoveredPublicationVersion({
-    artifactVersion: "4.0.1-alpha.31",
-    channel: "release",
-  }), "4.0.1-alpha.31");
-  assert.equal(resolveRecoveredPublicationVersion({
-    artifactVersion: "4.0.1-alpha.31",
-    channel: "alpha",
-    rematerializeOnResume: true,
-  }), "4.0.1-alpha.31");
-
-  for (const artifactVersion of ["4.0.1", "4.0.1-alpha.33", "4.0.1-alpha.32"]) {
-    assert.equal(resolveRecoveredCandidateVersion({
-      artifactVersion,
-      publicationVersion: "4.0.1",
+  assert.equal(
+    resolveRecoveredPublicationVersion({
+      artifactVersion: "4.0.1-alpha.31",
       channel: "release",
       rematerializeOnResume: true,
-      targetRef: "release/v4/v4.0",
-      candidateRef: "publish-gate/release/v4/v4.0/4.0.1-alpha.33",
-    }), "4.0.1-alpha.33");
+    }),
+    "4.0.1",
+  );
+  assert.equal(
+    resolveRecoveredPublicationVersion({
+      artifactVersion: "4.0.1-alpha.31",
+      channel: "release",
+    }),
+    "4.0.1-alpha.31",
+  );
+  assert.equal(
+    resolveRecoveredPublicationVersion({
+      artifactVersion: "4.0.1-alpha.31",
+      channel: "alpha",
+      rematerializeOnResume: true,
+    }),
+    "4.0.1-alpha.31",
+  );
+
+  for (const artifactVersion of ["4.0.1", "4.0.1-alpha.33", "4.0.1-alpha.32"]) {
+    assert.equal(
+      resolveRecoveredCandidateVersion({
+        artifactVersion,
+        publicationVersion: "4.0.1",
+        channel: "release",
+        rematerializeOnResume: true,
+        targetRef: "release/v4/v4.0",
+        candidateRef: "publish-gate/release/v4/v4.0/4.0.1-alpha.33",
+      }),
+      "4.0.1-alpha.33",
+    );
   }
 
   const stableRecovery = {
@@ -568,22 +598,38 @@ test("stable rematerialized recovery preserves candidate bytes but selects the f
     targetRef: "release/v4/v4.0",
     candidateRef: "publish-gate/release/v4/v4.0/4.0.1-alpha.33",
   };
-  assert.throws(() => resolveRecoveredCandidateVersion({
-    ...stableRecovery,
-    candidateRef: "publish-gate/release/v4/v4.1/4.0.1-alpha.33",
-  }), /must descend from publish-gate\/release\/v4\/v4\.0\//u);
-  assert.throws(() => resolveRecoveredCandidateVersion({
-    ...stableRecovery,
-    candidateRef: "publish-gate/release/v4/v4.0/4.0.1",
-  }), /must bind an exact alpha version/u);
-  assert.throws(() => resolveRecoveredCandidateVersion({
-    ...stableRecovery,
-    candidateRef: "publish-gate/release/v4/v4.0/4.0.2-alpha.1",
-  }), /does not match publication 4\.0\.1/u);
-  assert.throws(() => resolveRecoveredCandidateVersion({
-    ...stableRecovery,
-    artifactVersion: "4.0.2-alpha.32",
-  }), /does not match publication 4\.0\.1/u);
+  assert.throws(
+    () =>
+      resolveRecoveredCandidateVersion({
+        ...stableRecovery,
+        candidateRef: "publish-gate/release/v4/v4.1/4.0.1-alpha.33",
+      }),
+    /must descend from publish-gate\/release\/v4\/v4\.0\//u,
+  );
+  assert.throws(
+    () =>
+      resolveRecoveredCandidateVersion({
+        ...stableRecovery,
+        candidateRef: "publish-gate/release/v4/v4.0/4.0.1",
+      }),
+    /must bind an exact alpha version/u,
+  );
+  assert.throws(
+    () =>
+      resolveRecoveredCandidateVersion({
+        ...stableRecovery,
+        candidateRef: "publish-gate/release/v4/v4.0/4.0.2-alpha.1",
+      }),
+    /does not match publication 4\.0\.1/u,
+  );
+  assert.throws(
+    () =>
+      resolveRecoveredCandidateVersion({
+        ...stableRecovery,
+        artifactVersion: "4.0.2-alpha.32",
+      }),
+    /does not match publication 4\.0\.1/u,
+  );
 });
 
 test("candidate recovery excludes credential-island manifests outside the Passport platform matrix", () => {
@@ -601,8 +647,14 @@ test("candidate recovery excludes credential-island manifests outside the Passpo
     const normalized = normalizePlatformManifests(downloads, {
       platformMatrix: [{ platformId: "macos-arm64", artifactName: "kungfu-macos-arm64-source" }],
     });
-    assert.deepEqual(normalized.manifests.map((entry) => entry.platform.id), ["macos-arm64"]);
-    assert.deepEqual(normalized.evidence.map((entry) => entry.artifactName), ["kungfu-macos-arm64-source"]);
+    assert.deepEqual(
+      normalized.manifests.map((entry) => entry.platform.id),
+      ["macos-arm64"],
+    );
+    assert.deepEqual(
+      normalized.evidence.map((entry) => entry.artifactName),
+      ["kungfu-macos-arm64-source"],
+    );
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
@@ -612,39 +664,54 @@ test("recovery accepts a target advanced by the same explicit durable transactio
   const input = fixture();
   const existingTransaction = durableTransaction(input, "publish_failed");
   const observedTargetSha = "a".repeat(40);
-  assert.deepEqual(validateRecoveryTargetRef({
-    targetSha: input.targetSha,
-    observedTargetSha,
-    expectedTransactionId: existingTransaction.id,
-    existingTransaction,
-    ancestry: { status: "ahead", mergeIsAncestor: true },
-  }), { advanced: true, observedSha: observedTargetSha });
+  assert.deepEqual(
+    validateRecoveryTargetRef({
+      targetSha: input.targetSha,
+      observedTargetSha,
+      expectedTransactionId: existingTransaction.id,
+      existingTransaction,
+      ancestry: { status: "ahead", mergeIsAncestor: true },
+    }),
+    { advanced: true, observedSha: observedTargetSha },
+  );
 
-  assert.throws(() => validateRecoveryTargetRef({
-    targetSha: input.targetSha,
-    observedTargetSha,
-  }), (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "target-ref-moved");
+  assert.throws(
+    () =>
+      validateRecoveryTargetRef({
+        targetSha: input.targetSha,
+        observedTargetSha,
+      }),
+    (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "target-ref-moved",
+  );
 });
 
 test("recovery rejects unrelated target advancement and conflicting transaction state", () => {
   const input = fixture();
   const existingTransaction = durableTransaction(input, "complete");
-  assert.throws(() => validateRecoveryTargetRef({
-    targetSha: input.targetSha,
-    observedTargetSha: "a".repeat(40),
-    expectedTransactionId: existingTransaction.id,
-    existingTransaction,
-    ancestry: { status: "diverged", mergeIsAncestor: false },
-  }), (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "target-ancestry-mismatch");
+  assert.throws(
+    () =>
+      validateRecoveryTargetRef({
+        targetSha: input.targetSha,
+        observedTargetSha: "a".repeat(40),
+        expectedTransactionId: existingTransaction.id,
+        existingTransaction,
+        ancestry: { status: "diverged", mergeIsAncestor: false },
+      }),
+    (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "target-ancestry-mismatch",
+  );
 
   existingTransaction.state = "repair_required";
-  assert.throws(() => validateRecoveryTargetRef({
-    targetSha: input.targetSha,
-    observedTargetSha: "a".repeat(40),
-    expectedTransactionId: existingTransaction.id,
-    existingTransaction,
-    ancestry: { status: "ahead", mergeIsAncestor: true },
-  }), (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "transaction-state-conflict");
+  assert.throws(
+    () =>
+      validateRecoveryTargetRef({
+        targetSha: input.targetSha,
+        observedTargetSha: "a".repeat(40),
+        expectedTransactionId: existingTransaction.id,
+        existingTransaction,
+        ancestry: { status: "ahead", mergeIsAncestor: true },
+      }),
+    (error) => error instanceof ReleaseCandidateRecoveryError && error.code === "transaction-state-conflict",
+  );
 });
 
 test("recovered sealed publication identity stays bound to the original candidate runtime", () => {
@@ -667,19 +734,17 @@ test("recovered sealed publication identity stays bound to the original candidat
     passport: secondInput.passport,
     candidateRuntimeSha: RUNTIME_SHA,
   });
-  assert.notEqual(
-    verifyReleaseCandidateRecovery(firstInput).receipt.buildchainToolingSha,
-    verifyReleaseCandidateRecovery(secondInput).receipt.buildchainToolingSha,
-  );
+  assert.notEqual(verifyReleaseCandidateRecovery(firstInput).receipt.buildchainToolingSha, verifyReleaseCandidateRecovery(secondInput).receipt.buildchainToolingSha);
   assert.deepEqual(second, first);
   assert.equal(first.runtimeSha, RUNTIME_SHA);
   assert.throws(
-    () => createRecoveredPublicationCandidate({
-      allFiles,
-      repository: firstInput.candidateRepository,
-      passport: firstInput.passport,
-      candidateRuntimeSha: "9".repeat(40),
-    }),
+    () =>
+      createRecoveredPublicationCandidate({
+        allFiles,
+        repository: firstInput.candidateRepository,
+        passport: firstInput.passport,
+        candidateRuntimeSha: "9".repeat(40),
+      }),
     /recovered publication candidate runtime mismatch/,
   );
 });
@@ -748,10 +813,7 @@ test("recovery accepts only byte-identical Buildchain manifest and summary sidec
     sha256: `sha256:${"8".repeat(64)}`,
   };
   input.artifacts[0].files.push(manifestSidecar, summarySidecar);
-  input.platformManifestEvidence[0].files.push(
-    { path: "manifest.json", size: manifestSidecar.size, sha256: manifestSidecar.sha256 },
-    { path: "summary.json", size: summarySidecar.size, sha256: summarySidecar.sha256 },
-  );
+  input.platformManifestEvidence[0].files.push({ path: "manifest.json", size: manifestSidecar.size, sha256: manifestSidecar.sha256 }, { path: "summary.json", size: summarySidecar.size, sha256: summarySidecar.sha256 });
   assert.equal(verifyReleaseCandidateRecovery(input).receipt.action, "reused");
 
   input.platformManifestEvidence[0].files[2].sha256 = `sha256:${"9".repeat(64)}`;
@@ -790,10 +852,13 @@ test("recovery rejects missing and expired candidate artifacts", () => {
 });
 
 test("recovery rejects transaction identity and candidate-root conflicts", () => {
-  expectCode("transaction-identity-conflict", fixture({
-    expectedTransactionId: "tx-expected",
-    existingTransaction: { id: "tx-other", state: "finalizing" },
-  }));
+  expectCode(
+    "transaction-identity-conflict",
+    fixture({
+      expectedTransactionId: "tx-expected",
+      existingTransaction: { id: "tx-other", state: "finalizing" },
+    }),
+  );
   const candidateConflict = fixture();
   candidateConflict.existingTransaction = {
     ...durableTransaction(candidateConflict, "publishing"),
@@ -983,19 +1048,23 @@ test("anchor request parser rejects unbound workflow-dispatch candidates", () =>
   };
   assert.deepEqual(resolveAnchorRecoveryRequest({ passport: input.passport, buildSummary, transactionId: "transaction-1" }), request);
   request.runtime.sha = TARGET_SHA;
-  assert.throws(() => resolveAnchorRecoveryRequest({
-    passport: input.passport,
-    buildSummary: {
-      publishSource: {
-        releaseManifest: JSON.stringify({
-          sourceRef: "publish-gate/anchor",
-          sourceSha: SOURCE_SHA,
-          anchorRequest: request,
-        }),
-      },
-    },
-    transactionId: "transaction-1",
-  }), /does not bind/u);
+  assert.throws(
+    () =>
+      resolveAnchorRecoveryRequest({
+        passport: input.passport,
+        buildSummary: {
+          publishSource: {
+            releaseManifest: JSON.stringify({
+              sourceRef: "publish-gate/anchor",
+              sourceSha: SOURCE_SHA,
+              anchorRequest: request,
+            }),
+          },
+        },
+        transactionId: "transaction-1",
+      }),
+    /does not bind/u,
+  );
 });
 
 test("recovery binds an additional product payload manifest to candidate, summary, tree, and bytes", () => {
@@ -1019,10 +1088,7 @@ test("recovery binds an additional product payload manifest to candidate, summar
     downloadedSize: 21,
     digest: `sha256:${"a".repeat(64)}`,
     downloadedDigest: `sha256:${"a".repeat(64)}`,
-    files: [
-      productManifest.files[0],
-      { path: productManifest.manifestPath, size: 17, sha256: `sha256:${"b".repeat(64)}` },
-    ],
+    files: [productManifest.files[0], { path: productManifest.manifestPath, size: 17, sha256: `sha256:${"b".repeat(64)}` }],
   });
   assert.equal(verifyReleaseCandidateRecovery(input).receipt.action, "reused");
   input.productPayloadManifests[0].files[0].size = 14;
@@ -1031,52 +1097,13 @@ test("recovery binds an additional product payload manifest to candidate, summar
 
 test("workflow recovery is a fresh-event path and statically excludes product installation", async () => {
   const fs = await import("node:fs");
-  const advanced = fs.readFileSync(
-    new URL(
-      "../.github/workflows/.release-candidate-promote.yml",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const publicWorkflow = fs.readFileSync(
-    new URL(
-      "../.github/workflows/release-candidate-promote.yml",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const refPromotion = fs.readFileSync(
-    new URL(
-      "../.github/workflows/buildchain-ref-promotion.yml",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const dogfoodFailure = fs.readFileSync(
-    new URL(
-      "../.github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const alphaPromotion = fs.readFileSync(
-    new URL(
-      "../actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const durableOperations = fs.readFileSync(
-    new URL(
-      "../actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
-      import.meta.url,
-    ),
-    "utf8",
-  );
-  const promoteLib = fs.readFileSync(
-    new URL("../actions/promote-buildchain-ref/lib.js", import.meta.url),
-    "utf8",
-  );
+  const advanced = fs.readFileSync(new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url), "utf8");
+  const publicWorkflow = fs.readFileSync(new URL("../.github/workflows/release-candidate-promote.yml", import.meta.url), "utf8");
+  const refPromotion = fs.readFileSync(new URL("../.github/workflows/buildchain-ref-promotion.yml", import.meta.url), "utf8");
+  const dogfoodFailure = fs.readFileSync(new URL("../.github/workflows/buildchain-candidate-recovery-dogfood-failure.yml", import.meta.url), "utf8");
+  const alphaPromotion = fs.readFileSync(new URL("../actions/promote-buildchain-ref/internal/promote-alpha-channel.js", import.meta.url), "utf8");
+  const durableOperations = fs.readFileSync(new URL("../actions/promote-buildchain-ref/internal/durable-transaction-operations.js", import.meta.url), "utf8");
+  const promoteLib = fs.readFileSync(new URL("../actions/promote-buildchain-ref/lib.js", import.meta.url), "utf8");
   for (const input of [
     "resume-candidate-repository",
     "resume-candidate-run-id",
@@ -1091,67 +1118,34 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     assert.match(publicWorkflow, new RegExp(`${input}:`));
   }
   assert.match(advanced, /Preflight PR[^]*pnpm@11[^]*resume-from-candidate-run/);
-  assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
+  assert.match(advanced, /name: Install promotion dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' && github\.repository != inputs\.buildchain-repository \}\}/);
+  assert.match(advanced, /name: Bridge Buildchain self-runtime dependencies\n\s+if: \$\{\{ github\.repository == inputs\.buildchain-repository \}\}/);
+  assert.match(advanced, /ln -s \.buildchain\/runtime\/node_modules node_modules/);
   assert.match(
     advanced,
-    /name: Bridge Buildchain self-runtime dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id != '' && github\.repository == inputs\.buildchain-repository \}\}/,
+    /test ! -d \.buildchain\/runtime\/promotion-shell\/actions\/promote-buildchain-ref \|\| cp -R \.buildchain\/runtime\/promotion-shell\/actions\/promote-buildchain-ref\/\. \.buildchain\/runtime\/actions\/promote-buildchain-ref\//,
   );
-  assert.match(advanced, /ln -s \.buildchain\/runtime\/node_modules node_modules/);
-  assert.match(advanced, /test ! -d \.buildchain\/runtime\/promotion-shell\/actions\/promote-buildchain-ref \|\| cp -R \.buildchain\/runtime\/promotion-shell\/actions\/promote-buildchain-ref\/\. \.buildchain\/runtime\/actions\/promote-buildchain-ref\//);
   assert.match(advanced, /name: Install exact publication planning dependencies\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Resolve exact publication transaction version\n\s+id: plan\n\s+if: \$\{\{ inputs\.resume-candidate-run-id == '' \}\}/);
   assert.match(advanced, /name: Reuse sealed candidate publication version/);
   assert.match(advanced, /release-candidate-publication-version/);
-  assert.match(
-    advanced,
-    /BUILDCHAIN_RECOVERED_CANDIDATE_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.version \}\}/,
-  );
-  assert.match(
-    advanced,
-    /BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.publication-version \}\}/,
-  );
+  assert.match(advanced, /BUILDCHAIN_RECOVERED_CANDIDATE_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.version \}\}/);
+  assert.match(advanced, /BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: \$\{\{ needs\.release-candidate-preflight\.outputs\.publication-version \}\}/);
   assert.match(advanced, /planned-publication-version=\$\{BUILDCHAIN_RECOVERED_PUBLICATION_VERSION\}/);
   assert.match(advanced, /planned-release-candidate-version=\$\{BUILDCHAIN_RECOVERED_CANDIDATE_VERSION\}/);
   assert.match(advanced, /publish-sealed-bundle-root: \$\{\{ steps\.rc\.outputs\.publish-sealed-bundle-root \}\}/);
-  assert.match(
-    advanced,
-    /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/,
-  );
+  assert.match(advanced, /publish-required-artifacts-path: \$\{\{ inputs\.publish-required-artifacts-json == '' && steps\.rc\.outputs\.publish-required-artifacts-path \|\| '' \}\}/);
   assert.match(advanced, /BUILDCHAIN_EXPECTED_TRANSACTION_ID: \$\{\{ inputs\.resume-transaction-id \}\}/);
-  assert.equal(
-    advanced.match(/BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME: \$\{\{ inputs\.publish-rematerialize-on-resume \}\}/g)?.length,
-    2,
-  );
+  assert.equal(advanced.match(/BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME: \$\{\{ inputs\.publish-rematerialize-on-resume \}\}/g)?.length, 2);
   assert.match(advanced, /BUILDCHAIN_RELEASE_CANDIDATE_RECOVERY_RECEIPT_PATH: \$\{\{ steps\.rc\.outputs\.release-candidate-recovery-receipt-path \}\}/);
-  assert.match(
-    advanced,
-    /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\.release-passport-v4-runtime-resume-evidence-json \|\| steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}/,
-  );
-  assert.match(
-    advanced,
-    /release-passport-v4-runtime-resume-evidence-command: \$\{\{ steps\.rc\.outputs\.release-candidate-publication-qualification-path == '' && steps\.rc\.outputs\.v4-runtime-resume-finalize-command \|\| '' \}\}/,
-  );
-  assert.match(
-    alphaPromotion,
-    /updateTag\(context\.rule\.alphaTag,[\s\S]*?markComplete\(\)/,
-  );
-  assert.match(
-    durableOperations,
-    /completeTransactionFinalization\([\s\S]*?collectAndPersistReleasePassport\(/,
-  );
-  assert.match(
-    promoteLib,
-    /generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs[\s\S]*?collectGitHubReleasePassport\(/,
-  );
+  assert.match(advanced, /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\.release-passport-v4-runtime-resume-evidence-json \|\| steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}/);
+  assert.match(advanced, /release-passport-v4-runtime-resume-evidence-command: \$\{\{ steps\.rc\.outputs\.release-candidate-publication-qualification-path == '' && steps\.rc\.outputs\.v4-runtime-resume-finalize-command \|\| '' \}\}/);
+  assert.match(alphaPromotion, /updateTag\(context\.rule\.alphaTag,[\s\S]*?markComplete\(\)/);
+  assert.match(durableOperations, /completeTransactionFinalization\([\s\S]*?collectAndPersistReleasePassport\(/);
+  assert.match(promoteLib, /generatedV4RuntimeResumeEvidence = generateReleaseEvidenceInputs[\s\S]*?collectGitHubReleasePassport\(/);
   assert.match(advanced, /if \[ -f "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" \]; then/);
-  assert.match(
-    advanced,
-    /cp "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" "\$\{RELEASE_PASSPORT_OUTPUT_DIR\}\//,
-  );
-  assert.match(
-    refPromotion,
-    /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
-  );
+  assert.match(advanced, /cp "\$\{\{ steps\.rc\.outputs\.v4-runtime-resume-evidence-path \}\}" "\$\{RELEASE_PASSPORT_OUTPUT_DIR\}\//);
+  assert.match(refPromotion, /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/);
   assert.match(
     refPromotion,
     /promote-stable:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-sha'\] \|\| inputs\['recover-durable-transaction'\] == true && github\.sha \|\| 'v4' \}\}/,
@@ -1160,10 +1154,7 @@ test("workflow recovery is a fresh-event path and statically excludes product in
     publicWorkflow,
     /stable:[\s\S]*resume-candidate-repository: \$\{\{ inputs\.resume-candidate-repository \}\}[\s\S]*resume-candidate-run-id: \$\{\{ inputs\.resume-candidate-run-id \}\}[\s\S]*resume-expected-source-tree: \$\{\{ inputs\.resume-expected-source-tree \}\}[\s\S]*resume-expected-candidate-runtime-sha: \$\{\{ inputs\.resume-expected-candidate-runtime-sha \}\}[\s\S]*resume-buildchain-runtime-sha: \$\{\{ inputs\.resume-buildchain-runtime-sha \}\}/,
   );
-  assert.match(
-    refPromotion,
-    /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/,
-  );
+  assert.match(refPromotion, /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/);
   assert.doesNotMatch(refPromotion, /^\s+github-release-payload-patterns: "\*\.tgz"$/m);
   assert.match(dogfoodFailure, /workflow_dispatch:/);
   assert.match(dogfoodFailure, /__candidate-recovery-dogfood-missing\.yml@v3-alpha/);
