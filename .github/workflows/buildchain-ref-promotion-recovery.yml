@@ -83,7 +83,6 @@ jobs:
       publication-auto-admission: true
       publication-auto-no-gate: true
       publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion-recovery.yml
-      publication-authority-workflow-path: .github/workflows/.release-candidate-promote.yml
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain
       publication-package-name: "@kungfu-tech/buildchain"
