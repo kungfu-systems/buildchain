@@ -198,7 +198,24 @@
         "mergeCritical": false,
         "metric": "protected release completion latency",
         "expectedContributionSeconds": 0,
-        "rationale": "This existing promotion lane now preserves the complete product publication transaction for v3 and v4 before the v4 declarative Provider Plane tail."
+        "rationale": "This is the existing v3 promotion lane under an explicit legacy identity, not an added execution path."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-candidate-promote.yml#v4-declarative-promote",
+      "authorityClass": "release",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 30,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "protected release completion latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The v4 provider lane replaces consumer tail execution only for release invocations and is outside merge-critical CI."
       }
     },
     {

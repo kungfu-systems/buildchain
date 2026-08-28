@@ -5,6 +5,11 @@
     "baselineRevision": "4271eceaa2aa11dc98d2917dcb390f943ca42031",
     "currentRevision": "working-tree"
   },
+  "totalExcessLedger": {
+    "metric": "calibrated-full-dimensional-excess-v1",
+    "measuredExcess": 68014,
+    "current": 59953
+  },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
     "capability": "maintainability-governance",
@@ -133,10 +138,10 @@
       "actions/promote-buildchain-ref/internal/version-state-operations.js": {
         "baseline": {
           "functions": {
-            "createVersionStateOperations@27": {
+            "createVersionStateOperations@131": {
               "lines": 415
             },
-            "createVersionStateCommit@141": {
+            "createVersionStateCommit@245": {
               "lines": 286,
               "complexity": 27
             }
@@ -144,10 +149,10 @@
         },
         "current": {
           "functions": {
-            "createVersionStateOperations@27": {
+            "createVersionStateOperations@131": {
               "lines": 415
             },
-            "createVersionStateCommit@141": {
+            "createVersionStateCommit@245": {
               "lines": 286,
               "complexity": 27
             }
@@ -155,10 +160,10 @@
         },
         "target": {
           "functions": {
-            "createVersionStateOperations@27": {
+            "createVersionStateOperations@131": {
               "lines": 180
             },
-            "createVersionStateCommit@141": {
+            "createVersionStateCommit@245": {
               "lines": 180,
               "complexity": 25
             }
@@ -169,109 +174,43 @@
         "baseline": {
           "lines": 5132,
           "functions": {
-            "resolvePublishContract@257": {
+            "resolvePublishContract@258": {
               "complexity": 30
             },
-            "validatePromotionReleaseCandidate@527": {
+            "validatePromotionReleaseCandidate@528": {
               "complexity": 27
             },
-            "runPublishTransaction@1418": {
+            "runPublishTransaction@1419": {
               "lines": 247,
               "complexity": 33
-            },
-            "collectAndPersistReleasePassport@1806": {
-              "lines": 276,
-              "complexity": 60
-            },
-            "createRefMutationOperations@3171": {
-              "lines": 648
-            },
-            "updateBranch@3401": {
-              "lines": 378,
-              "complexity": 34
-            },
-            "createReconciliationOperations@3819": {
-              "lines": 672
-            },
-            "assertReleasePrOrVersionStateParent@4126": {
-              "lines": 335,
-              "complexity": 42
-            },
-            "promoteBuildchainRefs@4508": {
-              "lines": 407,
-              "complexity": 46
             }
           }
         },
         "current": {
-          "lines": 4788,
+          "lines": 3471,
           "functions": {
-            "resolvePublishContract@257": {
+            "resolvePublishContract@258": {
               "complexity": 30
             },
-            "validatePromotionReleaseCandidate@527": {
+            "validatePromotionReleaseCandidate@528": {
               "complexity": 27
             },
-            "runPublishTransaction@1418": {
+            "runPublishTransaction@1419": {
               "lines": 247,
               "complexity": 33
-            },
-            "collectAndPersistReleasePassport@1806": {
-              "lines": 276,
-              "complexity": 60
-            },
-            "createRefMutationOperations@3171": {
-              "lines": 648
-            },
-            "updateBranch@3401": {
-              "lines": 378,
-              "complexity": 34
-            },
-            "createReconciliationOperations@3819": {
-              "lines": 672
-            },
-            "assertReleasePrOrVersionStateParent@4126": {
-              "lines": 335,
-              "complexity": 42
-            },
-            "promoteBuildchainRefs@4508": {
-              "lines": 260,
-              "complexity": 46
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "resolvePublishContract@257": {
+            "resolvePublishContract@258": {
               "complexity": 25
             },
-            "validatePromotionReleaseCandidate@527": {
+            "validatePromotionReleaseCandidate@528": {
               "complexity": 25
             },
-            "runPublishTransaction@1418": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "collectAndPersistReleasePassport@1806": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "createRefMutationOperations@3171": {
-              "lines": 180
-            },
-            "updateBranch@3401": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "createReconciliationOperations@3819": {
-              "lines": 180
-            },
-            "assertReleasePrOrVersionStateParent@4126": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "promoteBuildchainRefs@4508": {
+            "runPublishTransaction@1419": {
               "lines": 180,
               "complexity": 25
             }
@@ -887,23 +826,23 @@
         "baseline": {
           "lines": 2878,
           "functions": {
-            "collectPaperStatus@1483": {
+            "collectPaperStatus@1117": {
               "lines": 190,
               "complexity": 47
             },
-            "validatePaperProvisioningAuthority@1674": {
+            "validatePaperProvisioningAuthority@1308": {
               "complexity": 45
             }
           }
         },
         "current": {
-          "lines": 2878,
+          "lines": 2512,
           "functions": {
-            "collectPaperStatus@1483": {
+            "collectPaperStatus@1117": {
               "lines": 190,
               "complexity": 47
             },
-            "validatePaperProvisioningAuthority@1674": {
+            "validatePaperProvisioningAuthority@1308": {
               "complexity": 45
             }
           }
@@ -911,11 +850,11 @@
         "target": {
           "lines": 600,
           "functions": {
-            "collectPaperStatus@1483": {
+            "collectPaperStatus@1117": {
               "lines": 180,
               "complexity": 25
             },
-            "validatePaperProvisioningAuthority@1674": {
+            "validatePaperProvisioningAuthority@1308": {
               "complexity": 25
             }
           }
@@ -965,29 +904,6 @@
               "complexity": 25
             },
             "verifyPublicationAdmission@791": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/publication-control-plane-audit.js": {
-        "baseline": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
-              "complexity": 87
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
-              "complexity": 87
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "evaluatePublicationControlPlaneSnapshot@75": {
               "complexity": 25
             }
           }
@@ -1101,49 +1017,49 @@
         "baseline": {
           "lines": 2987,
           "functions": {
-            "mergeAuthoritativePassportBase@411": {
+            "mergeAuthoritativePassportBase@407": {
               "complexity": 29
             },
-            "normalizeKfd2Claim@836": {
+            "normalizeKfd2Claim@832": {
               "complexity": 59
             },
-            "createReleasePassport@1286": {
+            "createReleasePassport@1165": {
               "lines": 268,
               "complexity": 30
             },
-            "collectGitHubReleasePassport@1586": {
+            "collectGitHubReleasePassport@1465": {
               "lines": 304,
               "complexity": 43
             },
-            "validateKfd2ReleaseTrustPassportAudit@1908": {
+            "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 65
             },
-            "validateReleaseEvidenceAttachments@2227": {
+            "validateReleaseEvidenceAttachments@2105": {
               "complexity": 26
             }
           }
         },
         "current": {
-          "lines": 2987,
+          "lines": 2883,
           "functions": {
-            "mergeAuthoritativePassportBase@411": {
+            "mergeAuthoritativePassportBase@407": {
               "complexity": 29
             },
-            "normalizeKfd2Claim@836": {
+            "normalizeKfd2Claim@832": {
               "complexity": 59
             },
-            "createReleasePassport@1286": {
+            "createReleasePassport@1165": {
               "lines": 268,
               "complexity": 30
             },
-            "collectGitHubReleasePassport@1586": {
+            "collectGitHubReleasePassport@1465": {
               "lines": 304,
               "complexity": 43
             },
-            "validateKfd2ReleaseTrustPassportAudit@1908": {
+            "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 65
             },
-            "validateReleaseEvidenceAttachments@2227": {
+            "validateReleaseEvidenceAttachments@2105": {
               "complexity": 26
             }
           }
@@ -1151,24 +1067,24 @@
         "target": {
           "lines": 600,
           "functions": {
-            "mergeAuthoritativePassportBase@411": {
+            "mergeAuthoritativePassportBase@407": {
               "complexity": 25
             },
-            "normalizeKfd2Claim@836": {
+            "normalizeKfd2Claim@832": {
               "complexity": 25
             },
-            "createReleasePassport@1286": {
+            "createReleasePassport@1165": {
               "lines": 180,
               "complexity": 25
             },
-            "collectGitHubReleasePassport@1586": {
+            "collectGitHubReleasePassport@1465": {
               "lines": 180,
               "complexity": 25
             },
-            "validateKfd2ReleaseTrustPassportAudit@1908": {
+            "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 25
             },
-            "validateReleaseEvidenceAttachments@2227": {
+            "validateReleaseEvidenceAttachments@2105": {
               "complexity": 25
             }
           }
@@ -1363,21 +1279,21 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@350": {
+            "evaluateMaintainability@353": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@350": {
+            "evaluateMaintainability@353": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@350": {
+            "evaluateMaintainability@353": {
               "complexity": 25
             }
           }
@@ -1865,31 +1781,13 @@
       },
       "scripts/run-lifecycle-core.mjs": {
         "baseline": {
-          "lines": 885,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 471,
-              "complexity": 74
-            }
-          }
+          "lines": 885
         },
         "current": {
-          "lines": 885,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 471,
-              "complexity": 74
-            }
-          }
+          "lines": 850
         },
         "target": {
-          "lines": 600,
-          "functions": {
-            "runLifecycle@411": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
+          "lines": 600
         }
       },
       "scripts/stable-candidate-patrol.mjs": {
@@ -2091,6 +1989,47 @@
             }
           }
         }
+      },
+      "actions/promote-buildchain-ref/internal/promotion-operations.js": {
+        "baseline": {
+          "lines": 1320,
+          "functions": {
+            "updateBranch@158": {
+              "lines": 378,
+              "complexity": 34
+            },
+            "assertReleasePrOrVersionStateParent@795": {
+              "lines": 335,
+              "complexity": 42
+            }
+          }
+        },
+        "current": {
+          "lines": 1171,
+          "functions": {
+            "updateBranch@158": {
+              "lines": 378,
+              "complexity": 34
+            },
+            "assertReleasePrOrVersionStateParent@795": {
+              "lines": 335,
+              "complexity": 42
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "updateBranch@158": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "assertReleasePrOrVersionStateParent@795": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
       }
     },
     "rust": {
@@ -2113,41 +2052,6 @@
           "functions": {
             "execute@222": {
               "lines": 140
-            }
-          }
-        }
-      },
-      "crates/buildchain-v4-contracts/src/compatibility_facts/verifier.rs": {
-        "baseline": {
-          "functions": {
-            "load_bundle@159": {
-              "complexity": 38
-            },
-            "verify_path_inner@316": {
-              "lines": 216,
-              "complexity": 68
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "load_bundle@159": {
-              "complexity": 38
-            },
-            "verify_path_inner@316": {
-              "lines": 216,
-              "complexity": 68
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "load_bundle@159": {
-              "complexity": 30
-            },
-            "verify_path_inner@316": {
-              "lines": 140,
-              "complexity": 30
             }
           }
         }
@@ -2356,44 +2260,36 @@
             "<anonymous@170>@170": {
               "lines": 195
             },
-            "<anonymous@366>@366": {
-              "lines": 872,
-              "complexity": 57
-            },
-            "<anonymous@1426>@1426": {
+            "<anonymous@553>@553": {
               "lines": 183
             },
-            "<anonymous@1610>@1610": {
+            "<anonymous@737>@737": {
               "lines": 506
             },
-            "<anonymous@3022>@3022": {
+            "<anonymous@2153>@2153": {
               "lines": 249
             },
-            "<anonymous@4206>@4206": {
+            "<anonymous@3337>@3337": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 4549,
+          "lines": 3680,
           "functions": {
             "<anonymous@170>@170": {
               "lines": 195
             },
-            "<anonymous@366>@366": {
-              "lines": 872,
-              "complexity": 57
-            },
-            "<anonymous@1426>@1426": {
+            "<anonymous@553>@553": {
               "lines": 183
             },
-            "<anonymous@1610>@1610": {
+            "<anonymous@737>@737": {
               "lines": 506
             },
-            "<anonymous@3022>@3022": {
+            "<anonymous@2153>@2153": {
               "lines": 249
             },
-            "<anonymous@4206>@4206": {
+            "<anonymous@3337>@3337": {
               "lines": 188
             }
           }
@@ -2404,20 +2300,16 @@
             "<anonymous@170>@170": {
               "lines": 180
             },
-            "<anonymous@366>@366": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "<anonymous@1426>@1426": {
+            "<anonymous@553>@553": {
               "lines": 180
             },
-            "<anonymous@1610>@1610": {
+            "<anonymous@737>@737": {
               "lines": 180
             },
-            "<anonymous@3022>@3022": {
+            "<anonymous@2153>@2153": {
               "lines": 180
             },
-            "<anonymous@4206>@4206": {
+            "<anonymous@3337>@3337": {
               "lines": 180
             }
           }
@@ -2639,39 +2531,39 @@
         "baseline": {
           "lines": 4220,
           "functions": {
-            "<anonymous@2656>@2656": {
+            "<anonymous@4>@4": {
               "lines": 195
             },
-            "<anonymous@2852>@2852": {
+            "<anonymous@200>@200": {
               "lines": 181
             },
-            "<anonymous@3034>@3034": {
+            "<anonymous@382>@382": {
               "lines": 184
             },
-            "<anonymous@3348>@3348": {
+            "<anonymous@696>@696": {
               "lines": 188
             },
-            "<anonymous@3723>@3723": {
+            "<anonymous@904>@904": {
               "lines": 204
             }
           }
         },
         "current": {
-          "lines": 4220,
+          "lines": 1371,
           "functions": {
-            "<anonymous@2656>@2656": {
+            "<anonymous@4>@4": {
               "lines": 195
             },
-            "<anonymous@2852>@2852": {
+            "<anonymous@200>@200": {
               "lines": 181
             },
-            "<anonymous@3034>@3034": {
+            "<anonymous@382>@382": {
               "lines": 184
             },
-            "<anonymous@3348>@3348": {
+            "<anonymous@696>@696": {
               "lines": 188
             },
-            "<anonymous@3723>@3723": {
+            "<anonymous@904>@904": {
               "lines": 204
             }
           }
@@ -2679,81 +2571,19 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@2656>@2656": {
+            "<anonymous@4>@4": {
               "lines": 180
             },
-            "<anonymous@2852>@2852": {
+            "<anonymous@200>@200": {
               "lines": 180
             },
-            "<anonymous@3034>@3034": {
+            "<anonymous@382>@382": {
               "lines": 180
             },
-            "<anonymous@3348>@3348": {
+            "<anonymous@696>@696": {
               "lines": 180
             },
-            "<anonymous@3723>@3723": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "tests/promote-buildchain-ref-recovery.test.mjs": {
-        "baseline": {
-          "lines": 4814,
-          "functions": {
-            "<anonymous@535>@535": {
-              "lines": 262
-            },
-            "<anonymous@1545>@1545": {
-              "lines": 252
-            },
-            "<anonymous@2248>@2248": {
-              "lines": 184
-            },
-            "<anonymous@3059>@3059": {
-              "lines": 219
-            },
-            "<anonymous@4096>@4096": {
-              "lines": 232
-            }
-          }
-        },
-        "current": {
-          "lines": 4814,
-          "functions": {
-            "<anonymous@535>@535": {
-              "lines": 262
-            },
-            "<anonymous@1545>@1545": {
-              "lines": 252
-            },
-            "<anonymous@2248>@2248": {
-              "lines": 184
-            },
-            "<anonymous@3059>@3059": {
-              "lines": 219
-            },
-            "<anonymous@4096>@4096": {
-              "lines": 232
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "<anonymous@535>@535": {
-              "lines": 180
-            },
-            "<anonymous@1545>@1545": {
-              "lines": 180
-            },
-            "<anonymous@2248>@2248": {
-              "lines": 180
-            },
-            "<anonymous@3059>@3059": {
-              "lines": 180
-            },
-            "<anonymous@4096>@4096": {
+            "<anonymous@904>@904": {
               "lines": 180
             }
           }
@@ -2763,23 +2593,21 @@
         "baseline": {
           "lines": 4211,
           "functions": {
-            "<anonymous@3165>@3165": {
+            "<anonymous@62>@62": {
               "lines": 203
             }
           }
         },
         "current": {
-          "lines": 4211,
           "functions": {
-            "<anonymous@3165>@3165": {
+            "<anonymous@62>@62": {
               "lines": 203
             }
           }
         },
         "target": {
-          "lines": 600,
           "functions": {
-            "<anonymous@3165>@3165": {
+            "<anonymous@62>@62": {
               "lines": 180
             }
           }
@@ -2899,14 +2727,14 @@
         "baseline": {
           "functions": {
             "<anonymous@76>@76": {
-              "lines": 296
+              "lines": 292
             }
           }
         },
         "current": {
           "functions": {
             "<anonymous@76>@76": {
-              "lines": 296
+              "lines": 292
             }
           }
         },
@@ -2950,6 +2778,167 @@
         "target": {
           "lines": 600
         }
+      },
+      "tests/build-surface-reusable-build.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 342
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 342
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/build-surface-reusable-build-signing.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 266
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 266
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/build-surface-reusable-build-artifacts.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 232
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 230
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-durable-recovery.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 219
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 219
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-major-promotion.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@291>@291": {
+              "lines": 228
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@291>@291": {
+              "lines": 228
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@291>@291": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 262
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 262
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 244
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 244
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@3>@3": {
+              "lines": 180
+            }
+          }
+        }
       }
     },
     "workflows": {
@@ -2962,7 +2951,7 @@
           "decisions": 113
         },
         "current": {
-          "lines": 3370,
+          "lines": 3341,
           "jobs": 14,
           "steps": 194,
           "maxStepsPerJob": 44,
@@ -2997,7 +2986,7 @@
           "decisions": 27
         },
         "current": {
-          "lines": 1007,
+          "lines": 1010,
           "maxStepsPerJob": 30,
           "decisions": 27
         },
@@ -3016,11 +3005,11 @@
           "decisions": 75
         },
         "current": {
-          "lines": 2608,
-          "jobs": 12,
-          "steps": 91,
+          "lines": 2707,
+          "jobs": 13,
+          "steps": 99,
           "maxStepsPerJob": 47,
-          "decisions": 70
+          "decisions": 75
         },
         "target": {
           "lines": 600,
@@ -3171,9 +3160,7 @@
   },
   "hotspots": [
     "tests/v3-v4-capability-inventory.test.mjs",
-    "packages/core/v4-floating-consumer-policy.js",
     "tests/v4-floating-consumer-policy-contract.test.mjs",
-    "tests/v4-declarative-promotion-mode.test.mjs",
     ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/buildchain-ref-promotion.yml",
     "tests/release-candidate-recovery.test.mjs",
@@ -3191,10 +3178,13 @@
     "tests/promotion-channel-router.test.mjs",
     "scripts/site-capability-metadata.mjs",
     "tests/v4-floating-consumer-policy.test.mjs",
+    "scripts/buildchain-cli-help.mjs",
     "scripts/check-v4-floating-consumer-policy-contract.mjs",
-    "packages/core/dev-delivery-warrant-state.js",
     "tests/dev-delivery-warrant.test.mjs",
     "actions/promote-buildchain-ref/internal/version-state.js",
+    "packages/core/v4-floating-consumer-release-passport.js",
+    "packages/core/release-passport.js",
+    "tests/promote-buildchain-ref-governance.test.mjs",
     "scripts/buildchain-cli-help.mjs"
   ],
   "burnDownSlices": [
@@ -3203,21 +3193,35 @@
       "path": "actions/promote-buildchain-ref/lib.js",
       "metric": "lines",
       "baseline": 5132,
-      "current": 4788
+      "current": 3471
     },
     {
       "domain": "tests",
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 4549
+      "current": 3680
     },
     {
       "domain": "workflows",
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 2608
+      "current": 2707
+    },
+    {
+      "domain": "sources",
+      "path": "packages/core/release-passport.js",
+      "metric": "lines",
+      "baseline": 2987,
+      "current": 2883
+    },
+    {
+      "domain": "sources",
+      "path": "packages/core/paper.js",
+      "metric": "lines",
+      "baseline": 2878,
+      "current": 2512
     }
   ]
 }

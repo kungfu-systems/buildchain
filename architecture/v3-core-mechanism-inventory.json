@@ -57,7 +57,7 @@
       {
         "mechanismId": "publish-transaction",
         "root": "actions/promote-buildchain-ref/internal",
-        "pattern": "^(?:durable-transaction-[a-z-]+|existing-version-state)\\.js$"
+        "pattern": "^durable-transaction-[a-z-]+\\.js$"
       },
       {
         "mechanismId": "publish-transaction",
@@ -624,12 +624,13 @@
         "scripts/release-transaction.mjs",
         "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
         "actions/promote-buildchain-ref/internal/durable-transaction-store.js",
-        "actions/promote-buildchain-ref/internal/existing-version-state.js",
+        "actions/promote-buildchain-ref/internal/version-state-operations.js",
         "actions/promote-buildchain-ref/reuse-complete-release.js"
       ],
       "testPaths": [
         "tests/publish-transaction.test.mjs",
-        "tests/promote-buildchain-ref.test.mjs"
+        "tests/promote-buildchain-ref.test.mjs",
+        "tests/promote-buildchain-ref-facade-contracts.test.mjs"
       ],
       "migrationDisposition": "primary-rust-authority-with-v3-record-reader",
       "unresolved": [

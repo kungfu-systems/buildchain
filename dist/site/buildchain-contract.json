@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "4.0.1-alpha.42",
+    "version": "4.0.1-alpha.32",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v4",
@@ -1361,7 +1361,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:63e635acfd386cbc8839d427f2647a312c63a5bb66204bc12b4e79642dccba50",
+      "auditDigest": "sha256:3b1346cb6a1499a2c49c05f28f1c9c0092692b66dcacf478266b413c9c508f31",
       "compatibleBreakingDigests": [
         "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
       ],
@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:3fb58bdf0a847b7e1bcd93e8fb4a7451a2e8699b21aba6c97b5c0ab0451d27dd",
+      "auditDigest": "sha256:08df81d55362c0c75b2b67fd65c95de534be08c7363da56a931f9729e16a1209",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -2058,7 +2058,7 @@
         "release-state SHA is recorded as a durable audit entrance"
       ],
       "breakingDigest": "sha256:b627e1b2ece9b6049517a942c5139e342e6077cdd3d8962d61cef8481b1f70ad",
-      "auditDigest": "sha256:756c825d788725dafd5ad9d3d5e87a5066da513aff5c539a969a3d3a20be8616"
+      "auditDigest": "sha256:4932b0ef2ea1c62101347789ef233c77142630a69762d325688269fe29c230c5"
     },
     {
       "contractVersion": 1,
@@ -2107,7 +2107,7 @@
         "prose-only public claims downgrade the release trust passport audit"
       ],
       "breakingDigest": "sha256:f0b636eb925ddbf45ff1a8872454ab7b4dd98857cac12bb75217830130e62a16",
-      "auditDigest": "sha256:756c825d788725dafd5ad9d3d5e87a5066da513aff5c539a969a3d3a20be8616"
+      "auditDigest": "sha256:4932b0ef2ea1c62101347789ef233c77142630a69762d325688269fe29c230c5"
     },
     {
       "contractVersion": 1,
@@ -2257,7 +2257,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:9853fb572b0c7c07cdafea4f54b71cd5dd4a433e7d48a30037a35d508bbb3d85"
+      "auditDigest": "sha256:b18ced6cdfb2c21d300e4edd3ec24ed1b03bbb6d1ac60c3a8f61ee7de68f690c"
     },
     {
       "contractVersion": 1,
@@ -2279,7 +2279,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:0663245525a022d2dd25a7d8cd8359ed99eec228c2325fcc3d96138fc1036b49"
+      "auditDigest": "sha256:f9e6164124bebeef90e098373e68b8cdfb5f2ef98e4f48d66b407274b0f16dd2"
     },
     {
       "contractVersion": 1,
@@ -2964,7 +2964,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:63e635acfd386cbc8839d427f2647a312c63a5bb66204bc12b4e79642dccba50",
+      "auditDigest": "sha256:3b1346cb6a1499a2c49c05f28f1c9c0092692b66dcacf478266b413c9c508f31",
       "compatibleBreakingDigests": [
         "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
         "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
@@ -5173,7 +5173,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:3fb58bdf0a847b7e1bcd93e8fb4a7451a2e8699b21aba6c97b5c0ab0451d27dd"
+      "auditDigest": "sha256:08df81d55362c0c75b2b67fd65c95de534be08c7363da56a931f9729e16a1209"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:62d3eb22e876f0108aca3e96120ec40ca0851b380fbb61170339a47a681bdf7b"
+  "contractDigest": "sha256:9361aa3f46ca66609e96eee0342a8accfa069b47cabae845bf895a02b3377283"
 }
