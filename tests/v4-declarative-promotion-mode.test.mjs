@@ -82,14 +82,14 @@ test("trusted-publisher durable alpha recovery keeps the official floating shell
   assert.doesNotMatch(promoteAlphaBlock, /channel-finalization-recovery/u);
 });
 
-test("declarative promotion receipt reads the retained passport hierarchy", () => {
+test("declarative promotion receipt reads the bundled controller evidence", () => {
   assert.match(
     workflow,
-    /promotion-evidence\/release-candidate\/passport\/release-candidate-passport\.json/,
+    /promotion-evidence\/release-candidate-passport\.json/,
   );
   assert.doesNotMatch(
     workflow,
-    /promotion-evidence\/release-candidate\/release-candidate-passport\.json/,
+    /promotion-evidence\/release-candidate\/passport\/release-candidate-passport\.json/,
   );
 });
 
