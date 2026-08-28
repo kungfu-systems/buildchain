@@ -1048,7 +1048,7 @@ for (const requiredSnippet of [
   "resume-buildchain-runtime-ref:",
   "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
   "release-passport-buildchain-self-kfd: true",
-  "buildchain-channel: alpha",
+  "declarative-release-tail: true",
   "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {

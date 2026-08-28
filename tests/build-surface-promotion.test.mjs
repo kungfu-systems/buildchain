@@ -701,7 +701,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
     workflow,
     /promote-alpha:[\s\S]*buildchain-ref: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && inputs\['resume-buildchain-runtime-ref'\] \|\| 'v4-alpha' \}\}/,
   );
-  assert.match(workflow, /promote-alpha:[\s\S]*buildchain-channel: alpha[\s\S]*resume-buildchain-runtime-sha:/);
+  assert.match(workflow, /promote-alpha:[\s\S]*buildchain-expected-channel: alpha[\s\S]*resume-buildchain-runtime-sha:/);
   assert.match(
     workflow,
     /promote-alpha:[\s\S]*buildchain-alpha-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/,
