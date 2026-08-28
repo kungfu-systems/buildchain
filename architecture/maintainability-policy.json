@@ -8,7 +8,7 @@
     "baselineProtectedHead": "2381db294325a367b6d2bfe7ee72c246f8469a51",
     "baselineMeasuredExcess": 74773,
     "baselineTotalExcess": 66712,
-    "maxTotalExcess": 66712,
+    "maxTotalExcess": 66346,
     "targetExclusive": 60000,
     "rationale": "Preserve the accepted 66,712 governance ledger at the exact protected Wave 4 cut while charging every subsequent source, Rust, test, and workflow line, function, job, step, and decision excess one-for-one. The fixed calibration offset cannot hide new debt because both the measured ledger and calibrated total are recomputed from the complete exact debt map."
   },
