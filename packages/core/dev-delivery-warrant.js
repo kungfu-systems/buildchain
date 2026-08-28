@@ -1,5 +1,5 @@
 import { devDeliveryClone as clone, devDeliveryContentRoot, devDeliveryExactRoot as exactRoot, devDeliveryExactSha as exactSha, devDeliveryPositiveInteger as positiveInteger, devDeliveryProtectedBase as protectedBase, devDeliveryRepository as repository, devDeliveryText as text, devDeliveryTimestamp as timestamp } from "./dev-delivery-common.js";
-import { chainedDevDeliveryAttemptInput, createDevDeliveryCandidateIdentity, validateDevDeliveryCandidateChain } from "./dev-delivery-candidate-identity.js";
+import { assertDevDeliveryCandidateMetadataMatch, chainedDevDeliveryAttemptInput, createDevDeliveryCandidateIdentity, devDeliveryCandidateMetadataMatches, normalizeDevDeliveryCandidateMetadata, replaceDevDeliveryCandidateMetadata, validateDevDeliveryCandidateChain } from "./dev-delivery-candidate-identity.js";
 import { DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA, createCancelQueuedDevDeliveryCandidate } from "./dev-delivery-warrant-cancellation.js";
 import { DEV_DELIVERY_SETTLEMENT_RECEIPT_SCHEMA, createDevDeliveryTerminalSettler } from "./dev-delivery-warrant-settlement.js";
 import { createDevDeliveryWarrantQualifier } from "./dev-delivery-native-proof.js";
@@ -80,14 +80,9 @@ function normalizeCandidate(input, expected) {
     closureRoot: exactRoot(input.closureRoot, "closureRoot"),
     dependencyRoot: exactRoot(input.dependencyRoot, "dependencyRoot"),
     toolchainRoot: exactRoot(input.toolchainRoot, "toolchainRoot"),
-    ...(input.environmentRoot
-      ? { environmentRoot: exactRoot(input.environmentRoot, "environmentRoot") }
-      : {}),
-    ...(Object.hasOwn(input, "sourceWorkflowRunId")
-      ? {
-          sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0),
-        }
-      : {}),
+    ...(input.environmentRoot ? { environmentRoot: exactRoot(input.environmentRoot, "environmentRoot") } : {}),
+    ...normalizeDevDeliveryCandidateMetadata(input),
+    ...(Object.hasOwn(input, "sourceWorkflowRunId") ? { sourceWorkflowRunId: nonNegativeInteger(input.sourceWorkflowRunId, "candidate sourceWorkflowRunId", 0) } : {}),
     priority: priority(input.priority),
     enqueuedAt: timestamp(input.enqueuedAt, "candidate enqueuedAt"),
     updatedAt: timestamp(input.updatedAt || input.enqueuedAt, "candidate updatedAt"),
@@ -163,6 +158,7 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
     const warrantPhase = text(warrant.phase || "qualified");
     if (!["provisional", "qualified"].includes(warrantPhase)) throw new Error("active Warrant phase is unsupported");
     if (Object.hasOwn(warrant, "phase")) warrant.phase = warrantPhase;
+    Object.assign(warrant, normalizeDevDeliveryCandidateMetadata(warrant, "Warrant"));
     if (warrantPhase === "qualified") {
       if (warrant.nativeProofRoot) warrant.nativeProofRoot = exactRoot(warrant.nativeProofRoot, "Warrant nativeProofRoot");
       if (warrant.nativeProofReuseRoot) warrant.nativeProofReuseRoot = exactRoot(warrant.nativeProofReuseRoot, "Warrant nativeProofReuseRoot");
@@ -173,6 +169,7 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
       throw new Error("exactly one active candidate must match the active Warrant");
     }
     if (warrant.releaseBlockerPriority?.claimRoot !== activeCandidates[0].releaseBlockerPriority?.claimRoot) throw new Error("active Warrant release-blocker priority drift");
+    assertDevDeliveryCandidateMetadataMatch(warrant, activeCandidates[0]);
   } else if (queue.candidates.some((candidate) => ["selected", "provisional", "proving", "qualified", "waiting", "blocked"].includes(candidate.status))) {
     throw new Error("active candidate exists without an active Warrant");
   }
@@ -203,6 +200,7 @@ function submissionReceipt({ before, after, candidate, action, now }) {
     ...candidateRootProjection(candidate),
     ...(Object.hasOwn(candidate, "affectedPaths") ? { affectedPaths: candidate.affectedPaths } : {}),
     sourceWorkflowRunId: candidate.sourceWorkflowRunId,
+    ...normalizeDevDeliveryCandidateMetadata(candidate),
     ...(Object.hasOwn(candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: candidate.releaseBlockerPriority } : {}),
     deliveryClass: candidate.deliveryClass,
     priority: candidate.priority,
@@ -264,7 +262,7 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
           throw new Error(`candidate ${attemptedCandidate.candidateId} is terminal and cannot be resubmitted`);
         }
         const exactProofFields = ["sourcePatchRoot", "sourceProofRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot", "environmentRoot"];
-        const exactProofMatches = exactProofFields.every((field) => existing[field] === attemptedCandidate[field]) && JSON.stringify(existing.affectedPaths || []) === JSON.stringify(attemptedCandidate.affectedPaths || []) && existing.releaseBlockerPriority?.claimRoot === attemptedCandidate.releaseBlockerPriority?.claimRoot;
+        const exactProofMatches = exactProofFields.every((field) => existing[field] === attemptedCandidate[field]) && JSON.stringify(existing.affectedPaths || []) === JSON.stringify(attemptedCandidate.affectedPaths || []) && devDeliveryCandidateMetadataMatches(existing, attemptedCandidate) && existing.releaseBlockerPriority?.claimRoot === attemptedCandidate.releaseBlockerPriority?.claimRoot;
         const bindingAction = reconcileSourceWorkflowRunId(existing, attemptedCandidate, before.activeWarrant?.candidateId, currentTime);
         if (existing.sourceHead === attemptedCandidate.sourceHead && exactProofMatches) {
           if (bindingAction === "active") return { candidate: existing, action: "active-warrant-retained-noop" };
@@ -282,6 +280,7 @@ export function submitDevDeliveryCandidate(queueInput, input, { now = new Date()
           const headChanged = existing.sourceHead !== attemptedCandidate.sourceHead;
           existing.sourceHead = attemptedCandidate.sourceHead;
           for (const field of exactProofFields) existing[field] = attemptedCandidate[field];
+          replaceDevDeliveryCandidateMetadata(existing, attemptedCandidate);
           if (Object.hasOwn(attemptedCandidate, "affectedPaths")) existing.affectedPaths = attemptedCandidate.affectedPaths;
           else delete existing.affectedPaths;
           if (Object.hasOwn(attemptedCandidate, "releaseBlockerPriority")) existing.releaseBlockerPriority = attemptedCandidate.releaseBlockerPriority;
@@ -412,6 +411,7 @@ export function selectDevDeliveryWarrant(queueInput, { now = new Date().toISOStr
         protectedBase: next.protectedBase,
         ...candidateRootProjection(candidate),
         ...(Object.hasOwn(candidate, "affectedPaths") ? { affectedPaths: candidate.affectedPaths } : {}),
+        ...normalizeDevDeliveryCandidateMetadata(candidate),
         sourceWorkflowRunId: candidate.sourceWorkflowRunId,
         ...(Object.hasOwn(candidate, "releaseBlockerPriority") ? { releaseBlockerPriority: candidate.releaseBlockerPriority } : {}),
         deliveryClass: candidate.deliveryClass,

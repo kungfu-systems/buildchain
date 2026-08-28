@@ -69,6 +69,70 @@ test("queue identity and state roots fail closed on drift", () => {
   );
 });
 
+test("protected v3 queue reader preserves v4 native candidate metadata", () => {
+  const commandBody = {
+    schema: "kungfu.buildchain.native-command-contract/v1",
+    runner: "bash-lc",
+    command: "./shifu check:source",
+  };
+  const nativeCommandContract = {
+    ...commandBody,
+    commandRoot: devDeliveryContentRoot(commandBody),
+  };
+  const submitted = submit(queue(), 100, "2026-08-04T00:00:00Z", {
+    nativeCommandContract,
+    shardEvidenceRoots: [ROOTS.shard],
+  });
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+
+  assert.deepEqual(selected.queue.candidates[0].nativeCommandContract, nativeCommandContract);
+  assert.deepEqual(selected.queue.candidates[0].shardEvidenceRoots, [ROOTS.shard]);
+  assert.deepEqual(selected.warrant.nativeCommandContract, nativeCommandContract);
+  assert.deepEqual(selected.warrant.shardEvidenceRoots, [ROOTS.shard]);
+  assert.equal(normalizeDevDeliveryQueue(selected.queue).stateRoot, selected.queue.stateRoot);
+});
+
+test("protected v3 queue reader rejects v4 candidate metadata mutation", () => {
+  const commandBody = {
+    schema: "kungfu.buildchain.native-command-contract/v1",
+    runner: "bash-lc",
+    command: "./shifu check:source",
+  };
+  const nativeCommandContract = {
+    ...commandBody,
+    commandRoot: devDeliveryContentRoot(commandBody),
+  };
+  const submitted = submit(queue(), 100, "2026-08-04T00:00:00Z", {
+    nativeCommandContract,
+    shardEvidenceRoots: [ROOTS.shard],
+  });
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:00:01Z",
+  });
+
+  const commandMutation = structuredClone(selected.queue);
+  commandMutation.candidates[0].nativeCommandContract.command = "./shifu check";
+  assert.throws(() => normalizeDevDeliveryQueue(commandMutation), /native command contract root drift/u);
+
+  const shardMutation = structuredClone(selected.queue);
+  shardMutation.candidates[0].shardEvidenceRoots = [ROOTS.evidence];
+  assert.throws(() => normalizeDevDeliveryQueue(shardMutation), /active Warrant shard evidence roots drift/u);
+
+  const malformedShard = structuredClone(selected.queue);
+  malformedShard.candidates[0].shardEvidenceRoots = ["not-a-root"];
+  assert.throws(() => normalizeDevDeliveryQueue(malformedShard), /must be a sha256 content root/u);
+
+  const warrantMutation = structuredClone(selected.queue);
+  const changedCommandBody = { ...commandBody, command: "./shifu check" };
+  warrantMutation.activeWarrant.nativeCommandContract = {
+    ...changedCommandBody,
+    commandRoot: devDeliveryContentRoot(changedCommandBody),
+  };
+  assert.throws(() => normalizeDevDeliveryQueue(warrantMutation), /active Warrant native command contract drift/u);
+});
+
 test("selected Warrant retains the exact source workflow run for immediate controller handoff", () => {
   const submitted = submit(queue(), 100, "2026-08-04T00:00:00Z");
   const selected = selectDevDeliveryWarrant(submitted.queue, {
