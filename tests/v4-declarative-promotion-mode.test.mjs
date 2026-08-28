@@ -74,3 +74,14 @@ test("declarative promotion receipt reads the retained passport hierarchy", () =
     /promotion-evidence\/release-candidate\/release-candidate-passport\.json/,
   );
 });
+
+test("legacy publication authority audits the exact OIDC mutation job", () => {
+  assert.match(
+    workflow,
+    /publication-authority:[\s\S]*?authority-job-id: legacy-promote/u,
+  );
+  assert.match(
+    workflow,
+    /promote:\n    name: Select declarative or legacy promotion result\n    # buildchain-publication-authority-job: legacy-promote/u,
+  );
+});

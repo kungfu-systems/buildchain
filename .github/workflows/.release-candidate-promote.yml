@@ -1132,14 +1132,7 @@ jobs:
           fi
   publication-authority:
     name: Seal product publication capability
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-plan,
-        qualification-plan,
-      ]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
     permissions:
       actions: read
@@ -1171,6 +1164,7 @@ jobs:
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
+      authority-job-id: legacy-promote
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
@@ -1327,13 +1321,7 @@ jobs:
 
   v4-declarative-promote:
     name: Promote sealed v4 candidate through Provider Plane
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-plan,
-      ]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan]
     if: ${{ needs.preflight.outputs.action == 'promote' && (startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run }}
     runs-on: ubuntu-24.04
     permissions:
@@ -1426,15 +1414,7 @@ jobs:
 
   legacy-promote:
     name: Promote release candidate
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-plan,
-        publication-authority,
-        publication-qualification,
-      ]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification]
     if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -2495,6 +2475,7 @@ jobs:
 
   promote:
     name: Select declarative or legacy promotion result
+    # buildchain-publication-authority-job: legacy-promote
     needs: [legacy-promote, v4-declarative-promote]
     if: ${{ always() && (needs.legacy-promote.result == 'success' || needs.v4-declarative-promote.result == 'success') }}
     runs-on: ubuntu-24.04
@@ -2630,16 +2611,7 @@ jobs:
 
   controller-receipt:
     name: Record release-candidate promotion controller receipt
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-authority,
-        promote,
-        github-artifact-attestation,
-        publish-github-artifact-attestation-evidence,
-      ]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote, github-artifact-attestation, publish-github-artifact-attestation-evidence]
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
