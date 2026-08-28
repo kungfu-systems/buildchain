@@ -129,8 +129,8 @@ function evaluateDebtBudget({ debt, policy }) {
   if (budget.maxTotalExcess > budget.baselineTotalExcess) {
     issues.push("debt budget maximum cannot exceed its frozen baseline");
   }
-  if (budget.targetExclusive > budget.maxTotalExcess) {
-    issues.push("debt budget target cannot exceed its frozen maximum");
+  if (budget.targetExclusive > budget.baselineTotalExcess) {
+    issues.push("debt budget target cannot exceed its frozen baseline");
   }
   const measured = calculateDebtMeasuredExcess(debt);
   const total =

@@ -35,6 +35,7 @@ import {
 } from "./github-artifact-attestation.js";
 import { verifyV4FloatingConsumerPolicyCertification } from "./v4-floating-consumer-evidence.js";
 import {
+  createV4ReleasePassportOperations,
   isV4PromotionRouting,
   releasePassportCertificationVerificationOptions,
   requireV4ConsumerPolicyCertification,
@@ -399,13 +400,6 @@ function parseJsonInputWithMeta(value, fallback = undefined, { cwd = process.cwd
     path: "",
     sha256: sha256Text(stableJson(parsed)),
   };
-}
-
-function parseV4ConsumerPolicyCertification(input, cwd) {
-  return parseJsonInputWithMeta(input, undefined, {
-    cwd,
-    label: "v4ConsumerPolicyCertificationJson",
-  });
 }
 
 function mergeAuthoritativePassportBase(passport, basePassport = undefined, { requireKfd = false } = {}) {
@@ -1071,123 +1065,6 @@ function normalizeTransaction(value = undefined) {
     result: normalizeTransactionResult(value),
   };
 }
-
-function normalizePromotionRouting(value = undefined) {
-  if (value === undefined) return undefined;
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error("release.promotionRouting must be a JSON object");
-  }
-  if (value.contract !== "buildchain.promotion-routing/v1") {
-    throw new Error("release.promotionRouting contract must be buildchain.promotion-routing/v1");
-  }
-  for (const [label, field] of [
-    ["router.ref", value.router?.ref],
-    ["router.sha", value.router?.sha],
-    ["shell.ref", value.shell?.ref],
-    ["shell.sha", value.shell?.sha],
-    ["runtime.requestedRef", value.runtime?.requestedRef],
-    ["runtime.resolvedSha", value.runtime?.resolvedSha],
-    ["contractLock.path", value.contractLock?.path],
-    ["contractLock.digest", value.contractLock?.digest],
-    ["publication.channel", value.publication?.channel],
-    ["publication.targetRef", value.publication?.targetRef],
-  ]) {
-    if (!String(field || "").trim()) throw new Error(`release.promotionRouting.${label} is required`);
-  }
-  for (const [label, sha] of [
-    ["router.sha", value.router.sha],
-    ["shell.sha", value.shell.sha],
-    ["runtime.resolvedSha", value.runtime.resolvedSha],
-  ]) {
-    if (!/^[0-9a-f]{40}$/i.test(String(sha))) {
-      throw new Error(`release.promotionRouting.${label} must be a 40-character Git SHA`);
-    }
-  }
-  if (!/^sha256:[0-9a-f]{64}$/i.test(String(value.contractLock.digest))) {
-    throw new Error("release.promotionRouting.contractLock.digest must be a sha256 digest");
-  }
-  return JSON.parse(JSON.stringify(value));
-}
-
-function normalizePromotionEvidence({
-  release = {},
-  v4ConsumerPolicyCertification: certification,
-  v4ConsumerPolicyCertificationRoot: certificationRoot,
-  v4RuntimeResumeEvidence,
-  repository,
-  sourceSha,
-  cwd,
-}) {
-  const routing = normalizePromotionRouting(release.promotionRouting);
-  const identity = resolveV4ConsumerPolicyCertificationIdentity({
-    release: { ...release, certification },
-    routing,
-    runtimeResume: v4RuntimeResumeEvidence,
-    sourceSha,
-  });
-  return {
-    routing,
-    consumerPolicy: requireV4ConsumerPolicyCertification({
-      value: certification,
-      repository,
-      sourceSha: identity.sourceSha,
-      runtimeSha: identity.runtimeSha,
-      routing,
-      cwd,
-      certificationRoot,
-    }),
-  };
-}
-
-function normalizeV4RuntimeResumeEvidence(value, expected = {}) {
-  if (value === undefined || value === null || value === "") return undefined;
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error("v4RuntimeResumeEvidence must be a JSON object");
-  }
-  const authorizationVerification = verifyV4RuntimeAuthorizationReceipt({
-    receipt: value.authorization,
-    receiptRoot: value.authorizationRoot,
-    repository: expected.repository,
-    sourceSha: expected.sourceSha,
-    runtimeSha: expected.resumeRuntimeSha,
-    consumerPolicyReceiptRoot: expected.consumerPolicyReceiptRoot,
-  });
-  if (!authorizationVerification.ok) {
-    throw new Error(`v4 runtime authorization invalid: ${authorizationVerification.failures.join(", ")}`);
-  }
-  const lineageVerification = verifyV4RuntimeResumeLineage({
-    lineage: value.lineage,
-    lineageRoot: value.lineageRoot,
-    repository: expected.repository,
-    sourceSha: expected.sourceSha,
-    resumeRuntimeSha: expected.resumeRuntimeSha,
-    consumerPolicyReceiptRoot: expected.consumerPolicyReceiptRoot,
-  });
-  if (!lineageVerification.ok) {
-    throw new Error(`v4 runtime resume lineage invalid: ${lineageVerification.failures.join(", ")}`);
-  }
-  if (value.lineage?.authorizationRoot !== value.authorizationRoot) {
-    throw new Error("v4 runtime resume lineage authorization root mismatch");
-  }
-  return {
-    authorizationRoot: value.authorizationRoot,
-    authorization: structuredClone(value.authorization),
-    lineageRoot: value.lineageRoot,
-    lineage: structuredClone(value.lineage),
-  };
-}
-
-function v4RuntimeResumeSourceSha(release, fallback = "") {
-  const builtSourceSha = releaseField(
-    release || {},
-    "builtSourceSha",
-    "built_source_sha",
-  );
-  return release?.treeEquivalent === true && builtSourceSha
-    ? builtSourceSha
-    : fallback;
-}
-
 
 function prepareBuildEvidence({
   buildSummary,
@@ -1891,6 +1768,17 @@ export function collectGitHubReleasePassport({
 function issue(level, code, message, details = {}) {
   return { level, code, message, details };
 }
+const {
+  normalizePromotionEvidence,
+  normalizePromotionRouting,
+  normalizeV4RuntimeResumeEvidence,
+  parseV4ConsumerPolicyCertification,
+  v4RuntimeResumeSourceSha,
+  validateV4ConsumerPolicyPassportSection,
+  validateV4RuntimeResumePassportSection,
+} = createV4ReleasePassportOperations({
+  issue, parseJsonInputWithMeta, releaseField,
+});
 
 function validateContract(value, expectedContract, label, issues) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -2297,65 +2185,6 @@ function validateReleaseEvidenceAttachments({
     }
   }
   return { evidenceArtifacts, releaseEvidence };
-}
-
-function validateV4ConsumerPolicyPassportSection({ passport, issues }) {
-  const routing = passport?.promotionRouting;
-  const evidence = passport?.v4ConsumerPolicy;
-  if (isV4PromotionRouting(routing) && !evidence) {
-    issues.push(issue(
-      "error",
-      "v4ConsumerPolicy.missing",
-      "Buildchain v4 Release Passport requires an external floating consumer policy certification",
-    ));
-    return;
-  }
-  if (!evidence) return;
-  const verification = verifyV4FloatingConsumerPolicyCertification(
-    releasePassportCertificationVerificationOptions({
-      evidence,
-      passport,
-      routing,
-    }),
-  );
-  for (const failure of verification.failures) {
-    issues.push(issue("error", `v4ConsumerPolicy.${failure.code}`, failure.message));
-  }
-}
-
-function validateV4RuntimeResumePassportSection({ passport, issues }) {
-  const evidence = passport?.v4RuntimeResume;
-  if (!evidence) return;
-  const consumerPolicyReceiptRoot = passport?.v4ConsumerPolicy?.certification?.receiptRoot || "";
-  const authorization = verifyV4RuntimeAuthorizationReceipt({
-    receipt: evidence.authorization,
-    receiptRoot: evidence.authorizationRoot,
-    repository: passport?.product?.repository || "",
-    sourceSha: v4RuntimeResumeSourceSha(passport?.release, passport?.release?.sourceSha || ""),
-    runtimeSha: passport?.promotionRouting?.runtime?.resolvedSha || "",
-    consumerPolicyReceiptRoot,
-  });
-  for (const failure of authorization.failures) {
-    issues.push(issue("error", `v4RuntimeResume.authorization.${failure}`, failure));
-  }
-  const lineage = verifyV4RuntimeResumeLineage({
-    lineage: evidence.lineage,
-    lineageRoot: evidence.lineageRoot,
-    repository: passport?.product?.repository || "",
-    sourceSha: v4RuntimeResumeSourceSha(passport?.release, passport?.release?.sourceSha || ""),
-    resumeRuntimeSha: passport?.promotionRouting?.runtime?.resolvedSha || "",
-    consumerPolicyReceiptRoot,
-  });
-  for (const failure of lineage.failures) {
-    issues.push(issue("error", `v4RuntimeResume.lineage.${failure}`, failure));
-  }
-  if (evidence.lineage?.authorizationRoot !== evidence.authorizationRoot) {
-    issues.push(issue(
-      "error",
-      "v4RuntimeResume.authorization-root-mismatch",
-      "runtime resume lineage must bind the embedded authorization receipt root",
-    ));
-  }
 }
 
 function validatePublishEvidenceSection({ passport, publishEvidence, normalizedPublishEvidence, issues }) {

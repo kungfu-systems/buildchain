@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 70881,
-    "current": 62820
+    "measuredExcess": 68060,
+    "current": 59999
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1017,49 +1017,49 @@
         "baseline": {
           "lines": 2987,
           "functions": {
-            "mergeAuthoritativePassportBase@411": {
+          "mergeAuthoritativePassportBase@405": {
               "complexity": 29
             },
-            "normalizeKfd2Claim@836": {
+          "normalizeKfd2Claim@830": {
               "complexity": 59
             },
-            "createReleasePassport@1286": {
+          "createReleasePassport@1163": {
               "lines": 268,
               "complexity": 30
             },
-            "collectGitHubReleasePassport@1586": {
+          "collectGitHubReleasePassport@1463": {
               "lines": 304,
               "complexity": 43
             },
-            "validateKfd2ReleaseTrustPassportAudit@1908": {
+          "validateKfd2ReleaseTrustPassportAudit@1796": {
               "complexity": 65
             },
-            "validateReleaseEvidenceAttachments@2227": {
+          "validateReleaseEvidenceAttachments@2115": {
               "complexity": 26
             }
           }
         },
         "current": {
-          "lines": 2987,
+        "lines": 2816,
           "functions": {
-            "mergeAuthoritativePassportBase@411": {
+          "mergeAuthoritativePassportBase@405": {
               "complexity": 29
             },
-            "normalizeKfd2Claim@836": {
+          "normalizeKfd2Claim@830": {
               "complexity": 59
             },
-            "createReleasePassport@1286": {
+          "createReleasePassport@1163": {
               "lines": 268,
               "complexity": 30
             },
-            "collectGitHubReleasePassport@1586": {
+          "collectGitHubReleasePassport@1463": {
               "lines": 304,
               "complexity": 43
             },
-            "validateKfd2ReleaseTrustPassportAudit@1908": {
+          "validateKfd2ReleaseTrustPassportAudit@1796": {
               "complexity": 65
             },
-            "validateReleaseEvidenceAttachments@2227": {
+          "validateReleaseEvidenceAttachments@2115": {
               "complexity": 26
             }
           }
@@ -1067,24 +1067,24 @@
         "target": {
           "lines": 600,
           "functions": {
-            "mergeAuthoritativePassportBase@411": {
+          "mergeAuthoritativePassportBase@405": {
               "complexity": 25
             },
-            "normalizeKfd2Claim@836": {
+          "normalizeKfd2Claim@830": {
               "complexity": 25
             },
-            "createReleasePassport@1286": {
+          "createReleasePassport@1163": {
               "lines": 180,
               "complexity": 25
             },
-            "collectGitHubReleasePassport@1586": {
+          "collectGitHubReleasePassport@1463": {
               "lines": 180,
               "complexity": 25
             },
-            "validateKfd2ReleaseTrustPassportAudit@1908": {
+          "validateKfd2ReleaseTrustPassportAudit@1796": {
               "complexity": 25
             },
-            "validateReleaseEvidenceAttachments@2227": {
+          "validateReleaseEvidenceAttachments@2115": {
               "complexity": 25
             }
           }
@@ -2531,39 +2531,39 @@
         "baseline": {
           "lines": 4220,
           "functions": {
-            "<anonymous@2569>@2569": {
+          "<anonymous@4>@4": {
               "lines": 195
             },
-            "<anonymous@2765>@2765": {
+          "<anonymous@200>@200": {
               "lines": 181
             },
-            "<anonymous@2947>@2947": {
+          "<anonymous@382>@382": {
               "lines": 184
             },
-            "<anonymous@3261>@3261": {
+          "<anonymous@696>@696": {
               "lines": 188
             },
-            "<anonymous@3636>@3636": {
+          "<anonymous@1017>@1017": {
               "lines": 204
             }
           }
         },
         "current": {
-          "lines": 4133,
+        "lines": 1484,
           "functions": {
-            "<anonymous@2569>@2569": {
+          "<anonymous@4>@4": {
               "lines": 195
             },
-            "<anonymous@2765>@2765": {
+          "<anonymous@200>@200": {
               "lines": 181
             },
-            "<anonymous@2947>@2947": {
+          "<anonymous@382>@382": {
               "lines": 184
             },
-            "<anonymous@3261>@3261": {
+          "<anonymous@696>@696": {
               "lines": 188
             },
-            "<anonymous@3636>@3636": {
+          "<anonymous@1017>@1017": {
               "lines": 204
             }
           }
@@ -2571,19 +2571,19 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@2569>@2569": {
+          "<anonymous@4>@4": {
               "lines": 180
             },
-            "<anonymous@2765>@2765": {
+          "<anonymous@200>@200": {
               "lines": 180
             },
-            "<anonymous@2947>@2947": {
+          "<anonymous@382>@382": {
               "lines": 180
             },
-            "<anonymous@3261>@3261": {
+          "<anonymous@696>@696": {
               "lines": 180
             },
-            "<anonymous@3636>@3636": {
+          "<anonymous@1017>@1017": {
               "lines": 180
             }
           }
@@ -3005,11 +3005,11 @@
           "decisions": 75
         },
         "current": {
-          "lines": 2708,
+        "lines": 2707,
           "jobs": 13,
-          "steps": 99,
+        "steps": 99,
           "maxStepsPerJob": 47,
-          "decisions": 75
+        "decisions": 75
         },
         "target": {
           "lines": 600,
@@ -3204,7 +3204,14 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 2708
+      "current": 2707
+    },
+    {
+      "domain": "sources",
+      "path": "packages/core/release-passport.js",
+      "metric": "lines",
+      "baseline": 2987,
+      "current": 2816
     },
     {
       "domain": "sources",
