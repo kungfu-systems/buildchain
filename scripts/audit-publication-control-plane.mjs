@@ -121,9 +121,8 @@ function jobBlock(workflowText, jobId, delegated = false) {
 
 function first(value, keys) {
   for (const key of keys) {
-    const parts = key.split(".");
     let current = value;
-    for (const part of parts) current = current && typeof current === "object" ? current[part] : undefined;
+    for (const part of key.split(".")) current = current && typeof current === "object" ? current[part] : undefined;
     if (current !== undefined && current !== null && current !== "") return current;
   }
   return undefined;
