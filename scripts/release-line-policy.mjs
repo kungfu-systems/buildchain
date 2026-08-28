@@ -47,14 +47,25 @@ export function parseVersionStateRef(ref) {
 
 export function parseReleaseLineRecoveryRef(ref) {
   const normalizedRef = normalizeRef(ref);
-  const match = normalizedRef.match(/^fix\/release-line-v(\d+)-v(\d+\.\d+)-[0-9A-Za-z._-]+$/);
+  const match = normalizedRef.match(/^fix\/(alpha|release)-line-v(\d+)-v(\d+\.\d+)-[0-9A-Za-z._-]+$/);
   if (!match) return undefined;
   return {
-    major: Number(match[1]),
-    loose: Number(match[2]),
-    normalizedRef: `release/v${match[1]}/v${match[2]}`,
-    lineSuffix: `/v${match[1]}/v${match[2]}`,
+    channel: match[1],
+    major: Number(match[2]),
+    loose: Number(match[3]),
+    normalizedRef: `${match[1]}/v${match[2]}/v${match[3]}`,
   };
+}
+
+function getRecoveryBumpKeyword({ target, baseRef, baseChannel, version, looseVersionNumber, headRef }) {
+  if (!target) return "";
+  if (baseChannel !== target.channel || target.normalizedRef !== normalizeRef(baseRef)) {
+    throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
+  }
+  if (target.major !== version.major || target.loose !== looseVersionNumber) {
+    throw new Error(`The version of head ref ${headRef} does not match current ${version.version}`);
+  }
+  return baseChannel === "release" ? "patch" : "prerelease";
 }
 
 export function parsePublishGateChannelRef(ref) {
@@ -131,6 +142,14 @@ export function getBumpKeyword({ cwd = process.cwd(), headRef, baseRef, loose = 
   const authorityTarget = parseAuthorityRef(baseRef);
   const headChannel = getChannel(headRef);
   const baseChannel = getChannel(baseRef);
+  const recoveryKeyword = getRecoveryBumpKeyword({
+    target: releaseLineRecoveryTarget,
+    baseRef,
+    baseChannel,
+    version,
+    looseVersionNumber,
+    headRef,
+  });
   const key = `${headChannel}->${baseChannel}`;
   const keywords = {
     "dev->alpha": "prerelease",
@@ -157,16 +176,7 @@ export function getBumpKeyword({ cwd = process.cwd(), headRef, baseRef, loose = 
     return "none";
   }
 
-  if (releaseLineRecoveryTarget) {
-    if (baseChannel !== "release" || releaseLineRecoveryTarget.normalizedRef !== normalizeRef(baseRef)) {
-      throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
-    }
-    const mismatchMsg = `The version of head ref ${headRef} does not match current ${version.version}`;
-    if (releaseLineRecoveryTarget.major !== version.major || releaseLineRecoveryTarget.loose !== looseVersionNumber) {
-      throw new Error(mismatchMsg);
-    }
-    return "patch";
-  }
+  if (recoveryKeyword) return recoveryKeyword;
 
   if (publishGateTarget) {
     if (publishGateTarget.channel !== baseChannel || publishGateTarget.normalizedRef !== normalizeRef(baseRef)) {
