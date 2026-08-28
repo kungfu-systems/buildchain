@@ -5,6 +5,11 @@
     "baselineRevision": "4271eceaa2aa11dc98d2917dcb390f943ca42031",
     "currentRevision": "working-tree"
   },
+  "totalExcessLedger": {
+    "metric": "calibrated-full-dimensional-excess-v1",
+    "measuredExcess": 74773,
+    "current": 66712
+  },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
     "capability": "maintainability-governance",
@@ -1274,21 +1279,21 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@350": {
+            "evaluateMaintainability@353": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@350": {
+            "evaluateMaintainability@353": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@350": {
+            "evaluateMaintainability@353": {
               "complexity": 25
             }
           }
