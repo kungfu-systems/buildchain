@@ -59,7 +59,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
     root,
     repository: "kungfu-systems/buildchain",
     sourceSha: "a".repeat(40),
-    invokedWorkflow: ".github/workflows/.release-candidate-promote.yml", invocationSourcePath: ".github/workflows/buildchain-ref-promotion.yml",
+    invokedWorkflow: ".github/workflows/release-candidate-promote.yml",
     expectedInvocationChannel: "alpha",
     resolvedWorkflowSha: "b".repeat(40),
     resolvedRuntimeSha: "b".repeat(40),
@@ -73,7 +73,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
   assert.equal(result.receipt.invocation.channel, "alpha");
 });
 
-test("bounded alpha recovery calls the exact protected shell with current runtime binding", () => {
+test("bounded alpha recovery admits the old floating shell with current exact runtime binding", () => {
   const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
   const legacyRelative = ".github/workflows/release-candidate-promote.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
@@ -194,13 +194,9 @@ test("bounded alpha recovery calls the exact protected shell with current runtim
       JSON.stringify(externalEvidencePersistence.failures),
     );
 
-    const foreignInvocationRoot = writeForeignSelectorWorkflow(
-      relative,
-      workflow,
-    );
     const foreignRepository = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
-      invocationRoot: foreignInvocationRoot,
+      invocationRoot: root,
       repository: "kungfu-systems/consumer",
       sourceSha: "a".repeat(40),
       invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
@@ -218,7 +214,7 @@ test("bounded alpha recovery calls the exact protected shell with current runtim
       ),
       true,
     );
-    fs.rmSync(foreignInvocationRoot, { recursive: true, force: true });
+
     result = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
       invocationRoot: root,
@@ -369,20 +365,6 @@ test("bounded alpha recovery calls the exact protected shell with current runtim
     /run: test "\$\{\{ steps\.identities\.outputs\.runtime-sha \}\}" = "\$\{\{ inputs\['resume-buildchain-runtime-sha'\] \}\}"/u,
   );
 });
-
-function writeForeignSelectorWorkflow(relative, workflow) {
-  const invocationRoot = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-v4-foreign-recovery-"),
-  );
-  fs.mkdirSync(path.join(invocationRoot, ".github/workflows"), {
-    recursive: true,
-  });
-  fs.writeFileSync(
-    path.join(invocationRoot, relative),
-    workflow.replace("@v4-alpha", "@v4-beta"),
-  );
-  return invocationRoot;
-}
 
 test("v4 floating policy contract rejects certification without caller lock readback", () => {
   assert.throws(

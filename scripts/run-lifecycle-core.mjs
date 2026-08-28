@@ -408,476 +408,441 @@ export function verifyBuildLifecycleCompilerCacheActivity({
   return activity;
 }
 
-export function runLifecycle({
-  cwd = process.cwd(),
-  stageName = "",
-  command = "",
-  required = false,
-  timeoutMinutes,
-  manifestPath = ".buildchain/artifacts/manifest.json",
-  summaryPath = ".buildchain/artifacts/summary.json",
-  diagnosticsPath = "",
-  artifactName = "buildchain-artifact",
-  manifestArtifactName = "",
-  diagnosticsArtifactName = "",
-  platformId = os.platform(),
-  platformName = platformId,
-  artifactPaths = [],
-  expectedArtifactsJson = "",
-  workspace = process.cwd(),
-  logPath = process.env.BUILDCHAIN_LOG_PATH || ".buildchain/logs/events.jsonl",
-  processSummaryPath = "",
-  processSamplesPath = ".buildchain/diagnostics/process-samples.jsonl",
-  sampleProcessTree = false,
-  processSampleIntervalMs = 15000,
-  requestedParallelism = 0,
-  processSummaryRequired = true,
-  substageEvidencePath = "",
-} = {}) {
-  if (timeoutMinutes !== undefined && (!Number.isFinite(timeoutMinutes) || timeoutMinutes <= 0)) {
+function normalizeLifecycleOptions(options) {
+  const normalized = { ...options };
+  const defaults = {
+    cwd: process.cwd(), stageName: "", command: "", required: false,
+    manifestPath: ".buildchain/artifacts/manifest.json",
+    summaryPath: ".buildchain/artifacts/summary.json", diagnosticsPath: "",
+    artifactName: "buildchain-artifact", manifestArtifactName: "",
+    diagnosticsArtifactName: "", platformId: os.platform(), artifactPaths: [],
+    expectedArtifactsJson: "", workspace: process.cwd(),
+    logPath: process.env.BUILDCHAIN_LOG_PATH || ".buildchain/logs/events.jsonl",
+    processSummaryPath: "", processSamplesPath: ".buildchain/diagnostics/process-samples.jsonl",
+    sampleProcessTree: false, processSampleIntervalMs: 15000, requestedParallelism: 0,
+    processSummaryRequired: true, substageEvidencePath: "",
+  };
+  for (const [key, value] of Object.entries(defaults)) {
+    if (normalized[key] === undefined) normalized[key] = value;
+  }
+  if (normalized.platformName === undefined) normalized.platformName = normalized.platformId;
+  return normalized;
+}
+
+function resolveLifecyclePaths(options) {
+  if (options.timeoutMinutes !== undefined && (!Number.isFinite(options.timeoutMinutes) || options.timeoutMinutes <= 0)) {
     throw new Error("lifecycle timeoutMinutes must be a positive number");
   }
-  const resolvedCwd = path.resolve(cwd);
-  const resolvedWorkspace = path.resolve(workspace);
-  const resolvedManifestPath = path.resolve(resolvedWorkspace, manifestPath);
-  const resolvedSummaryPath = path.resolve(resolvedWorkspace, summaryPath);
+  const resolvedCwd = path.resolve(options.cwd);
+  const resolvedWorkspace = path.resolve(options.workspace);
+  const resolvedManifestPath = path.resolve(resolvedWorkspace, options.manifestPath);
+  const resolvedSummaryPath = path.resolve(resolvedWorkspace, options.summaryPath);
   const resolvedDiagnosticsPath = path.resolve(
     resolvedWorkspace,
-    diagnosticsPath || path.join(path.dirname(manifestPath), "diagnostics.json"),
+    options.diagnosticsPath || path.join(path.dirname(options.manifestPath), "diagnostics.json"),
   );
-  const resolvedLogPath = logPath ? path.resolve(resolvedWorkspace, logPath) : "";
-  const resolvedProcessSummaryPath = processSummaryPath || sampleProcessTree
-    ? path.resolve(resolvedWorkspace, processSummaryPath || ".buildchain/diagnostics/process-summary.json")
+  const resolvedLogPath = options.logPath ? path.resolve(resolvedWorkspace, options.logPath) : "";
+  const resolvedProcessSummaryPath = options.processSummaryPath || options.sampleProcessTree
+    ? path.resolve(resolvedWorkspace, options.processSummaryPath || ".buildchain/diagnostics/process-summary.json")
     : "";
-  const resolvedProcessSamplesPath = processSamplesPath
-    ? path.resolve(resolvedWorkspace, processSamplesPath)
+  const resolvedProcessSamplesPath = options.processSamplesPath
+    ? path.resolve(resolvedWorkspace, options.processSamplesPath)
     : path.resolve(resolvedWorkspace, ".buildchain/diagnostics/process-samples.jsonl");
-  const relativeLogPath = resolvedLogPath ? toPosix(path.relative(resolvedWorkspace, resolvedLogPath)) : "";
-  const relativeProcessSummaryPath = resolvedProcessSummaryPath
-    ? toPosix(path.relative(resolvedWorkspace, resolvedProcessSummaryPath))
-    : "";
-  const relativeDiagnosticsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsPath));
   const diagnosticsDir = path.dirname(resolvedDiagnosticsPath);
-  const resolvedDiagnosticsEventsPath = path.join(diagnosticsDir, "events.jsonl");
-  const resolvedDiagnosticsProcessSummaryPath = path.join(diagnosticsDir, "process-summary.json");
-  const resolvedDiagnosticsProcessSamplesPath = path.join(diagnosticsDir, "process-samples.jsonl");
-  const resolvedSourceCheckoutPath = path.resolve(resolvedWorkspace, ".buildchain/diagnostics/source-checkout.json");
-  const resolvedDiagnosticsSourceCheckoutPath = path.join(diagnosticsDir, "source-checkout.json");
   const resolvedCompilerCachePreparationPath = path.resolve(
     resolvedWorkspace,
     process.env.BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH ||
       ".buildchain/diagnostics/compiler-cache-preparation.json",
   );
-  const compilerCachePreparationRelative = path.relative(
-    resolvedWorkspace,
-    resolvedCompilerCachePreparationPath,
-  );
-  if (
-    compilerCachePreparationRelative.startsWith("..") ||
-    path.isAbsolute(compilerCachePreparationRelative)
-  ) {
-    throw new Error(
-      "BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH must remain inside the workflow workspace",
-    );
+  const compilerCachePreparationRelative = path.relative(resolvedWorkspace, resolvedCompilerCachePreparationPath);
+  if (compilerCachePreparationRelative.startsWith("..") || path.isAbsolute(compilerCachePreparationRelative)) {
+    throw new Error("BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH must remain inside the workflow workspace");
   }
-  const resolvedDiagnosticsCompilerCachePreparationPath = path.join(
+  return {
+    resolvedCwd, resolvedWorkspace, resolvedManifestPath, resolvedSummaryPath,
+    resolvedDiagnosticsPath, resolvedLogPath, resolvedProcessSummaryPath, resolvedProcessSamplesPath,
+    relativeLogPath: resolvedLogPath ? toPosix(path.relative(resolvedWorkspace, resolvedLogPath)) : "",
+    relativeProcessSummaryPath: resolvedProcessSummaryPath ? toPosix(path.relative(resolvedWorkspace, resolvedProcessSummaryPath)) : "",
+    relativeDiagnosticsPath: toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsPath)),
     diagnosticsDir,
-    "compiler-cache-preparation.json",
-  );
-  const resolvedDiagnosticsManifestPath = path.join(diagnosticsDir, "diagnostics-manifest.json");
-  const relativeDiagnosticsEventsPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsEventsPath));
-  const relativeDiagnosticsProcessSummaryPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSummaryPath));
-  const relativeDiagnosticsProcessSamplesPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsProcessSamplesPath));
-  const relativeDiagnosticsSourceCheckoutPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsSourceCheckoutPath));
-  const relativeDiagnosticsCompilerCachePreparationPath = toPosix(
-    path.relative(resolvedWorkspace, resolvedDiagnosticsCompilerCachePreparationPath),
-  );
-  const relativeDiagnosticsManifestPath = toPosix(path.relative(resolvedWorkspace, resolvedDiagnosticsManifestPath));
+    resolvedDiagnosticsEventsPath: path.join(diagnosticsDir, "events.jsonl"),
+    resolvedDiagnosticsProcessSummaryPath: path.join(diagnosticsDir, "process-summary.json"),
+    resolvedDiagnosticsProcessSamplesPath: path.join(diagnosticsDir, "process-samples.jsonl"),
+    resolvedSourceCheckoutPath: path.resolve(resolvedWorkspace, ".buildchain/diagnostics/source-checkout.json"),
+    resolvedDiagnosticsSourceCheckoutPath: path.join(diagnosticsDir, "source-checkout.json"),
+    resolvedCompilerCachePreparationPath,
+    resolvedDiagnosticsCompilerCachePreparationPath: path.join(diagnosticsDir, "compiler-cache-preparation.json"),
+    resolvedDiagnosticsManifestPath: path.join(diagnosticsDir, "diagnostics-manifest.json"),
+  };
+}
+
+function addRelativeLifecyclePaths(paths) {
+  const relative = (target) => toPosix(path.relative(paths.resolvedWorkspace, target));
+  return {
+    ...paths,
+    relativeDiagnosticsEventsPath: relative(paths.resolvedDiagnosticsEventsPath),
+    relativeDiagnosticsProcessSummaryPath: relative(paths.resolvedDiagnosticsProcessSummaryPath),
+    relativeDiagnosticsProcessSamplesPath: relative(paths.resolvedDiagnosticsProcessSamplesPath),
+    relativeDiagnosticsSourceCheckoutPath: relative(paths.resolvedDiagnosticsSourceCheckoutPath),
+    relativeDiagnosticsCompilerCachePreparationPath:
+      relative(paths.resolvedDiagnosticsCompilerCachePreparationPath),
+    relativeDiagnosticsManifestPath: relative(paths.resolvedDiagnosticsManifestPath),
+  };
+}
+
+function createLifecycleContext(options) {
+  const paths = addRelativeLifecyclePaths(resolveLifecyclePaths(options));
   const logRunId = crypto.randomUUID();
-  const frameworkLog = createBuildchainLogger({
-    cwd: resolvedWorkspace,
-    path: resolvedLogPath || false,
+  const loggerOptions = {
+    cwd: paths.resolvedWorkspace,
+    path: paths.resolvedLogPath || false,
     console: false,
-    source: "buildchain",
     component: "lifecycle",
-    phase: stageName || "lifecycle",
+    phase: options.stageName || "lifecycle",
     attributes: { buildchainLogRunId: logRunId },
-  });
-  const userLog = createBuildchainLogger({
-    cwd: resolvedWorkspace,
-    path: resolvedLogPath || false,
-    console: false,
-    source: "user",
-    component: "lifecycle",
-    phase: stageName || "lifecycle",
-    attributes: { buildchainLogRunId: logRunId },
-  });
-  const loadedConfig = loadBuildchainConfig(resolvedCwd);
-  let commandSource = "none";
-  let executed = false;
+  };
+  return {
+    ...options, ...paths, logRunId,
+    frameworkLog: createBuildchainLogger({ ...loggerOptions, source: "buildchain" }),
+    userLog: createBuildchainLogger({ ...loggerOptions, source: "user" }),
+    loadedConfig: loadBuildchainConfig(paths.resolvedCwd),
+    commandSource: "none",
+    executed: false,
+  };
+}
 
-  frameworkLog.info("lifecycle.start", {
-    attributes: {
-      stage: stageName,
-      artifactName,
-      platformId,
-    },
+function executeWorkflowLifecycleCommand(context) {
+  const {
+    command, stageName, sampleProcessTree, processSampleIntervalMs, requestedParallelism,
+    timeoutMinutes, resolvedCwd, resolvedLogPath, resolvedProcessSummaryPath,
+    resolvedProcessSamplesPath, logRunId, loadedConfig, userLog, platformId, platformName,
+  } = context;
+  context.commandSource = "workflow-input";
+  const lifecycle = loadedConfig?.config?.lifecycle || {};
+  const configuredStage = stageName ? lifecycle[stageName] : undefined;
+  const commandShell = configuredStage?.shell || true;
+  const effectiveCommandTimeoutMinutes = configuredStage?.timeoutMinutes ?? timeoutMinutes;
+  const startedAt = Date.now();
+  userLog.info("lifecycle.command.start", {
+    attributes: { commandSource: context.commandSource, stage: stageName || "command", sampleProcessTree },
   });
-
-  if (command.trim()) {
-    commandSource = "workflow-input";
-    const lifecycle = loadedConfig?.config?.lifecycle || {};
-    const configuredStage = stageName ? lifecycle[stageName] : undefined;
-    const commandShell = configuredStage?.shell || true;
-    const effectiveCommandTimeoutMinutes = configuredStage?.timeoutMinutes ?? timeoutMinutes;
-    const startedAt = Date.now();
-    userLog.info("lifecycle.command.start", {
-      attributes: {
-        commandSource,
-        stage: stageName || "command",
-        sampleProcessTree,
-      },
-    });
-    try {
-      const commandEnv = {
-        ...process.env,
-        ...(lifecycle.env || {}),
-        ...(configuredStage?.env || {}),
-        ...(resolvedLogPath
-          ? {
-              BUILDCHAIN_LOG_PATH: resolvedLogPath,
-              BUILDCHAIN_LOG_RUN_ID: logRunId,
-            }
-          : {}),
-      };
-      if (sampleProcessTree) {
-        executeSampledShellCommand({
-          command,
-          cwd: resolvedCwd,
-          env: commandEnv,
-          shell: commandShell,
-          label: `lifecycle-${stageName || "command"}`,
-          processSummaryPath: resolvedProcessSummaryPath,
-          processSamplesPath: resolvedProcessSamplesPath,
-          processSampleIntervalMs,
-          requestedParallelism,
-          timeout: effectiveCommandTimeoutMinutes ? effectiveCommandTimeoutMinutes * 60_000 : undefined,
-        });
-      } else {
-        runShellCommandSync(command, {
-          cwd: resolvedCwd,
-          env: commandEnv,
-          shell: commandShell,
-          stdio: "inherit",
-          timeout: effectiveCommandTimeoutMinutes ? effectiveCommandTimeoutMinutes * 60_000 : undefined,
-        });
-      }
-      executed = true;
-      userLog.info("lifecycle.command.end", {
-        durationMs: Date.now() - startedAt,
-        attributes: {
-          commandSource,
-          stage: stageName || "command",
-        },
-      });
-    } catch (error) {
-      const lifecycleError = describeLifecycleTimeout(error, {
-        timeoutMinutes: effectiveCommandTimeoutMinutes,
-        stageName,
-        platformId,
-        platformName,
-      });
-      userLog.error("lifecycle.command.error", {
-        durationMs: Date.now() - startedAt,
-        message: "lifecycle command failed",
-        attributes: lifecycleErrorAttributes(lifecycleError, {
-          commandSource,
-          stage: stageName || "command",
-          sampleProcessTree,
-        }),
-      });
-      throw lifecycleError;
-    }
-  } else if (stageName) {
-    commandSource = "buildchain.toml";
-    const startedAt = Date.now();
-    userLog.info("lifecycle.stage.start", {
-      attributes: {
-        commandSource,
-        stage: stageName,
-        sampleProcessTree,
-      },
-    });
-    try {
-      executed = runLifecycleStageWithSampler({
-        cwd: resolvedCwd,
-        loadedConfig,
-        name: stageName,
-        env: resolvedLogPath
-          ? {
-              BUILDCHAIN_LOG_PATH: resolvedLogPath,
-              BUILDCHAIN_LOG_RUN_ID: logRunId,
-            }
-          : {},
-        sampleProcessTree,
+  try {
+    const commandEnv = {
+      ...process.env, ...(lifecycle.env || {}), ...(configuredStage?.env || {}),
+      ...(resolvedLogPath ? { BUILDCHAIN_LOG_PATH: resolvedLogPath, BUILDCHAIN_LOG_RUN_ID: logRunId } : {}),
+    };
+    const timeout = effectiveCommandTimeoutMinutes ? effectiveCommandTimeoutMinutes * 60_000 : undefined;
+    if (sampleProcessTree) {
+      executeSampledShellCommand({
+        command, cwd: resolvedCwd, env: commandEnv, shell: commandShell,
+        label: `lifecycle-${stageName || "command"}`,
         processSummaryPath: resolvedProcessSummaryPath,
         processSamplesPath: resolvedProcessSamplesPath,
-        processSampleIntervalMs,
-        requestedParallelism,
-        timeoutMinutes,
+        processSampleIntervalMs, requestedParallelism, timeout,
       });
-      userLog.info("lifecycle.stage.end", {
-        durationMs: Date.now() - startedAt,
-        attributes: {
-          commandSource,
-          stage: stageName,
-          executed,
-        },
+    } else {
+      runShellCommandSync(command, {
+        cwd: resolvedCwd, env: commandEnv, shell: commandShell, stdio: "inherit", timeout,
       });
-    } catch (error) {
-      const lifecycleError = describeLifecycleTimeout(error, {
-        timeoutMinutes: loadedConfig?.config?.lifecycle?.[stageName]?.timeoutMinutes ?? timeoutMinutes,
-        stageName,
-        platformId,
-        platformName,
-      });
-      userLog.error("lifecycle.stage.error", {
-        durationMs: Date.now() - startedAt,
-        message: "lifecycle stage failed",
-        attributes: lifecycleErrorAttributes(lifecycleError, {
-          commandSource,
-          stage: stageName,
-          sampleProcessTree,
-        }),
-      });
-      throw lifecycleError;
     }
+    context.executed = true;
+    userLog.info("lifecycle.command.end", {
+      durationMs: Date.now() - startedAt,
+      attributes: { commandSource: context.commandSource, stage: stageName || "command" },
+    });
+  } catch (error) {
+    const lifecycleError = describeLifecycleTimeout(error, {
+      timeoutMinutes: effectiveCommandTimeoutMinutes, stageName, platformId, platformName,
+    });
+    userLog.error("lifecycle.command.error", {
+      durationMs: Date.now() - startedAt, message: "lifecycle command failed",
+      attributes: lifecycleErrorAttributes(lifecycleError, {
+        commandSource: context.commandSource, stage: stageName || "command", sampleProcessTree,
+      }),
+    });
+    throw lifecycleError;
   }
-  if (required && !executed) {
+}
+
+function executeConfiguredLifecycleStage(context) {
+  const {
+    stageName, sampleProcessTree, timeoutMinutes, processSampleIntervalMs,
+    requestedParallelism, resolvedCwd, resolvedLogPath, resolvedProcessSummaryPath,
+    resolvedProcessSamplesPath, logRunId, loadedConfig, userLog, platformId, platformName,
+  } = context;
+  context.commandSource = "buildchain.toml";
+  const startedAt = Date.now();
+  userLog.info("lifecycle.stage.start", {
+    attributes: { commandSource: context.commandSource, stage: stageName, sampleProcessTree },
+  });
+  try {
+    context.executed = runLifecycleStageWithSampler({
+      cwd: resolvedCwd, loadedConfig, name: stageName,
+      env: resolvedLogPath ? { BUILDCHAIN_LOG_PATH: resolvedLogPath, BUILDCHAIN_LOG_RUN_ID: logRunId } : {},
+      sampleProcessTree, processSummaryPath: resolvedProcessSummaryPath,
+      processSamplesPath: resolvedProcessSamplesPath, processSampleIntervalMs,
+      requestedParallelism, timeoutMinutes,
+    });
+    userLog.info("lifecycle.stage.end", {
+      durationMs: Date.now() - startedAt,
+      attributes: { commandSource: context.commandSource, stage: stageName, executed: context.executed },
+    });
+  } catch (error) {
+    const lifecycleError = describeLifecycleTimeout(error, {
+      timeoutMinutes: loadedConfig?.config?.lifecycle?.[stageName]?.timeoutMinutes ?? timeoutMinutes,
+      stageName, platformId, platformName,
+    });
+    userLog.error("lifecycle.stage.error", {
+      durationMs: Date.now() - startedAt, message: "lifecycle stage failed",
+      attributes: lifecycleErrorAttributes(lifecycleError, {
+        commandSource: context.commandSource, stage: stageName, sampleProcessTree,
+      }),
+    });
+    throw lifecycleError;
+  }
+}
+
+function executeLifecycle(context) {
+  const { stageName, artifactName, platformId, command, required, frameworkLog } = context;
+  frameworkLog.info("lifecycle.start", { attributes: { stage: stageName, artifactName, platformId } });
+  if (command.trim()) executeWorkflowLifecycleCommand(context);
+  else if (stageName) executeConfiguredLifecycleStage(context);
+  if (required && !context.executed) {
     frameworkLog.error("lifecycle.required-missing", {
-      attributes: {
-        stage: stageName || "command",
-        commandSource,
-      },
+      attributes: { stage: stageName || "command", commandSource: context.commandSource },
     });
     throw new Error(`required lifecycle stage did not run: ${stageName || "command"}`);
   }
+}
 
-  const compilerCacheActivity = verifyBuildLifecycleCompilerCacheActivity({ stageName, executed, cwd: resolvedCwd, frameworkLog });
-  const substages = lifecycleSubstageEvidenceContext({ substageEvidencePath, cwd: resolvedCwd, workspace: resolvedWorkspace, diagnosticsDir, lifecycleStage: stageName, platformId });
+function readLifecycleSupportArtifacts(context) {
   const shouldReadProcessSummary = Boolean(
-    resolvedProcessSummaryPath
-      && (fs.existsSync(resolvedProcessSummaryPath) || processSummaryRequired),
+    context.resolvedProcessSummaryPath &&
+      (fs.existsSync(context.resolvedProcessSummaryPath) || context.processSummaryRequired),
   );
-  const processSummaryArtifact = shouldReadProcessSummary
-    ? readProcessSummaryArtifact(resolvedProcessSummaryPath)
-    : undefined;
-  const sourceCheckoutArtifact = fs.existsSync(resolvedSourceCheckoutPath)
-    ? JSON.parse(fs.readFileSync(resolvedSourceCheckoutPath, "utf8"))
-    : undefined;
-  const compilerCachePreparationArtifact = fs.existsSync(resolvedCompilerCachePreparationPath)
-    ? JSON.parse(fs.readFileSync(resolvedCompilerCachePreparationPath, "utf8"))
-    : undefined;
-  fs.mkdirSync(path.dirname(resolvedManifestPath), { recursive: true });
+  return {
+    processSummaryArtifact: shouldReadProcessSummary
+      ? readProcessSummaryArtifact(context.resolvedProcessSummaryPath)
+      : undefined,
+    sourceCheckoutArtifact: fs.existsSync(context.resolvedSourceCheckoutPath)
+      ? JSON.parse(fs.readFileSync(context.resolvedSourceCheckoutPath, "utf8"))
+      : undefined,
+    compilerCachePreparationArtifact: fs.existsSync(context.resolvedCompilerCachePreparationPath)
+      ? JSON.parse(fs.readFileSync(context.resolvedCompilerCachePreparationPath, "utf8"))
+      : undefined,
+  };
+}
+
+function collectLifecycleArtifacts(context) {
+  const compilerCacheActivity = verifyBuildLifecycleCompilerCacheActivity({
+    stageName: context.stageName, executed: context.executed,
+    cwd: context.resolvedCwd, frameworkLog: context.frameworkLog,
+  });
+  const substages = lifecycleSubstageEvidenceContext({
+    substageEvidencePath: context.substageEvidencePath, cwd: context.resolvedCwd,
+    workspace: context.resolvedWorkspace, diagnosticsDir: context.diagnosticsDir,
+    lifecycleStage: context.stageName, platformId: context.platformId,
+  });
+  const support = readLifecycleSupportArtifacts(context);
+  fs.mkdirSync(path.dirname(context.resolvedManifestPath), { recursive: true });
   const scanStartedAt = Date.now();
-  const signingArtifactPaths = stageName === "build"
+  const signingArtifactPaths = context.stageName === "build"
     ? signingArtifactPathsForPlatform({
-        loadedConfig,
-        cwd: resolvedCwd,
-        platformId,
+        loadedConfig: context.loadedConfig, cwd: context.resolvedCwd, platformId: context.platformId,
       })
     : [];
-  const files = collectArtifactFiles(resolvedWorkspace, [
-    ...artifactPaths,
-    ...signingArtifactPaths,
+  const files = collectArtifactFiles(context.resolvedWorkspace, [
+    ...context.artifactPaths, ...signingArtifactPaths,
   ]);
   const manifestFiles = files.map((file) => {
     const stat = fs.statSync(file);
     return {
-      path: manifestPathFor(resolvedWorkspace, file),
+      path: manifestPathFor(context.resolvedWorkspace, file),
       size: stat.size,
       sha256: sha256File(file),
     };
   });
   const artifactScanDurationMs = Date.now() - scanStartedAt;
-  frameworkLog.info("artifact.scan", {
-    durationMs: artifactScanDurationMs,
-    attributes: {
-      fileCount: manifestFiles.length,
-    },
+  context.frameworkLog.info("artifact.scan", {
+    durationMs: artifactScanDurationMs, attributes: { fileCount: manifestFiles.length },
   });
   const platform = {
-    id: platformId,
-    name: platformName,
-    os: process.env.RUNNER_OS || os.platform(),
-    arch: process.env.RUNNER_ARCH || os.arch(),
+    id: context.platformId, name: context.platformName,
+    os: process.env.RUNNER_OS || os.platform(), arch: process.env.RUNNER_ARCH || os.arch(),
   };
   const summary = createArtifactSummary({
-    artifactName,
-    platform,
-    files: manifestFiles,
+    artifactName: context.artifactName, platform, files: manifestFiles,
   });
-  const expected = parseExpectedArtifactsJson(expectedArtifactsJson);
   const expectedArtifacts = validateExpectedArtifacts({
-    expected,
-    files: manifestFiles,
-    summary,
+    expected: parseExpectedArtifactsJson(context.expectedArtifactsJson),
+    files: manifestFiles, summary,
   });
+  return {
+    compilerCacheActivity, substages, ...support, manifestFiles,
+    artifactScanDurationMs, platform, summary, expectedArtifacts,
+  };
+}
+
+function createLifecycleManifest(context, artifacts) {
+  const { frameworkLog, userLog } = context;
+  const { manifestFiles, summary, artifactScanDurationMs, compilerCacheActivity, substages } = artifacts;
   frameworkLog.info("artifact.manifest.write", {
     attributes: {
-      manifestPath: toPosix(path.relative(resolvedWorkspace, resolvedManifestPath)),
-      summaryPath: toPosix(path.relative(resolvedWorkspace, resolvedSummaryPath)),
+      manifestPath: toPosix(path.relative(context.resolvedWorkspace, context.resolvedManifestPath)),
+      summaryPath: toPosix(path.relative(context.resolvedWorkspace, context.resolvedSummaryPath)),
     },
   });
   frameworkLog.info("lifecycle.end", {
-    attributes: {
-      stage: stageName,
-      executed,
-      fileCount: manifestFiles.length,
-    },
+    attributes: { stage: context.stageName, executed: context.executed, fileCount: manifestFiles.length },
   });
+  const events = context.resolvedLogPath
+    ? readBuildchainLogEvents(context.resolvedLogPath)
+    : [...frameworkLog.events, ...userLog.events];
   const observability = {
     log: {
-      contract: "kungfu-buildchain-log-event",
-      runId: logRunId,
-      path: relativeLogPath,
-      summary: resolvedLogPath
-        ? summarizeBuildchainLogEvents(
-            readBuildchainLogEvents(resolvedLogPath).filter(
-              (event) => event.attributes?.buildchainLogRunId === logRunId,
-            ),
-          )
-        : summarizeBuildchainLogEvents([...frameworkLog.events, ...userLog.events]),
+      contract: "kungfu-buildchain-log-event", runId: context.logRunId,
+      path: context.relativeLogPath,
+      summary: context.resolvedLogPath
+        ? summarizeBuildchainLogEvents(events.filter((event) => event.attributes?.buildchainLogRunId === context.logRunId))
+        : summarizeBuildchainLogEvents(events),
     },
   };
   const lifecycleObservability = summarizeLifecycleObservability({
-    events: resolvedLogPath ? readBuildchainLogEvents(resolvedLogPath) : [...frameworkLog.events, ...userLog.events],
-    logPath: relativeLogPath,
-    artifactScanDurationMs,
-    totalBytes: summary.totalBytes,
-    fileCount: summary.fileCount,
+    events, logPath: context.relativeLogPath, artifactScanDurationMs,
+    totalBytes: summary.totalBytes, fileCount: summary.fileCount,
   });
   observability.lifecycle = lifecycleObservability;
   Object.assign(observability, { compilerCacheActivity }, substages.observability);
   observability.diagnostics = {
     contract: BUILDCHAIN_DIAGNOSTICS_CONTRACT,
-    path: relativeDiagnosticsPath,
-    manifestPath: relativeDiagnosticsManifestPath,
-    eventsPath: relativeDiagnosticsEventsPath,
+    path: context.relativeDiagnosticsPath,
+    manifestPath: context.relativeDiagnosticsManifestPath,
+    eventsPath: context.relativeDiagnosticsEventsPath,
   };
-  if (relativeProcessSummaryPath) {
+  if (context.relativeProcessSummaryPath) {
     observability.process = {
       contract: BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
-      path: relativeProcessSummaryPath,
+      path: context.relativeProcessSummaryPath,
     };
   }
-  const summaryWithObservability = {
-    ...summary,
-    observability,
-  };
-  const manifest = {
-    schemaVersion: 1,
-    contract: "kungfu-buildchain-artifact",
-    artifactName,
-    platform,
-    git: {
-      repository: process.env.GITHUB_REPOSITORY || "",
-      sha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
-      ref: process.env.BUILDCHAIN_SOURCE_REF || process.env.GITHUB_REF || "",
-      runId: process.env.GITHUB_RUN_ID || "",
-      runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
-    },
-    lifecycle: {
-      stage: stageName,
-      commandSource,
-      executed,
-      ...substages.lifecycle,
-    },
-    observability,
-    summary: summaryWithObservability,
-    expectedArtifacts,
-    files: manifestFiles,
-  };
-
-  fs.writeFileSync(resolvedManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  fs.mkdirSync(path.dirname(resolvedSummaryPath), { recursive: true });
-  fs.writeFileSync(resolvedSummaryPath, `${JSON.stringify(summaryWithObservability, null, 2)}\n`);
-  writeDiagnosticsArtifact(
-    resolvedDiagnosticsPath,
-    createDiagnosticsArtifact({
-      cwd: resolvedCwd,
-      logPath: resolvedLogPath,
-      artifactPaths,
-      lifecycleObservability,
-      processSummary: processSummaryArtifact?.summary,
-      sourceCheckout: sourceCheckoutArtifact,
-      compilerCachePreparation: compilerCachePreparationArtifact,
-      links: {
-        artifactName,
-        platformId,
-        ...(manifestArtifactName ? { manifestArtifactName } : {}),
-        ...(diagnosticsArtifactName ? { diagnosticsArtifactName } : {}),
-        manifest: toPosix(path.relative(resolvedWorkspace, resolvedManifestPath)),
-        summary: toPosix(path.relative(resolvedWorkspace, resolvedSummaryPath)),
-        log: relativeLogPath,
-        diagnosticsManifest: relativeDiagnosticsManifestPath,
-        diagnosticsEvents: relativeDiagnosticsEventsPath,
-        ...(relativeProcessSummaryPath ? { processSummary: relativeProcessSummaryPath } : {}),
-        ...(processSummaryArtifact ? { diagnosticsProcessSummary: relativeDiagnosticsProcessSummaryPath } : {}),
-        ...(processSummaryArtifact?.samplesPath ? { diagnosticsProcessSamples: relativeDiagnosticsProcessSamplesPath } : {}),
-        ...substages.links,
-        ...(sourceCheckoutArtifact ? { sourceCheckout: relativeDiagnosticsSourceCheckoutPath } : {}),
-        ...(compilerCachePreparationArtifact
-          ? { compilerCachePreparation: relativeDiagnosticsCompilerCachePreparationPath }
-          : {}),
+  const summaryWithObservability = { ...summary, observability };
+  return {
+    lifecycleObservability, summaryWithObservability,
+    manifest: {
+      schemaVersion: 1, contract: "kungfu-buildchain-artifact",
+      artifactName: context.artifactName, platform: artifacts.platform,
+      git: {
+        repository: process.env.GITHUB_REPOSITORY || "",
+        sha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
+        ref: process.env.BUILDCHAIN_SOURCE_REF || process.env.GITHUB_REF || "",
+        runId: process.env.GITHUB_RUN_ID || "",
+        runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",
       },
+      lifecycle: {
+        stage: context.stageName, commandSource: context.commandSource,
+        executed: context.executed, ...substages.lifecycle,
+      },
+      observability, summary: summaryWithObservability,
+      expectedArtifacts: artifacts.expectedArtifacts, files: manifestFiles,
+    },
+  };
+}
+
+function diagnosticsLinks(context, artifacts) {
+  const { processSummaryArtifact, sourceCheckoutArtifact, compilerCachePreparationArtifact, substages } = artifacts;
+  return {
+    artifactName: context.artifactName, platformId: context.platformId,
+    ...(context.manifestArtifactName ? { manifestArtifactName: context.manifestArtifactName } : {}),
+    ...(context.diagnosticsArtifactName ? { diagnosticsArtifactName: context.diagnosticsArtifactName } : {}),
+    manifest: toPosix(path.relative(context.resolvedWorkspace, context.resolvedManifestPath)),
+    summary: toPosix(path.relative(context.resolvedWorkspace, context.resolvedSummaryPath)),
+    log: context.relativeLogPath,
+    diagnosticsManifest: context.relativeDiagnosticsManifestPath,
+    diagnosticsEvents: context.relativeDiagnosticsEventsPath,
+    ...(context.relativeProcessSummaryPath ? { processSummary: context.relativeProcessSummaryPath } : {}),
+    ...(processSummaryArtifact ? { diagnosticsProcessSummary: context.relativeDiagnosticsProcessSummaryPath } : {}),
+    ...(processSummaryArtifact?.samplesPath ? { diagnosticsProcessSamples: context.relativeDiagnosticsProcessSamplesPath } : {}),
+    ...substages.links,
+    ...(sourceCheckoutArtifact ? { sourceCheckout: context.relativeDiagnosticsSourceCheckoutPath } : {}),
+    ...(compilerCachePreparationArtifact
+      ? { compilerCachePreparation: context.relativeDiagnosticsCompilerCachePreparationPath }
+      : {}),
+  };
+}
+
+function persistLifecycleDiagnostics(context, artifacts, product) {
+  fs.writeFileSync(context.resolvedManifestPath, `${JSON.stringify(product.manifest, null, 2)}\n`);
+  fs.mkdirSync(path.dirname(context.resolvedSummaryPath), { recursive: true });
+  fs.writeFileSync(
+    context.resolvedSummaryPath,
+    `${JSON.stringify(product.summaryWithObservability, null, 2)}\n`,
+  );
+  writeDiagnosticsArtifact(
+    context.resolvedDiagnosticsPath,
+    createDiagnosticsArtifact({
+      cwd: context.resolvedCwd,
+      logPath: context.resolvedLogPath,
+      artifactPaths: context.artifactPaths,
+      lifecycleObservability: product.lifecycleObservability,
+      processSummary: artifacts.processSummaryArtifact?.summary,
+      sourceCheckout: artifacts.sourceCheckoutArtifact,
+      compilerCachePreparation: artifacts.compilerCachePreparationArtifact,
+      links: diagnosticsLinks(context, artifacts),
     }),
   );
-  if (resolvedLogPath && fs.existsSync(resolvedLogPath)) {
-    copyIfExists(resolvedLogPath, resolvedDiagnosticsEventsPath);
+  if (context.resolvedLogPath && fs.existsSync(context.resolvedLogPath)) {
+    copyIfExists(context.resolvedLogPath, context.resolvedDiagnosticsEventsPath);
   } else {
-    writeJsonlEvents(resolvedDiagnosticsEventsPath, [...frameworkLog.events, ...userLog.events]);
-  }
-  if (processSummaryArtifact) {
-    copyIfExists(resolvedProcessSummaryPath, resolvedDiagnosticsProcessSummaryPath);
-    const resolvedSamplesPath = resolveLinkedFilePath({
-      linkedPath: processSummaryArtifact.samplesPath,
-      workspace: resolvedWorkspace,
-      cwd: resolvedCwd,
-      fallbackDir: path.dirname(resolvedProcessSummaryPath),
-    });
-    copyIfExists(resolvedSamplesPath, resolvedDiagnosticsProcessSamplesPath);
-  }
-  copyIfExists(substages.sourcePath, substages.targetPath);
-  if (sourceCheckoutArtifact) {
-    copyIfExists(resolvedSourceCheckoutPath, resolvedDiagnosticsSourceCheckoutPath);
-  }
-  if (compilerCachePreparationArtifact) {
-    copyIfExists(
-      resolvedCompilerCachePreparationPath,
-      resolvedDiagnosticsCompilerCachePreparationPath,
+    writeJsonlEvents(
+      context.resolvedDiagnosticsEventsPath,
+      [...context.frameworkLog.events, ...context.userLog.events],
     );
   }
-  writeDiagnosticsSidecarManifest(resolvedDiagnosticsManifestPath, {
-    workspace: resolvedWorkspace,
-    artifactName,
-    platformId,
-    diagnosticsArtifactName,
+  if (artifacts.processSummaryArtifact) {
+    copyIfExists(context.resolvedProcessSummaryPath, context.resolvedDiagnosticsProcessSummaryPath);
+    const resolvedSamplesPath = resolveLinkedFilePath({
+      linkedPath: artifacts.processSummaryArtifact.samplesPath,
+      workspace: context.resolvedWorkspace,
+      cwd: context.resolvedCwd,
+      fallbackDir: path.dirname(context.resolvedProcessSummaryPath),
+    });
+    copyIfExists(resolvedSamplesPath, context.resolvedDiagnosticsProcessSamplesPath);
+  }
+  copyIfExists(artifacts.substages.sourcePath, artifacts.substages.targetPath);
+  if (artifacts.sourceCheckoutArtifact) {
+    copyIfExists(context.resolvedSourceCheckoutPath, context.resolvedDiagnosticsSourceCheckoutPath);
+  }
+  if (artifacts.compilerCachePreparationArtifact) {
+    copyIfExists(
+      context.resolvedCompilerCachePreparationPath,
+      context.resolvedDiagnosticsCompilerCachePreparationPath,
+    );
+  }
+  writeDiagnosticsSidecarManifest(context.resolvedDiagnosticsManifestPath, {
+    workspace: context.resolvedWorkspace,
+    artifactName: context.artifactName,
+    platformId: context.platformId,
+    diagnosticsArtifactName: context.diagnosticsArtifactName,
     files: [
-      { kind: "diagnostics", filePath: resolvedDiagnosticsPath, required: true },
-      { kind: "events", filePath: resolvedDiagnosticsEventsPath, required: true },
-      { kind: "process-summary", filePath: resolvedDiagnosticsProcessSummaryPath },
-      { kind: "process-samples", filePath: resolvedDiagnosticsProcessSamplesPath },
-      substages.sidecar,
-      { kind: "source-checkout", filePath: resolvedDiagnosticsSourceCheckoutPath },
-      {
-        kind: "compiler-cache-preparation",
-        filePath: resolvedDiagnosticsCompilerCachePreparationPath,
-      },
+      { kind: "diagnostics", filePath: context.resolvedDiagnosticsPath, required: true },
+      { kind: "events", filePath: context.resolvedDiagnosticsEventsPath, required: true },
+      { kind: "process-summary", filePath: context.resolvedDiagnosticsProcessSummaryPath },
+      { kind: "process-samples", filePath: context.resolvedDiagnosticsProcessSamplesPath },
+      artifacts.substages.sidecar,
+      { kind: "source-checkout", filePath: context.resolvedDiagnosticsSourceCheckoutPath },
+      { kind: "compiler-cache-preparation", filePath: context.resolvedDiagnosticsCompilerCachePreparationPath },
     ],
   });
-  console.log(`buildchain_manifest=${path.relative(resolvedWorkspace, resolvedManifestPath)}`);
-  return manifest;
+  console.log(`buildchain_manifest=${path.relative(context.resolvedWorkspace, context.resolvedManifestPath)}`);
+  return product.manifest;
+}
+
+export function runLifecycle(options = {}) {
+  const context = createLifecycleContext(normalizeLifecycleOptions(options));
+  executeLifecycle(context);
+  const artifacts = collectLifecycleArtifacts(context);
+  const product = createLifecycleManifest(context, artifacts);
+  return persistLifecycleDiagnostics(context, artifacts, product);
 }
 
 export function normalizeCommandStage(commandText) {

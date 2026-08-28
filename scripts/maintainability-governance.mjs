@@ -87,6 +87,67 @@ function metricLeaves(value, prefix = "") {
 function metricAt(value, metric) {
   return metric.split(".").reduce((current, key) => current?.[key], value);
 }
+function calculateDebtMeasuredExcess(debt) {
+  return Object.values(debt?.surfaces || {}).reduce(
+    (domainTotal, surfaces) =>
+      domainTotal +
+      Object.values(surfaces || {}).reduce(
+        (surfaceTotal, entry) =>
+          surfaceTotal +
+          metricLeaves(entry.current).reduce((metricTotal, [metric, value]) => {
+            const target = metricAt(entry.target, metric);
+            return (
+              metricTotal +
+              (Number.isFinite(value) && Number.isFinite(target)
+                ? Math.max(0, value - target)
+                : 0)
+            );
+          }, 0),
+        0,
+      ),
+    0,
+  );
+}
+function evaluateDebtBudget({ debt, policy }) {
+  const budget = policy.debtBudget;
+  if (!budget) return [];
+  const issues = [];
+  for (const field of [
+    "baselineMeasuredExcess",
+    "baselineTotalExcess",
+    "maxTotalExcess",
+    "targetExclusive",
+  ]) {
+    if (!Number.isInteger(budget[field]) || budget[field] < 0) {
+      issues.push(`debt budget ${field} must be a non-negative integer`);
+    }
+  }
+  if (!String(budget.baselineProtectedHead || "").trim()) {
+    issues.push("debt budget baselineProtectedHead is required");
+  }
+  if (issues.length) return issues;
+  if (budget.maxTotalExcess > budget.baselineTotalExcess) {
+    issues.push("debt budget maximum cannot exceed its frozen baseline");
+  }
+  if (budget.targetExclusive > budget.baselineTotalExcess) {
+    issues.push("debt budget target cannot exceed its frozen baseline");
+  }
+  const measured = calculateDebtMeasuredExcess(debt);
+  const total =
+    budget.baselineTotalExcess + measured - budget.baselineMeasuredExcess;
+  const ledger = debt.totalExcessLedger || {};
+  if (ledger.measuredExcess !== measured || ledger.current !== total) {
+    issues.push(
+      `debt total-excess ledger is stale: measured ${measured}, calibrated ${total}`,
+    );
+  }
+  if (total > budget.maxTotalExcess) {
+    issues.push(
+      `maintainability debt total excess is ${total}; frozen maximum is ${budget.maxTotalExcess}`,
+    );
+  }
+  return issues;
+}
 function evaluateDebtEntry(domain, path, entry, expected) {
   if (JSON.stringify(entry.current) !== JSON.stringify(expected))
     return [`${domain}:${path}: current measurement is stale`];
@@ -196,6 +257,34 @@ const exceptionCollections = [
   "approvedTestDebtTransitions",
   "approvedWorkflowDebtTransitions",
 ];
+function evaluateExceptionBudget({ policy }) {
+  const budget = policy.exceptionBudget;
+  if (!budget) return [];
+  const issues = [];
+  let total = 0;
+  for (const collection of exceptionCollections) {
+    const count = Object.keys(policy[collection] || {}).length;
+    total += count;
+    const maximum = budget.maxByCollection?.[collection];
+    if (!Number.isInteger(maximum) || maximum < 0) {
+      issues.push(
+        `exception budget ${collection} must be a non-negative integer`,
+      );
+    } else if (count > maximum) {
+      issues.push(
+        `${collection} has ${count} exceptions; frozen maximum is ${maximum}`,
+      );
+    }
+  }
+  if (!Number.isInteger(budget.maxTotal) || budget.maxTotal < 0) {
+    issues.push("exception budget maxTotal must be a non-negative integer");
+  } else if (total > budget.maxTotal) {
+    issues.push(
+      `maintainability exceptions total ${total}; frozen maximum is ${budget.maxTotal}`,
+    );
+  }
+  return issues;
+}
 function exceptionGovernanceIssues(label, approval, policy, now) {
   const issues = [];
   const reference = approval?.governance;
@@ -373,8 +462,11 @@ function evaluateWorkflowBudgets({ current, baselineFiles, policy }) {
   return issues;
 }
 export {
+  calculateDebtMeasuredExcess,
   debtSurfaces,
   evaluateDebtAuthority,
+  evaluateDebtBudget,
+  evaluateExceptionBudget,
   evaluateExceptionGovernance,
   evaluateTestBudgets,
   evaluateWorkflowBudgets,

@@ -329,7 +329,7 @@
         ],
         "idempotence": [
           {
-            "path": "tests/promote-buildchain-ref.test.mjs",
+            "path": "tests/promote-buildchain-ref-facade-contracts.test.mjs",
             "name": "durable release transaction treats retried createRef as idempotent"
           }
         ]

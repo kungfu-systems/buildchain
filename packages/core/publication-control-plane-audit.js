@@ -72,19 +72,152 @@ function fact(id, pass, observed) {
   };
 }
 
-export function evaluatePublicationControlPlaneSnapshot({
+function evaluatePublisherPolicy({
+  publisher,
+  publisherMode,
+  packageName,
   repository,
   workflowPath,
-  publisherWorkflowPath = workflowPath,
+  publisherWorkflowPath,
+  workflowFilename,
   environment,
-  branch,
-  packageName,
-  publisherMode = "npm-trusted-publisher",
-  requiredStatusCheck = "check",
-  snapshot,
-  observedAt,
-  expiresAt,
-} = {}) {
+  providerEnvironment,
+}) {
+  if (publisherMode === "npm-trusted-publisher") {
+    const identityPass = publisher.packageName === packageName &&
+      publisher.provider === "github" &&
+      publisher.repository === repository &&
+      publisher.workflowFilename === workflowFilename &&
+      publisher.environment === providerEnvironment &&
+      publisher.longLivedWorkflowCredentialPresent === false;
+    return identityPass && (
+      (publisher.enforcement === "audited-control-plane" && publisher.allowPublish === true) ||
+      (publisher.enforcement === "provider-at-transaction" &&
+        publisher.authorizationDeferred === true &&
+        publisher.configurationRead === false)
+    );
+  }
+  if (publisherMode === "github-token") {
+    return publisher.provider === "github-token" &&
+      publisher.repository === repository &&
+      publisher.workflowPath === workflowPath &&
+      publisher.permissionScoped === true &&
+      publisher.longLivedWorkflowCredentialPresent === false;
+  }
+  if (publisherMode !== "oidc-role") return false;
+  return publisher.provider !== "" &&
+    publisher.repository === repository &&
+    publisher.workflowPath === publisherWorkflowPath &&
+    publisher.environment === environment &&
+    publisher.trustQualifying === true &&
+    /^[0-9a-f]{64}$/i.test(String(publisher.roleDigest || "").replace(/^sha256:/, "")) &&
+    publisher.longLivedWorkflowCredentialPresent === false;
+}
+
+function evaluateCredentialIsolation({ oidc, publisherMode, publisherWorkflowPath, providerEnvironment }) {
+  return publisherMode === "github-token"
+    ? oidc.githubTokenJobScoped === true && oidc.longLivedCredentialPresent === false
+    : oidc.workflowPath === publisherWorkflowPath &&
+      oidc.environment === providerEnvironment &&
+      oidc.idTokenJobScoped === true &&
+      oidc.longLivedCredentialPresent === false;
+}
+
+function requiredStatusCheckBinding(branchPolicy, requiredStatusCheck) {
+  const declared = branchPolicy.declaredRequiredStatusCheck || branchPolicy.requiredStatusCheck;
+  const resolved = branchPolicy.requiredStatusCheck;
+  return {
+    resolved,
+    pass: declared === requiredStatusCheck && (
+      resolved === declared ||
+      (resolved.startsWith(`${declared} / `) && branchPolicy.requiredStatusCheckMatchCount === 1)
+    ),
+  };
+}
+
+function sourceAuthorizationPass(branchPolicy) {
+  const authorizationSha = branchPolicy.authorizationSha || branchPolicy.sourceSha;
+  return branchPolicy.sourceSha === authorizationSha || (
+    branchPolicy.releaseReconciliation?.qualifying === true &&
+    branchPolicy.releaseReconciliation.parentSha === authorizationSha &&
+    /^\d+\.\d+\.\d+$/.test(String(branchPolicy.releaseReconciliation.version || "")) &&
+    branchPolicy.releaseReconciliation.packageVersion === branchPolicy.releaseReconciliation.version &&
+    Array.isArray(branchPolicy.releaseReconciliation.changedPaths) &&
+    branchPolicy.releaseReconciliation.changedPaths.length > 0
+  );
+}
+
+function evaluateConfiguredBranchPolicy(branchPolicy, branch) {
+  return branchPolicy.ref === branch &&
+    branchPolicy.strict === true &&
+    Number(branchPolicy.requiredApprovals || 0) >= 1 &&
+    branchPolicy.requireConversationResolution === true &&
+    branchPolicy.enforceAdmins === true;
+}
+
+function evaluateProviderBranchPolicy(branchPolicy, branch, requiredCheck) {
+  return branchPolicy.ref === branch &&
+    branchPolicy.policyMode === "provider-enforced-transaction" &&
+    branchPolicy.protected === true &&
+    branchPolicy.enforcementLevel === "everyone" &&
+    Array.isArray(branchPolicy.requiredStatusChecks) &&
+    requiredCheck.pass &&
+    branchPolicy.requiredStatusChecks.includes(requiredCheck.resolved) &&
+    branchPolicy.requiredCheckPassed === true &&
+    /^[0-9a-f]{40}$/i.test(String(branchPolicy.requiredCheckSha || "")) &&
+    branchPolicy.requiredCheckSha === branchPolicy.pullRequestHeadSha;
+}
+
+function evaluateProviderPullRequest(branchPolicy, branch, repository) {
+  return (branchPolicy.sourceSha === branchPolicy.headSha || branchPolicy.sourceContainedInBranch === true) &&
+    sourceAuthorizationPass(branchPolicy) &&
+    branchPolicy.mergedPullRequest === true &&
+    branchPolicy.baseRef === branch &&
+    branchPolicy.headRepository === repository &&
+    Number(branchPolicy.approvalCount || 0) >= 1 &&
+    branchPolicy.independentApproval === true;
+}
+
+function evaluateBranchPolicy({ branchPolicy, branch, repository, requiredStatusCheck }) {
+  const requiredCheck = requiredStatusCheckBinding(branchPolicy, requiredStatusCheck);
+  return evaluateConfiguredBranchPolicy(branchPolicy, branch) || (
+    evaluateProviderBranchPolicy(branchPolicy, branch, requiredCheck) &&
+    evaluateProviderPullRequest(branchPolicy, branch, repository)
+  );
+}
+
+function evaluateEnvironmentPolicy(environmentPolicy, environment) {
+  return environment === "none"
+    ? environmentPolicy.declared === false && environmentPolicy.exists === false
+    : environmentPolicy.name === environment &&
+      environmentPolicy.declared === true &&
+      environmentPolicy.exists === true &&
+      environmentPolicy.protected === true &&
+      environmentPolicy.branchAuthorized === true &&
+      (environmentPolicy.reviewRequired !== true || environmentPolicy.preventSelfReview === true);
+}
+
+function evaluateRunnerPolicy(runner) {
+  return runner.class === "ephemeral" &&
+    runner.label === "ubuntu-24.04" &&
+    runner.githubHosted === true &&
+    runner.selfHostedAuthorized === false;
+}
+
+function evaluatePublicationControlPlaneSnapshotOptions(options) {
+  const {
+    repository,
+    workflowPath,
+    publisherWorkflowPath = workflowPath,
+    environment,
+    branch,
+    packageName,
+    publisherMode = "npm-trusted-publisher",
+    requiredStatusCheck = "check",
+    snapshot,
+    observedAt,
+    expiresAt,
+  } = options;
   const workflowFilename = String(publisherWorkflowPath || "").split("/").pop();
   const providerEnvironment = environment === "none" ? "" : environment;
   const actions = snapshot?.actions || {};
@@ -93,131 +226,22 @@ export function evaluatePublicationControlPlaneSnapshot({
   const oidc = snapshot?.oidc || {};
   const publisher = snapshot?.publisher || {};
   const runner = snapshot?.runner || {};
-  const npmIdentityPass = publisher.packageName === packageName &&
-    publisher.provider === "github" &&
-    publisher.repository === repository &&
-    publisher.workflowFilename === workflowFilename &&
-    publisher.environment === providerEnvironment &&
-    publisher.longLivedWorkflowCredentialPresent === false;
-  const publisherPass = publisherMode === "npm-trusted-publisher"
-    ? npmIdentityPass && (
-      (publisher.enforcement === "audited-control-plane" && publisher.allowPublish === true) ||
-      (publisher.enforcement === "provider-at-transaction" &&
-        publisher.authorizationDeferred === true &&
-        publisher.configurationRead === false)
-    )
-    : publisherMode === "github-token"
-      ? publisher.provider === "github-token" &&
-        publisher.repository === repository &&
-        publisher.workflowPath === workflowPath &&
-        publisher.permissionScoped === true &&
-        publisher.longLivedWorkflowCredentialPresent === false
-      : publisherMode === "oidc-role"
-        ? publisher.provider !== "" &&
-          publisher.repository === repository &&
-          publisher.workflowPath === publisherWorkflowPath &&
-          publisher.environment === environment &&
-          publisher.trustQualifying === true &&
-          /^[0-9a-f]{64}$/i.test(String(publisher.roleDigest || "").replace(/^sha256:/, "")) &&
-          publisher.longLivedWorkflowCredentialPresent === false
-        : false;
-  const credentialIsolationPass = publisherMode === "github-token"
-    ? oidc.githubTokenJobScoped === true && oidc.longLivedCredentialPresent === false
-    : oidc.workflowPath === publisherWorkflowPath &&
-      oidc.environment === providerEnvironment &&
-      oidc.idTokenJobScoped === true &&
-      oidc.longLivedCredentialPresent === false;
-  const configuredBranchPolicyPass = branchPolicy.ref === branch &&
-    branchPolicy.strict === true &&
-    Number(branchPolicy.requiredApprovals || 0) >= 1 &&
-    branchPolicy.requireConversationResolution === true &&
-    branchPolicy.enforceAdmins === true;
-  const declaredRequiredStatusCheck = branchPolicy.declaredRequiredStatusCheck || branchPolicy.requiredStatusCheck;
-  const resolvedRequiredStatusCheck = branchPolicy.requiredStatusCheck;
-  const requiredStatusCheckBindingPass = declaredRequiredStatusCheck === requiredStatusCheck && (
-    resolvedRequiredStatusCheck === declaredRequiredStatusCheck ||
-    (
-      resolvedRequiredStatusCheck.startsWith(`${declaredRequiredStatusCheck} / `) &&
-      branchPolicy.requiredStatusCheckMatchCount === 1
-    )
-  );
-  const authorizationSha = branchPolicy.authorizationSha || branchPolicy.sourceSha;
-  const sourceAuthorizationPass = branchPolicy.sourceSha === authorizationSha || (
-    branchPolicy.releaseReconciliation?.qualifying === true &&
-    branchPolicy.releaseReconciliation.parentSha === authorizationSha &&
-    /^\d+\.\d+\.\d+$/.test(String(branchPolicy.releaseReconciliation.version || "")) &&
-    branchPolicy.releaseReconciliation.packageVersion === branchPolicy.releaseReconciliation.version &&
-    Array.isArray(branchPolicy.releaseReconciliation.changedPaths) &&
-    branchPolicy.releaseReconciliation.changedPaths.length > 0
-  );
-  const sourceBranchBindingPass = branchPolicy.sourceSha === branchPolicy.headSha ||
-    branchPolicy.sourceContainedInBranch === true;
-  const providerTransactionBranchPass = branchPolicy.ref === branch &&
-    branchPolicy.policyMode === "provider-enforced-transaction" &&
-    branchPolicy.protected === true &&
-    branchPolicy.enforcementLevel === "everyone" &&
-    Array.isArray(branchPolicy.requiredStatusChecks) &&
-    requiredStatusCheckBindingPass &&
-    branchPolicy.requiredStatusChecks.includes(resolvedRequiredStatusCheck) &&
-    branchPolicy.requiredCheckPassed === true &&
-    /^[0-9a-f]{40}$/i.test(String(branchPolicy.requiredCheckSha || "")) &&
-    branchPolicy.requiredCheckSha === branchPolicy.pullRequestHeadSha &&
-    sourceBranchBindingPass &&
-    sourceAuthorizationPass &&
-    branchPolicy.mergedPullRequest === true &&
-    branchPolicy.baseRef === branch &&
-    branchPolicy.headRepository === repository &&
-    Number(branchPolicy.approvalCount || 0) >= 1 &&
-    branchPolicy.independentApproval === true;
   const facts = [
-    fact(
-      "actions-policy",
-      actions.defaultWorkflowPermissions === "read" && actions.canApprovePullRequestReviews === false,
-      actions,
-    ),
-    fact(
-      "branch-policy",
-      configuredBranchPolicyPass || providerTransactionBranchPass,
-      branchPolicy,
-    ),
-    fact(
-      "environment-policy",
-      environment === "none"
-        ? environmentPolicy.declared === false && environmentPolicy.exists === false
-        : environmentPolicy.name === environment &&
-          environmentPolicy.declared === true &&
-          environmentPolicy.exists === true &&
-          environmentPolicy.protected === true &&
-          environmentPolicy.branchAuthorized === true &&
-          (environmentPolicy.reviewRequired !== true || environmentPolicy.preventSelfReview === true),
-      environmentPolicy,
-    ),
-    fact(
-      "oidc-policy",
-      credentialIsolationPass,
-      oidc,
-    ),
-    fact(
-      "publisher-policy",
-      publisherPass,
-      publisher,
-    ),
-    fact(
-      "runner-policy",
-      runner.class === "ephemeral" &&
-        runner.label === "ubuntu-24.04" &&
-        runner.githubHosted === true &&
-        runner.selfHostedAuthorized === false,
-      runner,
-    ),
+    fact("actions-policy", actions.defaultWorkflowPermissions === "read" && actions.canApprovePullRequestReviews === false, actions),
+    fact("branch-policy", evaluateBranchPolicy({ branchPolicy, branch, repository, requiredStatusCheck }), branchPolicy),
+    fact("environment-policy", evaluateEnvironmentPolicy(environmentPolicy, environment), environmentPolicy),
+    fact("oidc-policy", evaluateCredentialIsolation({ oidc, publisherMode, publisherWorkflowPath, providerEnvironment }), oidc),
+    fact("publisher-policy", evaluatePublisherPolicy({
+      publisher, publisherMode, packageName, repository, workflowPath,
+      publisherWorkflowPath, workflowFilename, environment, providerEnvironment,
+    }), publisher),
+    fact("runner-policy", evaluateRunnerPolicy(runner), runner),
   ];
   return createPublicationControlPlaneAudit({
-    repository,
-    workflowPath,
-    publisherWorkflowPath,
-    environment,
-    facts,
-    observedAt,
-    expiresAt,
+    repository, workflowPath, publisherWorkflowPath, environment, facts, observedAt, expiresAt,
   });
+}
+
+export function evaluatePublicationControlPlaneSnapshot({ repository, workflowPath, publisherWorkflowPath = workflowPath, environment, branch, packageName, publisherMode = "npm-trusted-publisher", requiredStatusCheck = "check", snapshot, observedAt, expiresAt, } = {}) {
+  return evaluatePublicationControlPlaneSnapshotOptions({ repository, workflowPath, publisherWorkflowPath, environment, branch, packageName, publisherMode, requiredStatusCheck, snapshot, observedAt, expiresAt });
 }
