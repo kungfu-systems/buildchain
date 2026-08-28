@@ -1411,6 +1411,11 @@ test("sealed publication authority verifier is independent and credential-free",
   assert.match(workflow, /release-candidate admission requires exactly one Gate aggregate, consumer Gate command, or explicit publication-auto-no-gate decision/);
   assert.match(workflow, /name: Checkout exact consumer Gate subject/);
   assert.match(workflow, /name: Checkout exact consumer Gate controller/);
+  const subjectCheckout = workflow.match(
+    /- name: Checkout exact consumer Gate subject\n(?<body>[\s\S]*?)\n\s+- name: Checkout exact consumer Gate controller/,
+  );
+  assert.ok(subjectCheckout?.groups?.body);
+  assert.match(subjectCheckout.groups.body, /fetch-depth:\s*0/);
   assert.match(workflow, /name: Assemble consumer Gate from exact downloaded evidence/);
   assert.match(workflow, /BUILDCHAIN_CONSUMER_GATE_COMMAND: \$\{\{ inputs\.consumer-gate-command \}\}/);
   assert.match(workflow, /consumer-gate-controller-sha:/);

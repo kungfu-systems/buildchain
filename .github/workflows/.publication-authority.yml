@@ -581,6 +581,7 @@ jobs:
           path: .buildchain/publication-consumer-source
           clean: true
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Checkout exact consumer Gate controller
         if: ${{ !inputs.dry-run && inputs.auto-admission && inputs.auto-admission-kind == 'release-candidate' && inputs.consumer-gate-command != '' && inputs.consumer-gate-controller-sha != '' }}
