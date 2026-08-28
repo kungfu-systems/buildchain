@@ -749,7 +749,7 @@ test("buildchain ref promotion consumes PR-stage release candidate evidence", ()
   );
   assert.match(
     workflow,
-    /promote-alpha:[\s\S]*github\.event_name == 'workflow_dispatch'[\s\S]*startsWith\(inputs\['target-ref'\], 'alpha\/'\)[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /promote-alpha:[\s\S]*github\.event_name == 'workflow_dispatch'[\s\S]*startsWith\(inputs\['target-ref'\], 'alpha\/'\)[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
   assert.match(
     workflow,

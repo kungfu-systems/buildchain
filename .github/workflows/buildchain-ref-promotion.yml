@@ -82,7 +82,6 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
-      buildchain-channel: alpha
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && github.sha || 'v4-alpha' }}
       buildchain-expected-channel: alpha

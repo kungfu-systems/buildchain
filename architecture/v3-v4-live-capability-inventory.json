@@ -16518,7 +16518,7 @@
         "evidence": {
           "path": ".buildchain/release-impact.json",
           "selector": "$",
-          "valueRoot": "sha256:8411804d1efba911b09a0e83494c68affe7cfede5bc5134f12cbede12be1f655"
+          "valueRoot": "sha256:86635418114935d03650376b734aeb2e081648ba519d1f2ae9eece184934a7a3"
         }
       }
     },

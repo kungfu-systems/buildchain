@@ -1163,6 +1163,7 @@ jobs:
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
+      authority-job-id: legacy-promote
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
