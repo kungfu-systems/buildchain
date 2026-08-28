@@ -130,6 +130,23 @@ test("v4 admission requires declarative mode while v3 remains compatible", () =>
   );
 });
 
+test("v4 Provider Plane publishes the standard promotion controller evidence", () => {
+  const source = (file) =>
+    fs.readFileSync(new URL(file, import.meta.url), "utf8");
+  const declarativeJob = source(
+    "../.github/workflows/.release-candidate-promote.yml",
+  ).match(/\n  v4-declarative-promote:\n([\s\S]*?)\n  legacy-promote:\n/u)[1];
+  assert.match(
+    declarativeJob,
+    /name: buildchain-release-promotion-controller-evidence-[\s\S]*\.buildchain\/release-candidate\/[\s\S]*\.buildchain\/release-passport\/[\s\S]*\.buildchain\/release-tail\//u,
+  );
+  assert.doesNotMatch(declarativeJob, /declarative-controller-evidence/u);
+  assert.match(
+    source("../.github/workflows/.release-candidate-promote.yml"),
+    /promotion-evidence\/release-passport\/buildchain\.release\.json/u,
+  );
+});
+
 test("qualified v4 release materializes the four built-in provider capabilities", () => {
   const directory = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-v4-tail-"),

@@ -1155,7 +1155,6 @@ jobs:
       publish-target: ${{ inputs.publish-target }}
       github-release: ${{ inputs.github-release }}
       declarative-release-tail: ${{ inputs.declarative-release-tail }}
-      provider-failure-after-capability: ${{ inputs.provider-failure-after-capability }}
       github-release-title: ${{ inputs.github-release-title }}
       github-release-notes: ${{ inputs.github-release-notes }}
       github-release-payload-patterns: ${{ inputs.github-release-payload-patterns }}
