@@ -33,11 +33,8 @@ function terminalEvidenceOptions(rest, environment) {
   };
 }
 
-export function devDeliveryCliOptions(args = [], environment = process.env) {
-  const [command = "", ...rest] = args;
+function authorityStateOptions(rest, environment) {
   return {
-    command,
-    repository: flag(rest, "repository", environment.GITHUB_REPOSITORY),
     branch: flag(
       rest,
       "branch",
@@ -53,6 +50,20 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
       "expected-old",
       environment.BUILDCHAIN_DEV_DELIVERY_EXPECTED_OLD,
     ),
+    legacyTerminalRecoveryPath: flag(
+      rest,
+      "legacy-terminal-recovery",
+      environment.BUILDCHAIN_DEV_DELIVERY_LEGACY_TERMINAL_RECOVERY,
+    ),
+  };
+}
+
+export function devDeliveryCliOptions(args = [], environment = process.env) {
+  const [command = "", ...rest] = args;
+  return {
+    command,
+    repository: flag(rest, "repository", environment.GITHUB_REPOSITORY),
+    ...authorityStateOptions(rest, environment),
     pullRequestNumber: flag(
       rest,
       "pull-request",

@@ -203,6 +203,27 @@ buildchain dev warrant cancel-queued --repository owner/repository \
 Warrant-scoped mutations require the exact fencing token and lease generation.
 `close` also requires a rooted terminal evidence object.
 
+Legacy v3 queues that predate the native command contract can be observed but
+cannot enter ordinary mutation paths. If every live legacy candidate has an
+exact completed failed hosted run with zero nonterminal jobs, an operator may
+atomically terminalize that complete live set:
+
+```sh
+buildchain dev warrant recover-legacy-terminal \
+  --repository owner/repository --branch dev/v4/v4.0 \
+  --expected-old sha256:<current-state-root> \
+  --legacy-terminal-recovery legacy-terminal-recovery.json --execute
+```
+
+The request must cover every live legacy native candidate exactly once and
+bind each stored candidate, source workflow run, terminal provider result, and
+content-addressed evidence object. Each evidence object carries the exact
+provider job identities, attempts, conclusions, and completion timestamps; all
+jobs must be terminal and at least one must have failed. The transition writes
+one expected-old state update and requires the resulting queue to pass the
+current strict native-proof contract. The recovery cannot qualify, merge,
+requeue, or partially advance a legacy authority state.
+
 On the v4 line, `observe` also has an explicit `--read-mode v4` candidate. It requires retained exact semantic-diff qualification and source binding, invokes the effect-disabled Rust projection, retains parity evidence, and returns the existing observation shape. The default and rollback mode remains `v3`; mutation commands ignore the read switch. See [`v4-delivery-warrant-read-candidate.md`](v4-delivery-warrant-read-candidate.md).
 
 Expensive native commands must run through `dev-delivery-native-run.mjs` (or an
