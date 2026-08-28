@@ -237,7 +237,7 @@ test("bounded alpha recovery admits the old floating shell with current exact ru
   assert.equal(result.ok, true, JSON.stringify(result.failures));
   assert.equal(result.receipt.invocation.visibleSelector, "alpha/v4/v4.0");
   assert.equal(result.receipt.invocation.selectorClass, "protected-bootstrap");
-  assert.match(workflow, /^  workflow_dispatch:/mu);
+  assert.match(workflow, /^  workflow_call:/mu);
   assert.doesNotMatch(workflow, /^  workflow_run:/mu);
   assert.match(
     workflow,

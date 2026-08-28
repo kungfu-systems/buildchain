@@ -185,6 +185,23 @@
   },
   "declarations": [
     {
+      "laneId": ".github/workflows/buildchain-ref-promotion.yml#recover-stable-candidate",
+      "authorityClass": "release",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 45,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "protected stable candidate recovery completion latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The lane reuses the bounded recovery workflow only for exact manually resumed stable candidates and does not join pull-request checks."
+      }
+    },
+    {
       "laneId": ".github/workflows/.release-candidate-promote.yml#legacy-promote",
       "authorityClass": "release",
       "triggerClass": "reusable",

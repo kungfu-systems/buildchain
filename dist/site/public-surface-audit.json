@@ -1850,9 +1850,22 @@
       {
         "id": "buildchain-ref-promotion-recovery",
         "path": ".github/workflows/buildchain-ref-promotion-recovery.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
+        "reusable": true,
+        "inputs": [
+          "dry-run",
+          "release-passport-v4-runtime-resume-evidence-json",
+          "resume-buildchain-runtime-ref",
+          "resume-buildchain-runtime-sha",
+          "resume-candidate-repository",
+          "resume-candidate-run-id",
+          "resume-expected-candidate-root",
+          "resume-expected-candidate-runtime-sha",
+          "resume-expected-source-tree",
+          "resume-transaction-id",
+          "sha",
+          "target-ref"
+        ],
+        "inputCount": 12,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -8910,7 +8923,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "63cbd30a11e11c5524f17ca7bc37202fd8f0cbefd9e73ab37398cd899294a345",
+    "workflowRegistryDigest": "95bb3dca892cfa66318d433298b9ce94e8499f79c5d5e3a86f24a00bb0a4b8b3",
     "pageRegistryDigest": "294b0479ac931f8645d4d18e7431cab4533f1f9fbd12df8f8700089e7ed2319a"
   },
   "comparison": {

@@ -3307,7 +3307,7 @@ test("npm-only promotion does not require a standalone binary workflow", () => {
     selfPromotion.indexOf("\n  promote-stable:\n"),
   );
   const stableCondition = stableJob.slice(0, stableJob.indexOf("\n    uses:"));
-  assert.doesNotMatch(stableCondition, /resume-candidate-run-id/);
+  assert.match(stableCondition, /inputs\['resume-candidate-run-id'\] == ''/);
   assert.match(
     stableJob,
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4/,
