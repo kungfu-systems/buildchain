@@ -1222,8 +1222,7 @@ jobs:
 
   publication-qualification:
     name: Run consumer publication predicate
-    needs:
-      [preflight, controller-plan, qualification-plan, publication-authority]
+    needs: [preflight, controller-plan, qualification-plan, publication-authority]
     if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -1473,7 +1472,7 @@ jobs:
           registry-url: "https://registry.npmjs.org/"
 
       - name: Install promotion dependencies
-        if: ${{ inputs.resume-candidate-run-id == '' }}
+        if: ${{ inputs.resume-candidate-run-id == '' && github.repository != inputs.buildchain-repository }}
         shell: bash
         run: |
           case "${PACKAGE_MANAGER}" in
@@ -1651,7 +1650,7 @@ jobs:
           NODE
 
       - name: Bridge Buildchain self-runtime dependencies
-        if: ${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository }}
+        if: ${{ github.repository == inputs.buildchain-repository }}
         shell: bash
         run: |
           test ! -e node_modules
