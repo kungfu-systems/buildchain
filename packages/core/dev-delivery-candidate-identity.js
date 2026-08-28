@@ -5,6 +5,11 @@ import {
   devDeliveryText as text,
 } from "./dev-delivery-common.js";
 export const CHAINED_ATTEMPT_IDENTITY = "chained-attempt-v2";
+const terminalBeforeChainCutover = (candidate, terminalStates) =>
+  terminalStates.has(candidate.status) &&
+  candidate.enqueuedAt < "2026-08-05T14:42:34.000Z";
+const UNCHAINED_SUCCESSOR =
+  "same-PR successor must chain the latest durable predecessor";
 export const EXACT_DEV_DELIVERY_PROOF_FIELDS = Object.freeze([
   "sourcePatchRoot",
   "sourceProofRoot",
@@ -73,27 +78,24 @@ export function validateDevDeliveryCandidateChain(candidates, terminalStates) {
   const latestByPullRequest = new Map();
   for (const candidate of candidates) {
     const latest = latestByPullRequest.get(candidate.pullRequestNumber);
-    if (latest && candidate.identitySemantics !== CHAINED_ATTEMPT_IDENTITY) {
-      throw new Error(
-        "same-PR successor must chain the latest durable predecessor",
-      );
+    if (
+      latest &&
+      candidate.identitySemantics !== CHAINED_ATTEMPT_IDENTITY &&
+      (!terminalBeforeChainCutover(latest, terminalStates) ||
+        !terminalBeforeChainCutover(candidate, terminalStates))
+    ) {
+      throw new Error(UNCHAINED_SUCCESSOR);
     }
     if (candidate.identitySemantics === CHAINED_ATTEMPT_IDENTITY) {
       const predecessor = precedingCandidates.get(
         candidate.predecessorCandidateId,
       );
-      if (!predecessor)
-        throw new Error(
-          "chained candidate predecessor must appear earlier in the queue",
-        );
-      if (predecessor.pullRequestNumber !== candidate.pullRequestNumber) {
-        throw new Error(
-          "chained candidate predecessor must belong to the same pull request",
-        );
-      }
-      if (!terminalStates.has(predecessor.status)) {
-        throw new Error("chained candidate predecessor must be terminal");
-      }
+      // prettier-ignore
+      if (!predecessor) throw new Error("chained candidate predecessor must appear earlier in the queue");
+      // prettier-ignore
+      if (predecessor.pullRequestNumber !== candidate.pullRequestNumber) throw new Error("chained candidate predecessor must belong to the same pull request");
+      // prettier-ignore
+      if (!terminalStates.has(predecessor.status)) throw new Error("chained candidate predecessor must be terminal");
       if (latest?.candidateId !== predecessor.candidateId) {
         throw new Error(
           "chained candidate must bind the latest durable predecessor",
