@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 992,
+  "generation": 993,
   "fencingCounter": 153,
   "policy": {
     "agingSeconds": 900,
@@ -7129,8 +7129,39 @@
         "tests/v4-floating-consumer-policy-contract.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3230,
+      "assignmentRoot": "sha256:58105cf22426d3f0a60cf03d9613d50ebec632e6673027f7f1633fcb774f6b11",
+      "initiativeRoot": "sha256:7adc5f6f1ec2b67bc4f76d1766819b5e551385b63c7afe05522a1abd6498ba25",
+      "sourceIdentityRoot": "sha256:61eb67a95d16143f6cfdcf5448f92d40a1abe5cf407a0e1991d391328152de91",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:154daf5d4b45c5fa0ce917954318e5c0bb85a40774c42ecd123de87c2d488f50",
+      "sourceHead": "c3922d50ac6b368ba85e3283c068b61698cc7738",
+      "sourcePatchRoot": "sha256:89213cdb200e86793bd2033cb3b0daaf6b4fc51e406704ed5f41f2a9631446a0",
+      "sourceProofRoot": "sha256:4892b0238c000cc6f6552d96d68dd61f568301df39e2b12095f8f41f37229df1",
+      "planRoot": "sha256:a5575e251043562a5926d245cf87400417d9dc2252adb61997e10ec87d7d1991",
+      "closureRoot": "sha256:f8fa0a516fac228ed4a6dbe81b005a779ed82c349472fc2d1d6f631ae27d6ac4",
+      "dependencyRoot": "sha256:f38491cdabf6772851a6a6db601cea3e21c03be2d3f249f5462ef17517648baf",
+      "toolchainRoot": "sha256:645b34421ce3b74c485067ba41996ca19e9baeb475f700f36300a3ba2fb702a5",
+      "sourceWorkflowRunId": 33179811433,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-28T14:41:49.582Z",
+      "updatedAt": "2026-08-28T14:41:49.582Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "packages/core/dev-delivery-candidate-identity.js",
+        "packages/core/dev-delivery-warrant-state.js",
+        "tests/dev-delivery-warrant-resubmission.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-28T13:32:41.125Z",
-  "stateRoot": "sha256:9b44e2edddbe14f792774a5699dcdb8affb96be62ebe0564bb594d5432e23637"
+  "updatedAt": "2026-08-28T14:41:49.582Z",
+  "stateRoot": "sha256:640ec3a7e28dd0fb18d9c8ff7627417d504cb68dbf42f472474b286a4da89d5f"
 }
