@@ -15,6 +15,10 @@ const recoveryWorkflow = fs.readFileSync(
   path.resolve(".github/workflows/buildchain-ref-promotion-recovery.yml"),
   "utf8",
 );
+const selfPromotionWorkflow = fs.readFileSync(
+  path.resolve(".github/workflows/buildchain-ref-promotion.yml"),
+  "utf8",
+);
 const protectedShellPredicate =
   "startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0'";
 
@@ -40,6 +44,24 @@ test("bounded floating bootstrap uses the old private shell with a declarative b
   assert.match(recoveryWorkflow, /declarative-release-tail: true/u);
   assert.doesNotMatch(recoveryWorkflow, /channel-finalization-recovery/u);
   assert.doesNotMatch(publicWorkflow, /channel-finalization-recovery/u);
+});
+
+test("trusted-publisher durable alpha recovery keeps the official floating shell on the declarative built-in tail", () => {
+  const promoteAlphaBlock = selfPromotionWorkflow.match(
+    /^  promote-alpha:[\s\S]*?(?=^  promote-stable:)/mu,
+  )?.[0];
+
+  assert.ok(promoteAlphaBlock, "expected the promote-alpha job");
+  assert.match(
+    promoteAlphaBlock,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.?release-candidate-promote\.yml@v4-alpha/u,
+  );
+  assert.match(
+    promoteAlphaBlock,
+    /^      publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml$/mu,
+  );
+  assert.match(promoteAlphaBlock, /^      declarative-release-tail: true$/mu);
+  assert.doesNotMatch(promoteAlphaBlock, /channel-finalization-recovery/u);
 });
 
 test("declarative promotion receipt reads the retained passport hierarchy", () => {
