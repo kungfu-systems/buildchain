@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64292,
-    "current": 56231
+    "measuredExcess": 64285,
+    "current": 56224
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -187,7 +187,7 @@
           }
         },
         "current": {
-          "lines": 3471,
+          "lines": 3468,
           "functions": {
             "resolvePublishContract@258": {
               "complexity": 30
@@ -1716,21 +1716,21 @@
       "scripts/release-line-policy.mjs": {
         "baseline": {
           "functions": {
-            "getBumpKeyword@124": {
+            "getBumpKeyword@135": {
               "complexity": 35
             }
           }
         },
         "current": {
           "functions": {
-            "getBumpKeyword@124": {
-              "complexity": 35
+            "getBumpKeyword@135": {
+              "complexity": 31
             }
           }
         },
         "target": {
           "functions": {
-            "getBumpKeyword@124": {
+            "getBumpKeyword@135": {
               "complexity": 25
             }
           }
@@ -3085,6 +3085,7 @@
   "hotspots": [
     "tests/v3-v4-capability-inventory.test.mjs",
     "tests/v4-floating-consumer-policy-contract.test.mjs",
+    "tests/v4-publication-qualification.test.mjs",
     ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/buildchain-ref-promotion.yml",
     "tests/release-candidate-recovery.test.mjs",
@@ -3118,7 +3119,7 @@
       "path": "actions/promote-buildchain-ref/lib.js",
       "metric": "lines",
       "baseline": 5132,
-      "current": 3471
+      "current": 3468
     },
     {
       "domain": "tests",
