@@ -894,6 +894,7 @@ Owner: Buildchain protected delivery maintainers
 - `packages/core/dev-delivery-warrant.js`
 - `packages/core/dev-delivery-warrant-state.js`
 - `packages/core/dev-delivery-warrant-qualification.js`
+- `packages/core/dev-delivery-warrant-legacy-recovery.js`
 - `packages/core/dev-delivery-native-proof.js`
 - `packages/core/dev-delivery-native-execution.js`
 - `packages/core/dev-delivery-execution-failure.js`
@@ -940,6 +941,7 @@ Owner: Buildchain protected delivery maintainers
 
 - `tests/dev-delivery-warrant.test.mjs`
 - `tests/dev-delivery-warrant-command.test.mjs`
+- `tests/dev-delivery-warrant-legacy-recovery.test.mjs`
 - `tests/dev-delivery-two-phase.test.mjs`
 - `tests/dev-delivery-two-phase-run.test.mjs`
 - `tests/dev-delivery-native-run.test.mjs`
@@ -956,7 +958,7 @@ Owner: Buildchain protected delivery maintainers
 
 ### Minimal validation
 
-- `node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/v4-delivery-authority-parity.test.mjs`
+- `node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-warrant-legacy-recovery.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/v4-delivery-authority-parity.test.mjs`
 
 ## v4-publication-rehearsal
 
