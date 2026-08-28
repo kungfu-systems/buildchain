@@ -1,0 +1,13 @@
+{
+  "overrides": [
+    {
+      "files": [
+        ".github/workflows/.release-candidate-promote.yml",
+        "tests/release-candidate-recovery.test.mjs"
+      ],
+      "options": {
+        "printWidth": 240
+      }
+    }
+  ]
+}

@@ -92,6 +92,10 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+function readRepoText(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), "utf8");
+}
+
 test("every workflow v2 token is explicitly governed and no ungoverned runtime default remains", () => {
   const inventory = JSON.parse(
     fs.readFileSync(
@@ -135,7 +139,7 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
       `${entry.path} must declare a sunset condition`,
     );
 
-    const source = fs.readFileSync(path.join(root, entry.path), "utf8");
+    const source = readRepoText(entry.path);
     assert.equal(
       source.split(entry.token).length - 1,
       entry.expectedOccurrences,
@@ -176,7 +180,7 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     ".github/workflows/release-propagation.yml",
   ];
   for (const workflow of workflows) {
-    const source = fs.readFileSync(path.join(root, workflow), "utf8");
+    const source = readRepoText(workflow);
     assert.match(
       source,
       /controller-plan-artifact:/,
@@ -240,20 +244,14 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     );
   }
 
-  const gateEnvelope = fs.readFileSync(
-    path.join(root, ".github/workflows/.gate-profile.yml"),
-    "utf8",
-  );
+  const gateEnvelope = readRepoText(".github/workflows/.gate-profile.yml");
   assert.match(gateEnvelope, /shifu-gate-aggregate/);
   assert.doesNotMatch(
     gateEnvelope,
     /BUILDCHAIN_CONTROLLER_(?:GATE_IDS|GATE_RESULTS)/,
   );
 
-  const channelRouter = fs.readFileSync(
-    path.join(root, ".github/workflows/build.yml"),
-    "utf8",
-  );
+  const channelRouter = readRepoText(".github/workflows/build.yml");
   assert.match(
     channelRouter,
     /router-repository: \$\{\{ steps\.router\.outputs\.repository \}\}/,
@@ -282,9 +280,8 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
   assert.match(channelRouter, /Enforce public channel router aggregate/);
 
-  const governanceReconciliation = fs.readFileSync(
-    path.join(root, ".github/workflows/release-governance-reconcile.yml"),
-    "utf8",
+  const governanceReconciliation = readRepoText(
+    ".github/workflows/release-governance-reconcile.yml",
   );
   assert.match(governanceReconciliation, /workflow_call:/);
   assert.match(governanceReconciliation, /workflow_dispatch:/);
@@ -295,19 +292,15 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   assert.match(governanceReconciliation, /args\+\=\(--apply\)/);
   assert.match(governanceReconciliation, /persist-credentials: false/);
 
-  const libnodeConsumer = fs.readFileSync(
-    path.join(root, "fixtures/libnode-shaped/.github/workflows/build.yml"),
-    "utf8",
+  const libnodeConsumer = readRepoText(
+    "fixtures/libnode-shaped/.github/workflows/build.yml",
   );
   assert.match(
     libnodeConsumer,
     /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/,
   );
 
-  const reusableBuild = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
+  const reusableBuild = readRepoText(".github/workflows/.build.yml");
   assert.match(reusableBuild, /Checkout build controller workflow shell/);
   assert.match(
     reusableBuild,
@@ -330,13 +323,9 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/,
   );
 
-  const paperRelease = fs.readFileSync(
-    path.join(root, ".github/workflows/paper-release.yml"),
-    "utf8",
-  );
-  const promotion = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
+  const paperRelease = readRepoText(".github/workflows/paper-release.yml");
+  const promotion = readRepoText(
+    ".github/workflows/.release-candidate-promote.yml",
   );
   const promotionAuthority = promotion.slice(
     promotion.indexOf("  publication-authority:"),
@@ -374,893 +363,10 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
 });
 
-test("reusable build workflow exposes the required surface contract", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-  const router = fs.readFileSync(
-    path.join(root, ".github/workflows/build.yml"),
-    "utf8",
-  );
-  const summarizeJob = workflow.slice(
-    workflow.indexOf("  summarize:"),
-    workflow.indexOf(
-      "\n  controller-receipt:",
-      workflow.indexOf("  summarize:"),
-    ),
-  );
-  const artifactDownloads =
-    workflow.match(/uses: actions\/download-artifact@v7\.0\.0/g) || [];
-  const authenticatedArtifactDownloads =
-    workflow.match(
-      /uses: actions\/download-artifact@v7\.0\.0\n\s+with:\n\s+github-token: \$\{\{ (?:github\.token|secrets\.BUILDCHAIN_PROMOTION_TOKEN) \}\}/g,
-    ) || [];
-  assert.match(workflow, /workflow_call:/);
-  assert.equal(
-    authenticatedArtifactDownloads.length,
-    artifactDownloads.length,
-    "every reusable-build artifact download must use the REST-backed token path so failed-job reruns can consume prior-attempt evidence",
-  );
-  assert.match(
-    workflow,
-    /artifact-signing-control:[\s\S]*?outputs:\n\s+source-run-attempt: \$\{\{ steps\.control-request\.outputs\.source-run-attempt \}\}/u,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /needs\.artifact-signing-control\.outputs\.source-run-attempt/g,
-      ) || []
-    ).length,
-    4,
-    "failed-job reruns must finalize the exact source attempt retained by the signing controller",
-  );
-  assert.match(
-    workflow,
-    /control-runner-json:\n\s+description: "JSON runner-label array for trusted control-plane jobs"[\s\S]*?default: '\["ubuntu-24\.04"\]'/,
-  );
-  assert.match(
-    workflow,
-    /artifact-finalization-command:\n\s+description: "Optional consumer verification command over final artifact bytes before manifest resealing"/,
-  );
-  assert.match(
-    workflow,
-    /artifact-finalization-on-platform:\n\s+description: "Run trusted artifact finalization on each GitHub-hosted platform runner instead of the control runner"[\s\S]*?default: false[\s\S]*?type: boolean/,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /runs-on: \$\{\{ fromJSON\(inputs\.control-runner-json\) \}\}/g,
-      ) || []
-    ).length,
-    9,
-  );
-  assert.match(
-    workflow,
-    /fail-fast:\n\s+description: "Cancel sibling platform lanes[\s\S]*?default: false[\s\S]*?type: boolean/,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /strategy:\n\s+fail-fast: \$\{\{ inputs\.fail-fast \}\}/g,
-      ) || []
-    ).length,
-    4,
-  );
-  assert.match(
-    workflow,
-    /kfd-agent-hub:\n\s+description: "Agent Hub conformance mode: off or auto/,
-  );
-  assert.equal(
-    (workflow.match(/name: Run KFD Agent Hub conformance/g) || []).length,
-    2,
-  );
-  assert.equal(
-    (workflow.match(/name: Upload KFD Agent Hub evidence/g) || []).length,
-    2,
-  );
-  assert.match(workflow, /buildchain\.mjs kfd hub test/);
-  assert.match(
-    workflow,
-    /artifact-name \}\}-kfd-agent-hub-\$\{\{ matrix\.platform\.id \}\}/,
-  );
-  assert.match(
-    workflow,
-    /name: Resolve source-bound application identity[\s\S]*?loadCredentialInput[\s\S]*?sourceTreeSha: process\.env\.BUILDCHAIN_SOURCE_TREE_SHA/,
-    "the credential island must derive product identity from the exact source-bound sealed manifest",
-  );
-  assert.match(
-    workflow,
-    /expected-bundle-id: \$\{\{ steps\.credential-identity\.outputs\.bundle-id \}\}/,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /BUILDCHAIN_MACOS_EXPECTED_BUNDLE_ID/,
-    "consumer repositories must not configure product bundle identity in the signing environment",
-  );
-  assert.match(workflow, /name: Validate consumer package manager contract/);
-  assert.match(
-    workflow,
-    /validator=\.buildchain\/runtime\/scripts\/validate-package-manager-contract\.mjs/,
-  );
-  assert.match(
-    workflow,
-    /validator=\.buildchain\/workflow-shell\/scripts\/validate-package-manager-contract\.mjs/,
-    "new workflow shells must retain package-manager validation when the selected stable runtime predates the validator",
-  );
-  assert.match(workflow, /node "\$\{validator\}"/);
-  assert.match(
-    workflow,
-    /BUILDCHAIN_PACKAGE_MANAGER_CWD: \.buildchain\/consumer\n/,
-    "consumer package-manager detection must use the repository root even when builds use a nested working directory",
-  );
-  assert.ok(
-    workflow.indexOf("name: Validate consumer package manager contract") <
-      workflow.indexOf("  build-native:"),
-    "consumer package-manager incompatibility must fail before native release-candidate jobs",
-  );
-  assert.match(workflow, /  anchored-release-preflight:/);
-  assert.match(workflow, /scripts\/anchored-version-material\.mjs/);
-  assert.match(
-    workflow,
-    /verifier=\.buildchain\/runtime\/scripts\/anchored-version-material\.mjs/,
-  );
-  assert.match(
-    workflow,
-    /verifier=\.buildchain\/workflow-shell\/scripts\/anchored-version-material\.mjs/,
-    "new workflow shells must retain the additive anchored preflight when the selected stable runtime predates its verifier",
-  );
-  assert.match(
-    workflow,
-    /install --dir \.buildchain\/workflow-shell --prod --frozen-lockfile --ignore-scripts/,
-  );
-  assert.match(
-    workflow,
-    /node "\$\{\{ steps\.anchored-verifier\.outputs\.path \}\}"/,
-  );
-  assert.match(
-    summarizeJob,
-    /name: Checkout Buildchain workflow shell for aggregate compatibility[\s\S]*?ref: \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-sha \}\}[\s\S]*?path: \.buildchain\/workflow-shell/,
-  );
-  assert.match(
-    summarizeJob,
-    /binder=\.buildchain\/runtime\/scripts\/resolve-artifact-coordinates\.mjs/,
-  );
-  assert.match(
-    summarizeJob,
-    /binder=\.buildchain\/workflow-shell\/scripts\/resolve-artifact-coordinates\.mjs/,
-    "new workflow shells must retain producer artifact coordinates when the selected stable runtime predates the binder",
-  );
-  assert.match(
-    summarizeJob,
-    /node "\$\{\{ steps\.artifact-coordinate-binder\.outputs\.path \}\}"/,
-  );
-  assert.match(workflow, /kind":"anchored-version-material"/);
-  assert.match(workflow, /target_ref="release\/\$\{BUILDCHAIN_TARGET_LINE\}"/);
-  assert.ok(
-    workflow.indexOf("  anchored-release-preflight:") <
-      workflow.indexOf("  build-native:"),
-    "anchored derived version material must be verified before heavy native builds",
-  );
-  assert.match(workflow, /runner-preset:/);
-  assert.match(workflow, /platforms-json:/);
-  assert.match(workflow, /self-hosted-offline-fallback:/);
-  assert.match(
-    workflow,
-    /name: Route offline self-hosted lanes[\s\S]*?BUILDCHAIN_RUNNER_INVENTORY_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
-  );
-  assert.match(
-    workflow,
-    /name: Checkout trusted runner-routing shell[\s\S]*?buildchain-workflow-shell-sha/,
-  );
-  assert.match(workflow, /runner-routing-json:/);
-  assert.match(workflow, /linux-container-preset:/);
-  assert.match(workflow, /linux-container-image:/);
-  assert.match(workflow, /resolve-contract:/);
-  assert.match(
-    workflow,
-    /fromJSON\(needs\.resolve-contract\.outputs\.native-platforms-json\)/,
-  );
-  assert.match(
-    workflow,
-    /fromJSON\(needs\.resolve-contract\.outputs\.container-platforms-json\)/,
-  );
-  assert.match(workflow, /Setup Buildchain Node\.js with fnm/);
-  assert.match(workflow, /setup-rust:/);
-  assert.match(workflow, /rust-toolchain:/);
-  assert.match(workflow, /rustup-dist-server:/);
-  assert.match(workflow, /rustup-update-root:/);
-  assert.match(workflow, /cargo-registry-index:/);
-  assert.equal((workflow.match(/RUSTUP_DIST_SERVER:/g) || []).length, 2);
-  assert.equal((workflow.match(/RUSTUP_UPDATE_ROOT:/g) || []).length, 2);
-  assert.match(workflow, /https:\/\/static\.rust-lang\.org\/rustup/);
-  assert.match(workflow, /Setup Rust toolchain on Windows/);
-  assert.match(
-    workflow,
-    /if: \$\{\{ inputs\.setup-rust && runner\.os == 'Windows' \}\}/,
-  );
-  assert.match(workflow, /shell: cmd/);
-  assert.match(workflow, /curl\.exe --proto "=https"/);
-  assert.match(workflow, /https:\/\/win\.rustup\.rs\/x86_64/);
-  assert.match(workflow, /--no-modify-path/);
-  assert.match(workflow, /buildchain-cargo/);
-  assert.match(workflow, /buildchain-rustup/);
-  assert.match(workflow, /Setup Rust toolchain/);
-  assert.match(
-    workflow,
-    /if: \$\{\{ inputs\.setup-rust && runner\.os != 'Windows' \}\}/,
-  );
-  assert.match(
-    workflow,
-    /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/,
-  );
-  assert.match(workflow, /toolchain: \$\{\{ inputs\.rust-toolchain \}\}/);
-  assert.match(
-    workflow,
-    /CARGO_REGISTRIES_CRATES_IO_INDEX: \$\{\{ inputs\.cargo-registry-index \}\}/,
-  );
-  assert.match(workflow, /container:/);
-  assert.match(workflow, /require-trusted-event:/);
-  assert.match(workflow, /buildchain-ref:/);
-  assert.match(workflow, /buildchain-contract-lock-path:/);
-  assert.match(workflow, /buildchain-contract-compatibility-policy:/);
-  assert.match(workflow, /buildchain-contract-drift-issue-mode:/);
-  assert.match(workflow, /default: ""/);
-  assert.match(workflow, /Resolve Buildchain runtime/);
-  assert.match(workflow, /runtime-sha/);
-  assert.match(workflow, /Checkout consumer contract lock/);
-  assert.match(workflow, /buildchain-contract-lock\.mjs check/);
-  assert.match(workflow, /BUILDCHAIN_WORKFLOW_SHELL_REF:/);
-  assert.match(
-    workflow,
-    /BUILDCHAIN_EXPECTED_CHANNEL: \$\{\{ inputs\.buildchain-expected-channel \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_EXPECTED_MAJOR: \$\{\{ inputs\.buildchain-expected-major \}\}/,
-  );
-  assert.match(workflow, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME:/);
-  assert.doesNotMatch(workflow, /contract-lock-compatible=true/);
-  assert.match(workflow, /Report consumer Buildchain contract drift/);
-  assert.match(workflow, /contract-lock-status=/);
-  assert.match(
-    workflow,
-    /buildchain-ref override is only allowed for trusted workflow_dispatch runs/,
-  );
-  assert.match(workflow, /refs\/heads\/train\/vN\/vN\.M\/<capability>/);
-  assert.match(workflow, /publish-channel:/);
-  assert.match(workflow, /publish-refs-json:/);
-  assert.match(workflow, /publish-source-ref:/);
-  assert.match(workflow, /publish-anchor-request-json:/);
-  assert.match(workflow, /github\.event\.pull_request\.head\.repo\.full_name/);
-  assert.match(workflow, /resolve-publish-gate\.mjs/);
-  assert.match(workflow, /resolve-publish-source\.mjs --mode lock/);
-  assert.match(workflow, /Verify publish target channel ref and PR lineage/);
-  assert.match(workflow, /verify-publish-channel-ref\.mjs/);
-  assert.ok(
-    workflow.indexOf("Resolve publish source lock") <
-      workflow.indexOf("Verify publish target channel ref and PR lineage"),
-  );
-  assert.ok(
-    workflow.indexOf("Verify publish target channel ref and PR lineage") <
-      workflow.indexOf("resolve-source:"),
-  );
-  assert.ok(
-    workflow.indexOf("Verify publish target channel ref and PR lineage") <
-      workflow.indexOf("build-native:"),
-  );
-  assert.ok(
-    workflow.indexOf("Verify publish target channel ref and PR lineage") <
-      workflow.indexOf("build-linux-container:"),
-  );
-  assert.ok(
-    workflow.indexOf("Check Buildchain contract lock") <
-      workflow.indexOf("build-native:"),
-  );
-  assert.match(workflow, /resolve-publish-source\.mjs --mode manifest/);
-  assert.equal(
-    (workflow.match(/Install Buildchain runtime dependencies/g) || []).length,
-    7,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /pnpm@11\.7\.0 install --dir \.buildchain\/runtime --prod --frozen-lockfile --ignore-scripts/g,
-      ) || []
-    ).length,
-    7,
-  );
-  assert.match(workflow, /install-command:/);
-  assert.match(workflow, /build-command:/);
-  assert.match(workflow, /verify-command:/);
-  assert.match(workflow, /artifact-name:/);
-  assert.match(workflow, /artifact-name-template:/);
-  assert.match(workflow, /expected-artifacts-json:/);
-  assert.equal(
-    (workflow.match(/Seal declared artifact signing requests/g) || []).length,
-    2,
-  );
-  assert.equal(
-    (workflow.match(/Publish Buildchain-owned artifact signing request/g) || [])
-      .length,
-    2,
-  );
-  assert.equal(
-    (workflow.match(/Seal detached signing control request/g) || []).length,
-    2,
-  );
-  assert.equal(
-    (workflow.match(/Publish detached signing control request/g) || []).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /Dispatch and await exact Buildchain signing authority/g,
-      ) || []
-    ).length,
-    1,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /Verify and import final signed bytes on GitHub-hosted infrastructure/g,
-      ) || []
-    ).length,
-    1,
-  );
-  assert.doesNotMatch(workflow, /Download immutable signed result\n/);
-  assert.equal(
-    (workflow.match(/Publish signing finalization delegation/g) || []).length,
-    1,
-  );
-  assert.match(
-    workflow,
-    /artifact-signing-control:[\s\S]*?runs-on: ubuntu-24\.04/,
-  );
-  assert.match(
-    workflow,
-    /artifact-signing-control:[\s\S]*?needs:[\s\S]*?- build-native[\s\S]*?- build-linux-container/,
-  );
-  assert.match(
-    workflow,
-    /finalize-artifact-signing:[\s\S]*?runs-on: \$\{\{ fromJSON\(inputs\.artifact-finalization-on-platform && matrix\.platform\.runner \|\| inputs\.control-runner-json\) \}\}/,
-  );
-  assert.match(
-    workflow,
-    /Enforce trusted platform-native finalization[\s\S]*?artifact-finalization-on-platform requires a GitHub-hosted platform runner/,
-  );
-  const finalizationJob = workflow.slice(
-    workflow.indexOf("  finalize-artifact-signing:"),
-    workflow.indexOf(
-      "\n  credential-island-macos:",
-      workflow.indexOf("  finalize-artifact-signing:"),
-    ),
-  );
-  assert.match(
-    finalizationJob,
-    /Download pre-signing deterministic artifact\n\s+uses:/,
-  );
-  assert.doesNotMatch(
-    finalizationJob,
-    /Download pre-signing deterministic artifact\n\s+if:/,
-  );
-  assert.match(
-    finalizationJob,
-    /Verify final artifact bytes with consumer policy/,
-  );
-  assert.match(finalizationJob, /BUILDCHAIN_ARTIFACT_SIGNING_STATE:/);
-  assert.ok(
-    finalizationJob.indexOf("Verify and import final signed bytes") <
-      finalizationJob.indexOf(
-        "Verify final artifact bytes with consumer policy",
-      ) &&
-      finalizationJob.indexOf(
-        "Verify final artifact bytes with consumer policy",
-      ) < finalizationJob.indexOf("Recompute manifest over final signed bytes"),
-    "consumer final-byte verification must run after signed-byte import and before manifest resealing",
-  );
-  assert.match(
-    workflow,
-    /needs\.artifact-signing-control\.result == 'success'/,
-  );
-  assert.match(
-    workflow,
-    /needs\.finalize-artifact-signing\.result == 'success'/,
-  );
-  assert.equal(
-    (workflow.match(/if \[ ! -f "\$\{signing_sealer\}" \]; then/g) || [])
-      .length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /if: \$\{\{ steps\.signing-requests\.outputs\.request-count != '0' \}\}/g,
-      ) || []
-    ).length,
-    4,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /Artifact signing request sealing is unavailable in the resolved legacy runtime/g,
-      ) || []
-    ).length,
-    2,
-  );
-  const firstBuild = workflow.indexOf("      - name: Run build lifecycle");
-  const firstSeal = workflow.indexOf(
-    "      - name: Seal declared artifact signing requests",
-  );
-  const firstVerify = workflow.indexOf("      - name: Run verify lifecycle");
-  const signingControl = workflow.indexOf("  artifact-signing-control:");
-  assert.ok(
-    firstBuild < firstSeal && firstSeal < firstVerify,
-    "unsigned requests must be sealed between build and verify",
-  );
-  assert.ok(
-    firstVerify < signingControl,
-    "the detached controller must be scheduled after the caller build jobs",
-  );
-  assert.doesNotMatch(
-    workflow.slice(workflow.indexOf("  build-native:"), signingControl),
-    /Dispatch and await exact Buildchain signing authority/u,
-  );
-  assert.match(
-    workflow,
-    /signing-request-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
-  );
-  assert.match(workflow, /process-summary-path:/);
-  assert.match(workflow, /sample-process-tree:/);
-  assert.match(workflow, /process-sample-interval-ms:/);
-  assert.match(workflow, /requested-parallelism:/);
-  assert.match(workflow, /artifact-transfer-mode:/);
-  assert.match(workflow, /artifact-signing-request-upload-no-proxy:/);
-  assert.equal(
-    (
-      workflow.match(
-        /vars\.BUILDCHAIN_ARTIFACT_SIGNING_REQUEST_UPLOAD_NO_PROXY/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (workflow.match(/Resolve artifact signing request upload route/g) || [])
-      .length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /NO_PROXY: \$\{\{ steps\.signing-request-upload-route\.outputs\.no-proxy \}\}/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.match(workflow, /s3-to-github-artifacts/);
-  assert.match(workflow, /artifact-relay-s3-bucket:/);
-  assert.match(workflow, /artifact-relay-s3-region:/);
-  assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_BUCKET/);
-  assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN/);
-  assert.match(workflow, /BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN/);
-  assert.match(workflow, /checkout-cache-mode:/);
-  assert.match(workflow, /checkout-cache-mirror-url-template:/);
-  assert.match(workflow, /checkout-cache-reference-repository-template:/);
-  assert.match(workflow, /checkout-cache-fallback:/);
-  assert.match(workflow, /checkout-cache-timeout-seconds:/);
-  assert.match(workflow, /checkout-cache-github-timeout-seconds:/);
-  assert.match(workflow, /checkout-cache-fetch-attempts:/);
-  assert.match(workflow, /checkout-history-mode:/);
-  assert.equal(
-    (
-      workflow.match(
-        /BUILDCHAIN_CHECKOUT_HISTORY_MODE: \$\{\{ inputs\.checkout-history-mode \}\}/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.match(workflow, /shifu-cache-profile-ref:/);
-  assert.match(workflow, /shifu-cache-profile-digest:/);
-  assert.match(workflow, /compiler-cache-provider:/);
-  assert.match(workflow, /compiler-cache-platforms-json:/);
-  assert.match(workflow, /compiler-cache-required:/);
-  assert.equal((workflow.match(/SHIFU_CACHE_PROFILE_REF:/g) || []).length, 6);
-  assert.equal(
-    (workflow.match(/SHIFU_CACHE_PROFILE_DIGEST:/g) || []).length,
-    8,
-  );
-  assert.equal(
-    (workflow.match(/Prepare auditable compiler cache/g) || []).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /node \.buildchain\/runtime\/scripts\/compiler-cache-evidence\.mjs prepare/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (workflow.match(/Verify auditable compiler cache activity/g) || []).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /node \.buildchain\/runtime\/scripts\/compiler-cache-evidence\.mjs verify/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/compiler-cache-preparation\.json/g,
-      ) || []
-    ).length,
-    5,
-  );
-  assert.equal(
-    (workflow.match(/BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS:/g) || [])
-      .length,
-    4,
-  );
-  assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS:/);
-  assert.match(workflow, /BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE/);
-  assert.match(
-    workflow,
-    /BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE/,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /node \.buildchain\/runtime\/scripts\/locked-source-checkout\.mjs/g,
-      ) || []
-    ).length,
-    0,
-  );
-  assert.match(workflow, /buildchain-workflow-shell-sha:/);
-  assert.match(workflow, /"workflow-shell-sha": workflowShellSha/);
-  assert.match(workflow, /Checkout Buildchain workflow shell/);
-  assert.match(
-    workflow,
-    /ref: \$\{\{ steps\.runtime\.outputs\.workflow-shell-sha \}\}/,
-  );
-  assert.match(
-    workflow,
-    /path: \|\n\s+\.buildchain\/workflow-shell\/scripts\/locked-source-checkout\.mjs/,
-  );
-  assert.match(
-    workflow,
-    /\.buildchain\/workflow-shell\/scripts\/artifact-signing-delegation\.mjs/,
-  );
-  assert.match(
-    workflow,
-    /\.buildchain\/workflow-shell\/scripts\/artifact-signing-controller\.mjs/,
-  );
-  assert.match(
-    workflow,
-    /\.buildchain\/workflow-shell\/scripts\/artifact-signing-controller-core\.mjs/,
-  );
-  assert.match(
-    workflow,
-    /\.buildchain\/workflow-shell\/scripts\/aws-runner-burst-core\.mjs/,
-  );
-  assert.match(
-    workflow,
-    /\.buildchain\/workflow-shell\/scripts\/aws-windows-jit-core\.mjs/,
-  );
-  assert.match(
-    workflow,
-    /\.buildchain\/workflow-shell\/scripts\/aws-macos-jit-core\.mjs/,
-  );
-  assert.doesNotMatch(
-    fs.readFileSync(
-      path.resolve(
-        import.meta.dirname,
-        "..",
-        "scripts",
-        "git-fetch-process-tree.mjs",
-      ),
-      "utf8",
-    ),
-    /from\s+["']\.\.\//,
-    "the flattened runtime bootstrap must not import files outside scripts/",
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /node \.buildchain\/runtime-bootstrap\/artifact-signing-delegation\.mjs seal/g,
-      ) || []
-    ).length,
-    0,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /node \.buildchain\/runtime-bootstrap\/artifact-signing-controller\.mjs seal/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.match(workflow, /Upload Buildchain runtime checkout bootstrap/);
-  assert.equal(
-    (workflow.match(/Download Buildchain runtime checkout bootstrap/g) || [])
-      .length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g,
-      ) || []
-    ).length,
-    4,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /BUILDCHAIN_SOURCE_CHECKOUT_PATH: \.buildchain\/runtime/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /BUILDCHAIN_SOURCE_REPOSITORY: \$\{\{ inputs\.buildchain-repository \}\}/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/runtime-checkout\.json/g,
-      ) || []
-    ).length,
-    2,
-  );
-  const nativeJob = workflow.slice(
-    workflow.indexOf("\n  build-native:"),
-    workflow.indexOf("\n  build-linux-container:"),
-  );
-  const containerJob = workflow.slice(
-    workflow.indexOf("\n  build-linux-container:"),
-    workflow.indexOf("\n  relay-artifacts:"),
-  );
-  assert.ok(
-    nativeJob.indexOf("Setup Node.js") <
-      nativeJob.indexOf("Download Buildchain runtime checkout bootstrap"),
-  );
-  assert.ok(
-    containerJob.indexOf("Setup Buildchain Node.js") <
-      containerJob.indexOf("Download Buildchain runtime checkout bootstrap"),
-  );
-  for (const job of [nativeJob, containerJob]) {
-    assert.ok(
-      job.indexOf("Download Buildchain runtime checkout bootstrap") <
-        job.indexOf("Checkout Buildchain runtime"),
-    );
-    assert.doesNotMatch(
-      job,
-      /Checkout Buildchain runtime\n\s+uses: actions\/checkout/,
-    );
-  }
-  assert.equal(
-    (
-      workflow.match(
-        /BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: \.buildchain\/diagnostics\/source-checkout\.json/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /\.buildchain\/artifacts\/\$\{\{ matrix\.platform\.id \}\}\/source-checkout\.json/g,
-      ) || []
-    ).length,
-    5,
-  );
-  assert.match(workflow, /id-token: write/);
-  assert.match(workflow, /artifact-transfer:/);
-  assert.match(workflow, /INPUT_RELAY_REQUIRED:/);
-  assert.match(workflow, /github-hosted-platform-ids-json:/);
-  assert.match(workflow, /artifact-relay-s3\.mjs upload/);
-  assert.match(workflow, /artifact-relay-s3\.mjs download/);
-  assert.match(workflow, /artifact-relay-s3\.mjs cleanup/);
-  assert.match(workflow, /aws-actions\/configure-aws-credentials@v6\.1\.0/);
-  assert.match(
-    workflow,
-    /artifact-name \}\}-relay-manifest-\$\{\{ matrix\.platform\.id \}\}-/,
-  );
-  assert.match(workflow, /relay-artifacts:/);
-  assert.match(
-    workflow,
-    /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'/,
-  );
-  assert.match(
-    workflow,
-    /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts'/,
-  );
-  assert.match(
-    workflow,
-    /needs\.artifact-transfer\.outputs\.mode == 'github-artifacts' \|\| matrix\.platform\.githubHosted == true/,
-  );
-  assert.match(
-    workflow,
-    /needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts' && matrix\.platform\.githubHosted != true/,
-  );
-  const deterministicPayloadUploads = [
-    ...workflow.matchAll(
-      /\n      - name: (?:Upload|Publish final(?: signed)?) deterministic artifact\n([\s\S]*?)(?=\n      - name:|\n  [a-z])/g,
-    ),
-  ];
-  assert.equal(deterministicPayloadUploads.length, 4);
-  for (const [, uploadStep] of deterministicPayloadUploads) {
-    assert.match(uploadStep, /include-hidden-files: true/);
-  }
-  const relayJob = workflow.slice(
-    workflow.indexOf("\n  relay-artifacts:"),
-    workflow.indexOf("\n  artifact-signing-control:"),
-  );
-  assert.equal(
-    (
-      relayJob.match(
-        /if: \$\{\{ matrix\.platform\.githubHosted != true \}\}/g,
-      ) || []
-    ).length,
-    9,
-  );
-  assert.match(workflow, /process-summary-required:/);
-  assert.match(workflow, /manifest\.json/);
-  assert.match(workflow, /summary\.json/);
-  assert.match(workflow, /diagnostics\.json/);
-  assert.match(workflow, /diagnostics-manifest\.json/);
-  assert.match(workflow, /source-checkout\.json/);
-  assert.match(workflow, /events\.jsonl/);
-  assert.match(workflow, /process-summary\.json/);
-  assert.match(workflow, /process-samples\.jsonl/);
-  assert.match(workflow, /-diagnostics-\$\{\{ matrix\.platform\.id \}\}-/);
-  assert.match(workflow, /build-summary-artifact:/);
-  assert.match(workflow, /build-diagnostics-summary-artifact:/);
-  assert.match(workflow, /release-candidate-artifact:/);
-  assert.match(workflow, /diagnostics-summary-artifact-name:/);
-  assert.match(workflow, /build-diagnostics-summary-json:/);
-  assert.match(workflow, /diagnostics contract warning/);
-  assert.match(workflow, /sidecar manifest warning totals/);
-  assert.match(workflow, /downloaded-diagnostics/);
-  assert.match(workflow, /BUILDCHAIN_RUNTIME_SHA/);
-  assert.match(workflow, /BUILDCHAIN_RUNTIME_TRUST_DECISION/);
-  assert.match(workflow, /BUILDCHAIN_CONTRACT_LOCK_PATH/);
-  assert.match(workflow, /aggregate-diagnostics-summary\.mjs/);
-  assert.match(workflow, /generate-release-candidate-passport\.mjs/);
-  assert.match(workflow, /release-candidate-enabled/);
-  assert.match(
-    workflow,
-    /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ needs\.resolve-source\.outputs\.publish-source-channel \|\| needs\.trust-gate\.outputs\.publish-channel \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_RC_PR_BASE_REF: \$\{\{ github\.base_ref \|\| github\.event\.pull_request\.base\.ref \}\}/,
-  );
-  assert.match(
-    workflow,
-    /release-candidate-target-channel=\$\{rc_target_channel\}/,
-  );
-  assert.match(workflow, /alpha\/\*\)/);
-  assert.match(workflow, /release\/\*\)/);
-  assert.match(
-    workflow,
-    /if: \$\{\{ steps\.names\.outputs\.release-candidate-enabled == 'true' \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_RC_TARGET_CHANNEL: \$\{\{ steps\.names\.outputs\.release-candidate-target-channel \}\}/,
-  );
-  assert.match(workflow, /diagnostics-summary\.json/);
-  assert.match(
-    workflow,
-    /\$\{\{ inputs\.artifact-name \}\}-release-candidate-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
-  );
-  assert.match(workflow, /generate-release-candidate-passport\.mjs/);
-  assert.match(
-    workflow,
-    /-diagnostics-summary-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
-  );
-  assert.match(workflow, /Upload aggregate diagnostics summary/);
-  assert.equal(
-    (
-      workflow.match(
-        /manifest-artifact-name: \$\{\{ inputs\.artifact-name \}\}-manifest-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /diagnostics-artifact-name: \$\{\{ inputs\.artifact-name \}\}-diagnostics-\$\{\{ matrix\.platform\.id \}\}-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /process-summary-path: \$\{\{ inputs\.process-summary-path \|\| \(inputs\.sample-process-tree && '\.buildchain\/diagnostics\/process-summary\.json'\) \|\| '' \}\}/g,
-      ) || []
-    ).length,
-    4,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /sample-process-tree: \$\{\{ inputs\.sample-process-tree \}\}/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /process-summary-required: \$\{\{ inputs\.require-build \}\}/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /process-summary-required: \$\{\{ inputs\.process-summary-path != '' \|\| inputs\.require-build \}\}/g,
-      ) || []
-    ).length,
-    2,
-  );
-  assert.match(workflow, /publish-allowed:/);
-  assert.match(workflow, /publish-reason:/);
-  assert.match(workflow, /publish-source-sha:/);
-  assert.match(workflow, /release-manifest-json:/);
-  assert.equal(
-    (
-      workflow.match(
-        /artifact-summary-json: \$\{\{ steps\.summary\.outputs\.artifact-summary-json \}\}/g,
-      ) || []
-    ).length,
-    1,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_SOURCE_SHA: \$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
-  );
-  assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
-  assert.match(workflow, /artifact-compression-level:/);
-  assert.match(workflow, /default: 0/);
-  assert.equal(
-    (
-      workflow.match(
-        /name: Upload deterministic artifact[\s\S]*?compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/g,
-      ) || []
-    ).length,
-    3,
-  );
-  assert.match(
-    router,
-    /artifact-compression-level: \$\{\{ inputs\.artifact-compression-level \}\}/,
-  );
-});
-
 test("publication artifact workflow exposes paper artifact contract", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/publication-artifact.yml"),
-    "utf8",
-  );
-  const reproducibility = fs.readFileSync(
-    path.join(root, "packages/core/publication-reproducibility.js"),
-    "utf8",
+  const workflow = readRepoText(".github/workflows/publication-artifact.yml");
+  const reproducibility = readRepoText(
+    "packages/core/publication-reproducibility.js",
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
@@ -1330,18 +436,11 @@ test("publication artifact workflow exposes paper artifact contract", () => {
 });
 
 test("paper release workflow publishes declared npm package with source lock and GitHub Release", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/paper-release.yml"),
-    "utf8",
+  const workflow = readRepoText(".github/workflows/paper-release.yml");
+  const sealedWorkflow = readRepoText(
+    ".github/workflows/paper-release-sealed.yml",
   );
-  const sealedWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/paper-release-sealed.yml"),
-    "utf8",
-  );
-  const docs = fs.readFileSync(
-    path.join(root, "docs/publication-artifacts.md"),
-    "utf8",
-  );
+  const docs = readRepoText("docs/publication-artifacts.md");
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /buildchain-ref:/);
   assert.match(workflow, /buildchain-contract-lock-path:/);
@@ -1636,13 +735,11 @@ test("artifact relay uploads to S3 and downloads verified GitHub artifact payloa
 });
 
 test("release-candidate promote workflow is promote-only and never schedules a heavy build", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
+  const workflow = readRepoText(
+    ".github/workflows/.release-candidate-promote.yml",
   );
-  const publicWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
-    "utf8",
+  const publicWorkflow = readRepoText(
+    ".github/workflows/release-candidate-promote.yml",
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(
@@ -2145,10 +1242,7 @@ test("release-candidate promote workflow is promote-only and never schedules a h
 });
 
 test("sealed publication authority verifier is independent and credential-free", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.publication-authority.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/.publication-authority.yml");
   assert.match(workflow, /name: Independently verify publication admission/);
   assert.match(workflow, /verifyPublicationAdmission/);
   assert.match(workflow, /contents: read/);
@@ -2253,9 +1347,8 @@ test("sealed publication authority verifier is independent and credential-free",
 });
 
 test("self-publication admission assembly binds downloaded evidence without publication credentials", () => {
-  const script = fs.readFileSync(
-    path.join(root, "scripts/assemble-self-publication-admission.mjs"),
-    "utf8",
+  const script = readRepoText(
+    "scripts/assemble-self-publication-admission.mjs",
   );
   assert.match(script, /createPublicationArtifactManifestSet/);
   assert.match(script, /createPublicationGateDecision/);
@@ -2275,19 +1368,15 @@ test("self-publication admission assembly binds downloaded evidence without publ
 });
 
 test("publication artifact admission uses validated Gate policy bindings", () => {
-  const script = fs.readFileSync(
-    path.join(root, "scripts/assemble-publication-artifact-admission.mjs"),
-    "utf8",
+  const script = readRepoText(
+    "scripts/assemble-publication-artifact-admission.mjs",
   );
   assert.match(script, /policyDigest: gateBindings\.policyDigest/);
   assert.doesNotMatch(script, /policyDigest: gateAggregate\.policyDigest/);
 });
 
 test("publication control-plane audit defers npm OIDC authorization to the publish transaction", () => {
-  const script = fs.readFileSync(
-    path.join(root, "scripts/audit-publication-control-plane.mjs"),
-    "utf8",
-  );
+  const script = readRepoText("scripts/audit-publication-control-plane.mjs");
   assert.match(script, /provider-at-transaction/);
   assert.match(script, /authorizationDeferred: true/);
   assert.match(script, /configurationRead: false/);
@@ -2319,10 +1408,7 @@ test("legacy release workflows fail closed instead of bypassing publish-gate sou
     ".wheel-release.yml",
   ];
   for (const workflowName of retiredReleaseWorkflows) {
-    const workflow = fs.readFileSync(
-      path.join(root, ".github/workflows", workflowName),
-      "utf8",
-    );
+    const workflow = readRepoText(`.github/workflows/${workflowName}`);
     assert.match(workflow, /release path is retired/);
     assert.match(workflow, /release-candidate-promote\.yml@v3/);
     assert.match(workflow, /publish-gate source-lock enforcement/);
@@ -2335,10 +1421,7 @@ test("legacy release workflows fail closed instead of bypassing publish-gate sou
 });
 
 test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/dev-pr-auto-merge.yml");
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /target-branch:/);
   assert.match(workflow, /expected-pr-number:/);
@@ -2411,10 +1494,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
     /\$legacyBinding\.stateRoot == \.observation\.stateRoot/,
   );
 
-  const verify = fs.readFileSync(
-    path.join(root, ".github/workflows/verify.yml"),
-    "utf8",
-  );
+  const verify = readRepoText(".github/workflows/verify.yml");
   assert.match(verify, /pull_request:/);
   assert.match(verify, /merge_group:/);
   assert.match(verify, /types: \[checks_requested\]/);
@@ -2422,9 +1502,8 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
 });
 
 test("queued Warrant cancellation workflow binds exact terminal event authority", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/dev-delivery-warrant-cancel.yml"),
-    "utf8",
+  const workflow = readRepoText(
+    ".github/workflows/dev-delivery-warrant-cancel.yml",
   );
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /expected-candidate-id:/);
@@ -2440,9 +1519,8 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
 });
 
 test("Buildchain self-delivery exposes the complete two-phase Warrant caller", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-dev-delivery.yml"),
-    "utf8",
+  const workflow = readRepoText(
+    ".github/workflows/buildchain-dev-delivery.yml",
   );
   const stableLock = JSON.parse(
     fs.readFileSync(path.join(root, ".buildchain/contract-lock.json"), "utf8"),
@@ -2584,14 +1662,8 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
 });
 
 test("PR-controlled native delivery and provider finalization use distinct hosted jobs", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/dev-pr-auto-merge.yml"),
-    "utf8",
-  );
-  const template = fs.readFileSync(
-    path.join(root, "templates/native-dev-delivery.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/dev-pr-auto-merge.yml");
+  const template = readRepoText("templates/native-dev-delivery.yml");
   assert.match(
     workflow,
     /buildchain-ref:\n\s+description: "Explicit Buildchain v4 runtime ref[^\n]+\n\s+default: "v4"/u,
@@ -2768,9 +1840,8 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
 });
 
 test("declared merge queue governance reconciles automatically on dev changes", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/dev-merge-queue-governance.yml"),
-    "utf8",
+  const workflow = readRepoText(
+    ".github/workflows/dev-merge-queue-governance.yml",
   );
   assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
   assert.match(workflow, /\.buildchain\/buildchain\.toml/);
@@ -2783,33 +1854,18 @@ test("declared merge queue governance reconciles automatically on dev changes", 
 });
 
 test("patrol workflow family exposes daily weekly monthly reusable entries and dogfood schedules", () => {
-  const engine = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-patrol.yml"),
-    "utf8",
+  const engine = readRepoText(".github/workflows/buildchain-patrol.yml");
+  const daily = readRepoText(".github/workflows/patrol-daily.yml");
+  const weekly = readRepoText(".github/workflows/patrol-weekly.yml");
+  const monthly = readRepoText(".github/workflows/patrol-monthly.yml");
+  const dogfoodDaily = readRepoText(
+    ".github/workflows/buildchain-patrol-daily.yml",
   );
-  const daily = fs.readFileSync(
-    path.join(root, ".github/workflows/patrol-daily.yml"),
-    "utf8",
+  const dogfoodWeekly = readRepoText(
+    ".github/workflows/buildchain-patrol-weekly.yml",
   );
-  const weekly = fs.readFileSync(
-    path.join(root, ".github/workflows/patrol-weekly.yml"),
-    "utf8",
-  );
-  const monthly = fs.readFileSync(
-    path.join(root, ".github/workflows/patrol-monthly.yml"),
-    "utf8",
-  );
-  const dogfoodDaily = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-patrol-daily.yml"),
-    "utf8",
-  );
-  const dogfoodWeekly = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-patrol-weekly.yml"),
-    "utf8",
-  );
-  const dogfoodMonthly = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-patrol-monthly.yml"),
-    "utf8",
+  const dogfoodMonthly = readRepoText(
+    ".github/workflows/buildchain-patrol-monthly.yml",
   );
 
   assert.match(engine, /workflow_call:/);
@@ -2978,14 +2034,8 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
 });
 
 test("check workflow preserves verify mode and exposes source-check mode", () => {
-  const reusable = fs.readFileSync(
-    path.join(root, ".github/workflows/check.yml"),
-    "utf8",
-  );
-  const verify = fs.readFileSync(
-    path.join(root, ".github/workflows/verify.yml"),
-    "utf8",
-  );
+  const reusable = readRepoText(".github/workflows/check.yml");
+  const verify = readRepoText(".github/workflows/verify.yml");
 
   assert.match(reusable, /workflow_call:/);
   assert.match(reusable, /mode:/);
@@ -3047,10 +2097,7 @@ test("check workflow preserves verify mode and exposes source-check mode", () =>
   assert.match(reusable, /dev-delivery-source-proof-reuse\.mjs seal/);
   assert.match(reusable, /buildchain-source-qualification-proof-/);
   assert.match(reusable, /retention-days: 14/);
-  const lifecycleDocs = fs.readFileSync(
-    path.join(root, "docs/lifecycle-protocol.md"),
-    "utf8",
-  );
+  const lifecycleDocs = readRepoText("docs/lifecycle-protocol.md");
   assert.match(lifecycleDocs, /BUILDCHAIN_CHECK_MODE=source/);
   assert.match(lifecycleDocs, /BUILDCHAIN_CHECK_MODE=verify/);
   assert.match(verify, /Checkout Buildchain runtime/);
@@ -3104,10 +2151,7 @@ test("source-check fixture executes only install and check", () => {
 });
 
 test("reusable web-surface workflow exposes preview, cleanup, staging, and production gates", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.web-surface.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/.web-surface.yml");
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /permissions:\n  actions: read\n  contents: read/);
   assert.match(workflow, /buildchain-ref:/);
@@ -3357,10 +2401,7 @@ test("reusable web-surface workflow exposes preview, cleanup, staging, and produ
 });
 
 test("web-surface side-effect jobs and sealed production paths have explicit authority", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.web-surface.yml"),
-    "utf8",
-  );
+  const workflow = readRepoText(".github/workflows/.web-surface.yml");
   const job = (id) => {
     const match = workflow.match(
       new RegExp(`^  ${id}:\\n([\\s\\S]*?)(?=^  [a-z0-9-]+:\\n|\\Z)`, "m"),

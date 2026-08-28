@@ -28,6 +28,21 @@ on:
         required: false
         default: contracts/fixtures/v4-adopter-delivery-v1/archive-template.json
         type: string
+      consumer-repository:
+        description: Exact external public adopter repository for candidate qualification
+        required: false
+        default: ""
+        type: string
+      consumer-ref:
+        description: Exact external public adopter commit for candidate qualification
+        required: false
+        default: ""
+        type: string
+      invocation-source-path:
+        description: Public floating caller path retained by the external adopter
+        required: false
+        default: ""
+        type: string
   workflow_call:
     inputs:
       consumer:
@@ -51,6 +66,21 @@ on:
         description: Repository-relative published archive identity input
         required: true
         type: string
+      consumer-repository:
+        description: Exact external public adopter repository for candidate qualification
+        required: false
+        default: ""
+        type: string
+      consumer-ref:
+        description: Exact external public adopter commit for candidate qualification
+        required: false
+        default: ""
+        type: string
+      invocation-source-path:
+        description: Public floating caller path retained by the external adopter
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -61,12 +91,57 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       receipt-root: ${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}
+      consumer-source-sha: ${{ steps.consumer-source.outputs.sha }}
     steps:
+      - name: Validate exact external adopter selection
+        shell: bash
+        env:
+          CONSUMER_REPOSITORY: ${{ inputs['consumer-repository'] }}
+          CONSUMER_REF: ${{ inputs['consumer-ref'] }}
+          INVOCATION_SOURCE_PATH: ${{ inputs['invocation-source-path'] }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${CONSUMER_REPOSITORY}" && -z "${CONSUMER_REF}" && -z "${INVOCATION_SOURCE_PATH}" ]]; then
+            exit 0
+          fi
+          if [[ ! "${CONSUMER_REPOSITORY}" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+            echo "::error::consumer-repository must be an exact owner/repository identity"
+            exit 1
+          fi
+          if [[ ! "${CONSUMER_REF}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::consumer-ref must be an exact commit SHA"
+            exit 1
+          fi
+          if [[ ! "${INVOCATION_SOURCE_PATH}" =~ ^\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml$ ]]; then
+            echo "::error::invocation-source-path must identify a public adopter workflow"
+            exit 1
+          fi
       - name: Checkout exact consumer source
         uses: actions/checkout@v7.0.0
         with:
+          repository: ${{ inputs['consumer-repository'] || github.repository }}
+          ref: ${{ inputs['consumer-ref'] || github.sha }}
           path: .buildchain/consumer
           persist-credentials: false
+      - name: Resolve exact consumer source
+        id: consumer-source
+        shell: bash
+        working-directory: .buildchain/consumer
+        env:
+          REQUESTED_CONSUMER_REF: ${{ inputs['consumer-ref'] }}
+        run: |
+          set -euo pipefail
+          observed="$(git rev-parse HEAD | tr '[:upper:]' '[:lower:]')"
+          requested="$(printf '%s' "${REQUESTED_CONSUMER_REF}" | tr '[:upper:]' '[:lower:]')"
+          if [[ ! "${observed}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::consumer checkout did not resolve to an exact commit SHA"
+            exit 1
+          fi
+          if [[ -n "${requested}" && "${observed}" != "${requested}" ]]; then
+            echo "::error::consumer checkout does not match the requested exact commit"
+            exit 1
+          fi
+          printf 'sha=%s\n' "${observed}" >> "${GITHUB_OUTPUT}"
       - name: Resolve exact called-workflow runtime
         id: runtime
         shell: bash
@@ -91,13 +166,16 @@ jobs:
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-adopter-delivery.yml
-          BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ github.repository == 'kungfu-systems/buildchain' && '.github/workflows/v4-adopter-delivery-dogfood.yml' || '' }}
+          BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ inputs['invocation-source-path'] || (github.repository == 'kungfu-systems/buildchain' && '.github/workflows/v4-adopter-delivery-dogfood.yml' || '') }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
           BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
           BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-adopter-delivery-policy-receipt.json
-        run: node .buildchain/v4-policy-runtime/scripts/v4-consumer-policy.mjs scan
+        run: >-
+          node .buildchain/v4-policy-runtime/scripts/v4-consumer-policy.mjs scan
+          --repository "${{ inputs['consumer-repository'] || github.repository }}"
+          --source-sha "${{ steps.consumer-source.outputs.sha }}"
       - name: Upload rooted consumer admission receipt
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -127,7 +205,21 @@ jobs:
       - name: Checkout exact consumer source
         uses: actions/checkout@v7.0.0
         with:
+          repository: ${{ inputs['consumer-repository'] || github.repository }}
+          ref: ${{ inputs['consumer-ref'] || github.sha }}
           persist-credentials: false
+      - name: Verify exact consumer source
+        id: consumer-source
+        env:
+          EXPECTED_CONSUMER_SHA: ${{ needs.consumer-admission.outputs.consumer-source-sha }}
+        run: |
+          set -euo pipefail
+          observed="$(git rev-parse HEAD | tr '[:upper:]' '[:lower:]')"
+          if [[ "${observed}" != "${EXPECTED_CONSUMER_SHA}" ]]; then
+            echo "::error::platform consumer checkout drifted from admission"
+            exit 1
+          fi
+          printf 'sha=%s\n' "${observed}" >> "${GITHUB_OUTPUT}"
       - name: Resolve exact called-workflow runtime
         id: runtime
         env:
@@ -180,9 +272,64 @@ jobs:
           node .buildchain/v4-runtime/bin/buildchain.mjs adopter-delivery archive
           --input "${{ inputs.archive-path }}"
           --output .buildchain/adopter-delivery/archive.json
+      - name: Exercise failure, retry, terminal and protocol-neutral qualification
+        run: >-
+          node .buildchain/v4-runtime/scripts/v4-cross-platform-adopter-qualification.mjs run
+          --runtime-root .buildchain/v4-runtime
+          --consumer-root .
+          --platform "${{ matrix.platform }}"
+          --consumer "${{ inputs.consumer }}"
+          --runtime-sha "${{ steps.runtime.outputs.sha }}"
+          --consumer-sha "${{ steps.consumer-source.outputs.sha }}"
+          --input "${{ inputs.input-path }}"
+          --bootstrap "${{ inputs.bootstrap-path }}"
+          --output ".buildchain/adopter-delivery/${{ matrix.platform }}/qualification-report.json"
       - name: Upload exact offline conformance evidence
         uses: actions/upload-artifact@v7.0.1
         with:
           name: v4-adopter-delivery-${{ inputs.consumer }}-${{ matrix.platform }}-${{ github.sha }}
-          path: .buildchain/adopter-delivery/*.json
+          path: .buildchain/adopter-delivery/**/*.json
+          if-no-files-found: error
+
+  qualification:
+    name: Reconcile exact three-platform qualification
+    needs: conformance
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Resolve exact called-workflow runtime
+        id: runtime
+        shell: bash
+        env:
+          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${BUILDCHAIN_WORKFLOW_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::job.workflow_sha is not an exact commit SHA"
+            exit 1
+          fi
+          printf 'sha=%s\n' "$(printf '%s' "${BUILDCHAIN_WORKFLOW_SHA}" | tr '[:upper:]' '[:lower:]')" >> "${GITHUB_OUTPUT}"
+      - name: Checkout exact Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ steps.runtime.outputs.sha }}
+          path: .buildchain/v4-runtime
+          persist-credentials: false
+      - name: Download raw platform reports
+        uses: actions/download-artifact@v7.0.0
+        with:
+          pattern: v4-adopter-delivery-${{ inputs.consumer }}-*-${{ github.sha }}
+          path: .buildchain/platform-reports
+      - name: Require one exact report from every platform
+        shell: bash
+        run: >-
+          node .buildchain/v4-runtime/scripts/v4-cross-platform-adopter-qualification.mjs aggregate
+          --reports-root .buildchain/platform-reports
+          --consumer "${{ inputs.consumer }}"
+          --output .buildchain/adopter-delivery-qualification.json
+      - name: Upload rooted cross-platform qualification
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: v4-adopter-delivery-qualification-${{ inputs.consumer }}-${{ github.sha }}
+          path: .buildchain/adopter-delivery-qualification.json
           if-no-files-found: error

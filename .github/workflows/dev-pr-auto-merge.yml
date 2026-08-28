@@ -259,6 +259,11 @@ on:
         default: "auto"
         type: string
         required: false
+      defer-landing:
+        description: "Qualify the exact required Warrant and publish its evidence without landing the PR"
+        default: false
+        type: boolean
+        required: false
       dry-run:
         description: "Plan only; do not merge PRs"
         default: true
@@ -1411,7 +1416,7 @@ jobs:
 
       - name: Run Buildchain dev PR auto-merge
         id: merge
-        if: needs.admission.outputs.handoff-required != 'true' && (inputs.delivery-warrant-mode != 'required' || needs.admission.outputs.already-qualified == 'true' || steps.native-final.outcome == 'success')
+        if: inputs.defer-landing != true && needs.admission.outputs.handoff-required != 'true' && (inputs.delivery-warrant-mode != 'required' || needs.admission.outputs.already-qualified == 'true' || steps.native-final.outcome == 'success')
         continue-on-error: true
         run: node .buildchain/runtime/scripts/dev-pr-auto-merge.mjs
         env:
@@ -1440,7 +1445,7 @@ jobs:
           BUILDCHAIN_DEV_PR_OUTPUT_PATH: .buildchain/dev-pr-auto-merge/result.json
 
       - name: Upload dev PR auto-merge plan
-        if: always()
+        if: always() && inputs.defer-landing != true
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-dev-pr-auto-merge-${{ needs.admission.outputs.branch-artifact }}
@@ -1468,6 +1473,18 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ "${DEFER_LANDING}" = "true" ]; then
+            if [ "${WARRANT_MODE}" != "required" ]; then
+              echo "::error::defer-landing requires delivery-warrant-mode required"
+              exit 1
+            fi
+            if [ "${ALREADY_QUALIFIED}" != "true" ] && { [ "${BOUNDARY_OUTCOME}" != "success" ] || [ "${NATIVE_OUTCOME}" != "success" ]; }; then
+              echo "::error::defer-landing requires exact native Warrant qualification"
+              exit 1
+            fi
+            echo "Exact required Warrant qualified; landing is explicitly deferred."
+            exit 0
+          fi
           if [ "${NATIVE_JOB_OUTCOME}" = "failure" ]; then
             if [ "${FAILURE_FINAL_OUTCOME}" != "success" ]; then
               echo "::error::Exact independently verified native failure did not settle its retained fence"
@@ -1498,6 +1515,7 @@ jobs:
           fi
         env:
           MERGE_STEP_OUTCOME: ${{ steps.merge.outcome }}
+          DEFER_LANDING: ${{ inputs.defer-landing }}
           TARGETED: ${{ steps.merge.outputs.targeted }}
           TARGETED_OK: ${{ steps.merge.outputs.targeted-ok }}
           WARRANT_MODE: ${{ inputs.delivery-warrant-mode }}

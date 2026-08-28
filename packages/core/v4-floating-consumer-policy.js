@@ -295,12 +295,13 @@ function classifyBuildchainUses(records, failures, { repository } = {}) {
       EXACT_SHA.test(parsed.selector.toLowerCase()) ||
       parsed.selector.includes("${{");
     if (!v4Candidate) continue;
-    const protectedBootstrap =
-      repository === BUILDCHAIN_REPOSITORY &&
+    const bootstrapShape =
       normalizeWorkflowPath(parsed.path) ===
         ALPHA_RECOVERY_BOOTSTRAP.workflow &&
       record.sourcePath === ALPHA_RECOVERY_BOOTSTRAP.sourcePath &&
       parsed.selector === ALPHA_RECOVERY_BOOTSTRAP.selector;
+    const protectedBootstrap =
+      repository === BUILDCHAIN_REPOSITORY && bootstrapShape;
     const channel =
       CHANNELS[parsed.selector] || (protectedBootstrap ? "alpha" : "");
     uses.push({

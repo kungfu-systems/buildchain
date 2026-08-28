@@ -116,11 +116,8 @@ on:
         type: string
         required: false
         default: ""
-      authority-workflow-path:
-        description: "Buildchain product-publication workflow path bound by the admission"
-        type: string
-        required: false
-        default: ""
+      authority-workflow-path: { description: "Buildchain product-publication workflow path bound by the admission", type: string, required: false, default: "" }
+      authority-job-id: { description: "Exact publication job audited inside the authority workflow", type: string, required: false, default: "promote" }
       product:
         type: string
         required: false
@@ -693,7 +690,7 @@ jobs:
             --workflow-ref "${{ inputs.buildchain-ref }}" \
             --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
             --required-status-check "${{ inputs.required-status-check }}" \
-            --job promote \
+            --job "${{ inputs.authority-job-id }}" \
             --environment none \
             --package "${{ inputs.package-name }}" \
             --publisher-mode "$publisher_mode" \

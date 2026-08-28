@@ -285,6 +285,10 @@ const channelPromotionWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/release-candidate-promote.yml"),
   "utf8",
 );
+const boundedAlphaRecoveryWorkflow = fs.readFileSync(
+  path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
+  "utf8",
+);
 const promotionShellRouting = parsePromotionShellRouting(
   fs.readFileSync(path.join(root, ".buildchain/promotion-shell-routing.json"), "utf8"),
   { major: Number(selfDogfoodMajor) },
@@ -294,6 +298,20 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
   shellRouting: promotionShellRouting,
 })) {
   throw new Error("generated channel promotion workflow is stale");
+}
+for (const requiredSnippet of [
+  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0",
+  "promotion-shell-ref: ${{ needs.consumer-admission.outputs.shell-call-ref }}",
+  "declarative-release-tail: true",
+]) {
+  if (!boundedAlphaRecoveryWorkflow.includes(requiredSnippet)) {
+    throw new Error(`bounded alpha recovery missing bootstrap contract: ${requiredSnippet}`);
+  }
+}
+for (const workflowSource of [boundedAlphaRecoveryWorkflow, channelPromotionWorkflow]) {
+  if (workflowSource.includes("channel-finalization-recovery")) {
+    throw new Error("Buildchain-only alpha bootstrap must not add a public or recovery workflow input");
+  }
 }
 for (const requiredSnippet of [
   "buildchain-channel:",
@@ -1021,16 +1039,16 @@ for (const forbiddenSnippet of [
 for (const requiredSnippet of [
   "id-token: write",
   "actions: write",
-  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha",
+  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha",
   "github.event.workflow_run.event == 'push'",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
   "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
   "resume-candidate-run-id:",
   "resume-expected-source-tree:",
-  "resume-buildchain-runtime-sha:",
+  "resume-buildchain-runtime-ref:",
   "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
   "release-passport-buildchain-self-kfd: true",
-  "buildchain-channel: alpha",
+  "declarative-release-tail: true",
   "release-passport-impact-json: .buildchain/release-impact.json",
 ]) {
   if (!buildchainRefPromotionWorkflow.includes(requiredSnippet)) {

@@ -426,6 +426,14 @@ on:
         description: "Product-owned command that emits KFD-3 artifact-side collaboration-interface witness JSON"
         default: ""
         type: string
+      release-passport-adopter-delivery-json:
+        description: "Compatibility-only v3 adopter delivery input; v4 requires adopter manifest plus product gates"
+        default: ""
+        type: string
+      release-passport-kfd-adopter-manifest-gate-json:
+        description: "Compatibility-only v3 producer gate input; v4 derives the gate from source-bound evidence"
+        default: ""
+        type: string
       release-passport-kfd-adopter-manifest-json:
         description: "Standard full-cut adopter conformance manifest JSON path"
         default: ""
@@ -716,7 +724,6 @@ concurrency:
 
 permissions:
   contents: read
-
 jobs:
   preflight:
     name: Revalidate promotion intent
@@ -1124,15 +1131,8 @@ jobs:
           fi
   publication-authority:
     name: Seal product publication capability
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-plan,
-        qualification-plan,
-      ]
-    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' }}
     permissions:
       actions: read
       checks: read
@@ -1163,6 +1163,7 @@ jobs:
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
+      authority-job-id: legacy-promote
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
@@ -1180,7 +1181,7 @@ jobs:
   qualification-plan:
     name: Bind consumer publication predicate
     needs: [preflight]
-    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' }}
     runs-on: ubuntu-24.04
     permissions: {}
     outputs:
@@ -1191,7 +1192,6 @@ jobs:
     steps:
       - name: Seal exact predicate identity
         id: plan
-        shell: bash
         env:
           BUILDCHAIN_CONSUMER_PREDICATE_COMMAND: ${{ inputs.publication-consumer-qualification-command }}
           BUILDCHAIN_CONSUMER_QUALIFICATION_CONTROLLER_SHA: ${{ inputs.publication-consumer-qualification-controller-sha }}
@@ -1222,9 +1222,8 @@ jobs:
 
   publication-qualification:
     name: Run consumer publication predicate
-    needs:
-      [preflight, controller-plan, qualification-plan, publication-authority]
-    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' }}
+    needs: [preflight, controller-plan, qualification-plan, publication-authority]
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -1320,14 +1319,8 @@ jobs:
 
   v4-declarative-promote:
     name: Promote sealed v4 candidate through Provider Plane
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-plan,
-      ]
-    if: ${{ needs.preflight.outputs.action == 'promote' && (startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run }}
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan]
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability != '' && (startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -1419,16 +1412,8 @@ jobs:
 
   legacy-promote:
     name: Promote release candidate
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-plan,
-        publication-authority,
-        publication-qualification,
-      ]
-    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification]
+    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: write
@@ -1487,7 +1472,7 @@ jobs:
           registry-url: "https://registry.npmjs.org/"
 
       - name: Install promotion dependencies
-        if: ${{ inputs.resume-candidate-run-id == '' }}
+        if: ${{ inputs.resume-candidate-run-id == '' && github.repository != inputs.buildchain-repository }}
         shell: bash
         run: |
           case "${PACKAGE_MANAGER}" in
@@ -1665,7 +1650,7 @@ jobs:
           NODE
 
       - name: Bridge Buildchain self-runtime dependencies
-        if: ${{ inputs.resume-candidate-run-id != '' && github.repository == inputs.buildchain-repository }}
+        if: ${{ github.repository == inputs.buildchain-repository }}
         shell: bash
         run: |
           test ! -e node_modules
@@ -2107,6 +2092,8 @@ jobs:
           release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}
           release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}
           release-passport-kfd-3-artifact-verify-command: ${{ inputs.release-passport-kfd-3-artifact-verify-command }}
+          release-passport-adopter-delivery-json: ${{ inputs.release-passport-adopter-delivery-json }}
+          release-passport-kfd-adopter-manifest-gate-json: ${{ inputs.release-passport-kfd-adopter-manifest-gate-json }}
           release-passport-kfd-adopter-manifest-json: ${{ inputs.release-passport-kfd-adopter-manifest-json }}
           release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}
           release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}
@@ -2363,35 +2350,7 @@ jobs:
           RELEASED_PRODUCT_EVIDENCE: ${{ steps.release-evidence.outputs.evidence-path }}
           RELEASE_PROPAGATION_CAPTURE: ${{ steps.capture-release-propagation.outcome == 'success' && '.buildchain/release-propagation-capture/capture-result.json' || '' }}
         run: |
-          node <<'NODE'
-          const fs = require("node:fs");
-          const path = require("node:path");
-          const finalizationNeeded = process.env.FINALIZATION_NEEDED === "true";
-          const files = [
-            [process.env.RELEASE_CANDIDATE_PASSPORT, "release-candidate-passport.json"],
-            [process.env.PUBLISH_EVIDENCE, "publish-evidence.json"],
-          ];
-          if (!finalizationNeeded) {
-            files.push([process.env.RELEASE_PASSPORT, "release-passport.json"]);
-          }
-          if (process.env.PUBLICATION_COMMIT_ENABLED === "true" && !finalizationNeeded) {
-            files.push([process.env.PUBLICATION_COMMIT_EVIDENCE, "publication-commit-evidence.json"]);
-          }
-          if (process.env.RELEASE_ACTIVATION_RECEIPTS && !finalizationNeeded) {
-            files.push([process.env.RELEASE_ACTIVATION_RECEIPTS, "release-activation-receipt-set.json"]);
-          }
-          if (process.env.RELEASED_PRODUCT_EVIDENCE && !finalizationNeeded) {
-            files.push([process.env.RELEASED_PRODUCT_EVIDENCE, "released-product-evidence.json"]);
-          }
-          if (process.env.RELEASE_PROPAGATION_CAPTURE && !finalizationNeeded) {
-            files.push([process.env.RELEASE_PROPAGATION_CAPTURE, "release-propagation-capture.json"]);
-          }
-          fs.mkdirSync(".buildchain/controller/promotion-evidence", { recursive: true });
-          for (const [source, name] of files) {
-            if (!source || !fs.existsSync(source)) throw new Error(`promotion controller evidence is missing: ${source || name}`);
-            fs.copyFileSync(source, path.join(".buildchain/controller/promotion-evidence", name));
-          }
-          NODE
+          node .buildchain/runtime/scripts/promotion-routing-evidence.mjs bundle-controller-evidence
 
       - name: Upload release-candidate-promotion controller evidence
         if: ${{ always() && steps.controller-evidence.outcome == 'success' }}
@@ -2514,6 +2473,7 @@ jobs:
 
   promote:
     name: Select declarative or legacy promotion result
+    # buildchain-publication-authority-job: legacy-promote
     needs: [legacy-promote, v4-declarative-promote]
     if: ${{ always() && (needs.legacy-promote.result == 'success' || needs.v4-declarative-promote.result == 'success') }}
     runs-on: ubuntu-24.04
@@ -2558,7 +2518,7 @@ jobs:
   github-artifact-attestation:
     name: Sign Linux release artifact with GitHub OIDC
     needs: [promote]
-    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && !inputs.dry-run && needs.promote.result == 'success' }}
+    if: ${{ inputs.github-artifact-attestation-policy-json != '' && !inputs.dry-run && needs.promote.result == 'success' }}
     permissions:
       actions: read
       artifact-metadata: write
@@ -2649,16 +2609,7 @@ jobs:
 
   controller-receipt:
     name: Record release-candidate promotion controller receipt
-    needs:
-      [
-        preflight,
-        controller-plan,
-        release-candidate-preflight,
-        publication-authority,
-        promote,
-        github-artifact-attestation,
-        publish-github-artifact-attestation-evidence,
-      ]
+    needs: [preflight, controller-plan, release-candidate-preflight, publication-authority, promote, github-artifact-attestation, publish-github-artifact-attestation-evidence]
     if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:

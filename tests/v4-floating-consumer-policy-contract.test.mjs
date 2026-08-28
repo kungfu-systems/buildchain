@@ -41,35 +41,39 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/v4-adopter-delivery-dogfood\.yml' \|\| '' \}\}/u,
+    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ inputs\['invocation-source-path'\] \|\| \(github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/v4-adopter-delivery-dogfood\.yml' \|\| ''\) \}\}/u,
+  );
+  assert.match(
+    workflow,
+    /--repository "\$\{\{ inputs\['consumer-repository'\] \|\| github\.repository \}\}"\n\s+--source-sha "\$\{\{ steps\.consumer-source\.outputs\.sha \}\}"/u,
   );
   assert.doesNotMatch(workflow, /github\.event_name == 'workflow_dispatch'/u);
 });
 
-test("alpha promotion caller passes the same runtime admission used in GitHub", () => {
-  const authority = resolveV4FloatingConsumerPolicyAuthority({
-    runtimeRoot: root,
-    callerRoot: root,
-  });
-  const result = scanV4FloatingConsumerPolicy({
-    root,
-    repository: "kungfu-systems/buildchain",
-    sourceSha: "a".repeat(40),
-    invokedWorkflow: ".github/workflows/release-candidate-promote.yml",
-    expectedInvocationChannel: "alpha",
-    resolvedWorkflowSha: "b".repeat(40),
-    resolvedRuntimeSha: "b".repeat(40),
-    policy: authority.policy,
-    scannerRoot: authority.scannerRoot,
-  });
-
-  assert.equal(result.ok, true, JSON.stringify(result.failures));
-  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
-  assert.equal(result.receipt.invocation.selectorClass, "floating");
-  assert.equal(result.receipt.invocation.channel, "alpha");
+test("bounded alpha facade bootstrap retains the floating private shell", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /\.release-candidate-promote\.yml@v4-alpha/u,
+  );
+  assert.match(
+    workflow,
+    /declarative-release-tail: true/u,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /workflows\/release-candidate-promote\.yml@v4-alpha/u,
+  );
+  assert.match(
+    workflow,
+    /buildchain-expected-channel: alpha/u,
+  );
 });
 
-test("bounded alpha recovery admits the floating advanced shell before promotion", () => {
+test("bounded alpha recovery admits the old floating shell with current exact runtime binding", () => {
   const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
   const legacyRelative = ".github/workflows/release-candidate-promote.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");

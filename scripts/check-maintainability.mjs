@@ -5,10 +5,52 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import {
-  analyzeJavaScript,
+  analyzeSource,
+  analyzeWorkflow,
   collectMaintainabilityMetrics,
   isHandMaintainedSource,
 } from "./maintainability-metrics.mjs";
+import {
+  calculateDebtMeasuredExcess,
+  evaluateDebtAuthority,
+  evaluateDebtBudget,
+  evaluateExceptionBudget,
+  evaluateExceptionGovernance,
+  evaluateTestBudgets,
+  evaluateWorkflowBudgets,
+} from "./maintainability-governance.mjs";
+
+function collectHotspots(root, current, limit = 20, shallowFallback = []) {
+  const maintained = new Set([
+    ...Object.keys(current.files || {}),
+    ...Object.keys(current.tests || {}),
+    ...Object.keys(current.workflows || {}),
+  ]);
+  // Shallow consumers cannot reproduce repository-wide churn ranking.
+  // Reuse the audited routes; full clones still re-rank them below.
+  // This keeps consumer verification deterministic without inventing history.
+  if (
+    gitOutput(root, ["rev-parse", "--is-shallow-repository"]).trim() === "true"
+  ) {
+    return shallowFallback.slice(0, limit);
+  }
+  const counts = new Map();
+  const record = (file) =>
+    maintained.has(file) && counts.set(file, (counts.get(file) || 0) + 1);
+  for (const args of [
+    ["log", "-n", "500", "--format=", "--name-only"],
+    ["diff", "--name-only"],
+  ])
+    for (const file of gitOutput(root, args).split("\n").filter(Boolean))
+      record(file);
+  return [...counts]
+    .sort(
+      ([leftPath, left], [rightPath, right]) =>
+        right - left || leftPath.localeCompare(rightPath),
+    )
+    .slice(0, limit)
+    .map(([file]) => file);
+}
 
 function readJson(root, file) {
   return JSON.parse(fs.readFileSync(path.join(root, file), "utf8"));
@@ -68,7 +110,35 @@ function sourceMetricsAtRevision(root, revision) {
   return Object.fromEntries(
     files.map((file) => [
       file,
-      analyzeJavaScript(file, gitOutput(root, ["show", `${revision}:${file}`])),
+      analyzeSource(file, gitOutput(root, ["show", `${revision}:${file}`])),
+    ]),
+  );
+}
+
+function testMetricsAtRevision(root, revision) {
+  const files = gitOutput(root, ["ls-tree", "-r", "--name-only", revision])
+    .split("\n")
+    .filter((file) =>
+      /(?:^tests\/|(?:^|\/)tests?\/).+\.(?:c|m)?js$/u.test(file),
+    )
+    .sort();
+  return Object.fromEntries(
+    files.map((file) => [
+      file,
+      analyzeSource(file, gitOutput(root, ["show", `${revision}:${file}`])),
+    ]),
+  );
+}
+
+function workflowMetricsAtRevision(root, revision) {
+  const files = gitOutput(root, ["ls-tree", "-r", "--name-only", revision])
+    .split("\n")
+    .filter((file) => /^\.github\/workflows\/.*\.ya?ml$/u.test(file))
+    .sort();
+  return Object.fromEntries(
+    files.map((file) => [
+      file,
+      analyzeWorkflow(file, gitOutput(root, ["show", `${revision}:${file}`])),
     ]),
   );
 }
@@ -276,10 +346,14 @@ function evaluateRepositoryBudgets({ current, policy }) {
   return issues;
 }
 
+function budgetsForFile(policy, file) {
+  return file.endsWith(".rs") ? policy.rustBudgets : policy.sourceBudgets;
+}
+
 function evaluateMaintainability({ current, baselineFiles, policy }) {
   const issues = [];
-  const budgets = policy.sourceBudgets;
   for (const [file, metrics] of Object.entries(current.files)) {
+    const budgets = budgetsForFile(policy, file);
     const baseline = baselineFiles[file];
     if (!baseline) {
       const transition = policy.approvedNewFileTransitions?.[file];
@@ -381,15 +455,66 @@ function evaluateMaintainability({ current, baselineFiles, policy }) {
 
 function checkMaintainability({ root = process.cwd() } = {}) {
   const policy = readJson(root, "architecture/maintainability-policy.json");
+  if (policy.schemaVersion !== 2) {
+    throw new Error("maintainability policy schemaVersion must be 2");
+  }
   const baseline = readJson(root, policy.baseline);
   const enforcementRevision = policy.enforcementRevision || baseline.revision;
+  const extendedCoverageRevision =
+    policy.extendedCoverageRevision || enforcementRevision;
   const hydratedRevisions = ensureMaintainabilityRevisionsAvailable(root, {
     baselineRevision: baseline.revision,
     enforcementRevision,
   });
+  const hydratedExtendedCoverageRevision = ensureRevisionAvailable(
+    root,
+    extendedCoverageRevision,
+  );
   const current = collectMaintainabilityMetrics({ root });
+  const debt = readJson(root, "architecture/maintainability-debt.json");
+  const architecture = readJson(
+    root,
+    "architecture/internal-capabilities.json",
+  );
   const baselineFiles = sourceMetricsAtRevision(root, enforcementRevision);
-  const issues = evaluateMaintainability({ current, baselineFiles, policy });
+  const extendedSourceFiles = sourceMetricsAtRevision(
+    root,
+    extendedCoverageRevision,
+  );
+  for (const [file, metrics] of Object.entries(extendedSourceFiles)) {
+    if (file.endsWith(".rs")) baselineFiles[file] = metrics;
+  }
+  const baselineTests = testMetricsAtRevision(root, extendedCoverageRevision);
+  const baselineWorkflows = workflowMetricsAtRevision(
+    root,
+    extendedCoverageRevision,
+  );
+  const issues = evaluateExceptionGovernance({ policy });
+  issues.push(...evaluateExceptionBudget({ policy }));
+  const hotspots = collectHotspots(root, current, 20, debt.hotspots || []);
+  issues.push(
+    ...evaluateDebtAuthority({
+      current,
+      policy,
+      debt,
+      capabilityIds: new Set(
+        architecture.capabilities.map((entry) => entry.id),
+      ),
+      hotspots,
+    }),
+  );
+  issues.push(...evaluateDebtBudget({ debt, policy }));
+  issues.push(...evaluateMaintainability({ current, baselineFiles, policy }));
+  issues.push(
+    ...evaluateTestBudgets({ current, baselineFiles: baselineTests, policy }),
+  );
+  issues.push(
+    ...evaluateWorkflowBudgets({
+      current,
+      baselineFiles: baselineWorkflows,
+      policy,
+    }),
+  );
   issues.push(...evaluateRepositoryBudgets({ current, policy }));
   issues.push(
     ...evaluatePublicSurface({ root, revision: enforcementRevision, policy }),
@@ -401,12 +526,18 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     schemaVersion: 1,
     baselineRevision: baseline.revision,
     enforcementRevision,
+    extendedCoverageRevision,
     hydratedBaselineRevision: hydratedRevisions[baseline.revision],
     hydratedEnforcementRevision: hydratedRevisions[enforcementRevision],
+    hydratedExtendedCoverageRevision,
     trackedFiles: current.repository.trackedFiles,
     sourceFiles: current.repository.handMaintainedSourceFiles,
     publicSurface: current.publicSurface,
     hotspots: current.hotspots,
+    governedDebtSurfaces: Object.values(debt.surfaces).reduce(
+      (total, entries) => total + Object.keys(entries).length,
+      0,
+    ),
   };
 }
 
@@ -427,11 +558,21 @@ if (
 }
 
 export {
+  calculateDebtMeasuredExcess,
   checkMaintainability,
+  collectHotspots,
   ensureMaintainabilityRevisionsAvailable,
   ensureRevisionAvailable,
   evaluateMaintainability,
+  evaluateDebtAuthority,
+  evaluateDebtBudget,
+  evaluateExceptionBudget,
+  evaluateExceptionGovernance,
   evaluateRepositoryBudgets,
+  evaluateTestBudgets,
+  evaluateWorkflowBudgets,
   evaluatePublicSurface,
   sourceMetricsAtRevision,
+  testMetricsAtRevision,
+  workflowMetricsAtRevision,
 };

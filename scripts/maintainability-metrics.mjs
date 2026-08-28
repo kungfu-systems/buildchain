@@ -9,6 +9,10 @@ import {
   dependencyCycles,
   relativeImports,
 } from "./check-internal-architecture.mjs";
+import {
+  analyzeRust,
+  analyzeWorkflow,
+} from "./maintainability-domain-metrics.mjs";
 
 const JS_EXTENSIONS = new Set([".js", ".mjs", ".cjs"]);
 const HAND_MAINTAINED_EXTENSIONS = new Set([...JS_EXTENSIONS, ".rs"]);
@@ -163,6 +167,12 @@ function analyzeJavaScript(file, source) {
   };
 }
 
+function analyzeSource(file, source) {
+  return path.extname(file) === ".rs"
+    ? analyzeRust(file, source)
+    : analyzeJavaScript(file, source);
+}
+
 function countRegistryEntries(root, file, field, revision = "") {
   const value = JSON.parse(readTrackedFile(root, file, revision));
   return Array.isArray(value[field]) ? value[field].length : 0;
@@ -261,13 +271,20 @@ function collectMaintainabilityMetrics({
   const sourceMetrics = Object.fromEntries(
     sourceFiles.map((file) => {
       const source = readTrackedFile(root, file, revision);
-      return [
-        file,
-        JS_EXTENSIONS.has(path.extname(file))
-          ? analyzeJavaScript(file, source)
-          : { lines: lineCount(source), complexity: 0, functions: [] },
-      ];
+      return [file, analyzeSource(file, source)];
     }),
+  );
+  const testMetrics = Object.fromEntries(
+    testFiles.map((file) => [
+      file,
+      analyzeJavaScript(file, readTrackedFile(root, file, revision)),
+    ]),
+  );
+  const workflowMetrics = Object.fromEntries(
+    workflowFiles.map((file) => [
+      file,
+      analyzeWorkflow(file, readTrackedFile(root, file, revision)),
+    ]),
   );
   const sumLines = (entries) =>
     entries.reduce(
@@ -347,6 +364,8 @@ function collectMaintainabilityMetrics({
       },
     },
     files: sourceMetrics,
+    tests: testMetrics,
+    workflows: workflowMetrics,
   };
 }
 
@@ -359,6 +378,9 @@ if (
 
 export {
   analyzeJavaScript,
+  analyzeRust,
+  analyzeSource,
+  analyzeWorkflow,
   collectMaintainabilityMetrics,
   isHandMaintainedSource,
   lineCount,

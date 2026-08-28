@@ -335,6 +335,7 @@ function settleTerminalCandidate(queue, identity, candidate) {
     identity,
     candidate,
     "duplicate-terminal-event-noop",
+    { successorWake: candidate.terminal?.successorWake || null },
   );
   return { queue, receipt, receiptRoot: devDeliveryContentRoot(receipt) };
 }
@@ -439,7 +440,10 @@ export function createDevDeliveryTerminalSettler({
         throw new Error("stale fencing token");
       if (leaseGeneration !== queue.activeWarrant.generation)
         throw new Error("stale lease generation");
-      if (identity.outcome === "dequeued") {
+      if (
+        identity.outcome === "dequeued" &&
+        queue.activeWarrant.phase === "provisional"
+      ) {
         return retainDequeuedWarrant(
           queue,
           identity,

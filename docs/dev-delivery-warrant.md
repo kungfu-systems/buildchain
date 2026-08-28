@@ -60,15 +60,18 @@ state, event, or evidence drift fails closed.
 
 The reusable terminal controller classifies authoritative completion,
 cancellation, supersession, native failure, and transient dequeue separately.
-`dequeued` alone never clears an active Warrant: a fresh holder continues with
-the same generation and token, while an expired holder waits for proof that its
-fenced worker stopped. Queued work may still settle as dequeued because it never
-started native execution. The controller uses one `settle` operation for active,
-queued, already-terminal, and never-admitted pull requests. An active Warrant
-still requires its exact fence and evidence. A matching queued cancellation is
-persisted normally. A duplicate terminal event or a pull request that never
-entered Warrant authority returns a rooted explicit no-op instead of failing
-the workflow or inventing queue state.
+`dequeued` retains only a provisional Warrant whose native worker may still be
+running: a fresh holder continues with the same generation and token, while an
+expired holder waits for proof that its fenced worker stopped. A qualified or
+historical phase-less holder has no unproven native worker to fence, so its exact
+dequeue closes atomically and persists the rooted queued-successor wake. Queued
+work may also settle as dequeued because it never started native execution. The
+controller uses one `settle` operation for active, queued, already-terminal,
+and never-admitted pull requests. An active Warrant still requires its exact
+fence and evidence. A matching queued cancellation is persisted normally. A
+duplicate terminal event replays the persisted wake, while a pull request that
+never entered Warrant authority returns a rooted explicit no-op instead of
+failing the workflow or inventing queue state.
 
 The supported priority classes are `ordinary`, `expedited`, and `emergency`.
 The queue does not infer an emergency: callers must choose it explicitly under

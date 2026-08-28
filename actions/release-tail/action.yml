@@ -2,6 +2,18 @@ name: "Execute a declarative Buildchain release tail"
 author: "Keren Dong"
 description: "Execute rooted release provider effects through one Buildchain-owned transaction, readback, retry, and receipt path"
 inputs:
+  capsule-contract:
+    description: "Compatibility alias: must name the current source-bound v4 rehearsal capsule contract"
+    required: false
+  capsule:
+    description: "Compatibility alias for rehearsal-capsule"
+    required: false
+  capsule-root:
+    description: "Compatibility alias for candidate-root"
+    required: false
+  evidence-path:
+    description: "Compatibility alias for rehearsal-evidence-path"
+    required: false
   declaration:
     description: "Versioned release-tail declaration JSON or path"
     required: false
@@ -50,6 +62,12 @@ outputs:
     description: "JSON array of standardized receipt roots"
   rehearsal-evidence-root:
     description: "Root of effect-disabled or provider-observed rehearsal evidence"
+  binding-root:
+    description: "Compatibility output bound to the exact v4 capsule root"
+  evidence-root:
+    description: "Compatibility alias for rehearsal-evidence-root"
+  evidence-path:
+    description: "Compatibility output containing the rehearsal evidence path"
 runs:
   using: "node24"
   main: "dist/index.js"

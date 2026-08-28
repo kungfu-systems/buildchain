@@ -318,7 +318,7 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 131
+        "line": 167
       },
       "example": "import { createAdopterDeliveryPassportBinding } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
@@ -347,9 +347,38 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 151
+        "line": 187
       },
       "example": "import { normalizeAdopterDeliveryPassportBinding } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/adopter-delivery-passport.js#releasePassportKfdAdopterSourceSha",
+      "name": "releasePassportKfdAdopterSourceSha",
+      "kind": "function",
+      "signature": "function releasePassportKfdAdopterSourceSha({ passportSourceSha = \"\", release = undefined, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ passportSourceSha = \"\", release = undefined, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/adopter-delivery-passport.js",
+        "line": 12
+      },
+      "example": "import { releasePassportKfdAdopterSourceSha } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -376,7 +405,7 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 104
+        "line": 140
       },
       "example": "import { validateAdopterDeliveryGateResult } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
@@ -409,7 +438,7 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 158
+        "line": 194
       },
       "example": "import { validateAdopterDeliveryPassportBinding } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
@@ -438,7 +467,7 @@
       ],
       "source": {
         "path": "packages/core/adopter-delivery-passport.js",
-        "line": 233
+        "line": 269
       },
       "example": "import { validateAdopterDeliveryReleaseEvidence } from \"@kungfu-tech/buildchain/adopter-delivery-passport\";",
       "maturity": "stable",
@@ -8120,7 +8149,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 511
+        "line": 512
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8515,7 +8544,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 525
+        "line": 526
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8587,7 +8616,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 520
+        "line": 521
       },
       "example": "import { reconcileDevDeliveryTerminalEvidence } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8677,7 +8706,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 514
+        "line": 515
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -10589,7 +10618,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 420
+        "line": 422
       },
       "example": "import { codeownersForPath } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10618,7 +10647,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 314
+        "line": 316
       },
       "example": "import { compileEffectiveGithubGovernancePolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10642,7 +10671,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 453
+        "line": 455
       },
       "example": "import { createBuildchainGithubGovernanceAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10758,7 +10787,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 428
+        "line": 430
       },
       "example": "import { evaluateCodeownersAuthority } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -10912,7 +10941,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 166
+        "line": 168
       },
       "example": "import { githubGovernanceDigest } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -11028,7 +11057,7 @@
       ],
       "source": {
         "path": "packages/core/github-governance-authority.js",
-        "line": 404
+        "line": 406
       },
       "example": "import { parseCodeowners } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16549,7 +16578,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2425
+        "line": 2059
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16578,7 +16607,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1483
+        "line": 1117
       },
       "example": "import { collectPaperStatus } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16607,7 +16636,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2667
+        "line": 2301
       },
       "example": "import { createPaperAlphaPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16636,7 +16665,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2604
+        "line": 2238
       },
       "example": "import { createPaperBuildPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16658,14 +16687,14 @@
       ],
       "returns": "unknown",
       "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 524
+        "line": 525
       },
       "example": "import { createPaperProvisioningAuthority } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16694,7 +16723,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2725
+        "line": 2359
       },
       "example": "import { createPaperResumePlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16723,7 +16752,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2852
+        "line": 2486
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16747,7 +16776,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 95
+        "line": 96
       },
       "example": "import { PAPER_ALPHA_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16771,7 +16800,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 94
+        "line": 95
       },
       "example": "import { PAPER_BUILD_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16795,7 +16824,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 87
+        "line": 88
       },
       "example": "import { PAPER_MIGRATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16819,7 +16848,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 90
+        "line": 91
       },
       "example": "import { PAPER_NPM_BOOTSTRAP_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16843,7 +16872,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 88
+        "line": 89
       },
       "example": "import { PAPER_PREFLIGHT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16867,7 +16896,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 92
+        "line": 93
       },
       "example": "import { PAPER_PROVISIONING_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16891,7 +16920,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 96
+        "line": 97
       },
       "example": "import { PAPER_RESUME_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16915,7 +16944,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 86
+        "line": 87
       },
       "example": "import { PAPER_SCAFFOLD_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16939,7 +16968,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 99
+        "line": 100
       },
       "example": "import { PAPER_STATE_ORDER } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16963,7 +16992,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 89
+        "line": 90
       },
       "example": "import { PAPER_STATUS_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16987,7 +17016,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 97
+        "line": 98
       },
       "example": "import { PAPER_VISIBILITY_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16999,24 +17028,19 @@
     {
       "id": "packages/core/paper.js#planPaperMigration",
       "name": "planPaperMigration",
-      "kind": "function",
-      "signature": "function planPaperMigration({ cwd = process.cwd(), buildchainRoot = process.cwd(), buildchainVersion = \"\", buildchainSha = \"\", } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), buildchainRoot = process.cwd(), buildchainVersion = \"\", buildchainSha = \"\", } = {}"
-        }
-      ],
+      "kind": "value",
+      "signature": "planPaperMigration",
+      "parameters": [],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "No narrower error contract was mechanically discoverable."
       ],
       "sideEffects": [
-        "none-detected-by-static-source-scan"
+        "unknown"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1024
+        "line": 1
       },
       "example": "import { planPaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17028,24 +17052,19 @@
     {
       "id": "packages/core/paper.js#planPaperScaffold",
       "name": "planPaperScaffold",
-      "kind": "function",
-      "signature": "function planPaperScaffold({ cwd = process.cwd(), buildchainRoot = process.cwd(), buildchainVersion = \"\", buildchainRef = \"v3\", buildchainSha = \"\", name = path.basename(path.resolve(cwd)), title = \"\", packageName = \"\", repository = \"\", version = \"0.1.0-alpha.0\", siteBaseUrl = \"\", } = {})",
-      "parameters": [
-        {
-          "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), buildchainRoot = process.cwd(), buildchainVersion = \"\", buildchainRef = \"v3\", buildchainSha = \"\", name = path.basename(path.resolve(cwd)), title = \"\", packageName = \"\", repository = \"\", version = \"0.1.0-alpha.0\", siteBaseUrl = \"\", } = {}"
-        }
-      ],
+      "kind": "value",
+      "signature": "planPaperScaffold",
+      "parameters": [],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "No narrower error contract was mechanically discoverable."
       ],
       "sideEffects": [
-        "none-detected-by-static-source-scan"
+        "unknown"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 707
+        "line": 1
       },
       "example": "import { planPaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17078,7 +17097,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 250
+        "line": 251
       },
       "example": "import { resolvePaperRuntimeGitSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -17090,24 +17109,19 @@
     {
       "id": "packages/core/paper.js#writePaperMigration",
       "name": "writePaperMigration",
-      "kind": "function",
-      "signature": "function writePaperMigration(plan)",
-      "parameters": [
-        {
-          "name": "plan",
-          "signature": "plan"
-        }
-      ],
+      "kind": "value",
+      "signature": "writePaperMigration",
+      "parameters": [],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "No narrower error contract was mechanically discoverable."
       ],
       "sideEffects": [
-        "local-filesystem-write"
+        "unknown"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1141
+        "line": 1
       },
       "example": "import { writePaperMigration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17119,24 +17133,19 @@
     {
       "id": "packages/core/paper.js#writePaperScaffold",
       "name": "writePaperScaffold",
-      "kind": "function",
-      "signature": "function writePaperScaffold(plan)",
-      "parameters": [
-        {
-          "name": "plan",
-          "signature": "plan"
-        }
-      ],
+      "kind": "value",
+      "signature": "writePaperScaffold",
+      "parameters": [],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "No narrower error contract was mechanically discoverable."
       ],
       "sideEffects": [
-        "local-filesystem-write"
+        "unknown"
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 852
+        "line": 1
       },
       "example": "import { writePaperScaffold } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18472,7 +18481,7 @@
       ],
       "source": {
         "path": "packages/core/publication-control-plane-audit.js",
-        "line": 75
+        "line": 245
       },
       "example": "import { evaluatePublicationControlPlaneSnapshot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -18590,6 +18599,650 @@
         "line": 6
       },
       "example": "import { PUBLICATION_NPM_PACKAGE_CONTRACT } from \"@kungfu-tech/buildchain\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#appendPublicationRehearsalToml",
+      "name": "appendPublicationRehearsalToml",
+      "kind": "function",
+      "signature": "function appendPublicationRehearsalToml(source)",
+      "parameters": [
+        {
+          "name": "source",
+          "signature": "source"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 46
+      },
+      "example": "import { appendPublicationRehearsalToml } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#assertPublicationRehearsalConfig",
+      "name": "assertPublicationRehearsalConfig",
+      "kind": "function",
+      "signature": "function assertPublicationRehearsalConfig(config)",
+      "parameters": [
+        {
+          "name": "config",
+          "signature": "config"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 19
+      },
+      "example": "import { assertPublicationRehearsalConfig } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#mergePublicationRehearsalAgentInstructions",
+      "name": "mergePublicationRehearsalAgentInstructions",
+      "kind": "function",
+      "signature": "function mergePublicationRehearsalAgentInstructions(current = \"\")",
+      "parameters": [
+        {
+          "name": "current",
+          "signature": "current = \"\""
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 73
+      },
+      "example": "import { mergePublicationRehearsalAgentInstructions } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#projectPublicationRehearsalToml",
+      "name": "projectPublicationRehearsalToml",
+      "kind": "function",
+      "signature": "function projectPublicationRehearsalToml(source)",
+      "parameters": [
+        {
+          "name": "source",
+          "signature": "source"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 55
+      },
+      "example": "import { projectPublicationRehearsalToml } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+      "name": "PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 10
+      },
+      "example": "import { PUBLICATION_REHEARSAL_AGENT_SECTION_END } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+      "name": "PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 8
+      },
+      "example": "import { PUBLICATION_REHEARSAL_AGENT_SECTION_START } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+      "name": "PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 12
+      },
+      "example": "import { PUBLICATION_REHEARSAL_WORKFLOW_PATH } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#publicationRehearsalAgentInstructions",
+      "name": "publicationRehearsalAgentInstructions",
+      "kind": "function",
+      "signature": "function publicationRehearsalAgentInstructions()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 69
+      },
+      "example": "import { publicationRehearsalAgentInstructions } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#publicationRehearsalToml",
+      "name": "publicationRehearsalToml",
+      "kind": "function",
+      "signature": "function publicationRehearsalToml()",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 15
+      },
+      "example": "import { publicationRehearsalToml } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-projection.js#publicationRehearsalWorkflow",
+      "name": "publicationRehearsalWorkflow",
+      "kind": "function",
+      "signature": "function publicationRehearsalWorkflow(buildchainRef)",
+      "parameters": [
+        {
+          "name": "buildchainRef",
+          "signature": "buildchainRef"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-projection.js",
+        "line": 99
+      },
+      "example": "import { publicationRehearsalWorkflow } from \"@kungfu-tech/buildchain/publication-rehearsal-projection\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#createPublicationRehearsalCapsule",
+      "name": "createPublicationRehearsalCapsule",
+      "kind": "function",
+      "signature": "function createPublicationRehearsalCapsule(input = {})",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 91
+      },
+      "example": "import { createPublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#executePublicationRehearsal",
+      "name": "executePublicationRehearsal",
+      "kind": "function",
+      "signature": "async function executePublicationRehearsal({ capsule, capsuleRoot, candidateRoot = capsuleRoot, mode = \"simulate\", environment = {}, adapters = {}, authority = null, transaction = null, checkpoint, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ capsule, capsuleRoot, candidateRoot = capsuleRoot, mode = \"simulate\", environment = {}, adapters = {}, authority = null, transaction = null, checkpoint, } = {}"
+        }
+      ],
+      "returns": "Promise<unknown>",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 133
+      },
+      "example": "import { executePublicationRehearsal } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#normalizePublicationRehearsalCapsule",
+      "name": "normalizePublicationRehearsalCapsule",
+      "kind": "function",
+      "signature": "function normalizePublicationRehearsalCapsule(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 99
+      },
+      "example": "import { normalizePublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+      "name": "PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 14
+      },
+      "example": "import { PUBLICATION_REHEARSAL_CAPSULE_CONTRACT } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_COMMAND",
+      "name": "PUBLICATION_REHEARSAL_COMMAND",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_COMMAND",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 24
+      },
+      "example": "import { PUBLICATION_REHEARSAL_COMMAND } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+      "name": "PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 18
+      },
+      "example": "import { PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+      "name": "PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+      "kind": "constant",
+      "signature": "const PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 16
+      },
+      "example": "import { PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#publicationRehearsalBindingRoot",
+      "name": "publicationRehearsalBindingRoot",
+      "kind": "function",
+      "signature": "function publicationRehearsalBindingRoot(capsule)",
+      "parameters": [
+        {
+          "name": "capsule",
+          "signature": "capsule"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 111
+      },
+      "example": "import { publicationRehearsalBindingRoot } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#publicationRehearsalDiagnostic",
+      "name": "publicationRehearsalDiagnostic",
+      "kind": "function",
+      "signature": "function publicationRehearsalDiagnostic(error, { capsule } = {})",
+      "parameters": [
+        {
+          "name": "error",
+          "signature": "error"
+        },
+        {
+          "name": "parameter2",
+          "signature": "{ capsule } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 115
+      },
+      "example": "import { publicationRehearsalDiagnostic } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#PublicationRehearsalError",
+      "name": "PublicationRehearsalError",
+      "kind": "class",
+      "signature": "class PublicationRehearsalError",
+      "parameters": [],
+      "returns": "PublicationRehearsalError",
+      "errors": [
+        "Construction and method errors follow the linked source implementation."
+      ],
+      "sideEffects": [
+        "class-dependent"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 52
+      },
+      "example": "import { PublicationRehearsalError } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+      "name": "RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+      "kind": "constant",
+      "signature": "const RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 20
+      },
+      "example": "import { RELEASE_LOCAL_CONSTRUCTIBILITY_ADR } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+      "name": "RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+      "kind": "constant",
+      "signature": "const RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 22
+      },
+      "example": "import { RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#resolvePublicationRehearsalFile",
+      "name": "resolvePublicationRehearsalFile",
+      "kind": "function",
+      "signature": "function resolvePublicationRehearsalFile(capsuleRoot, relativePath)",
+      "parameters": [
+        {
+          "name": "capsuleRoot",
+          "signature": "capsuleRoot"
+        },
+        {
+          "name": "relativePath",
+          "signature": "relativePath"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 170
+      },
+      "example": "import { resolvePublicationRehearsalFile } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/publication-rehearsal-runtime.js#verifyPublicationRehearsalCapsule",
+      "name": "verifyPublicationRehearsalCapsule",
+      "kind": "function",
+      "signature": "function verifyPublicationRehearsalCapsule({ capsule, capsuleRoot, candidateRoot = capsuleRoot, } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ capsule, capsuleRoot, candidateRoot = capsuleRoot, } = {}"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/publication-rehearsal-runtime.js",
+        "line": 103
+      },
+      "example": "import { verifyPublicationRehearsalCapsule } from \"@kungfu-tech/buildchain/publication-rehearsal-runtime\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -19995,7 +20648,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 584
+        "line": 585
       },
       "example": "import { recoveryFailure } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20043,7 +20696,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 56
+        "line": 57
       },
       "example": "import { ReleaseCandidateRecoveryError } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20072,7 +20725,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 134
+        "line": 135
       },
       "example": "import { validateRecoveryTargetRef } from \"@kungfu-tech/buildchain/release-candidate-recovery\";",
       "maturity": "stable",
@@ -20101,7 +20754,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 176
+        "line": 177
       },
       "example": "import { validateReleaseCandidateRecoveryReceipt } from \"@kungfu-tech/buildchain/release-candidate-recovery\";",
       "maturity": "stable",
@@ -20130,7 +20783,7 @@
       ],
       "source": {
         "path": "packages/core/release-candidate-recovery.js",
-        "line": 443
+        "line": 444
       },
       "example": "import { verifyReleaseCandidateRecovery } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20844,7 +21497,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 51
+        "line": 54
       },
       "example": "import { AGENT_INDEX_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20868,7 +21521,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 49
+        "line": 52
       },
       "example": "import { ARTIFACT_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20897,7 +21550,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1584
+        "line": 1465
       },
       "example": "import { collectGitHubReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20926,7 +21579,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1249
+        "line": 1128
       },
       "example": "import { createArtifactEvidence } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -20955,7 +21608,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 220
+        "line": 223
       },
       "example": "import { createInvariantPassportGate } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -20984,7 +21637,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2786
+        "line": 2607
       },
       "example": "import { createReleaseCheckReport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21013,7 +21666,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 1284
+        "line": 1165
       },
       "example": "import { createReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21042,7 +21695,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2942
+        "line": 2763
       },
       "example": "import { explainReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21066,7 +21719,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 50
+        "line": 53
       },
       "example": "import { IMPACT_LEDGER_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21090,7 +21743,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 56
+        "line": 59
       },
       "example": "import { INVARIANT_PASSPORT_GATE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -21114,7 +21767,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 57
+        "line": 60
       },
       "example": "import { KFD_AGENT_HUB_RELEASE_EVIDENCE_CONTRACT } from \"@kungfu-tech/buildchain/release-passport\";",
       "maturity": "stable",
@@ -21138,7 +21791,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 54
+        "line": 57
       },
       "example": "import { KFD2_RELEASE_TRUST_PASSPORT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21162,7 +21815,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 55
+        "line": 58
       },
       "example": "import { KFD2_TRUST_PROOF_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21191,7 +21844,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2971
+        "line": 2792
       },
       "example": "import { makeReleasePassportFixtureAssets } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21215,7 +21868,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 52
+        "line": 55
       },
       "example": "import { PRODUCT_MECHANISM_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21252,7 +21905,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2858
+        "line": 2679
       },
       "example": "import { readJsonFromLocation } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21300,7 +21953,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 53
+        "line": 56
       },
       "example": "import { RELEASE_EVIDENCE_ATTACHMENT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21354,7 +22007,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 235
+        "line": 238
       },
       "example": "import { sha256File } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21383,7 +22036,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 157
+        "line": 160
       },
       "example": "import { sha256Text } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21407,7 +22060,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2983
+        "line": 2804
       },
       "example": "import { validateKnownReleasePassportContracts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -21436,7 +22089,7 @@
       ],
       "source": {
         "path": "packages/core/release-passport.js",
-        "line": 2907
+        "line": 2728
       },
       "example": "import { verifyReleasePassport } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24748,6 +25401,218 @@
       ]
     },
     {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#createV4CrossPlatformAdopterReport",
+      "name": "createV4CrossPlatformAdopterReport",
+      "kind": "function",
+      "signature": "function createV4CrossPlatformAdopterReport(input)",
+      "parameters": [
+        {
+          "name": "input",
+          "signature": "input"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 259
+      },
+      "example": "import { createV4CrossPlatformAdopterReport } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#qualifyV4CrossPlatformAdopters",
+      "name": "qualifyV4CrossPlatformAdopters",
+      "kind": "function",
+      "signature": "function qualifyV4CrossPlatformAdopters({ reports, consumers })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ reports, consumers }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "may-write-or-invoke-external-actions"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 270
+      },
+      "example": "import { qualifyV4CrossPlatformAdopters } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#summarizeV3V4CapabilityInventory",
+      "name": "summarizeV3V4CapabilityInventory",
+      "kind": "function",
+      "signature": "function summarizeV3V4CapabilityInventory(inventory)",
+      "parameters": [
+        {
+          "name": "inventory",
+          "signature": "inventory"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 39
+      },
+      "example": "import { summarizeV3V4CapabilityInventory } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_PLATFORMS",
+      "name": "V4_CROSS_PLATFORM_ADOPTER_PLATFORMS",
+      "kind": "constant",
+      "signature": "const V4_CROSS_PLATFORM_ADOPTER_PLATFORMS",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 7
+      },
+      "example": "import { V4_CROSS_PLATFORM_ADOPTER_PLATFORMS } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT",
+      "name": "V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 5
+      },
+      "example": "import { V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT",
+      "name": "V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT",
+      "kind": "constant",
+      "signature": "const V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 3
+      },
+      "example": "import { V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_NEUTRAL_DRIVER",
+      "name": "V4_CROSS_PLATFORM_NEUTRAL_DRIVER",
+      "kind": "constant",
+      "signature": "const V4_CROSS_PLATFORM_NEUTRAL_DRIVER",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 12
+      },
+      "example": "import { V4_CROSS_PLATFORM_NEUTRAL_DRIVER } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/v4-cross-platform-adopter-qualification.js#validateV4CrossPlatformAdopterReport",
+      "name": "validateV4CrossPlatformAdopterReport",
+      "kind": "function",
+      "signature": "function validateV4CrossPlatformAdopterReport(report)",
+      "parameters": [
+        {
+          "name": "report",
+          "signature": "report"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/v4-cross-platform-adopter-qualification.js",
+        "line": 222
+      },
+      "example": "import { validateV4CrossPlatformAdopterReport } from \"@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/v4-floating-consumer-evidence.js#certifyV4FloatingConsumerPolicyReceipt",
       "name": "certifyV4FloatingConsumerPolicyReceipt",
       "kind": "function",
@@ -24984,7 +25849,7 @@
       ],
       "source": {
         "path": "packages/core/v4-floating-consumer-policy.js",
-        "line": 428
+        "line": 429
       },
       "example": "import { scanV4FloatingConsumerPolicy } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -28189,7 +29054,7 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:7def95efbb6f76cea7962e2ec07e2155a3e6bacdc1ee1043d985f33eddb25ac7",
+      "digest": "sha256:19d8a5b924bbc261d39bd33312d9177450d246256b2af44cea89f476394a477c",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -28654,7 +29519,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:63025628454a130404894dd3a08906098c6cdd57ed33aff85264da6548348e42",
+      "digest": "sha256:95136fbc5d53bfd37b39b3e2fb331fbbb518ef51d5362cc65c5df4d2ea0fee35",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -28794,6 +29659,74 @@
         "packages/core/v4-publication-rehearsal.js#validateV4PublicationRehearsalCapsule",
         "packages/core/v4-publication-rehearsal.js#validateV4PublicationRehearsalProviderBindings",
         "packages/core/v4-publication-rehearsal.js#verifyV4PublicationRehearsalCapsule"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-rehearsal-runtime",
+      "export": "./publication-rehearsal-runtime",
+      "target": "./packages/core/publication-rehearsal-runtime.js",
+      "digest": "sha256:cd7b3d76223b859b995a30988d5432c1c5e05fdb304d7fa2d98db43ec85e3606",
+      "summary": "Compatibility names for the source-bound v4 publication rehearsal runtime and explicit rooted migration diagnostics.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 14,
+      "symbolIds": [
+        "packages/core/publication-rehearsal-runtime.js#createPublicationRehearsalCapsule",
+        "packages/core/publication-rehearsal-runtime.js#executePublicationRehearsal",
+        "packages/core/publication-rehearsal-runtime.js#normalizePublicationRehearsalCapsule",
+        "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_CAPSULE_CONTRACT",
+        "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_COMMAND",
+        "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT",
+        "packages/core/publication-rehearsal-runtime.js#PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT",
+        "packages/core/publication-rehearsal-runtime.js#publicationRehearsalBindingRoot",
+        "packages/core/publication-rehearsal-runtime.js#publicationRehearsalDiagnostic",
+        "packages/core/publication-rehearsal-runtime.js#PublicationRehearsalError",
+        "packages/core/publication-rehearsal-runtime.js#RELEASE_LOCAL_CONSTRUCTIBILITY_ADR",
+        "packages/core/publication-rehearsal-runtime.js#RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT",
+        "packages/core/publication-rehearsal-runtime.js#resolvePublicationRehearsalFile",
+        "packages/core/publication-rehearsal-runtime.js#verifyPublicationRehearsalCapsule"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/publication-rehearsal-projection",
+      "export": "./publication-rehearsal-projection",
+      "target": "./packages/core/publication-rehearsal-projection.js",
+      "digest": "sha256:3cd3538b52d4f8abc6e90d8dab1ffe1d3b2cf71c1bb37313cb077fb20ca16d6f",
+      "summary": "Compatibility projection helpers that emit only the current source-bound v4 publication rehearsal configuration and workflow.",
+      "capabilityGroup": "release-passport-trust",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 10,
+      "symbolIds": [
+        "packages/core/publication-rehearsal-projection.js#appendPublicationRehearsalToml",
+        "packages/core/publication-rehearsal-projection.js#assertPublicationRehearsalConfig",
+        "packages/core/publication-rehearsal-projection.js#mergePublicationRehearsalAgentInstructions",
+        "packages/core/publication-rehearsal-projection.js#projectPublicationRehearsalToml",
+        "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_AGENT_SECTION_END",
+        "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_AGENT_SECTION_START",
+        "packages/core/publication-rehearsal-projection.js#PUBLICATION_REHEARSAL_WORKFLOW_PATH",
+        "packages/core/publication-rehearsal-projection.js#publicationRehearsalAgentInstructions",
+        "packages/core/publication-rehearsal-projection.js#publicationRehearsalToml",
+        "packages/core/publication-rehearsal-projection.js#publicationRehearsalWorkflow"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -29023,18 +29956,19 @@
       "specifier": "@kungfu-tech/buildchain/adopter-delivery-passport",
       "export": "./adopter-delivery-passport",
       "target": "./packages/core/adopter-delivery-passport.js",
-      "digest": "sha256:794e6e14442b0673e3909cab1663c919c331db31ff1b2af538a22940c5ed2e41",
+      "digest": "sha256:1b41d346874a335ca68618d5f78456eefd050b267843f13700db17a1af5ee9af",
       "summary": "Non-authoritative adopter delivery Release Passport binding and substitution checks.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 6,
+      "symbolCount": 7,
       "symbolIds": [
         "packages/core/adopter-delivery-passport.js#ADOPTER_DELIVERY_PASSPORT_BINDING_CONTRACT",
         "packages/core/adopter-delivery-passport.js#createAdopterDeliveryPassportBinding",
         "packages/core/adopter-delivery-passport.js#normalizeAdopterDeliveryPassportBinding",
+        "packages/core/adopter-delivery-passport.js#releasePassportKfdAdopterSourceSha",
         "packages/core/adopter-delivery-passport.js#validateAdopterDeliveryGateResult",
         "packages/core/adopter-delivery-passport.js#validateAdopterDeliveryPassportBinding",
         "packages/core/adopter-delivery-passport.js#validateAdopterDeliveryReleaseEvidence"
@@ -29099,6 +30033,36 @@
         "packages/core/v4-adopter-delivery.js#V4_ADOPTER_DELIVERY_SELECTORS",
         "packages/core/v4-adopter-delivery.js#V4_ADOPTER_DELIVERY_SOURCE",
         "packages/core/v4-adopter-delivery.js#verifyV4AdopterDeliveryReadback"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification",
+      "export": "./v4-cross-platform-adopter-qualification",
+      "target": "./packages/core/v4-cross-platform-adopter-qualification.js",
+      "digest": "sha256:5632da352725ecd3f06e06bd7772ede824c76fffeb91c123495be2f6818ea8e8",
+      "summary": "Exact-source v3 capability matrix reports, executed failure and recovery evidence, and cross-platform public adopter qualification APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 8,
+      "symbolIds": [
+        "packages/core/v4-cross-platform-adopter-qualification.js#createV4CrossPlatformAdopterReport",
+        "packages/core/v4-cross-platform-adopter-qualification.js#qualifyV4CrossPlatformAdopters",
+        "packages/core/v4-cross-platform-adopter-qualification.js#summarizeV3V4CapabilityInventory",
+        "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_PLATFORMS",
+        "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_QUALIFICATION_CONTRACT",
+        "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_ADOPTER_REPORT_CONTRACT",
+        "packages/core/v4-cross-platform-adopter-qualification.js#V4_CROSS_PLATFORM_NEUTRAL_DRIVER",
+        "packages/core/v4-cross-platform-adopter-qualification.js#validateV4CrossPlatformAdopterReport"
       ],
       "owner": "buildchain-core",
       "maturity": "stable",
@@ -29275,7 +30239,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:de724d5a0774b98c4a12a1d1f7921c82bcb87102fc622b3ff4505de28cc75001",
+      "digest": "sha256:762f10b7e0f99422ecdc73e717f721a22c940989edaa7b1011b3ba551db2b37e",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29391,7 +30355,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-control-plane-audit",
       "export": "./publication-control-plane-audit",
       "target": "./packages/core/publication-control-plane-audit.js",
-      "digest": "sha256:a2d207047837abddf9d1f2b728b5a730467917444cbcb2221310f8c45fe0ce5d",
+      "digest": "sha256:42e9a3877827801ed97b8940382f0780826bc148611077e30b314dcfda8a76ee",
       "summary": "Read-only publication control-plane snapshot evaluation APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29441,7 +30405,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:2aea877b54d6fc147ce08faf8c49448ecc2e6a1fda14689b41cb107496110b97",
+      "digest": "sha256:4eb7b9a3616b16178062cc88d430f0fb3bd11c16c8e926ebc9fd98396859732c",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -29614,7 +30578,7 @@
       "specifier": "@kungfu-tech/buildchain/release-candidate-recovery",
       "export": "./release-candidate-recovery",
       "target": "./packages/core/release-candidate-recovery.js",
-      "digest": "sha256:6034a75aeb4e3e14330f43b4d8c72f3a0a9823a20ce03a578ea6eac33000d31e",
+      "digest": "sha256:c8e5ddfbbed9bca96d6dde3ad945da438eaed977d4bc93c3ff13780f85f6f35a",
       "summary": "Fail-closed verification and immutable receipts for reusing a successful sealed candidate run without rebuilding product payloads.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -29815,14 +30779,14 @@
       "specifier": "@kungfu-tech/buildchain/release-passport",
       "export": "./release-passport",
       "target": "./packages/core/release-passport.js",
-      "digest": "sha256:2988f713a00099a83b76302bff589c355502c90854c53f608d004e64e9ee7302",
+      "digest": "sha256:4932b0ef2ea1c62101347789ef233c77142630a69762d325688269fe29c230c5",
       "summary": "Release passport collection, verification, explanation, and evidence APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 23,
+      "symbolCount": 24,
       "symbolIds": [
         "packages/core/release-passport.js#AGENT_INDEX_CONTRACT",
         "packages/core/release-passport.js#ARTIFACT_EVIDENCE_CONTRACT",
@@ -29843,6 +30807,7 @@
         "packages/core/release-passport.js#RELEASE_CHECK_REPORT_CONTRACT",
         "packages/core/release-passport.js#RELEASE_EVIDENCE_ATTACHMENT_CONTRACT",
         "packages/core/release-passport.js#RELEASE_PASSPORT_CONTRACT",
+        "packages/core/adopter-delivery-passport.js#releasePassportKfdAdopterSourceSha",
         "packages/core/release-passport.js#sha256File",
         "packages/core/release-passport.js#sha256Text",
         "packages/core/release-passport.js#validateKnownReleasePassportContracts",
@@ -30154,7 +31119,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:750df1c7346b119f1654ef151e1814401d0f768b65a27051df12d33fa831981d"
+      "digest": "sha256:e9683e04409d60ee1a4e60f89766c158586cf1eb91fc890f0b2660814f05dbdb"
     },
     {
       "id": "build-facts",

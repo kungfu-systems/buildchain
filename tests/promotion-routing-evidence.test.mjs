@@ -3,7 +3,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createPromotionRoutingEvidence } from "../scripts/promotion-routing-evidence.mjs";
+import {
+  bundlePromotionControllerEvidence,
+  createPromotionRoutingEvidence,
+} from "../scripts/promotion-routing-evidence.mjs";
 
 test("promotion routing evidence preserves the workflow routing contract", () => {
   const cwd = fs.mkdtempSync(
@@ -87,4 +90,44 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
     "promote job must checkout the selected shell before using its helper",
   );
   assert.doesNotMatch(workflow, /node <<'NODE'[\s\S]*buildchain\.promotion-routing\/v1/);
+  assert.match(
+    workflow,
+    /node \.buildchain\/runtime\/scripts\/promotion-routing-evidence\.mjs bundle-controller-evidence/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /node \.buildchain\/runtime\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs bundle-controller-evidence/,
+  );
+});
+
+test("promotion evidence bundling preserves exact bytes and finalization boundaries", () => {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promotion-bundle-"));
+  const write = (name, value) => {
+    fs.writeFileSync(path.join(cwd, name), value);
+    return name;
+  };
+  const env = {
+    RELEASE_CANDIDATE_PASSPORT: write("candidate.json", "candidate\n"),
+    PUBLISH_EVIDENCE: write("publish.json", "publish\n"),
+    RELEASE_PASSPORT: write("release.json", "release\n"),
+    FINALIZATION_NEEDED: "false",
+  };
+  const result = bundlePromotionControllerEvidence({ cwd, env });
+  assert.deepEqual(result.files, [
+    "release-candidate-passport.json",
+    "publish-evidence.json",
+    "release-passport.json",
+  ]);
+  assert.equal(
+    fs.readFileSync(path.join(result.outputDir, "release-passport.json"), "utf8"),
+    "release\n",
+  );
+  assert.throws(
+    () =>
+      bundlePromotionControllerEvidence({
+        cwd,
+        env: { ...env, PUBLISH_EVIDENCE: "missing.json" },
+      }),
+    /promotion controller evidence is missing/u,
+  );
 });
