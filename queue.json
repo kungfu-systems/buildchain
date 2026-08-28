@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 995,
+  "generation": 996,
   "fencingCounter": 154,
   "policy": {
     "agingSeconds": 900,
@@ -7168,8 +7168,41 @@
         "tests/dev-delivery-warrant-resubmission.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3240,
+      "assignmentRoot": "sha256:41f591884de300bdd0f0066592b6b55dd1450dfbdff9d7b11efcc608a6562048",
+      "initiativeRoot": "sha256:59191ce7a7404d6fa1cb3a63ae7ca0a0ade1e3e1bbedbe29906eb34dc73843f2",
+      "sourceIdentityRoot": "sha256:a9b77a57ca8ad38ef66b3da66811e303078670878da4822522788e6112f6d194",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:841d991d0eadfe52a15ec0b1644010ddae6b63f4652b7f10b72e4c0125d845a4",
+      "sourceHead": "3e8b1b6803ddc6723b9c36a9c9c636e828e0733d",
+      "sourcePatchRoot": "sha256:6bfada33563ea66d59d3e381d8b819b3ad84c8000adac2e2ffd04bf3ce6c7ede",
+      "sourceProofRoot": "sha256:15f5f8094be593d5e73654d832c94099aee3ccc5bc5a5b29b8325840fffdfb12",
+      "planRoot": "sha256:e64a6a0de6e6d318ca2bba7d7e56f3af427dfd34a7dd5fb6a12793a59b2c55ac",
+      "closureRoot": "sha256:94a4e2903164bff9a634bf8266aa7099b0a52d2bd00437580ef66f48c6976241",
+      "dependencyRoot": "sha256:6f795fd299b8cf17fffec0addd97e76e9722977233dc8932176ae72e2dedf257",
+      "toolchainRoot": "sha256:05480d47cd998957a142cdd3a46474d8b66226240a0d7181af143387ae2ad08f",
+      "sourceWorkflowRunId": 33190550051,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-28T16:57:45.052Z",
+      "updatedAt": "2026-08-28T16:57:45.052Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/promotion-shell-routing.json",
+        ".github/workflows/release-candidate-promote.yml",
+        "architecture/maintainability-debt.json",
+        "dist/site/buildchain-contract.json",
+        "tests/promotion-channel-router.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-28T16:49:59.349Z",
-  "stateRoot": "sha256:5e02c4774cf81201f5381059809f9a088b6c1e57d429f7fb85160954d54feb5c"
+  "updatedAt": "2026-08-28T16:57:45.052Z",
+  "stateRoot": "sha256:3a00f1623e48ee9f34654478512beaf5526e209b4b55e40d83ccaf9eff917195"
 }
