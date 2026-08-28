@@ -80,6 +80,10 @@ on:
         description: "Exact current Buildchain tooling SHA used by this recovery run"
         required: false
         default: ""
+      resume-buildchain-runtime-ref:
+        description: "Approved v4 train or authority ref resolving to the recovery runtime SHA"
+        required: false
+        default: ""
       resume-transaction-id:
         description: "Optional existing durable transaction identity"
         required: false
@@ -113,7 +117,7 @@ jobs:
           exit 1
 
   reject-invalid-candidate-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && (!startsWith(inputs['target-ref'], 'alpha/') || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || (inputs['resume-expected-source-tree'] == '' && inputs['resume-expected-candidate-root'] == '')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && (!startsWith(inputs['target-ref'], 'alpha/') || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || (inputs['resume-expected-source-tree'] == '' && inputs['resume-expected-candidate-root'] == '')) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -142,7 +146,7 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write
@@ -154,9 +158,11 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
-      buildchain-channel: alpha
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-sha'] || 'v4-alpha' }}
+      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && github.sha || 'v4-alpha' }}
+      buildchain-expected-channel: alpha
+      buildchain-expected-major: "4"
+      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
@@ -193,9 +199,11 @@ jobs:
       publication-auto-admission: true
       publication-auto-no-gate: true
       publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-authority-workflow-path: .github/workflows/.release-candidate-promote.yml
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain
       publication-package-name: "@kungfu-tech/buildchain"
+      declarative-release-tail: true
       dry-run: ${{ inputs['dry-run'] == 'true' }}
 
   promote-stable:

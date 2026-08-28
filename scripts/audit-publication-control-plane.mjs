@@ -11,10 +11,9 @@ import {
 
 const GITHUB_JSON_MAX_BUFFER = 16 * 1024 * 1024;
 
-function flag(name, fallback = "") {
-  const index = process.argv.indexOf(`--${name}`);
-  return index === -1 ? fallback : String(process.argv[index + 1] || "");
-}
+const flag = (name, fallback = "") => process.argv.includes(`--${name}`)
+  ? String(process.argv[process.argv.indexOf(`--${name}`) + 1] || "")
+  : fallback;
 
 function commandJson(command, args, label, { publicReadFallback = false } = {}) {
   const options = {
@@ -42,13 +41,9 @@ function commandJson(command, args, label, { publicReadFallback = false } = {}) 
   }
 }
 
-function githubJson(apiPath, label, { publicReadFallback = false } = {}) {
-  return commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label, { publicReadFallback });
-}
+const githubJson = (apiPath, label, { publicReadFallback = false } = {}) => commandJson("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], label, { publicReadFallback });
 
-function githubPublicJson(apiPath, label) {
-  return githubJson(apiPath, label, { publicReadFallback: true });
-}
+const githubPublicJson = (apiPath, label) => githubJson(apiPath, label, { publicReadFallback: true });
 
 function githubJsonOptional(apiPath, label, fallback, fallbackPattern = /404|not found/i) {
   const result = spawnSyncCommand("gh", ["api", apiPath, "-H", "Accept: application/vnd.github+json"], {
@@ -68,9 +63,7 @@ function githubJsonOptional(apiPath, label, fallback, fallbackPattern = /404|not
   }
 }
 
-function githubJsonReadLimited(apiPath, label, fallback) {
-  return githubJsonOptional(apiPath, label, fallback, /401|403|404|unauthorized|forbidden|not found/i);
-}
+const githubJsonReadLimited = (apiPath, label, fallback) => githubJsonOptional(apiPath, label, fallback, /401|403|404|unauthorized|forbidden|not found/i);
 
 function rulesetIncludesBranch(ruleset, branch, defaultBranch) {
   const includes = ruleset.conditions?.ref_name?.include || [];
@@ -102,7 +95,7 @@ function normalizeRulesetBranchPolicy(rulesets, branch, defaultBranch) {
   };
 }
 
-function jobBlock(workflowText, jobId) {
+function jobBlock(workflowText, jobId, delegated = false) {
   const lines = String(workflowText).split(/\r?\n/);
   const jobsIndex = lines.findIndex((line) => /^jobs:\s*$/.test(line));
   if (jobsIndex === -1) return "";
@@ -115,14 +108,21 @@ function jobBlock(workflowText, jobId) {
       break;
     }
   }
-  return lines.slice(start, end).join("\n");
+  const block = lines.slice(start, end).join("\n");
+  if (delegated) return block;
+  const declarations = [...block.matchAll(/^ {4}# buildchain-publication-authority-job:\s*([A-Za-z0-9_-]+)\s*$/gm)];
+  if (declarations.length > 1 || declarations[0]?.[1] === jobId) throw new Error(`publication authority job delegation is invalid: ${jobId}`);
+  if (!declarations.length) return block;
+  const delegatedJobId = declarations[0][1];
+  const delegatedBlock = jobBlock(workflowText, delegatedJobId, true);
+  if (!delegatedBlock) throw new Error(`delegated publication workflow job is missing: ${delegatedJobId}`);
+  return delegatedBlock;
 }
 
 function first(value, keys) {
   for (const key of keys) {
-    const parts = key.split(".");
     let current = value;
-    for (const part of parts) current = current && typeof current === "object" ? current[part] : undefined;
+    for (const part of key.split(".")) current = current && typeof current === "object" ? current[part] : undefined;
     if (current !== undefined && current !== null && current !== "") return current;
   }
   return undefined;

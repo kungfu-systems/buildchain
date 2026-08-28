@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 68014,
-    "current": 59953
+    "measuredExcess": 67985,
+    "current": 59924
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -2726,21 +2726,21 @@
       "tests/v4-floating-consumer-policy-contract.test.mjs": {
         "baseline": {
           "functions": {
-            "<anonymous@76>@76": {
+            "<anonymous@77>@77": {
               "lines": 292
             }
           }
         },
         "current": {
           "functions": {
-            "<anonymous@76>@76": {
+            "<anonymous@77>@77": {
               "lines": 292
             }
           }
         },
         "target": {
           "functions": {
-            "<anonymous@76>@76": {
+            "<anonymous@77>@77": {
               "lines": 180
             }
           }
@@ -3005,7 +3005,7 @@
           "decisions": 75
         },
         "current": {
-          "lines": 2707,
+          "lines": 2678,
           "jobs": 13,
           "steps": 99,
           "maxStepsPerJob": 47,
@@ -3207,7 +3207,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 2707
+      "current": 2678
     },
     {
       "domain": "sources",
