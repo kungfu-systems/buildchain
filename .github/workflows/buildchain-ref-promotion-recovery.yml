@@ -150,7 +150,7 @@ jobs:
           --router-ref "${{ inputs['resume-buildchain-runtime-ref'] }}"
           --router-sha "${{ inputs['resume-buildchain-runtime-sha'] }}"
           --shell-ref alpha/v4/v4.0
-          --shell-call-ref v4-alpha
+          --shell-call-ref alpha/v4/v4.0
           --runtime-ref "${{ steps.route.outputs.runtime-ref }}"
 
       - name: Bind governed recovery ref to exact runtime B
@@ -227,8 +227,8 @@ jobs:
   promote-alpha-recovery:
     name: Resume sealed v4 candidate through the advanced shell
     needs: consumer-admission
-    # Bounded bootstrap: v4-alpha retains the schema-compatible legacy channel transaction until floating readback converges.
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    # Bounded bootstrap: the protected Alpha private shell retains the legacy channel transaction until floating readback converges.
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0
     permissions:
       actions: write
       artifact-metadata: write

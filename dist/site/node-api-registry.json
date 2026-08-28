@@ -29539,7 +29539,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:0a51003264330504dd9a08bd898f2f7c13cfb15b22a34d29ec0417e5369f90d7",
+      "digest": "sha256:df1b9d27dc28324fc89dc5af7838d8d1b57aa91355e43653882286070ff2308c",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
