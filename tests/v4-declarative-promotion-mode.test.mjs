@@ -15,6 +15,10 @@ const recoveryWorkflow = fs.readFileSync(
   path.resolve(".github/workflows/buildchain-ref-promotion-recovery.yml"),
   "utf8",
 );
+const selfPromotionWorkflow = fs.readFileSync(
+  path.resolve(".github/workflows/buildchain-ref-promotion.yml"),
+  "utf8",
+);
 const protectedShellPredicate =
   "startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0'";
 
@@ -55,6 +59,18 @@ test("bounded floating bootstrap uses the legacy private shell with an exact pro
   assert.match(recoveryWorkflow, /declarative-release-tail: true/u);
   assert.doesNotMatch(recoveryWorkflow, /channel-finalization-recovery/u);
   assert.doesNotMatch(publicWorkflow, /channel-finalization-recovery/u);
+});
+
+test("trusted-publisher durable alpha recovery keeps the official floating shell on the declarative built-in tail", () => {
+  assert.match(
+    selfPromotionWorkflow,
+    /promote-alpha:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
+  );
+  assert.match(
+    selfPromotionWorkflow,
+    /promote-alpha:[\s\S]*publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml[\s\S]*declarative-release-tail: true/u,
+  );
+  assert.doesNotMatch(selfPromotionWorkflow, /channel-finalization-recovery/u);
 });
 
 test("declarative promotion receipt reads the retained passport hierarchy", () => {
