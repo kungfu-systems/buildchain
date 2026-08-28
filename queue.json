@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 999,
+  "generation": 1000,
   "fencingCounter": 155,
   "policy": {
     "agingSeconds": 900,
@@ -7209,8 +7209,51 @@
         "tests/promotion-channel-router.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3242,
+      "assignmentRoot": "sha256:cb700f5ff1101249415687ca258193b94160a2868c523904361dd0d87bd0067d",
+      "initiativeRoot": "sha256:ba66a0ccbc37b1fd9c0d7e8553ee363a6d0c1387be896efc5345d1edb25e776e",
+      "sourceIdentityRoot": "sha256:844fdb0257e0686f8c0f4a54228238ea0b489dc8a64a2c38c837f357ae8d8f7e",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:d8f9e7ac6b2a0f084e65b82fd187f549eff0a628d3d4add03a5b3011be6ea89b",
+      "sourceHead": "b4ca9754d73a0d3867b67c19173cf3e8e264cdbc",
+      "sourcePatchRoot": "sha256:191a6e10f5d21f72705c4c8d86274569bf8c8a15c809503f0934d93d73d26ca4",
+      "sourceProofRoot": "sha256:f6ad0cb3467bf0ea753b8dd992c8d88b6c60015581a3189ffe9f8467cecd625e",
+      "planRoot": "sha256:74abf08ec48f4edc78949cb1128e1bc8ef1b6a09a06eda42bdaf1f287b06a9c7",
+      "closureRoot": "sha256:a4ece7f34abbf6a690a656382939f68f7c884c74aa8326116ce25b24fd74e1cc",
+      "dependencyRoot": "sha256:f1c398e7d9c2911aa73bb0fe71dfab66bde61369d329a29142170d31013554d5",
+      "toolchainRoot": "sha256:983b99357f861941c49635c1965cff7584c9b5129671baf3ab7ef88cf830c2b6",
+      "sourceWorkflowRunId": 33199465188,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-28T18:55:31.522Z",
+      "updatedAt": "2026-08-28T18:55:31.522Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/agent-change-map.md",
+        "architecture/internal-capabilities.json",
+        "architecture/maintainability-debt.json",
+        "architecture/maintainability-policy.json",
+        "architecture/v3-core-mechanism-inventory.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/dev-delivery-warrant.md",
+        "packages/core/dev-delivery-warrant-legacy-recovery.js",
+        "scripts/dev-delivery-warrant-options.mjs",
+        "scripts/dev-delivery-warrant.mjs",
+        "tests/dev-delivery-warrant-legacy-recovery.test.mjs",
+        "tests/internal-architecture.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-28T18:46:08.952Z",
-  "stateRoot": "sha256:69d4726035f1067816014ddb40cc350e03681c5ccf698efa5116cb12d3809786"
+  "updatedAt": "2026-08-28T18:55:31.522Z",
+  "stateRoot": "sha256:4a87d3153092d454af1a1ae0bed047f8e4b81684a92654c250c79b644f7f5c2c"
 }
