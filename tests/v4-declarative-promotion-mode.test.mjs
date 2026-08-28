@@ -54,7 +54,7 @@ test("trusted-publisher durable alpha recovery keeps the official floating shell
   assert.ok(promoteAlphaBlock, "expected the promote-alpha job");
   assert.match(
     promoteAlphaBlock,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/u,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.?release-candidate-promote\.yml@v4-alpha/u,
   );
   assert.match(
     promoteAlphaBlock,
