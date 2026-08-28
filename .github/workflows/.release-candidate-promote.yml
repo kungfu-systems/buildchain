@@ -2349,7 +2349,7 @@ jobs:
           RELEASED_PRODUCT_EVIDENCE: ${{ steps.release-evidence.outputs.evidence-path }}
           RELEASE_PROPAGATION_CAPTURE: ${{ steps.capture-release-propagation.outcome == 'success' && '.buildchain/release-propagation-capture/capture-result.json' || '' }}
         run: |
-          node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs bundle-controller-evidence
+          node .buildchain/runtime/scripts/promotion-routing-evidence.mjs bundle-controller-evidence
 
       - name: Upload release-candidate-promotion controller evidence
         if: ${{ always() && steps.controller-evidence.outcome == 'success' }}
