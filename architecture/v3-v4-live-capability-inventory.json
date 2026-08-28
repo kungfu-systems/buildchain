@@ -16518,7 +16518,7 @@
         "evidence": {
           "path": ".buildchain/release-impact.json",
           "selector": "$",
-          "valueRoot": "sha256:8411804d1efba911b09a0e83494c68affe7cfede5bc5134f12cbede12be1f655"
+          "valueRoot": "sha256:86635418114935d03650376b734aeb2e081648ba519d1f2ae9eece184934a7a3"
         }
       }
     },
@@ -17266,7 +17266,7 @@
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "exports[export=\"./github-governance-authority\"]",
-          "valueRoot": "sha256:c840ddeacf5eb8da14aee3e6879f0827aa965aa0187aecc36ca776d07bb6cdab"
+          "valueRoot": "sha256:e8fd60fb66ceef4dc83a727c98eec0df00824a2bb5b3cb151b659c022b0acbee"
         }
       }
     },
@@ -17596,7 +17596,7 @@
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "exports[export=\"./paper\"]",
-          "valueRoot": "sha256:e86f76742a70d77039c39d9fb106de20c99458ccc07b65fc674328d2a952f819"
+          "valueRoot": "sha256:cfcd0b854e3301c651106bb9e1a85980d8d1fdc143b52f197d6cb4722682585e"
         }
       }
     },
@@ -17706,7 +17706,7 @@
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "exports[export=\"./publication-control-plane-audit\"]",
-          "valueRoot": "sha256:1bb25a02f8d3ef0148c3e2a4ad9b6a94a841adc1ff1daf94f98d5e34c195fd56"
+          "valueRoot": "sha256:cf82832e74c4e7ae5e5d5ae1c0ec867e6eedefbeebd0a60d803dcd2df68e8813"
         }
       }
     },
@@ -17926,7 +17926,7 @@
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "exports[export=\"./release-candidate-recovery\"]",
-          "valueRoot": "sha256:131e9c0f108a311b8246d8dfc55ff9d347cb9255162452f392874d6b01acf203"
+          "valueRoot": "sha256:01261a72dc7d43e61d5a9ec649ce4d7dfee1ab1c0148bd6cff0edad40aba008b"
         }
       }
     },
@@ -17970,7 +17970,7 @@
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "exports[export=\"./release-passport\"]",
-          "valueRoot": "sha256:6a7403eb6020c6af989a721021aa6b9715df7db70c9f5da89f2b689c3ba767ae"
+          "valueRoot": "sha256:252874ae31215dc568e4184ec199c985b6a7cb8e887c5a89dcb3d73bfe960f02"
         }
       }
     },
@@ -18168,7 +18168,7 @@
         "evidence": {
           "path": "dist/site/buildchain-contract.json",
           "selector": "$",
-          "valueRoot": "sha256:5373a6b746a389305d55d58d93b9aebf1ca61e2b13e32aab309e98f41a89b13c"
+          "valueRoot": "sha256:9b6a3e20dc4e4170c22306b8ac4a7ee67aabd2be51646872a1bfdfecb83fff64"
         }
       }
     },
@@ -18256,7 +18256,7 @@
         "evidence": {
           "path": "dist/site/kfd-claims.json",
           "selector": "$",
-          "valueRoot": "sha256:94d546cec054e24f53841af5a46808cd452d0005f5bfcf8f7d370711ae446f0b"
+          "valueRoot": "sha256:f80363cd21046e7aff9ac3893ece8d8b1684de96ff5119fb0ca9fe8dd4e342bb"
         }
       }
     },
@@ -18278,7 +18278,7 @@
         "evidence": {
           "path": "dist/site/manual-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:b446b41f1342623ad5189850985553a9044dd14f3c4a24aa44cfc54db95ce876"
+          "valueRoot": "sha256:b59b28864798f61c0c893afd23c9a234ef9bafae98fe579bc7a3d160dd89c46b"
         }
       }
     },
@@ -18300,7 +18300,7 @@
         "evidence": {
           "path": "dist/site/node-api-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:9b173aa7390cc94d24b9a2b5711a367b15771b73773cd8f0a78f5c71ed054701"
+          "valueRoot": "sha256:872cc8fb9f34546c2f031c2adc04c164196895c4fa039b110546116b826405b8"
         }
       }
     },
@@ -18322,7 +18322,7 @@
         "evidence": {
           "path": "dist/site/page-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:e01f49540ad858f2289ed212bdae9dab01be495f6c57d7d14ab07d3639201d3f"
+          "valueRoot": "sha256:21b32f318518e79b75f1097128c582a27db32934cc0a7d6d625d2bc3c5b9696c"
         }
       }
     },
@@ -18344,7 +18344,7 @@
         "evidence": {
           "path": "dist/site/public-surface-audit.json",
           "selector": "$",
-          "valueRoot": "sha256:dfdf7e6d38ea9b2cfec280831472ba61a825b88578437bc3b4965b61c656e0b1"
+          "valueRoot": "sha256:de1e9d5d7272dab92d5c9190859095facb34493ece6f37a1955aba2c6d7d1aed"
         }
       }
     },
@@ -18564,7 +18564,7 @@
         "evidence": {
           "path": "dist/site/site-manifest.json",
           "selector": "$",
-          "valueRoot": "sha256:52413ce389353ea7fd83598a6f5c2ebbb5a88f163cff60ec4227324384d96fd8"
+          "valueRoot": "sha256:82fa02f7b83f5edcaf93288122d0e653795ed3301b0b6c2ca8ebcd23eddbdeec"
         }
       }
     },
@@ -18586,7 +18586,7 @@
         "evidence": {
           "path": "dist/site/workflow-registry.json",
           "selector": "$",
-          "valueRoot": "sha256:590efe0d07ae20987f36056835f21e2a17fe40c242eb55032776b9bc4c0c7735"
+          "valueRoot": "sha256:09480a4485d410fb1a073178eea6448258b6c9e22200d22ac1f0519c78beecc7"
         }
       }
     },
@@ -68879,7 +68879,7 @@
         "evidence": {
           "path": "architecture/v4-runtime-semantic-closure.json",
           "selector": "capability[id=\"publish-transaction\"]",
-          "valueRoot": "sha256:4e24bcc1f070542ed22f3892d6f75f0d437e3242bfdee770c08788eca4407900"
+          "valueRoot": "sha256:6917cce13c939d813f2ddcf099cf22fbbc2a601ed94bcc3ac56b7e495fc0610a"
         }
       }
     },
@@ -102360,9 +102360,9 @@
     },
     "liveV4": {
       "branch": "origin/dev/v4/v4.0",
-      "commit": "97edd5b93eb67e5bf36ad55726e08231b47b70c0",
+      "commit": "11b4ab21405cdffcc9d6dc10cd947618d9d1bf9c",
       "role": "execution-time-protected-target",
-      "tree": "05b14410fd3350bc6a621fe2c1bef575fef9b5fd"
+      "tree": "e427a70d932d1bf9575841c0e89974e70a8f6e23"
     },
     "priorFamilyV3": {
       "branch": "origin/dev/v3/v3.0",
