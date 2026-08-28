@@ -4,8 +4,34 @@ import {
   devDeliveryPositiveInteger as positiveInteger,
   devDeliveryText as text,
 } from "./dev-delivery-common.js";
-
 export const CHAINED_ATTEMPT_IDENTITY = "chained-attempt-v2";
+export const EXACT_DEV_DELIVERY_PROOF_FIELDS = Object.freeze([
+  "sourcePatchRoot",
+  "sourceProofRoot",
+  "planRoot",
+  "closureRoot",
+  "dependencyRoot",
+  "toolchainRoot",
+  "environmentRoot",
+  "sourceWorkflowRunId",
+]);
+
+export function matchesExactDevDeliveryCandidate(existing, attempted) {
+  return (
+    existing.sourceHead === attempted.sourceHead &&
+    EXACT_DEV_DELIVERY_PROOF_FIELDS.every(
+      (field) => existing[field] === attempted[field],
+    ) &&
+    JSON.stringify(existing.affectedPaths || []) ===
+      JSON.stringify(attempted.affectedPaths || []) &&
+    JSON.stringify(existing.shardEvidenceRoots || []) ===
+      JSON.stringify(attempted.shardEvidenceRoots || []) &&
+    existing.nativeCommandContract?.commandRoot ===
+      attempted.nativeCommandContract?.commandRoot &&
+    existing.releaseBlockerPriority?.claimRoot ===
+      attempted.releaseBlockerPriority?.claimRoot
+  );
+}
 
 export function createDevDeliveryCandidateIdentity(
   input,
