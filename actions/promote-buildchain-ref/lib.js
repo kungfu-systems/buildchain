@@ -2139,17 +2139,14 @@ async function assertChannelPromotionPr({
         headRef === expectedHeadRef ||
         matchingVersionStateTarget === targetRef ||
         matchingPublishGateTarget === targetRef ||
-        (
-          getPromotionRule(targetRef).channel === "release" &&
-          matchingReleaseRecoveryTarget === targetRef
-        )
+        matchingReleaseRecoveryTarget === targetRef
       ) &&
       headRepo === `${owner}/${repo}`
     );
   });
   if (!matchingPullRequest) {
     throw new Error(
-      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}, publish-gate/${getPromotionRule(targetRef).channel}/... -> ${targetRef}, buildchain/version-state/* -> ${targetRef}, or an exact line-scoped release recovery PR`,
+      `Promotion source ${sha} must come from a merged same-repository PR ${expectedHeadRef} -> ${targetRef}, publish-gate/${getPromotionRule(targetRef).channel}/... -> ${targetRef}, buildchain/version-state/* -> ${targetRef}, or an exact line-scoped channel recovery PR`,
     );
   }
   return matchingPullRequest;
