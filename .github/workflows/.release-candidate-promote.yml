@@ -1132,7 +1132,7 @@ jobs:
   publication-authority:
     name: Seal product publication capability
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, qualification-plan]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
     permissions:
       actions: read
       checks: read
@@ -1163,7 +1163,6 @@ jobs:
       required-status-check: ${{ inputs.required-status-check }}
       publisher-workflow-path: ${{ inputs.publication-publisher-workflow-path }}
       authority-workflow-path: ${{ inputs.publication-authority-workflow-path }}
-      authority-job-id: legacy-promote
       product: ${{ inputs.publication-product }}
       publication-target: ${{ inputs.publication-target }}
       publication-version: ${{ needs.publication-plan.outputs.version }}
@@ -1181,7 +1180,7 @@ jobs:
   qualification-plan:
     name: Bind consumer publication predicate
     needs: [preflight]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') }}
     runs-on: ubuntu-24.04
     permissions: {}
     outputs:
@@ -1223,7 +1222,7 @@ jobs:
   publication-qualification:
     name: Run consumer publication predicate
     needs: [preflight, controller-plan, qualification-plan, publication-authority]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -1413,7 +1412,7 @@ jobs:
   legacy-promote:
     name: Promote release candidate
     needs: [preflight, controller-plan, release-candidate-preflight, publication-plan, publication-authority, publication-qualification]
-    if: ${{ needs.preflight.outputs.action == 'promote' && inputs.provider-failure-after-capability == '' && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
+    if: ${{ needs.preflight.outputs.action == 'promote' && !(startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0') && needs.publication-authority.result == 'success' && needs.publication-qualification.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: write

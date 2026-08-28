@@ -73,6 +73,30 @@ test("bounded alpha facade bootstrap retains the floating private shell", () => 
   );
 });
 
+test("alpha promotion caller passes the same runtime admission used in GitHub", () => {
+  const authority = resolveV4FloatingConsumerPolicyAuthority({
+    runtimeRoot: root,
+    callerRoot: root,
+  });
+  const result = scanV4FloatingConsumerPolicy({
+    root,
+    repository: "kungfu-systems/buildchain",
+    sourceSha: "a".repeat(40),
+    invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+    invocationSourcePath: ".github/workflows/buildchain-ref-promotion.yml",
+    expectedInvocationChannel: "alpha",
+    resolvedWorkflowSha: "b".repeat(40),
+    resolvedRuntimeSha: "b".repeat(40),
+    policy: authority.policy,
+    scannerRoot: authority.scannerRoot,
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+  assert.equal(result.receipt.invocation.selectorClass, "floating");
+  assert.equal(result.receipt.invocation.channel, "alpha");
+});
+
 test("bounded alpha recovery admits the old floating shell with current exact runtime binding", () => {
   const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
   const legacyRelative = ".github/workflows/release-candidate-promote.yml";
