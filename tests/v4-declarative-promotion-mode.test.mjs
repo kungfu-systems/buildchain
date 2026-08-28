@@ -22,17 +22,32 @@ const selfPromotionWorkflow = fs.readFileSync(
 const protectedShellPredicate =
   "startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0'";
 
-test("protected alpha v4 recovery selects only the declarative Provider Plane", () => {
+test("protected v4 publication selects the complete transaction and reserves the provider capsule for injected recovery", () => {
   assert.match(
     workflow,
-    new RegExp(`v4-declarative-promote:[\\s\\S]*?if: \\$\\{\\{[^\\n]*${protectedShellPredicate.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[^\\n]*\\}\\}`),
+    new RegExp(
+      `v4-declarative-promote:[\\s\\S]*?if: \\$\\{\\{[^\\n]*provider-failure-after-capability != ''[^\\n]*${protectedShellPredicate.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[^\\n]*\\}\\}`,
+    ),
   );
-  for (const legacyJob of ["publication-authority", "qualification-plan", "publication-qualification", "legacy-promote"]) {
+  for (const productionJob of [
+    "publication-authority",
+    "qualification-plan",
+    "publication-qualification",
+    "legacy-promote",
+  ]) {
     assert.match(
       workflow,
-      new RegExp(`^  ${legacyJob}:[\\s\\S]*?^    if: [^\\n]*!\\(startsWith\\(inputs\\.promotion-shell-ref, 'v4'\\) \\|\\| inputs\\.promotion-shell-ref == 'alpha/v4/v4\\.0'\\)`, "m"),
+      new RegExp(
+        `^  ${productionJob}:[\\s\\S]*?^    if: [^\\n]*provider-failure-after-capability == ''`,
+        "m",
+      ),
     );
   }
+  assert.match(workflow, /authority-job-id: legacy-promote/u);
+  assert.match(
+    workflow,
+    /legacy-promote:[\s\S]*publish-transaction: "true"[\s\S]*declarative-release-tail: \$\{\{ inputs\.declarative-release-tail \}\}/u,
+  );
 });
 
 test("bounded floating bootstrap uses the old private shell with a declarative built-in tail", () => {
@@ -40,7 +55,10 @@ test("bounded floating bootstrap uses the old private shell with a declarative b
     recoveryWorkflow,
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
   );
-  assert.match(recoveryWorkflow, /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u);
+  assert.match(
+    recoveryWorkflow,
+    /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u,
+  );
   assert.match(recoveryWorkflow, /declarative-release-tail: true/u);
   assert.doesNotMatch(recoveryWorkflow, /channel-finalization-recovery/u);
   assert.doesNotMatch(publicWorkflow, /channel-finalization-recovery/u);
