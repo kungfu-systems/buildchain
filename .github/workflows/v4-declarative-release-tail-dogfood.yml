@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   publish:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-contract-lock-path: .buildchain/contract-lock.json
