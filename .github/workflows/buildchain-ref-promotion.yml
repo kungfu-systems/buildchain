@@ -158,6 +158,7 @@ jobs:
       buildchain-ref: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       buildchain-expected-channel: alpha
       buildchain-expected-major: "4"
+      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
       target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
