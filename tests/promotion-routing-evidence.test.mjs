@@ -92,7 +92,11 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
   assert.doesNotMatch(workflow, /node <<'NODE'[\s\S]*buildchain\.promotion-routing\/v1/);
   assert.match(
     workflow,
-    /promotion-routing-evidence\.mjs bundle-controller-evidence/,
+    /node \.buildchain\/runtime\/scripts\/promotion-routing-evidence\.mjs bundle-controller-evidence/,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /node \.buildchain\/runtime\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs bundle-controller-evidence/,
   );
 });
 

@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 68011,
-    "current": 59950
+    "measuredExcess": 67962,
+    "current": 59901
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -187,7 +187,7 @@
           }
         },
         "current": {
-          "lines": 3471,
+          "lines": 3468,
           "functions": {
             "resolvePublishContract@258": {
               "complexity": 30
@@ -1748,21 +1748,21 @@
       "scripts/release-line-policy.mjs": {
         "baseline": {
           "functions": {
-            "getBumpKeyword@124": {
+            "getBumpKeyword@135": {
               "complexity": 35
             }
           }
         },
         "current": {
           "functions": {
-            "getBumpKeyword@124": {
-              "complexity": 35
+            "getBumpKeyword@135": {
+              "complexity": 31
             }
           }
         },
         "target": {
           "functions": {
-            "getBumpKeyword@124": {
+            "getBumpKeyword@135": {
               "complexity": 25
             }
           }
@@ -2237,7 +2237,7 @@
           }
         },
         "current": {
-          "lines": 3181,
+          "lines": 3178,
           "functions": {
             "<anonymous@2013>@2013": {
               "lines": 206
@@ -2655,7 +2655,7 @@
           "lines": 1217
         },
         "current": {
-          "lines": 1217
+          "lines": 1208
         },
         "target": {
           "lines": 600
@@ -3005,7 +3005,7 @@
           "decisions": 75
         },
         "current": {
-          "lines": 2707,
+          "lines": 2677,
           "jobs": 13,
           "steps": 99,
           "maxStepsPerJob": 47,
@@ -3182,6 +3182,7 @@
     "scripts/check-v4-floating-consumer-policy-contract.mjs",
     "tests/dev-delivery-warrant.test.mjs",
     "actions/promote-buildchain-ref/internal/version-state.js",
+    "packages/core/v4-floating-consumer-policy.js",
     "packages/core/v4-floating-consumer-release-passport.js",
     "packages/core/release-passport.js",
     "tests/promote-buildchain-ref-governance.test.mjs",
@@ -3194,7 +3195,7 @@
       "path": "actions/promote-buildchain-ref/lib.js",
       "metric": "lines",
       "baseline": 5132,
-      "current": 3471
+      "current": 3468
     },
     {
       "domain": "tests",
@@ -3208,7 +3209,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 2707
+      "current": 2677
     },
     {
       "domain": "sources",
