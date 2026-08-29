@@ -207,6 +207,7 @@ export function validateV4PublicationQualificationReceipt(
 export function assertV4DeclarativePromotionInputs(inputs) {
   const forbidden = Object.entries(inputs || {}).filter(
     ([name, value]) =>
+      name !== "dry-run" &&
       /(command|cmd|script|shell|run)$/iu.test(name) &&
       String(value || "").trim() !== "",
   );
