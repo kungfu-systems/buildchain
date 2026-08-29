@@ -689,7 +689,7 @@ jobs:
             --workflow-ref "${{ inputs.buildchain-ref }}" \
             --publisher-workflow "${{ inputs.publisher-workflow-path }}" \
             --required-status-check "${{ inputs.required-status-check }}" \
-            --job promote \
+            --job apply \
             --environment none \
             --package "${{ inputs.package-name }}" \
             --publisher-mode "$publisher_mode" \
