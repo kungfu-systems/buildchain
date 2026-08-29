@@ -329,6 +329,32 @@ test("missing maintainability revisions are hydrated in bounded shallow fetches"
   );
 });
 
+test("release-line reconciliation reuses audited hotspot routes across DAG shapes", () => {
+  const auditedRoutes = ["packages/core/audited-route.js"];
+  const current = {
+    files: { "packages/core/audited-route.js": {} },
+    tests: {},
+    workflows: {},
+  };
+
+  for (const baseRef of [
+    "alpha/v4/v4.0",
+    "release/v4/v4.0",
+    "publish-gate/major",
+  ]) {
+    assert.deepEqual(
+      collectHotspots(root, current, 20, auditedRoutes, { baseRef }),
+      auditedRoutes,
+    );
+  }
+  assert.notDeepEqual(
+    collectHotspots(root, current, 20, auditedRoutes, {
+      baseRef: "dev/v4/v4.0",
+    }),
+    auditedRoutes,
+  );
+});
+
 test("public surface lifecycle metadata preserves baseline contracts", () => {
   assert.deepEqual(
     evaluatePublicSurface({
