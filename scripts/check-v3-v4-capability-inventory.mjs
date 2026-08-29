@@ -8,6 +8,7 @@ import {
   collectHistoryRows,
   collectRevisionCatalog,
   countsBy,
+  ensureCapabilityCutLineage,
   git,
   sha256,
 } from "./v3-v4-capability-catalog.mjs";
@@ -19,7 +20,6 @@ export const V3_V4_CAPABILITY_CUTS = Object.freeze({
   liveV3: "8493bf140a7f567e76aff3119f3d39ff026afc84",
   liveV4: "97edd5b93eb67e5bf36ad55726e08231b47b70c0",
 });
-
 const INVENTORY_PATH = "architecture/v3-v4-live-capability-inventory.json";
 const ALLOWED_DISPOSITIONS = new Set([
   "v4-native",
@@ -92,64 +92,6 @@ function capabilityCutAvailable(root, revision) {
   }
 }
 
-export function assertCapabilityCutAncestor({
-  root = process.cwd(),
-  revision,
-  descendant = "HEAD",
-  label = "capability cut",
-} = {}) {
-  try {
-    execFileSync("git", ["merge-base", "--is-ancestor", revision, descendant], {
-      cwd: root,
-      stdio: "ignore",
-    });
-  } catch {
-    throw new Error(
-      `${label} ${revision} must be an ancestor of ${descendant}; regenerate the cut after rebasing instead of relying on a retained local object`,
-    );
-  }
-}
-
-function repositoryIsShallow(root) {
-  return (
-    execFileSync("git", ["rev-parse", "--is-shallow-repository"], {
-      cwd: root,
-      encoding: "utf8",
-    }).trim() === "true"
-  );
-}
-
-export function ensureCapabilityCutAncestor({
-  root = process.cwd(),
-  revision,
-  descendant = "HEAD",
-  label = "capability cut",
-} = {}) {
-  try {
-    assertCapabilityCutAncestor({ root, revision, descendant, label });
-    return;
-  } catch (error) {
-    if (!repositoryIsShallow(root)) throw error;
-  }
-  const descendantCommit = execFileSync(
-    "git",
-    ["rev-parse", `${descendant}^{commit}`],
-    { cwd: root, encoding: "utf8" },
-  ).trim();
-  try {
-    execFileSync(
-      "git",
-      ["fetch", "--no-tags", "--depth=128", "origin", descendantCommit],
-      { cwd: root, stdio: "ignore" },
-    );
-  } catch {
-    throw new Error(
-      `${label} ${revision} ancestry could not be hydrated from ${descendantCommit} through a bounded origin fetch`,
-    );
-  }
-  assertCapabilityCutAncestor({ root, revision, descendant, label });
-}
-
 function ensureCapabilityCutsAvailable(root) {
   const revisions = Object.values(V3_V4_CAPABILITY_CUTS);
   const missing = revisions.filter(
@@ -170,7 +112,7 @@ function ensureCapabilityCutsAvailable(root) {
       `v3/v4 capability cuts are unavailable after a bounded origin fetch: ${unavailable.join(", ")}`,
     );
   }
-  ensureCapabilityCutAncestor({
+  ensureCapabilityCutLineage({
     root,
     revision: V3_V4_CAPABILITY_CUTS.liveV4,
     label: "live v4 capability cut",
