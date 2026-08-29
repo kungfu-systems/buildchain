@@ -5,10 +5,13 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import {
+  assertAlphaCapabilityProjection,
+  capabilityCutAvailable,
   collectHistoryRows,
   collectRevisionCatalog,
   countsBy,
   git,
+  repositoryIsShallow,
   sha256,
 } from "./v3-v4-capability-catalog.mjs";
 
@@ -80,18 +83,6 @@ const HISTORY_MIGRATION_PATHS = new Map([
   ],
 ]);
 
-function capabilityCutAvailable(root, revision) {
-  try {
-    execFileSync("git", ["cat-file", "-e", `${revision}^{commit}`], {
-      cwd: root,
-      stdio: "ignore",
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export function assertCapabilityCutAncestor({
   root = process.cwd(),
   revision,
@@ -99,10 +90,7 @@ export function assertCapabilityCutAncestor({
   label = "capability cut",
 } = {}) {
   try {
-    execFileSync("git", ["merge-base", "--is-ancestor", revision, descendant], {
-      cwd: root,
-      stdio: "ignore",
-    });
+    git(root, ["merge-base", "--is-ancestor", revision, descendant]);
   } catch {
     throw new Error(
       `${label} ${revision} must be an ancestor of ${descendant}; regenerate the cut after rebasing instead of relying on a retained local object`,
@@ -110,44 +98,43 @@ export function assertCapabilityCutAncestor({
   }
 }
 
-function repositoryIsShallow(root) {
-  return (
-    execFileSync("git", ["rev-parse", "--is-shallow-repository"], {
-      cwd: root,
-      encoding: "utf8",
-    }).trim() === "true"
-  );
-}
-
 export function ensureCapabilityCutAncestor({
   root = process.cwd(),
   revision,
   descendant = "HEAD",
   label = "capability cut",
+  baseRef = process.env.GITHUB_BASE_REF || "",
 } = {}) {
+  let ancestryError;
   try {
     assertCapabilityCutAncestor({ root, revision, descendant, label });
     return;
   } catch (error) {
-    if (!repositoryIsShallow(root)) throw error;
+    ancestryError = error;
   }
-  const descendantCommit = execFileSync(
-    "git",
-    ["rev-parse", `${descendant}^{commit}`],
-    { cwd: root, encoding: "utf8" },
-  ).trim();
+  if (repositoryIsShallow(root)) {
+    const descendantCommit = git(root, ["rev-parse", `${descendant}^{commit}`]);
+    try {
+      execFileSync(
+        "git",
+        ["fetch", "--no-tags", "--depth=128", "origin", descendantCommit],
+        { cwd: root, stdio: "ignore" },
+      );
+      assertCapabilityCutAncestor({ root, revision, descendant, label });
+      return;
+    } catch {
+      ancestryError = new Error(
+        `${label} ${revision} ancestry could not be hydrated from ${descendantCommit} through a bounded origin fetch`,
+      );
+    }
+  }
   try {
-    execFileSync(
-      "git",
-      ["fetch", "--no-tags", "--depth=128", "origin", descendantCommit],
-      { cwd: root, stdio: "ignore" },
-    );
-  } catch {
+    assertAlphaCapabilityProjection({ root, revision, descendant, baseRef });
+  } catch (projectionError) {
     throw new Error(
-      `${label} ${revision} ancestry could not be hydrated from ${descendantCommit} through a bounded origin fetch`,
+      `${ancestryError.message}; protected alpha projection rejected: ${projectionError.message}`,
     );
   }
-  assertCapabilityCutAncestor({ root, revision, descendant, label });
 }
 
 function ensureCapabilityCutsAvailable(root) {

@@ -347,11 +347,31 @@ test("release-line reconciliation reuses audited hotspot routes across DAG shape
       auditedRoutes,
     );
   }
-  assert.notDeepEqual(
-    collectHotspots(root, current, 20, auditedRoutes, {
-      baseRef: "dev/v4/v4.0",
-    }),
-    auditedRoutes,
+  const full = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-maintainability-full-"),
+  );
+  git(full, ["init", "--initial-branch=main"]);
+  git(full, ["config", "user.name", "Buildchain Test"]);
+  git(full, ["config", "user.email", "buildchain-test@example.invalid"]);
+  fs.writeFileSync(path.join(full, "audited.js"), "audited\n");
+  fs.writeFileSync(path.join(full, "active.js"), "one\n");
+  git(full, ["add", "."]);
+  git(full, ["commit", "-m", "baseline"]);
+  fs.writeFileSync(path.join(full, "active.js"), "two\n");
+  git(full, ["commit", "-am", "update active route"]);
+  assert.deepEqual(
+    collectHotspots(
+      full,
+      {
+        files: { "audited.js": {}, "active.js": {} },
+        tests: {},
+        workflows: {},
+      },
+      20,
+      ["audited.js"],
+      { baseRef: "dev/v4/v4.0" },
+    ),
+    ["active.js", "audited.js"],
   );
 });
 

@@ -47,6 +47,79 @@ export function git(root, args, { trim = true } = {}) {
   return trim ? output.trim() : output;
 }
 
+export function capabilityCutAvailable(root, revision) {
+  try {
+    git(root, ["cat-file", "-e", `${revision}^{commit}`]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function repositoryIsShallow(root) {
+  return git(root, ["rev-parse", "--is-shallow-repository"]) === "true";
+}
+
+function remoteBranchHead(root, branch) {
+  const rows = git(root, [
+    "ls-remote",
+    "--exit-code",
+    "origin",
+    `refs/heads/${branch}`,
+  ]).split("\n");
+  if (rows.length !== 1) throw new Error(`protected ${branch} is ambiguous`);
+  return rows[0].split(/\s+/u)[0];
+}
+
+export function assertAlphaCapabilityProjection({
+  root = process.cwd(),
+  revision,
+  descendant = "HEAD",
+  baseRef = process.env.GITHUB_BASE_REF || "",
+  candidateCommit,
+} = {}) {
+  if (!/^alpha\/v\d+\/v\d+\.\d+$/u.test(baseRef))
+    throw new Error(`capability projection is not authorized for ${baseRef}`);
+  const sourceRef = baseRef.replace(/^alpha\//u, "dev/");
+  const base = remoteBranchHead(root, baseRef);
+  const source = remoteBranchHead(root, sourceRef);
+  const candidate =
+    candidateCommit ||
+    (process.env.GITHUB_HEAD_REF
+      ? remoteBranchHead(root, process.env.GITHUB_HEAD_REF)
+      : git(root, ["rev-parse", `${descendant}^{commit}`]));
+  const targets = [revision, base, candidate, source].filter(
+    (value) =>
+      repositoryIsShallow(root) || !capabilityCutAvailable(root, value),
+  );
+  if (targets.length)
+    execFileSync(
+      "git",
+      ["fetch", "--no-tags", "--depth=128", "origin", ...targets],
+      {
+        cwd: root,
+        stdio: "ignore",
+      },
+    );
+  const parents = git(root, ["rev-list", "--parents", "-n", "1", candidate])
+    .split(/\s+/u)
+    .slice(1);
+  if (parents.length !== 1 || parents[0] !== base)
+    throw new Error("alpha projection is not one linear protected-base commit");
+  try {
+    git(root, ["merge-base", "--is-ancestor", revision, source]);
+  } catch {
+    throw new Error(
+      `protected ${sourceRef} does not contain the capability cut`,
+    );
+  }
+  const tree = (value) => git(root, ["rev-parse", `${value}^{tree}`]);
+  if (tree(candidate) !== tree(source) || tree(descendant) !== tree(candidate))
+    throw new Error(
+      `alpha projection tree differs from protected ${sourceRef}`,
+    );
+}
+
 function gitJson(root, revision, relPath) {
   return JSON.parse(
     git(root, ["show", `${revision}:${relPath}`], { trim: false }),

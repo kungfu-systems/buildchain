@@ -12,14 +12,15 @@ import {
   buildV3V4CapabilityInventory,
   ensureCapabilityCutAncestor,
 } from "../scripts/check-v3-v4-capability-inventory.mjs";
+import { assertAlphaCapabilityProjection } from "../scripts/v3-v4-capability-catalog.mjs";
 
 function runGit(root, args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 }
 
-test("live v4 cut is reachable from the checked candidate", () => {
+test("live v4 cut is reachable or exactly projected from the checked candidate", () => {
   assert.doesNotThrow(() =>
-    assertCapabilityCutAncestor({
+    ensureCapabilityCutAncestor({
       revision: V3_V4_CAPABILITY_CUTS.liveV4,
       label: "live v4 capability cut",
     }),
@@ -32,6 +33,58 @@ test("live v4 cut is reachable from the checked candidate", () => {
         label: "reversed test cut",
       }),
     /must be an ancestor/u,
+  );
+});
+
+test("alpha capability projection requires one protected-base commit with the exact dev tree", () => {
+  const sandbox = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-capability-alpha-projection-"),
+  );
+  const source = path.join(sandbox, "source");
+  const remote = path.join(sandbox, "remote.git");
+  fs.mkdirSync(source);
+  runGit(source, ["init", "--initial-branch=dev/v4/v4.0"]);
+  runGit(source, ["config", "user.name", "Buildchain Test"]);
+  runGit(source, ["config", "user.email", "buildchain@example.invalid"]);
+  fs.writeFileSync(path.join(source, "capability.txt"), "cut\n");
+  runGit(source, ["add", "capability.txt"]);
+  runGit(source, ["commit", "-m", "live cut"]);
+  const cut = runGit(source, ["rev-parse", "HEAD"]);
+  fs.writeFileSync(path.join(source, "capability.txt"), "protected dev\n");
+  runGit(source, ["commit", "-am", "protected dev"]);
+  const devTree = runGit(source, ["rev-parse", "HEAD^{tree}"]);
+  runGit(source, ["checkout", "--orphan", "alpha/v4/v4.0"]);
+  runGit(source, ["rm", "-rf", "."]);
+  fs.writeFileSync(path.join(source, "alpha.txt"), "protected alpha\n");
+  runGit(source, ["add", "."]);
+  runGit(source, ["commit", "-m", "protected alpha"]);
+  runGit(sandbox, ["init", "--bare", remote]);
+  runGit(source, ["remote", "add", "origin", remote]);
+  runGit(source, ["push", "origin", "dev/v4/v4.0", "alpha/v4/v4.0"]);
+  runGit(source, ["read-tree", devTree]);
+  runGit(source, ["checkout-index", "-a", "-f"]);
+  runGit(source, ["commit", "-m", "project protected dev tree"]);
+  const candidate = runGit(source, ["rev-parse", "HEAD"]);
+
+  assert.doesNotThrow(() =>
+    assertAlphaCapabilityProjection({
+      root: source,
+      revision: cut,
+      baseRef: "alpha/v4/v4.0",
+      candidateCommit: candidate,
+    }),
+  );
+  fs.writeFileSync(path.join(source, "capability.txt"), "drift\n");
+  runGit(source, ["commit", "-am", "drift"]);
+  assert.throws(
+    () =>
+      assertAlphaCapabilityProjection({
+        root: source,
+        revision: cut,
+        baseRef: "alpha/v4/v4.0",
+        candidateCommit: runGit(source, ["rev-parse", "HEAD"]),
+      }),
+    /one linear|tree differs/u,
   );
 });
 
