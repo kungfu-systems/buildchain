@@ -218,8 +218,8 @@ export function recoverLegacyTerminalDevDeliveryQueue(
       evidenceRoot: entry.evidenceRoot,
     });
   }
-  const recoveredActive = transitions.some((entry) => entry.activeWarrant);
-  if (recoveredActive) queue.activeWarrant = null;
+  if (transitions.some((entry) => entry.activeWarrant))
+    queue.activeWarrant = null;
   queue.generation += 1;
   queue.updatedAt = currentTime;
   queue.stateRoot = devDeliveryContentRoot(queue);

@@ -346,12 +346,9 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
     "queue fencingCounter",
   );
   queue.policy = normalizePolicy(queue.policy);
-  const hasExecutionReceipt = Boolean(
-    queue.activeWarrant?.nativeExecutionReceiptRoot,
-  );
-  const hasQualificationReceipt = Boolean(
-    queue.activeWarrant?.qualificationReceiptRoot,
-  );
+  const hasExecutionReceipt = !!queue.activeWarrant?.nativeExecutionReceiptRoot;
+  const hasQualificationReceipt =
+    !!queue.activeWarrant?.qualificationReceiptRoot;
   const allowLegacyV3Readback =
     expected.allowLegacyV3Readback === true &&
     hasExecutionReceipt === hasQualificationReceipt;
