@@ -356,15 +356,32 @@ test("release-line reconciliation reuses audited hotspot routes across DAG shape
     workflows: {},
   };
 
-  for (const baseRef of [
+  for (const releaseRef of [
     "alpha/v4/v4.0",
     "release/v4/v4.0",
     "publish-gate/major",
   ]) {
     assert.deepEqual(
-      collectHotspots(fixtureRoot, current, 20, auditedRoutes, { baseRef }),
+      collectHotspots(fixtureRoot, current, 20, auditedRoutes, {
+        baseRef: releaseRef,
+      }),
       auditedRoutes,
     );
+  }
+  const previousBaseRef = process.env.GITHUB_BASE_REF;
+  const previousRefName = process.env.GITHUB_REF_NAME;
+  try {
+    process.env.GITHUB_BASE_REF = "";
+    process.env.GITHUB_REF_NAME = "alpha/v4/v4.0";
+    assert.deepEqual(
+      collectHotspots(fixtureRoot, current, 20, auditedRoutes),
+      auditedRoutes,
+    );
+  } finally {
+    if (previousBaseRef === undefined) delete process.env.GITHUB_BASE_REF;
+    else process.env.GITHUB_BASE_REF = previousBaseRef;
+    if (previousRefName === undefined) delete process.env.GITHUB_REF_NAME;
+    else process.env.GITHUB_REF_NAME = previousRefName;
   }
   assert.deepEqual(
     collectHotspots(fixtureRoot, current, 20, auditedRoutes, {
