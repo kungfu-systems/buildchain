@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{ContractFault, ContractResult, content_root, validate_root};
 
 pub const RELEASE_INVOCATION_CONTRACT: &str = "kungfu-buildchain-v4-release-invocation/v1";
+pub const RELEASE_PROVIDER_CONTRACT: &str = "kungfu-buildchain-release-tail-provider/v1";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -48,6 +49,22 @@ pub struct ReleaseAuthorityIdentity {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ReleaseProviderIdentity {
+    adapter: String,
+    contract: String,
+    repository: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ReleaseParentLineage {
+    invocation_root: Option<String>,
+    transaction_root: Option<String>,
+    receipt_root: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ReleaseInvocation {
     schema: String,
     publisher: ReleasePublisherIdentity,
@@ -55,6 +72,8 @@ pub struct ReleaseInvocation {
     candidate: ReleaseCandidateIdentity,
     target: ReleaseTargetIdentity,
     authority: ReleaseAuthorityIdentity,
+    provider: ReleaseProviderIdentity,
+    parent: ReleaseParentLineage,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -65,6 +84,8 @@ pub struct ReleaseInvocationRoots {
     candidate_root: String,
     target_root: String,
     authority_root: String,
+    provider_root: String,
+    parent_root: String,
     invocation_root: String,
 }
 
@@ -166,6 +187,38 @@ impl ReleaseInvocation {
         ] {
             validate_root(root, &format!("$/authority/{name}"))?;
         }
+        if self.provider.adapter != "built-in-provider-plane"
+            || self.provider.contract != RELEASE_PROVIDER_CONTRACT
+            || self.provider.repository != self.candidate.repository
+        {
+            return Err(validation(
+                "invalid-release-provider",
+                "$/provider",
+                "provider identity must bind the built-in Provider Plane and candidate repository",
+            ));
+        }
+        let parent_roots = [
+            self.parent.invocation_root.as_ref(),
+            self.parent.transaction_root.as_ref(),
+            self.parent.receipt_root.as_ref(),
+        ];
+        let present = parent_roots.iter().filter(|root| root.is_some()).count();
+        if present != 0 && present != parent_roots.len() {
+            return Err(validation(
+                "invalid-release-parent-lineage",
+                "$/parent",
+                "parent lineage roots must be either all null or all present",
+            ));
+        }
+        for (name, root) in [
+            ("invocationRoot", &self.parent.invocation_root),
+            ("transactionRoot", &self.parent.transaction_root),
+            ("receiptRoot", &self.parent.receipt_root),
+        ] {
+            if let Some(root) = root {
+                validate_root(root, &format!("$/parent/{name}"))?;
+            }
+        }
         Ok(())
     }
 }
@@ -194,6 +247,14 @@ pub fn project_release_invocation(
         "release-invocation-authority",
         &serde_json::to_value(&invocation.authority).unwrap(),
     )?;
+    let provider_root = content_root(
+        "release-invocation-provider",
+        &serde_json::to_value(&invocation.provider).unwrap(),
+    )?;
+    let parent_root = content_root(
+        "release-invocation-parent",
+        &serde_json::to_value(&invocation.parent).unwrap(),
+    )?;
     let invocation_root = content_root(
         "release-invocation",
         &serde_json::json!({
@@ -203,6 +264,8 @@ pub fn project_release_invocation(
             "candidateRoot": candidate_root,
             "targetRoot": target_root,
             "authorityRoot": authority_root,
+            "providerRoot": provider_root,
+            "parentRoot": parent_root,
         }),
     )?;
     Ok(ReleaseInvocationProjection {
@@ -213,6 +276,8 @@ pub fn project_release_invocation(
             candidate_root,
             target_root,
             authority_root,
+            provider_root,
+            parent_root,
             invocation_root,
         },
     })

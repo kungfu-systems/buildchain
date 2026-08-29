@@ -12,11 +12,66 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ledgerPath = path.join(root, "architecture/v4-release-topology.json");
-const releaseMarker =
-  /(?:release-candidate-promote\.yml|promote-buildchain-ref|v4-release-candidate-promote|release-tail-runtime)/u;
 
 function read(relative) {
   return fs.readFileSync(path.join(root, relative), "utf8");
+}
+
+function productionFiles(relative, extensions) {
+  const absolute = path.join(root, relative);
+  if (!fs.existsSync(absolute)) return [];
+  const entries = fs.readdirSync(absolute, { withFileTypes: true });
+  return entries.flatMap((entry) => {
+    const child = path.posix.join(relative, entry.name);
+    if (
+      entry.isDirectory() &&
+      !["dist", "node_modules", ".git"].includes(entry.name)
+    )
+      return productionFiles(child, extensions);
+    if (
+      entry.isFile() &&
+      extensions.some((extension) => entry.name.endsWith(extension))
+    )
+      return [child];
+    return [];
+  });
+}
+
+function matchingProductionFiles(roots, extensions, pattern) {
+  return roots
+    .flatMap((relative) => productionFiles(relative, extensions))
+    .filter((relative) => relative !== "scripts/check-v4-release-topology.mjs")
+    .filter((relative) => pattern.test(read(relative)))
+    .sort();
+}
+
+export function discoverV4ReleaseAuthorityClosure() {
+  const providerPlane = matchingProductionFiles(
+    ["actions", "packages/core"],
+    [".js", ".mjs", ".cjs"],
+    /(?:release-tail-provider-(?:adapters|plane)|create(?:GitHubReleaseAssets|SignedStaticChannel|SiteReleaseActivation|ReleasedEvidence)Adapter)/u,
+  );
+  const runtimeSelectors = matchingProductionFiles(
+    [".github/workflows", "scripts", "packages/core"],
+    [".yml", ".yaml", ".js", ".mjs", ".cjs"],
+    /(?:promotion-runtime-sha|resume-buildchain-runtime-sha|BUILDCHAIN_(?:CURRENT_RUNTIME_SHA|RUNTIME_REF|RESUME_CANDIDATE_RUN_ID)|authorizeV4RuntimeSelection|scanV4RuntimeSelectorPersistence|v4-release-candidate-adapter)/u,
+  );
+  const terminalProjections = matchingProductionFiles(
+    [".github/workflows", "actions", "packages/core", "scripts"],
+    [".yml", ".yaml", ".js", ".mjs", ".cjs"],
+    /(?:createV4ReleaseReceipt|release-receipt\.json|V4_RELEASE_RECEIPT_CONTRACT)/u,
+  );
+  return {
+    providerAdapters: [
+      ...new Set([
+        ...providerPlane,
+        "packages/core/release-tail-provider-plane.js",
+      ]),
+    ].sort(),
+    runtimeSelectors,
+    runtimeEngines: ["actions/v4-release-candidate-promote/index.js"],
+    terminalProjections,
+  };
 }
 
 function jobBlock(source, jobId) {
@@ -104,25 +159,27 @@ export function discoverV4ReleaseTopology(
       "carriers",
       "mutationSignals",
     ],
-    workflows: workflows.map((workflow) => ({
-      path: workflow.path,
-      triggers: workflow.triggers,
-      jobs: workflow.jobs.map((job) =>
-        [
-          job.id,
-          job.kind,
-          job.uses || "-",
-          job.permissions.contents || "-",
-          job.permissions.idToken || "-",
-          Object.entries(job.carriers)
-            .filter(([, present]) => present)
-            .map(([name]) => name)
-            .join(",") || "-",
-          job.mutationSignals.join(",") || "-",
-        ].join("|"),
-      ),
-      reusableEdges: workflow.reusableEdges,
-    })),
+    workflows: workflows
+      .filter((workflow) => semanticPaths.has(workflow.path))
+      .map((workflow) => ({
+        path: workflow.path,
+        triggers: workflow.triggers,
+        jobs: workflow.jobs.map((job) =>
+          [
+            job.id,
+            job.kind,
+            job.uses || "-",
+            job.permissions.contents || "-",
+            job.permissions.idToken || "-",
+            Object.entries(job.carriers)
+              .filter(([, present]) => present)
+              .map(([name]) => name)
+              .join(",") || "-",
+            job.mutationSignals.join(",") || "-",
+          ].join("|"),
+        ),
+        reusableEdges: workflow.reusableEdges,
+      })),
     metrics: {
       workflowCount: workflows.length,
       jobCount: jobs.length,
@@ -174,7 +231,26 @@ export function findUnknownV4ReleaseTopology(
   const declared = new Set(workflowPaths);
   return allWorkflowPaths
     .filter((relative) => !declared.has(relative))
-    .filter((relative) => releaseMarker.test(readWorkflow(relative)))
+    .filter((relative) => {
+      const source = readWorkflow(relative);
+      const usesReleaseAuthority = parseYamlUses(source).some(({ value }) =>
+        /(?:release-candidate-promote|promote-buildchain-ref|v4-release-candidate-promote|release-tail)/u.test(
+          value,
+        ),
+      );
+      const hasReleaseLanguage =
+        /(?:^|[-_ ])(?:release|publish|promotion|distribution|tag)(?:$|[-_ :])/imu.test(
+          source,
+        );
+      const hasMutationAuthority =
+        /(?:contents|id-token):\s*write/u.test(source) ||
+        /(?:git push|npm publish|gh release (?:create|upload)|createRef|updateRef)/u.test(
+          source,
+        );
+      return (
+        usesReleaseAuthority || (hasReleaseLanguage && hasMutationAuthority)
+      );
+    })
     .sort();
 }
 
@@ -187,10 +263,76 @@ function assertClosedWorld(workflowPaths) {
   );
 }
 
+function assertAuthorityClosure(ledger) {
+  const closure = ledger.authorityClosure;
+  assert.ok(
+    closure && typeof closure === "object",
+    "authority closure missing",
+  );
+  for (const className of [
+    "providerAdapters",
+    "runtimeSelectors",
+    "runtimeEngines",
+    "terminalProjections",
+  ]) {
+    assert.ok(
+      Array.isArray(closure[className]) && closure[className].length > 0,
+      `authority closure class ${className} is empty`,
+    );
+    for (const relative of closure[className])
+      assert.ok(
+        fs.statSync(path.join(root, relative)).isFile(),
+        `authority closure path is not a file: ${relative}`,
+      );
+  }
+  const discovered = discoverV4ReleaseAuthorityClosure();
+  for (const className of Object.keys(discovered))
+    assert.deepEqual(
+      closure[className],
+      discovered[className],
+      `authority closure class drifted: ${className}`,
+    );
+  assert.deepEqual(closure.runtimeEngines, [
+    "actions/v4-release-candidate-promote/index.js",
+  ]);
+  assert.equal(
+    closure.freshEntry,
+    ".github/workflows/release-candidate-promote.yml",
+  );
+  assert.equal(
+    closure.recoveryEntry,
+    ".github/workflows/buildchain-ref-promotion-recovery.yml",
+  );
+  const engineSurface = [
+    ".github/workflows/.release-candidate-promote.yml",
+    ...closure.runtimeEngines,
+  ]
+    .map(read)
+    .join("\n");
+  for (const pattern of closure.forbiddenLegacyEnginePatterns)
+    assert.doesNotMatch(
+      engineSurface,
+      new RegExp(pattern, "u"),
+      `legacy release engine remains reachable: ${pattern}`,
+    );
+  const canonicalWorkflow = read(
+    ".github/workflows/.release-candidate-promote.yml",
+  );
+  assert.match(
+    canonicalWorkflow,
+    /scripts\/v4-release-candidate-adapter\.mjs/u,
+  );
+  assert.match(
+    canonicalWorkflow,
+    /release-invocation\.json[\s\S]*release-transaction\.json[\s\S]*release-receipt\.json/u,
+  );
+}
+
 export function checkV4ReleaseTopology() {
   const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8"));
   assert.equal(ledger.contract, "kungfu-buildchain-v4-release-topology/v1");
   assertClosedWorld(ledger.closedWorld.workflowPaths);
+  assertAuthorityClosure(ledger);
   const actual = discoverV4ReleaseTopology(
     ledger.closedWorld.workflowPaths,
     ledger.semanticScope.workflowPaths,
@@ -219,7 +361,11 @@ export function checkV4ReleaseTopology() {
   return actual;
 }
 
-if (process.argv.includes("--print")) {
+if (process.argv.includes("--print-closure")) {
+  process.stdout.write(
+    `${JSON.stringify(discoverV4ReleaseAuthorityClosure(), null, 2)}\n`,
+  );
+} else if (process.argv.includes("--print")) {
   const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8"));
   process.stdout.write(
     `${JSON.stringify(
