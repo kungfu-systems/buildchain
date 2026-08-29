@@ -6,6 +6,7 @@ import {
   closeDevDeliveryWarrant,
   createDevDeliveryQueue,
   createNativeCommandContract,
+  fenceDevDeliveryWriterProtocol,
   heartbeatDevDeliveryWarrant,
   observeDevDeliveryQueue,
   qualifyDevDeliveryWarrant,
@@ -91,6 +92,13 @@ function requireTerminalEvidenceCas(options) {
       "terminal evidence reconciliation execute requires expected-old CAS",
     );
   }
+  if (
+    options.command === "fence-writer-protocol" &&
+    options.execute &&
+    !options.expectedOldStateRoot
+  ) {
+    throw new Error("writer protocol fence execute requires expected-old CAS");
+  }
 }
 
 function normalizeRepository(value) {
@@ -175,6 +183,9 @@ function jsonObject(value, label) {
 }
 
 function transitionFor(command, queue, options) {
+  if (command === "fence-writer-protocol") {
+    return fenceDevDeliveryWriterProtocol(queue, { now: options.now });
+  }
   if (command === "submit") {
     const nativeCommandContract = options.environmentRoot
       ? createNativeCommandContract(options.nativeCommand)
@@ -517,7 +528,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
 }
 
 function usage() {
-  return "Usage:\n  buildchain dev warrant <submit|select|heartbeat|qualify|recover|recover-legacy-terminal|close|settle|reconcile-terminal-evidence|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n\nLegacy terminal recovery:\n  recover-legacy-terminal --expected-old sha256:... --legacy-terminal-recovery FILE [--execute]\n\nRead candidate:\n  observe --read-mode v4 --read-qualification FILE --read-qualification-root sha256:... --read-typescript-revision SHA --read-rust-revision SHA --read-validator-version TOKEN [--read-evidence-output FILE]\n";
+  return "Usage:\n  buildchain dev warrant <fence-writer-protocol|submit|select|heartbeat|qualify|recover|recover-legacy-terminal|close|settle|reconcile-terminal-evidence|cancel-queued|observe> --repository owner/repo --branch dev/vN/vN.M [--execute] [--output FILE] [--json]\n\nWriter protocol fence:\n  fence-writer-protocol --expected-old sha256:... [--execute]\n\nLegacy terminal recovery:\n  recover-legacy-terminal --expected-old sha256:... --legacy-terminal-recovery FILE [--execute]\n\nRead candidate:\n  observe --read-mode v4 --read-qualification FILE --read-qualification-root sha256:... --read-typescript-revision SHA --read-rust-revision SHA --read-validator-version TOKEN [--read-evidence-output FILE]\n";
 }
 
 async function main() {
@@ -529,6 +540,7 @@ async function main() {
   const options = devDeliveryCliOptions(args);
   if (
     ![
+      "fence-writer-protocol",
       "submit",
       "select",
       "heartbeat",
