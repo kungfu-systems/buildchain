@@ -430,20 +430,29 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
       options.command,
     ),
   });
+  let concurrencyRecovery = null;
   if (
     options.expectedOldStateRoot &&
     loaded.queue.stateRoot !== options.expectedOldStateRoot
   ) {
-    throw new Error(
-      `expected-old state drift: ${loaded.queue.stateRoot} != ${options.expectedOldStateRoot}`,
-    );
+    if (options.command !== "heartbeat") {
+      throw new Error(
+        `expected-old state drift: ${loaded.queue.stateRoot} != ${options.expectedOldStateRoot}`,
+      );
+    }
+    concurrencyRecovery = {
+      schema: "kungfu.buildchain.dev-delivery-concurrency-recovery/v1",
+      action: "heartbeat-state-root-rebased",
+      requestedStateRoot: options.expectedOldStateRoot,
+      observedStateRoot: loaded.queue.stateRoot,
+      observedCommitSha: loaded.commitSha,
+    };
   }
   if (options.command === "observe") return observeQueue(loaded, options);
   const initialLoaded = loaded;
   let changed = transitionFor(options.command, loaded.queue, options);
   let mutates = changed.queue.stateRoot !== loaded.queue.stateRoot;
   let write = null;
-  let concurrencyRecovery = null;
   if (options.execute && mutates) {
     if (changed.receipt.expectedOldStateRoot !== loaded.queue.stateRoot) {
       throw new Error(
