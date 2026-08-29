@@ -3,7 +3,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
+import {
+  GitHubDevDeliveryStore,
+  runDevDeliveryCommand,
+} from "../scripts/dev-delivery-warrant.mjs";
 import {
   createDevDeliveryQueue,
   createNativeCommandContract,
@@ -214,14 +217,88 @@ test("legacy follower recovery preserves an unrelated exact active Warrant", () 
     ["selected", "terminal-failure"],
   );
   assert.equal(recovered.receipt.transitions[0].activeWarrant, false);
-  assert.equal(
+  assert.match(
     recovered.receipt.nextAction,
-    "Continue the preserved exact active Warrant.",
+    /Continue the exact active Warrant/u,
   );
   assert.equal(
     normalizeDevDeliveryQueue(recovered.queue).stateRoot,
     recovered.queue.stateRoot,
   );
+});
+
+test("legacy recovery command reads a mixed queue through the GitHub store", async () => {
+  const legacy = legacyFollowerQueue();
+  const activeWarrant = structuredClone(legacy.activeWarrant);
+  const legacyFollower = legacy.candidates[1];
+  const request = {
+    schema: "kungfu.buildchain.legacy-terminal-recovery-request/v1",
+    expectedOldStateRoot: legacy.stateRoot,
+    evidence: [hostedTerminalEvidence(legacyFollower, 501)],
+  };
+  const directory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "mixed-legacy-terminal-recovery-"),
+  );
+  const recoveryPath = path.join(directory, "request.json");
+  fs.writeFileSync(recoveryPath, `${JSON.stringify(request, null, 2)}\n`);
+  const commitSha = "c".repeat(40);
+  const fetchImpl = async (url, options) => {
+    if (options.method === "GET" && url.includes("/git/ref/heads/")) {
+      return new Response(JSON.stringify({ object: { sha: commitSha } }), {
+        status: 200,
+      });
+    }
+    if (options.method === "GET" && url.endsWith(`/git/commits/${commitSha}`)) {
+      return new Response(JSON.stringify({ tree: { sha: "tree-sha" } }), {
+        status: 200,
+      });
+    }
+    if (options.method === "GET" && url.endsWith("/git/trees/tree-sha")) {
+      return new Response(
+        JSON.stringify({
+          tree: [{ path: "queue.json", type: "blob", sha: "blob-sha" }],
+        }),
+        { status: 200 },
+      );
+    }
+    if (options.method === "GET" && url.endsWith("/git/blobs/blob-sha")) {
+      return new Response(
+        JSON.stringify({
+          encoding: "base64",
+          content: Buffer.from(`${JSON.stringify(legacy, null, 2)}\n`).toString(
+            "base64",
+          ),
+        }),
+        { status: 200 },
+      );
+    }
+    throw new Error(`unexpected request: ${options.method} ${url}`);
+  };
+  const store = new GitHubDevDeliveryStore({
+    repository: legacy.repository,
+    token: "test-token",
+    fetchImpl,
+  });
+
+  try {
+    const planned = await runDevDeliveryCommand(
+      {
+        command: "recover-legacy-terminal",
+        repository: legacy.repository,
+        branch: legacy.protectedBase,
+        expectedOldStateRoot: legacy.stateRoot,
+        legacyTerminalRecoveryPath: recoveryPath,
+        now: "2026-08-04T00:11:00Z",
+      },
+      store,
+    );
+    assert.equal(planned.mode, "plan");
+    assert.deepEqual(planned.warrant, activeWarrant);
+    assert.equal(planned.receipt.transitions.length, 1);
+    assert.equal(planned.receipt.transitions[0].activeWarrant, false);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("legacy terminal recovery rejects nonterminal provider evidence", () => {
