@@ -20,12 +20,13 @@ function runGit(root, args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 }
 
-test("live v4 cut is reachable from the checked candidate", () => {
-  assert.doesNotThrow(() =>
-    assertCapabilityCutAncestor({
-      revision: V3_V4_CAPABILITY_CUTS.liveV4,
-      label: "live v4 capability cut",
-    }),
+test("live v4 cut has an admitted lineage from the checked candidate", () => {
+  const lineage = ensureCapabilityCutLineage({
+    revision: V3_V4_CAPABILITY_CUTS.liveV4,
+    label: "live v4 capability cut",
+  });
+  assert.ok(
+    ["direct-ancestry", "protected-tree-equivalent"].includes(lineage.mode),
   );
   assert.throws(
     () =>
