@@ -27,7 +27,7 @@
   "repositoryBudgets": {
     "baselineRevision": "858dbe00b6206a8f356b4a12d2659bee7a72e71b",
     "maxHandMaintainedSourceFiles": 444,
-    "maxHandMaintainedSourceLines": 164856,
+    "maxHandMaintainedSourceLines": 164857,
     "maxWorkflowFiles": 77,
     "maxWorkflowLines": 26791,
     "latestTransition": "An idle queue can install one rooted minimum writer protocol that stale runtimes cannot erase or bypass.",

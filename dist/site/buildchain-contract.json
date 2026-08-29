@@ -1591,7 +1591,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
-      "auditDigest": "sha256:e74c133c5cc71e47f26046241523604050de8ec78a7807e790dddc8ada673331"
+      "auditDigest": "sha256:8ca8fd8e7b111357a7267e150a268ce8f4b9a06d89360e07a08d1a49656e619e"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:da98b1d6b6283056e7c54517678d5c6a4a2f553c413d9b340fc1eed3acc1c998"
+  "contractDigest": "sha256:a27c4defa5061ca51a19f02ab49ba8869b939de300b12654121f678cd4cd97b0"
 }
