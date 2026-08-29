@@ -140,7 +140,7 @@ export function recoverLegacyTerminalDevDeliveryQueue(
     );
   }
   const before = normalizeDevDeliveryQueue(queueInput, {
-    allowLegacyV3Readback: true,
+    allowMixedLegacyRecovery: true,
   });
   const expectedOldStateRoot = exactRoot(
     request.expectedOldStateRoot,
@@ -218,7 +218,8 @@ export function recoverLegacyTerminalDevDeliveryQueue(
       evidenceRoot: entry.evidenceRoot,
     });
   }
-  queue.activeWarrant = null;
+  const recoveredActive = transitions.some((entry) => entry.activeWarrant);
+  if (recoveredActive) queue.activeWarrant = null;
   queue.generation += 1;
   queue.updatedAt = currentTime;
   queue.stateRoot = devDeliveryContentRoot(queue);
@@ -236,11 +237,10 @@ export function recoverLegacyTerminalDevDeliveryQueue(
     nextStateRoot: after.stateRoot,
     requestRoot,
     transitions,
-    nextAction: "Select the next strictly valid queued candidate, if any.",
+    nextAction: recoveredActive
+      ? "Select the next strictly valid queued candidate, if any."
+      : "Continue the preserved exact active Warrant.",
   };
-  return {
-    queue: after,
-    receipt,
-    receiptRoot: devDeliveryContentRoot(receipt),
-  };
+  const receiptRoot = devDeliveryContentRoot(receipt);
+  return { queue: after, receipt, receiptRoot };
 }

@@ -67,6 +67,27 @@ function legacyQueue() {
   return legacy;
 }
 
+function legacyFollowerQueue() {
+  const first = submitDevDeliveryCandidate(
+    initialQueue(),
+    candidate(200, "a".repeat(40), 1001),
+    { now: "2026-08-04T00:01:00Z" },
+  );
+  const selected = selectDevDeliveryWarrant(first.queue, {
+    now: "2026-08-04T00:02:00Z",
+  });
+  const follower = submitDevDeliveryCandidate(
+    selected.queue,
+    candidate(201, "b".repeat(40), 1002),
+    { now: "2026-08-04T00:03:00Z" },
+  );
+  const legacy = structuredClone(follower.queue);
+  delete legacy.candidates[1].nativeCommandContract;
+  delete legacy.stateRoot;
+  legacy.stateRoot = devDeliveryContentRoot(legacy);
+  return legacy;
+}
+
 function hostedTerminalEvidence(candidateEntry, jobId, overrides = {}) {
   const runAttempt = overrides.runAttempt || 1;
   const body = {
@@ -167,6 +188,37 @@ test("legacy terminal recovery atomically closes the complete failed live set", 
     ["selected", "queued"],
   );
   assert.match(recovered.receiptRoot, /^sha256:[0-9a-f]{64}$/u);
+});
+
+test("legacy follower recovery preserves an unrelated exact active Warrant", () => {
+  const legacy = legacyFollowerQueue();
+  const activeWarrant = structuredClone(legacy.activeWarrant);
+  const legacyFollower = legacy.candidates[1];
+  const request = {
+    schema: "kungfu.buildchain.legacy-terminal-recovery-request/v1",
+    expectedOldStateRoot: legacy.stateRoot,
+    evidence: [hostedTerminalEvidence(legacyFollower, 501)],
+  };
+
+  assert.throws(
+    () => normalizeDevDeliveryQueue(legacy),
+    /live native candidate requires exact native proof/u,
+  );
+
+  const recovered = recoverLegacyTerminalDevDeliveryQueue(legacy, request, {
+    now: "2026-08-04T00:11:00Z",
+  });
+  assert.deepEqual(recovered.queue.activeWarrant, activeWarrant);
+  assert.deepEqual(
+    recovered.queue.candidates.map((entry) => entry.status),
+    ["selected", "terminal-failure"],
+  );
+  assert.equal(recovered.receipt.transitions[0].activeWarrant, false);
+  assert.equal(
+    recovered.receipt.nextAction,
+    "Continue the preserved exact active Warrant.",
+  );
+  assert.doesNotThrow(() => normalizeDevDeliveryQueue(recovered.queue));
 });
 
 test("legacy terminal recovery rejects nonterminal provider evidence", () => {
