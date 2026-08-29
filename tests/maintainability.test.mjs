@@ -158,10 +158,15 @@ test("exact-head maintainability baseline is reproducible", () => {
   assert.equal(report.hotspots.promoteBuildchainRefs.complexity, 26);
   assert.equal(report.hotspots.createReleaseCheckReport.lines, 65);
   assert.equal(report.hotspots.createReleaseCheckReport.complexity, 5);
-  assert.ok(
-    debt.hotspots.includes("scripts/buildchain-cli-help.mjs"),
-    "the public CLI help hotspot must retain an audited change route across PR checkout shapes",
-  );
+  for (const route of [
+    "scripts/buildchain-cli-help.mjs",
+    "scripts/check-maintainability.mjs",
+    "tests/maintainability.test.mjs",
+  ])
+    assert.ok(
+      debt.hotspots.includes(route),
+      `${route} must retain an audited change route across checkout shapes`,
+    );
 });
 
 test("AST complexity proxy counts bounded decisions without charging nested functions twice", () => {
@@ -356,15 +361,32 @@ test("release-line reconciliation reuses audited hotspot routes across DAG shape
     workflows: {},
   };
 
-  for (const baseRef of [
+  for (const releaseRef of [
     "alpha/v4/v4.0",
     "release/v4/v4.0",
     "publish-gate/major",
   ]) {
     assert.deepEqual(
-      collectHotspots(fixtureRoot, current, 20, auditedRoutes, { baseRef }),
+      collectHotspots(fixtureRoot, current, 20, auditedRoutes, {
+        baseRef: releaseRef,
+      }),
       auditedRoutes,
     );
+  }
+  const previousBaseRef = process.env.GITHUB_BASE_REF;
+  const previousRefName = process.env.GITHUB_REF_NAME;
+  try {
+    process.env.GITHUB_BASE_REF = "";
+    process.env.GITHUB_REF_NAME = "alpha/v4/v4.0";
+    assert.deepEqual(
+      collectHotspots(fixtureRoot, current, 20, auditedRoutes),
+      auditedRoutes,
+    );
+  } finally {
+    if (previousBaseRef === undefined) delete process.env.GITHUB_BASE_REF;
+    else process.env.GITHUB_BASE_REF = previousBaseRef;
+    if (previousRefName === undefined) delete process.env.GITHUB_REF_NAME;
+    else process.env.GITHUB_REF_NAME = previousRefName;
   }
   assert.deepEqual(
     collectHotspots(fixtureRoot, current, 20, auditedRoutes, {
