@@ -877,7 +877,7 @@ jobs:
           BUILDCHAIN_RESUME_CANDIDATE_RUN_ID: ${{ inputs.resume-candidate-run-id }}
           BUILDCHAIN_RESUME_EXPECTED_WORKFLOW_FILE: ${{ inputs.resume-expected-workflow-file || inputs.release-candidate-workflow-file }}
           BUILDCHAIN_RESUME_EXPECTED_WORKFLOW_NAME: ${{ inputs.resume-expected-workflow-name || inputs.release-candidate-workflow-name }}
-          BUILDCHAIN_RESUME_CHANNEL: ${{ steps.intent.outputs.channel }}
+          BUILDCHAIN_RESUME_CHANNEL: ${{ inputs.promotion-publication-channel || steps.intent.outputs.channel }}
           BUILDCHAIN_RESUME_TARGET_REF: ${{ steps.intent.outputs.target-ref }}
           BUILDCHAIN_RESUME_TARGET_SHA: ${{ steps.intent.outputs.requested-sha }}
           BUILDCHAIN_RESUME_EXPECTED_SOURCE_TREE: ${{ inputs.resume-expected-source-tree }}

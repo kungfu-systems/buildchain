@@ -433,7 +433,7 @@ test("buildchain ref promotion delegates alpha evidence to the canonical publish
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.doesNotMatch(workflow, /promote-stable:|uses: \.\/actions\/promote-buildchain-ref/);
 });
-test("QUALIFY receives the rooted transient runtime authorization", () => {
+test("QUALIFY receives the rooted transient runtime authorization and publication channel", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
@@ -444,7 +444,7 @@ test("QUALIFY receives the rooted transient runtime authorization", () => {
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: \$\{\{ inputs\.promotion-runtime-authorization-root \}\}/,
+    /BUILDCHAIN_RESUME_CHANNEL: \$\{\{ inputs\.promotion-publication-channel \|\| steps\.intent\.outputs\.channel \}\}[\s\S]*BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: \$\{\{ inputs\.promotion-runtime-authorization-root \}\}/,
   );
   const qualify = workflow.slice(workflow.indexOf("  qualify:"), workflow.indexOf("  apply:"));
   assert.match(qualify, /Translate and admit legacy-compatible inputs/);
