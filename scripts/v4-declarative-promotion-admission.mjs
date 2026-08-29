@@ -8,7 +8,10 @@ export function admitV4DeclarativePromotion({
   runtimeRef,
   declarative,
 }) {
-  if (!/^v4(?:$|[-./])/u.test(String(runtimeRef || ""))) {
+  if (
+    declarative !== true &&
+    !/^v4(?:$|[-./])/u.test(String(runtimeRef || ""))
+  ) {
     return Object.freeze({ mode: "legacy", admitted: true });
   }
   if (declarative !== true) {

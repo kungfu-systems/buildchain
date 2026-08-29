@@ -127,7 +127,6 @@ const requiredPaths = [
   "scripts/npm-publish-transaction.mjs",
   "scripts/paper.mjs",
   "scripts/publication-package.mjs",
-  "scripts/publication-commit-evidence.mjs",
   "scripts/publication-reproducibility.mjs",
   "scripts/release-candidate-resolver.mjs",
   "scripts/resume-from-candidate-run.mjs",
@@ -300,8 +299,8 @@ if (channelPromotionWorkflow !== generateChannelPromotionWorkflow(advancedPromot
   throw new Error("generated channel promotion workflow is stale");
 }
 for (const requiredSnippet of [
-  "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@alpha/v4/v4.0",
-  "promotion-shell-ref: ${{ needs.consumer-admission.outputs.shell-call-ref }}",
+  "name: Adapt recovery inputs into the canonical v4 publisher",
+  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha",
   "declarative-release-tail: true",
 ]) {
   if (!boundedAlphaRecoveryWorkflow.includes(requiredSnippet)) {
@@ -316,8 +315,8 @@ for (const workflowSource of [boundedAlphaRecoveryWorkflow, channelPromotionWork
 for (const requiredSnippet of [
   "buildchain-channel:",
   `/${promotionShellRouting.alpha.workflowPath}@${promotionShellRouting.alpha.callRef}`,
-  `/${promotionShellRouting.stable.workflowPath}@${promotionShellRouting.stable.callRef}`,
-  `STABLE_SHELL_REF: v${selfDogfoodMajor}`,
+  `SELECTED_SHELL_REF: v${selfDogfoodMajor}-alpha`,
+  "name: Invoke the single v4 publisher adapter",
   "promotion-contract-lock-digest:",
   "authorize-promotion-runtime-override.cjs",
   "BUILDCHAIN_ROUTER_REPOSITORY: ${{ inputs.buildchain-repository }}",
@@ -328,6 +327,9 @@ for (const requiredSnippet of [
   if (!channelPromotionWorkflow.includes(requiredSnippet)) {
     throw new Error(`channel promotion workflow missing routing contract: ${requiredSnippet}`);
   }
+}
+if (channelPromotionWorkflow.includes("Promote with stable workflow shell")) {
+  throw new Error("channel promotion workflow retains a parallel stable publisher");
 }
 for (const forbiddenSnippet of ["job.workflow_repository", "job.workflow_sha"]) {
   if (channelPromotionWorkflow.includes(forbiddenSnippet)) {
@@ -1046,7 +1048,6 @@ for (const requiredSnippet of [
   "resume-candidate-run-id:",
   "resume-expected-source-tree:",
   "resume-buildchain-runtime-ref:",
-  "uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4",
   "release-passport-buildchain-self-kfd: true",
   "declarative-release-tail: true",
   "release-passport-impact-json: .buildchain/release-impact.json",
@@ -1057,61 +1058,28 @@ for (const requiredSnippet of [
 }
 const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
 for (const requiredSnippet of [
-  "release-passport-kfd-1-witness-jsons:",
-  "release-passport-kfd-1-witness-jsons: ${{ inputs.release-passport-kfd-1-witness-jsons }}",
-  "release-passport-kfd-2-claim-jsons:",
-  "release-passport-kfd-2-claim-jsons: ${{ inputs.release-passport-kfd-2-claim-jsons }}",
-  "release-passport-kfd-3-prebuild-witness-jsons:",
-  "release-passport-kfd-3-prebuild-witness-jsons: ${{ inputs.release-passport-kfd-3-prebuild-witness-jsons }}",
-  "release-passport-kfd-3-artifact-witness-jsons:",
-  "release-passport-kfd-3-artifact-witness-jsons: ${{ inputs.release-passport-kfd-3-artifact-witness-jsons }}",
-  "release-passport-kfd-3-artifact-verify-command:",
-  "release-passport-kfd-adopter-manifest-json:", "release-passport-kfd-adopter-manifest-json: ${{ inputs.release-passport-kfd-adopter-manifest-json }}",
-  "release-passport-kfd-support-matrix-json:", "release-passport-kfd-support-matrix-json: ${{ inputs.release-passport-kfd-support-matrix-json }}",
-  "release-passport-kfd-product-gate-jsons:",
-  "release-passport-kfd-product-gate-jsons: ${{ inputs.release-passport-kfd-product-gate-jsons }}",
-  "release-passport-invariant-passport-jsons:",
-  "release-passport-invariant-passport-jsons: ${{ inputs.release-passport-invariant-passport-jsons }}",
-  "release-passport-invariant-passport-command:",
-  "release-passport-invariant-passport-command: ${{ inputs.release-passport-invariant-passport-command }}",
-  "release-passport-buildchain-self-kfd:",
-  "release-passport-buildchain-self-kfd: ${{ inputs.release-passport-buildchain-self-kfd }}",
-  "github-release:",
-  "default: true",
-  "github-release: ${{ inputs.github-release }}",
-  "github-release-payload-patterns:",
-  "github-release-artifact-paths: ${{ steps.rc.outputs.release-candidate-github-release-artifact-paths }}",
-  "github-release-title: ${{ inputs.github-release-title }}",
-  "github-release-notes: ${{ inputs.github-release-notes }}",
-  "publication-commit-command:",
-  "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:",
-  "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:",
-  "Commit consumer publication authority last",
-  "node .buildchain/runtime/scripts/publication-commit-evidence.mjs",
-  "require-publish-source-lock: \"true\"",
-  "publish-source-ref: ${{ steps.publish-gate.outputs.ref }}",
-  "publish-source-sha: ${{ steps.publish-gate.outputs.sha }}",
-  "publish-source-locked: ${{ steps.publish-gate.outputs.locked }}",
-  "expected-publication-version: ${{ needs.publication-plan.outputs.version }}",
-  "publication-version: ${{ needs.publication-plan.outputs.version }}",
-  "name: Plan exact publication version",
-  "name: Install exact publication planning dependencies",
-  "DRY_RUN: ${{ inputs.dry-run }}",
-  "if (dryRun) {",
-  "Enforce Buildchain stable release canary gate",
-  "BUILDCHAIN_STABLE_RELEASE_POLICY: .buildchain/stable-release-policy.json",
-  "Consumer has no binary-distribution.yml; standalone binary dispatch is not applicable.",
-  "gh workflow view binary-distribution.yml",
-  "resume-candidate-run-id:",
-  "node .buildchain/runtime/scripts/resume-from-candidate-run.mjs",
-  "publish-sealed-bundle-root: ${{ steps.rc.outputs.publish-sealed-bundle-root }}",
-  "BUILDCHAIN_EXPECTED_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}",
-  "if: ${{ inputs.resume-candidate-run-id == '' }}",
-  "Bridge Buildchain self-runtime dependencies",
-  "ln -s .buildchain/runtime/node_modules node_modules",
+  "name: QUALIFY canonical v4 release invocation inputs",
+  "name: APPLY one rooted provider transaction",
+  "name: SETTLE terminal ReleaseReceipt projection",
+  "uses: ./.buildchain/runtime/actions/v4-release-candidate-promote",
+  "publisher-workflow-sha:",
+  "runtime-commit:",
+  "runtime-tree:",
+  "release-invocation-root:",
+  "release-transaction-root:",
+  "release-receipt-root:",
 ]) {
   if (!releaseCandidatePromoteWorkflow.includes(requiredSnippet)) {
-    throw new Error(`release candidate promote workflow missing KFD gate pass-through: ${requiredSnippet}`);
+    throw new Error(`release candidate promote workflow missing canonical v4 boundary: ${requiredSnippet}`);
+  }
+}
+for (const retiredSnippet of [
+  "Commit consumer publication authority last",
+  "publish-github-artifact-attestation-evidence.mjs",
+  "capture-package-release-propagation.mjs",
+]) {
+  if (releaseCandidatePromoteWorkflow.includes(retiredSnippet)) {
+    throw new Error(`release candidate promote workflow retains parallel publication authority: ${retiredSnippet}`);
   }
 }
 const workflowDir = path.join(root, ".github/workflows");

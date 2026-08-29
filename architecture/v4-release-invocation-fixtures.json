@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-release-invocation-fixtures/v1",
+  "invocations": {
+    "alpha": {
+      "schema": "kungfu-buildchain-v4-release-invocation/v1",
+      "publisher": {
+        "repository": "kungfu-systems/buildchain",
+        "workflow": ".github/workflows/.release-candidate-promote.yml",
+        "workflowSha": "30cbbc46870871a0eacbe952935ea753e473ff25",
+        "job": "apply"
+      },
+      "runtime": {
+        "repository": "kungfu-systems/buildchain",
+        "commit": "30cbbc46870871a0eacbe952935ea753e473ff25",
+        "tree": "b86fea30cb92a32215206f159708a8ea1d10d462"
+      },
+      "candidate": {
+        "repository": "kungfu-systems/kungfu",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "4.0.0-alpha.9"
+      },
+      "target": {
+        "channel": "alpha",
+        "tag": "v4.0.0-alpha.9",
+        "expectedOldSha": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "authority": {
+        "policyRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "qualificationRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "warrantRoot": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    },
+    "stable": {
+      "schema": "kungfu-buildchain-v4-release-invocation/v1",
+      "publisher": {
+        "repository": "kungfu-systems/buildchain",
+        "workflow": ".github/workflows/.release-candidate-promote.yml",
+        "workflowSha": "30cbbc46870871a0eacbe952935ea753e473ff25",
+        "job": "apply"
+      },
+      "runtime": {
+        "repository": "kungfu-systems/buildchain",
+        "commit": "30cbbc46870871a0eacbe952935ea753e473ff25",
+        "tree": "b86fea30cb92a32215206f159708a8ea1d10d462"
+      },
+      "candidate": {
+        "repository": "kungfu-systems/kungfu",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "version": "4.0.0"
+      },
+      "target": {
+        "channel": "stable",
+        "tag": "v4.0.0",
+        "expectedOldSha": "cccccccccccccccccccccccccccccccccccccccc"
+      },
+      "authority": {
+        "policyRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "qualificationRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "warrantRoot": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "alpha-fresh",
+      "invocation": "alpha",
+      "route": { "surface": "alpha", "execution": "fresh" }
+    },
+    {
+      "id": "alpha-resume",
+      "invocation": "alpha",
+      "route": { "surface": "alpha", "execution": "resume" }
+    },
+    {
+      "id": "public-alpha",
+      "invocation": "alpha",
+      "route": { "surface": "public", "execution": "fresh" }
+    },
+    {
+      "id": "private-alpha",
+      "invocation": "alpha",
+      "route": { "surface": "private", "execution": "resume" }
+    },
+    {
+      "id": "declarative-alpha",
+      "invocation": "alpha",
+      "route": { "surface": "declarative", "execution": "fresh" }
+    },
+    {
+      "id": "legacy-alpha",
+      "invocation": "alpha",
+      "route": { "surface": "legacy-compatible", "execution": "resume" }
+    },
+    {
+      "id": "stable-fresh",
+      "invocation": "stable",
+      "route": { "surface": "stable", "execution": "fresh" }
+    },
+    {
+      "id": "stable-resume",
+      "invocation": "stable",
+      "route": { "surface": "stable", "execution": "resume" }
+    }
+  ],
+  "equivalenceGroups": [
+    [
+      "alpha-fresh",
+      "alpha-resume",
+      "public-alpha",
+      "private-alpha",
+      "declarative-alpha",
+      "legacy-alpha"
+    ],
+    ["stable-fresh", "stable-resume"]
+  ]
+}

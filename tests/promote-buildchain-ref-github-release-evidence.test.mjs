@@ -64,11 +64,6 @@ test("promote action collects GitHub Release evidence assets fail-closed", () =>
   );
 });
 
-test("complete recovery selects immutable public evidence instead of rematerializing declarative assets", () => {
-  const source = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/github-release.js"), "utf8");
-  assert.match(source, /return declarative && !legacyOptions\?\.reuseExistingCompleteEvidence/u);
-});
-
 test("promote action publishes semver GitHub Release evidence assets", async (t) => {
   const cwd = makeTempWorkspace({
     ".buildchain/release-evidence/v1.0.1-alpha.0/evidence.json": { ok: true },

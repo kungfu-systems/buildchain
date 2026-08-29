@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.libkungfu.dev/schema/v4-release-invocation-v1.schema.json",
+  "title": "Buildchain v4 canonical ReleaseInvocation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "publisher",
+    "runtime",
+    "candidate",
+    "target",
+    "authority"
+  ],
+  "properties": {
+    "schema": { "const": "kungfu-buildchain-v4-release-invocation/v1" },
+    "publisher": { "$ref": "#/$defs/publisher" },
+    "runtime": { "$ref": "#/$defs/runtime" },
+    "candidate": { "$ref": "#/$defs/candidate" },
+    "target": { "$ref": "#/$defs/target" },
+    "authority": { "$ref": "#/$defs/authority" }
+  },
+  "$defs": {
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "root": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "workflow", "workflowSha", "job"],
+      "properties": {
+        "repository": { "const": "kungfu-systems/buildchain" },
+        "workflow": {
+          "const": ".github/workflows/.release-candidate-promote.yml"
+        },
+        "workflowSha": { "$ref": "#/$defs/sha" },
+        "job": { "const": "apply" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "tree"],
+      "properties": {
+        "repository": { "const": "kungfu-systems/buildchain" },
+        "commit": { "$ref": "#/$defs/sha" },
+        "tree": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "tree", "version"],
+      "properties": {
+        "repository": { "type": "string", "pattern": "^[ -~]+$" },
+        "commit": { "$ref": "#/$defs/sha" },
+        "tree": { "$ref": "#/$defs/sha" },
+        "version": { "type": "string", "pattern": "^[ -~]+$" }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "tag", "expectedOldSha"],
+      "properties": {
+        "channel": { "enum": ["alpha", "stable"] },
+        "tag": {
+          "type": "string",
+          "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+        },
+        "expectedOldSha": {
+          "oneOf": [{ "$ref": "#/$defs/sha" }, { "type": "null" }]
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyRoot", "qualificationRoot", "warrantRoot"],
+      "properties": {
+        "policyRoot": { "$ref": "#/$defs/root" },
+        "qualificationRoot": { "$ref": "#/$defs/root" },
+        "warrantRoot": { "$ref": "#/$defs/root" }
+      }
+    }
+  }
+}

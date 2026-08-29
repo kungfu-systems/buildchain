@@ -17,15 +17,6 @@
       "sunsetCondition": "Remove after every known caller migrates to the lifecycle version command."
     },
     {
-      "path": ".github/workflows/.release-candidate-promote.yml",
-      "token": "actions/create-github-app-token@v2",
-      "expectedOccurrences": 1,
-      "classification": "third-party-action-version",
-      "callerStatus": "active",
-      "owner": "actions/create-github-app-token maintainers",
-      "sunsetCondition": "Upgrade through normal dependency review when a compatible successor is adopted."
-    },
-    {
       "path": ".github/workflows/.release-docker.yml",
       "token": "workflows v2 Docker release path is retired",
       "expectedOccurrences": 1,
