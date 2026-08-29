@@ -196,7 +196,6 @@ function normalizeNpmPublisher(value, { packageName, repository, workflowFilenam
     configurationRead: true,
   };
 }
-
 function main() {
   const repository = flag("repository");
   const workflowRepository = flag("workflow-repository", repository);

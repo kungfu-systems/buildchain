@@ -1128,9 +1128,9 @@ test("publication authority recollects live App-authenticated governance instead
     new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
     "utf8",
   );
-  assert.match(
+  assert.doesNotMatch(
     releaseWorkflow,
-    /BUILDCHAIN_GOVERNANCE_READ_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
+    /BUILDCHAIN_GOVERNANCE_READ_TOKEN|\.publication-authority\.yml/,
   );
   assert.match(
     authorityWorkflow,
@@ -1147,7 +1147,6 @@ test("publication authority recollects live App-authenticated governance instead
   );
   for (const workflow of [
     ".binary-release-assets.yml",
-    ".release-candidate-promote.yml",
     ".web-surface.yml",
     "paper-release.yml",
     "paper-release-sealed.yml",

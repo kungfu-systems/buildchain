@@ -130,21 +130,30 @@ test("v4 admission requires declarative mode while v3 remains compatible", () =>
   );
 });
 
-test("v4 Provider Plane publishes the standard promotion controller evidence", () => {
-  const source = (file) =>
-    fs.readFileSync(new URL(file, import.meta.url), "utf8");
-  const declarativeJob = source(
-    "../.github/workflows/.release-candidate-promote.yml",
-  ).match(/\n  v4-declarative-promote:\n([\s\S]*?)\n  legacy-promote:\n/u)[1];
-  assert.match(
-    declarativeJob,
-    /name: buildchain-release-promotion-controller-evidence-[\s\S]*\.buildchain\/release-candidate\/[\s\S]*\.buildchain\/release-passport\/[\s\S]*\.buildchain\/release-tail\//u,
+test("v4 Provider Plane publishes rooted invocation transaction and receipt evidence", () => {
+  const workflow = fs.readFileSync(
+    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
+    "utf8",
   );
-  assert.doesNotMatch(declarativeJob, /declarative-controller-evidence/u);
-  assert.match(
-    source("../.github/workflows/.release-candidate-promote.yml"),
-    /promotion-evidence\/release-passport\.json/u,
+  const apply = workflow.slice(
+    workflow.indexOf("\n  apply:"),
+    workflow.indexOf("\n  settle:"),
   );
+  const settle = workflow.slice(workflow.indexOf("\n  settle:"));
+
+  assert.match(
+    apply,
+    /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/,
+  );
+  assert.match(apply, /release-invocation-root:/);
+  assert.match(apply, /release-transaction-root:/);
+  assert.match(apply, /release-receipt-root:/);
+  assert.match(
+    apply,
+    /name: buildchain-v4-release-apply-\$\{\{ needs\.qualify\.outputs\.requested-sha \}\}/,
+  );
+  assert.match(settle, /release-receipt\.json/);
+  assert.doesNotMatch(apply, /declarative-controller-evidence/u);
 });
 
 test("qualified v4 release materializes the four built-in provider capabilities", () => {

@@ -52,16 +52,11 @@ function assertOrdered(relative, markers) {
 
 export function assertPromotionCertificationWiring(source) {
   for (const marker of [
-    "path: .buildchain/runtime/candidate-policy-runtime",
-    "BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ steps.v4-policy-caller.outputs.runtime-sha }}",
-    "policy_runtime=.buildchain/runtime",
-    'node "${policy_runtime}/scripts/v4-consumer-policy.mjs" certify',
-    "passport.consumerPolicy?.receipt?.caller?.sourceSha",
-    "path: .buildchain/runtime/policy-caller",
-    '--caller-root "${{ github.workspace }}/.buildchain/runtime/policy-caller"',
-    '--stable-lock "${{ inputs.buildchain-stable-contract-lock-path }}"',
-    '--alpha-lock "${{ inputs.buildchain-alpha-contract-lock-path }}"',
-    "release-passport-v4-consumer-policy-certification-root: ${{ steps.v4-policy-certification.outputs.v4-consumer-policy-certification-root }}",
+    "Translate and admit legacy-compatible inputs",
+    "BUILDCHAIN_PROMOTION_INPUTS_JSON: ${{ toJSON(inputs) }}",
+    "Resolve and qualify the sealed release candidate",
+    "BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON",
+    "QUALIFY canonical v4 release invocation inputs",
   ]) {
     if (!source.includes(marker)) {
       fail(`promotion certification is missing ${marker}`);
@@ -165,8 +160,7 @@ export function checkV4FloatingConsumerPolicyContract() {
   const promotion = read(".github/workflows/release-candidate-promote.yml");
   if (
     !promotion.includes("consumer-admission:") ||
-    !jobDependsOn(promotion, "alpha", "consumer-admission") ||
-    !jobDependsOn(promotion, "stable", "consumer-admission")
+    !jobDependsOn(promotion, "invoke", "consumer-admission")
   ) {
     fail(
       "release candidate promotion is not transitively gated by consumer admission",
@@ -179,16 +173,12 @@ export function checkV4FloatingConsumerPolicyContract() {
     ["packages/core/release-candidate.js", "consumerPolicy"],
     ["packages/core/release-passport.js", "v4ConsumerPolicy"],
     [
-      "actions/promote-buildchain-ref/action.yml",
-      "release-passport-v4-consumer-policy-certification-json",
+      "actions/v4-release-candidate-promote/index.js",
+      "candidate.consumerPolicy?.receiptRoot",
     ],
     [
-      "actions/promote-buildchain-ref/action.yml",
-      "release-passport-v4-consumer-policy-certification-root",
-    ],
-    [
-      ".github/workflows/.release-candidate-promote.yml",
-      "v4-policy-certification",
+      "actions/v4-release-candidate-promote/index.js",
+      "createV4ReleaseInvocation",
     ],
   ]) {
     if (!read(relative).includes(marker)) {
