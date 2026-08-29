@@ -1279,21 +1279,21 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@353": {
+            "evaluateMaintainability@361": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@353": {
+            "evaluateMaintainability@361": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@353": {
+            "evaluateMaintainability@361": {
               "complexity": 25
             }
           }

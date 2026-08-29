@@ -20,13 +20,21 @@ import {
   evaluateWorkflowBudgets,
 } from "./maintainability-governance.mjs";
 
-function collectHotspots(root, current, limit = 20, shallowFallback = []) {
-  const baseRef = arguments[4]?.baseRef || process.env.GITHUB_BASE_REF || "";
+function collectHotspots(
+  root,
+  current,
+  limit = 20,
+  shallowFallback = [],
+  { baseRef = process.env.GITHUB_BASE_REF || "" } = {},
+) {
   const maintained = new Set([
     ...Object.keys(current.files || {}),
     ...Object.keys(current.tests || {}),
     ...Object.keys(current.workflows || {}),
   ]);
+  // Shallow consumers and release-line reconciliation commits cannot reproduce
+  // the development branch's churn ranking. Reuse the audited routes instead:
+  // release promotion verifies an exact reviewed tree, not an equivalent DAG.
   if (
     gitOutput(root, ["rev-parse", "--is-shallow-repository"]).trim() ===
       "true" ||

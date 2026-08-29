@@ -89,17 +89,13 @@ export function assertAlphaCapabilityProjection({
       ? remoteBranchHead(root, process.env.GITHUB_HEAD_REF)
       : git(root, ["rev-parse", `${descendant}^{commit}`]));
   const targets = [revision, base, candidate, source].filter(
-    (value) =>
-      repositoryIsShallow(root) || !capabilityCutAvailable(root, value),
+    (value) => repositoryIsShallow(root) || !capabilityCutAvailable(root, value),
   );
   if (targets.length)
     execFileSync(
       "git",
       ["fetch", "--no-tags", "--depth=128", "origin", ...targets],
-      {
-        cwd: root,
-        stdio: "ignore",
-      },
+      { cwd: root, stdio: "ignore" },
     );
   const parents = git(root, ["rev-list", "--parents", "-n", "1", candidate])
     .split(/\s+/u)
@@ -109,15 +105,11 @@ export function assertAlphaCapabilityProjection({
   try {
     git(root, ["merge-base", "--is-ancestor", revision, source]);
   } catch {
-    throw new Error(
-      `protected ${sourceRef} does not contain the capability cut`,
-    );
+    throw new Error(`protected ${sourceRef} does not contain the capability cut`);
   }
   const tree = (value) => git(root, ["rev-parse", `${value}^{tree}`]);
   if (tree(candidate) !== tree(source) || tree(descendant) !== tree(candidate))
-    throw new Error(
-      `alpha projection tree differs from protected ${sourceRef}`,
-    );
+    throw new Error(`alpha projection tree differs from protected ${sourceRef}`);
 }
 
 function gitJson(root, revision, relPath) {

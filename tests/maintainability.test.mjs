@@ -330,9 +330,28 @@ test("missing maintainability revisions are hydrated in bounded shallow fetches"
 });
 
 test("release-line reconciliation reuses audited hotspot routes across DAG shapes", () => {
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-maintainability-release-dag-"),
+  );
   const auditedRoutes = ["packages/core/audited-route.js"];
+  const historyRoute = "packages/core/history-route.js";
+  fs.mkdirSync(path.join(fixtureRoot, "packages", "core"), {
+    recursive: true,
+  });
+  git(fixtureRoot, ["init", "--initial-branch=main"]);
+  git(fixtureRoot, ["config", "user.name", "Buildchain Test"]);
+  git(fixtureRoot, ["config", "user.email", "buildchain-test@example.invalid"]);
+  fs.writeFileSync(path.join(fixtureRoot, auditedRoutes[0]), "audited\n");
+  fs.writeFileSync(path.join(fixtureRoot, historyRoute), "history-1\n");
+  git(fixtureRoot, ["add", "."]);
+  git(fixtureRoot, ["commit", "-m", "baseline routes"]);
+  fs.writeFileSync(path.join(fixtureRoot, historyRoute), "history-2\n");
+  git(fixtureRoot, ["commit", "-am", "increase history route churn"]);
   const current = {
-    files: { "packages/core/audited-route.js": {} },
+    files: {
+      "packages/core/audited-route.js": {},
+      [historyRoute]: {},
+    },
     tests: {},
     workflows: {},
   };
@@ -343,35 +362,15 @@ test("release-line reconciliation reuses audited hotspot routes across DAG shape
     "publish-gate/major",
   ]) {
     assert.deepEqual(
-      collectHotspots(root, current, 20, auditedRoutes, { baseRef }),
+      collectHotspots(fixtureRoot, current, 20, auditedRoutes, { baseRef }),
       auditedRoutes,
     );
   }
-  const full = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-maintainability-full-"),
-  );
-  git(full, ["init", "--initial-branch=main"]);
-  git(full, ["config", "user.name", "Buildchain Test"]);
-  git(full, ["config", "user.email", "buildchain-test@example.invalid"]);
-  fs.writeFileSync(path.join(full, "audited.js"), "audited\n");
-  fs.writeFileSync(path.join(full, "active.js"), "one\n");
-  git(full, ["add", "."]);
-  git(full, ["commit", "-m", "baseline"]);
-  fs.writeFileSync(path.join(full, "active.js"), "two\n");
-  git(full, ["commit", "-am", "update active route"]);
   assert.deepEqual(
-    collectHotspots(
-      full,
-      {
-        files: { "audited.js": {}, "active.js": {} },
-        tests: {},
-        workflows: {},
-      },
-      20,
-      ["audited.js"],
-      { baseRef: "dev/v4/v4.0" },
-    ),
-    ["active.js", "audited.js"],
+    collectHotspots(fixtureRoot, current, 20, auditedRoutes, {
+      baseRef: "dev/v4/v4.0",
+    }),
+    [historyRoute, auditedRoutes[0]],
   );
 });
 
