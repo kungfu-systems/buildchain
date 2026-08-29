@@ -98,6 +98,15 @@ test("release promotion workflow delegates routing mechanics to shell-owned help
     workflow,
     /node \.buildchain\/runtime\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs bundle-controller-evidence/,
   );
+  assert.match(
+    workflow,
+    /promotion-evidence\/release-candidate-passport\.json/,
+  );
+  assert.match(workflow, /promotion-evidence\/publish-evidence\.json/);
+  assert.match(workflow, /promotion-evidence\/release-passport\.json/);
+  assert.doesNotMatch(workflow, /promotion-evidence\/release-candidate\/passport/);
+  assert.doesNotMatch(workflow, /promotion-evidence\/release-tail/);
+  assert.doesNotMatch(workflow, /promotion-evidence\/release-passport\/buildchain/);
 });
 
 test("promotion evidence bundling preserves exact bytes and finalization boundaries", () => {

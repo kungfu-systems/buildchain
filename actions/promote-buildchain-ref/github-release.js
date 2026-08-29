@@ -421,7 +421,7 @@ export async function publishSelectedGitHubRelease({
       "declarative-release-tail does not accept custom GitHub Release title or notes",
     );
   }
-  return declarative
+  return declarative && !legacyOptions?.reuseExistingCompleteEvidence
     ? publishDeclarativeGitHubReleaseEvidence(declarativeOptions)
     : publishGitHubReleaseEvidence(legacyOptions);
 }
