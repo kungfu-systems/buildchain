@@ -29,6 +29,7 @@ import {
   DEV_DELIVERY_QUEUE_CONTRACT,
   DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA,
   DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA,
+  DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT,
   DEV_DELIVERY_WARRANT_SCHEMA,
   TERMINAL_STATES,
   createDevDeliveryQueue,
@@ -38,6 +39,10 @@ import {
   submitDevDeliveryCandidate,
   transitionDevDeliveryQueue as transition,
 } from "./dev-delivery-warrant-state.js";
+import {
+  DEV_DELIVERY_WRITER_PROTOCOL_FENCE_RECEIPT_SCHEMA,
+  fenceDevDeliveryWriterProtocol,
+} from "./dev-delivery-writer-protocol-transition.js";
 
 export { devDeliveryContentRoot } from "./dev-delivery-common.js";
 export {
@@ -85,8 +90,11 @@ export {
   DEV_DELIVERY_QUEUE_CONTRACT,
   DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA,
   DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA,
+  DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT,
+  DEV_DELIVERY_WRITER_PROTOCOL_FENCE_RECEIPT_SCHEMA,
   DEV_DELIVERY_WARRANT_SCHEMA,
   createDevDeliveryQueue,
+  fenceDevDeliveryWriterProtocol,
   normalizeDevDeliveryQueue,
   rankDevDeliveryCandidates,
   submitDevDeliveryCandidate,

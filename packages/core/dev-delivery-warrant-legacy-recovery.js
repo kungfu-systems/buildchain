@@ -218,7 +218,8 @@ export function recoverLegacyTerminalDevDeliveryQueue(
       evidenceRoot: entry.evidenceRoot,
     });
   }
-  queue.activeWarrant = null;
+  if (transitions.some((entry) => entry.activeWarrant))
+    queue.activeWarrant = null;
   queue.generation += 1;
   queue.updatedAt = currentTime;
   queue.stateRoot = devDeliveryContentRoot(queue);
@@ -236,7 +237,8 @@ export function recoverLegacyTerminalDevDeliveryQueue(
     nextStateRoot: after.stateRoot,
     requestRoot,
     transitions,
-    nextAction: "Select the next strictly valid queued candidate, if any.",
+    nextAction:
+      "Continue the exact active Warrant, or select the next candidate.",
   };
   return {
     queue: after,

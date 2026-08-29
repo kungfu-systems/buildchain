@@ -300,7 +300,7 @@ test("single-flight v1 bytes remain the default when bounded authority is off", 
 
   assert.equal(
     JSON.stringify(legacy),
-    '{"schemaVersion":1,"contract":"kungfu-buildchain-dev-delivery-warrant-queue","repository":"kungfu-systems/kungfu","protectedBase":"dev/v4/v4.0","generation":0,"fencingCounter":0,"policy":{"agingSeconds":300,"maxPriority":2,"leaseSeconds":600,"emergencyPolicy":"reviewed-explicit-only"},"activeWarrant":null,"candidates":[],"updatedAt":"2026-08-04T00:00:00.000Z","stateRoot":"sha256:5de99c1862e228278e13f954c5f420d9a3e1e182ee80882196c664b297f28754"}',
+    '{"schemaVersion":1,"contract":"kungfu-buildchain-dev-delivery-warrant-queue","repository":"kungfu-systems/kungfu","protectedBase":"dev/v4/v4.0","generation":0,"fencingCounter":0,"policy":{"agingSeconds":300,"maxPriority":2,"leaseSeconds":600,"emergencyPolicy":"reviewed-explicit-only","minimumWriterProtocolRoot":"sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"},"activeWarrant":null,"candidates":[],"updatedAt":"2026-08-04T00:00:00.000Z","stateRoot":"sha256:a6f567a84beb8b5e0d442bb1c797198c020e4e24159d422f4313ab20df067a50"}',
   );
   assert.equal(Object.hasOwn(legacy, "authorityMode"), false);
 });
