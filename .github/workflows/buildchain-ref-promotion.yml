@@ -28,6 +28,11 @@ on:
         required: true
         default: false
         type: boolean
+      bootstrap-fresh-candidate:
+        description: "Bounded alpha bootstrap using an exact admitted train runtime"
+        required: true
+        default: false
+        type: boolean
       publication-admission-json:
         description: "Fresh sealed admission JSON required for manual apply"
         required: false
@@ -94,7 +99,7 @@ permissions:
 
 jobs:
   reject-manual-apply:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['recover-durable-transaction'] != true && inputs['resume-candidate-run-id'] == '' && inputs['publication-admission-json'] == '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['recover-durable-transaction'] != true && inputs['bootstrap-fresh-candidate'] != true && inputs['resume-candidate-run-id'] == '' && inputs['publication-admission-json'] == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -133,7 +138,7 @@ jobs:
         (
           github.event_name == 'workflow_dispatch' &&
           startsWith(inputs['target-ref'], 'alpha/') &&
-          (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
+          (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true || (inputs['bootstrap-fresh-candidate'] == true && inputs['resume-buildchain-runtime-ref'] != '' && inputs['resume-buildchain-runtime-sha'] != '')) &&
           inputs.sha != ''
         ) ||
         (
@@ -159,7 +164,7 @@ jobs:
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && github.sha || 'v4-alpha' }}
+      buildchain-ref: ${{ (inputs['resume-candidate-run-id'] != '' || inputs['bootstrap-fresh-candidate'] == true) && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && github.sha || 'v4-alpha' }}
       buildchain-expected-channel: alpha
       buildchain-expected-major: "4"
       buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
@@ -188,7 +193,7 @@ jobs:
       required-status-check: check
       branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
       required-artifact-count: 0
-      publish-transaction-override: ${{ inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '' }}
+      publish-transaction-override: ${{ inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '' || inputs['bootstrap-fresh-candidate'] == true }}
       publish-required-artifacts-json: '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]'
       publish-package-main: "@kungfu-tech/buildchain"
       trusted-publishing: true
