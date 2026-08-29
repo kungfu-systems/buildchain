@@ -7,6 +7,13 @@ import { publishDeclarativeGitHubReleaseEvidence } from "../promote-buildchain-r
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
 import { v4ContentRoot } from "../../packages/core/v4-canonical-contracts.js";
 import {
+  V4_RELEASE_INVOCATION_CONTRACT,
+  V4_RELEASE_RECEIPT_CONTRACT,
+  createV4ReleaseInvocation,
+  createV4ReleaseReceipt,
+  createV4ReleaseTransaction,
+} from "../../packages/core/v4-release-invocation.js";
+import {
   v4PublicationQualificationRoot,
   validateV4PublicationQualificationReceipt,
 } from "../../packages/core/v4-publication-qualification.js";
@@ -61,6 +68,27 @@ export function aggregateV4ReleasePassport({
   return { ...body, passportRoot: releaseTailRoot(body) };
 }
 
+async function expectedTagSha(octokit, repository, tag) {
+  const [owner, repo] = repository.split("/");
+  try {
+    const response = await octokit.rest.git.getRef({
+      owner,
+      repo,
+      ref: `tags/${tag}`,
+    });
+    return response.data.object.sha;
+  } catch (error) {
+    if (Number(error?.status) === 404) return null;
+    throw error;
+  }
+}
+
+function canonicalChannel(channel) {
+  if (channel === "alpha") return "alpha";
+  if (["release", "stable", "major"].includes(channel)) return "stable";
+  throw new Error(`unsupported canonical release channel '${channel}'`);
+}
+
 async function main() {
   const repository = input("repository", true);
   const sourceSha = input("source-sha", true);
@@ -70,6 +98,7 @@ async function main() {
   const candidate = read(input("candidate-passport-path", true));
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));
+  const octokit = github.getOctokit(input("token", true));
   if (
     candidate.repository !== repository ||
     candidate.source?.headSha !== sourceSha
@@ -88,7 +117,68 @@ async function main() {
     tag,
     channel,
   });
+  const invocationPath = path.resolve(
+    ".buildchain/release-tail/release-invocation.json",
+  );
+  const retainedInvocation = fs.existsSync(invocationPath)
+    ? read(invocationPath)
+    : null;
+  const invocationInput = {
+    schema: V4_RELEASE_INVOCATION_CONTRACT,
+    publisher: {
+      repository: "kungfu-systems/buildchain",
+      workflow: ".github/workflows/.release-candidate-promote.yml",
+      workflowSha: input("publisher-workflow-sha", true),
+      job: "apply",
+    },
+    runtime: {
+      repository: "kungfu-systems/buildchain",
+      commit: input("runtime-commit", true),
+      tree: input("runtime-tree", true),
+    },
+    candidate: {
+      repository,
+      commit: sourceSha,
+      tree: candidate.source?.treeHash,
+      version: candidate.target?.version || version,
+    },
+    target: {
+      channel: canonicalChannel(channel),
+      tag,
+      expectedOldSha: retainedInvocation
+        ? retainedInvocation.target.expectedOldSha
+        : await expectedTagSha(octokit, repository, tag),
+    },
+    authority: {
+      policyRoot: candidate.consumerPolicy?.receiptRoot,
+      qualificationRoot: qualification.receiptRoot,
+      warrantRoot: qualification.receiptRoot,
+    },
+  };
+  const releaseInvocation = createV4ReleaseInvocation(invocationInput);
+  if (retainedInvocation) {
+    const retained = createV4ReleaseInvocation(retainedInvocation);
+    if (
+      retained.roots.invocationRoot !== releaseInvocation.roots.invocationRoot
+    )
+      throw new Error(
+        "retained ReleaseInvocation does not match the requested resume",
+      );
+  }
+  const releaseTransaction = createV4ReleaseTransaction({
+    invocationRoot: releaseInvocation.roots.invocationRoot,
+    publisherRoot: releaseInvocation.roots.publisherRoot,
+    runtimeRoot: releaseInvocation.roots.runtimeRoot,
+  });
   const outputDir = path.resolve(".buildchain/release-passport");
+  write(invocationPath, releaseInvocation.invocation);
+  const releaseTransactionPath = write(
+    ".buildchain/release-tail/release-transaction.json",
+    {
+      ...releaseTransaction.transaction,
+      transactionRoot: releaseTransaction.transactionRoot,
+    },
+  );
   const passportPath = write(
     path.join(outputDir, "buildchain.release.json"),
     passport,
@@ -107,7 +197,7 @@ async function main() {
     },
   );
   const result = await publishDeclarativeGitHubReleaseEvidence({
-    octokit: github.getOctokit(input("token", true)),
+    octokit,
     repository,
     sourceSha,
     version,
@@ -123,6 +213,33 @@ async function main() {
     qualificationRoot: qualification.receiptRoot,
     failureAfterCapability: input("failure-after-capability"),
   });
+  const releaseReceipt = createV4ReleaseReceipt({
+    schema: V4_RELEASE_RECEIPT_CONTRACT,
+    transactionRoot: releaseTransaction.transactionRoot,
+    outcome: "complete",
+    releasePassportRoot: passport.passportRoot,
+    providerTransactionRoot: result.transaction.transactionRoot,
+    providerStateRoot: result.transaction.stateRoot,
+    providerReceiptRoots: result.transaction.receipts
+      .map(({ receiptRoot }) => receiptRoot)
+      .sort(),
+  });
+  const releaseReceiptPath = write(
+    ".buildchain/release-tail/release-receipt.json",
+    { ...releaseReceipt.receipt, receiptRoot: releaseReceipt.receiptRoot },
+  );
+  core.setOutput("release-invocation-path", invocationPath);
+  core.setOutput(
+    "release-invocation-root",
+    releaseInvocation.roots.invocationRoot,
+  );
+  core.setOutput("release-transaction-path", releaseTransactionPath);
+  core.setOutput(
+    "release-transaction-root",
+    releaseTransaction.transactionRoot,
+  );
+  core.setOutput("release-receipt-path", releaseReceiptPath);
+  core.setOutput("release-receipt-root", releaseReceipt.receiptRoot);
   core.setOutput("release-passport-path", passportPath);
   core.setOutput("release-passport-root", passport.passportRoot);
   core.setOutput("transaction-state", result.transaction.state);

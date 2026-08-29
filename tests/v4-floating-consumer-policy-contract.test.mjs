@@ -50,32 +50,32 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
   assert.doesNotMatch(workflow, /github\.event_name == 'workflow_dispatch'/u);
 });
 
-test("bounded alpha facade bootstrap retains the floating private shell", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /\.release-candidate-promote\.yml@v4-alpha/u,
-  );
-  assert.match(
-    workflow,
-    /declarative-release-tail: true/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /workflows\/release-candidate-promote\.yml@v4-alpha/u,
-  );
-  assert.match(
-    workflow,
-    /buildchain-expected-channel: alpha/u,
-  );
+test("alpha promotion caller passes the same runtime admission used in GitHub", () => {
+  const authority = resolveV4FloatingConsumerPolicyAuthority({
+    runtimeRoot: root,
+    callerRoot: root,
+  });
+  const result = scanV4FloatingConsumerPolicy({
+    root,
+    repository: "kungfu-systems/buildchain",
+    sourceSha: "a".repeat(40),
+    invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+    invocationSourcePath: ".github/workflows/buildchain-ref-promotion.yml",
+    expectedInvocationChannel: "alpha",
+    resolvedWorkflowSha: "b".repeat(40),
+    resolvedRuntimeSha: "b".repeat(40),
+    policy: authority.policy,
+    scannerRoot: authority.scannerRoot,
+  });
+
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+  assert.equal(result.receipt.invocation.selectorClass, "floating");
+  assert.equal(result.receipt.invocation.channel, "alpha");
 });
 
-test("bounded alpha recovery admits the old floating shell with current exact runtime binding", () => {
+test("bounded recovery is a one-way adapter into the same public publisher", () => {
   const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
-  const legacyRelative = ".github/workflows/release-candidate-promote.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
   const authority = resolveV4FloatingConsumerPolicyAuthority({
     runtimeRoot: root,
@@ -84,122 +84,19 @@ test("bounded alpha recovery admits the old floating shell with current exact ru
   const consumerRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-v4-recovery-consumer-"),
   );
-  const externalReceipt = path.join(
-    os.tmpdir(),
-    `${path.basename(consumerRoot)}-policy-receipt.json`,
-  );
   fs.mkdirSync(path.join(consumerRoot, ".buildchain"), { recursive: true });
   for (const lock of ["contract-lock.json", "alpha-contract-lock.json"])
     fs.copyFileSync(
       path.join(root, ".buildchain", lock),
       path.join(consumerRoot, ".buildchain", lock),
     );
-
-  let result;
   try {
-    const sourceOnly = scanV4FloatingConsumerPolicy({
-      root: consumerRoot,
-      repository: "kungfu-systems/buildchain",
-      sourceSha: "a".repeat(40),
-      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-      invocationSourcePath: legacyRelative,
-      expectedInvocationChannel: "alpha",
-      resolvedWorkflowSha: "b".repeat(40),
-      resolvedRuntimeSha: "c".repeat(40),
-      policy: authority.policy,
-      scannerRoot: authority.scannerRoot,
-    });
-    assert.equal(sourceOnly.ok, false);
-    assert.equal(
-      sourceOnly.failures.some(
-        ({ code }) => code === "invoked-workflow-not-found",
-      ),
-      true,
-    );
-    fs.mkdirSync(path.dirname(path.join(consumerRoot, legacyRelative)), {
-      recursive: true,
-    });
-    fs.copyFileSync(
-      path.join(root, legacyRelative),
-      path.join(consumerRoot, legacyRelative),
-    );
-    const legacyCompatible = scanV4FloatingConsumerPolicy({
-      root: consumerRoot,
-      repository: "kungfu-systems/buildchain",
-      sourceSha: "a".repeat(40),
-      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-      invocationSourcePath: legacyRelative,
-      expectedInvocationChannel: "alpha",
-      resolvedWorkflowSha: "b".repeat(40),
-      resolvedRuntimeSha: "c".repeat(40),
-      policy: authority.policy,
-      scannerRoot: authority.scannerRoot,
-    });
-    assert.equal(
-      legacyCompatible.ok,
-      true,
-      JSON.stringify(legacyCompatible.failures),
-    );
-    assert.equal(
-      legacyCompatible.receipt.invocation.visibleSelector,
-      "v4-alpha",
-    );
-    assert.equal(
-      legacyCompatible.receipt.invocation.sourcePath,
-      legacyRelative,
-    );
-    const stableCompatible = scanV4FloatingConsumerPolicy({
-      root: consumerRoot,
-      repository: "kungfu-systems/buildchain",
-      sourceSha: "a".repeat(40),
-      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-      invocationSourcePath: legacyRelative,
-      expectedInvocationChannel: "stable",
-      resolvedWorkflowSha: "b".repeat(40),
-      resolvedRuntimeSha: "c".repeat(40),
-      policy: authority.policy,
-      scannerRoot: authority.scannerRoot,
-    });
-    assert.equal(
-      stableCompatible.ok,
-      true,
-      JSON.stringify(stableCompatible.failures),
-    );
-    assert.equal(stableCompatible.receipt.invocation.visibleSelector, "v4");
-
-    const internalReceipt = path.join(
-      consumerRoot,
-      ".buildchain/evidence/v4-consumer-policy-receipt.json",
-    );
-    fs.mkdirSync(path.dirname(internalReceipt), { recursive: true });
-    fs.writeFileSync(internalReceipt, `${JSON.stringify(legacyCompatible)}\n`);
-    const selfScanningPersistence = scanV4RuntimeSelectorPersistence({
-      root: consumerRoot,
-    });
-    assert.equal(selfScanningPersistence.status, "rejected");
-    assert.equal(
-      selfScanningPersistence.failures.some(
-        ({ code }) => code === "persistent-runtime-json-value",
-      ),
-      true,
-    );
-    fs.rmSync(internalReceipt);
-    fs.writeFileSync(externalReceipt, `${JSON.stringify(legacyCompatible)}\n`);
-    const externalEvidencePersistence = scanV4RuntimeSelectorPersistence({
-      root: consumerRoot,
-    });
-    assert.equal(
-      externalEvidencePersistence.status,
-      "passed",
-      JSON.stringify(externalEvidencePersistence.failures),
-    );
-
-    const foreignRepository = scanV4FloatingConsumerPolicy({
+    const result = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
       invocationRoot: root,
-      repository: "kungfu-systems/consumer",
+      repository: "kungfu-systems/buildchain",
       sourceSha: "a".repeat(40),
-      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+      invokedWorkflow: ".github/workflows/release-candidate-promote.yml",
       invocationSourcePath: relative,
       expectedInvocationChannel: "alpha",
       resolvedWorkflowSha: "b".repeat(40),
@@ -207,163 +104,29 @@ test("bounded alpha recovery admits the old floating shell with current exact ru
       policy: authority.policy,
       scannerRoot: authority.scannerRoot,
     });
-    assert.equal(foreignRepository.ok, false);
-    assert.equal(
-      foreignRepository.failures.some(
-        ({ code }) => code === "unapproved-v4-selector",
-      ),
-      true,
-    );
-
-    result = scanV4FloatingConsumerPolicy({
-      root: consumerRoot,
-      invocationRoot: root,
-      repository: "kungfu-systems/buildchain",
-      sourceSha: "a".repeat(40),
-      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-      invocationSourcePath: relative,
-      expectedInvocationChannel: "alpha",
-      resolvedWorkflowSha: "b".repeat(40),
-      resolvedRuntimeSha: "c".repeat(40),
-      policy: authority.policy,
-      scannerRoot: authority.scannerRoot,
-    });
+    assert.equal(result.ok, true, JSON.stringify(result.failures));
+    assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+    assert.equal(result.receipt.invocation.selectorClass, "floating");
   } finally {
     fs.rmSync(consumerRoot, { recursive: true, force: true });
-    fs.rmSync(externalReceipt, { force: true });
   }
-
-  assert.equal(result.ok, true, JSON.stringify(result.failures));
-  assert.equal(result.receipt.invocation.visibleSelector, "alpha/v4/v4.0");
-  assert.equal(result.receipt.invocation.selectorClass, "protected-bootstrap");
   assert.match(workflow, /^  workflow_dispatch:/mu);
-  assert.doesNotMatch(workflow, /^  workflow_run:/mu);
   assert.match(
     workflow,
-    /promote-alpha-recovery:[\s\S]*needs: consumer-admission[\s\S]*\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
+    /^  resume:[\s\S]*release-candidate-promote\.yml@v4-alpha/mu,
   );
-  assert.match(
-    workflow,
-    /release-passport-v4-runtime-resume-evidence-json: \$\{\{ inputs\['release-passport-v4-runtime-resume-evidence-json'\] \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /candidate recovery inputs must be supplied together or omitted together/u,
-  );
-  assert.match(
-    workflow,
-    /transaction identity is required when resuming a published alpha candidate/u,
-  );
-  assert.match(
-    workflow,
-    /TARGET_REF\}" != alpha\/\* \|\| -z "\$\{CANDIDATE_RUN_ID\}" \|\| -n "\$\{TRANSACTION_ID\}"/u,
-  );
-  assert.match(
-    workflow,
-    /fresh candidate recovery must not claim a pre-existing transaction identity/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /resume-transaction-id:[\s\S]{0,180}required: true/u,
-  );
-  assert.match(
-    workflow,
-    /stable recovery requires an exact sealed candidate run/u,
-  );
-  assert.match(workflow, /path: \.buildchain\/recovered-source/u);
-  assert.match(
-    workflow,
-    /sparse-checkout:\s+\|\s+\.buildchain\/contract-lock\.json\s+\.buildchain\/alpha-contract-lock\.json\s+\.github\/workflows\/release-candidate-promote\.yml/u,
-  );
-  assert.match(workflow, /sparse-checkout-cone-mode: false/u);
-  assert.match(
-    workflow,
-    /cp "\$\{source_path\}" "\.buildchain\/consumer\/\.buildchain\/\$\{lock\}"/u,
-  );
-  assert.match(
-    workflow,
-    /cp "\.buildchain\/recovered-source\/\.github\/workflows\/release-candidate-promote\.yml" \\\s+"\.buildchain\/consumer\/\.github\/workflows\/release-candidate-promote\.yml"/u,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \.github\/workflows\/release-candidate-promote\.yml/u,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_V4_POLICY_RECEIPT_PATH: \.\.\/recovery-admission\/v4-consumer-policy-receipt\.json/u,
-  );
-  assert.match(
-    workflow,
-    /consumerPolicyReceiptPath: process\.env\.GITHUB_WORKSPACE \+ "\/\.buildchain\/recovery-admission\/v4-consumer-policy-receipt\.json"/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /consumer\/\.buildchain\/evidence\/v4-consumer-policy-receipt\.json/u,
-  );
-  assert.match(workflow, /git -C \.buildchain\/consumer init --quiet/u);
-  assert.match(
-    workflow,
-    /git -C \.buildchain\/consumer ls-files -- \.github\/workflows \.github\/actions \.buildchain/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /runtime A\+B evidence is required for cross-runtime candidate resume/u,
-  );
-  assert.match(
-    workflow,
-    /release-passport-v4-runtime-resume-evidence-json:\s+\$\{\{ inputs\['release-passport-v4-runtime-resume-evidence-json'\] \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /github-release-payload-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && '\*\.tgz' \|\| '' \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /standalone-binary-distribution: \$\{\{ inputs\['resume-candidate-run-id'\] == '' \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /artifact-patterns: \$\{\{ \(inputs\['resume-candidate-run-id'\] != '' \|\| needs\.consumer-admission\.outputs\.publication-channel == 'alpha'\) && 'buildchain-package-\*' \|\| '' \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /router-ref: \$\{\{ inputs\['resume-buildchain-runtime-ref'\] \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /router-sha: \$\{\{ inputs\['resume-buildchain-runtime-sha'\] \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /shell-call-ref: \$\{\{ steps\.identities\.outputs\.shell-call-ref \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_INVOCATION_SOURCE_ROOT: \.buildchain\/recovered-source/u,
-  );
-  assert.match(workflow, /--shell-ref alpha\/v4\/v4\.0/u);
-  assert.match(workflow, /--shell-call-ref alpha\/v4\/v4\.0/u);
-  assert.match(workflow, /resume-buildchain-runtime-ref:/u);
-  assert.match(
-    workflow,
-    /--buildchain-ref "\$\{\{ inputs\['resume-buildchain-runtime-ref'\] \}\}"/u,
-  );
-  assert.match(
-    workflow,
-    /--router-ref "\$\{\{ inputs\['resume-buildchain-runtime-ref'\] \}\}"/u,
-  );
-  assert.match(
-    workflow,
-    /--router-sha "\$\{\{ inputs\['resume-buildchain-runtime-sha'\] \}\}"/u,
-  );
-  assert.match(
-    workflow,
-    /run: test "\$\{\{ steps\.identities\.outputs\.runtime-sha \}\}" = "\$\{\{ inputs\['resume-buildchain-runtime-sha'\] \}\}"/u,
-  );
+  assert.doesNotMatch(workflow, /^  consumer-admission:/mu);
+  assert.doesNotMatch(workflow, /uses:.*@alpha\/v4\/v4\.0/u);
+  for (const marker of [
+    "resume-candidate-run-id: ${{ inputs['resume-candidate-run-id'] }}",
+    "resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}",
+    "resume-transaction-id: ${{ inputs['resume-transaction-id'] }}",
+    "publish-transaction-override: true",
+  ])
+    assert.match(
+      workflow,
+      new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"),
+    );
 });
 
 test("v4 floating policy contract rejects certification without caller lock readback", () => {
@@ -376,25 +139,28 @@ test("v4 floating policy contract rejects certification without caller lock read
   );
 });
 
-test("fresh promotion certifies with the runtime sealed into the candidate Passport", () => {
+test("fresh promotion roots policy, candidate, publisher, and runtime before APPLY", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
+  assert.match(workflow, /QUALIFY canonical v4 release invocation inputs/u);
+  assert.match(workflow, /publisher-sha=\$\{\{ job\.workflow_sha \}\}/u);
   assert.match(
     workflow,
-    /const runtimeSha = passport\.buildchain\?\.sha \|\| "";/u,
+    /tree="\$\(git -C \.buildchain\/runtime rev-parse 'HEAD\^\{tree\}'\)"/u,
   );
-  assert.match(workflow, /runtime-sha=\$\{runtimeSha\}/u);
+  assert.match(workflow, /Translate and admit legacy-compatible inputs/u);
+  assert.match(workflow, /Resolve and qualify the sealed release candidate/u);
+  assert.match(workflow, /APPLY one rooted provider transaction/u);
   assert.match(
     workflow,
-    /ref: \$\{\{ steps\.v4-policy-caller\.outputs\.runtime-sha \}\}/u,
+    /runtime-commit: \$\{\{ needs\.qualify\.outputs\.runtime-sha \}\}/u,
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_EXPECTED_RUNTIME_SHA: \$\{\{ steps\.v4-policy-caller\.outputs\.runtime-sha \}\}/u,
+    /runtime-tree: \$\{\{ needs\.qualify\.outputs\.runtime-tree \}\}/u,
   );
-  assert.match(workflow, /policy_runtime=\.buildchain\/runtime$/mu);
   assert.doesNotMatch(
     workflow,
     /policy_runtime=\.buildchain\/runtime\/promotion-shell/u,
@@ -411,10 +177,7 @@ test("v4 floating policy contract rejects an unbound certification root", () => 
       path.join(root, ".github/workflows/.release-candidate-promote.yml"),
       "utf8",
     )
-    .replace(
-      /^\s*release-passport-v4-consumer-policy-certification-root:.*$/mu,
-      "",
-    );
+    .replace(/^\s*BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON:.*$/mu, "");
   assert.throws(
     () => assertPromotionCertificationWiring(workflow),
     /promotion certification is missing/u,
