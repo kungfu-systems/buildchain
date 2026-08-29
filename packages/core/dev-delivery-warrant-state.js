@@ -347,13 +347,14 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
   );
   queue.policy = normalizePolicy(queue.policy);
   const allowLegacyV3Readback =
-    expected.allowLegacyV3Readback === true &&
-    !(queue.candidates || []).some(
-      (candidate) => candidate?.nativeCommandContract,
-    ) &&
-    !queue.activeWarrant?.nativeCommandContract &&
-    !queue.activeWarrant?.nativeExecutionReceiptRoot &&
-    !queue.activeWarrant?.qualificationReceiptRoot;
+    expected.allowMixedLegacyRecovery === true ||
+    (expected.allowLegacyV3Readback === true &&
+      !(queue.candidates || []).some(
+        (candidate) => candidate?.nativeCommandContract,
+      ) &&
+      !queue.activeWarrant?.nativeCommandContract &&
+      !queue.activeWarrant?.nativeExecutionReceiptRoot &&
+      !queue.activeWarrant?.qualificationReceiptRoot);
   queue.candidates = (queue.candidates || []).map((candidate) =>
     normalizeCandidate(candidate, { ...queue, allowLegacyV3Readback }),
   );
