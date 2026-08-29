@@ -22,6 +22,10 @@ import {
   validateActiveDevDeliveryWarrant,
 } from "./dev-delivery-native-proof.js";
 import {
+  lacksExactNativeExecutionContract,
+  lacksLiveNativeProof,
+} from "./dev-delivery-warrant-native-compatibility.js";
+import {
   normalizeProviderFailureAuthorityBinding,
   normalizeTerminalEvidenceCorrection,
 } from "./dev-delivery-warrant-settlement.js";
@@ -164,20 +168,6 @@ function normalizePolicy(policy = {}) {
   };
 }
 
-function lacksLiveNativeProof(candidate, status, allowLegacyV3Readback) {
-  const { environmentRoot, nativeCommandContract } = candidate;
-  const native =
-    candidate.deliveryClass !== "non-native-fast" ||
-    environmentRoot ||
-    nativeCommandContract;
-  return (
-    native &&
-    (!environmentRoot ||
-      (!nativeCommandContract && allowLegacyV3Readback !== true)) &&
-    !TERMINAL_STATES.has(status)
-  );
-}
-
 function normalizeCandidate(input, expected) {
   const identity = createDevDeliveryCandidateIdentity(
     input,
@@ -276,7 +266,12 @@ function normalizeCandidate(input, expected) {
       "candidate shardEvidenceRoots",
     );
   }
-  if (lacksLiveNativeProof(candidate, status, expected.allowLegacyV3Readback))
+  if (
+    lacksLiveNativeProof(candidate, status, {
+      allowLegacyV3Readback: expected.allowLegacyV3Readback,
+      allowLegacyQueuedReadback: expected.allowLegacyQueuedNativeReadback,
+    })
+  )
     throw new Error("live native candidate requires exact native proof");
   if (Object.hasOwn(input, "releaseBlockerPriority"))
     candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(
@@ -354,8 +349,13 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
     !queue.activeWarrant?.nativeCommandContract &&
     !queue.activeWarrant?.nativeExecutionReceiptRoot &&
     !queue.activeWarrant?.qualificationReceiptRoot;
+  const candidateExpected = {
+    ...queue,
+    allowLegacyV3Readback,
+    allowLegacyQueuedNativeReadback: true,
+  };
   queue.candidates = (queue.candidates || []).map((candidate) =>
-    normalizeCandidate(candidate, { ...queue, allowLegacyV3Readback }),
+    normalizeCandidate(candidate, candidateExpected),
   );
   validateDevDeliveryCandidateChain(queue.candidates, TERMINAL_STATES);
   queue.updatedAt = timestamp(queue.updatedAt, "queue updatedAt");
@@ -569,7 +569,11 @@ export function rankDevDeliveryCandidates(
   });
   const currentTime = timestamp(now, "now");
   return queue.candidates
-    .filter((candidate) => candidate.status === "queued")
+    .filter(
+      (candidate) =>
+        candidate.status === "queued" &&
+        !lacksExactNativeExecutionContract(candidate),
+    )
     .map((candidate) => ({
       candidate,
       priority: effectivePriority(candidate, queue.policy, currentTime),

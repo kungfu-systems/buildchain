@@ -294,6 +294,7 @@
         "packages/core/dev-delivery-proof.js",
         "packages/core/dev-delivery-warrant-cancellation.js",
         "packages/core/dev-delivery-warrant-legacy-recovery.js",
+        "packages/core/dev-delivery-warrant-native-compatibility.js",
         "packages/core/dev-delivery-warrant-qualification.js",
         "packages/core/dev-delivery-warrant-settlement.js",
         "packages/core/dev-delivery-warrant-state.js",
