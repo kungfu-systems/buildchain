@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1071,
+  "generation": 1072,
   "fencingCounter": 163,
   "policy": {
     "agingSeconds": 900,
@@ -13,7 +13,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:30088a212db8199cf1437efba42acb56149c1c6bf6c8277fd506b897bcbbd23b",
@@ -47,8 +47,13 @@
     "issuedAt": "2026-08-29T05:46:06.694Z",
     "expiresAt": "2026-08-29T06:50:20.051Z",
     "fencingToken": "sha256:1492e788b2e59438f343109e9d7088de68d96b082ce40ead76c0feee40bd7c55",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-29T05:50:20.051Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-29T05:50:20.051Z",
+    "nativeProofRoot": "sha256:54a39bbd12df650d8b6673335730ee05cfeb9ef75763bfb3a8f86f7bdbdf4652",
+    "nativeExecutionReceiptRoot": "sha256:18aab510745ae7ec91511a12e92652a874581d4a1532b78e412b44d652689274",
+    "nativeProofReuseRoot": "sha256:1e0178ec3c74d556eb3dbb2e58505a58127a178966bf04aea320d799531ae0bf",
+    "qualificationReceiptRoot": "sha256:59fd45ff99abac19fa60034ebe0fc9254fcba780eab7db5c9c5d03f8c1a22624",
+    "qualifiedAt": "2026-08-29T05:50:45.344Z"
   },
   "candidates": [
     {
@@ -7690,10 +7695,10 @@
       "sourceWorkflowRunId": 33236439926,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-29T05:41:18.110Z",
-      "updatedAt": "2026-08-29T05:50:20.051Z",
+      "updatedAt": "2026-08-29T05:50:45.344Z",
       "attempts": 2,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "tests/v3-v4-capability-inventory.test.mjs"
@@ -7701,6 +7706,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-29T05:50:20.051Z",
-  "stateRoot": "sha256:76cc8db70ede73a6a7c92bbc4053ffe01c2057c40af06617ed2c1b209d36db28"
+  "updatedAt": "2026-08-29T05:50:45.344Z",
+  "stateRoot": "sha256:3c7397b915410062e4d7321e75c6a866d38043fcf15d4172534badfc9c725c4f"
 }
