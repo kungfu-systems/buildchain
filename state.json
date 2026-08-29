@@ -16,10 +16,10 @@
   "state_ref": "buildchain/release-state/4-0-2-alpha-2",
   "state_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-state/v4.0.2-alpha.2.json",
   "evidence_path": "/home/runner/work/buildchain/buildchain/.buildchain/release-evidence/v4.0.2-alpha.2/evidence.json",
-  "state": "finalizing",
-  "previous_state": "published",
+  "state": "complete",
+  "previous_state": "finalizing",
   "actor": "dongkeren",
-  "run_id": "33244464195",
+  "run_id": "33245088417",
   "superseded_by": "",
   "failure": "",
   "artifacts": [
@@ -106,5 +106,5 @@
   },
   "resume_command": "buildchain paper resume --version \"4.0.2-alpha.0\" --state-ref \"refs/heads/buildchain/release-state/4-0-2-alpha-0\"",
   "created_at": "2026-08-29T09:06:01.583Z",
-  "updated_at": "2026-08-29T09:18:49.621Z"
+  "updated_at": "2026-08-29T09:18:53.732Z"
 }
