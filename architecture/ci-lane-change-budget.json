@@ -185,37 +185,105 @@
   },
   "declarations": [
     {
-      "laneId": ".github/workflows/.release-candidate-promote.yml#legacy-promote",
-      "authorityClass": "release",
+      "laneId": ".github/workflows/.release-candidate-promote.yml#qualify",
+      "authorityClass": "evidence",
       "triggerClass": "reusable",
       "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 45,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "protected release completion latency",
-        "expectedContributionSeconds": 0,
-        "rationale": "This is the existing v3 promotion lane under an explicit legacy identity, not an added execution path."
-      }
-    },
-    {
-      "laneId": ".github/workflows/.release-candidate-promote.yml#v4-declarative-promote",
-      "authorityClass": "release",
-      "triggerClass": "reusable",
-      "concurrencyPolicy": {
-        "mode": "none",
+        "mode": "serialized",
         "cancelInProgress": false
       },
       "expectedRunnerMinutes": 30,
       "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": false,
-        "metric": "protected release completion latency",
+        "metric": "protected release qualification latency",
         "expectedContributionSeconds": 0,
-        "rationale": "The v4 provider lane replaces consumer tail execution only for release invocations and is outside merge-critical CI."
+        "rationale": "QUALIFY is the read-only exact-runtime and sealed-candidate admission boundary."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-candidate-promote.yml#apply",
+      "authorityClass": "release",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "serialized",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 30,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "protected release APPLY latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "APPLY is the sole contents-write and provider-mutation OIDC authority boundary."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.release-candidate-promote.yml#settle",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "serialized",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "terminal receipt projection latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "SETTLE verifies and projects the already durable terminal ReleaseReceipt without mutation authority."
+      }
+    },
+    {
+      "laneId": ".github/workflows/buildchain-ref-promotion-recovery.yml#resume",
+      "authorityClass": "release",
+      "triggerClass": "manual",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 35,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "manual recovery adapter latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The recovery surface is a one-way adapter into the same canonical publisher."
+      }
+    },
+    {
+      "laneId": ".github/workflows/buildchain-ref-promotion.yml#promote",
+      "authorityClass": "release",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 35,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Buildchain alpha promotion adapter latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The Buildchain-owned alpha entry delegates to the single v4 publisher."
+      }
+    },
+    {
+      "laneId": ".github/workflows/release-candidate-promote.yml#invoke",
+      "authorityClass": "release",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 35,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "public promotion adapter latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The public compatibility surface resolves discovery facts and invokes one fixed v4 publisher."
       }
     },
     {

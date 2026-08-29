@@ -23,6 +23,9 @@ const PLATFORM_MARKERS = Object.freeze({
   "self-hosted": /\bself-hosted\b/iu,
   windows: /\bwindows\b/iu,
 });
+const LIVE_V4_PROTECTED_BRANCH = "refs/heads/dev/v4/v4.0";
+const LIVE_V4_PROTECTED_LINEAGE_REF = "refs/remotes/origin/dev/v4/v4.0";
+const PROTECTED_LINEAGE_DEPTH = 256;
 
 export function sha256(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
@@ -45,6 +48,110 @@ export function git(root, args, { trim = true } = {}) {
     maxBuffer: 64 * 1024 * 1024,
   });
   return trim ? output.trim() : output;
+}
+
+export function assertCapabilityCutAncestor({
+  root = process.cwd(),
+  revision,
+  descendant = "HEAD",
+  label = "capability cut",
+} = {}) {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", revision, descendant], {
+      cwd: root,
+      stdio: "ignore",
+    });
+  } catch {
+    throw new Error(
+      `${label} ${revision} must be an ancestor of ${descendant}; regenerate the cut after rebasing instead of relying on a retained local object`,
+    );
+  }
+}
+
+export function ensureCapabilityCutAncestor({
+  root = process.cwd(),
+  revision,
+  descendant = "HEAD",
+  label = "capability cut",
+} = {}) {
+  try {
+    assertCapabilityCutAncestor({ root, revision, descendant, label });
+    return;
+  } catch (error) {
+    if (git(root, ["rev-parse", "--is-shallow-repository"]) !== "true")
+      throw error;
+  }
+  const descendantCommit = git(root, ["rev-parse", `${descendant}^{commit}`]);
+  try {
+    execFileSync(
+      "git",
+      ["fetch", "--no-tags", "--depth=128", "origin", descendantCommit],
+      { cwd: root, stdio: "ignore" },
+    );
+  } catch {
+    throw new Error(
+      `${label} ${revision} ancestry could not be hydrated from ${descendantCommit} through a bounded origin fetch`,
+    );
+  }
+  assertCapabilityCutAncestor({ root, revision, descendant, label });
+}
+
+function protectedV4TreeWitness(root, descendant) {
+  try {
+    execFileSync(
+      "git",
+      [
+        "fetch",
+        "--no-tags",
+        `--depth=${PROTECTED_LINEAGE_DEPTH}`,
+        "origin",
+        `${LIVE_V4_PROTECTED_BRANCH}:${LIVE_V4_PROTECTED_LINEAGE_REF}`,
+      ],
+      { cwd: root, stdio: "ignore" },
+    );
+  } catch {
+    throw new Error(
+      `protected v4 lineage ${LIVE_V4_PROTECTED_BRANCH} could not be hydrated through a bounded origin fetch`,
+    );
+  }
+  const tree = git(root, ["rev-parse", `${descendant}^{tree}`]);
+  return (
+    git(root, [
+      "log",
+      `--max-count=${PROTECTED_LINEAGE_DEPTH}`,
+      "--format=%H %T",
+      LIVE_V4_PROTECTED_LINEAGE_REF,
+    ])
+      .split("\n")
+      .map((row) => row.split(" "))
+      .find(([, candidateTree]) => candidateTree === tree)?.[0] || ""
+  );
+}
+
+export function ensureCapabilityCutLineage({
+  root = process.cwd(),
+  revision,
+  descendant = "HEAD",
+  label = "capability cut",
+} = {}) {
+  try {
+    ensureCapabilityCutAncestor({ root, revision, descendant, label });
+    return { mode: "direct-ancestry", witness: descendant };
+  } catch (directError) {
+    const witness = protectedV4TreeWitness(root, descendant);
+    if (!witness)
+      throw new Error(
+        `${label} ${revision} is not an ancestor of ${descendant}, and ${descendant} has no tree-equivalent commit in the bounded protected v4 lineage`,
+        { cause: directError },
+      );
+    ensureCapabilityCutAncestor({
+      root,
+      revision,
+      descendant: witness,
+      label: `${label} protected-lineage witness`,
+    });
+    return { mode: "protected-tree-equivalent", witness };
+  }
 }
 
 function gitJson(root, revision, relPath) {

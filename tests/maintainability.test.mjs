@@ -329,6 +329,51 @@ test("missing maintainability revisions are hydrated in bounded shallow fetches"
   );
 });
 
+test("release-line reconciliation reuses audited hotspot routes across DAG shapes", () => {
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-maintainability-release-dag-"),
+  );
+  const auditedRoutes = ["packages/core/audited-route.js"];
+  const historyRoute = "packages/core/history-route.js";
+  fs.mkdirSync(path.join(fixtureRoot, "packages", "core"), {
+    recursive: true,
+  });
+  git(fixtureRoot, ["init", "--initial-branch=main"]);
+  git(fixtureRoot, ["config", "user.name", "Buildchain Test"]);
+  git(fixtureRoot, ["config", "user.email", "buildchain-test@example.invalid"]);
+  fs.writeFileSync(path.join(fixtureRoot, auditedRoutes[0]), "audited\n");
+  fs.writeFileSync(path.join(fixtureRoot, historyRoute), "history-1\n");
+  git(fixtureRoot, ["add", "."]);
+  git(fixtureRoot, ["commit", "-m", "baseline routes"]);
+  fs.writeFileSync(path.join(fixtureRoot, historyRoute), "history-2\n");
+  git(fixtureRoot, ["commit", "-am", "increase history route churn"]);
+  const current = {
+    files: {
+      "packages/core/audited-route.js": {},
+      [historyRoute]: {},
+    },
+    tests: {},
+    workflows: {},
+  };
+
+  for (const baseRef of [
+    "alpha/v4/v4.0",
+    "release/v4/v4.0",
+    "publish-gate/major",
+  ]) {
+    assert.deepEqual(
+      collectHotspots(fixtureRoot, current, 20, auditedRoutes, { baseRef }),
+      auditedRoutes,
+    );
+  }
+  assert.deepEqual(
+    collectHotspots(fixtureRoot, current, 20, auditedRoutes, {
+      baseRef: "dev/v4/v4.0",
+    }),
+    [historyRoute, auditedRoutes[0]],
+  );
+});
+
 test("public surface lifecycle metadata preserves baseline contracts", () => {
   assert.deepEqual(
     evaluatePublicSurface({
