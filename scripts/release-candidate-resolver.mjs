@@ -728,7 +728,7 @@ export async function resolveReleaseCandidateArtifacts({
   const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
   const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
     manifests,
-    version: passport.target?.version || "",
+    version: [sealedBundle?.manifest?.npm?.version, passport.target?.version, ""].find(Boolean),
     kind: publishArtifactKind,
     tarballPaths: npmTarballPaths,
     mainPackage: publishPackageMain,

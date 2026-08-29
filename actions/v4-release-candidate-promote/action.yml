@@ -1,24 +1,51 @@
 name: "Promote a v4 declarative release candidate"
 author: "Keren Dong"
-description: "Validate sealed candidate evidence and execute the built-in four-capability Release Tail Provider Plane without consumer commands"
+description: "Validate sealed candidate evidence and execute one rooted product publication and Release Tail Provider Plane"
 inputs:
   token:
     {
       required: true,
       description: "GitHub token with release and contents write authority",
     }
+  mutation-token:
+    {
+      required: true,
+      description: "Bounded token for generated protected ref and pull-request mutations",
+    }
   repository:
     { required: true, description: "Exact owner/repo publication target" }
-  source-sha: { required: true, description: "Exact protected publication source SHA" }
+  source-sha:
+    { required: true, description: "Exact protected publication source SHA" }
   version: { required: true, description: "Exact publication version" }
   tag: { required: true, description: "Exact publication tag" }
   channel: { required: true, description: "alpha, release, or stable" }
+  target-ref:
+    { required: true, description: "Protected release channel branch" }
+  target-sha:
+    {
+      required: true,
+      description: "Exact protected channel SHA admitted by QUALIFY",
+    }
   candidate-passport-path:
     { required: true, description: "Downloaded release candidate Passport" }
   stage-capsules-path:
     { required: true, description: "Downloaded Stage Capsule aggregate" }
   publication-qualification-path:
     { required: true, description: "Sealed publication qualification receipt" }
+  candidate-build-summary-path:
+    {
+      required: true,
+      description: "Downloaded release candidate build summary",
+    }
+  sealed-bundle-root:
+    { required: true, description: "Downloaded sealed product payload root" }
+  sealed-bundle-manifest:
+    {
+      required: true,
+      description: "Downloaded sealed product payload manifest",
+    }
+  required-artifacts-path:
+    { required: true, description: "Downloaded required product artifact set" }
   publisher-workflow-sha:
     { required: true, description: "Exact canonical publisher workflow SHA" }
   runtime-commit:
@@ -29,6 +56,36 @@ inputs:
     {
       required: false,
       description: "Newline-separated admitted release artifact files",
+    }
+  required-status-check:
+    { default: "check", description: "Protected channel status check" }
+  publish-command:
+    {
+      default: "",
+      description: "Optional declared publication command override",
+    }
+  publish-mode:
+    { default: "", description: "Declared product publication mode" }
+  publish-dist-tag:
+    { default: "", description: "Expected package distribution tag" }
+  publish-package-set-order:
+    { default: "as-provided", description: "Package publication ordering" }
+  publish-package-main:
+    { required: true, description: "Main package publication identity" }
+  publish-auth:
+    {
+      default: "trusted-publishing",
+      description: "Product provider authentication mode",
+    }
+  publish-rematerialize-on-resume:
+    {
+      default: "true",
+      description: "Rematerialize a resumed sealed package version",
+    }
+  publish-transaction-override:
+    {
+      default: "false",
+      description: "Resume an explicitly admitted durable publication transaction",
     }
   state-path:
     {
@@ -58,6 +115,10 @@ outputs:
     { description: "Three-phase ReleaseTransaction root" }
   release-receipt-path: { description: "Single terminal ReleaseReceipt path" }
   release-receipt-root: { description: "Single terminal ReleaseReceipt root" }
+  product-provider-result-path:
+    { description: "Rooted product publication and protected ref result" }
+  product-provider-result-root:
+    { description: "Content root of the product provider result" }
 runs:
   using: "node24"
   main: "dist/index.js"
