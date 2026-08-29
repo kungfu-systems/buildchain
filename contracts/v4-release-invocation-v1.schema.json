@@ -10,7 +10,9 @@
     "runtime",
     "candidate",
     "target",
-    "authority"
+    "authority",
+    "provider",
+    "parent"
   ],
   "properties": {
     "schema": { "const": "kungfu-buildchain-v4-release-invocation/v1" },
@@ -18,7 +20,9 @@
     "runtime": { "$ref": "#/$defs/runtime" },
     "candidate": { "$ref": "#/$defs/candidate" },
     "target": { "$ref": "#/$defs/target" },
-    "authority": { "$ref": "#/$defs/authority" }
+    "authority": { "$ref": "#/$defs/authority" },
+    "provider": { "$ref": "#/$defs/provider" },
+    "parent": { "$ref": "#/$defs/parent" }
   },
   "$defs": {
     "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
@@ -81,6 +85,50 @@
         "qualificationRoot": { "$ref": "#/$defs/root" },
         "warrantRoot": { "$ref": "#/$defs/root" }
       }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "contract", "repository"],
+      "properties": {
+        "adapter": { "const": "built-in-provider-plane" },
+        "contract": {
+          "const": "kungfu-buildchain-release-tail-provider/v1"
+        },
+        "repository": { "type": "string", "pattern": "^[ -~]+$" }
+      }
+    },
+    "parent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["invocationRoot", "transactionRoot", "receiptRoot"],
+      "properties": {
+        "invocationRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "transactionRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        },
+        "receiptRoot": {
+          "oneOf": [{ "$ref": "#/$defs/root" }, { "type": "null" }]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "invocationRoot": { "type": "null" },
+            "transactionRoot": { "type": "null" },
+            "receiptRoot": { "type": "null" }
+          }
+        },
+        {
+          "properties": {
+            "invocationRoot": { "$ref": "#/$defs/root" },
+            "transactionRoot": { "$ref": "#/$defs/root" },
+            "receiptRoot": { "$ref": "#/$defs/root" }
+          }
+        }
+      ]
     }
   }
 }
