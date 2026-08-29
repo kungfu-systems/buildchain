@@ -13,6 +13,8 @@ export const V4_RELEASE_TRANSACTION_CONTRACT =
   "kungfu-buildchain-v4-release-transaction/v1";
 export const V4_RELEASE_RECEIPT_CONTRACT =
   "kungfu-buildchain-v4-release-receipt/v1";
+export const V4_RELEASE_PROVIDER_CONTRACT =
+  "kungfu-buildchain-release-tail-provider/v1";
 
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
 const TAG_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/u;
@@ -127,10 +129,59 @@ function validateAuthority(value) {
     validateV4Root(value[name], `$/authority/${name}`);
 }
 
+function validateProvider(value, candidate) {
+  exactKeys(value, ["adapter", "contract", "repository"], "$/provider");
+  if (
+    value.adapter !== "built-in-provider-plane" ||
+    value.contract !== V4_RELEASE_PROVIDER_CONTRACT ||
+    value.repository !== candidate.repository
+  )
+    fault(
+      "invalid-release-provider",
+      "$/provider",
+      "provider identity must bind the built-in Provider Plane and candidate repository",
+    );
+}
+
+function validateParent(value) {
+  exactKeys(
+    value,
+    ["invocationRoot", "transactionRoot", "receiptRoot"],
+    "$/parent",
+  );
+  const roots = [
+    value.invocationRoot,
+    value.transactionRoot,
+    value.receiptRoot,
+  ];
+  if (roots.every((root) => root === null)) return;
+  if (roots.some((root) => root === null))
+    fault(
+      "invalid-release-parent-lineage",
+      "$/parent",
+      "parent lineage roots must be either all null or all present",
+    );
+  roots.forEach((root, index) =>
+    validateV4Root(
+      root,
+      `$/parent/${["invocationRoot", "transactionRoot", "receiptRoot"][index]}`,
+    ),
+  );
+}
+
 export function createV4ReleaseInvocation(value) {
   exactKeys(
     value,
-    ["schema", "publisher", "runtime", "candidate", "target", "authority"],
+    [
+      "schema",
+      "publisher",
+      "runtime",
+      "candidate",
+      "target",
+      "authority",
+      "provider",
+      "parent",
+    ],
     "$",
   );
   if (value.schema !== V4_RELEASE_INVOCATION_CONTRACT)
@@ -144,6 +195,8 @@ export function createV4ReleaseInvocation(value) {
   validateCandidate(value.candidate);
   validateTarget(value.target);
   validateAuthority(value.authority);
+  validateProvider(value.provider, value.candidate);
+  validateParent(value.parent);
   v4CanonicalBytes(value);
   const roots = {
     publisherRoot: v4ContentRoot(
@@ -160,6 +213,8 @@ export function createV4ReleaseInvocation(value) {
       "release-invocation-authority",
       value.authority,
     ),
+    providerRoot: v4ContentRoot("release-invocation-provider", value.provider),
+    parentRoot: v4ContentRoot("release-invocation-parent", value.parent),
   };
   const invocationRoot = v4ContentRoot("release-invocation", {
     schema: V4_RELEASE_INVOCATION_CONTRACT,
@@ -261,16 +316,30 @@ export function planV4ReleaseRoute({
 export function createV4ReleaseTransaction(value) {
   exactKeys(
     value,
-    ["invocationRoot", "publisherRoot", "runtimeRoot"],
+    [
+      "invocationRoot",
+      "publisherRoot",
+      "runtimeRoot",
+      "providerRoot",
+      "parentRoot",
+    ],
     "$transaction",
   );
-  for (const name of ["invocationRoot", "publisherRoot", "runtimeRoot"])
+  for (const name of [
+    "invocationRoot",
+    "publisherRoot",
+    "runtimeRoot",
+    "providerRoot",
+    "parentRoot",
+  ])
     validateV4Root(value[name], `$transaction/${name}`);
   const transaction = {
     schema: V4_RELEASE_TRANSACTION_CONTRACT,
     invocationRoot: value.invocationRoot,
     publisherRoot: value.publisherRoot,
     runtimeRoot: value.runtimeRoot,
+    providerRoot: value.providerRoot,
+    parentRoot: value.parentRoot,
     phases: ["QUALIFY", "APPLY", "SETTLE"],
     writer: "canonical-v4-apply",
   };

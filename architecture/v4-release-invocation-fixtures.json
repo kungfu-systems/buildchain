@@ -30,6 +30,16 @@
         "policyRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
         "qualificationRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "warrantRoot": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "provider": {
+        "adapter": "built-in-provider-plane",
+        "contract": "kungfu-buildchain-release-tail-provider/v1",
+        "repository": "kungfu-systems/kungfu"
+      },
+      "parent": {
+        "invocationRoot": null,
+        "transactionRoot": null,
+        "receiptRoot": null
       }
     },
     "stable": {
@@ -60,6 +70,16 @@
         "policyRoot": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
         "qualificationRoot": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
         "warrantRoot": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "provider": {
+        "adapter": "built-in-provider-plane",
+        "contract": "kungfu-buildchain-release-tail-provider/v1",
+        "repository": "kungfu-systems/kungfu"
+      },
+      "parent": {
+        "invocationRoot": null,
+        "transactionRoot": null,
+        "receiptRoot": null
       }
     }
   },

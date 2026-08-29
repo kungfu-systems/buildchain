@@ -8,6 +8,7 @@ import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane
 import { v4ContentRoot } from "../../packages/core/v4-canonical-contracts.js";
 import {
   V4_RELEASE_INVOCATION_CONTRACT,
+  V4_RELEASE_PROVIDER_CONTRACT,
   V4_RELEASE_RECEIPT_CONTRACT,
   createV4ReleaseInvocation,
   createV4ReleaseReceipt,
@@ -154,6 +155,16 @@ async function main() {
       qualificationRoot: qualification.receiptRoot,
       warrantRoot: qualification.receiptRoot,
     },
+    provider: {
+      adapter: "built-in-provider-plane",
+      contract: V4_RELEASE_PROVIDER_CONTRACT,
+      repository,
+    },
+    parent: {
+      invocationRoot: null,
+      transactionRoot: null,
+      receiptRoot: null,
+    },
   };
   const releaseInvocation = createV4ReleaseInvocation(invocationInput);
   if (retainedInvocation) {
@@ -169,6 +180,8 @@ async function main() {
     invocationRoot: releaseInvocation.roots.invocationRoot,
     publisherRoot: releaseInvocation.roots.publisherRoot,
     runtimeRoot: releaseInvocation.roots.runtimeRoot,
+    providerRoot: releaseInvocation.roots.providerRoot,
+    parentRoot: releaseInvocation.roots.parentRoot,
   });
   const outputDir = path.resolve(".buildchain/release-passport");
   write(invocationPath, releaseInvocation.invocation);

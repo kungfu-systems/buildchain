@@ -1047,6 +1047,10 @@ test("workflow recovery resumes through the same canonical publisher transaction
     new URL("../.github/workflows/buildchain-ref-promotion.yml", import.meta.url),
     "utf8",
   );
+  const candidateAdapter = fs.readFileSync(
+    new URL("../scripts/v4-release-candidate-adapter.mjs", import.meta.url),
+    "utf8",
+  );
 
   for (const input of [
     "resume-candidate-repository",
@@ -1069,7 +1073,14 @@ test("workflow recovery resumes through the same canonical publisher transaction
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
   );
   assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
-  assert.match(advanced, /node \.buildchain\/runtime\/scripts\/resume-from-candidate-run\.mjs/);
+  assert.match(
+    advanced,
+    /node \.buildchain\/runtime\/scripts\/v4-release-candidate-adapter\.mjs/,
+  );
+  assert.match(
+    candidateAdapter,
+    /scripts\/resume-from-candidate-run\.mjs/,
+  );
   assert.match(advanced, /Resume the same transaction journal/);
   assert.match(
     refPromotion,
