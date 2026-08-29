@@ -77,6 +77,10 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
 test("bounded recovery is a one-way adapter into the same public publisher", () => {
   const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
+  const publicPromotion = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
   const authority = resolveV4FloatingConsumerPolicyAuthority({
     runtimeRoot: root,
     callerRoot: root,
@@ -84,7 +88,27 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
   const consumerRoot = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-v4-recovery-consumer-"),
   );
+  const invocationRoot = path.join(consumerRoot, "invocation-source");
   fs.mkdirSync(path.join(consumerRoot, ".buildchain"), { recursive: true });
+  fs.mkdirSync(path.join(invocationRoot, ".github", "workflows"), {
+    recursive: true,
+  });
+  fs.writeFileSync(
+    path.join(
+      invocationRoot,
+      ".github",
+      "workflows",
+      "release-candidate-promote.yml",
+    ),
+    [
+      "jobs:",
+      "  alpha:",
+      "    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha",
+      "  stable:",
+      "    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4",
+      "",
+    ].join("\n"),
+  );
   for (const lock of ["contract-lock.json", "alpha-contract-lock.json"])
     fs.copyFileSync(
       path.join(root, ".buildchain", lock),
@@ -93,20 +117,21 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
   try {
     const result = scanV4FloatingConsumerPolicy({
       root: consumerRoot,
-      invocationRoot: root,
+      invocationRoot,
       repository: "kungfu-systems/buildchain",
       sourceSha: "a".repeat(40),
-      invokedWorkflow: ".github/workflows/release-candidate-promote.yml",
-      invocationSourcePath: relative,
-      expectedInvocationChannel: "alpha",
+      invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
+      invocationSourcePath: ".github/workflows/release-candidate-promote.yml",
+      expectedInvocationChannel: "stable",
       resolvedWorkflowSha: "b".repeat(40),
       resolvedRuntimeSha: "c".repeat(40),
       policy: authority.policy,
       scannerRoot: authority.scannerRoot,
     });
     assert.equal(result.ok, true, JSON.stringify(result.failures));
-    assert.equal(result.receipt.invocation.visibleSelector, "v4-alpha");
+    assert.equal(result.receipt.invocation.visibleSelector, "v4");
     assert.equal(result.receipt.invocation.selectorClass, "floating");
+    assert.equal(result.receipt.invocation.channel, "stable");
   } finally {
     fs.rmSync(consumerRoot, { recursive: true, force: true });
   }
@@ -114,6 +139,16 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
   assert.match(
     workflow,
     /^  resume:[\s\S]*release-candidate-promote\.yml@v4-alpha/mu,
+  );
+  assert.ok(
+    publicPromotion.includes(
+      "BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/release-candidate-promote.yml' || inputs.publication-publisher-workflow-path }}",
+    ),
+  );
+  assert.ok(
+    publicPromotion.includes(
+      "BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}",
+    ),
   );
   assert.doesNotMatch(workflow, /^  consumer-admission:/mu);
   assert.doesNotMatch(workflow, /uses:.*@alpha\/v4\/v4\.0/u);
