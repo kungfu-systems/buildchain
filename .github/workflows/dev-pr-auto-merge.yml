@@ -434,10 +434,7 @@ jobs:
                 exit 1
               fi
               ;;
-            *)
-              echo "::error::buildchain-ref must be an exact immutable SHA, v4, v4-alpha, or train/v4/v4.0/<capability>"
-              exit 1
-              ;;
+            *) [[ "${BUILDCHAIN_REF}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::buildchain-ref must be an exact immutable SHA, v4, v4-alpha, or train/v4/v4.0/<capability>"; exit 1; } ;;
           esac
         env:
           BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
@@ -460,10 +457,7 @@ jobs:
             echo "::error::resolved Buildchain runtime is not an exact commit SHA"
             exit 1
           fi
-          if [[ "${BUILDCHAIN_REF}" =~ ^[0-9a-f]{40}$ && "${runtime_sha}" != "${BUILDCHAIN_REF}" ]]; then
-            echo "::error::resolved Buildchain runtime SHA does not match the immutable selector"
-            exit 1
-          fi
+          if [[ "${BUILDCHAIN_REF}" =~ ^[0-9a-f]{40}$ && "${runtime_sha}" != "${BUILDCHAIN_REF}" ]]; then echo "::error::resolved Buildchain runtime SHA does not match the immutable selector"; exit 1; fi
           mkdir -p .buildchain/dev-delivery
           jq -n \
             --arg repository "${BUILDCHAIN_REPOSITORY}" \
