@@ -77,7 +77,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `scripts/locked-source-checkout.mjs`
 - sources: `scripts/maintainability-domain-metrics.mjs`
 - sources: `scripts/paper.mjs`
-- sources: `scripts/publication-commit-evidence.mjs`
 - sources: `scripts/reconcile-github-governance.mjs`
 - sources: `scripts/release-candidate-resolver.mjs`
 - sources: `scripts/release-line-policy.mjs`
@@ -124,7 +123,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/release-passport.test.mjs`
 - tests: `tests/release-propagation.test.mjs`
 - tests: `tests/v4-delivery-authority-parity.test.mjs`
-- tests: `tests/v4-floating-consumer-policy-contract.test.mjs`
 - tests: `tests/v4-floating-consumer-policy.test.mjs`
 - tests: `tests/v4-publication-rehearsal.test.mjs`
 - tests: `tests/web-surface.test.mjs`
@@ -154,6 +152,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 - `tests/v3-v4-capability-inventory.test.mjs`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
+- `tests/v4-publication-qualification.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
 - `tests/release-candidate-recovery.test.mjs`
@@ -171,15 +170,14 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `tests/promotion-channel-router.test.mjs`
 - `scripts/site-capability-metadata.mjs`
 - `tests/v4-floating-consumer-policy.test.mjs`
+- `tests/v4-declarative-promotion-mode.test.mjs`
 - `scripts/buildchain-cli-help.mjs`
 - `scripts/check-v4-floating-consumer-policy-contract.mjs`
 - `tests/dev-delivery-warrant.test.mjs`
 - `actions/promote-buildchain-ref/internal/version-state.js`
-- `packages/core/v4-floating-consumer-policy.js`
 - `packages/core/v4-floating-consumer-release-passport.js`
 - `packages/core/release-passport.js`
 - `tests/promote-buildchain-ref-governance.test.mjs`
-- `tests/v4-declarative-promotion-mode.test.mjs`
 - `scripts/buildchain-cli-help.mjs`
 
 ## cli-command-registry

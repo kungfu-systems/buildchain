@@ -934,7 +934,6 @@
         "reusable": true,
         "inputs": [
           "admission-json",
-          "authority-job-id",
           "authority-workflow-path",
           "auto-admission",
           "auto-admission-kind",
@@ -972,7 +971,7 @@
           "target-ref",
           "used-nonces-json"
         ],
-        "inputCount": 38,
+        "inputCount": 37,
         "secrets": [
           "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
@@ -1151,14 +1150,17 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
+          "release-invocation-root",
           "release-propagation-work-artifact",
+          "release-receipt-root",
           "release-tail-declaration-root",
           "release-tail-receipt-roots-json",
           "release-tail-state-root",
           "release-tail-transaction-root",
-          "release-tail-transaction-state"
+          "release-tail-transaction-state",
+          "release-transaction-root"
         ],
-        "outputCount": 28
+        "outputCount": 31
       },
       {
         "id": ".release-docker",
@@ -2731,14 +2733,17 @@
           "release-candidate-artifact",
           "release-candidate-recovery-receipt-artifact",
           "release-candidate-recovery-root",
+          "release-invocation-root",
           "release-propagation-work-artifact",
+          "release-receipt-root",
           "release-tail-declaration-root",
           "release-tail-receipt-roots-json",
           "release-tail-state-root",
           "release-tail-transaction-root",
-          "release-tail-transaction-state"
+          "release-tail-transaction-state",
+          "release-transaction-root"
         ],
-        "outputCount": 40
+        "outputCount": 43
       },
       {
         "id": "release-governance-reconcile",
@@ -3302,12 +3307,15 @@
           "candidate-passport-path",
           "failure-after-capability",
           "publication-qualification-path",
+          "publisher-workflow-sha",
           "repository",
+          "runtime-commit",
+          "runtime-tree",
           "stage-capsules-path",
           "state-path",
           "token"
         ],
-        "inputCount": 8
+        "inputCount": 11
       },
       {
         "id": "validate-config",
@@ -8916,8 +8924,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "48dcf0d6e798d64f8cb0acb2c7e6af7782b8332f9a254a83512abf9d8e31a49f",
-    "pageRegistryDigest": "620d7dd295b0ed42c046ebea1b2cfb97b69f9e10a0c4f5cb0b796e7e0f1219d1"
+    "workflowRegistryDigest": "bbc79f60364cdb7e52d090e1a9559503f40e5a1b75f647b3493b3258d7a360a7",
+    "pageRegistryDigest": "3a4b72100125de7e2fb37f2af4f66f131f22f5831db4203f8178e4295c89a1eb"
   },
   "comparison": {
     "missingCliRegistry": [],

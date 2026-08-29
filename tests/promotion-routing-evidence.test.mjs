@@ -56,57 +56,29 @@ test("promotion routing evidence preserves the workflow routing contract", () =>
   );
 });
 
-test("release promotion workflow delegates routing mechanics to shell-owned helpers", () => {
+test("release promotion workflow routes through the canonical invocation boundary", () => {
   const workflow = fs.readFileSync(
     path.resolve(".github/workflows/.release-candidate-promote.yml"),
     "utf8",
   );
-  const promoteJob = workflow.slice(
-    workflow.indexOf("\n  legacy-promote:"),
-    workflow.indexOf("\n  promote:"),
+  const apply = workflow.slice(
+    workflow.indexOf("\n  apply:"),
+    workflow.indexOf("\n  settle:"),
   );
-  const checkoutShell = promoteJob.indexOf(
-    "path: .buildchain/runtime/promotion-shell",
-  );
-  const checkoutRuntime = promoteJob.indexOf("path: .buildchain/runtime\n");
-  const recordRouting = promoteJob.indexOf(
-    "node .buildchain/runtime/promotion-shell/scripts/promotion-routing-evidence.mjs",
+
+  assert.match(apply, /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/);
+  assert.match(
+    apply,
+    /publisher-workflow-sha: \$\{\{ needs\.qualify\.outputs\.publisher-sha \}\}/,
   );
   assert.match(
-    workflow,
-    /bash \.buildchain\/runtime\/promotion-shell\/scripts\/verify-promotion-router-binding\.sh/,
-  );
-  assert.match(
-    workflow,
-    /node \.buildchain\/runtime\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs/,
-  );
-  assert.ok(checkoutShell >= 0, "promote job must checkout the selected shell");
-  assert.ok(
-    checkoutRuntime < checkoutShell,
-    "promote job must checkout the parent runtime before the nested selected shell",
-  );
-  assert.ok(
-    checkoutShell < recordRouting,
-    "promote job must checkout the selected shell before using its helper",
-  );
-  assert.doesNotMatch(workflow, /node <<'NODE'[\s\S]*buildchain\.promotion-routing\/v1/);
-  assert.match(
-    workflow,
-    /node \.buildchain\/runtime\/scripts\/promotion-routing-evidence\.mjs bundle-controller-evidence/,
+    apply,
+    /runtime-commit: \$\{\{ needs\.qualify\.outputs\.runtime-sha \}\}/,
   );
   assert.doesNotMatch(
     workflow,
-    /node \.buildchain\/runtime\/promotion-shell\/scripts\/promotion-routing-evidence\.mjs bundle-controller-evidence/,
+    /verify-promotion-router-binding\.sh|promotion-routing-evidence\.mjs/,
   );
-  assert.match(
-    workflow,
-    /promotion-evidence\/release-candidate-passport\.json/,
-  );
-  assert.match(workflow, /promotion-evidence\/publish-evidence\.json/);
-  assert.match(workflow, /promotion-evidence\/release-passport\.json/);
-  assert.doesNotMatch(workflow, /promotion-evidence\/release-candidate\/passport/);
-  assert.doesNotMatch(workflow, /promotion-evidence\/release-tail/);
-  assert.doesNotMatch(workflow, /promotion-evidence\/release-passport\/buildchain/);
 });
 
 test("promotion evidence bundling preserves exact bytes and finalization boundaries", () => {
