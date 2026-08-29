@@ -1209,7 +1209,7 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
   assert.match(workflow, /empty and v3 selectors are rejected/u);
   assert.match(
     workflow,
-    /buildchain-ref must be v4, v4-alpha, or train\/v4\/v4\.0\/<capability>/u,
+    /buildchain-ref must be an exact immutable SHA, v4, v4-alpha, or train\/v4\/v4\.0\/<capability>/u,
   );
   assert.match(
     template,
