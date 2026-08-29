@@ -851,7 +851,7 @@ test("sealed publication authority verifier is independent and credential-free",
     workflow,
     /--workflow "\$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}"/,
   );
-  assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"/);
+  assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"[\s\S]*--job apply/);
   assert.match(
     workflow,
     /BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: \$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}/,

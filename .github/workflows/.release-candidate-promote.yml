@@ -856,13 +856,7 @@ jobs:
         if: ${{ steps.intent.outputs.action == 'promote' }}
         id: candidate
         shell: bash
-        run: |
-          set -euo pipefail
-          if [ -n "$BUILDCHAIN_RESUME_CANDIDATE_RUN_ID" ]; then
-            node .buildchain/runtime/scripts/resume-from-candidate-run.mjs
-          else
-            node .buildchain/runtime/scripts/release-candidate-resolver.mjs
-          fi
+        run: node .buildchain/runtime/scripts/v4-release-candidate-adapter.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
@@ -1056,6 +1050,8 @@ jobs:
             invocationRoot: transaction.invocationRoot,
             publisherRoot: transaction.publisherRoot,
             runtimeRoot: transaction.runtimeRoot,
+            providerRoot: transaction.providerRoot,
+            parentRoot: transaction.parentRoot,
           });
           const { receiptRoot, ...receipt } = storedReceipt;
           const receiptProjection = createV4ReleaseReceipt(receipt);
@@ -1081,5 +1077,8 @@ jobs:
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-v4-release-settle-${{ needs.qualify.outputs.requested-sha }}
-          path: .buildchain/evidence/release-tail/release-receipt.json
+          path: |
+            .buildchain/evidence/release-tail/release-invocation.json
+            .buildchain/evidence/release-tail/release-transaction.json
+            .buildchain/evidence/release-tail/release-receipt.json
           if-no-files-found: error

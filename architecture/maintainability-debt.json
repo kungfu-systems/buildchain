@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64284,
-    "current": 56223
+    "measuredExcess": 64295,
+    "current": 56234
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1491,21 +1491,21 @@
       "scripts/generate-channel-promotion-workflow.mjs": {
         "baseline": {
           "functions": {
-            "generateChannelPromotionWorkflow@277": {
+            "generateChannelPromotionWorkflow@278": {
               "lines": 282
             }
           }
         },
         "current": {
           "functions": {
-            "generateChannelPromotionWorkflow@277": {
+            "generateChannelPromotionWorkflow@278": {
               "lines": 240
             }
           }
         },
         "target": {
           "functions": {
-            "generateChannelPromotionWorkflow@277": {
+            "generateChannelPromotionWorkflow@278": {
               "lines": 180
             }
           }
@@ -2614,7 +2614,7 @@
           "lines": 1217
         },
         "current": {
-          "lines": 1126
+          "lines": 1137
         },
         "target": {
           "lines": 600
@@ -2937,7 +2937,7 @@
           "lines": 2736
         },
         "current": {
-          "lines": 1085
+          "lines": 1084
         },
         "target": {
           "lines": 600
@@ -3060,7 +3060,7 @@
           "lines": 1218
         },
         "current": {
-          "lines": 1094
+          "lines": 1095
         },
         "target": {
           "lines": 600
@@ -3135,7 +3135,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 1085
+      "current": 1084
     },
     {
       "domain": "sources",
