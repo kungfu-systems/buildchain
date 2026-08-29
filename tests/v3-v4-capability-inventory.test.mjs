@@ -7,22 +7,26 @@ import test from "node:test";
 
 import {
   V3_V4_CAPABILITY_CUTS,
-  assertCapabilityCutAncestor,
   assertV3V4CapabilityInventory,
   buildV3V4CapabilityInventory,
-  ensureCapabilityCutAncestor,
 } from "../scripts/check-v3-v4-capability-inventory.mjs";
+import {
+  assertCapabilityCutAncestor,
+  ensureCapabilityCutAncestor,
+  ensureCapabilityCutLineage,
+} from "../scripts/v3-v4-capability-catalog.mjs";
 
 function runGit(root, args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 }
 
-test("live v4 cut is reachable from the checked candidate", () => {
-  assert.doesNotThrow(() =>
-    assertCapabilityCutAncestor({
-      revision: V3_V4_CAPABILITY_CUTS.liveV4,
-      label: "live v4 capability cut",
-    }),
+test("live v4 cut has an admitted lineage from the checked candidate", () => {
+  const lineage = ensureCapabilityCutLineage({
+    revision: V3_V4_CAPABILITY_CUTS.liveV4,
+    label: "live v4 capability cut",
+  });
+  assert.ok(
+    ["direct-ancestry", "protected-tree-equivalent"].includes(lineage.mode),
   );
   assert.throws(
     () =>
@@ -70,6 +74,63 @@ test("live v4 ancestry is hydrated in a bounded shallow checkout", () => {
   );
   assert.doesNotThrow(() =>
     ensureCapabilityCutAncestor({ root: shallow, revision: cut }),
+  );
+});
+
+test("tree-equivalent alpha candidates use the protected v4 lineage as a bounded witness", () => {
+  const sandbox = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-capability-cut-release-lineage-"),
+  );
+  const source = path.join(sandbox, "source");
+  const remote = path.join(sandbox, "remote.git");
+  fs.mkdirSync(source);
+  runGit(source, ["init", "--initial-branch=main"]);
+  runGit(source, ["config", "user.name", "Buildchain Test"]);
+  runGit(source, ["config", "user.email", "buildchain@example.invalid"]);
+  for (const value of ["base", "cut", "release-tree"]) {
+    fs.writeFileSync(path.join(source, "state.txt"), `${value}\n`);
+    runGit(source, ["add", "state.txt"]);
+    runGit(source, ["commit", "-m", value]);
+  }
+  const cut = runGit(source, ["rev-parse", "HEAD^"]);
+  const protectedHead = runGit(source, ["rev-parse", "HEAD"]);
+  runGit(sandbox, ["init", "--bare", remote]);
+  runGit(source, ["remote", "add", "origin", remote]);
+  runGit(source, ["push", "origin", `${protectedHead}:refs/heads/dev/v4/v4.0`]);
+
+  runGit(source, ["switch", "--orphan", "alpha"]);
+  fs.writeFileSync(path.join(source, "state.txt"), "release-tree\n");
+  runGit(source, ["add", "state.txt"]);
+  runGit(source, ["commit", "-m", "tree-equivalent alpha"]);
+  assert.throws(
+    () => assertCapabilityCutAncestor({ root: source, revision: cut }),
+    /must be an ancestor/u,
+  );
+  assert.deepEqual(
+    ensureCapabilityCutLineage({ root: source, revision: cut }),
+    {
+      mode: "protected-tree-equivalent",
+      witness: protectedHead,
+    },
+  );
+
+  runGit(source, ["switch", "--orphan", "unrelated-cut"]);
+  fs.writeFileSync(path.join(source, "state.txt"), "unrelated-cut\n");
+  runGit(source, ["add", "state.txt"]);
+  runGit(source, ["commit", "-m", "unrelated cut"]);
+  const unrelatedCut = runGit(source, ["rev-parse", "HEAD"]);
+  runGit(source, ["switch", "alpha"]);
+  assert.throws(
+    () => ensureCapabilityCutLineage({ root: source, revision: unrelatedCut }),
+    /protected-lineage witness.*must be an ancestor/u,
+  );
+
+  fs.writeFileSync(path.join(source, "state.txt"), "drifted-alpha\n");
+  runGit(source, ["add", "state.txt"]);
+  runGit(source, ["commit", "-m", "drifted alpha"]);
+  assert.throws(
+    () => ensureCapabilityCutLineage({ root: source, revision: cut }),
+    /no tree-equivalent commit in the bounded protected v4 lineage/u,
   );
 });
 

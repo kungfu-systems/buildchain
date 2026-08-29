@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "e26eb3643fd95be5a21613adffaea25bbd78bb6c2199b6850757573667879908",
+    "sha256": "faa63862a8d8bd3f8c4147e96ed0467576cc521e21a36c970abd5b51f2546530",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 77,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "e26eb3643fd95be5a21613adffaea25bbd78bb6c2199b6850757573667879908",
+      "sha256": "faa63862a8d8bd3f8c4147e96ed0467576cc521e21a36c970abd5b51f2546530",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 77,
@@ -4104,10 +4104,9 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 38,
+          "inputCount": 37,
           "inputs": [
             "admission-json",
-            "authority-job-id",
             "authority-workflow-path",
             "auto-admission",
             "auto-admission-kind",
@@ -6276,13 +6275,16 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 8,
+          "inputCount": 11,
           "inputs": [
             "artifact-paths",
             "candidate-passport-path",
             "failure-after-capability",
             "publication-qualification-path",
+            "publisher-workflow-sha",
             "repository",
+            "runtime-commit",
+            "runtime-tree",
             "stage-capsules-path",
             "state-path",
             "token"

@@ -12,6 +12,8 @@ import {
 import {
   chainedDevDeliveryAttemptInput,
   createDevDeliveryCandidateIdentity,
+  EXACT_DEV_DELIVERY_PROOF_FIELDS,
+  matchesExactDevDeliveryCandidate,
   validateDevDeliveryCandidateChain,
 } from "./dev-delivery-candidate-identity.js";
 import {
@@ -380,6 +382,8 @@ export function transitionDevDeliveryQueue(queueInput, mutate, nowInput) {
   delete queue.stateRoot;
   const now = timestamp(nowInput, "now");
   const result = mutate(queue, before, now);
+  if (result.preserveState)
+    return { before, after: before, expectedOldStateRoot, result };
   queue.generation += 1;
   queue.updatedAt = now;
   const after = withQueueRoot(queue);
@@ -478,34 +482,14 @@ export function submitDevDeliveryCandidate(
             `candidate ${attemptedCandidate.candidateId} is terminal and cannot be resubmitted`,
           );
         }
-        const exactProofFields = [
-          "sourcePatchRoot",
-          "sourceProofRoot",
-          "planRoot",
-          "closureRoot",
-          "dependencyRoot",
-          "toolchainRoot",
-          "environmentRoot",
-          "sourceWorkflowRunId",
-        ];
-        const exactProofMatches =
-          exactProofFields.every(
-            (field) => existing[field] === attemptedCandidate[field],
-          ) &&
-          JSON.stringify(existing.affectedPaths || []) ===
-            JSON.stringify(attemptedCandidate.affectedPaths || []) &&
-          JSON.stringify(existing.shardEvidenceRoots || []) ===
-            JSON.stringify(attemptedCandidate.shardEvidenceRoots || []) &&
-          existing.nativeCommandContract?.commandRoot ===
-            attemptedCandidate.nativeCommandContract?.commandRoot &&
-          existing.releaseBlockerPriority?.claimRoot ===
-            attemptedCandidate.releaseBlockerPriority?.claimRoot;
-        if (
-          existing.sourceHead === attemptedCandidate.sourceHead &&
-          exactProofMatches
-        ) {
-          action = "duplicate-noop";
+        if (matchesExactDevDeliveryCandidate(existing, attemptedCandidate)) {
+          action =
+            before.activeWarrant?.candidateId === existing.candidateId
+              ? "active-warrant-noop"
+              : "duplicate-noop";
           selected = existing;
+          if (action === "active-warrant-noop")
+            return { candidate: selected, action, preserveState: true };
         } else {
           if (before.activeWarrant?.candidateId === existing.candidateId) {
             throw new Error(
@@ -515,7 +499,7 @@ export function submitDevDeliveryCandidate(
           const headChanged =
             existing.sourceHead !== attemptedCandidate.sourceHead;
           existing.sourceHead = attemptedCandidate.sourceHead;
-          for (const field of exactProofFields)
+          for (const field of EXACT_DEV_DELIVERY_PROOF_FIELDS)
             existing[field] = attemptedCandidate[field];
           if (attemptedCandidate.nativeCommandContract)
             existing.nativeCommandContract =

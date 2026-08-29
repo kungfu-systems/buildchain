@@ -158,10 +158,15 @@ test("exact-head maintainability baseline is reproducible", () => {
   assert.equal(report.hotspots.promoteBuildchainRefs.complexity, 26);
   assert.equal(report.hotspots.createReleaseCheckReport.lines, 65);
   assert.equal(report.hotspots.createReleaseCheckReport.complexity, 5);
-  assert.ok(
-    debt.hotspots.includes("scripts/buildchain-cli-help.mjs"),
-    "the public CLI help hotspot must retain an audited change route across PR checkout shapes",
-  );
+  for (const route of [
+    "scripts/buildchain-cli-help.mjs",
+    "scripts/check-maintainability.mjs",
+    "tests/maintainability.test.mjs",
+  ])
+    assert.ok(
+      debt.hotspots.includes(route),
+      `${route} must retain an audited change route across checkout shapes`,
+    );
 });
 
 test("AST complexity proxy counts bounded decisions without charging nested functions twice", () => {
@@ -326,6 +331,68 @@ test("missing maintainability revisions are hydrated in bounded shallow fetches"
       ["fixture.txt"],
     ),
     ["fixture.txt"],
+  );
+});
+
+test("release-line reconciliation reuses audited hotspot routes across DAG shapes", () => {
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-maintainability-release-dag-"),
+  );
+  const auditedRoutes = ["packages/core/audited-route.js"];
+  const historyRoute = "packages/core/history-route.js";
+  fs.mkdirSync(path.join(fixtureRoot, "packages", "core"), {
+    recursive: true,
+  });
+  git(fixtureRoot, ["init", "--initial-branch=main"]);
+  git(fixtureRoot, ["config", "user.name", "Buildchain Test"]);
+  git(fixtureRoot, ["config", "user.email", "buildchain-test@example.invalid"]);
+  fs.writeFileSync(path.join(fixtureRoot, auditedRoutes[0]), "audited\n");
+  fs.writeFileSync(path.join(fixtureRoot, historyRoute), "history-1\n");
+  git(fixtureRoot, ["add", "."]);
+  git(fixtureRoot, ["commit", "-m", "baseline routes"]);
+  fs.writeFileSync(path.join(fixtureRoot, historyRoute), "history-2\n");
+  git(fixtureRoot, ["commit", "-am", "increase history route churn"]);
+  const current = {
+    files: {
+      "packages/core/audited-route.js": {},
+      [historyRoute]: {},
+    },
+    tests: {},
+    workflows: {},
+  };
+
+  for (const releaseRef of [
+    "alpha/v4/v4.0",
+    "release/v4/v4.0",
+    "publish-gate/major",
+  ]) {
+    assert.deepEqual(
+      collectHotspots(fixtureRoot, current, 20, auditedRoutes, {
+        baseRef: releaseRef,
+      }),
+      auditedRoutes,
+    );
+  }
+  const previousBaseRef = process.env.GITHUB_BASE_REF;
+  const previousRefName = process.env.GITHUB_REF_NAME;
+  try {
+    process.env.GITHUB_BASE_REF = "";
+    process.env.GITHUB_REF_NAME = "alpha/v4/v4.0";
+    assert.deepEqual(
+      collectHotspots(fixtureRoot, current, 20, auditedRoutes),
+      auditedRoutes,
+    );
+  } finally {
+    if (previousBaseRef === undefined) delete process.env.GITHUB_BASE_REF;
+    else process.env.GITHUB_BASE_REF = previousBaseRef;
+    if (previousRefName === undefined) delete process.env.GITHUB_REF_NAME;
+    else process.env.GITHUB_REF_NAME = previousRefName;
+  }
+  assert.deepEqual(
+    collectHotspots(fixtureRoot, current, 20, auditedRoutes, {
+      baseRef: "dev/v4/v4.0",
+    }),
+    [historyRoute, auditedRoutes[0]],
   );
 });
 

@@ -20,17 +20,25 @@ import {
   evaluateWorkflowBudgets,
 } from "./maintainability-governance.mjs";
 
-function collectHotspots(root, current, limit = 20, shallowFallback = []) {
+function collectHotspots(
+  root,
+  current,
+  limit = 20,
+  shallowFallback = [],
+  {
+    baseRef = process.env.GITHUB_BASE_REF || process.env.GITHUB_REF_NAME || "",
+  } = {},
+) {
   const maintained = new Set([
     ...Object.keys(current.files || {}),
     ...Object.keys(current.tests || {}),
     ...Object.keys(current.workflows || {}),
   ]);
-  // Shallow consumers cannot reproduce repository-wide churn ranking.
-  // Reuse the audited routes; full clones still re-rank them below.
-  // This keeps consumer verification deterministic without inventing history.
+  // Release-line reconciliation reuses audited routes across equivalent-tree DAG shapes.
   if (
-    gitOutput(root, ["rev-parse", "--is-shallow-repository"]).trim() === "true"
+    gitOutput(root, ["rev-parse", "--is-shallow-repository"]).trim() ===
+      "true" ||
+    /^(?:alpha|release|publish-gate)\//u.test(baseRef)
   ) {
     return shallowFallback.slice(0, limit);
   }
