@@ -898,8 +898,9 @@ jobs:
         id: policy
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
+          BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/release-candidate-promote.yml' || inputs.publication-publisher-workflow-path }}
           BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ needs.resolve-promotion.outputs.channel }}
-          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/release-candidate-promote.yml
+          BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
