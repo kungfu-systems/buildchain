@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:ed5b008fb7fad61438b5f80223dcf0a9c0b967e2b2d69bb0fec33efb2ad63e50",
+      "auditDigest": "sha256:7ce33eb5d7d5f9679c6969a7740f08a34c1e41bf30bbed1afbb964d164e6cee2",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1863,7 +1863,7 @@
         "no consumer command, script, shell, checkout, or executable tail hook is accepted"
       ],
       "breakingDigest": "sha256:9229eb3a000fb408feb6b8793c209c77afbf9327026467d68954470e22e4f8f4",
-      "auditDigest": "sha256:95d3243d798cc8c05005660b9dc5e9cf4d98c03ca7e0c6ad70bf206052717a07"
+      "auditDigest": "sha256:28f962e2c7542d650417975ea9d5922816f57c63798e895ed0eac61840a02af4"
     },
     {
       "contractVersion": 1,
@@ -5173,7 +5173,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:ed5b008fb7fad61438b5f80223dcf0a9c0b967e2b2d69bb0fec33efb2ad63e50"
+      "auditDigest": "sha256:7ce33eb5d7d5f9679c6969a7740f08a34c1e41bf30bbed1afbb964d164e6cee2"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:78f16e7c72d8113e1323c7d365afc81067320ebb6a1c13bd56ad13b4304ff31e"
+  "contractDigest": "sha256:31c683d3390e89156543109a11ae3642887423548298e5d62e3420f7018c7e9b"
 }

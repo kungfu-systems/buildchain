@@ -473,6 +473,10 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/u,
   );
   assert.match(
+    canonical,
+    /source-sha: \$\{\{ needs\.qualify\.outputs\.requested-sha \}\}/u,
+  );
+  assert.match(
     publicWrapper,
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@/u,
   );

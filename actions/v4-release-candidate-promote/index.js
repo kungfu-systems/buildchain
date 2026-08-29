@@ -19,6 +19,7 @@ import {
   v4PublicationQualificationRoot,
   validateV4PublicationQualificationReceipt,
 } from "../../packages/core/v4-publication-qualification.js";
+import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
 import {
   applyProductPublication,
   planProductPublication,
@@ -38,6 +39,7 @@ export function aggregateV4ReleasePassport({
   candidate,
   stageCapsules,
   qualification,
+  sourceBinding,
   version,
   tag,
   channel,
@@ -60,7 +62,13 @@ export function aggregateV4ReleasePassport({
   const body = {
     schema: "kungfu.buildchain.release-passport/v4",
     repository: candidate.repository,
-    source: candidate.source,
+    source: {
+      ...candidate.source,
+      headSha: sourceBinding.protectedSource.sha,
+      treeHash: sourceBinding.protectedSource.tree,
+      candidateHeadSha: sourceBinding.candidateSource.sha,
+    },
+    protectedPublicationSource: sourceBinding,
     release: { version, tag, channel },
     candidateRoot: qualification.candidateRoot,
     policyDigest: qualification.policyDigest,
@@ -72,6 +80,59 @@ export function aggregateV4ReleasePassport({
       .sort(),
   };
   return { ...body, passportRoot: releaseTailRoot(body) };
+}
+
+async function observeProtectedPublicationSource({
+  octokit,
+  repository,
+  protectedSourceSha,
+  candidate,
+}) {
+  const [owner, repo] = repository.split("/");
+  const candidateSourceSha = candidate.source?.headSha;
+  const [protectedCommitResponse, candidateCommitResponse] = await Promise.all([
+    octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: protectedSourceSha,
+    }),
+    octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: candidateSourceSha,
+    }),
+  ]);
+  const normalizeCommit = (response) => ({
+    sha: response.data.sha,
+    tree: response.data.tree?.sha,
+    parents: (response.data.parents || []).map(({ sha }) => sha),
+  });
+  let pullRequest = null;
+  if (protectedSourceSha !== candidateSourceSha) {
+    const number = Number(candidate.pullRequest?.number || 0);
+    if (!Number.isSafeInteger(number) || number <= 0) {
+      throw new Error(
+        "tree-equivalent protected publication requires an exact pull request identity",
+      );
+    }
+    const response = await octokit.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: number,
+    });
+    pullRequest = {
+      number,
+      merged: response.data.merged === true,
+      headSha: response.data.head?.sha,
+      mergeSha: response.data.merge_commit_sha,
+    };
+  }
+  return bindV4ProtectedPublicationSource({
+    repository,
+    protectedCommit: normalizeCommit(protectedCommitResponse),
+    candidateCommit: normalizeCommit(candidateCommitResponse),
+    pullRequest,
+  });
 }
 
 async function expectedTagSha(octokit, repository, tag) {
@@ -93,6 +154,21 @@ function canonicalChannel(channel) {
   if (channel === "alpha") return "alpha";
   if (["release", "stable", "major"].includes(channel)) return "stable";
   throw new Error(`unsupported canonical release channel '${channel}'`);
+}
+
+function assertCandidateEvidenceBinding({
+  candidate,
+  stageCapsules,
+  repository,
+}) {
+  if (candidate.repository !== repository)
+    throw new Error("candidate repository binding mismatch");
+  if (
+    stageCapsules.repository !== repository ||
+    stageCapsules.source?.sha !== candidate.source?.headSha ||
+    stageCapsules.source?.treeSha !== candidate.source?.treeHash
+  )
+    throw new Error("Stage Capsule repository/source binding mismatch");
 }
 
 function productProviderRequest({
@@ -145,6 +221,7 @@ async function createReleaseDocuments({
   candidate,
   stageCapsules,
   qualification,
+  sourceBinding,
   publicationPlan,
   octokit,
 }) {
@@ -154,6 +231,7 @@ async function createReleaseDocuments({
     candidate,
     stageCapsules,
     qualification,
+    sourceBinding,
     version,
     tag,
     channel,
@@ -180,7 +258,7 @@ async function createReleaseDocuments({
     candidate: {
       repository,
       commit: sourceSha,
-      tree: candidate.source?.treeHash,
+      tree: sourceBinding.protectedSource.tree,
       version: fallbackVersion,
     },
     target: {
@@ -388,16 +466,13 @@ async function main() {
   const qualification = read(input("publication-qualification-path", true));
   const octokit = github.getOctokit(input("token", true));
   const mutationOctokit = github.getOctokit(input("mutation-token", true));
-  if (
-    candidate.repository !== repository ||
-    candidate.source?.headSha !== sourceSha
-  )
-    throw new Error("candidate repository/source binding mismatch");
-  if (
-    stageCapsules.repository !== repository ||
-    stageCapsules.source?.sha !== sourceSha
-  )
-    throw new Error("Stage Capsule repository/source binding mismatch");
+  assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
+  const sourceBinding = await observeProtectedPublicationSource({
+    octokit,
+    repository,
+    protectedSourceSha: sourceSha,
+    candidate,
+  });
   const providerRequest = productProviderRequest({
     octokit,
     mutationOctokit,
@@ -421,6 +496,7 @@ async function main() {
     candidate,
     stageCapsules,
     qualification,
+    sourceBinding,
     publicationPlan,
     octokit,
   });

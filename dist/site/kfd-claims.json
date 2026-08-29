@@ -21,7 +21,7 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "c74fbf5ce95f7a587a8e5f443ab99c9b23ce62f4d239870cd984c6a7623c442c",
+    "sha256": "0fdcfa05644c75ee009645e9a4c1f8018a30ff4c7b5b6078e576743e4b1fd1d5",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 77,
@@ -246,7 +246,7 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "c74fbf5ce95f7a587a8e5f443ab99c9b23ce62f4d239870cd984c6a7623c442c",
+      "sha256": "0fdcfa05644c75ee009645e9a4c1f8018a30ff4c7b5b6078e576743e4b1fd1d5",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 77,
@@ -6275,7 +6275,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 27,
+          "inputCount": 28,
           "inputs": [
             "artifact-paths",
             "candidate-build-summary-path",
@@ -6299,6 +6299,7 @@
             "runtime-tree",
             "sealed-bundle-manifest",
             "sealed-bundle-root",
+            "source-sha",
             "stage-capsules-path",
             "state-path",
             "target-ref",
