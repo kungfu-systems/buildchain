@@ -893,6 +893,7 @@ Owner: Buildchain protected delivery maintainers
 
 - `packages/core/dev-delivery-warrant.js`
 - `packages/core/dev-delivery-warrant-state.js`
+- `packages/core/dev-delivery-warrant-native-compatibility.js`
 - `packages/core/dev-delivery-warrant-qualification.js`
 - `packages/core/dev-delivery-warrant-legacy-recovery.js`
 - `packages/core/dev-delivery-native-proof.js`

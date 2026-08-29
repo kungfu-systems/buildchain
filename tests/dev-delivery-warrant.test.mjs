@@ -68,7 +68,7 @@ test("queue readback preserves native qualification metadata", () => {
   assert.equal(normalizeDevDeliveryQueue(submitted.queue).stateRoot, submitted.queue.stateRoot);
 });
 
-test("queue readback accepts legacy terminal native candidates without weakening live authority", () => {
+test("queue readback quarantines legacy queued native candidates without weakening live authority", () => {
   const submitted = submit(queue(), 99, "2026-08-04T00:00:00Z");
   const selected = selectDevDeliveryWarrant(submitted.queue, { now: "2026-08-04T00:00:01Z" });
   const terminal = closeDevDeliveryWarrant(selected.queue, selected.warrant, { outcome: "dequeued", evidenceRoot: ROOTS.evidence, now: "2026-08-04T00:01:00Z" });
@@ -80,12 +80,12 @@ test("queue readback accepts legacy terminal native candidates without weakening
     return legacy;
   };
 
-  const legacyTerminal = asLegacyState(terminal.queue);
-  assert.equal(normalizeDevDeliveryQueue(legacyTerminal).stateRoot, legacyTerminal.stateRoot);
+  for (const state of [asLegacyState(terminal.queue), asLegacyState(submitted.queue)])
+    assert.equal(normalizeDevDeliveryQueue(state).stateRoot, state.stateRoot);
 
-  const legacyLive = asLegacyState(submitted.queue);
+  const legacySelected = asLegacyState(selected.queue);
   assert.throws(
-    () => normalizeDevDeliveryQueue(legacyLive),
+    () => normalizeDevDeliveryQueue(legacySelected),
     /live native candidate requires exact native proof/u,
   );
 });
@@ -143,12 +143,12 @@ test("read-only v3 compatibility accepts provisional and exact qualified native 
     normalizeDevDeliveryQueue(legacy, { allowLegacyV3Readback: true }).stateRoot,
     legacy.stateRoot,
   );
-  assert.equal(
+  assert.deepEqual(
     observeDevDeliveryQueue(legacy, {
       now: "2026-08-04T00:05:01Z",
       allowLegacyV3Readback: true,
-    }).queued[0].pullRequestNumber,
-    100,
+    }).queued,
+    [],
   );
 
   const missingProof = structuredClone(legacy);
