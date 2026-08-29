@@ -758,8 +758,12 @@ jobs:
       candidate-source-sha: ${{ steps.candidate.outputs.release-candidate-source-sha }}
       candidate-artifact: ${{ steps.candidate.outputs.release-candidate-artifact }}
       candidate-passport-path: ${{ steps.candidate.outputs.release-candidate-passport-path }}
+      candidate-build-summary-path: ${{ steps.candidate.outputs.release-candidate-build-summary-path }}
       stage-capsules-path: ${{ steps.candidate.outputs.release-candidate-stage-capsules-path }}
       publication-qualification-path: ${{ steps.candidate.outputs.release-candidate-publication-qualification-path }}
+      sealed-bundle-root: ${{ steps.candidate.outputs.publish-sealed-bundle-root }}
+      sealed-bundle-manifest: ${{ steps.candidate.outputs.publish-sealed-bundle-manifest }}
+      required-artifacts-path: ${{ steps.candidate.outputs.publish-required-artifacts-path }}
       release-artifact-paths: ${{ steps.candidate.outputs.release-candidate-github-release-artifact-paths }}
     steps:
       - name: Checkout the selected runtime for read-only qualification
@@ -906,8 +910,10 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       actions: read
+      checks: write
       contents: write
       id-token: write
+      pull-requests: write
     outputs:
       promoted-sha: ${{ needs.qualify.outputs.requested-sha }}
       built-source-sha: ${{ needs.qualify.outputs.candidate-source-sha }}
@@ -925,6 +931,13 @@ jobs:
       release-transaction-root: ${{ steps.provider.outputs.release-transaction-root || steps.resume.outputs.release-transaction-root }}
       release-receipt-root: ${{ steps.provider.outputs.release-receipt-root || steps.resume.outputs.release-receipt-root }}
     steps:
+      - name: Checkout the admitted protected channel state
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.qualify.outputs.requested-sha }}
+          clean: true
+          persist-credentials: false
+
       - name: Checkout the admitted runtime only
         uses: actions/checkout@v7.0.0
         with:
@@ -944,6 +957,9 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Install exact protected channel dependencies without scripts
+        run: corepack pnpm@11.7.0 install --frozen-lockfile --ignore-scripts
+
       - name: Install exact provider runtime dependencies without scripts
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
 
@@ -960,17 +976,33 @@ jobs:
         uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
         with: &provider-inputs
           token: ${{ github.token }}
+          mutation-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
           repository: ${{ github.repository }}
           source-sha: ${{ needs.qualify.outputs.candidate-source-sha }}
           version: ${{ needs.qualify.outputs.version }}
           tag: ${{ needs.qualify.outputs.exact-tag }}
           channel: ${{ needs.qualify.outputs.channel }}
+          target-ref: ${{ needs.qualify.outputs.target-ref }}
+          target-sha: ${{ needs.qualify.outputs.requested-sha }}
           candidate-passport-path: ${{ needs.qualify.outputs.candidate-passport-path }}
+          candidate-build-summary-path: ${{ needs.qualify.outputs.candidate-build-summary-path }}
           stage-capsules-path: ${{ needs.qualify.outputs.stage-capsules-path }}
           publication-qualification-path: ${{ needs.qualify.outputs.publication-qualification-path }}
+          sealed-bundle-root: ${{ needs.qualify.outputs.sealed-bundle-root }}
+          sealed-bundle-manifest: ${{ needs.qualify.outputs.sealed-bundle-manifest }}
+          required-artifacts-path: ${{ needs.qualify.outputs.required-artifacts-path }}
           publisher-workflow-sha: ${{ needs.qualify.outputs.publisher-sha }}
           runtime-commit: ${{ needs.qualify.outputs.runtime-sha }}
           runtime-tree: ${{ needs.qualify.outputs.runtime-tree }}
+          required-status-check: ${{ inputs.required-status-check }}
+          publish-command: ${{ inputs.publish-command }}
+          publish-mode: ${{ inputs.publish-mode }}
+          publish-dist-tag: ${{ inputs.publish-dist-tag }}
+          publish-package-set-order: ${{ inputs.publish-package-set-order }}
+          publish-package-main: ${{ inputs.publish-package-main }}
+          publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
+          publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
+          publish-transaction-override: ${{ inputs.publish-transaction-override }}
           artifact-paths: ${{ needs.qualify.outputs.release-artifact-paths }}
           state-path: .buildchain/release-tail/state.json
           failure-after-capability: ${{ inputs.provider-failure-after-capability }}

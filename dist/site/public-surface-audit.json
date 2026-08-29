@@ -3304,18 +3304,34 @@
         "path": "actions/v4-release-candidate-promote/action.yml",
         "inputs": [
           "artifact-paths",
+          "candidate-build-summary-path",
           "candidate-passport-path",
           "failure-after-capability",
+          "mutation-token",
           "publication-qualification-path",
+          "publish-auth",
+          "publish-command",
+          "publish-dist-tag",
+          "publish-mode",
+          "publish-package-main",
+          "publish-package-set-order",
+          "publish-rematerialize-on-resume",
+          "publish-transaction-override",
           "publisher-workflow-sha",
           "repository",
+          "required-artifacts-path",
+          "required-status-check",
           "runtime-commit",
           "runtime-tree",
+          "sealed-bundle-manifest",
+          "sealed-bundle-root",
           "stage-capsules-path",
           "state-path",
+          "target-ref",
+          "target-sha",
           "token"
         ],
-        "inputCount": 11
+        "inputCount": 27
       },
       {
         "id": "validate-config",
@@ -8924,7 +8940,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "bb86cef4c0a6658ff1bf05aa33cd5ff5f119f8b3c3cee90e5aa2d911247b38e4",
+    "workflowRegistryDigest": "ef14b55b6d64b9a0be6488611a0c3c6b2c748ba00d893418db343ec34202227b",
     "pageRegistryDigest": "3a4b72100125de7e2fb37f2af4f66f131f22f5831db4203f8178e4295c89a1eb"
   },
   "comparison": {
