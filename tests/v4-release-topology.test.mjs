@@ -26,6 +26,7 @@ import {
   findUnknownV4ReleaseTopology,
 } from "../scripts/check-v4-release-topology.mjs";
 import { resolveV4ReleaseCandidateAdapter } from "../scripts/v4-release-candidate-adapter.mjs";
+import { selectProductPublicationPlan } from "../actions/v4-release-candidate-promote/product-provider.js";
 
 const fixture = JSON.parse(
   fs.readFileSync(
@@ -269,6 +270,39 @@ test("fresh and recovery candidate discovery are data-only adapters into the sam
   assert.doesNotMatch(
     workflow,
     /if \[ -n "\$BUILDCHAIN_RESUME_CANDIDATE_RUN_ID" \]/u,
+  );
+});
+
+test("canonical APPLY roots the product provider's planned exact version", () => {
+  assert.deepEqual(
+    selectProductPublicationPlan({
+      updates: [
+        {
+          action: "dry-run-publish-transaction",
+          version: "4.0.2-alpha.3",
+          tag: "v4.0.2-alpha.3",
+          releaseCandidateVersion: "4.0.2-alpha.2",
+        },
+      ],
+    }),
+    {
+      version: "4.0.2-alpha.3",
+      tag: "v4.0.2-alpha.3",
+      candidateVersion: "4.0.2-alpha.2",
+    },
+  );
+  assert.throws(
+    () =>
+      selectProductPublicationPlan({
+        updates: [
+          {
+            action: "dry-run-publish-transaction",
+            version: "4.0.2-alpha.3",
+            tag: "v22.22.3-kf.0",
+          },
+        ],
+      }),
+    /mismatched exact tag/u,
   );
 });
 

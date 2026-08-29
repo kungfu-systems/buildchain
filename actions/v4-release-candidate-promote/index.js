@@ -2,6 +2,7 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { publishDeclarativeGitHubReleaseEvidence } from "../promote-buildchain-ref/github-release.js";
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
@@ -19,6 +20,10 @@ import {
   validateV4PublicationQualificationReceipt,
 } from "../../packages/core/v4-publication-qualification.js";
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
+import {
+  applyProductPublication,
+  planProductPublication,
+} from "./product-provider.js";
 
 const input = (name, required = false) =>
   core.getInput(name, { required }).trim();
@@ -166,23 +171,62 @@ function assertCandidateEvidenceBinding({
     throw new Error("Stage Capsule repository/source binding mismatch");
 }
 
-async function main() {
-  const repository = input("repository", true);
-  const sourceSha = input("source-sha", true);
-  const version = input("version", true);
-  const tag = input("tag", true);
-  const channel = input("channel", true);
-  const candidate = read(input("candidate-passport-path", true));
-  const stageCapsules = read(input("stage-capsules-path", true));
-  const qualification = read(input("publication-qualification-path", true));
-  const octokit = github.getOctokit(input("token", true));
-  assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
-  const sourceBinding = await observeProtectedPublicationSource({
+function productProviderRequest({
+  octokit,
+  mutationOctokit,
+  repository,
+  targetRef,
+  targetSha,
+  candidate,
+  candidatePassportPath,
+  buildSummaryPath,
+  qualification,
+}) {
+  return {
     octokit,
+    mutationOctokit,
     repository,
-    protectedSourceSha: sourceSha,
+    targetRef,
+    targetSha,
     candidate,
-  });
+    candidatePassportPath,
+    buildSummaryPath,
+    qualification,
+    requiredStatusCheck: input("required-status-check") || "check",
+    publishCommand: input("publish-command"),
+    sealedBundleRoot: input("sealed-bundle-root", true),
+    sealedBundleManifest: input("sealed-bundle-manifest", true),
+    requiredArtifactsPath: input("required-artifacts-path", true),
+    publishMode: input("publish-mode"),
+    publishAuth: input("publish-auth") || "trusted-publishing",
+    publishDistTag: input("publish-dist-tag"),
+    publishPackageSetOrder: input("publish-package-set-order") || "as-provided",
+    publishPackageMain: input("publish-package-main", true),
+    publishRematerializeOnResume: core.getBooleanInput(
+      "publish-rematerialize-on-resume",
+    ),
+    publishTransactionOverride: core.getBooleanInput(
+      "publish-transaction-override",
+    ),
+    actor: github.context.actor,
+    runId: String(github.context.runId || ""),
+  };
+}
+
+async function createReleaseDocuments({
+  repository,
+  sourceSha,
+  fallbackVersion,
+  channel,
+  candidate,
+  stageCapsules,
+  qualification,
+  sourceBinding,
+  publicationPlan,
+  octokit,
+}) {
+  const version = publicationPlan.version;
+  const tag = publicationPlan.tag;
   const passport = aggregateV4ReleasePassport({
     candidate,
     stageCapsules,
@@ -215,7 +259,7 @@ async function main() {
       repository,
       commit: sourceSha,
       tree: sourceBinding.protectedSource.tree,
-      version,
+      version: fallbackVersion,
     },
     target: {
       channel: canonicalChannel(channel),
@@ -283,16 +327,57 @@ async function main() {
       releasePassportRoot: passport.passportRoot,
     },
   );
+  return {
+    evidencePath,
+    invocationPath,
+    passport,
+    passportPath,
+    releaseInvocation,
+    releaseTransaction,
+    releaseTransactionPath,
+    tag,
+    version,
+  };
+}
+
+async function applyAndSettle({
+  repository,
+  sourceSha,
+  channel,
+  qualification,
+  octokit,
+  providerRequest,
+  publicationPlan,
+  documents,
+}) {
+  let productProviderResult;
+  try {
+    productProviderResult = await applyProductPublication(
+      providerRequest,
+      publicationPlan,
+    );
+  } catch (error) {
+    if (error.providerProjection)
+      write(
+        ".buildchain/release-tail/product-provider-result.json",
+        error.providerProjection,
+      );
+    throw error;
+  }
+  const productProviderPath = write(
+    ".buildchain/release-tail/product-provider-result.json",
+    productProviderResult,
+  );
   const result = await publishDeclarativeGitHubReleaseEvidence({
     octokit,
     repository,
-    sourceSha,
-    version,
-    tag,
+    sourceSha: productProviderResult.publication.releaseSha,
+    version: documents.version,
+    tag: documents.tag,
     channel,
-    publishEvidencePath: evidencePath,
-    releasePassportPath: passportPath,
-    releasePassportOutputDir: outputDir,
+    publishEvidencePath: documents.evidencePath,
+    releasePassportPath: documents.passportPath,
+    releasePassportOutputDir: path.dirname(documents.passportPath),
     additionalAssetPaths: core
       .getMultilineInput("artifact-paths")
       .filter(Boolean),
@@ -302,43 +387,135 @@ async function main() {
   });
   const releaseReceipt = createV4ReleaseReceipt({
     schema: V4_RELEASE_RECEIPT_CONTRACT,
-    transactionRoot: releaseTransaction.transactionRoot,
+    transactionRoot: documents.releaseTransaction.transactionRoot,
     outcome: "complete",
-    releasePassportRoot: passport.passportRoot,
+    releasePassportRoot: documents.passport.passportRoot,
     providerTransactionRoot: result.transaction.transactionRoot,
     providerStateRoot: result.transaction.stateRoot,
-    providerReceiptRoots: result.transaction.receipts
-      .map(({ receiptRoot }) => receiptRoot)
-      .sort(),
+    providerReceiptRoots: [
+      productProviderResult.root,
+      ...result.transaction.receipts.map(({ receiptRoot }) => receiptRoot),
+    ].sort(),
   });
   const releaseReceiptPath = write(
     ".buildchain/release-tail/release-receipt.json",
     { ...releaseReceipt.receipt, receiptRoot: releaseReceipt.receiptRoot },
   );
-  core.setOutput("release-invocation-path", invocationPath);
+  return {
+    productProviderPath,
+    productProviderResult,
+    releaseReceipt,
+    releaseReceiptPath,
+    result,
+  };
+}
+
+function setOutputs(documents, settlement) {
+  core.setOutput("release-invocation-path", documents.invocationPath);
   core.setOutput(
     "release-invocation-root",
-    releaseInvocation.roots.invocationRoot,
+    documents.releaseInvocation.roots.invocationRoot,
   );
-  core.setOutput("release-transaction-path", releaseTransactionPath);
+  core.setOutput("release-transaction-path", documents.releaseTransactionPath);
   core.setOutput(
     "release-transaction-root",
-    releaseTransaction.transactionRoot,
+    documents.releaseTransaction.transactionRoot,
   );
-  core.setOutput("release-receipt-path", releaseReceiptPath);
-  core.setOutput("release-receipt-root", releaseReceipt.receiptRoot);
-  core.setOutput("release-passport-path", passportPath);
-  core.setOutput("release-passport-root", passport.passportRoot);
-  core.setOutput("transaction-state", result.transaction.state);
-  core.setOutput("declaration-root", result.declarationRoot);
-  core.setOutput("transaction-root", result.transaction.transactionRoot);
-  core.setOutput("state-root", result.transaction.stateRoot);
+  core.setOutput("release-receipt-path", settlement.releaseReceiptPath);
+  core.setOutput("release-receipt-root", settlement.releaseReceipt.receiptRoot);
+  core.setOutput(
+    "product-provider-result-path",
+    settlement.productProviderPath,
+  );
+  core.setOutput(
+    "product-provider-result-root",
+    settlement.productProviderResult.root,
+  );
+  core.setOutput("release-passport-path", documents.passportPath);
+  core.setOutput("release-passport-root", documents.passport.passportRoot);
+  core.setOutput("transaction-state", settlement.result.transaction.state);
+  core.setOutput("declaration-root", settlement.result.declarationRoot);
+  core.setOutput(
+    "transaction-root",
+    settlement.result.transaction.transactionRoot,
+  );
+  core.setOutput("state-root", settlement.result.transaction.stateRoot);
   core.setOutput(
     "receipt-roots-json",
     JSON.stringify(
-      result.transaction.receipts.map(({ receiptRoot }) => receiptRoot),
+      [
+        settlement.productProviderResult.root,
+        ...settlement.result.transaction.receipts.map(
+          ({ receiptRoot }) => receiptRoot,
+        ),
+      ].sort(),
     ),
   );
 }
 
-main().catch((error) => core.setFailed(error.message));
+async function main() {
+  const repository = input("repository", true);
+  const sourceSha = input("source-sha", true);
+  const fallbackVersion = input("version", true);
+  const fallbackTag = input("tag", true);
+  const channel = input("channel", true);
+  const candidatePassportPath = input("candidate-passport-path", true);
+  const buildSummaryPath = input("candidate-build-summary-path", true);
+  const candidate = read(candidatePassportPath);
+  const stageCapsules = read(input("stage-capsules-path", true));
+  const qualification = read(input("publication-qualification-path", true));
+  const octokit = github.getOctokit(input("token", true));
+  const mutationOctokit = github.getOctokit(input("mutation-token", true));
+  assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
+  const sourceBinding = await observeProtectedPublicationSource({
+    octokit,
+    repository,
+    protectedSourceSha: sourceSha,
+    candidate,
+  });
+  const providerRequest = productProviderRequest({
+    octokit,
+    mutationOctokit,
+    repository,
+    targetRef: input("target-ref", true),
+    targetSha: input("target-sha", true),
+    candidate,
+    candidatePassportPath,
+    buildSummaryPath,
+    qualification,
+  });
+  const publicationPlan = await planProductPublication(providerRequest, {
+    fallbackVersion,
+    fallbackTag,
+  });
+  const documents = await createReleaseDocuments({
+    repository,
+    sourceSha,
+    fallbackVersion,
+    channel,
+    candidate,
+    stageCapsules,
+    qualification,
+    sourceBinding,
+    publicationPlan,
+    octokit,
+  });
+  const settlement = await applyAndSettle({
+    repository,
+    sourceSha,
+    channel,
+    qualification,
+    octokit,
+    providerRequest,
+    publicationPlan,
+    documents,
+  });
+  setOutputs(documents, settlement);
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main().catch((error) => core.setFailed(error.message));
+}

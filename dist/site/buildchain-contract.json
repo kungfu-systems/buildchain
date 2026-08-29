@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:26e793cfd33e27e999770c7e3af6061a4b941f5050228e48ddabe9e227dc3d61",
+      "auditDigest": "sha256:bb006a22c17a67a79dcd3bf566e2fdf9f5a1c4841580d1cfbaa44229f2a8b8b1",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1863,7 +1863,7 @@
         "no consumer command, script, shell, checkout, or executable tail hook is accepted"
       ],
       "breakingDigest": "sha256:9229eb3a000fb408feb6b8793c209c77afbf9327026467d68954470e22e4f8f4",
-      "auditDigest": "sha256:f70abd0616561e152cdc06431365830f782be494278b99b9926bc72bae4a5fdb"
+      "auditDigest": "sha256:28f962e2c7542d650417975ea9d5922816f57c63798e895ed0eac61840a02af4"
     },
     {
       "contractVersion": 1,
@@ -2257,7 +2257,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:a99c7387e403b8c471987e976bf02673664290d9621181ecfaa34169b8c2f8f2"
+      "auditDigest": "sha256:27bcd57f554c2f254fb350097e15fe8f3954bafb2fc04c72f725bdaf444fbea7"
     },
     {
       "contractVersion": 1,
@@ -2279,7 +2279,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:03c6dbaab4b981366a18934a265447542999ac57b62ffa2688da2dfab1979938"
+      "auditDigest": "sha256:ab1899ef8d6328b92f647a46bdb52a57a50b7e55a2af51e199dac7cfbe68545a"
     },
     {
       "contractVersion": 1,
@@ -5173,7 +5173,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:26e793cfd33e27e999770c7e3af6061a4b941f5050228e48ddabe9e227dc3d61"
+      "auditDigest": "sha256:bb006a22c17a67a79dcd3bf566e2fdf9f5a1c4841580d1cfbaa44229f2a8b8b1"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:c3f3fd491d8a04ca97e1953c5fa070fa049c03c3790b257b086c09208ca6b759"
+  "contractDigest": "sha256:ed72093ec969540b761f3b92a5f2a8fa9078f79a2f8f7327e2ed45202243428d"
 }
