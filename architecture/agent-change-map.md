@@ -174,6 +174,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/buildchain-cli-help.mjs`
 - `scripts/check-v4-floating-consumer-policy-contract.mjs`
 - `tests/dev-delivery-warrant.test.mjs`
+- `packages/core/dev-delivery-warrant-state.js`
 - `actions/promote-buildchain-ref/internal/version-state.js`
 - `packages/core/v4-floating-consumer-release-passport.js`
 - `packages/core/release-passport.js`
