@@ -1083,3 +1083,14 @@ jobs:
           name: buildchain-v4-release-settle-${{ needs.qualify.outputs.requested-sha }}
           path: .buildchain/evidence/release-tail/release-receipt.json
           if-no-files-found: error
+
+  legacy-promote:
+    name: Bounded bootstrap publication authority audit bridge
+    if: ${{ github.repository != 'kungfu-systems/buildchain' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Prohibit execution outside the historical bootstrap shell
+        run: exit 1
