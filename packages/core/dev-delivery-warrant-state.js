@@ -346,16 +346,15 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
     "queue fencingCounter",
   );
   queue.policy = normalizePolicy(queue.policy);
+  const candidates = queue.candidates || [];
   const allowLegacyV3Readback =
     expected.allowMixedLegacyRecovery === true ||
     (expected.allowLegacyV3Readback === true &&
-      !(queue.candidates || []).some(
-        (candidate) => candidate?.nativeCommandContract,
-      ) &&
+      !candidates.some((candidate) => candidate?.nativeCommandContract) &&
       !queue.activeWarrant?.nativeCommandContract &&
       !queue.activeWarrant?.nativeExecutionReceiptRoot &&
       !queue.activeWarrant?.qualificationReceiptRoot);
-  queue.candidates = (queue.candidates || []).map((candidate) =>
+  queue.candidates = candidates.map((candidate) =>
     normalizeCandidate(candidate, { ...queue, allowLegacyV3Readback }),
   );
   validateDevDeliveryCandidateChain(queue.candidates, TERMINAL_STATES);
