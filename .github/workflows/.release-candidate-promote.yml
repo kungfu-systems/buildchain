@@ -961,7 +961,7 @@ jobs:
         with: &provider-inputs
           token: ${{ github.token }}
           repository: ${{ github.repository }}
-          source-sha: ${{ needs.qualify.outputs.candidate-source-sha }}
+          source-sha: ${{ needs.qualify.outputs.requested-sha }}
           version: ${{ needs.qualify.outputs.version }}
           tag: ${{ needs.qualify.outputs.exact-tag }}
           channel: ${{ needs.qualify.outputs.channel }}

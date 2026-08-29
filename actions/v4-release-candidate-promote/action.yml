@@ -9,7 +9,7 @@ inputs:
     }
   repository:
     { required: true, description: "Exact owner/repo publication target" }
-  source-sha: { required: true, description: "Exact candidate source SHA" }
+  source-sha: { required: true, description: "Exact protected publication source SHA" }
   version: { required: true, description: "Exact publication version" }
   tag: { required: true, description: "Exact publication tag" }
   channel: { required: true, description: "alpha, release, or stable" }
