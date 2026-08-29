@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64326,
-    "current": 56265
+    "measuredExcess": 64325,
+    "current": 56264
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1741,7 +1741,7 @@
           "lines": 1125
         },
         "current": {
-          "lines": 1125
+          "lines": 1124
         },
         "target": {
           "lines": 600
