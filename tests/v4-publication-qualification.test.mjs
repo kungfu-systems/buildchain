@@ -103,6 +103,9 @@ test("execution-shaped fields and legacy command inputs are rejected at admissio
       "publication-gate-command": "node gate.js",
     }),
   );
+  assert.doesNotThrow(() =>
+    assertV4DeclarativePromotionInputs({ "dry-run": true }),
+  );
 });
 
 test("v4 admission requires declarative mode while v3 remains compatible", () => {
