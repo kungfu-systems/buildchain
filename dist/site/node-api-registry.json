@@ -29815,7 +29815,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-publication-qualification",
       "export": "./v4-publication-qualification",
       "target": "./packages/core/v4-publication-qualification.js",
-      "digest": "sha256:88df23b5a9e12838edab7c3a3c117fec2c145b7ded92f847d522051574214173",
+      "digest": "sha256:514be74e61aa9e4145b43488a36f44f58e78b5cec67284dbff52a6083e811d96",
       "summary": "Sealed v4 candidate, source, artifact, policy, freshness, and command-free promotion admission APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
