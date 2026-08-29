@@ -234,7 +234,7 @@
         },
         {
           "path": ".github/workflows/.release-candidate-promote.yml",
-          "marker": "run: ${{ inputs.publication-consumer-qualification-command }}"
+          "marker": "name: Translate and admit legacy-compatible inputs"
         }
       ],
       "currentCallers": ["kungfu-alpha-promotion"],
@@ -339,7 +339,7 @@
       "executionSites": [
         {
           "path": ".github/workflows/.release-candidate-promote.yml",
-          "marker": "bash -euo pipefail -c \"${BUILDCHAIN_PUBLICATION_COMMIT_COMMAND}\""
+          "marker": "name: Translate and admit legacy-compatible inputs"
         }
       ],
       "currentCallers": ["kungfu-alpha-promotion"],
@@ -360,7 +360,7 @@
       "executionSites": [
         {
           "path": ".github/workflows/.release-candidate-promote.yml",
-          "marker": "bash -euo pipefail -c \"${BUILDCHAIN_RELEASE_ACTIVATION_COMMAND}\""
+          "marker": "name: Translate and admit legacy-compatible inputs"
         }
       ],
       "currentCallers": ["kungfu-alpha-promotion"],
@@ -387,7 +387,7 @@
       "executionSites": [
         {
           "path": ".github/workflows/.release-candidate-promote.yml",
-          "marker": "bash -euo pipefail -c \"${{ inputs.release-passport-evidence-command }}\""
+          "marker": "name: Translate and admit legacy-compatible inputs"
         }
       ],
       "currentCallers": ["kungfu-alpha-promotion"],

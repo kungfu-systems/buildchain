@@ -1,5 +1,35 @@
 // prettier-ignore
 const { GENERATED_COMMIT_SIGN_OFF, OTHER_SHA, PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT, SHA, alignMajorBootstrapReleaseImpact, alphaDistTagForPromotion, alreadyExists, assert, assertAllowedLocalChanges, assertChannelPromotionPr, assertExpectedPublicationVersion, assertPromotableRepository, assertPromotableTargetRef, assertProtectedChannel, assertProviderEnforcedChannelTransaction, collectGitHubReleaseEvidenceAssets, containedReleaseExecutionIdentity, createGitMock, createPublicationSealedBundle, createTreeEquivalentReleaseImpact, crypto, discoverVersionStateFiles, ensureManagedChannelBranchProtection, execFileSync, expectedHeadRefForTarget, explainReleaseLineDryRun, finalizationRequirements, formatReleaseLineDryRun, fs, generateReleaseEvidenceInputs, isAllowedReleaseLineRecoveryPath, latestAlphaForPatch, loadBuildchainConfig, makeTempWorkspace, materializeCommandShim, notFound, os, ownsMajorAlphaChannel, packageManifest, parseReleaseLineRef, parseTags, path, persistDurableReleaseTransaction, plannedPublicationExactTag, productionImpactJson, promoteBuildchainRefs, protectedChannel, publicationArtifactCandidateDigest, publishGitHubReleaseEvidence, releasePassportArtifactFiles, resolveProtectedStatusCheckContext, resolveReleaseImpactInput, resolveTagsForTarget, restoreDurableReleaseTransaction, root, run, runPublishTransaction, runVersionVerification, selectAlphaTag, selectReleaseTag, sha256Json, signedGeneratedCommitMessage, test, testReleaseCommitMatchesTransactionMaterial, transactionContainedInRelease, transitionReleaseTransaction, transientGitHubError, updateVersionStateContents, validatePromotionReleaseCandidate, validateRequiredPublishSourceLock, versionStateBranchName, versionVerificationAllowedPathsForPromotion } = await import("./promote-buildchain-ref-recovery-harness.mjs");
+test("contained release execution reuses an advanced published transaction before completion", () => {
+  for (const transactionState of ["published", "finalizing", "complete"]) {
+    const transaction = {
+      state: transactionState,
+      source_sha: "1".repeat(40),
+      release_sha: "2".repeat(40),
+      release_material_sha: "3".repeat(40),
+      publish_tooling_sha: "4".repeat(40),
+    };
+    assert.deepEqual(
+      containedReleaseExecutionIdentity(
+        {
+          sha: "5".repeat(40),
+          advancedPublicationTransaction: transaction,
+        },
+        {
+          containsPublishedMaterial: true,
+          releaseSha: "6".repeat(40),
+        },
+      ),
+      {
+        transaction,
+        releaseSha: transaction.release_sha,
+        sourceSha: transaction.source_sha,
+        releaseMaterialSha: transaction.release_material_sha,
+        publishToolingSha: transaction.publish_tooling_sha,
+      },
+    );
+  }
+});
 test("release promotion uses frozen PR alpha evidence when a later same-patch alpha exists", async () => {
   const oldReleaseSha = "4".repeat(40);
   const alphaZeroSha = "5".repeat(40);

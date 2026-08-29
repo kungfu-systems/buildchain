@@ -138,14 +138,21 @@ function terminal(jobInput) {
 function heartbeatEntry(result, previousStateRoot) {
   const warrant = selectedWarrant(result);
   const receipt = result.receipt;
+  const expectedOldStateRoot = receipt?.expectedOldStateRoot;
+  const recovery = result.concurrencyRecovery;
+  const rebased = expectedOldStateRoot !== previousStateRoot;
   if (
     receipt?.action !== "heartbeat" ||
-    result.before?.stateRoot !== previousStateRoot ||
-    receipt.expectedOldStateRoot !== previousStateRoot ||
+    result.before?.stateRoot !== expectedOldStateRoot ||
     result.after?.stateRoot !== receipt.nextStateRoot ||
     result.observation?.stateRoot !== receipt.nextStateRoot ||
     warrant?.fencingToken !== receipt.fencingToken ||
-    warrant?.generation !== receipt.leaseGeneration
+    warrant?.generation !== receipt.leaseGeneration ||
+    (rebased &&
+      (recovery?.action !== "heartbeat-state-root-rebased" ||
+        recovery.requestedStateRoot !== previousStateRoot ||
+        recovery.observedStateRoot !== expectedOldStateRoot)) ||
+    (!rebased && recovery)
   ) {
     throw new Error(
       "durable provider heartbeat transition is not root-continuous",
@@ -155,8 +162,10 @@ function heartbeatEntry(result, previousStateRoot) {
     throw new Error("durable provider heartbeat receipt root drift");
   }
   return {
-    expectedOldStateRoot: receipt.expectedOldStateRoot,
+    previousStateRoot,
+    expectedOldStateRoot,
     nextStateRoot: receipt.nextStateRoot,
+    concurrencyRecovery: recovery || null,
     receipt,
     receiptRoot: result.receiptRoot,
     heartbeatAt: timestamp(warrant.heartbeatAt, "durable heartbeatAt"),
@@ -274,13 +283,20 @@ function verifyHeartbeatContinuity(receipt, initial) {
   let previousRoot = initial.stateRoot;
   let previousTime = Date.parse(receipt.initialHeartbeatAt);
   for (const entry of receipt.heartbeats) {
+    const rebased = entry.expectedOldStateRoot !== previousRoot;
+    const recovery = entry.concurrencyRecovery;
     if (
-      entry.expectedOldStateRoot !== previousRoot ||
+      entry.previousStateRoot !== previousRoot ||
       devDeliveryContentRoot(entry.receipt) !== entry.receiptRoot ||
       entry.receipt.expectedOldStateRoot !== entry.expectedOldStateRoot ||
       entry.receipt.nextStateRoot !== entry.nextStateRoot ||
       entry.receipt.fencingToken !== initial.fencingToken ||
-      entry.receipt.leaseGeneration !== initial.generation
+      entry.receipt.leaseGeneration !== initial.generation ||
+      (rebased &&
+        (recovery?.action !== "heartbeat-state-root-rebased" ||
+          recovery.requestedStateRoot !== previousRoot ||
+          recovery.observedStateRoot !== entry.expectedOldStateRoot)) ||
+      (!rebased && recovery)
     ) {
       throw new Error("provider heartbeat root continuity mismatch");
     }

@@ -427,16 +427,14 @@ jobs:
         run: |
           case "${BUILDCHAIN_REF}" in
             v4|v4-alpha) ;;
+            [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
             train/v4/v4.0/*)
               if [[ ! "${BUILDCHAIN_REF}" =~ ^train/v4/v4\.0/[a-z0-9][a-z0-9._-]*$ ]]; then
                 echo "::error::trusted v4 train selector has an invalid capability component"
                 exit 1
               fi
               ;;
-            *)
-              echo "::error::buildchain-ref must be v4, v4-alpha, or train/v4/v4.0/<capability>"
-              exit 1
-              ;;
+            *) [[ "${BUILDCHAIN_REF}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::buildchain-ref must be an exact immutable SHA, v4, v4-alpha, or train/v4/v4.0/<capability>"; exit 1; } ;;
           esac
         env:
           BUILDCHAIN_REF: ${{ inputs.buildchain-ref }}
@@ -459,6 +457,7 @@ jobs:
             echo "::error::resolved Buildchain runtime is not an exact commit SHA"
             exit 1
           fi
+          if [[ "${BUILDCHAIN_REF}" =~ ^[0-9a-f]{40}$ && "${runtime_sha}" != "${BUILDCHAIN_REF}" ]]; then echo "::error::resolved Buildchain runtime SHA does not match the immutable selector"; exit 1; fi
           mkdir -p .buildchain/dev-delivery
           jq -n \
             --arg repository "${BUILDCHAIN_REPOSITORY}" \

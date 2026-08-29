@@ -3,103 +3,79 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-const workflow = fs.readFileSync(
-  path.resolve(".github/workflows/.release-candidate-promote.yml"),
-  "utf8",
-);
-const publicWorkflow = fs.readFileSync(
-  path.resolve(".github/workflows/release-candidate-promote.yml"),
-  "utf8",
-);
-const recoveryWorkflow = fs.readFileSync(
-  path.resolve(".github/workflows/buildchain-ref-promotion-recovery.yml"),
-  "utf8",
-);
-const selfPromotionWorkflow = fs.readFileSync(
-  path.resolve(".github/workflows/buildchain-ref-promotion.yml"),
-  "utf8",
-);
-const protectedShellPredicate =
-  "startsWith(inputs.promotion-shell-ref, 'v4') || inputs.promotion-shell-ref == 'alpha/v4/v4.0'";
+const readWorkflow = (name) =>
+  fs.readFileSync(path.resolve(".github/workflows", name), "utf8");
 
-test("protected v4 publication selects the complete transaction and reserves the provider capsule for injected recovery", () => {
-  assert.match(
-    workflow,
-    new RegExp(
-      `v4-declarative-promote:[\\s\\S]*?if: \\$\\{\\{[^\\n]*provider-failure-after-capability != ''[^\\n]*${protectedShellPredicate.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}[^\\n]*\\}\\}`,
-    ),
+const advanced = readWorkflow(".release-candidate-promote.yml");
+const publicWorkflow = readWorkflow("release-candidate-promote.yml");
+const recovery = readWorkflow("buildchain-ref-promotion-recovery.yml");
+const selfPromotion = readWorkflow("buildchain-ref-promotion.yml");
+
+test("canonical publisher has one QUALIFY APPLY SETTLE execution topology", () => {
+  assert.match(advanced, /^  qualify:/m);
+  assert.match(advanced, /^  apply:/m);
+  assert.match(advanced, /^  settle:/m);
+  assert.doesNotMatch(
+    advanced,
+    /^  (?:publication-authority|qualification-plan|publication-qualification|legacy-promote|v4-declarative-promote|promote):/m,
   );
-  for (const productionJob of [
-    "publication-authority",
-    "qualification-plan",
-    "publication-qualification",
-    "legacy-promote",
-  ]) {
+});
+
+test("public and recovery adapters invoke only the floating alpha publisher", () => {
+  for (const workflow of [publicWorkflow, recovery]) {
     assert.match(
       workflow,
-      new RegExp(
-        `^  ${productionJob}:[\\s\\S]*?^    if: [^\\n]*provider-failure-after-capability == ''`,
-        "m",
-      ),
+      /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.?release-candidate-promote\.yml@v4-alpha/u,
+    );
+    assert.doesNotMatch(
+      workflow,
+      /\.release-candidate-promote\.yml@v4(?:\n|$)/u,
     );
   }
-  assert.match(workflow, /authority-job-id: legacy-promote/u);
-  assert.match(
-    workflow,
-    /legacy-promote:[\s\S]*publish-transaction: "true"[\s\S]*declarative-release-tail: \$\{\{ inputs\.declarative-release-tail \}\}/u,
-  );
+  assert.match(publicWorkflow, /^  invoke:/m);
+  assert.match(recovery, /^  resume:/m);
 });
 
-test("bounded floating bootstrap uses the old private shell with a declarative built-in tail", () => {
+test("Buildchain self-promotion uses one current-major alpha publisher", () => {
   assert.match(
-    recoveryWorkflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@alpha\/v4\/v4\.0/u,
+    selfPromotion,
+    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/m,
   );
-  assert.match(
-    recoveryWorkflow,
-    /promotion-shell-ref: \$\{\{ needs\.consumer-admission\.outputs\.shell-call-ref \}\}/u,
-  );
-  assert.match(recoveryWorkflow, /declarative-release-tail: true/u);
-  assert.doesNotMatch(recoveryWorkflow, /channel-finalization-recovery/u);
-  assert.doesNotMatch(publicWorkflow, /channel-finalization-recovery/u);
-});
-
-test("trusted-publisher durable alpha recovery keeps the official floating shell on the declarative built-in tail", () => {
-  const promoteAlphaBlock = selfPromotionWorkflow.match(
-    /^  promote-alpha:[\s\S]*?(?=^  promote-stable:)/mu,
-  )?.[0];
-
-  assert.ok(promoteAlphaBlock, "expected the promote-alpha job");
-  assert.match(
-    promoteAlphaBlock,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.?release-candidate-promote\.yml@v4-alpha/u,
-  );
-  assert.match(
-    promoteAlphaBlock,
-    /^      publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion\.yml$/mu,
-  );
-  assert.match(promoteAlphaBlock, /^      declarative-release-tail: true$/mu);
-  assert.doesNotMatch(promoteAlphaBlock, /channel-finalization-recovery/u);
-});
-
-test("declarative promotion receipt reads the bundled controller evidence", () => {
-  assert.match(
-    workflow,
-    /promotion-evidence\/release-candidate-passport\.json/,
-  );
+  assert.doesNotMatch(selfPromotion, /^  promote-(?:alpha|stable):/m);
   assert.doesNotMatch(
-    workflow,
-    /promotion-evidence\/release-candidate\/passport\/release-candidate-passport\.json/,
+    selfPromotion,
+    /\.release-candidate-promote\.yml@v4(?:\n|$)/u,
   );
 });
 
-test("legacy publication authority audits the exact OIDC mutation job", () => {
-  assert.match(
-    workflow,
-    /publication-authority:[\s\S]*?authority-job-id: legacy-promote/u,
+test("APPLY retains one rooted transaction and SETTLE reads its receipt", () => {
+  const apply = advanced.slice(
+    advanced.indexOf("\n  apply:"),
+    advanced.indexOf("\n  settle:"),
   );
-  assert.match(
-    workflow,
-    /promote:\n    name: Select declarative or legacy promotion result\n    # buildchain-publication-authority-job: legacy-promote/u,
+  const settle = advanced.slice(advanced.indexOf("\n  settle:"));
+
+  assert.match(apply, /release-invocation-root:/);
+  assert.match(apply, /release-transaction-root:/);
+  assert.match(apply, /release-receipt-root:/);
+  assert.match(apply, /Resume the same transaction journal/);
+  assert.match(settle, /release-receipt\.json/);
+  assert.match(settle, /receipt-root=/);
+});
+
+test("only APPLY carries provider mutation permissions", () => {
+  const qualify = advanced.slice(
+    advanced.indexOf("\n  qualify:"),
+    advanced.indexOf("\n  apply:"),
   );
+  const apply = advanced.slice(
+    advanced.indexOf("\n  apply:"),
+    advanced.indexOf("\n  settle:"),
+  );
+  const settle = advanced.slice(advanced.indexOf("\n  settle:"));
+
+  assert.doesNotMatch(qualify, /contents: write|id-token: write/);
+  assert.match(apply, /contents: write/);
+  assert.match(apply, /id-token: write/);
+  assert.doesNotMatch(settle, /contents: write|id-token: write/);
 });

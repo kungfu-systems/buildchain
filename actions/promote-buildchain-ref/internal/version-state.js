@@ -263,12 +263,13 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
         : filePath === allowedPath,
     );
   const runtimeBridgePath = path.join(cwd, "node_modules");
-  let runtimeBridgePresent = false, isAcceptedDependencyTree = false;
+  let runtimeBridgePresent = false;
+  let isExactRuntimeBridge = false;
   try {
-    const runtimeBridge = fs.lstatSync(runtimeBridgePath);
-    runtimeBridgePresent = true;
-    isAcceptedDependencyTree = !runtimeBridge.isSymbolicLink() || fs.realpathSync(runtimeBridgePath) === fs.realpathSync(path.resolve(cwd, ".buildchain/runtime/node_modules"));
-  } catch { /* Missing or dangling paths are not accepted dependency trees. */ }
+    runtimeBridgePresent = Boolean(fs.lstatSync(runtimeBridgePath));
+    isExactRuntimeBridge = fs.realpathSync(runtimeBridgePath) ===
+      fs.realpathSync(path.resolve(cwd, ".buildchain/runtime/node_modules"));
+  } catch { /* Missing paths are not the exact runtime bridge. */ }
   const unexpected = output
     .split(/\r?\n/)
     .filter(Boolean)
@@ -276,10 +277,10 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
       const status = line.slice(0, 2);
       const filePath = line.slice(3).trim();
       if (isEphemeralBuildchainEvidence(status, filePath)) return false;
-      if (status === "??" && filePath === "node_modules" && isAcceptedDependencyTree) return false;
+      if (status === "??" && filePath === "node_modules" && isExactRuntimeBridge) return false;
       return !(allowed.has(filePath) && status !== "??" && !status.includes("D"));
     });
-  if (runtimeBridgePresent && !isAcceptedDependencyTree &&
+  if (runtimeBridgePresent && !isExactRuntimeBridge &&
     !unexpected.includes("?? node_modules")) {
     unexpected.push("?? node_modules");
   }
