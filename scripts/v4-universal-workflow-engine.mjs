@@ -6,6 +6,7 @@ import {
   validateV4UniversalWorkflowRequest,
   v4UniversalWorkflowRequestRoot,
 } from "../packages/core/v4-universal-workflow-bootstrap.js";
+import { createV4ReleaseInvocation } from "../packages/core/v4-release-invocation.js";
 
 function fail(message) {
   throw new Error(message);
@@ -44,6 +45,54 @@ function emit(value) {
   process.stdout.write(`${JSON.stringify(value)}\n`);
 }
 
+function capabilityResult(request, admission) {
+  if (request.capability.id === "bootstrap-conformance")
+    return { payload: request.payload };
+  if (request.capability.id === "release-invocation") {
+    const release = createV4ReleaseInvocation(request.payload);
+    return {
+      releaseInvocation: release.invocation,
+      releaseRoots: release.roots,
+    };
+  }
+  fail(`candidate capability is not implemented: ${request.capability.id}`);
+}
+
+function executeCandidate(request, admission) {
+  const runtime = exactRuntime(admission);
+  const engineSha = String(process.env.BUILDCHAIN_UNIVERSAL_ENGINE_SHA || "")
+    .trim()
+    .toLowerCase();
+  if (engineSha !== runtime.sha)
+    fail("candidate engine checkout does not match the admitted runtime SHA");
+  try {
+    return {
+      status: "succeeded",
+      output: capabilityResult(request, admission),
+    };
+  } catch (error) {
+    return {
+      status: "failed",
+      error: {
+        code: String(error?.code || "candidate-execution-failed"),
+        message: "candidate capability execution failed",
+      },
+    };
+  }
+}
+
+function assertResultLineage(admission, result) {
+  if (
+    result?.schema !== "kungfu-buildchain-v4-universal-workflow-result/v1" ||
+    result.requestRoot !== admission.requestRoot ||
+    result.capabilityRoot !== admission.capabilityRoot ||
+    result.runtime?.repository !== admission.runtime?.repository ||
+    result.runtime?.sha !== admission.runtime?.sha ||
+    !["succeeded", "failed"].includes(result.status)
+  )
+    fail("candidate result does not match the admitted lineage");
+}
+
 const command = process.argv[2];
 if (!command) fail("a command is required");
 
@@ -64,6 +113,9 @@ if (command === "inspect") {
       request: readJsonEnvironment("BUILDCHAIN_UNIVERSAL_REQUEST_JSON"),
       policy: readJsonEnvironment("BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON"),
       observedRefSha: process.env.BUILDCHAIN_UNIVERSAL_OBSERVED_SHA,
+      observedConsumerRepository:
+        process.env.BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY,
+      observedConsumerSha: process.env.BUILDCHAIN_UNIVERSAL_CONSUMER_SHA,
       reviewEvidence: readJsonEnvironment(
         "BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON",
       ),
@@ -76,21 +128,15 @@ if (command === "inspect") {
   );
   const admission = readJsonEnvironment("BUILDCHAIN_UNIVERSAL_ADMISSION_JSON");
   const runtime = exactRuntime(admission);
-  const engineSha = String(process.env.BUILDCHAIN_UNIVERSAL_ENGINE_SHA || "")
-    .trim()
-    .toLowerCase();
-  if (engineSha !== runtime.sha)
-    fail("candidate engine checkout does not match the admitted runtime SHA");
-  if (request.capability.id !== "bootstrap-conformance")
-    fail(`candidate capability is not implemented: ${request.capability.id}`);
+  const execution = executeCandidate(request, admission);
   const result = {
     schema: "kungfu-buildchain-v4-universal-workflow-result/v1",
-    status: "succeeded",
+    status: execution.status,
     requestRoot: admission.requestRoot,
     runtime,
     capabilityRoot: admission.capabilityRoot,
     enginePath: "scripts/v4-universal-workflow-engine.mjs",
-    payload: request.payload,
+    ...execution,
   };
   emit({
     ...result,
@@ -99,6 +145,7 @@ if (command === "inspect") {
 } else if (command === "terminal") {
   const admission = readJsonEnvironment("BUILDCHAIN_UNIVERSAL_ADMISSION_JSON");
   const result = readJsonEnvironment("BUILDCHAIN_UNIVERSAL_RESULT_JSON");
+  assertResultLineage(admission, result);
   emit(
     completeV4UniversalWorkflow({
       admission,
