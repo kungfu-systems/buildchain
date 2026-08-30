@@ -33,9 +33,6 @@ on:
         description: "Protected Train-to-dev backflow binding root"
         value: ${{ jobs.settle.outputs.backflow-root }}
 
-permissions:
-  contents: read
-
 jobs:
   admit:
     name: Admit exact reviewed candidate
@@ -164,20 +161,6 @@ jobs:
     name: Execute exact admitted candidate
     needs: admit
     runs-on: ubuntu-24.04
-    permissions:
-      actions: write
-      artifact-metadata: write
-      attestations: write
-      checks: write
-      contents: write
-      deployments: write
-      id-token: write
-      issues: write
-      packages: write
-      pages: write
-      pull-requests: write
-      security-events: write
-      statuses: write
     outputs:
       result-json: ${{ steps.execute.outputs.result-json }}
       result-root: ${{ steps.execute.outputs.result-root }}
