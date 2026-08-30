@@ -137,6 +137,8 @@ function promotionOptions(
     releaseCandidatePassportPath: request.candidatePassportPath,
     releaseCandidateBuildSummaryPath: request.buildSummaryPath,
     releaseCandidateVersion,
+    releaseCandidateRecoveryReceiptPath:
+      request.releaseCandidateRecoveryReceiptPath || "",
     actor: request.actor,
     runId: request.runId,
     publishTransactionOverride: request.publishTransactionOverride,

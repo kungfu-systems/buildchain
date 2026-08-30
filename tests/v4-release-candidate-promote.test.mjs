@@ -63,6 +63,23 @@ test("legacy promotion shells recover standard sealed provider inputs", () => {
   });
 });
 
+test("candidate recovery passes the rooted sibling receipt to the product provider", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
+  const passport = path.join(root, "passport", "release-candidate-passport.json");
+  const recoveryReceipt = path.join(root, "recovery-receipt.json");
+  fs.mkdirSync(path.dirname(passport), { recursive: true });
+  fs.mkdirSync(path.join(root, "payloads"));
+  fs.writeFileSync(path.join(root, "sealed-bundle.json"), "{}\n");
+  fs.writeFileSync(recoveryReceipt, "{}\n");
+  fs.writeFileSync(path.join(root, "publish-required-artifacts.json"), `${JSON.stringify([{ name: "@kungfu-tech/buildchain", role: "main" }])}\n`);
+
+  assert.equal(
+    resolveCandidateProviderInputs({ candidatePassportPath: passport })
+      .releaseCandidateRecoveryReceiptPath,
+    recoveryReceipt,
+  );
+});
+
 test("legacy promotion shells bind the exact merged PR target", async () => {
   const candidateSha = "1".repeat(40), mergeSha = "2".repeat(40);
   const result = await resolvePublicationTarget({

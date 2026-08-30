@@ -70,6 +70,10 @@ export function resolveCandidateProviderInputs({ candidatePassportPath, sealedBu
     requiredArtifactsPath: standardCandidatePath(candidatePassportPath, requiredArtifactsPath, "publish-required-artifacts.json", "required-artifacts-path"),
     publishPackageMain: String(publishPackageMain || "").trim(),
   };
+  const recoveryReceiptPath = path.join(path.dirname(resolved.sealedBundleManifest), "recovery-receipt.json");
+  if (fs.existsSync(path.resolve(recoveryReceiptPath))) {
+    resolved.releaseCandidateRecoveryReceiptPath = recoveryReceiptPath;
+  }
   if (!resolved.publishPackageMain) {
     const main = read(resolved.requiredArtifactsPath).filter(({ role }) => role === "main");
     if (main.length !== 1 || !String(main[0]?.name || "").trim())
@@ -267,6 +271,8 @@ function productProviderRequest({
     publishDistTag: input("publish-dist-tag"),
     publishPackageSetOrder: input("publish-package-set-order") || "as-provided",
     publishPackageMain: providerInputs.publishPackageMain,
+    releaseCandidateRecoveryReceiptPath:
+      providerInputs.releaseCandidateRecoveryReceiptPath || "",
     publishRematerializeOnResume: core.getBooleanInput(
       "publish-rematerialize-on-resume",
     ),
