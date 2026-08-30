@@ -15,6 +15,10 @@ const publicPromotion = fs.readFileSync(
   path.resolve(".github/workflows/release-candidate-promote.yml"),
   "utf8",
 );
+const resolver = fs.readFileSync(
+  path.resolve("scripts/release-candidate-resolver.mjs"),
+  "utf8",
+);
 
 function nestedKeys(source, marker) {
   const lines = source.split("\n");

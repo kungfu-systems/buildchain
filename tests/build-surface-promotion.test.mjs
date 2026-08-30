@@ -433,7 +433,7 @@ test("buildchain ref promotion delegates alpha evidence to the canonical publish
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
   assert.doesNotMatch(workflow, /promote-stable:|uses: \.\/actions\/promote-buildchain-ref/);
 });
-test("QUALIFY receives the rooted transient runtime authorization", () => {
+test("QUALIFY receives the rooted transient runtime authorization and publication channel", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
     "utf8",
@@ -444,7 +444,7 @@ test("QUALIFY receives the rooted transient runtime authorization", () => {
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: \$\{\{ inputs\.promotion-runtime-authorization-root \}\}/,
+    /BUILDCHAIN_RESUME_CHANNEL: \$\{\{ inputs\.promotion-publication-channel \|\| steps\.intent\.outputs\.channel \}\}[\s\S]*BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: \$\{\{ inputs\.promotion-runtime-authorization-root \}\}/,
   );
   const qualify = workflow.slice(workflow.indexOf("  qualify:"), workflow.indexOf("  apply:"));
   assert.match(qualify, /Translate and admit legacy-compatible inputs/);
@@ -2492,6 +2492,7 @@ test("release-candidate resolver requires one merged PR-stage RC artifact", asyn
           html_url: "https://github.com/kungfu-systems/libnode/pull/42",
           merged_at: "2026-07-04T00:00:00Z",
           updated_at: "2026-07-04T00:00:00Z",
+          merge_commit_sha: targetSha,
           base: { ref: "alpha/v22/v22.22" },
           head: {
             sha: builtSourceSha,
@@ -2553,7 +2554,6 @@ test("release-candidate resolver requires one merged PR-stage RC artifact", asyn
   assert.equal(result.pullRequest.number, 42);
   assert.equal(seen.length, 3);
 });
-
 test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-action-"),
