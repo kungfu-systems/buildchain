@@ -461,3 +461,15 @@ test("production admission rejects contract-only false success", () => {
     { code: "capability-not-admitted" },
   );
 });
+
+test("Bootstrap inherits caller authority without widening compatibility facades", () => {
+  const workflow = fs.readFileSync(
+    new URL("../.github/workflows/bootstrap.yml", import.meta.url),
+    "utf8",
+  );
+  assert.doesNotMatch(workflow.slice(0, workflow.indexOf("\njobs:")), /^permissions:/mu);
+  assert.doesNotMatch(
+    workflow.slice(workflow.indexOf("\n  execute:"), workflow.indexOf("\n  settle:")),
+    /^    permissions:/mu,
+  );
+});

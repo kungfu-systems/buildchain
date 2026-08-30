@@ -958,8 +958,7 @@
     {
       "path": ".github/workflows/bootstrap.yml",
       "signals": [
-        "write-permission",
-        "oidc"
+        "write-permission"
       ],
       "classified": true
     },
@@ -1328,5 +1327,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "f142cf087f80dbfa1992329ff191f01e69af32e0cd79fb6ea278632313569a59"
+  "registryDigest": "29e21caafef9762a6b630340db8dd494ddc0533ffec2d1ab6c0eacd94d5b7d1b"
 }
