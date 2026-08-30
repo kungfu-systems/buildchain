@@ -42,7 +42,6 @@ function fail(code, message) {
   error.code = code;
   throw error;
 }
-
 function exactKeys(value, keys, label) {
   if (!value || typeof value !== "object" || Array.isArray(value))
     fail("invalid-object", `${label} must be an object`);
@@ -54,33 +53,28 @@ function exactKeys(value, keys, label) {
   )
     fail("invalid-field-set", `${label} has an invalid field set`);
 }
-
 function nonEmpty(value, label) {
   const normalized = String(value || "").trim();
   if (!normalized) fail("required-value", `${label} must be non-empty`);
   return normalized;
 }
-
 function exactSha(value, label) {
   const normalized = nonEmpty(value, label).toLowerCase();
   if (!EXACT_SHA.test(normalized))
     fail("invalid-exact-sha", `${label} must be an exact lowercase Git SHA`);
   return normalized;
 }
-
 function positiveInteger(value, label) {
   if (!Number.isSafeInteger(value) || value < 1)
     fail("invalid-positive-integer", `${label} must be a positive integer`);
   return value;
 }
-
 function root(value, label) {
   const normalized = nonEmpty(value, label).toLowerCase();
   if (!ROOT.test(normalized))
     fail("invalid-root", `${label} must be a lowercase sha256 root`);
   return normalized;
 }
-
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === "object")
@@ -98,7 +92,6 @@ function canonical(value) {
     return value;
   fail("unsupported-json", "value is not canonical JSON");
 }
-
 function documentRoot(domain, value) {
   const hash = crypto.createHash("sha256");
   hash.update(domain, "utf8");
@@ -106,12 +99,11 @@ function documentRoot(domain, value) {
   hash.update(`${JSON.stringify(canonical(value))}\n`, "utf8");
   return `sha256:${hash.digest("hex")}`;
 }
-
-function sortedRoots(values, label) {
+function sortedValues(values, label, normalize, kind) {
   if (!Array.isArray(values) || values.length === 0)
-    fail("required-roots", `${label} must be a non-empty array`);
+    fail(`required-${kind}`, `${label} must be a non-empty array`);
   const normalized = values.map((value, index) =>
-    root(value, `${label}[${index}]`),
+    normalize(value, `${label}[${index}]`),
   );
   const expected = [...new Set(normalized)].sort((left, right) =>
     Buffer.from(left).compare(Buffer.from(right)),
@@ -121,55 +113,23 @@ function sortedRoots(values, label) {
     normalized.some((value, index) => value !== expected[index])
   )
     fail(
-      "non-canonical-roots",
+      `non-canonical-${kind}`,
       `${label} must be byte-sorted and duplicate-free`,
     );
   return normalized;
 }
-
-function sortedTokens(values, label) {
-  if (!Array.isArray(values) || values.length === 0)
-    fail("required-tokens", `${label} must be a non-empty array`);
-  const normalized = values.map((value, index) => {
-    const token = nonEmpty(value, `${label}[${index}]`);
-    if (!TOKEN.test(token))
-      fail("invalid-token", `${label}[${index}] must be an ASCII token`);
-    return token;
-  });
-  const expected = [...new Set(normalized)].sort((left, right) =>
-    Buffer.from(left).compare(Buffer.from(right)),
-  );
-  if (
-    normalized.length !== expected.length ||
-    normalized.some((value, index) => value !== expected[index])
-  )
-    fail(
-      "non-canonical-tokens",
-      `${label} must be byte-sorted and duplicate-free`,
-    );
-  return normalized;
+function token(value, label) {
+  const token = nonEmpty(value, label);
+  if (!TOKEN.test(token))
+    fail("invalid-token", `${label} must be an ASCII token`);
+  return token;
 }
-
-function sortedStrings(values, label) {
-  if (!Array.isArray(values) || values.length === 0)
-    fail("required-strings", `${label} must be a non-empty array`);
-  const normalized = values.map((value, index) =>
-    nonEmpty(value, `${label}[${index}]`),
-  );
-  const expected = [...new Set(normalized)].sort((left, right) =>
-    Buffer.from(left).compare(Buffer.from(right)),
-  );
-  if (
-    normalized.length !== expected.length ||
-    normalized.some((value, index) => value !== expected[index])
-  )
-    fail(
-      "non-canonical-strings",
-      `${label} must be byte-sorted and duplicate-free`,
-    );
-  return normalized;
-}
-
+const sortedRoots = (values, label) =>
+  sortedValues(values, label, root, "roots");
+const sortedTokens = (values, label) =>
+  sortedValues(values, label, token, "tokens");
+const sortedStrings = (values, label) =>
+  sortedValues(values, label, nonEmpty, "strings");
 function permissions(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value))
     fail("invalid-permissions", `${label} must be an object`);
@@ -186,7 +146,6 @@ function permissions(value, label) {
     fail("required-permissions", `${label} must not be empty`);
   return result;
 }
-
 function repository(value, label) {
   const normalized = nonEmpty(value, label);
   if (!REPOSITORY.test(normalized))
@@ -470,6 +429,8 @@ export function admitV4UniversalWorkflow({
   request: requestValue,
   policy: policyValue,
   observedRefSha,
+  observedConsumerRepository,
+  observedConsumerSha,
   reviewEvidence: reviewEvidenceValue,
   now,
 } = {}) {
@@ -482,6 +443,11 @@ export function admitV4UniversalWorkflow({
     fail("source-repository-mismatch", "admission source repository mismatch");
   if (!policy.allowedConsumers.includes(request.consumer.repository))
     fail("consumer-not-admitted", "consumer repository is not admitted");
+  if (
+    request.consumer.repository !== observedConsumerRepository ||
+    request.consumer.sourceSha !== exactSha(observedConsumerSha, "observedConsumerSha")
+  )
+    fail("consumer-identity-mismatch", "request does not bind the caller repository and SHA");
   if (!policy.allowedCapabilities.includes(request.capability.id))
     fail("capability-not-admitted", "capability is not admitted");
   if (
