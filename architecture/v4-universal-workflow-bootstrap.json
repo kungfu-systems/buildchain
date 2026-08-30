@@ -173,8 +173,8 @@
     "staticBootstrap": "implemented",
     "candidateEngine": "bounded-capability-adapters",
     "compatibilityFacades": "generated-dual-path",
-    "externalConsumerDogfood": "non-circular-recovery-template-implemented-runtime-pending",
-    "buildchainSelfDogfood": "train-primary-and-consumer-recovery-pairs-implemented-hosted-proof-required",
-    "oldPathRetirement": "pending"
+    "externalConsumerDogfood": "public-consumer-three-platform-runtime-and-non-circular-recovery-hosted-proof-passed",
+    "buildchainSelfDogfood": "train-primary-and-consumer-recovery-three-pair-hosted-proof-passed",
+    "oldPathRetirement": "pending-protected-dev-integration"
   }
 }
