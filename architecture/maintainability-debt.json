@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64324,
-    "current": 56263
+    "measuredExcess": 64321,
+    "current": 56260
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -92,21 +92,21 @@
       "actions/promote-buildchain-ref/internal/durable-transaction-operations.js": {
         "baseline": {
           "functions": {
-            "createDurableTransactionOperations@11": {
+            "createDurableTransactionOperations@80": {
               "lines": 378
             }
           }
         },
         "current": {
           "functions": {
-            "createDurableTransactionOperations@11": {
+            "createDurableTransactionOperations@80": {
               "lines": 378
             }
           }
         },
         "target": {
           "functions": {
-            "createDurableTransactionOperations@11": {
+            "createDurableTransactionOperations@80": {
               "lines": 180
             }
           }
@@ -2614,7 +2614,7 @@
           "lines": 1217
         },
         "current": {
-          "lines": 1137
+          "lines": 1132
         },
         "target": {
           "lines": 600
@@ -2937,7 +2937,7 @@
           "lines": 2736
         },
         "current": {
-          "lines": 1116
+          "lines": 1118
         },
         "target": {
           "lines": 600
@@ -3137,7 +3137,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 1116
+      "current": 1118
     },
     {
       "domain": "sources",

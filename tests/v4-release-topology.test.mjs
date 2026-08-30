@@ -273,6 +273,38 @@ test("fresh and recovery candidate discovery are data-only adapters into the sam
   );
 });
 
+test("an exact resume transaction identity reaches the canonical product provider", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const action = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/action.yml"),
+    "utf8",
+  );
+  const entrypoint = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/index.js"),
+    "utf8",
+  );
+  const provider = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/product-provider.js"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /resume-transaction-id: \$\{\{ inputs\.resume-transaction-id \}\}/u,
+  );
+  assert.match(action, /resume-transaction-id:/u);
+  assert.match(
+    entrypoint,
+    /expectedTransactionId: input\("resume-transaction-id"\)/u,
+  );
+  assert.match(
+    provider,
+    /expectedTransactionId: request\.expectedTransactionId/u,
+  );
+});
+
 test("canonical APPLY roots the product provider's planned exact version", () => {
   assert.deepEqual(
     selectProductPublicationPlan({
