@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1126,
+  "generation": 1127,
   "fencingCounter": 169,
   "policy": {
     "agingSeconds": 900,
@@ -12,52 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "qualified",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:9cefde2ca22fd95d780cf02517ea1f01ad6ac1f7f8124b7e0ff5cbb04dc5c0a0",
-    "pullRequestNumber": 3317,
-    "sourceHead": "05e289aff444aa12a36e425dc9a0b320ba088ea8",
-    "assignmentRoot": "sha256:5c092a53f4e20e0ffc5cc03a0691d6cfffe2a69e4cfa24fd1bda5bbe2a2cead1",
-    "initiativeRoot": "sha256:8317113db9c76e9f6bfb85730d009a0eb2389511be448cbe7e8dfe8d3b41e876",
-    "sourceIdentityRoot": "sha256:b28b9323525d5b5b96ec8f71228f4ca0a109b5b1db6346234c5e1fbc5dce5bde",
-    "sourcePatchRoot": "sha256:81e64c557bc9466ffcd36c294c6992393f75e08b8eee8b9c04bbc5e87477f26e",
-    "sourceProofRoot": "sha256:b26db8bd46262cd95c893da1f3139a84a99667eb720ecfad0c994fcc6b884d35",
-    "planRoot": "sha256:fffa927c3a7f0385cf7084b7d5ddf96de0544027a98c3a87278e27f43bf85e99",
-    "closureRoot": "sha256:bd6c1d33fe852c15571e87f0a8b1f00563dbe32eea1276d918ebf7a689868e70",
-    "dependencyRoot": "sha256:1448f3acf66af5804853a9fb58bfc7d09b6988ee62d18a15e6c1c97d71726956",
-    "toolchainRoot": "sha256:f739040bb9819226aacb0b4f34ebe8c08bf551773b3f14476bdb65602fac0d05",
-    "environmentRoot": "sha256:dec82f872185a88457f3bf4e52ee191bc1a5f8aa7a3e6e94440d9ab8dde854f5",
-    "nativeCommandContract": {
-      "schema": "kungfu.buildchain.native-command-contract/v1",
-      "runner": "bash-lc",
-      "command": "mkdir -p \"$HOME/.local/bin\" && corepack enable --install-directory \"$HOME/.local/bin\" && export PATH=\"$HOME/.local/bin:$PATH\" && pnpm install --frozen-lockfile && pnpm run check",
-      "commandRoot": "sha256:c80aa61494655f6ff934d35012cdba3752978f8b702942ac3d4228c3b5f501a9"
-    },
-    "affectedPaths": [
-      "architecture/maintainability-debt.json",
-      "packages/core/dev-delivery-execution-transfer.js",
-      "tests/dev-delivery-process-boundary.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 33297369462,
-    "deliveryClass": "native-proof-required",
-    "priority": "ordinary",
-    "generation": 169,
-    "expectedOldStateRoot": "sha256:e3c16804b587ad916c48cc804438a6e98446d4b83beeeea4eee996d3f90fd2be",
-    "issuedAt": "2026-08-30T06:56:09.790Z",
-    "expiresAt": "2026-08-30T08:01:32.525Z",
-    "fencingToken": "sha256:cc3a8f5e6ef00ad4b6992efabf5b2bc75c8534b855bff0f557432ac08460951b",
-    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
-    "heartbeatAt": "2026-08-30T07:01:32.525Z",
-    "nativeProofRoot": "sha256:eb6997f45aa0072bb777ed04370ef7848f376a430129a3edf34a093b91ab3b9e",
-    "nativeExecutionReceiptRoot": "sha256:27fe30bf2c221de5af2debfe16d8619a407c8908072a9bf7a3e67edee444a0ba",
-    "nativeProofReuseRoot": "sha256:0aaba138ca50355aecab5ac2fab3cfe7622750d4db28b48b2781a2688bdcce2d",
-    "qualificationReceiptRoot": "sha256:a6ce9412da86323635a64554ee53f880a339350acda73f2f758c66a65fa31a22",
-    "qualifiedAt": "2026-08-30T07:01:55.642Z"
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -7994,11 +7949,19 @@
       "sourceWorkflowRunId": 33297369462,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-30T06:56:05.707Z",
-      "updatedAt": "2026-08-30T07:01:55.642Z",
+      "updatedAt": "2026-08-30T07:09:29.747Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "qualified",
-      "terminal": null,
+      "status": "merged",
+      "terminal": {
+        "outcome": "merged",
+        "reason": "Protected merge read back at exact commit e9df589c67f7caab43abb1a288d45734d33a72f9",
+        "evidenceRoot": "sha256:51d14da1e6fd3d64d156bd3b7e4b1663b932010828dda9081e33b3cb7bc7a9a4",
+        "closedAt": "2026-08-30T07:09:29.747Z",
+        "fencingToken": "sha256:cc3a8f5e6ef00ad4b6992efabf5b2bc75c8534b855bff0f557432ac08460951b",
+        "leaseGeneration": 169,
+        "successorWake": null
+      },
       "affectedPaths": [
         "architecture/maintainability-debt.json",
         "packages/core/dev-delivery-execution-transfer.js",
@@ -8007,6 +7970,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-30T07:01:55.642Z",
-  "stateRoot": "sha256:51abe4e239301bec74e5c18ccbfaf1379830b39e66fe3c9f77bde87d0f07d8f3"
+  "updatedAt": "2026-08-30T07:09:29.747Z",
+  "stateRoot": "sha256:f1480518e8ae047d4ff1fb29038bc9441051970defd84dd950fca3955265d284"
 }
