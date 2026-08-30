@@ -9,7 +9,7 @@ inputs:
     }
   mutation-token:
     {
-      required: true,
+      required: false,
       description: "Bounded token for generated protected ref and pull-request mutations",
     }
   repository:

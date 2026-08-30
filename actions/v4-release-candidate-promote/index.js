@@ -498,8 +498,9 @@ async function main() {
   const candidate = read(candidatePassportPath);
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));
-  const octokit = github.getOctokit(input("token", true));
-  const mutationOctokit = github.getOctokit(input("mutation-token", true));
+  const token = input("token", true);
+  const octokit = github.getOctokit(token);
+  const mutationOctokit = github.getOctokit(input("mutation-token") || token);
   assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
   const sourceBinding = await observeProtectedPublicationSource({
     octokit,
