@@ -152,6 +152,7 @@ test("release candidate resolver seals downloaded npm bytes before deriving requ
             number: 3314,
             state: "closed",
             merged_at: "2026-08-30T06:13:27Z",
+            merge_commit_sha: targetSha,
             base: { ref: "alpha/v4/v4.0" },
             head: {
               ref: "fix/v4-protected-alpha-bootstrap-route",
@@ -194,7 +195,6 @@ test("release candidate resolver seals downloaded npm bytes before deriving requ
       }
       throw new Error(`unexpected url ${url}`);
     };
-
     const result = await resolveReleaseCandidateArtifacts({
       repository: "kungfu-systems/buildchain",
       targetRef: "alpha/v4/v4.0",

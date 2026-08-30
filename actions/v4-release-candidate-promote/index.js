@@ -35,6 +35,26 @@ const write = (file, value) => {
   return resolved;
 };
 
+export function resolveCandidateBuildSummaryPath({
+  candidatePassportPath,
+  declaredPath = "",
+}) {
+  const selected = String(declaredPath || "").trim();
+  if (selected) return selected;
+  const fallback = path.join(
+    path.dirname(candidatePassportPath),
+    "..",
+    "summary",
+    "build-summary.json",
+  );
+  if (!fs.existsSync(path.resolve(fallback))) {
+    throw new Error(
+      "candidate-build-summary-path is required when the sealed candidate has no standard summary artifact",
+    );
+  }
+  return fallback;
+}
+
 export function aggregateV4ReleasePassport({
   candidate,
   stageCapsules,
