@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1136,
+  "generation": 1137,
   "fencingCounter": 170,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:3d03adbf018ab09510fefb13d4d23d6cfe50c9e1f3dbe0e4b26bb108f6d28e55",
@@ -49,8 +49,13 @@
     "issuedAt": "2026-08-30T08:15:07.572Z",
     "expiresAt": "2026-08-30T09:18:51.316Z",
     "fencingToken": "sha256:c1bb53a78f894ac0bf56bb323016470bbf5765e9f59e40c835f67542a9f75b33",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-30T08:18:51.316Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-30T08:18:51.316Z",
+    "nativeProofRoot": "sha256:68a66cb344953a66e3df5098f89e1a56ef197887a923365ca2bf8bb629f30f1e",
+    "nativeExecutionReceiptRoot": "sha256:98500857ea361657d54bc01432c770198d7c1652680978179742730fff2aaa45",
+    "nativeProofReuseRoot": "sha256:05953005cf614d9076f8226959b51893c80402ebc0d463477a8d46f6252b7ecf",
+    "qualificationReceiptRoot": "sha256:d1516bca421a329ab5641f24ba2c49ebfa95e352f5b2a34248a0b5d7bcdce251",
+    "qualifiedAt": "2026-08-30T08:19:10.756Z"
   },
   "candidates": [
     {
@@ -8034,10 +8039,10 @@
       "sourceWorkflowRunId": 33300297280,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-30T08:15:05.007Z",
-      "updatedAt": "2026-08-30T08:18:51.316Z",
+      "updatedAt": "2026-08-30T08:19:10.756Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "scripts/release-candidate-resolver.mjs",
@@ -8046,6 +8051,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-30T08:18:51.316Z",
-  "stateRoot": "sha256:10de4bedb6013ad6a1b1892eebb319caff01935ef775b861ebd8e4a487b2911e"
+  "updatedAt": "2026-08-30T08:19:10.756Z",
+  "stateRoot": "sha256:067877edc1ef33a8aeae5c8585cf20ebde628b12df1af9dcecb037fdd6e5f8e8"
 }
