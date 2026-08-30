@@ -37,10 +37,6 @@ jobs:
   admit:
     name: Admit exact reviewed candidate
     runs-on: ubuntu-24.04
-    permissions:
-      checks: read
-      contents: read
-      pull-requests: read
     outputs:
       runtime-sha: ${{ steps.admit.outputs.runtime-sha }}
       request-root: ${{ steps.admit.outputs.request-root }}
@@ -199,10 +195,6 @@ jobs:
     name: Seal terminal receipt outside candidate authority
     needs: [admit, execute]
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: read
     outputs:
       terminal-receipt-json: ${{ steps.settle.outputs.terminal-receipt-json }}
       terminal-receipt-root: ${{ steps.settle.outputs.terminal-receipt-root }}

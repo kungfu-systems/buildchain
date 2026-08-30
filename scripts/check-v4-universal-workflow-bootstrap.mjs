@@ -161,15 +161,7 @@ execFileSync(
   [path.join(root, contract.migration.compatibilityFacadeGenerator), "--check"],
   { stdio: "inherit" },
 );
-assert.match(
-  bootstrapSource,
-  /admit:[\s\S]*checks: read[\s\S]*pull-requests: read/u,
-);
-const bootstrapExecute = bootstrapSource.slice(
-  bootstrapSource.indexOf("\n  execute:"),
-  bootstrapSource.indexOf("\n  settle:"),
-);
-assert.doesNotMatch(bootstrapExecute, /^    permissions:/mu);
+assert.doesNotMatch(bootstrapSource, /^    permissions:/mu);
 assert.match(bootstrapSource, /settle:[\s\S]*needs: \[admit, execute\]/u);
 assert.match(
   bootstrapSource,
