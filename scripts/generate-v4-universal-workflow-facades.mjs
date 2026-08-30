@@ -49,6 +49,37 @@ function sourceRevision() {
   return revision;
 }
 
+function materializeSourceRevision() {
+  const revision = sourceRevision();
+  try {
+    execFileSync("git", ["cat-file", "-e", `${revision}^{commit}`], {
+      cwd: root,
+      stdio: "ignore",
+    });
+    return;
+  } catch {
+    // GitHub's default shallow checkout retains only the candidate head. The
+    // compatibility proof still needs the immutable pre-migration facade
+    // sources, so hydrate that one exact public commit rather than history.
+  }
+  try {
+    execFileSync(
+      "git",
+      ["fetch", "--no-tags", "--depth=1", "origin", revision],
+      { cwd: root, stdio: "pipe" },
+    );
+    execFileSync("git", ["cat-file", "-e", `${revision}^{commit}`], {
+      cwd: root,
+      stdio: "ignore",
+    });
+  } catch (error) {
+    const detail = String(error?.stderr || error?.message || error).trim();
+    fail(
+      `facade source revision ${revision} is unavailable and could not be hydrated from origin${detail ? `: ${detail}` : ""}`,
+    );
+  }
+}
+
 function frozenFacadeSource(relative) {
   return execFileSync("git", ["show", `${sourceRevision()}:${relative}`], {
     cwd: root,
@@ -276,6 +307,7 @@ function updateLaneBudgets() {
 function main() {
   const check = process.argv.includes("--check");
   const fresh = process.argv.includes("--fresh");
+  materializeSourceRevision();
   for (const relative of activeFacadePaths()) {
     const target = path.join(root, relative);
     const source = fresh
