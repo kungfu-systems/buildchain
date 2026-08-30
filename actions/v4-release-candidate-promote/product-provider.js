@@ -7,7 +7,11 @@ import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane
 
 export function selectProductPublicationPlan(
   result,
-  { fallbackVersion = "", fallbackTag = "" } = {},
+  {
+    fallbackVersion = "",
+    fallbackTag = "",
+    fallbackCandidateVersion = "",
+  } = {},
 ) {
   const planned = result?.updates?.find(
     ({ action }) => action === "dry-run-publish-transaction",
@@ -24,11 +28,36 @@ export function selectProductPublicationPlan(
     throw new Error(
       "product publication planning produced a mismatched exact tag",
     );
+  const plannedCandidateVersion = String(
+    planned?.releaseCandidateVersion || "",
+  ).trim();
+  const sealedCandidateVersion = String(fallbackCandidateVersion || "").trim();
+  if (
+    plannedCandidateVersion &&
+    sealedCandidateVersion &&
+    plannedCandidateVersion !== sealedCandidateVersion
+  )
+    throw new Error(
+      "product publication planning drifted from the sealed candidate version",
+    );
   return {
     version,
     tag,
-    candidateVersion: String(planned?.releaseCandidateVersion || "").trim(),
+    candidateVersion: plannedCandidateVersion || sealedCandidateVersion,
   };
+}
+
+export function sealedCandidateVersion(request) {
+  const manifest = JSON.parse(
+    fs.readFileSync(path.resolve(request.sealedBundleManifest), "utf8"),
+  );
+  const name = String(manifest?.npm?.name || "").trim();
+  const version = String(manifest?.npm?.version || "").trim();
+  if (name !== request.publishPackageMain || !version)
+    throw new Error(
+      "sealed candidate manifest omitted the exact main package version",
+    );
+  return version;
 }
 
 function providerProjection({ result, targetRef, targetSha, plan }) {
@@ -124,16 +153,21 @@ export async function planProductPublication(
   return selectProductPublicationPlan(result, {
     fallbackVersion,
     fallbackTag,
+    fallbackCandidateVersion: sealedCandidateVersion(request),
   });
 }
 
 export async function applyProductPublication(request, plan) {
   execFileSync("corepack", ["enable", "pnpm"], { stdio: "inherit" });
   const result = await promoteBuildchainRefs(
-    promotionOptions(request, {
-      dryRun: false,
-      expectedPublicationVersion: plan.version,
-    }, plan.candidateVersion),
+    promotionOptions(
+      request,
+      {
+        dryRun: false,
+        expectedPublicationVersion: plan.version,
+      },
+      plan.candidateVersion,
+    ),
   );
   const projection = providerProjection({
     result,

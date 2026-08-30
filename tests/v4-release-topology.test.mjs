@@ -26,7 +26,10 @@ import {
   findUnknownV4ReleaseTopology,
 } from "../scripts/check-v4-release-topology.mjs";
 import { resolveV4ReleaseCandidateAdapter } from "../scripts/v4-release-candidate-adapter.mjs";
-import { selectProductPublicationPlan } from "../actions/v4-release-candidate-promote/product-provider.js";
+import {
+  sealedCandidateVersion,
+  selectProductPublicationPlan,
+} from "../actions/v4-release-candidate-promote/product-provider.js";
 
 const fixture = JSON.parse(
   fs.readFileSync(
@@ -304,6 +307,77 @@ test("canonical APPLY roots the product provider's planned exact version", () =>
       }),
     /mismatched exact tag/u,
   );
+  assert.deepEqual(
+    selectProductPublicationPlan(
+      {
+        updates: [
+          {
+            action: "dry-run-publish-transaction",
+            version: "4.0.1",
+            tag: "v4.0.1",
+          },
+        ],
+      },
+      { fallbackCandidateVersion: "4.0.1-alpha.56" },
+    ),
+    {
+      version: "4.0.1",
+      tag: "v4.0.1",
+      candidateVersion: "4.0.1-alpha.56",
+    },
+  );
+  assert.throws(
+    () =>
+      selectProductPublicationPlan(
+        {
+          updates: [
+            {
+              action: "dry-run-publish-transaction",
+              version: "4.0.1",
+              tag: "v4.0.1",
+              releaseCandidateVersion: "4.0.1-alpha.55",
+            },
+          ],
+        },
+        { fallbackCandidateVersion: "4.0.1-alpha.56" },
+      ),
+    /drifted from the sealed candidate version/u,
+  );
+});
+
+test("canonical APPLY recovers the candidate version from the sealed package manifest", () => {
+  const temporaryRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-sealed-version-"),
+  );
+  try {
+    const manifest = path.join(temporaryRoot, "sealed-bundle.json");
+    fs.writeFileSync(
+      manifest,
+      `${JSON.stringify({
+        npm: {
+          name: "@kungfu-tech/buildchain",
+          version: "4.0.1-alpha.56",
+        },
+      })}\n`,
+    );
+    assert.equal(
+      sealedCandidateVersion({
+        sealedBundleManifest: manifest,
+        publishPackageMain: "@kungfu-tech/buildchain",
+      }),
+      "4.0.1-alpha.56",
+    );
+    assert.throws(
+      () =>
+        sealedCandidateVersion({
+          sealedBundleManifest: manifest,
+          publishPackageMain: "@kungfu-tech/not-buildchain",
+        }),
+      /omitted the exact main package version/u,
+    );
+  } finally {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
 });
 
 test("canonical APPLY activates the pnpm shim required by nested lifecycle scripts", () => {
@@ -315,10 +389,7 @@ test("canonical APPLY activates the pnpm shim required by nested lifecycle scrip
     provider,
     /execFileSync\("corepack", \["enable", "pnpm"\], \{ stdio: "inherit" \}\);/u,
   );
-  assert.match(
-    provider,
-    /\}, plan\.candidateVersion\),/u,
-  );
+  assert.match(provider, /\}\s*,\s*plan\.candidateVersion,?\s*\),/u);
 });
 
 test("one three-phase ReleaseTransaction owns one terminal ReleaseReceipt", () => {
