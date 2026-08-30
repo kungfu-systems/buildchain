@@ -381,6 +381,7 @@ Owner: Buildchain action maintainers
 
 ### Implementation
 
+- `actions/promote-buildchain-ref/internal/contained-published-version-state.js`
 - `actions/promote-buildchain-ref/internal/promote-alpha-channel.js`
 - `actions/promote-buildchain-ref/internal/promote-major-channel.js`
 - `actions/promote-buildchain-ref/internal/promote-release-channel.js`
@@ -392,6 +393,7 @@ Owner: Buildchain action maintainers
 
 ### Tests
 
+- `tests/promote-buildchain-ref-contained-published-version-state.test.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
 - `tests/promote-buildchain-ref-recovery.test.mjs`
 - `tests/promote-buildchain-ref-governance.test.mjs`
@@ -403,7 +405,7 @@ Owner: Buildchain action maintainers
 
 ### Minimal validation
 
-- `node --test tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-recovery.test.mjs tests/promote-buildchain-ref-governance.test.mjs tests/promotion-responsibilities.test.mjs`
+- `node --test tests/promote-buildchain-ref-contained-published-version-state.test.mjs tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-recovery.test.mjs tests/promote-buildchain-ref-governance.test.mjs tests/promotion-responsibilities.test.mjs`
 
 ## promotion-github-transaction-store
 

@@ -1,3 +1,5 @@
+import { containedPublishedVersionState } from "./contained-published-version-state.js";
+
 async function selectReleaseState(context) {
   const explicitReleaseTags = context.requestedTags
     ? context.requestedTags.filter(
@@ -226,19 +228,22 @@ async function createReleasePromotionCommit(context, state) {
   const releaseVersion = context.stripTagPrefix(
     state.selectedReleaseCandidate.tag,
   );
-  const releaseCommit = await context.createVersionStateCommit({
-    baseSha: context.sha,
-    version: releaseVersion,
-    message: `chore(release): release ${state.selectedReleaseCandidate.tag}`,
-    recoveredCandidate: Boolean(state.containsPublishedMaterial),
-    preserveExistingLifecycleIdentity: Boolean(
-      state.containsPublishedMaterial,
-    ),
-  });
-  const containedPublicationTransaction = containedReleaseExecutionIdentity(
+  const recoveredVersionState = containedPublishedVersionState(
     context,
     state,
-  ).transaction;
+    releaseVersion,
+  );
+  const releaseCommit = recoveredVersionState?.releaseCommit ||
+    await context.createVersionStateCommit({
+      baseSha: context.sha,
+      version: releaseVersion,
+      message: `chore(release): release ${state.selectedReleaseCandidate.tag}`,
+      recoveredCandidate: Boolean(state.containsPublishedMaterial),
+      preserveExistingLifecycleIdentity: Boolean(
+        state.containsPublishedMaterial,
+      ),
+    });
+  const containedPublicationTransaction = recoveredVersionState?.transaction;
   const releaseSha = containedPublicationTransaction
     ? context.advancedChannelSha || context.sha
     : releaseCommit.sha;
