@@ -3,6 +3,11 @@ name: Buildchain Dev Qualification Patrol
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       buildchain-repository:
         description: Buildchain runtime repository
         default: kungfu-systems/buildchain
@@ -81,7 +86,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   observe:
+    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -135,10 +148,15 @@ jobs:
   mutate:
     needs: observe
     if: >-
-      inputs.mutation-authorized &&
-      !inputs.dry-run &&
-      (needs.observe.outputs.action == 'dispatch' ||
-       needs.observe.outputs.action == 'rerun-failed-jobs')
+      ${{
+        inputs.universal-request-json == '' &&
+        (
+          inputs.mutation-authorized &&
+          !inputs.dry-run &&
+          (needs.observe.outputs.action == 'dispatch' ||
+          needs.observe.outputs.action == 'rerun-failed-jobs')
+        )
+      }}
     runs-on: ubuntu-24.04
     permissions:
       actions: write

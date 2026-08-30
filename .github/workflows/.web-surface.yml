@@ -3,6 +3,11 @@ name: Buildchain Web Surface
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
@@ -280,7 +285,15 @@ permissions:
   contents: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   runtime:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Resolve Buildchain runtime
     runs-on: ubuntu-24.04
     outputs:
@@ -424,6 +437,7 @@ jobs:
               .write();
 
   controller-plan:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Plan web-surface controller
     needs:
       - runtime
@@ -471,6 +485,7 @@ jobs:
           if-no-files-found: error
 
   release-intent:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Resolve production release PR intent
     runs-on: ubuntu-24.04
     permissions:
@@ -607,6 +622,7 @@ jobs:
               .write();
 
   publication-decision:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Resolve trusted production decision
     runs-on: ubuntu-24.04
     needs:
@@ -641,6 +657,7 @@ jobs:
           GITHUB_EVENT_ACTION: ${{ github.event.action }}
 
   apply-input-gate:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Validate web-surface apply inputs
     runs-on: ubuntu-24.04
     needs:
@@ -707,6 +724,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
   plan:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Plan web-surface channel
     runs-on: ubuntu-24.04
     needs:
@@ -972,7 +990,7 @@ jobs:
 
   preview-apply:
     name: Apply pull request preview
-    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.preview-apply }}
+    if: ${{ inputs.universal-request-json == '' && (github.event_name == 'pull_request' && github.event.action != 'closed' && inputs.preview-apply) }}
     runs-on: ubuntu-24.04
     needs:
       - plan
@@ -1135,7 +1153,7 @@ jobs:
 
   preview-cleanup:
     name: Apply pull request preview cleanup
-    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && inputs.preview-cleanup-apply && needs.release-intent.outputs.production-release-approved != 'true' }}
+    if: ${{ inputs.universal-request-json == '' && (github.event_name == 'pull_request' && github.event.action == 'closed' && inputs.preview-cleanup-apply && needs.release-intent.outputs.production-release-approved != 'true') }}
     runs-on: ubuntu-24.04
     needs:
       - plan
@@ -1268,7 +1286,7 @@ jobs:
 
   staging-apply:
     name: Apply staging deploy
-    if: ${{ github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply && needs.plan.outputs.web-surface-channel == 'staging' }}
+    if: ${{ inputs.universal-request-json == '' && (github.event_name == 'push' && github.ref_name == 'main' && inputs.staging-apply && needs.plan.outputs.web-surface-channel == 'staging') }}
     runs-on: ubuntu-24.04
     needs:
       - plan
@@ -1430,12 +1448,15 @@ jobs:
     name: Open production release PR
     if: >-
       ${{
-        github.event_name == 'push' &&
-        github.ref_name == 'main' &&
-        inputs.staging-apply &&
-        inputs.production-release-on-main &&
-        needs.staging-apply.result == 'success' &&
-        needs.release-intent.outputs.production-release-approved != 'true'
+        inputs.universal-request-json == '' &&
+        (
+          github.event_name == 'push' &&
+          github.ref_name == 'main' &&
+          inputs.staging-apply &&
+          inputs.production-release-on-main &&
+          needs.staging-apply.result == 'success' &&
+          needs.release-intent.outputs.production-release-approved != 'true'
+        )
       }}
     runs-on: ubuntu-24.04
     needs:
@@ -1602,9 +1623,12 @@ jobs:
       - publication-decision
     if: >-
       ${{
-        inputs.production-apply &&
-        needs.publication-decision.outputs.approved == 'true' &&
-        (inputs.publication-admission-json != '' || inputs.publication-runner-provenance-json != '' || inputs.publication-control-plane-audit-json != '' || inputs.publication-gate-aggregate-json != '' || inputs.publication-expected-json != '')
+        inputs.universal-request-json == '' &&
+        (
+          inputs.production-apply &&
+          needs.publication-decision.outputs.approved == 'true' &&
+          (inputs.publication-admission-json != '' || inputs.publication-runner-provenance-json != '' || inputs.publication-control-plane-audit-json != '' || inputs.publication-gate-aggregate-json != '' || inputs.publication-expected-json != '')
+        )
       }}
     permissions:
       actions: read
@@ -1636,9 +1660,12 @@ jobs:
       - release-intent
     if: >-
       ${{
-        inputs.production-apply &&
-        needs.publication-decision.outputs.approved == 'true' &&
-        inputs.publication-admission-json == '' && inputs.publication-runner-provenance-json == '' && inputs.publication-control-plane-audit-json == '' && inputs.publication-gate-aggregate-json == '' && inputs.publication-expected-json == ''
+        inputs.universal-request-json == '' &&
+        (
+          inputs.production-apply &&
+          needs.publication-decision.outputs.approved == 'true' &&
+          inputs.publication-admission-json == '' && inputs.publication-runner-provenance-json == '' && inputs.publication-control-plane-audit-json == '' && inputs.publication-gate-aggregate-json == '' && inputs.publication-expected-json == ''
+        )
       }}
     permissions:
       actions: read
@@ -1750,10 +1777,14 @@ jobs:
   production-apply:
     name: Apply production deploy
     if: >-
-      ${{ always() &&
-        inputs.production-apply &&
-        needs.publication-decision.outputs.approved == 'true' &&
-        (needs.publication-authority.result == 'success' || needs.external-publication-authority.result == 'success')
+      ${{
+        inputs.universal-request-json == '' &&
+        (
+          always() &&
+          inputs.production-apply &&
+          needs.publication-decision.outputs.approved == 'true' &&
+          (needs.publication-authority.result == 'success' || needs.external-publication-authority.result == 'success')
+        )
       }}
     runs-on: ubuntu-24.04
     needs:
@@ -1949,7 +1980,7 @@ jobs:
       - external-publication-authority
       - production-apply
       - release-intent
-    if: ${{ always() && needs.controller-plan.result == 'success' }}
+    if: ${{ inputs.universal-request-json == '' && (always() && needs.controller-plan.result == 'success') }}
     runs-on: ubuntu-24.04
     outputs:
       controller-receipt-artifact: buildchain-web-surface-controller-receipt-${{ needs.release-intent.outputs.production-source-sha }}

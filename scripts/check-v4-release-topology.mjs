@@ -180,7 +180,9 @@ function permission(block, name) {
 function workflowSnapshot(relative) {
   const source = read(relative);
   const document = parseWorkflowDocument(source);
-  const jobs = document.jobs.map((job) => {
+  const jobs = document.jobs
+    .filter((job) => job.id !== "universal-bootstrap")
+    .map((job) => {
     const block = jobBlock(source, job.id);
     const uses = job.uses || null;
     return {
@@ -206,7 +208,7 @@ function workflowSnapshot(relative) {
           "direct-publication-command",
       ].filter(Boolean),
     };
-  });
+    });
   return {
     path: relative,
     triggers: document.triggers,
@@ -214,6 +216,11 @@ function workflowSnapshot(relative) {
     reusableEdges: parseYamlUses(source)
       .map(({ value }) => value)
       .filter((value) => /\.github\/workflows\//u.test(value))
+      .filter(
+        (value) =>
+          value !==
+          "kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4",
+      )
       .sort(),
   };
 }

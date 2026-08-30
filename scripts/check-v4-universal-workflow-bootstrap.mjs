@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,6 +60,30 @@ assert.deepEqual(
   [...new Set(contract.bootstrapGovernedWorkflows)].sort(),
   "Bootstrap-governed workflows must be sorted and duplicate-free",
 );
+assert.deepEqual(
+  contract.retiredWorkflowSurfaces,
+  [...new Set(contract.retiredWorkflowSurfaces)].sort(),
+  "retired workflow surfaces must be sorted and duplicate-free",
+);
+for (const relative of contract.retiredWorkflowSurfaces) {
+  assert.ok(
+    contract.inventoryWorkflows.includes(relative),
+    `retired workflow is outside the inventory: ${relative}`,
+  );
+  assert.match(
+    fs.readFileSync(path.join(root, relative), "utf8"),
+    /retired/u,
+    `retired workflow does not fail closed explicitly: ${relative}`,
+  );
+}
+const activeWorkflows = contract.inventoryWorkflows.filter(
+  (relative) => !contract.retiredWorkflowSurfaces.includes(relative),
+);
+assert.deepEqual(
+  contract.bootstrapGovernedWorkflows,
+  activeWorkflows,
+  "every active public reusable workflow must be Bootstrap-governed",
+);
 for (const relative of contract.bootstrapGovernedWorkflows) {
   assert.ok(
     contract.inventoryWorkflows.includes(relative),
@@ -95,6 +120,7 @@ assert.deepEqual(
   admissionPolicy.contractRoots,
   [
     fileRoot("architecture/v4-universal-workflow-bootstrap.json"),
+    fileRoot(contract.bootstrap.faultCampaign),
     fileRoot("packages/core/v4-universal-workflow-bootstrap.js"),
     fileRoot("scripts/v4-universal-workflow-engine.mjs"),
   ].sort(),
@@ -107,6 +133,11 @@ assert.doesNotMatch(
   bootstrapSource,
   /admission-policy-json:/u,
   "callers must not supply their own admission authority",
+);
+execFileSync(
+  process.execPath,
+  [path.join(root, contract.migration.compatibilityFacadeGenerator), "--check"],
+  { stdio: "inherit" },
 );
 assert.match(
   bootstrapSource,
@@ -169,12 +200,14 @@ console.log(
     ok: true,
     schema: contract.schema,
     publicWorkflowCount: discovered.length,
+    activePublicWorkflowCount: activeWorkflows.length,
+    retiredWorkflowCount: contract.retiredWorkflowSurfaces.length,
     inventoriedWorkflowCount: contract.inventoryWorkflows.length,
     inventoryCoveragePercent: 100,
     governedWorkflowCount: contract.bootstrapGovernedWorkflows.length,
     governedCoveragePercent: Number(
       (
-        (contract.bootstrapGovernedWorkflows.length / discovered.length) *
+        (contract.bootstrapGovernedWorkflows.length / activeWorkflows.length) *
         100
       ).toFixed(2),
     ),
