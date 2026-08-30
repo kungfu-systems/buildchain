@@ -960,7 +960,7 @@ jobs:
   invoke:
     name: Invoke the single v4 publisher adapter
     needs: [resolve-promotion, consumer-admission]
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@111d0e12c962a7a37e1cb5c4b2ab233e2c64dc97
     permissions:
       actions: write
       artifact-metadata: write
