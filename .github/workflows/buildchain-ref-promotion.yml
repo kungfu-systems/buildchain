@@ -180,7 +180,7 @@ jobs:
       resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
       resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
       resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
-      artifact-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '' || 'buildchain-package-*' }}
+      artifact-patterns: buildchain-package-*
       publish-rematerialize-on-resume: true
       github-release: true
       github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
