@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-
+import { RELEASE_TAIL_PRODUCT_CAPABILITIES } from "./release-tail-product-capabilities.js";
 export const RELEASE_TAIL_DECLARATION_CONTRACT =
   "kungfu-buildchain-release-tail-capabilities";
 export const RELEASE_TAIL_TRANSACTION_POLICY = "buildchain.release-tail/v1";
@@ -27,8 +27,8 @@ export const RELEASE_TAIL_STATES = Object.freeze([
   "repair-required",
   "terminal-failure",
 ]);
-
 export const RELEASE_TAIL_CAPABILITY_REGISTRY = Object.freeze([
+  ...RELEASE_TAIL_PRODUCT_CAPABILITIES,
   Object.freeze({
     id: "artifact.publish",
     executor: "provider-adapter",

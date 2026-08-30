@@ -15,6 +15,7 @@ import {
   createV4ReleaseReceipt,
   createV4ReleaseTransaction,
 } from "../../packages/core/v4-release-invocation.js";
+import { createV4ProductPublicationPlan } from "../../packages/core/v4-product-publication.js";
 import {
   v4PublicationQualificationRoot,
   validateV4PublicationQualificationReceipt,
@@ -228,6 +229,7 @@ function productProviderRequest({
       "publish-transaction-override",
     ),
     expectedTransactionId: input("resume-transaction-id"),
+    publicationIntent: read(input("product-publication-intent-path", true)),
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
   };
@@ -243,6 +245,7 @@ async function createReleaseDocuments({
   qualification,
   sourceBinding,
   publicationPlan,
+  publicationIntent,
   octokit,
 }) {
   const version = publicationPlan.version;
@@ -321,6 +324,11 @@ async function createReleaseDocuments({
     providerRoot: releaseInvocation.roots.providerRoot,
     parentRoot: releaseInvocation.roots.parentRoot,
   });
+  const productPublicationPlan = createV4ProductPublicationPlan({
+    intent: publicationIntent,
+    invocationRoot: releaseInvocation.roots.invocationRoot,
+    transactionRoot: releaseTransaction.transactionRoot,
+  });
   const outputDir = path.resolve(".buildchain/release-passport");
   write(invocationPath, releaseInvocation.invocation);
   const releaseTransactionPath = write(
@@ -329,6 +337,10 @@ async function createReleaseDocuments({
       ...releaseTransaction.transaction,
       transactionRoot: releaseTransaction.transactionRoot,
     },
+  );
+  const productPublicationPlanPath = write(
+    ".buildchain/release-tail/product-publication-plan.json",
+    productPublicationPlan,
   );
   const passportPath = write(
     path.join(outputDir, "buildchain.release.json"),
@@ -355,6 +367,8 @@ async function createReleaseDocuments({
     releaseInvocation,
     releaseTransaction,
     releaseTransactionPath,
+    productPublicationPlan,
+    productPublicationPlanPath,
     tag,
     version,
   };
@@ -374,7 +388,7 @@ async function applyAndSettle({
   try {
     productProviderResult = await applyProductPublication(
       providerRequest,
-      publicationPlan,
+      documents.productPublicationPlan,
     );
   } catch (error) {
     if (error.providerProjection)
@@ -479,6 +493,7 @@ async function main() {
   const fallbackVersion = input("version", true);
   const fallbackTag = input("tag", true);
   const channel = input("channel", true);
+  const expectedTransactionId = input("resume-transaction-id");
   const candidatePassportPath = input("candidate-passport-path", true);
   const buildSummaryPath = resolveCandidateBuildSummaryPath({
     candidatePassportPath,
@@ -493,6 +508,7 @@ async function main() {
     sourceSha: declaredSourceSha,
     declaredTargetRef: input("target-ref"),
     declaredTargetSha: input("target-sha"),
+    expectedTransactionId,
   });
   const sourceSha = targetSha;
   const stageCapsules = read(input("stage-capsules-path", true));
@@ -532,6 +548,7 @@ async function main() {
     qualification,
     sourceBinding,
     publicationPlan,
+    publicationIntent: providerRequest.publicationIntent,
     octokit,
   });
   activateExactPnpm();
