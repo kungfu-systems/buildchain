@@ -210,8 +210,8 @@
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/release-candidate-resolver.mjs": {
-      "maxLines": 854,
-      "maxFunctionLines": 309,
+      "maxLines": 853,
+      "maxFunctionLines": 308,
       "maxFunctionComplexity": 61,
       "rationale": "The shared candidate resolver retains bounded archive streaming, payload size and sha256 validation while locating and validating candidate-bound Stage Capsule and publication qualification evidence. Exact publication version selection now prefers the sealed npm bundle without widening the orchestration function, and these lower exact ceilings cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
