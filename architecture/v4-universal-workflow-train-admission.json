@@ -1,0 +1,19 @@
+{
+  "schema": "kungfu-buildchain-v4-universal-workflow-admission-policy/v1",
+  "sourceRepository": "kungfu-systems/buildchain",
+  "allowedConsumers": ["kungfu-systems/buildchain", "kungfu-systems/taolu"],
+  "allowedCapabilities": ["bootstrap-conformance"],
+  "permissionCeiling": {
+    "contents": "read"
+  },
+  "contractRoots": [
+    "sha256:731290b7e0368e581c01407de744ea5a70d2941add60f46ae6d65744e387eb52",
+    "sha256:fec4b15e481b48feb187d24e596284db581ca8e8be70670e73d0d1e6a6a8c628"
+  ],
+  "targetRef": "dev/v4/v4.0",
+  "allowedReviewers": ["kungfu-origin"],
+  "minimumApprovals": 1,
+  "requiredChecks": ["Verify / check"],
+  "validFrom": "2026-08-30T00:00:00.000Z",
+  "expiresAt": "2026-09-07T00:00:00.000Z"
+}

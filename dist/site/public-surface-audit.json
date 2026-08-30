@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 77,
+    "workflowCount": 79,
     "actionCount": 8,
     "sitePageCount": 84,
     "docCommandRefCount": 1050,
@@ -1571,6 +1571,26 @@
         "outputCount": 0
       },
       {
+        "id": "bootstrap",
+        "path": ".github/workflows/bootstrap.yml",
+        "reusable": true,
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "admission-root",
+          "request-root",
+          "result-root",
+          "runtime-sha",
+          "terminal-receipt-json",
+          "terminal-receipt-root"
+        ],
+        "outputCount": 6
+      },
+      {
         "id": "build-surface-fixture",
         "path": ".github/workflows/build-surface-fixture.yml",
         "reusable": false,
@@ -2938,6 +2958,17 @@
           "stable-version"
         ],
         "outputCount": 6
+      },
+      {
+        "id": "universal-bootstrap-dogfood",
+        "path": ".github/workflows/universal-bootstrap-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
       },
       {
         "id": "v4-adopter-delivery-dogfood",
@@ -8941,8 +8972,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "aa81ffd608451b83ea0d81c36d522c707ee7c7c27ba2ff478a4771876bb0a57e",
-    "pageRegistryDigest": "c81347e800ca7ded1b69a8480e562e67dc46671deb39ec27ca4376e7c8a77afd"
+    "workflowRegistryDigest": "bdc21aec7e41bfe7fb30ca6f167ba22bc5d43e99aa7d934488aacf0ac757de8e",
+    "pageRegistryDigest": "ef6e4209c35f9133deb4cdca6e1cf6a1d1423c7864d27146d86d7551c21fd871"
   },
   "comparison": {
     "missingCliRegistry": [],

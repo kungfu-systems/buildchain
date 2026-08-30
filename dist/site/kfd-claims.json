@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "0fdcfa05644c75ee009645e9a4c1f8018a30ff4c7b5b6078e576743e4b1fd1d5",
+    "sha256": "deccb5418552b4eef40529016499b92072274b1b5da7883889c5b1cb9dc770d6",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 77,
+      "workflowCount": 79,
       "actionCount": 8,
       "sitePageCount": 84,
       "docCommandRefCount": 1050,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "0fdcfa05644c75ee009645e9a4c1f8018a30ff4c7b5b6078e576743e4b1fd1d5",
+      "sha256": "deccb5418552b4eef40529016499b92072274b1b5da7883889c5b1cb9dc770d6",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 77,
+        "workflowCount": 79,
         "actionCount": 8,
         "sitePageCount": 84,
         "docCommandRefCount": 1050,
@@ -4666,6 +4666,22 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:bootstrap",
+          "name": "workflow:bootstrap",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/bootstrap.yml",
+          "evidencePath": ".github/workflows/bootstrap.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 1,
+          "inputs": [
+            "request-json"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:build-surface-fixture",
           "name": "workflow:build-surface-fixture",
           "kind": "workflow",
@@ -5839,6 +5855,20 @@
             "revoked-versions",
             "target-branch"
           ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:universal-bootstrap-dogfood",
+          "name": "workflow:universal-bootstrap-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/universal-bootstrap-dogfood.yml",
+          "evidencePath": ".github/workflows/universal-bootstrap-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -7505,6 +7535,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 481
+    "publicSurfaceCount": 483
   }
 }
