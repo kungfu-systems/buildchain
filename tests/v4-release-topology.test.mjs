@@ -315,6 +315,10 @@ test("canonical APPLY activates the pnpm shim required by nested lifecycle scrip
     provider,
     /execFileSync\("corepack", \["enable", "pnpm"\], \{ stdio: "inherit" \}\);/u,
   );
+  assert.match(
+    provider,
+    /\}, plan\.candidateVersion\),/u,
+  );
 });
 
 test("one three-phase ReleaseTransaction owns one terminal ReleaseReceipt", () => {

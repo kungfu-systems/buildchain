@@ -61,10 +61,10 @@ function providerProjection({ result, targetRef, targetSha, plan }) {
   };
   return { ...projection, root: releaseTailRoot(projection) };
 }
-
 function promotionOptions(
   request,
   { dryRun, expectedPublicationVersion = "" },
+  releaseCandidateVersion = String(request.candidate.target?.version || ""),
 ) {
   const [owner, repo] = request.repository.split("/");
   return {
@@ -107,7 +107,7 @@ function promotionOptions(
     promoteOnlyReleaseCandidate: true,
     releaseCandidatePassportPath: request.candidatePassportPath,
     releaseCandidateBuildSummaryPath: request.buildSummaryPath,
-    releaseCandidateVersion: String(request.candidate.target?.version || ""),
+    releaseCandidateVersion,
     actor: request.actor,
     runId: request.runId,
     publishTransactionOverride: request.publishTransactionOverride,
@@ -133,7 +133,7 @@ export async function applyProductPublication(request, plan) {
     promotionOptions(request, {
       dryRun: false,
       expectedPublicationVersion: plan.version,
-    }),
+    }, plan.candidateVersion),
   );
   const projection = providerProjection({
     result,
