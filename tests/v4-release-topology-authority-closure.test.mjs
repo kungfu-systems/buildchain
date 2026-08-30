@@ -72,3 +72,33 @@ test("closed-world discovery rejects an undeclared release topology workflow", (
     ["new.yml"],
   );
 });
+
+test("fork governance retains a credential-limited receipt without claiming authority", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/github-governance-audit.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /name: Mint bounded governance auditor token[\s\S]+KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''[\s\S]+continue-on-error: true/,
+  );
+  assert.match(
+    workflow,
+    /GH_TOKEN: \$\{\{ steps\.auditor\.outputs\.token \|\| secrets\.BUILDCHAIN_GOVERNANCE_READ_TOKEN \|\| github\.token \}\}/,
+  );
+  assert.match(
+    workflow,
+    /FORK_PULL_REQUEST:[\s\S]+github\.event\.pull_request\.head\.repo\.fork[\s\S]+Fork PR governance is credential-limited/,
+  );
+});
+
+test("fork pull requests cannot enter the release fixture authority path", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/build-surface-fixture.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /libnode-shaped:\n    if: \$\{\{ github\.event_name != 'pull_request' \|\| !github\.event\.pull_request\.head\.repo\.fork \}\}/,
+  );
+});

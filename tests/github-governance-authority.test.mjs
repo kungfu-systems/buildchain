@@ -1176,22 +1176,3 @@ test("publication authority recollects live App-authenticated governance instead
     );
   }
 });
-
-test("governance audit degrades to a read-only receipt when fork credentials are unavailable", () => {
-  const workflow = fs.readFileSync(
-    new URL("../.github/workflows/github-governance-audit.yml", import.meta.url),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /name: Mint bounded governance auditor token[\s\S]+KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''[\s\S]+continue-on-error: true/,
-  );
-  assert.match(
-    workflow,
-    /GH_TOKEN: \$\{\{ steps\.auditor\.outputs\.token \|\| secrets\.BUILDCHAIN_GOVERNANCE_READ_TOKEN \|\| github\.token \}\}/,
-  );
-  assert.match(
-    workflow,
-    /FORK_PULL_REQUEST:[\s\S]+github\.event\.pull_request\.head\.repo\.fork[\s\S]+Fork PR governance is credential-limited/,
-  );
-});

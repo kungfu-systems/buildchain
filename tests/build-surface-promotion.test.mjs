@@ -306,10 +306,6 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /issues: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /secrets: inherit/);
-  assert.match(
-    workflow,
-    /libnode-shaped:\n    if: \$\{\{ github\.event_name != 'pull_request' \|\| !github\.event\.pull_request\.head\.repo\.fork \}\}/,
-  );
   assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4-alpha/);
   assert.match(workflow, /buildchain-channel: alpha/);
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.inputs\['buildchain-ref'\] \|\| 'v4-alpha' \}\}/);
