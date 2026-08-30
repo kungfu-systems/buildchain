@@ -29,6 +29,9 @@ on:
       terminal-receipt-root:
         description: "Terminal receipt root"
         value: ${{ jobs.settle.outputs.terminal-receipt-root }}
+      backflow-root:
+        description: "Protected Train-to-dev backflow binding root"
+        value: ${{ jobs.settle.outputs.backflow-root }}
 
 permissions:
   contents: read
@@ -215,9 +218,12 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      issues: write
+      pull-requests: read
     outputs:
       terminal-receipt-json: ${{ steps.settle.outputs.terminal-receipt-json }}
       terminal-receipt-root: ${{ steps.settle.outputs.terminal-receipt-root }}
+      backflow-root: ${{ steps.backflow.outputs.backflow-root }}
     steps:
       - name: Checkout immutable Bootstrap shell
         uses: actions/checkout@v7.0.0
@@ -241,3 +247,15 @@ jobs:
             echo "terminal-receipt-root=$(jq -r '.receiptRoot' .buildchain/terminal-receipt.json)"
           } >> "${GITHUB_OUTPUT}"
           test "$(jq -r '.status' <<< "${BUILDCHAIN_UNIVERSAL_RESULT_JSON}")" = "succeeded"
+
+      - name: Bind successful delivery to protected backflow
+        id: backflow
+        shell: bash
+        env:
+          BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ inputs.request-json }}
+          BUILDCHAIN_UNIVERSAL_TERMINAL_RECEIPT_JSON: ${{ steps.settle.outputs.terminal-receipt-json }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node .buildchain/bootstrap/scripts/v4-universal-workflow-backflow.mjs > .buildchain/backflow.json
+          echo "backflow-root=$(jq -r '.backflowRoot' .buildchain/backflow.json)" >> "${GITHUB_OUTPUT}"

@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "0291f0d5e249a4705dd16fb992484619dc95a05e986c2de3ba379c3d98aee57b",
+    "sha256": "9f613efa56304ef94147d216b0da320564d39f9d462a51f32be1322bcb0348f4",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 79,
+      "workflowCount": 80,
       "actionCount": 8,
       "sitePageCount": 84,
       "docCommandRefCount": 1050,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "0291f0d5e249a4705dd16fb992484619dc95a05e986c2de3ba379c3d98aee57b",
+      "sha256": "9f613efa56304ef94147d216b0da320564d39f9d462a51f32be1322bcb0348f4",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 79,
+        "workflowCount": 80,
         "actionCount": 8,
         "sitePageCount": 84,
         "docCommandRefCount": 1050,
@@ -5909,6 +5909,22 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:universal-bootstrap-recovery",
+          "name": "workflow:universal-bootstrap-recovery",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/universal-bootstrap-recovery.yml",
+          "evidencePath": ".github/workflows/universal-bootstrap-recovery.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 1,
+          "inputs": [
+            "request-json"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:v4-adopter-delivery-dogfood",
           "name": "workflow:v4-adopter-delivery-dogfood",
           "kind": "workflow",
@@ -7575,6 +7591,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 483
+    "publicSurfaceCount": 484
   }
 }

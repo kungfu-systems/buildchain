@@ -67,7 +67,8 @@ test("primary and recovery shells are non-circular and retain opposite fault rou
     /Parse exact recovery coordinates without Buildchain code/u,
   );
   assert.match(recovery, /Execute only the exact admitted engine/u);
-  assert.match(recovery, /Seal exact candidate recovery receipt/u);
+  assert.match(recovery, /Seal receipt outside candidate authority/u);
+  assert.doesNotMatch(recovery, /candidate\/scripts\/v4-universal-workflow-engine\.mjs terminal/u);
 });
 
 test("candidate-owned faults execute only after exact admission", () => {

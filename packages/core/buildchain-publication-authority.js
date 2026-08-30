@@ -59,6 +59,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/release-tail.yml", "product-publication", true, ["artifact.publish", "signed-channel.commit", "release.activate", "released-evidence.synthesize"], "caller-secrets", "caller-bound", "caller-bound", "fixed"],
   [".github/workflows/release-verify.yml", "governance-write"],
   [".github/workflows/stable-candidate-patrol.yml", "governance-write"],
+  [".github/workflows/universal-bootstrap-recovery.yml", "product-publication", true, ["universal-candidate-execution"], "caller-secrets", "none", "fixed", "caller-bound"],
   [".github/workflows/universal-bootstrap-dogfood.yml", "product-publication", true, ["universal-candidate-execution"], "caller-secrets", "none", "fixed", "caller-bound"],
   [".github/workflows/v4-declarative-release-tail-dogfood.yml", "product-publication", true, ["artifact.publish", "signed-channel.commit", "release.activate", "released-evidence.synthesize"], "caller-secrets", "none", "fixed", "fixed"],
 ]);

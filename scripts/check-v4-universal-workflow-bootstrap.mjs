@@ -77,7 +77,9 @@ for (const relative of contract.retiredWorkflowSurfaces) {
   );
 }
 const activeWorkflows = contract.inventoryWorkflows.filter(
-  (relative) => !contract.retiredWorkflowSurfaces.includes(relative),
+  (relative) =>
+    !contract.retiredWorkflowSurfaces.includes(relative) &&
+    relative !== contract.bootstrap.consumerRecoveryWorkflow,
 );
 assert.deepEqual(
   contract.bootstrapGovernedWorkflows,
@@ -122,6 +124,7 @@ assert.deepEqual(
     fileRoot("architecture/v4-universal-workflow-bootstrap.json"),
     fileRoot(contract.bootstrap.faultCampaign),
     fileRoot("packages/core/v4-universal-workflow-bootstrap.js"),
+    fileRoot("scripts/v4-universal-workflow-backflow.mjs"),
     fileRoot("scripts/v4-universal-workflow-engine.mjs"),
   ].sort(),
 );
@@ -160,6 +163,10 @@ const consumerRecoveryTemplate = fs.readFileSync(
   path.join(root, contract.bootstrap.consumerRecoveryTemplate),
   "utf8",
 );
+const consumerRecoveryWorkflow = fs.readFileSync(
+  path.join(root, contract.bootstrap.consumerRecoveryWorkflow),
+  "utf8",
+);
 const selfDogfood = fs.readFileSync(
   path.join(root, contract.bootstrap.selfDogfoodWorkflow),
   "utf8",
@@ -185,14 +192,19 @@ assert.doesNotMatch(
   /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\//u,
   "consumer recovery must not parse any published Buildchain workflow",
 );
+assert.equal(
+  consumerRecoveryWorkflow,
+  consumerRecoveryTemplate,
+  "the Buildchain self-consumer must exercise the exact distributable recovery shell",
+);
 assert.match(
   selfDogfood,
-  /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@v4-alpha/u,
+  /uses:\s+\.\/\.github\/workflows\/universal-bootstrap-recovery\.yml/u,
 );
 assert.doesNotMatch(
   selfDogfood,
-  /uses:\s+\.\/\.github\/workflows\/bootstrap\.yml/u,
-  "self-dogfood must not use a repository-local Bootstrap bypass",
+  /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@/u,
+  "Train self-dogfood must not depend on a published Buildchain Bootstrap",
 );
 
 console.log(

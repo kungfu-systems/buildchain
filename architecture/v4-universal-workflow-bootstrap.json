@@ -10,6 +10,7 @@
     "candidateEnginePath": "scripts/v4-universal-workflow-engine.mjs",
     "consumerTemplate": "templates/universal-buildchain-bootstrap.yml",
     "consumerRecoveryTemplate": "templates/universal-buildchain-bootstrap-recovery.yml",
+    "consumerRecoveryWorkflow": ".github/workflows/universal-bootstrap-recovery.yml",
     "consumerRecoveryMode": "separate-pre-positioned-consumer-owned-shell",
     "recoveryDependsOnPublishedBuildchain": false,
     "selfDogfoodWorkflow": ".github/workflows/universal-bootstrap-dogfood.yml",
@@ -88,6 +89,7 @@
     ".github/workflows/release-propagation.yml",
     ".github/workflows/release-tail.yml",
     ".github/workflows/stable-candidate-patrol.yml",
+    ".github/workflows/universal-bootstrap-recovery.yml",
     ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/v4-stage-capsule-canary.yml",
     ".github/workflows/v4-tail-reseal.yml"
@@ -149,7 +151,7 @@
       ".github/workflows/release-candidate-promote.yml"
     ],
     "staticBootstrap": "implemented",
-    "candidateEngine": "bootstrap-and-release-invocation",
+    "candidateEngine": "bounded-capability-adapters; generic-workflow execution pending",
     "compatibilityFacades": "generated-dual-path",
     "externalConsumerDogfood": "non-circular-recovery-template-implemented-runtime-pending",
     "buildchainSelfDogfood": "caller-implemented-runtime-pending",

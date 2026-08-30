@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 79,
+    "workflowCount": 80,
     "actionCount": 8,
     "sitePageCount": 84,
     "docCommandRefCount": 1050,
@@ -1597,6 +1597,7 @@
         "secretCount": 0,
         "outputs": [
           "admission-root",
+          "backflow-root",
           "request-root",
           "result-json",
           "result-root",
@@ -1604,7 +1605,7 @@
           "terminal-receipt-json",
           "terminal-receipt-root"
         ],
-        "outputCount": 7
+        "outputCount": 8
       },
       {
         "id": "build-surface-fixture",
@@ -3007,6 +3008,24 @@
         "secretCount": 0,
         "outputs": [],
         "outputCount": 0
+      },
+      {
+        "id": "universal-bootstrap-recovery",
+        "path": ".github/workflows/universal-bootstrap-recovery.yml",
+        "reusable": true,
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "backflow-root",
+          "runtime-sha",
+          "terminal-receipt-json",
+          "terminal-receipt-root"
+        ],
+        "outputCount": 4
       },
       {
         "id": "v4-adopter-delivery-dogfood",
@@ -9013,8 +9032,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "33a06388067cdd2e1ab0abefd9c5c918325f704307f325d4161e3d20141fa276",
-    "pageRegistryDigest": "b9af9bf13c9b18216d16d8ce087ab76a6c66537c42e00db1310adeac55f2cde8"
+    "workflowRegistryDigest": "d90856d755c1fdccf77fcb1818c72ab887354aa1c56a2a5aa093f929cef6e088",
+    "pageRegistryDigest": "de6950c12144a9ca39c5bd59cf21770523587c8b3c63fbe7f1bed40464678b65"
   },
   "comparison": {
     "missingCliRegistry": [],
