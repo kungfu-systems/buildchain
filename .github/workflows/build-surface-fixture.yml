@@ -17,6 +17,7 @@ on:
 permissions: { actions: read, contents: read, issues: write, id-token: write }
 jobs:
   libnode-shaped:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork }}
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
     secrets: inherit
     with:
@@ -25,7 +26,6 @@ jobs:
       working-directory: fixtures/libnode-shaped
       runner-preset: github-hosted
       linux-container-preset: kungfu-verify
-      untrusted-policy: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork && 'skip' || 'fail' }}
       artifact-transfer-mode: ${{ github.event.inputs['artifact-transfer-mode'] || 'github-artifacts' }}
       buildchain-contract-drift-issue-mode: "off"
       buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
