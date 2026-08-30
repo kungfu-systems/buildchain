@@ -763,6 +763,21 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/universal-bootstrap-recovery.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "universal-candidate-execution"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/universal-bootstrap-recovery.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -1261,6 +1276,14 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/universal-bootstrap-recovery.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/v4-adopter-delivery-dogfood.yml",
       "signals": [],
       "classified": false
@@ -1305,5 +1328,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "b8eb4ea37865dc3bce8e88fc19b486b2faa678a8c63c2128424742035e62650c"
+  "registryDigest": "f142cf087f80dbfa1992329ff191f01e69af32e0cd79fb6ea278632313569a59"
 }

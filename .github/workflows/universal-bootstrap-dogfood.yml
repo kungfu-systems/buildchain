@@ -25,8 +25,8 @@ permissions:
 
 jobs:
   public-bootstrap:
-    name: Exercise the public consumer contract
-    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4-alpha
+    name: Exercise the consumer-owned recovery contract
+    uses: ./.github/workflows/universal-bootstrap-recovery.yml
     with:
       request-json: ${{ inputs.request-json }}
     secrets: inherit
