@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -66,11 +65,7 @@ function materializeSourceRevision() {
       stdio: "ignore",
     });
     return;
-  } catch {
-    // GitHub's default shallow checkout retains only the candidate head. The
-    // compatibility proof still needs the immutable pre-migration facade
-    // sources, so hydrate that one exact public commit rather than history.
-  }
+  } catch {}
   try {
     execFileSync(
       "git",
