@@ -66,6 +66,8 @@ test("self-promotion recovery retains the sealed npm payload selector", () => {
     /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && ''/,
   );
   assert.match(recovery, /artifact-patterns: buildchain-package-\*/);
+  assert.match(promotion, /required-artifact-count: 0/);
+  assert.match(recovery, /required-artifact-count: 0/);
 });
 
 test("protected alpha recovery bootstraps from the current workflow runtime", () => {

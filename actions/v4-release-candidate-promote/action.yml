@@ -9,7 +9,7 @@ inputs:
     }
   mutation-token:
     {
-      required: true,
+      required: false,
       description: "Bounded token for generated protected ref and pull-request mutations",
     }
   repository:
@@ -20,11 +20,14 @@ inputs:
   tag: { required: true, description: "Exact publication tag" }
   channel: { required: true, description: "alpha, release, or stable" }
   target-ref:
-    { required: true, description: "Protected release channel branch" }
+    {
+      required: false,
+      description: "Protected release channel branch; recovered from sealed candidate evidence for legacy shells",
+    }
   target-sha:
     {
-      required: true,
-      description: "Exact protected channel SHA admitted by QUALIFY",
+      required: false,
+      description: "Exact protected channel SHA admitted by QUALIFY; recovered from sealed candidate evidence for legacy shells",
     }
   candidate-passport-path:
     { required: true, description: "Downloaded release candidate Passport" }
@@ -35,17 +38,17 @@ inputs:
   candidate-build-summary-path:
     {
       required: false,
-      description: "Downloaded release candidate build summary; omitted legacy shells use the sealed candidate's standard summary artifact",
+      description: "Downloaded release candidate build summary",
     }
   sealed-bundle-root:
-    { required: true, description: "Downloaded sealed product payload root" }
+    { required: false, description: "Downloaded sealed product payload root" }
   sealed-bundle-manifest:
     {
-      required: true,
+      required: false,
       description: "Downloaded sealed product payload manifest",
     }
   required-artifacts-path:
-    { required: true, description: "Downloaded required product artifact set" }
+    { required: false, description: "Downloaded required product artifact set" }
   publisher-workflow-sha:
     { required: true, description: "Exact canonical publisher workflow SHA" }
   runtime-commit:
@@ -71,7 +74,7 @@ inputs:
   publish-package-set-order:
     { default: "as-provided", description: "Package publication ordering" }
   publish-package-main:
-    { required: true, description: "Main package publication identity" }
+    { required: false, description: "Main package publication identity" }
   publish-auth:
     {
       default: "trusted-publishing",
@@ -86,6 +89,11 @@ inputs:
     {
       default: "false",
       description: "Resume an explicitly admitted durable publication transaction",
+    }
+  resume-transaction-id:
+    {
+      default: "",
+      description: "Exact durable publication transaction identity; mismatches fail before mutation",
     }
   state-path:
     {

@@ -21,8 +21,21 @@ import {
 } from "../../packages/core/v4-publication-qualification.js";
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
 import {
+  activateExactPnpm,
   applyProductPublication,
   planProductPublication,
+  resolveCandidateBuildSummaryPath,
+  resolveCandidateProviderInputs,
+  resolvePublicationTarget,
+  resolvePromotionTarget,
+} from "./product-provider.js";
+
+export {
+  activateExactPnpm,
+  resolveCandidateBuildSummaryPath,
+  resolveCandidateProviderInputs,
+  resolvePublicationTarget,
+  resolvePromotionTarget,
 } from "./product-provider.js";
 
 const input = (name, required = false) =>
@@ -34,74 +47,6 @@ const write = (file, value) => {
   fs.writeFileSync(resolved, `${JSON.stringify(value, null, 2)}\n`);
   return resolved;
 };
-
-export function resolveCandidateBuildSummaryPath({
-  candidatePassportPath,
-  declaredPath = "",
-}) {
-  const selected = String(declaredPath || "").trim();
-  if (selected) return selected;
-  const fallback = path.join(
-    path.dirname(candidatePassportPath),
-    "..",
-    "summary",
-    "build-summary.json",
-  );
-  if (!fs.existsSync(path.resolve(fallback))) {
-    throw new Error(
-      "candidate-build-summary-path is required when the sealed candidate has no standard summary artifact",
-    );
-  }
-  return fallback;
-}
-
-function standardCandidatePath(candidatePassportPath, declaredPath, relativePath, label) {
-  if (String(declaredPath || "").trim()) return declaredPath;
-  const fallback = path.join(path.dirname(candidatePassportPath), "..", relativePath);
-  if (!fs.existsSync(path.resolve(fallback)))
-    throw new Error(`${label} is required when the sealed candidate has no standard ${relativePath}`);
-  return fallback;
-}
-
-export function resolveCandidateProviderInputs({ candidatePassportPath, sealedBundleRoot = "", sealedBundleManifest = "", requiredArtifactsPath = "", publishPackageMain = "" }) {
-  const resolved = {
-    sealedBundleRoot: standardCandidatePath(candidatePassportPath, sealedBundleRoot, "payloads", "sealed-bundle-root"),
-    sealedBundleManifest: standardCandidatePath(candidatePassportPath, sealedBundleManifest, "sealed-bundle.json", "sealed-bundle-manifest"),
-    requiredArtifactsPath: standardCandidatePath(candidatePassportPath, requiredArtifactsPath, "publish-required-artifacts.json", "required-artifacts-path"),
-    publishPackageMain: String(publishPackageMain || "").trim(),
-  };
-  const recoveryReceiptPath = path.join(path.dirname(resolved.sealedBundleManifest), "recovery-receipt.json");
-  if (fs.existsSync(path.resolve(recoveryReceiptPath))) {
-    resolved.releaseCandidateRecoveryReceiptPath = recoveryReceiptPath;
-  }
-  if (!resolved.publishPackageMain) {
-    const main = read(resolved.requiredArtifactsPath).filter(({ role }) => role === "main");
-    if (main.length !== 1 || !String(main[0]?.name || "").trim())
-      throw new Error("publish-package-main is required when the sealed artifact set has no unique main package");
-    resolved.publishPackageMain = String(main[0].name).trim();
-  }
-  return resolved;
-}
-
-export async function resolvePublicationTarget({ octokit, repository, candidate, sourceSha, targetRef = "", targetSha = "" }) {
-  const declaredRef = String(targetRef || "").trim(), declaredSha = String(targetSha || "").trim();
-  if (declaredRef || declaredSha) {
-    if (!declaredRef || !declaredSha || sourceSha !== declaredSha)
-      throw new Error("declared publication target requires matching target-ref, target-sha, and source-sha");
-    return { sourceSha, targetRef: declaredRef, targetSha: declaredSha };
-  }
-  if (sourceSha !== candidate.source?.headSha)
-    throw new Error("legacy promotion target recovery requires the exact candidate source SHA");
-  const number = Number(candidate.pullRequest?.number || 0), baseRef = String(candidate.pullRequest?.baseRef || "").trim();
-  if (!Number.isSafeInteger(number) || number <= 0 || !baseRef)
-    throw new Error("legacy promotion target recovery requires an exact pull request and base ref");
-  const [owner, repo] = repository.split("/");
-  const { data } = await octokit.rest.pulls.get({ owner, repo, pull_number: number });
-  const mergeSha = String(data.merge_commit_sha || "").trim();
-  if (data.merged !== true || data.base?.ref !== baseRef || !/^[0-9a-f]{40}$/u.test(mergeSha))
-    throw new Error("legacy promotion target recovery requires the exact merged pull request");
-  return { sourceSha: mergeSha, targetRef: baseRef, targetSha: mergeSha };
-}
 
 export function aggregateV4ReleasePassport({
   candidate,
@@ -279,6 +224,7 @@ function productProviderRequest({
     publishTransactionOverride: core.getBooleanInput(
       "publish-transaction-override",
     ),
+    expectedTransactionId: input("resume-transaction-id"),
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
   };
@@ -542,7 +488,16 @@ async function main() {
   const octokit = github.getOctokit(token);
   const mutationOctokit = github.getOctokit(input("mutation-token") || token);
   assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
-  const publicationTarget = await resolvePublicationTarget({ octokit, repository, candidate, sourceSha: declaredSourceSha, targetRef: input("target-ref"), targetSha: input("target-sha") });
+  const publicationTarget = await resolvePublicationTarget({
+    octokit,
+    repository,
+    candidate,
+    candidatePassportPath,
+    channel,
+    sourceSha: declaredSourceSha,
+    targetRef: input("target-ref"),
+    targetSha: input("target-sha"),
+  });
   const sourceSha = publicationTarget.sourceSha;
   const sourceBinding = await observeProtectedPublicationSource({
     octokit,
@@ -579,6 +534,7 @@ async function main() {
     publicationPlan,
     octokit,
   });
+  activateExactPnpm();
   const settlement = await applyAndSettle({
     repository,
     sourceSha,

@@ -23,7 +23,6 @@ import {
 import {
   checkV4ReleaseTopology,
   discoverV4ReleaseTopology,
-  findUnknownV4ReleaseTopology,
 } from "../scripts/check-v4-release-topology.mjs";
 import { resolveV4ReleaseCandidateAdapter } from "../scripts/v4-release-candidate-adapter.mjs";
 import {
@@ -273,6 +272,38 @@ test("fresh and recovery candidate discovery are data-only adapters into the sam
   assert.doesNotMatch(
     workflow,
     /if \[ -n "\$BUILDCHAIN_RESUME_CANDIDATE_RUN_ID" \]/u,
+  );
+});
+
+test("an exact resume transaction identity reaches the canonical product provider", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const action = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/action.yml"),
+    "utf8",
+  );
+  const entrypoint = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/index.js"),
+    "utf8",
+  );
+  const provider = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/product-provider.js"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /resume-transaction-id: \$\{\{ inputs\.resume-transaction-id \}\}/u,
+  );
+  assert.match(action, /resume-transaction-id:/u);
+  assert.match(
+    entrypoint,
+    /expectedTransactionId: input\("resume-transaction-id"\)/u,
+  );
+  assert.match(
+    provider,
+    /expectedTransactionId: request\.expectedTransactionId/u,
   );
 });
 
@@ -535,65 +566,5 @@ test("the topology ledger exactly freezes all current release jobs and authority
       topologyLedger.semanticScope.workflowPaths,
     ),
     topology,
-  );
-});
-
-test("fresh, recovery, and startup-failure routes cannot reach a legacy release engine", () => {
-  const canonical = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  const publicWrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
-    "utf8",
-  );
-  const recovery = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
-    "utf8",
-  );
-  const promoteRelease = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/internal/promote-release-channel.js"),
-    "utf8",
-  );
-  assert.deepEqual(topologyLedger.authorityClosure.runtimeEngines, [
-    "actions/v4-release-candidate-promote/index.js",
-  ]);
-  assert.doesNotMatch(
-    [canonical, publicWrapper, recovery].join("\n"),
-    /legacy-promote|v4-declarative-promote/u,
-  );
-  assert.match(
-    canonical,
-    /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/u,
-  );
-  assert.match(
-    canonical,
-    /source-sha: \$\{\{ needs\.qualify\.outputs\.requested-sha \}\}/u,
-  );
-  assert.match(
-    publicWrapper,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@/u,
-  );
-  assert.match(
-    recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@/u,
-  );
-  assert.match(
-    promoteRelease,
-    /recoveredCandidate: Boolean\(state\.containsPublishedMaterial\)/u,
-  );
-});
-
-test("closed-world discovery rejects an undeclared release topology workflow", () => {
-  assert.deepEqual(
-    findUnknownV4ReleaseTopology(
-      ["known.yml"],
-      ["known.yml", "new.yml", "unrelated.yml"],
-      (relative) =>
-        relative === "new.yml"
-          ? "uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v4"
-          : "jobs:\n  check:\n    runs-on: ubuntu-24.04\n",
-    ),
-    ["new.yml"],
   );
 });

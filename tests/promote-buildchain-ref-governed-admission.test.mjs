@@ -116,7 +116,7 @@ test("governed promotion resumes its exact durable transaction after the target 
   const { octokit, refs, commits } = createGitMock({
     refs: new Map([
       ["heads/alpha/v1/v1.0", advancedSha],
-      ["heads/dev/v1/v1.0", advancedSha],
+      ["heads/dev/v1/v1.0", SHA],
       ["tags/v1.0-alpha", staleFloatingSha],
       ["tags/v1-alpha", staleFloatingSha],
     ]),
@@ -596,4 +596,3 @@ test("major promotion requires a release passport with the matching source tree"
     fs.rmSync(cwd, { recursive: true, force: true });
   }
 });
-

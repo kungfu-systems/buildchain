@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "4.0.2-alpha.2",
+    "version": "4.0.2-alpha.6",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v4",
@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:bb006a22c17a67a79dcd3bf566e2fdf9f5a1c4841580d1cfbaa44229f2a8b8b1",
+      "auditDigest": "sha256:d218de8c047af98b00483cfca7e4c6e61e889a2df281259a3988c4026f0b65d7",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1863,7 +1863,7 @@
         "no consumer command, script, shell, checkout, or executable tail hook is accepted"
       ],
       "breakingDigest": "sha256:9229eb3a000fb408feb6b8793c209c77afbf9327026467d68954470e22e4f8f4",
-      "auditDigest": "sha256:22f671f65179fd69a38de5963d383a0774208baee7e00dde7c581e7d7f27d5cb"
+      "auditDigest": "sha256:b297931166d06249a7d482d6c2ef1e95e60602503113775c868f4fd62e2d6e65"
     },
     {
       "contractVersion": 1,
@@ -5173,7 +5173,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:bb006a22c17a67a79dcd3bf566e2fdf9f5a1c4841580d1cfbaa44229f2a8b8b1"
+      "auditDigest": "sha256:d218de8c047af98b00483cfca7e4c6e61e889a2df281259a3988c4026f0b65d7"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:6deaf1241a5831a69a377150948220f8f39671c606ddaf10006e17ac40dbde69"
+  "contractDigest": "sha256:e3c3cf3bb755f809fa137c5488690e66d0a0e456333ba83703dda53a51cdd27b"
 }

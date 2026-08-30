@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64325,
-    "current": 56264
+    "measuredExcess": 64319,
+    "current": 56258
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -92,21 +92,21 @@
       "actions/promote-buildchain-ref/internal/durable-transaction-operations.js": {
         "baseline": {
           "functions": {
-            "createDurableTransactionOperations@11": {
+            "createDurableTransactionOperations@80": {
               "lines": 378
             }
           }
         },
         "current": {
           "functions": {
-            "createDurableTransactionOperations@11": {
+            "createDurableTransactionOperations@80": {
               "lines": 378
             }
           }
         },
         "target": {
           "functions": {
-            "createDurableTransactionOperations@11": {
+            "createDurableTransactionOperations@80": {
               "lines": 180
             }
           }
@@ -379,21 +379,21 @@
       "packages/core/dev-delivery-execution-transfer.js": {
         "baseline": {
           "functions": {
-            "verifyNativeExecutionTransfer@469": {
+            "verifyNativeExecutionTransfer@468": {
               "complexity": 36
             }
           }
         },
         "current": {
           "functions": {
-            "verifyNativeExecutionTransfer@469": {
+            "verifyNativeExecutionTransfer@468": {
               "complexity": 36
             }
           }
         },
         "target": {
           "functions": {
-            "verifyNativeExecutionTransfer@469": {
+            "verifyNativeExecutionTransfer@468": {
               "complexity": 25
             }
           }
@@ -1683,19 +1683,19 @@
               "lines": 309,
               "complexity": 62
             },
-            "resolveReleaseCandidateArtifactsCli@785": {
+            "resolveReleaseCandidateArtifactsCli@784": {
               "complexity": 29
             }
           }
         },
         "current": {
-          "lines": 854,
+          "lines": 853,
           "functions": {
             "resolveReleaseCandidateArtifacts@475": {
-              "lines": 309,
+              "lines": 308,
               "complexity": 61
             },
-            "resolveReleaseCandidateArtifactsCli@785": {
+            "resolveReleaseCandidateArtifactsCli@784": {
               "complexity": 29
             }
           }
@@ -1707,7 +1707,7 @@
               "lines": 180,
               "complexity": 25
             },
-            "resolveReleaseCandidateArtifactsCli@785": {
+            "resolveReleaseCandidateArtifactsCli@784": {
               "complexity": 25
             }
           }
@@ -2362,7 +2362,7 @@
           "lines": 806
         },
         "current": {
-          "lines": 806
+          "lines": 805
         },
         "target": {
           "lines": 600
@@ -2614,7 +2614,7 @@
           "lines": 1217
         },
         "current": {
-          "lines": 1137
+          "lines": 1132
         },
         "target": {
           "lines": 600
@@ -2937,7 +2937,7 @@
           "lines": 2736
         },
         "current": {
-          "lines": 1116
+          "lines": 1118
         },
         "target": {
           "lines": 600
@@ -3098,6 +3098,7 @@
     "scripts/check-v3-v4-capability-inventory.mjs",
     ".github/workflows/release-candidate-promote.yml",
     "actions/promote-buildchain-ref/lib.js",
+    "actions/v4-release-candidate-promote/index.js",
     "scripts/check-inventory.mjs",
     "tests/promote-buildchain-ref.test.mjs",
     "tests/promotion-channel-router.test.mjs",
@@ -3107,6 +3108,7 @@
     "scripts/buildchain-cli-help.mjs",
     "scripts/check-v4-floating-consumer-policy-contract.mjs",
     "tests/dev-delivery-warrant.test.mjs",
+    "packages/core/dev-delivery-warrant-state.js",
     "actions/promote-buildchain-ref/internal/version-state.js",
     "packages/core/v4-floating-consumer-release-passport.js",
     "packages/core/release-passport.js",
@@ -3135,7 +3137,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 1116
+      "current": 1118
     },
     {
       "domain": "sources",

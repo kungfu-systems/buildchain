@@ -165,6 +165,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/check-v3-v4-capability-inventory.mjs`
 - `.github/workflows/release-candidate-promote.yml`
 - `actions/promote-buildchain-ref/lib.js`
+- `actions/v4-release-candidate-promote/index.js`
 - `scripts/check-inventory.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
 - `tests/promotion-channel-router.test.mjs`
@@ -174,6 +175,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/buildchain-cli-help.mjs`
 - `scripts/check-v4-floating-consumer-policy-contract.mjs`
 - `tests/dev-delivery-warrant.test.mjs`
+- `packages/core/dev-delivery-warrant-state.js`
 - `actions/promote-buildchain-ref/internal/version-state.js`
 - `packages/core/v4-floating-consumer-release-passport.js`
 - `packages/core/release-passport.js`
@@ -895,6 +897,7 @@ Owner: Buildchain protected delivery maintainers
 
 - `packages/core/dev-delivery-warrant.js`
 - `packages/core/dev-delivery-warrant-state.js`
+- `packages/core/dev-delivery-warrant-native-compatibility.js`
 - `packages/core/dev-delivery-warrant-qualification.js`
 - `packages/core/dev-delivery-warrant-legacy-recovery.js`
 - `packages/core/dev-delivery-native-proof.js`
