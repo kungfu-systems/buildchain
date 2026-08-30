@@ -169,6 +169,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/check-inventory.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
 - `tests/promotion-channel-router.test.mjs`
+- `tests/v4-release-topology.test.mjs`
 - `scripts/site-capability-metadata.mjs`
 - `tests/v4-floating-consumer-policy.test.mjs`
 - `tests/v4-declarative-promotion-mode.test.mjs`
