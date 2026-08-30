@@ -150,6 +150,8 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 ### Current top twenty maintenance hotspots
 
+- `.github/workflows/bootstrap.yml`
+- `scripts/check-v4-universal-workflow-bootstrap.mjs`
 - `tests/v3-v4-capability-inventory.test.mjs`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
 - `tests/v4-publication-qualification.test.mjs`
