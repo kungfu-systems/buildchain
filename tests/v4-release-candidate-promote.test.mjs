@@ -186,7 +186,12 @@ test("provider verification exposes only the pinned pnpm runtime", () => {
       fs.readFileSync(shim, "utf8"),
       '#!/bin/sh\nexec corepack pnpm@11.7.0 "$@"\n',
     );
-    assert.equal(fs.statSync(shim).mode & 0o777, 0o755);
+    assert.equal(
+      fs.readFileSync(path.join(path.dirname(shim), "pnpm.cmd"), "utf8"),
+      "@echo off\r\ncorepack pnpm@11.7.0 %*\r\n",
+    );
+    if (process.platform !== "win32")
+      assert.equal(fs.statSync(shim).mode & 0o777, 0o755);
     assert.equal(process.env.PATH?.split(path.delimiter)[0], path.dirname(shim));
   } finally {
     process.env.PATH = previousPath;

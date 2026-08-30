@@ -94,6 +94,10 @@ export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
   fs.writeFileSync(shimPath, '#!/bin/sh\nexec corepack pnpm@11.7.0 "$@"\n', {
     mode: 0o755,
   });
+  fs.writeFileSync(
+    path.join(shimDirectory, "pnpm.cmd"),
+    "@echo off\r\ncorepack pnpm@11.7.0 %*\r\n",
+  );
   process.env.PATH = `${shimDirectory}${path.delimiter}${process.env.PATH || ""}`;
   return shimPath;
 }
