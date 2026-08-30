@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -127,6 +128,7 @@ export async function planProductPublication(
 }
 
 export async function applyProductPublication(request, plan) {
+  execFileSync("corepack", ["enable", "pnpm"], { stdio: "inherit" });
   const result = await promoteBuildchainRefs(
     promotionOptions(request, {
       dryRun: false,

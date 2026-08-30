@@ -306,6 +306,17 @@ test("canonical APPLY roots the product provider's planned exact version", () =>
   );
 });
 
+test("canonical APPLY activates the pnpm shim required by nested lifecycle scripts", () => {
+  const provider = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/product-provider.js"),
+    "utf8",
+  );
+  assert.match(
+    provider,
+    /execFileSync\("corepack", \["enable", "pnpm"\], \{ stdio: "inherit" \}\);/u,
+  );
+});
+
 test("one three-phase ReleaseTransaction owns one terminal ReleaseReceipt", () => {
   const transaction = transactionFor(fixture.invocations.alpha);
   assert.deepEqual(transaction.transaction.phases, [
