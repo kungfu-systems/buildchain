@@ -108,7 +108,8 @@
     "terminalProjections": [
       ".github/workflows/.release-candidate-promote.yml",
       "actions/v4-release-candidate-promote/index.js",
-      "packages/core/v4-release-invocation.js"
+      "packages/core/v4-release-invocation.js",
+      "scripts/v4-universal-workflow-engine.mjs"
     ],
     "freshEntry": ".github/workflows/release-candidate-promote.yml",
     "recoveryEntry": ".github/workflows/buildchain-ref-promotion-recovery.yml",

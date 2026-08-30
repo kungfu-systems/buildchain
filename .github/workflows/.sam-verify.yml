@@ -1,6 +1,11 @@
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       aws-root:
         default: "aws-cn"
         type: string
@@ -27,7 +32,15 @@ permissions:
   contents: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   prepare:
+    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -40,6 +53,7 @@ jobs:
           action: "verify"
 
   build:
+    if: ${{ inputs.universal-request-json == '' }}
     needs: prepare
     runs-on: ubuntu-24.04
     steps:
@@ -60,7 +74,7 @@ jobs:
       - run: sam build
 
   verify:
-    if: ${{ always() }}
+    if: ${{ inputs.universal-request-json == '' && (always()) }}
     needs: [prepare, build]
     runs-on: ubuntu-24.04
     steps:

@@ -319,6 +319,151 @@
         "expectedContributionSeconds": 0,
         "rationale": "The lane only reconciles already-produced rooted platform reports and grants no provider, release, or stable publication authority."
       }
+    },
+    {
+      "laneId": ".github/workflows/bootstrap.yml#admit",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "exact-candidate admission latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/bootstrap.yml#execute",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "exact-candidate execution latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/bootstrap.yml#settle",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "universal terminal settlement latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#public-bootstrap",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "manual",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "public Bootstrap dogfood latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    }
+  ],
+  "declarationFamilies": [
+    {
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "opt-in exact-candidate execution latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      },
+      "laneIds": [
+        ".github/workflows/.auditable-demo.yml#universal-bootstrap",
+        ".github/workflows/.binary-release-assets.yml#universal-bootstrap",
+        ".github/workflows/.build.yml#universal-bootstrap",
+        ".github/workflows/.bump-minor-version.yml#universal-bootstrap",
+        ".github/workflows/.declarative-auditable-demo.yml#universal-bootstrap",
+        ".github/workflows/.gate-profile.yml#universal-bootstrap",
+        ".github/workflows/.publication-authority.yml#universal-bootstrap",
+        ".github/workflows/.release-candidate-promote.yml#universal-bootstrap",
+        ".github/workflows/.release-verify.yml#universal-bootstrap",
+        ".github/workflows/.sam-verify.yml#universal-bootstrap",
+        ".github/workflows/.sync-release-page.yml#universal-bootstrap",
+        ".github/workflows/.sync-remote-git.yml#universal-bootstrap",
+        ".github/workflows/.web-surface.yml#universal-bootstrap",
+        ".github/workflows/.wheel-verify.yml#universal-bootstrap",
+        ".github/workflows/build.yml#universal-bootstrap",
+        ".github/workflows/buildchain-patrol.yml#universal-bootstrap",
+        ".github/workflows/check.yml#universal-bootstrap",
+        ".github/workflows/dev-alpha-candidate-patrol.yml#universal-bootstrap",
+        ".github/workflows/dev-delivery-warrant-cancel.yml#universal-bootstrap",
+        ".github/workflows/dev-delivery-warrant-close.yml#universal-bootstrap",
+        ".github/workflows/dev-pr-auto-merge.yml#universal-bootstrap",
+        ".github/workflows/dev-qualification-patrol.yml#universal-bootstrap",
+        ".github/workflows/engineering-housekeeper.yml#universal-bootstrap",
+        ".github/workflows/github-artifact-attestation.yml#universal-bootstrap",
+        ".github/workflows/paper-release-sealed.yml#universal-bootstrap",
+        ".github/workflows/paper-release.yml#universal-bootstrap",
+        ".github/workflows/patrol-daily.yml#universal-bootstrap",
+        ".github/workflows/patrol-monthly.yml#universal-bootstrap",
+        ".github/workflows/patrol-observed-evidence.yml#universal-bootstrap",
+        ".github/workflows/patrol-weekly.yml#universal-bootstrap",
+        ".github/workflows/publication-artifact.yml#universal-bootstrap",
+        ".github/workflows/release-candidate-promote.yml#universal-bootstrap",
+        ".github/workflows/release-propagation.yml#universal-bootstrap",
+        ".github/workflows/release-tail.yml#universal-bootstrap",
+        ".github/workflows/stable-candidate-patrol.yml#universal-bootstrap",
+        ".github/workflows/v4-stage-capsule-canary.yml#universal-bootstrap",
+        ".github/workflows/v4-tail-reseal.yml#universal-bootstrap"
+      ]
+    },
+    {
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "mixed-trigger exact-candidate execution latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      },
+      "laneIds": [
+        ".github/workflows/release-governance-reconcile.yml#universal-bootstrap",
+        ".github/workflows/v4-adopter-delivery.yml#universal-bootstrap"
+      ]
     }
   ]
 }
