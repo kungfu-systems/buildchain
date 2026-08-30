@@ -9,6 +9,8 @@
     "candidateRepository": "kungfu-systems/buildchain",
     "candidateEnginePath": "scripts/v4-universal-workflow-engine.mjs",
     "consumerTemplate": "templates/universal-buildchain-bootstrap.yml",
+    "consumerRecoveryMode": "pre-positioned-consumer-owned-shell",
+    "recoveryDependsOnPublishedBuildchain": false,
     "selfDogfoodWorkflow": ".github/workflows/universal-bootstrap-dogfood.yml",
     "discoveryRefExecutionAuthority": false,
     "exactShaExecutionAuthority": true,
@@ -92,9 +94,9 @@
   "migration": {
     "compatibilityFacadeGenerator": "scripts/generate-v4-universal-workflow-facades.mjs",
     "staticBootstrap": "implemented",
-    "candidateEngine": "bootstrap-conformance",
+    "candidateEngine": "bootstrap-and-release-invocation",
     "compatibilityFacades": "pending",
-    "externalConsumerDogfood": "pending",
+    "externalConsumerDogfood": "recovery-template-implemented-runtime-pending",
     "buildchainSelfDogfood": "caller-implemented-runtime-pending",
     "oldPathRetirement": "pending"
   }
