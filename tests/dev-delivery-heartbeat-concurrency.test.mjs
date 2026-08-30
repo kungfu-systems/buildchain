@@ -5,6 +5,8 @@ import {
   createDevDeliveryQueue,
   devDeliveryContentRoot,
   createNativeCommandContract,
+  heartbeatDevDeliveryWarrant,
+  rankDevDeliveryCandidates,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
@@ -156,6 +158,39 @@ test("heartbeat command rebases stale shared state under the exact fence", async
     selected.queue.stateRoot,
   );
   assert.equal(store.writes.length, 1);
+});
+
+test("heartbeat quarantines an incompatible legacy queued follower", () => {
+  const selected = selectedQueue();
+  const followerInput = structuredClone(selected.queue.candidates[0]);
+  for (const field of ["candidateId", "status", "terminal", "enqueuedAt", "updatedAt", "attempts", "recoveries"])
+    delete followerInput[field];
+  followerInput.pullRequestNumber = 201;
+  followerInput.sourceHead = "b".repeat(40);
+  followerInput.sourceIdentityRoot = ROOT("4");
+  const withFollower = submitDevDeliveryCandidate(selected.queue, followerInput, {
+    now: "2026-08-04T00:02:01Z",
+  });
+  const shared = structuredClone(withFollower.queue);
+  const follower = shared.candidates.find(
+    (candidate) => candidate.pullRequestNumber === 201,
+  );
+  delete follower.nativeCommandContract;
+  delete shared.stateRoot;
+  shared.stateRoot = devDeliveryContentRoot(shared);
+
+  const heartbeat = heartbeatDevDeliveryWarrant(shared, selected.warrant, {
+    now: "2026-08-04T00:03:00Z",
+    leaseSeconds: 60,
+  });
+  assert.equal(heartbeat.queue.activeWarrant.candidateId, selected.warrant.candidateId);
+  assert.deepEqual(rankDevDeliveryCandidates(heartbeat.queue), []);
+
+  const repaired = submitDevDeliveryCandidate(heartbeat.queue, followerInput, {
+    now: "2026-08-04T00:03:01Z",
+  });
+  assert.equal(repaired.receipt.action, "safe-proof-refresh-retained-age");
+  assert.equal(rankDevDeliveryCandidates(repaired.queue).length, 1);
 });
 
 test("provider receipt preserves an unrelated shared-state rebase", async () => {

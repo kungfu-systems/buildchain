@@ -25,6 +25,8 @@ import {
   discoverV4ReleaseTopology,
   findUnknownV4ReleaseTopology,
 } from "../scripts/check-v4-release-topology.mjs";
+import { resolveV4ReleaseCandidateAdapter } from "../scripts/v4-release-candidate-adapter.mjs";
+import { selectProductPublicationPlan } from "../actions/v4-release-candidate-promote/product-provider.js";
 
 const fixture = JSON.parse(
   fs.readFileSync(
@@ -57,6 +59,8 @@ function transactionFor(invocation) {
     invocationRoot: projected.roots.invocationRoot,
     publisherRoot: projected.roots.publisherRoot,
     runtimeRoot: projected.roots.runtimeRoot,
+    providerRoot: projected.roots.providerRoot,
+    parentRoot: projected.roots.parentRoot,
   });
 }
 
@@ -153,6 +157,8 @@ test("the public schema freezes the same closed ReleaseInvocation shape", () => 
     "candidate",
     "target",
     "authority",
+    "provider",
+    "parent",
   ])
     assert.equal(
       schema.$defs[definition].additionalProperties,
@@ -161,13 +167,52 @@ test("the public schema freezes the same closed ReleaseInvocation shape", () => 
     );
 });
 
-test("semantic drift changes the invocation root while adapter metadata does not", () => {
+test("every admitted identity class changes or rejects invocation lineage drift", () => {
   const baseline = project(fixture.cases[0]);
-  const drifted = structuredClone(fixture.invocations.alpha);
-  drifted.candidate.commit = "9".repeat(40);
+  const validDrifts = [
+    ["publisher", "workflowSha", "1".repeat(40)],
+    ["runtime", "commit", "2".repeat(40)],
+    ["runtime", "tree", "3".repeat(40)],
+    ["candidate", "commit", "4".repeat(40)],
+    ["candidate", "tree", "5".repeat(40)],
+    ["target", "expectedOldSha", "6".repeat(40)],
+    ["authority", "policyRoot", `sha256:${"7".repeat(64)}`],
+  ];
+  for (const [identity, field, value] of validDrifts) {
+    const drifted = structuredClone(fixture.invocations.alpha);
+    drifted[identity][field] = value;
+    assert.notEqual(
+      createV4ReleaseInvocation(drifted).roots.invocationRoot,
+      baseline.roots.invocationRoot,
+      `${identity}.${field}`,
+    );
+  }
+  const parentDrift = structuredClone(fixture.invocations.alpha);
+  parentDrift.parent = {
+    invocationRoot: `sha256:${"8".repeat(64)}`,
+    transactionRoot: `sha256:${"9".repeat(64)}`,
+    receiptRoot: `sha256:${"a".repeat(64)}`,
+  };
   assert.notEqual(
-    createV4ReleaseInvocation(drifted).roots.invocationRoot,
+    createV4ReleaseInvocation(parentDrift).roots.invocationRoot,
     baseline.roots.invocationRoot,
+    "parent lineage",
+  );
+  const providerDrift = structuredClone(fixture.invocations.alpha);
+  providerDrift.provider.adapter = "legacy-provider";
+  assert.throws(
+    () => createV4ReleaseInvocation(providerDrift),
+    (error) =>
+      error instanceof V4ContractFault &&
+      error.code === "invalid-release-provider",
+  );
+  const partialParent = structuredClone(fixture.invocations.alpha);
+  partialParent.parent.invocationRoot = `sha256:${"b".repeat(64)}`;
+  assert.throws(
+    () => createV4ReleaseInvocation(partialParent),
+    (error) =>
+      error instanceof V4ContractFault &&
+      error.code === "invalid-release-parent-lineage",
   );
 });
 
@@ -199,6 +244,65 @@ test("fresh, resume, no-op, and blocked routing is provider-free and determinist
       comparisonStatus: "diverged",
     }).decision,
     "Blocked",
+  );
+});
+
+test("fresh and recovery candidate discovery are data-only adapters into the same APPLY engine", () => {
+  assert.deepEqual(resolveV4ReleaseCandidateAdapter(), {
+    mode: "fresh",
+    script: "scripts/release-candidate-resolver.mjs",
+  });
+  assert.deepEqual(
+    resolveV4ReleaseCandidateAdapter({ resumeCandidateRunId: "123" }),
+    {
+      mode: "recovery",
+      script: "scripts/resume-from-candidate-run.mjs",
+    },
+  );
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /run: node \.buildchain\/runtime\/scripts\/v4-release-candidate-adapter\.mjs/u,
+  );
+  assert.doesNotMatch(
+    workflow,
+    /if \[ -n "\$BUILDCHAIN_RESUME_CANDIDATE_RUN_ID" \]/u,
+  );
+});
+
+test("canonical APPLY roots the product provider's planned exact version", () => {
+  assert.deepEqual(
+    selectProductPublicationPlan({
+      updates: [
+        {
+          action: "dry-run-publish-transaction",
+          version: "4.0.2-alpha.3",
+          tag: "v4.0.2-alpha.3",
+          releaseCandidateVersion: "4.0.2-alpha.2",
+        },
+      ],
+    }),
+    {
+      version: "4.0.2-alpha.3",
+      tag: "v4.0.2-alpha.3",
+      candidateVersion: "4.0.2-alpha.2",
+    },
+  );
+  assert.throws(
+    () =>
+      selectProductPublicationPlan({
+        updates: [
+          {
+            action: "dry-run-publish-transaction",
+            version: "4.0.2-alpha.3",
+            tag: "v22.22.3-kf.0",
+          },
+        ],
+      }),
+    /mismatched exact tag/u,
   );
 });
 
@@ -259,6 +363,8 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
         ["candidate", "release-invocation-candidate", invocation.candidate],
         ["target", "release-invocation-target", invocation.target],
         ["authority", "release-invocation-authority", invocation.authority],
+        ["provider", "release-invocation-provider", invocation.provider],
+        ["parent", "release-invocation-parent", invocation.parent],
         [
           "invocation",
           "release-invocation",
@@ -269,6 +375,8 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
             candidateRoot: projected.roots.candidateRoot,
             targetRoot: projected.roots.targetRoot,
             authorityRoot: projected.roots.authorityRoot,
+            providerRoot: projected.roots.providerRoot,
+            parentRoot: projected.roots.parentRoot,
           },
         ],
         ["transaction", "release-transaction", transaction.transaction],
@@ -318,12 +426,12 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
 test("the topology ledger exactly freezes all current release jobs and authority signals", () => {
   const topology = checkV4ReleaseTopology();
   assert.deepEqual(topology.metrics, {
-    workflowCount: 15,
-    jobCount: 25,
-    reusableEdgeCount: 7,
-    mutationRelevantNodeCount: 16,
-    contentsWriteJobCount: 6,
-    oidcWriteJobCount: 6,
+    workflowCount: 37,
+    jobCount: 92,
+    reusableEdgeCount: 23,
+    mutationRelevantNodeCount: 74,
+    contentsWriteJobCount: 14,
+    oidcWriteJobCount: 16,
   });
   assert.deepEqual(topology.semanticMetrics, {
     workflowCount: 5,
@@ -333,10 +441,48 @@ test("the topology ledger exactly freezes all current release jobs and authority
   });
   assert.deepEqual(
     discoverV4ReleaseTopology(
-      topology.workflows.map(({ path }) => path),
+      topologyLedger.closedWorld.workflowPaths,
       topologyLedger.semanticScope.workflowPaths,
     ),
     topology,
+  );
+});
+
+test("fresh, recovery, and startup-failure routes cannot reach a legacy release engine", () => {
+  const canonical = fs.readFileSync(
+    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    "utf8",
+  );
+  const publicWrapper = fs.readFileSync(
+    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    "utf8",
+  );
+  const recovery = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
+    "utf8",
+  );
+  assert.deepEqual(topologyLedger.authorityClosure.runtimeEngines, [
+    "actions/v4-release-candidate-promote/index.js",
+  ]);
+  assert.doesNotMatch(
+    [canonical, publicWrapper, recovery].join("\n"),
+    /legacy-promote|v4-declarative-promote/u,
+  );
+  assert.match(
+    canonical,
+    /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/u,
+  );
+  assert.match(
+    canonical,
+    /source-sha: \$\{\{ needs\.qualify\.outputs\.requested-sha \}\}/u,
+  );
+  assert.match(
+    publicWrapper,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@/u,
+  );
+  assert.match(
+    recovery,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@/u,
   );
 });
 

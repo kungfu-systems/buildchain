@@ -110,13 +110,13 @@ function digestFileSync(filePath, algorithm, encoding) {
   return hash.digest(encoding);
 }
 
-export function selectMergedChannelPullRequest({ pullRequests = [], targetRef, repository }) {
+export function selectMergedChannelPullRequest({ pullRequests = [], targetRef, targetSha = "", repository }) {
   const normalizedTarget = normalizeBranch(targetRef);
   const candidates = pullRequests.filter((pr) => {
-    const baseRef = normalizeBranch(pr.base?.ref || pr.baseRefName || "");
-    const merged = Boolean(pr.merged_at || pr.mergedAt || pr.state === "closed");
-    const sameRepo = !repository || !pr.head?.repo?.full_name || pr.head.repo.full_name === repository;
-    return merged && sameRepo && baseRef === normalizedTarget;
+    const baseRepo = pr.base?.repo?.full_name || pr.baseRepository?.nameWithOwner;
+    const merged = Boolean(pr.merged_at || pr.mergedAt || pr.merged === true);
+    const rooted = !repository || (baseRepo || pr.head?.repo?.full_name) === repository;
+    return merged && rooted && (!targetSha || (pr.merge_commit_sha || pr.mergeCommit?.oid) === targetSha) && normalizeBranch(pr.base?.ref || pr.baseRefName || "") === normalizedTarget;
   });
   candidates.sort((left, right) => {
     const leftTime = Date.parse(left.merged_at || left.updated_at || left.closed_at || "");
@@ -513,11 +513,11 @@ export async function resolveReleaseCandidateArtifacts({
   });
   const channelPullRequest = selectMergedChannelPullRequest({
     pullRequests: Array.isArray(pulls) ? pulls : [],
-    targetRef: normalizedTarget,
+    targetRef: normalizedTarget, targetSha: sha,
     repository: repoInfo.fullName,
   });
   if (!channelPullRequest) {
-    throw new Error(`no same-repository merged channel PR found for ${sha} into ${normalizedTarget}`);
+    throw new Error(`no exact merged channel PR rooted in ${repoInfo.fullName} found for ${sha} into ${normalizedTarget}`);
   }
   let pullRequest = channelPullRequest;
   if (majorGateTarget) {
@@ -725,16 +725,6 @@ export async function resolveReleaseCandidateArtifacts({
     const noun = publishArtifactKind === "npm" ? "npm package tarballs" : "platform manifests";
     throw new Error(`expected at least ${minimumPayloadCount} downloaded ${noun}, found ${downloadedRequiredArtifactCount}`);
   }
-  const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
-  const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
-    manifests,
-    version: passport.target?.version || "",
-    kind: publishArtifactKind,
-    tarballPaths: npmTarballPaths,
-    mainPackage: publishPackageMain,
-  });
-  const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
-  fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
   const sealedBundle = publishArtifactKind === "npm"
     ? createResolvedPublicationSealedBundle({
         bundleRoot: payloadDir,
@@ -750,6 +740,16 @@ export async function resolveReleaseCandidateArtifacts({
         releaseAssetPaths,
       })
     : undefined;
+  const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
+  const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
+    manifests,
+    version: [sealedBundle?.manifest?.npm?.version, passport.target?.version, ""].find(Boolean),
+    kind: publishArtifactKind,
+    tarballPaths: npmTarballPaths,
+    mainPackage: publishPackageMain,
+  });
+  const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
+  fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
   const sealedBundleManifestPath = sealedBundle
     ? path.join(resolvedOutput, "sealed-bundle.json")
     : "";

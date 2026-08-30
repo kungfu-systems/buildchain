@@ -73,7 +73,10 @@
       "stateAuthority": "single-writer-state-machine",
       "legacyFallbackAllowed": false,
       "providerDecisionAuthorityAllowed": false,
-      "implementation": ["packages/core/dev-delivery-warrant.js"],
+      "implementation": [
+        "packages/core/dev-delivery-warrant-native-compatibility.js",
+        "packages/core/dev-delivery-warrant.js"
+      ],
       "invariants": {
         "exactHeadFence": true,
         "immutableRootFence": true,

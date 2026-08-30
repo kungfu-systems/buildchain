@@ -66,6 +66,8 @@ const ROOT_DOMAINS = new Set([
   "release-invocation-candidate",
   "release-invocation-target",
   "release-invocation-authority",
+  "release-invocation-provider",
+  "release-invocation-parent",
   "release-invocation",
   "release-transaction",
   "release-receipt",

@@ -8149,7 +8149,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 512
+        "line": 520
       },
       "example": "import { cancelQueuedDevDeliveryCandidate } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8186,7 +8186,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 387
+        "line": 395
       },
       "example": "import { closeDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8285,6 +8285,30 @@
         "line": 1
       },
       "example": "import { DEV_DELIVERY_LEASE_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT",
+      "name": "DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT",
+      "kind": "value",
+      "signature": "DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "No narrower error contract was mechanically discoverable."
+      ],
+      "sideEffects": [
+        "unknown"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-warrant.js",
+        "line": 1
+      },
+      "example": "import { DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
       "audience": [
         "developer",
@@ -8460,6 +8484,54 @@
       ]
     },
     {
+      "id": "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_WRITER_PROTOCOL_FENCE_RECEIPT_SCHEMA",
+      "name": "DEV_DELIVERY_WRITER_PROTOCOL_FENCE_RECEIPT_SCHEMA",
+      "kind": "value",
+      "signature": "DEV_DELIVERY_WRITER_PROTOCOL_FENCE_RECEIPT_SCHEMA",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "No narrower error contract was mechanically discoverable."
+      ],
+      "sideEffects": [
+        "unknown"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-warrant.js",
+        "line": 1
+      },
+      "example": "import { DEV_DELIVERY_WRITER_PROTOCOL_FENCE_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/dev-delivery-warrant.js#fenceDevDeliveryWriterProtocol",
+      "name": "fenceDevDeliveryWriterProtocol",
+      "kind": "value",
+      "signature": "fenceDevDeliveryWriterProtocol",
+      "parameters": [],
+      "returns": "unknown",
+      "errors": [
+        "No narrower error contract was mechanically discoverable."
+      ],
+      "sideEffects": [
+        "unknown"
+      ],
+      "source": {
+        "path": "packages/core/dev-delivery-warrant.js",
+        "line": 1
+      },
+      "example": "import { fenceDevDeliveryWriterProtocol } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/dev-delivery-warrant.js#heartbeatDevDeliveryWarrant",
       "name": "heartbeatDevDeliveryWarrant",
       "kind": "function",
@@ -8487,7 +8559,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 258
+        "line": 266
       },
       "example": "import { heartbeatDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8544,7 +8616,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 526
+        "line": 534
       },
       "example": "import { observeDevDeliveryQueue } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8568,7 +8640,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 383
+        "line": 391
       },
       "example": "import { qualifyDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8616,7 +8688,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 521
+        "line": 529
       },
       "example": "import { reconcileDevDeliveryTerminalEvidence } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8649,7 +8721,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 304
+        "line": 312
       },
       "example": "import { recoverExpiredDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8682,7 +8754,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 98
+        "line": 106
       },
       "example": "import { selectDevDeliveryWarrant } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -8706,7 +8778,7 @@
       ],
       "source": {
         "path": "packages/core/dev-delivery-warrant.js",
-        "line": 515
+        "line": 523
       },
       "example": "import { settleDevDeliveryTerminalEvent } from \"@kungfu-tech/buildchain/dev-delivery-warrant\";",
       "maturity": "stable",
@@ -29054,14 +29126,14 @@
       "specifier": "@kungfu-tech/buildchain/dev-delivery-warrant",
       "export": "./dev-delivery-warrant",
       "target": "./packages/core/dev-delivery-warrant.js",
-      "digest": "sha256:19d8a5b924bbc261d39bd33312d9177450d246256b2af44cea89f476394a477c",
+      "digest": "sha256:14cc11a84018762f2169ade5e4daf94e2bc30a3f9f2bb1fb52105cd6dc6a0466",
       "summary": "Durable fair Dev Delivery Warrant queue, fenced lease, and split source and integration proof APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "developer",
         "agent"
       ],
-      "symbolCount": 56,
+      "symbolCount": 59,
       "symbolIds": [
         "packages/core/dev-delivery-warrant.js#cancelQueuedDevDeliveryCandidate",
         "packages/core/dev-delivery-proof.js#classifyDevDeliveryDelta",
@@ -29082,6 +29154,7 @@
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CANCELLATION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_CLASSES",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_LEASE_RECEIPT_SCHEMA",
+        "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_PRIORITIES",
         "packages/core/dev-delivery-native-proof.js#DEV_DELIVERY_QUALIFICATION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_QUEUE_CONTRACT",
@@ -29090,7 +29163,9 @@
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_TERMINAL_EVIDENCE_CORRECTION_SCHEMA",
         "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_WARRANT_SCHEMA",
+        "packages/core/dev-delivery-warrant.js#DEV_DELIVERY_WRITER_PROTOCOL_FENCE_RECEIPT_SCHEMA",
         "packages/core/dev-delivery-common.js#devDeliveryContentRoot",
+        "packages/core/dev-delivery-warrant.js#fenceDevDeliveryWriterProtocol",
         "packages/core/dev-delivery-warrant.js#heartbeatDevDeliveryWarrant",
         "packages/core/dev-delivery-proof.js#INTEGRATION_DELIVERY_PROOF_SCHEMA",
         "packages/core/dev-delivery-native-proof.js#NATIVE_COMMAND_CONTRACT_SCHEMA",
@@ -29740,7 +29815,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-publication-qualification",
       "export": "./v4-publication-qualification",
       "target": "./packages/core/v4-publication-qualification.js",
-      "digest": "sha256:88df23b5a9e12838edab7c3a3c117fec2c145b7ded92f847d522051574214173",
+      "digest": "sha256:514be74e61aa9e4145b43488a36f44f58e78b5cec67284dbff52a6083e811d96",
       "summary": "Sealed v4 candidate, source, artifact, policy, freshness, and command-free promotion admission APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -31119,7 +31194,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:cf61043790140da9953b53522dec4f2c408ffae87ba69168f6625bf17f7063e1"
+      "digest": "sha256:afc6f959491ea0360ee308ee476613a9b42ab37dc5755dc66d3edb484d5e81d3"
     },
     {
       "id": "build-facts",

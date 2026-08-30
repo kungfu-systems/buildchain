@@ -22,6 +22,10 @@ import {
   validateActiveDevDeliveryWarrant,
 } from "./dev-delivery-native-proof.js";
 import {
+  lacksExactNativeExecutionContract,
+  lacksLiveNativeProof,
+} from "./dev-delivery-warrant-native-compatibility.js";
+import {
   normalizeProviderFailureAuthorityBinding,
   normalizeTerminalEvidenceCorrection,
 } from "./dev-delivery-warrant-settlement.js";
@@ -36,6 +40,8 @@ export const DEV_DELIVERY_WARRANT_SCHEMA =
   "kungfu.buildchain.dev-delivery-warrant/v1";
 export const DEV_DELIVERY_SUBMISSION_RECEIPT_SCHEMA =
   "kungfu.buildchain.dev-delivery-submission-receipt/v1";
+export const DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT =
+  "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563";
 export const DEV_DELIVERY_SELECTION_RECEIPT_SCHEMA =
   "kungfu.buildchain.dev-delivery-selection-receipt/v1";
 export const DEV_DELIVERY_LEASE_RECEIPT_SCHEMA =
@@ -148,7 +154,7 @@ function exactRoots(values, label) {
   return [...new Set(values.map((value) => exactRoot(value, label)))].sort();
 }
 function normalizePolicy(policy = {}) {
-  return {
+  const normalized = {
     agingSeconds: positiveInteger(
       policy.agingSeconds,
       "policy agingSeconds",
@@ -162,22 +168,17 @@ function normalizePolicy(policy = {}) {
     ),
     emergencyPolicy: text(policy.emergencyPolicy || "reviewed-explicit-only"),
   };
+  if (Object.hasOwn(policy, "minimumWriterProtocolRoot")) {
+    const root = exactRoot(
+      policy.minimumWriterProtocolRoot,
+      "policy minimumWriterProtocolRoot",
+    );
+    if (root !== DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT)
+      throw new Error("unsupported dev delivery minimum writer protocol");
+    normalized.minimumWriterProtocolRoot = root;
+  }
+  return normalized;
 }
-
-function lacksLiveNativeProof(candidate, status, allowLegacyV3Readback) {
-  const { environmentRoot, nativeCommandContract } = candidate;
-  const native =
-    candidate.deliveryClass !== "non-native-fast" ||
-    environmentRoot ||
-    nativeCommandContract;
-  return (
-    native &&
-    (!environmentRoot ||
-      (!nativeCommandContract && allowLegacyV3Readback !== true)) &&
-    !TERMINAL_STATES.has(status)
-  );
-}
-
 function normalizeCandidate(input, expected) {
   const identity = createDevDeliveryCandidateIdentity(
     input,
@@ -276,7 +277,12 @@ function normalizeCandidate(input, expected) {
       "candidate shardEvidenceRoots",
     );
   }
-  if (lacksLiveNativeProof(candidate, status, expected.allowLegacyV3Readback))
+  if (
+    lacksLiveNativeProof(candidate, status, {
+      allowLegacyV3Readback: expected.allowLegacyV3Readback,
+      allowLegacyQueuedReadback: expected.allowLegacyQueuedNativeReadback,
+    })
+  )
     throw new Error("live native candidate requires exact native proof");
   if (Object.hasOwn(input, "releaseBlockerPriority"))
     candidate.releaseBlockerPriority = normalizeReleaseBlockerPriorityClaim(
@@ -310,7 +316,10 @@ export function createDevDeliveryQueue({
     protectedBase: protectedBase(protectedBaseInput),
     generation: 0,
     fencingCounter: 0,
-    policy: normalizePolicy(policy),
+    policy: {
+      ...normalizePolicy(policy),
+      minimumWriterProtocolRoot: DEV_DELIVERY_MINIMUM_WRITER_PROTOCOL_ROOT,
+    },
     activeWarrant: null,
     candidates: [],
     updatedAt: timestamp(now, "now"),
@@ -346,16 +355,19 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
     "queue fencingCounter",
   );
   queue.policy = normalizePolicy(queue.policy);
+  const hasExecutionReceipt = !!queue.activeWarrant?.nativeExecutionReceiptRoot;
+  const hasQualificationReceipt =
+    !!queue.activeWarrant?.qualificationReceiptRoot;
   const allowLegacyV3Readback =
     expected.allowLegacyV3Readback === true &&
-    !(queue.candidates || []).some(
-      (candidate) => candidate?.nativeCommandContract,
-    ) &&
-    !queue.activeWarrant?.nativeCommandContract &&
-    !queue.activeWarrant?.nativeExecutionReceiptRoot &&
-    !queue.activeWarrant?.qualificationReceiptRoot;
+    hasExecutionReceipt === hasQualificationReceipt;
+  const candidateExpected = {
+    ...queue,
+    allowLegacyV3Readback,
+    allowLegacyQueuedNativeReadback: true,
+  };
   queue.candidates = (queue.candidates || []).map((candidate) =>
-    normalizeCandidate(candidate, { ...queue, allowLegacyV3Readback }),
+    normalizeCandidate(candidate, candidateExpected),
   );
   validateDevDeliveryCandidateChain(queue.candidates, TERMINAL_STATES);
   queue.updatedAt = timestamp(queue.updatedAt, "queue updatedAt");
@@ -569,7 +581,11 @@ export function rankDevDeliveryCandidates(
   });
   const currentTime = timestamp(now, "now");
   return queue.candidates
-    .filter((candidate) => candidate.status === "queued")
+    .filter(
+      (candidate) =>
+        candidate.status === "queued" &&
+        !lacksExactNativeExecutionContract(candidate),
+    )
     .map((candidate) => ({
       candidate,
       priority: effectivePriority(candidate, queue.policy, currentTime),

@@ -47,11 +47,11 @@ function writeJson(directory, name, value) {
   );
 }
 
-function runtimeFixture(directory) {
+function runtimeFixture(directory, selector = "v4-alpha") {
   const selection = {
     schema: "kungfu.buildchain.dev-delivery-runtime-selection/v1",
     repository: "kungfu-systems/buildchain",
-    selector: "v4-alpha",
+    selector,
     resolvedSha: RUNTIME_SHA,
   };
   writeJson(directory, "runtime-selection.json", selection);
@@ -160,7 +160,7 @@ function nativeContextFixture(directory, outcome) {
 
 function transferFixture(directory, overrides = {}) {
   const warrant = warrantFixture(directory);
-  const runtime = runtimeFixture(directory);
+  const runtime = runtimeFixture(directory, overrides.runtimeSelector);
   nativeContextFixture(directory, "succeeded");
   const { proof, decision } = nativeProofFixture(warrant);
   writeJson(directory, "native-proof.json", proof);
@@ -438,12 +438,11 @@ test("credentialless seal binds fresh hosted context without provider jobs or ca
   assert.equal(Object.hasOwn(result.sealer, "jobId"), false);
 });
 
-test("runtime admission rejects exact SHAs and non-v4 selectors before transfer", () => {
-  const directory = fs.mkdtempSync(
-    path.join(os.tmpdir(), "delivery-runtime-admission-"),
-  );
+test("runtime admission accepts immutable SHA evidence but rejects non-v4 selectors", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "runtime-selector-"));
+  transferFixture(directory, { runtimeSelector: RUNTIME_SHA });
   const transfer = transferFixture(directory);
-  for (const selector of ["v3", RUNTIME_SHA, "train/v4/v4.1/nope"]) {
+  for (const selector of ["v3", "train/v4/v4.1/nope"]) {
     assert.throws(
       () =>
         createNativeExecutionTransfer({
@@ -452,7 +451,7 @@ test("runtime admission rejects exact SHAs and non-v4 selectors before transfer"
           files: transfer.files.map((entry) => entry.path),
           runtime: { ...transfer.runtime, selector },
         }),
-      /runtime selector must be v4/u,
+      /runtime selector must be an exact immutable SHA/u,
       selector,
     );
   }

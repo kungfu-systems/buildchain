@@ -659,6 +659,7 @@ test("release candidate resolver skips newer successful run without passport art
           state: "closed",
           merged_at: "2026-07-05T08:30:00Z",
           updated_at: "2026-07-05T08:30:00Z",
+          merge_commit_sha: targetSha,
           base: { ref: "release/v2/v2.5" },
           head: {
             ref: "alpha/v2/v2.5",
@@ -724,7 +725,6 @@ test("release candidate resolver skips newer successful run without passport art
   assert.equal(result.run.id, "100");
   assert.equal(result.artifacts.passport, `libnode-shaped-release-candidate-${olderSourceSha}`);
 });
-
 test("release candidate resolver waits for the exact channel PR run", async () => {
   const targetSha = "5".repeat(40);
   const builtSourceSha = "6".repeat(40);
@@ -742,6 +742,7 @@ test("release candidate resolver waits for the exact channel PR run", async () =
           number: 530,
           state: "closed",
           merged_at: "2026-07-15T16:04:52Z",
+          merge_commit_sha: targetSha,
           base: { ref: "alpha/v2/v2.13" },
           head: {
             ref: "dev/v2/v2.13",
@@ -812,7 +813,6 @@ test("release candidate resolver waits for the exact channel PR run", async () =
   assert.equal(waits, 1);
   assert.equal(result.run.id, "701");
 });
-
 test("release candidate resolver traces a major gate through its exact release-line merge", async () => {
   const majorSha = "7".repeat(40);
   const releaseSha = "8".repeat(40);
@@ -914,6 +914,7 @@ test("release candidate resolver rejects a major gate whose release head is not 
         {
           number: 1711,
           merged_at: "2026-07-24T21:15:23Z",
+          merge_commit_sha: majorSha,
           base: { ref: "publish-gate/major" },
           head: {
             ref: "release/v2/v2.14",
@@ -952,7 +953,6 @@ test("release candidate resolver rejects a major gate whose release head is not 
     /does not equal release-candidate PR #1710 merge/,
   );
 });
-
 test("release candidate resolver selects payload artifacts and generates publish requirements", () => {
   const payloads = selectPayloadArtifacts({
     artifactName: "libnode",
