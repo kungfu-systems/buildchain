@@ -90,6 +90,11 @@ inputs:
       default: "false",
       description: "Resume an explicitly admitted durable publication transaction",
     }
+  resume-transaction-id:
+    {
+      default: "",
+      description: "Exact durable publication transaction identity; mismatches fail before mutation",
+    }
   state-path:
     {
       default: ".buildchain/release-tail/state.json",

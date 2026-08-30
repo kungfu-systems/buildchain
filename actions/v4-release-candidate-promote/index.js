@@ -1,7 +1,6 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -21,10 +20,18 @@ import {
   validateV4PublicationQualificationReceipt,
 } from "../../packages/core/v4-publication-qualification.js";
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
-import { validateReleaseCandidateRecoveryReceipt } from "../../packages/core/release-candidate-recovery.js";
 import {
+  activateExactPnpm,
   applyProductPublication,
   planProductPublication,
+  resolveCandidateBuildSummaryPath,
+  resolvePromotionTarget,
+} from "./product-provider.js";
+
+export {
+  activateExactPnpm,
+  resolveCandidateBuildSummaryPath,
+  resolvePromotionTarget,
 } from "./product-provider.js";
 
 const input = (name, required = false) =>
@@ -36,98 +43,6 @@ const write = (file, value) => {
   fs.writeFileSync(resolved, `${JSON.stringify(value, null, 2)}\n`);
   return resolved;
 };
-
-export function resolveCandidateBuildSummaryPath({
-  candidatePassportPath,
-  declaredPath = "",
-}) {
-  const selected = String(declaredPath || "").trim();
-  if (selected) return selected;
-  const artifactsRoot = path.resolve(path.dirname(candidatePassportPath), "..");
-  const matches = fs
-    .readdirSync(artifactsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join(artifactsRoot, entry.name, "build-summary.json"))
-    .filter((entry) => fs.existsSync(entry))
-    .sort();
-  if (matches.length !== 1) {
-    throw new Error(
-      `candidate-build-summary-path is required when the sealed candidate has ${matches.length === 0 ? "no" : "ambiguous"} standard summary artifacts`,
-    );
-  }
-  return matches[0];
-}
-
-export function resolvePromotionTarget({
-  candidatePassportPath,
-  candidate,
-  repository,
-  channel,
-  sourceSha,
-  declaredTargetRef = "",
-  declaredTargetSha = "",
-}) {
-  const sealedBundleRoot = path.resolve(
-    path.dirname(candidatePassportPath),
-    "../..",
-  );
-  const recoveryReceiptPath = path.join(
-    path.dirname(sealedBundleRoot),
-    "recovery-receipt.json",
-  );
-  const hasRecoveryReceipt = fs.existsSync(recoveryReceiptPath);
-  const recoveryReceipt = hasRecoveryReceipt ? read(recoveryReceiptPath) : null;
-  const targetRef = String(
-    declaredTargetRef || recoveryReceipt?.target?.ref || "",
-  ).trim();
-  const targetSha = String(
-    declaredTargetSha || recoveryReceipt?.target?.sha || "",
-  ).trim();
-  if (!targetRef || !targetSha) {
-    throw new Error(
-      "target-ref and target-sha are required when no standard recovery receipt supplies them",
-    );
-  }
-  if (!hasRecoveryReceipt) {
-    if (sourceSha !== targetSha)
-      throw new Error(
-        "protected source SHA must equal target-sha without recovery evidence",
-      );
-    return { targetRef, targetSha };
-  }
-  const validation = validateReleaseCandidateRecoveryReceipt({
-    receipt: recoveryReceipt,
-    passport: candidate,
-    repository,
-    targetChannel: channel,
-    targetRef,
-    targetSha,
-    targetTree: candidate.source?.treeHash,
-  });
-  if (!validation.ok)
-    throw new Error(
-      `standard recovery receipt is invalid: ${validation.errors.join("; ")}`,
-    );
-  if (![targetSha, candidate.source?.headSha].includes(sourceSha))
-    throw new Error(
-      "legacy source-sha is not bound to the recovered candidate or protected target",
-    );
-  return { targetRef, targetSha };
-}
-
-export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
-  const shimDirectory = fs.mkdtempSync(
-    path.join(temporaryRoot, "buildchain-pnpm-"),
-  );
-  const shimPath = path.join(shimDirectory, "pnpm");
-  fs.writeFileSync(
-    shimPath,
-    '#!/bin/sh\nexec corepack pnpm@11.7.0 "$@"\n',
-    { mode: 0o755 },
-  );
-  process.env.PATH = `${shimDirectory}${path.delimiter}${process.env.PATH || ""}`;
-  return shimPath;
-}
 
 export function aggregateV4ReleasePassport({
   candidate,
@@ -312,6 +227,7 @@ function productProviderRequest({
     publishTransactionOverride: core.getBooleanInput(
       "publish-transaction-override",
     ),
+    expectedTransactionId: input("resume-transaction-id"),
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
   };

@@ -1004,6 +1004,7 @@ jobs:
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
+          resume-transaction-id: ${{ inputs.resume-transaction-id }}
           artifact-paths: ${{ needs.qualify.outputs.release-artifact-paths }}
           state-path: .buildchain/release-tail/state.json
           failure-after-capability: ${{ inputs.provider-failure-after-capability }}
