@@ -113,12 +113,9 @@ test("recovery scans historical state refs only when the exact publication versi
   assert.match(calls[1], /git\/matching-refs\/heads\/buildchain\/release-state\/$/u);
 });
 
-test("recovery without a transaction id does not adopt an unrelated historical transaction", async () => {
-  const calls = [];
-  const fetchImpl = async (url) => {
-    calls.push(url);
-    assert.doesNotMatch(url, /matching-refs/u);
-    return new Response(JSON.stringify({ message: "Not Found" }), { status: 404 });
+test("recovery without a transaction id starts fresh instead of adopting the exact-version transaction", async () => {
+  const fetchImpl = async () => {
+    throw new Error("fresh recovery must not read durable transaction state");
   };
 
   const result = await resolveRecoveryTransaction({
@@ -133,8 +130,6 @@ test("recovery without a transaction id does not adopt an unrelated historical t
   });
 
   assert.deepEqual(result, { version: "4.0.1", transaction: undefined });
-  assert.equal(calls.length, 1);
-  assert.match(calls[0], /contents\/state\.json\?ref=buildchain%2Frelease-state%2F4-0-1$/u);
 });
 
 function fixture(overrides = {}) {
