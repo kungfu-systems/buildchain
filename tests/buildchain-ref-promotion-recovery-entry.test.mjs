@@ -53,3 +53,12 @@ test("stable recovery forwards only inputs declared by the floating publisher", 
     [],
   );
 });
+
+test("self-promotion recovery retains the sealed npm payload selector", () => {
+  assert.match(promotion, /artifact-patterns: buildchain-package-\*/);
+  assert.doesNotMatch(
+    promotion,
+    /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && ''/,
+  );
+  assert.match(recovery, /artifact-patterns: buildchain-package-\*/);
+});
