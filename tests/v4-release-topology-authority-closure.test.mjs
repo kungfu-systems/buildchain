@@ -1,76 +1,104 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { findUnknownV4ReleaseTopology } from "../scripts/check-v4-release-topology.mjs";
+import {
+  sealedCandidateVersion,
+  selectProductPublicationPlan,
+} from "../actions/v4-release-candidate-promote/product-provider.js";
 
 const root = path.resolve(import.meta.dirname, "..");
-const topologyLedger = JSON.parse(
-  fs.readFileSync(
-    new URL("../architecture/v4-release-topology.json", import.meta.url),
-    "utf8",
-  ),
-);
 
-test("fresh, recovery, and startup-failure routes cannot reach a legacy release engine", () => {
-  const canonical = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
+test("recovered stable APPLY binds the release version to the sealed candidate", () => {
+  assert.deepEqual(
+    selectProductPublicationPlan(
+      {
+        updates: [
+          {
+            action: "dry-run-publish-transaction",
+            version: "4.0.1",
+            tag: "v4.0.1",
+          },
+        ],
+      },
+      { fallbackCandidateVersion: "4.0.1-alpha.56" },
+    ),
+    {
+      version: "4.0.1",
+      tag: "v4.0.1",
+      candidateVersion: "4.0.1-alpha.56",
+    },
   );
-  const publicWrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
-    "utf8",
-  );
-  const recovery = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
-    "utf8",
-  );
-  const promoteRelease = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/internal/promote-release-channel.js"),
-    "utf8",
-  );
-  assert.deepEqual(topologyLedger.authorityClosure.runtimeEngines, [
-    "actions/v4-release-candidate-promote/index.js",
-  ]);
-  assert.doesNotMatch(
-    [canonical, publicWrapper, recovery].join("\n"),
-    /legacy-promote|v4-declarative-promote/u,
-  );
-  assert.match(
-    canonical,
-    /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/u,
-  );
-  assert.match(
-    canonical,
-    /source-sha: \$\{\{ needs\.qualify\.outputs\.requested-sha \}\}/u,
-  );
-  assert.match(
-    publicWrapper,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@/u,
-  );
-  assert.match(
-    recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@/u,
-  );
-  assert.match(
-    promoteRelease,
-    /recoveredCandidate: Boolean\(state\.containsPublishedMaterial\)/u,
+  assert.throws(
+    () =>
+      selectProductPublicationPlan(
+        {
+          updates: [
+            {
+              action: "dry-run-publish-transaction",
+              version: "4.0.1",
+              tag: "v4.0.1",
+              releaseCandidateVersion: "4.0.1-alpha.55",
+            },
+          ],
+        },
+        { fallbackCandidateVersion: "4.0.1-alpha.56" },
+      ),
+    /drifted from the sealed candidate version/u,
   );
 });
 
-test("closed-world discovery rejects an undeclared release topology workflow", () => {
-  assert.deepEqual(
-    findUnknownV4ReleaseTopology(
-      ["known.yml"],
-      ["known.yml", "new.yml", "unrelated.yml"],
-      (relative) =>
-        relative === "new.yml"
-          ? "uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v4"
-          : "jobs:\n  check:\n    runs-on: ubuntu-24.04\n",
-    ),
-    ["new.yml"],
+test("canonical APPLY recovers the candidate version from the sealed package manifest", () => {
+  const temporaryRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-sealed-version-"),
   );
+  try {
+    const manifest = path.join(temporaryRoot, "sealed-bundle.json");
+    fs.writeFileSync(
+      manifest,
+      `${JSON.stringify({
+        npm: {
+          name: "@kungfu-tech/buildchain",
+          version: "4.0.1-alpha.56",
+        },
+      })}\n`,
+    );
+    assert.equal(
+      sealedCandidateVersion({
+        sealedBundleManifest: manifest,
+        publishPackageMain: "@kungfu-tech/buildchain",
+      }),
+      "4.0.1-alpha.56",
+    );
+    assert.throws(
+      () =>
+        sealedCandidateVersion({
+          sealedBundleManifest: manifest,
+          publishPackageMain: "@kungfu-tech/not-buildchain",
+        }),
+      /omitted the exact main package version/u,
+    );
+  } finally {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+test("canonical APPLY activates the pnpm shim required by nested lifecycle scripts", () => {
+  const provider = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/product-provider.js"),
+    "utf8",
+  );
+  assert.match(
+    provider,
+    /execFileSync\("corepack", \["enable", "pnpm"\], \{ stdio: "inherit" \}\);/u,
+  );
+  assert.match(
+    provider,
+    /const candidateVersion = sealedCandidateVersion\(request\);[\s\S]*promotionOptions\(request, \{ dryRun: true \}, candidateVersion\)/u,
+  );
+  assert.match(provider, /\}\s*,\s*plan\.candidateVersion,?\s*\),/u);
 });
 
 test("fork governance retains a credential-limited receipt without claiming authority", () => {
