@@ -155,6 +155,11 @@ function recoveredPromotionFixture() {
     recovered: { candidateRoot: `sha256:${candidate.candidateHash}` },
     skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
     payloadBytes: "unchanged",
+    transaction: {
+      identity: "transaction-exact",
+      state: "publishing",
+      publicationState: "publishing",
+    },
   };
   recoveryReceipt.root = `sha256:${sha256Json(recoveryReceipt)}`;
   fs.mkdirSync(path.dirname(candidatePassportPath), { recursive: true });
@@ -200,6 +205,37 @@ test("legacy promotion shells reject a drifted recovered target", () => {
   );
 });
 
+test("legacy promotion shells bind an expected recovery transaction", () => {
+  const { candidatePassportPath, candidate, recoveryReceipt } =
+    recoveredPromotionFixture();
+  assert.deepEqual(
+    resolvePromotionTarget({
+      candidatePassportPath,
+      candidate,
+      repository: candidate.repository,
+      channel: "alpha",
+      sourceSha: candidate.source.headSha,
+      expectedTransactionId: recoveryReceipt.transaction.identity,
+    }),
+    {
+      targetRef: recoveryReceipt.target.ref,
+      targetSha: recoveryReceipt.target.sha,
+    },
+  );
+  assert.throws(
+    () =>
+      resolvePromotionTarget({
+        candidatePassportPath,
+        candidate,
+        repository: candidate.repository,
+        channel: "alpha",
+        sourceSha: candidate.source.headSha,
+        expectedTransactionId: "transaction-drifted",
+      }),
+    /transaction identity mismatch/,
+  );
+});
+
 test("fresh promotion shells require exact protected source coordinates", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
   const candidatePassportPath = path.join(
@@ -241,7 +277,10 @@ test("provider verification exposes only the pinned pnpm runtime", () => {
     );
     if (process.platform !== "win32")
       assert.equal(fs.statSync(shim).mode & 0o777, 0o755);
-    assert.equal(process.env.PATH?.split(path.delimiter)[0], path.dirname(shim));
+    assert.equal(
+      process.env.PATH?.split(path.delimiter)[0],
+      path.dirname(shim),
+    );
   } finally {
     process.env.PATH = previousPath;
   }

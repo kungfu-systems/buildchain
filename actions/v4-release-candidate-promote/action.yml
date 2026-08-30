@@ -49,6 +49,11 @@ inputs:
     }
   required-artifacts-path:
     { required: false, description: "Downloaded required product artifact set" }
+  product-publication-intent-path:
+    {
+      required: true,
+      description: "QUALIFY-rooted exact product publication intent",
+    }
   publisher-workflow-sha:
     { required: true, description: "Exact canonical publisher workflow SHA" }
   runtime-commit:
