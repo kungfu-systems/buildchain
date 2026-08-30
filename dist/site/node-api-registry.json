@@ -5772,7 +5772,7 @@
       ],
       "source": {
         "path": "packages/core/ci-lane-change-budget.js",
-        "line": 180
+        "line": 181
       },
       "example": "import { evaluateCiLaneChangeBudget } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -28903,7 +28903,7 @@
       "specifier": "@kungfu-tech/buildchain/ci-lane-change-budget",
       "export": "./ci-lane-change-budget",
       "target": "./packages/core/ci-lane-change-budget.js",
-      "digest": "sha256:0cabfc98dedfeeb37a49461e7fbb480e8bb1b5b22cf2ac4ae5bae31305977033",
+      "digest": "sha256:46ba0887f1be1ed096457ac757d6bc1ca07fac99e7a47e2b7e37c96d632d4bb8",
       "summary": "Exact-baseline CI lane admission requiring authority, trigger, concurrency, runner, cancellation, and merge-critical SLO budgets.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -31194,7 +31194,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:38d7ccae6792de6d0ca13f9fae4690315c229f3e9ea864572707eb163116a747"
+      "digest": "sha256:f32355936fb272b76b892061b4bfeb3f03d72ddb44686c97829b509b2098d16c"
     },
     {
       "id": "build-facts",

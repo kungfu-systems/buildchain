@@ -3,6 +3,11 @@ name: V4 Retained Candidate Tail Reseal
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       request-json:
         description: Exact rooted v4 tail-reseal request JSON
         required: true
@@ -40,7 +45,15 @@ permissions:
   contents: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   plan:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Admit exact retained candidate
     runs-on: ubuntu-24.04
     outputs:
@@ -150,6 +163,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
   platforms:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Retain or reseal ${{ matrix.platform.name }}
     needs: plan
     strategy:
@@ -271,6 +285,7 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
   seal:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Seal standard candidate Passport
     needs: [plan, platforms]
     runs-on: ubuntu-24.04

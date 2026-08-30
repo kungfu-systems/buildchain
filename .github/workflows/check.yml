@@ -3,6 +3,11 @@ name: Buildchain Check
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       buildchain-repository:
         description: "Buildchain runtime repository"
         default: "kungfu-systems/buildchain"
@@ -107,7 +112,15 @@ permissions:
   pull-requests: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   check:
+    if: ${{ inputs.universal-request-json == '' }}
     name: check
     runs-on: ubuntu-24.04
     outputs:

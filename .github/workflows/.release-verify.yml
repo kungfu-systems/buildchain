@@ -1,6 +1,11 @@
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       prebuild:
         default: true
         type: boolean
@@ -191,7 +196,15 @@ on:
         required: false
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   prepare:
+    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -353,12 +366,15 @@ jobs:
   build:
     if: >-
       ${{
-        inputs.prebuild &&
-        false &&
-        inputs.build-container-enabled &&
+        inputs.universal-request-json == '' &&
         (
+          inputs.prebuild &&
+          false &&
+          inputs.build-container-enabled &&
+          (
           github.event_name != 'pull_request' ||
           github.event.pull_request.head.repo.full_name == github.repository
+          )
         )
       }}
     needs: prepare
@@ -561,12 +577,15 @@ jobs:
   build_local:
     if: >-
       ${{
-        inputs.prebuild &&
-        !inputs.build-container-enabled &&
-        inputs.enable-linux &&
+        inputs.universal-request-json == '' &&
         (
+          inputs.prebuild &&
+          !inputs.build-container-enabled &&
+          inputs.enable-linux &&
+          (
           github.event_name != 'pull_request' ||
           github.event.pull_request.head.repo.full_name == github.repository
+          )
         )
       }}
     needs: prepare
@@ -704,7 +723,7 @@ jobs:
             **/build/stage/**/*.*
 
   verify:
-    if: ${{ always() }}
+    if: ${{ inputs.universal-request-json == '' && (always()) }}
     needs: [prepare, build, build_local]
     runs-on: ubuntu-24.04
     permissions:

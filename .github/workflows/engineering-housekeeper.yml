@@ -3,6 +3,11 @@ name: Engineering Housekeeper
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       repository:
         description: "Repository to inspect as owner/repo. Empty uses the caller repository."
         required: false
@@ -119,7 +124,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   plan:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Inventory and plan
     runs-on: ubuntu-24.04
     permissions:
@@ -234,7 +247,7 @@ jobs:
 
   delete-branches:
     name: Apply exact branch deletions
-    if: ${{ inputs.mode == 'apply' && inputs.apply-enabled && needs.plan.outputs.branch-action-count != '0' }}
+    if: ${{ inputs.universal-request-json == '' && (inputs.mode == 'apply' && inputs.apply-enabled && needs.plan.outputs.branch-action-count != '0') }}
     needs: plan
     runs-on: ubuntu-24.04
     # Mutation authority is inherited from the caller. A report caller passes
@@ -313,7 +326,7 @@ jobs:
 
   label-pull-requests:
     name: Apply stale pull-request labels
-    if: ${{ inputs.mode == 'apply' && inputs.apply-enabled && inputs.stale-pull-request-label != '' && needs.plan.outputs.pull-request-action-count != '0' }}
+    if: ${{ inputs.universal-request-json == '' && (inputs.mode == 'apply' && inputs.apply-enabled && inputs.stale-pull-request-label != '' && needs.plan.outputs.pull-request-action-count != '0') }}
     needs: plan
     runs-on: ubuntu-24.04
     # See delete-branches: a reusable workflow cannot elevate the report
