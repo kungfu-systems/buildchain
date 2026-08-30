@@ -26,8 +26,8 @@
   "contractRoots": [
     "sha256:7a8d9ec433055ef4b1e4e7dde958e1a55bb4d62ac20c39754723895f58378e9a",
     "sha256:b6737ed958e8f53f7770b1c214c092591573ad63af41e05797117d9b7b212ed8",
-    "sha256:cfa7603698c9f57ba95bd5f618eb3860023289b217b449cf804de0e3b71e29b4",
-    "sha256:de41ff2deab5063f0eab6a98eadd1220210a5119795303ccf00e2ced58813e25"
+    "sha256:de41ff2deab5063f0eab6a98eadd1220210a5119795303ccf00e2ced58813e25",
+    "sha256:f7959fc76a9269123c00854f0f1db813ebf9b481d4b0c7ba9e7e054ff1cbafac"
   ],
   "targetRef": "dev/v4/v4.0",
   "allowedReviewers": ["kungfu-origin"],
