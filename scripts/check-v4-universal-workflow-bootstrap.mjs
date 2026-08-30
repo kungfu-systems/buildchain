@@ -125,6 +125,10 @@ const consumerTemplate = fs.readFileSync(
   path.join(root, contract.bootstrap.consumerTemplate),
   "utf8",
 );
+const consumerRecoveryTemplate = fs.readFileSync(
+  path.join(root, contract.bootstrap.consumerRecoveryTemplate),
+  "utf8",
+);
 const selfDogfood = fs.readFileSync(
   path.join(root, contract.bootstrap.selfDogfoodWorkflow),
   "utf8",
@@ -133,14 +137,22 @@ assert.match(
   consumerTemplate,
   /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@v4/u,
 );
-assert.match(consumerTemplate, /recovery-admit:[\s\S]*recovery-execute:/u);
 assert.match(
-  consumerTemplate,
+  consumerRecoveryTemplate,
+  /recovery-admit:[\s\S]*recovery-execute:/u,
+);
+assert.match(
+  consumerRecoveryTemplate,
   /Parse exact recovery coordinates without Buildchain code[\s\S]*Prove exact independent review before candidate code runs/u,
 );
 assert.match(
-  consumerTemplate,
+  consumerRecoveryTemplate,
   /recovery-execute:[\s\S]*needs: recovery-admit[\s\S]*contents: write/u,
+);
+assert.doesNotMatch(
+  consumerRecoveryTemplate,
+  /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\//u,
+  "consumer recovery must not parse any published Buildchain workflow",
 );
 assert.match(
   selfDogfood,
