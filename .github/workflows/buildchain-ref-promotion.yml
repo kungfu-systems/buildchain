@@ -146,7 +146,7 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@e7fedf216c74437b64b856d6ab446275ce973195
     permissions:
       actions: write
       artifact-metadata: write
