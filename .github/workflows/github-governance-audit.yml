@@ -31,16 +31,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Mint bounded governance auditor token
+        if: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID != '' && env.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != '' }}
         id: auditor
+        continue-on-error: true
         uses: actions/create-github-app-token@v3
+        env:
+          KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
         with:
           app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
-          private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+          private-key: ${{ env.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 
       - name: Collect sanitized managed-zone governance receipts
         env:
-          GH_TOKEN: ${{ steps.auditor.outputs.token }}
+          GH_TOKEN: ${{ steps.auditor.outputs.token || secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
           AUDIT_REPOSITORY: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && github.repository || '' }}
           AUDIT_TARGET_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || '' }}
         run: |
@@ -129,6 +133,14 @@ jobs:
 
       - name: Enforce governance qualification
         if: steps.summary.outputs.non-qualifying != '0'
+        env:
+          FORK_PULL_REQUEST: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+          GOVERNANCE_AUDITOR_TOKEN: ${{ steps.auditor.outputs.token }}
+          GOVERNANCE_READ_TOKEN: ${{ secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN }}
         run: |
+          if [[ "$FORK_PULL_REQUEST" == "true" && -z "$GOVERNANCE_AUDITOR_TOKEN" && -z "$GOVERNANCE_READ_TOKEN" ]]; then
+            echo "::warning::Fork PR governance is credential-limited; the sanitized non-qualifying receipt is retained and protected independent review remains authoritative."
+            exit 0
+          fi
           echo "::error::Managed-zone GitHub governance is non-qualifying."
           exit 1

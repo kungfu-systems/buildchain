@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -86,6 +87,142 @@ export function resolvePromotionTarget({
   return { targetRef, targetSha };
 }
 
+function standardCandidatePath(
+  candidatePassportPath,
+  declaredPath,
+  relativePath,
+  label,
+) {
+  if (String(declaredPath || "").trim()) return declaredPath;
+  const fallback = path.join(
+    path.dirname(candidatePassportPath),
+    "..",
+    relativePath,
+  );
+  if (!fs.existsSync(path.resolve(fallback)))
+    throw new Error(
+      `${label} is required when the sealed candidate has no standard ${relativePath}`,
+    );
+  return fallback;
+}
+
+export function resolveCandidateProviderInputs({
+  candidatePassportPath,
+  sealedBundleRoot = "",
+  sealedBundleManifest = "",
+  requiredArtifactsPath = "",
+  publishPackageMain = "",
+}) {
+  const resolved = {
+    sealedBundleRoot: standardCandidatePath(
+      candidatePassportPath,
+      sealedBundleRoot,
+      "payloads",
+      "sealed-bundle-root",
+    ),
+    sealedBundleManifest: standardCandidatePath(
+      candidatePassportPath,
+      sealedBundleManifest,
+      "sealed-bundle.json",
+      "sealed-bundle-manifest",
+    ),
+    requiredArtifactsPath: standardCandidatePath(
+      candidatePassportPath,
+      requiredArtifactsPath,
+      "publish-required-artifacts.json",
+      "required-artifacts-path",
+    ),
+    publishPackageMain: String(publishPackageMain || "").trim(),
+  };
+  const recoveryReceiptPath = path.join(
+    path.dirname(resolved.sealedBundleManifest),
+    "recovery-receipt.json",
+  );
+  if (fs.existsSync(path.resolve(recoveryReceiptPath))) {
+    resolved.releaseCandidateRecoveryReceiptPath = recoveryReceiptPath;
+  }
+  if (!resolved.publishPackageMain) {
+    const main = read(resolved.requiredArtifactsPath).filter(
+      ({ role }) => role === "main",
+    );
+    if (main.length !== 1 || !String(main[0]?.name || "").trim())
+      throw new Error(
+        "publish-package-main is required when the sealed artifact set has no unique main package",
+      );
+    resolved.publishPackageMain = String(main[0].name).trim();
+  }
+  return resolved;
+}
+
+export async function resolvePublicationTarget({
+  octokit,
+  repository,
+  candidate,
+  candidatePassportPath = "",
+  channel = "",
+  sourceSha,
+  targetRef = "",
+  targetSha = "",
+}) {
+  const declaredRef = String(targetRef || "").trim();
+  const declaredSha = String(targetSha || "").trim();
+  if (candidatePassportPath && channel) {
+    try {
+      const resolved = resolvePromotionTarget({
+        candidatePassportPath,
+        candidate,
+        repository,
+        channel,
+        sourceSha,
+        declaredTargetRef: declaredRef,
+        declaredTargetSha: declaredSha,
+      });
+      return { sourceSha: resolved.targetSha, ...resolved };
+    } catch (error) {
+      if (
+        declaredRef ||
+        declaredSha ||
+        !String(error?.message || "").includes(
+          "target-ref and target-sha are required",
+        )
+      )
+        throw error;
+    }
+  } else if (declaredRef || declaredSha) {
+    if (!declaredRef || !declaredSha || sourceSha !== declaredSha)
+      throw new Error(
+        "declared publication target requires matching target-ref, target-sha, and source-sha",
+      );
+    return { sourceSha, targetRef: declaredRef, targetSha: declaredSha };
+  }
+  if (sourceSha !== candidate.source?.headSha)
+    throw new Error(
+      "legacy promotion target recovery requires the exact candidate source SHA",
+    );
+  const number = Number(candidate.pullRequest?.number || 0);
+  const baseRef = String(candidate.pullRequest?.baseRef || "").trim();
+  if (!Number.isSafeInteger(number) || number <= 0 || !baseRef)
+    throw new Error(
+      "legacy promotion target recovery requires an exact pull request and base ref",
+    );
+  const [owner, repo] = repository.split("/");
+  const { data } = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: number,
+  });
+  const mergeSha = String(data.merge_commit_sha || "").trim();
+  if (
+    data.merged !== true ||
+    data.base?.ref !== baseRef ||
+    !/^[0-9a-f]{40}$/u.test(mergeSha)
+  )
+    throw new Error(
+      "legacy promotion target recovery requires the exact merged pull request",
+    );
+  return { sourceSha: mergeSha, targetRef: baseRef, targetSha: mergeSha };
+}
+
 export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
   const shimDirectory = fs.mkdtempSync(
     path.join(temporaryRoot, "buildchain-pnpm-"),
@@ -104,7 +241,11 @@ export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
 
 export function selectProductPublicationPlan(
   result,
-  { fallbackVersion = "", fallbackTag = "" } = {},
+  {
+    fallbackVersion = "",
+    fallbackTag = "",
+    fallbackCandidateVersion = "",
+  } = {},
 ) {
   const planned = result?.updates?.find(
     ({ action }) => action === "dry-run-publish-transaction",
@@ -121,11 +262,36 @@ export function selectProductPublicationPlan(
     throw new Error(
       "product publication planning produced a mismatched exact tag",
     );
+  const plannedCandidateVersion = String(
+    planned?.releaseCandidateVersion || "",
+  ).trim();
+  const sealedCandidateVersion = String(fallbackCandidateVersion || "").trim();
+  if (
+    plannedCandidateVersion &&
+    sealedCandidateVersion &&
+    plannedCandidateVersion !== sealedCandidateVersion
+  )
+    throw new Error(
+      "product publication planning drifted from the sealed candidate version",
+    );
   return {
     version,
     tag,
-    candidateVersion: String(planned?.releaseCandidateVersion || "").trim(),
+    candidateVersion: plannedCandidateVersion || sealedCandidateVersion,
   };
+}
+
+export function sealedCandidateVersion(request) {
+  const manifest = JSON.parse(
+    fs.readFileSync(path.resolve(request.sealedBundleManifest), "utf8"),
+  );
+  const name = String(manifest?.npm?.name || "").trim();
+  const version = String(manifest?.npm?.version || "").trim();
+  if (name !== request.publishPackageMain || !version)
+    throw new Error(
+      "sealed candidate manifest omitted the exact main package version",
+    );
+  return version;
 }
 
 function providerProjection({ result, targetRef, targetSha, plan }) {
@@ -158,10 +324,10 @@ function providerProjection({ result, targetRef, targetSha, plan }) {
   };
   return { ...projection, root: releaseTailRoot(projection) };
 }
-
 function promotionOptions(
   request,
   { dryRun, expectedPublicationVersion = "" },
+  releaseCandidateVersion = String(request.candidate.target?.version || ""),
 ) {
   const [owner, repo] = request.repository.split("/");
   return {
@@ -205,7 +371,9 @@ function promotionOptions(
     promoteOnlyReleaseCandidate: true,
     releaseCandidatePassportPath: request.candidatePassportPath,
     releaseCandidateBuildSummaryPath: request.buildSummaryPath,
-    releaseCandidateVersion: String(request.candidate.target?.version || ""),
+    releaseCandidateVersion,
+    releaseCandidateRecoveryReceiptPath:
+      request.releaseCandidateRecoveryReceiptPath || "",
     actor: request.actor,
     runId: request.runId,
     publishTransactionOverride: request.publishTransactionOverride,
@@ -216,21 +384,28 @@ export async function planProductPublication(
   request,
   { fallbackVersion = "", fallbackTag = "" } = {},
 ) {
+  const candidateVersion = sealedCandidateVersion(request);
   const result = await promoteBuildchainRefs(
-    promotionOptions(request, { dryRun: true }),
+    promotionOptions(request, { dryRun: true }, candidateVersion),
   );
   return selectProductPublicationPlan(result, {
     fallbackVersion,
     fallbackTag,
+    fallbackCandidateVersion: candidateVersion,
   });
 }
 
 export async function applyProductPublication(request, plan) {
+  execFileSync("corepack", ["enable", "pnpm"], { stdio: "inherit" });
   const result = await promoteBuildchainRefs(
-    promotionOptions(request, {
-      dryRun: false,
-      expectedPublicationVersion: plan.version,
-    }),
+    promotionOptions(
+      request,
+      {
+        dryRun: false,
+        expectedPublicationVersion: plan.version,
+      },
+      plan.candidateVersion,
+    ),
   );
   const projection = providerProjection({
     result,

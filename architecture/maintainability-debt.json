@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64321,
-    "current": 56260
+    "measuredExcess": 64319,
+    "current": 56258
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1683,19 +1683,19 @@
               "lines": 309,
               "complexity": 62
             },
-            "resolveReleaseCandidateArtifactsCli@785": {
+            "resolveReleaseCandidateArtifactsCli@784": {
               "complexity": 29
             }
           }
         },
         "current": {
-          "lines": 854,
+          "lines": 853,
           "functions": {
             "resolveReleaseCandidateArtifacts@475": {
-              "lines": 309,
+              "lines": 308,
               "complexity": 61
             },
-            "resolveReleaseCandidateArtifactsCli@785": {
+            "resolveReleaseCandidateArtifactsCli@784": {
               "complexity": 29
             }
           }
@@ -1707,7 +1707,7 @@
               "lines": 180,
               "complexity": 25
             },
-            "resolveReleaseCandidateArtifactsCli@785": {
+            "resolveReleaseCandidateArtifactsCli@784": {
               "complexity": 25
             }
           }
@@ -3102,6 +3102,7 @@
     "scripts/check-inventory.mjs",
     "tests/promote-buildchain-ref.test.mjs",
     "tests/promotion-channel-router.test.mjs",
+    "tests/v4-release-topology.test.mjs",
     "scripts/site-capability-metadata.mjs",
     "tests/v4-floating-consumer-policy.test.mjs",
     "tests/v4-declarative-promotion-mode.test.mjs",

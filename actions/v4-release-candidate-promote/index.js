@@ -25,12 +25,16 @@ import {
   applyProductPublication,
   planProductPublication,
   resolveCandidateBuildSummaryPath,
+  resolveCandidateProviderInputs,
+  resolvePublicationTarget,
   resolvePromotionTarget,
 } from "./product-provider.js";
 
 export {
   activateExactPnpm,
   resolveCandidateBuildSummaryPath,
+  resolveCandidateProviderInputs,
+  resolvePublicationTarget,
   resolvePromotionTarget,
 } from "./product-provider.js";
 
@@ -190,14 +194,8 @@ function productProviderRequest({
   candidatePassportPath,
   buildSummaryPath,
   qualification,
+  providerInputs,
 }) {
-  const sealedBundleRoot =
-    input("sealed-bundle-root") ||
-    path.resolve(path.dirname(candidatePassportPath), "../..");
-  const outputRoot = path.dirname(sealedBundleRoot);
-  const sealedBundleManifest =
-    input("sealed-bundle-manifest") ||
-    path.join(outputRoot, "sealed-bundle.json");
   return {
     octokit,
     mutationOctokit,
@@ -210,17 +208,16 @@ function productProviderRequest({
     qualification,
     requiredStatusCheck: input("required-status-check") || "check",
     publishCommand: input("publish-command"),
-    sealedBundleRoot,
-    sealedBundleManifest,
-    requiredArtifactsPath:
-      input("required-artifacts-path") ||
-      path.join(outputRoot, "publish-required-artifacts.json"),
+    sealedBundleRoot: providerInputs.sealedBundleRoot,
+    sealedBundleManifest: providerInputs.sealedBundleManifest,
+    requiredArtifactsPath: providerInputs.requiredArtifactsPath,
     publishMode: input("publish-mode"),
     publishAuth: input("publish-auth") || "trusted-publishing",
     publishDistTag: input("publish-dist-tag"),
     publishPackageSetOrder: input("publish-package-set-order") || "as-provided",
-    publishPackageMain:
-      input("publish-package-main") || read(sealedBundleManifest).npm?.name,
+    publishPackageMain: providerInputs.publishPackageMain,
+    releaseCandidateRecoveryReceiptPath:
+      providerInputs.releaseCandidateRecoveryReceiptPath || "",
     publishRematerializeOnResume: core.getBooleanInput(
       "publish-rematerialize-on-resume",
     ),
@@ -485,38 +482,41 @@ async function main() {
     declaredPath: input("candidate-build-summary-path"),
   });
   const candidate = read(candidatePassportPath);
-  const { targetRef, targetSha } = resolvePromotionTarget({
-    candidatePassportPath,
-    candidate,
-    repository,
-    channel,
-    sourceSha: declaredSourceSha,
-    declaredTargetRef: input("target-ref"),
-    declaredTargetSha: input("target-sha"),
-  });
-  const sourceSha = targetSha;
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));
   const token = input("token", true);
   const octokit = github.getOctokit(token);
   const mutationOctokit = github.getOctokit(input("mutation-token") || token);
   assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
+  const publicationTarget = await resolvePublicationTarget({
+    octokit,
+    repository,
+    candidate,
+    candidatePassportPath,
+    channel,
+    sourceSha: declaredSourceSha,
+    targetRef: input("target-ref"),
+    targetSha: input("target-sha"),
+  });
+  const sourceSha = publicationTarget.sourceSha;
   const sourceBinding = await observeProtectedPublicationSource({
     octokit,
     repository,
     protectedSourceSha: sourceSha,
     candidate,
   });
+  const providerInputs = resolveCandidateProviderInputs({ candidatePassportPath, sealedBundleRoot: input("sealed-bundle-root"), sealedBundleManifest: input("sealed-bundle-manifest"), requiredArtifactsPath: input("required-artifacts-path"), publishPackageMain: input("publish-package-main") });
   const providerRequest = productProviderRequest({
     octokit,
     mutationOctokit,
     repository,
-    targetRef,
-    targetSha,
+    targetRef: publicationTarget.targetRef,
+    targetSha: publicationTarget.targetSha,
     candidate,
     candidatePassportPath,
     buildSummaryPath,
     qualification,
+    providerInputs,
   });
   const publicationPlan = await planProductPublication(providerRequest, {
     fallbackVersion,
