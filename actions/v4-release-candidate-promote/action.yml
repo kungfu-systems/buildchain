@@ -34,8 +34,8 @@ inputs:
     { required: true, description: "Sealed publication qualification receipt" }
   candidate-build-summary-path:
     {
-      required: true,
-      description: "Downloaded release candidate build summary",
+      required: false,
+      description: "Downloaded release candidate build summary; omitted legacy shells use the sealed candidate's standard summary artifact",
     }
   sealed-bundle-root:
     { required: true, description: "Downloaded sealed product payload root" }
