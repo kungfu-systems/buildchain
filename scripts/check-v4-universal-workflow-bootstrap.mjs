@@ -119,6 +119,16 @@ assert.equal(contract.bootstrap.buildchainReleasePromotionPerIncident, false);
 assert.equal(contract.bootstrap.selfDogfoodUsesPublicContract, true);
 assert.equal(contract.bootstrap.recoveryDependsOnPublishedBuildchain, false);
 assert.deepEqual(
+  contract.capabilityAdapters.map(({ id }) => id).sort(),
+  [...admissionPolicy.allowedCapabilities].sort(),
+  "every admitted capability must have one real candidate adapter",
+);
+for (const adapter of contract.capabilityAdapters) {
+  assert.match(adapter.execution, /^exact-candidate-/u);
+  assert.ok(adapter.payloadSchema.endsWith("/v1"));
+}
+assert.ok(!admissionPolicy.allowedCapabilities.includes("workflow-contract"));
+assert.deepEqual(
   admissionPolicy.contractRoots,
   [
     fileRoot("architecture/v4-universal-workflow-bootstrap.json"),
@@ -126,7 +136,16 @@ assert.deepEqual(
     fileRoot("packages/core/v4-universal-workflow-bootstrap.js"),
     fileRoot("scripts/v4-universal-workflow-backflow.mjs"),
     fileRoot("scripts/v4-universal-workflow-engine.mjs"),
+    fileRoot("scripts/v4-universal-workflow-self-dogfood.mjs"),
   ].sort(),
+);
+assert.doesNotMatch(
+  fs.readFileSync(
+    path.join(root, contract.bootstrap.candidateEnginePath),
+    "utf8",
+  ),
+  /request\.capability\.id\s*===\s*["']workflow-contract["']/u,
+  "contract-only validation must not be admitted as successful execution",
 );
 const bootstrapSource = fs.readFileSync(
   path.join(root, contract.bootstrap.publicWorkflow),
@@ -199,12 +218,28 @@ assert.equal(
 );
 assert.match(
   selfDogfood,
+  /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@train\/v4\/v4\.0\/universal-reusable-workflow-bootstrap/u,
+);
+assert.match(
+  selfDogfood,
   /uses:\s+\.\/\.github\/workflows\/universal-bootstrap-recovery\.yml/u,
 );
 assert.doesNotMatch(
   selfDogfood,
-  /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@/u,
-  "Train self-dogfood must not depend on a published Buildchain Bootstrap",
+  /\.github\/workflows\/bootstrap\.yml@(?:v4|v4-alpha)(?:\s|$)/u,
+  "Train self-dogfood must not depend on an alpha or stable Bootstrap tag",
+);
+for (const channel of ["conformance", "alpha", "stable"]) {
+  assert.match(selfDogfood, new RegExp(`primary-${channel}:`, "u"));
+  assert.match(selfDogfood, new RegExp(`recovery-${channel}:`, "u"));
+}
+assert.match(
+  selfDogfood,
+  /\.state == "APPROVED"[\s\S]*ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*\.conclusion == "success"/u,
+);
+assert.match(
+  consumerRecoveryTemplate,
+  /result-json:[\s\S]*value:\s*\$\{\{ jobs\.recovery-execute\.outputs\.result-json \}\}/u,
 );
 
 console.log(

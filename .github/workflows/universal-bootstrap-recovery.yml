@@ -10,6 +10,8 @@ on:
     outputs:
       runtime-sha:
         value: ${{ jobs.recovery-admit.outputs.runtime-sha }}
+      result-json:
+        value: ${{ jobs.recovery-execute.outputs.result-json }}
       terminal-receipt-json:
         value: ${{ jobs.recovery-settle.outputs.terminal-receipt-json }}
       terminal-receipt-root:
@@ -276,4 +278,4 @@ jobs:
         run: |
           set -euo pipefail
           node .buildchain/candidate/scripts/v4-universal-workflow-backflow.mjs > .buildchain-backflow.json
-          echo "backflow-root=$(jq -r '.backflowRoot' .buildchain-backflow.json)" >> "${GITHUB_OUTPUT}"
+          echo "backflow-root=$(jq -r '.backflowRoot // empty' .buildchain-backflow.json)" >> "${GITHUB_OUTPUT}"

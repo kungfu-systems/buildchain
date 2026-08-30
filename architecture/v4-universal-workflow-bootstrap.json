@@ -21,6 +21,26 @@
     "buildchainReleasePromotionPerIncident": false,
     "selfDogfoodUsesPublicContract": true
   },
+  "capabilityAdapters": [
+    {
+      "id": "bootstrap-conformance",
+      "execution": "exact-candidate-engine",
+      "payloadSchema": "kungfu-buildchain-v4-universal-bootstrap-conformance/v1",
+      "providerEffects": false
+    },
+    {
+      "id": "release-candidate-promote",
+      "execution": "exact-candidate-action-and-provider-readback",
+      "payloadSchema": "kungfu-buildchain-v4-universal-release-promotion/v1",
+      "providerEffects": true
+    },
+    {
+      "id": "release-invocation",
+      "execution": "exact-candidate-canonical-projection",
+      "payloadSchema": "kungfu-buildchain-v4-release-invocation/v1",
+      "providerEffects": false
+    }
+  ],
   "complexityBudget": {
     "bootstrapAbis": 1,
     "requestEnvelopes": 1,
@@ -151,10 +171,10 @@
       ".github/workflows/release-candidate-promote.yml"
     ],
     "staticBootstrap": "implemented",
-    "candidateEngine": "bounded-capability-adapters; generic-workflow execution pending",
+    "candidateEngine": "bounded-capability-adapters",
     "compatibilityFacades": "generated-dual-path",
     "externalConsumerDogfood": "non-circular-recovery-template-implemented-runtime-pending",
-    "buildchainSelfDogfood": "caller-implemented-runtime-pending",
+    "buildchainSelfDogfood": "train-primary-and-consumer-recovery-pairs-implemented-hosted-proof-required",
     "oldPathRetirement": "pending"
   }
 }

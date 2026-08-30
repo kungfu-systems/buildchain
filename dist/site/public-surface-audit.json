@@ -3021,11 +3021,12 @@
         "secretCount": 0,
         "outputs": [
           "backflow-root",
+          "result-json",
           "runtime-sha",
           "terminal-receipt-json",
           "terminal-receipt-root"
         ],
-        "outputCount": 4
+        "outputCount": 5
       },
       {
         "id": "v4-adopter-delivery-dogfood",
@@ -9032,7 +9033,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "d90856d755c1fdccf77fcb1818c72ab887354aa1c56a2a5aa093f929cef6e088",
+    "workflowRegistryDigest": "244c3b963d5e23381f1af3e736863ad61fb9acb7f735c1f500e4e25903705b17",
     "pageRegistryDigest": "de6950c12144a9ca39c5bd59cf21770523587c8b3c63fbe7f1bed40464678b65"
   },
   "comparison": {
