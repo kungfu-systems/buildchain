@@ -31,16 +31,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Mint bounded governance auditor token
+        if: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID != '' && env.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != '' }}
         id: auditor
+        continue-on-error: true
         uses: actions/create-github-app-token@v3
+        env:
+          KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
         with:
           app-id: ${{ vars.KUNGFU_GOVERNANCE_AUDITOR_APP_ID }}
-          private-key: ${{ secrets.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
+          private-key: ${{ env.KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
 
       - name: Collect sanitized managed-zone governance receipts
         env:
-          GH_TOKEN: ${{ steps.auditor.outputs.token }}
+          GH_TOKEN: ${{ steps.auditor.outputs.token || secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN || github.token }}
           AUDIT_REPOSITORY: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && github.repository || '' }}
           AUDIT_TARGET_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || '' }}
         run: |
