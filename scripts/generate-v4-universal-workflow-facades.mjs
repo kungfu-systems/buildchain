@@ -32,7 +32,7 @@ const universalInput = `      universal-request-json:
 const bootstrapJob = `  universal-bootstrap:
     name: Universal exact-candidate execution
     if: \${{ inputs.universal-request-json != '' }}
-    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    uses: ./.github/workflows/bootstrap.yml
     with:
       request-json: \${{ inputs.universal-request-json }}
 
@@ -191,7 +191,7 @@ function verify(source, relative) {
   for (const snippet of [
     "      universal-request-json:\n",
     "  universal-bootstrap:\n",
-    "uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4",
+    "uses: ./.github/workflows/bootstrap.yml",
   ]) {
     if (!source.includes(snippet))
       fail(`${relative} is missing ${snippet.trim()}`);

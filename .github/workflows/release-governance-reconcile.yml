@@ -64,7 +64,7 @@ jobs:
   universal-bootstrap:
     name: Universal exact-candidate execution
     if: ${{ inputs.universal-request-json != '' }}
-    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    uses: ./.github/workflows/bootstrap.yml
     with:
       request-json: ${{ inputs.universal-request-json }}
 

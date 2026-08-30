@@ -133,11 +133,7 @@ function workflowSnapshot(relative) {
     reusableEdges: parseYamlUses(source)
       .map(({ value }) => value)
       .filter((value) => /\.github\/workflows\//u.test(value))
-      .filter(
-        (value) =>
-          value !==
-          "kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4",
-      )
+      .filter((value) => !/\/bootstrap\.yml(?:@v4)?$/u.test(value))
       .sort(),
   };
 }
