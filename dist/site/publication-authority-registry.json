@@ -233,6 +233,21 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/bootstrap.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "universal-candidate-execution"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/bootstrap.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/build-surface-fixture.yml",
       "authorityClass": "non-publication-oidc",
       "publicationCapable": false,
@@ -733,6 +748,36 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/universal-bootstrap-dogfood.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "universal-candidate-execution"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/universal-bootstrap-dogfood.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
+      "workflowPath": ".github/workflows/universal-bootstrap-recovery.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "universal-candidate-execution"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/universal-bootstrap-recovery.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -908,6 +953,11 @@
         "write-permission",
         "github-release"
       ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/bootstrap.yml",
+      "signals": [],
       "classified": true
     },
     {
@@ -1215,6 +1265,22 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/universal-bootstrap-dogfood.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
+      "path": ".github/workflows/universal-bootstrap-recovery.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/v4-adopter-delivery-dogfood.yml",
       "signals": [],
       "classified": false
@@ -1259,5 +1325,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "123c20ea9806ce8ba7b82545165b30ce08537eee64795c2de11f0cc3546a0844"
+  "registryDigest": "266f19363d4d067bc07a41b2145e1699284ed2b25f4adf7e1d07e4f3b7ed49d2"
 }

@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "0fdcfa05644c75ee009645e9a4c1f8018a30ff4c7b5b6078e576743e4b1fd1d5",
+    "sha256": "99cb743534168fc9520aa1e9df59088fdd7f7f590f94ee42d2e805ba53b1e523",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 77,
+      "workflowCount": 80,
       "actionCount": 8,
       "sitePageCount": 84,
       "docCommandRefCount": 1050,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "0fdcfa05644c75ee009645e9a4c1f8018a30ff4c7b5b6078e576743e4b1fd1d5",
+      "sha256": "99cb743534168fc9520aa1e9df59088fdd7f7f590f94ee42d2e805ba53b1e523",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 77,
+        "workflowCount": 80,
         "actionCount": 8,
         "sitePageCount": 84,
         "docCommandRefCount": 1050,
@@ -3854,7 +3854,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 11,
+          "inputCount": 12,
           "inputs": [
             "adapter-arguments-json",
             "adapter-path",
@@ -3866,7 +3866,8 @@
             "require-trusted-event",
             "source-artifact-digest",
             "source-artifact-name",
-            "source-ref"
+            "source-ref",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3880,7 +3881,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 15,
+          "inputCount": 16,
           "inputs": [
             "auto-admission",
             "buildchain-ref",
@@ -3896,7 +3897,8 @@
             "publication-version",
             "release-tag",
             "source-sha",
-            "target-ref"
+            "target-ref",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -3910,7 +3912,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 93,
+          "inputCount": 94,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -4001,6 +4003,7 @@
             "setup-rust",
             "shifu-cache-profile-digest",
             "shifu-cache-profile-ref",
+            "universal-request-json",
             "untrusted-policy",
             "verify-command",
             "verify-substage-evidence-path",
@@ -4018,8 +4021,10 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 0,
-          "inputs": [],
+          "inputCount": 1,
+          "inputs": [
+            "universal-request-json"
+          ],
           "reverseAuditSource": ".github/workflows"
         },
         {
@@ -4032,7 +4037,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
             "artifact-retention-days",
             "binary-artifact-digest",
@@ -4045,7 +4050,8 @@
             "render-media",
             "renderer-image",
             "scenario-path",
-            "source-ref"
+            "source-ref",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4059,7 +4065,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 30,
+          "inputCount": 31,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
@@ -4089,6 +4095,7 @@
             "shifu-cache-profile-digest",
             "shifu-cache-profile-ref",
             "source-ref",
+            "universal-request-json",
             "untrusted-policy",
             "working-directory"
           ],
@@ -4104,7 +4111,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 37,
+          "inputCount": 38,
           "inputs": [
             "admission-json",
             "authority-workflow-path",
@@ -4142,6 +4149,7 @@
             "runner-provenance-json",
             "source-sha",
             "target-ref",
+            "universal-request-json",
             "used-nonces-json"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4156,7 +4164,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 121,
+          "inputCount": 122,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -4278,7 +4286,8 @@
             "standalone-binary-distribution",
             "target-ref",
             "target-sha",
-            "trusted-publishing"
+            "trusted-publishing",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4368,7 +4377,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 41,
+          "inputCount": 42,
           "inputs": [
             "auto-approve-enabled",
             "aws-ci-region",
@@ -4409,6 +4418,7 @@
             "python-version",
             "setup-env-timeout-minutes",
             "setup-python-enabled",
+            "universal-request-json",
             "use-pipenv",
             "use-poetry"
           ],
@@ -4443,12 +4453,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
             "aws-region",
             "aws-role",
             "aws-root",
-            "manager"
+            "manager",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4462,7 +4473,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "aws-region",
             "aws-role-arn",
@@ -4476,6 +4487,7 @@
             "release-path",
             "release-url",
             "repo",
+            "universal-request-json",
             "upper-edge"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -4490,12 +4502,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
             "force",
             "remote-host",
             "remote-path",
-            "remote-repo"
+            "remote-repo",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4509,7 +4522,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 43,
+          "inputCount": 44,
           "inputs": [
             "artifact-path",
             "aws-region",
@@ -4552,6 +4565,7 @@
             "staging-apply",
             "staging-aws-role-arn",
             "staging-environment",
+            "universal-request-json",
             "verify-command",
             "working-directory"
           ],
@@ -4585,13 +4599,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 5,
+          "inputCount": 6,
           "inputs": [
             "aws-user-region",
             "bucket-release",
             "max-preview-links",
             "node-version",
-            "preview-files"
+            "preview-files",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4666,6 +4681,22 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:bootstrap",
+          "name": "workflow:bootstrap",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/bootstrap.yml",
+          "evidencePath": ".github/workflows/bootstrap.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 1,
+          "inputs": [
+            "request-json"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:build-surface-fixture",
           "name": "workflow:build-surface-fixture",
           "kind": "workflow",
@@ -4689,7 +4720,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 96,
+          "inputCount": 97,
           "inputs": [
             "artifact-compression-level",
             "artifact-finalization-command",
@@ -4783,6 +4814,7 @@
             "setup-rust",
             "shifu-cache-profile-digest",
             "shifu-cache-profile-ref",
+            "universal-request-json",
             "untrusted-policy",
             "verify-command",
             "verify-substage-evidence-path",
@@ -4884,7 +4916,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 16,
+          "inputCount": 17,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
@@ -4901,7 +4933,8 @@
             "require-approval",
             "required-status-checks",
             "same-repository-only",
-            "target-branch"
+            "target-branch",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4985,7 +5018,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
@@ -4997,6 +5030,7 @@
             "source-proof-policy-paths-json",
             "source-proof-required-contexts-json",
             "source-proof-reuse",
+            "universal-request-json",
             "upload-artifacts",
             "working-directory"
           ],
@@ -5012,7 +5046,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 15,
+          "inputCount": 16,
           "inputs": [
             "alpha-workflow-path",
             "auto-merge",
@@ -5028,7 +5062,8 @@
             "reactivation-authorized",
             "settlement-authorized",
             "source-branch",
-            "target-branch"
+            "target-branch",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5042,7 +5077,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
@@ -5055,7 +5090,8 @@
             "outcome",
             "reason",
             "target-branch",
-            "terminal-evidence-root"
+            "terminal-evidence-root",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5069,7 +5105,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
@@ -5083,7 +5119,8 @@
             "replay-tree-sha",
             "required-context-roots-json",
             "target-branch",
-            "terminal-evidence-root"
+            "terminal-evidence-root",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5111,7 +5148,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 44,
+          "inputCount": 45,
           "inputs": [
             "active-lease-context",
             "affected-paths-json",
@@ -5156,6 +5193,7 @@
             "source-workflow-run-id",
             "target-branch",
             "toolchain-root",
+            "universal-request-json",
             "warrant-lease-seconds"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -5170,7 +5208,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 10,
+          "inputCount": 11,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
@@ -5181,7 +5219,8 @@
             "mutation-authorized",
             "preflight-workflow-path",
             "priority-workflows-json",
-            "source-branch"
+            "source-branch",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5237,7 +5276,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 14,
+          "inputCount": 15,
           "inputs": [
             "apply-enabled",
             "artifact-prefix",
@@ -5252,7 +5291,8 @@
             "stale-days",
             "stale-pull-request-label",
             "target-branch",
-            "temporary-branch-patterns"
+            "temporary-branch-patterns",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5266,7 +5306,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "buildchain-ref",
             "environment",
@@ -5280,7 +5320,8 @@
             "retention-days",
             "source-sha",
             "subject-artifact-name",
-            "subject-relative-path"
+            "subject-relative-path",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5322,7 +5363,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 26,
+          "inputCount": 27,
           "inputs": [
             "artifact-name",
             "artifact-paths",
@@ -5348,6 +5389,7 @@
             "target-ref",
             "target-sha",
             "toolchain-type",
+            "universal-request-json",
             "verify-command",
             "working-directory"
           ],
@@ -5363,7 +5405,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 38,
+          "inputCount": 39,
           "inputs": [
             "artifact-name",
             "artifact-retention-days",
@@ -5401,6 +5443,7 @@
             "toolchain-digest",
             "toolchain-image",
             "toolchain-type",
+            "universal-request-json",
             "verify-command",
             "working-directory"
           ],
@@ -5416,7 +5459,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 13,
+          "inputCount": 14,
           "inputs": [
             "allowed-head-prefixes",
             "block-labels",
@@ -5430,7 +5473,8 @@
             "require-approval",
             "required-status-checks",
             "same-repository-only",
-            "target-branch"
+            "target-branch",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5444,12 +5488,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
             "dry-run",
-            "target-branch"
+            "target-branch",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5463,7 +5508,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 12,
+          "inputCount": 13,
           "inputs": [
             "artifact-path",
             "build-command",
@@ -5476,6 +5521,7 @@
             "production-aws-role-arn",
             "production-bucket",
             "production-environment",
+            "universal-request-json",
             "verify-command"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -5490,12 +5536,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
             "buildchain-ref",
             "buildchain-repository",
             "dry-run",
-            "target-branch"
+            "target-branch",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5509,7 +5556,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 23,
+          "inputCount": 24,
           "inputs": [
             "artifact-name",
             "artifact-paths",
@@ -5532,6 +5579,7 @@
             "toolchain-digest",
             "toolchain-image",
             "toolchain-type",
+            "universal-request-json",
             "verify-command",
             "working-directory"
           ],
@@ -5547,7 +5595,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 106,
+          "inputCount": 107,
           "inputs": [
             "allow-repository",
             "artifact-name",
@@ -5654,7 +5702,8 @@
             "standalone-binary-distribution",
             "target-ref",
             "target-sha",
-            "trusted-publishing"
+            "trusted-publishing",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5668,12 +5717,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
             "apply",
             "branch",
             "buildchain-ref",
-            "candidate-sha"
+            "candidate-sha",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5715,7 +5765,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 19,
+          "inputCount": 20,
           "inputs": [
             "agent-work-context-json",
             "agent-work-mode",
@@ -5735,6 +5785,7 @@
             "pr-title",
             "refresh-managed-readme-badges",
             "source-node",
+            "universal-request-json",
             "upstream-release-json"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -5749,7 +5800,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 14,
+          "inputCount": 15,
           "inputs": [
             "buildchain-ref",
             "candidate-root",
@@ -5764,7 +5815,8 @@
             "rehearsal-capsule-path",
             "rehearsal-evidence-path",
             "rehearsal-mode",
-            "state-path"
+            "state-path",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5820,7 +5872,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 16,
+          "inputCount": 17,
           "inputs": [
             "auto-approve",
             "auto-merge",
@@ -5837,7 +5889,38 @@
             "required-checks",
             "revoke-reason",
             "revoked-versions",
-            "target-branch"
+            "target-branch",
+            "universal-request-json"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:universal-bootstrap-dogfood",
+          "name": "workflow:universal-bootstrap-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/universal-bootstrap-dogfood.yml",
+          "evidencePath": ".github/workflows/universal-bootstrap-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
+          "id": "workflow:universal-bootstrap-recovery",
+          "name": "workflow:universal-bootstrap-recovery",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/universal-bootstrap-recovery.yml",
+          "evidencePath": ".github/workflows/universal-bootstrap-recovery.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 1,
+          "inputs": [
+            "request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5865,7 +5948,7 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 8,
+          "inputCount": 9,
           "inputs": [
             "archive-path",
             "bootstrap-path",
@@ -5874,7 +5957,8 @@
             "consumer-repository",
             "input-path",
             "invocation-source-path",
-            "node-version"
+            "node-version",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5930,13 +6014,14 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 6,
+          "inputCount": 7,
           "inputs": [
             "build-artifact-path",
             "consumer",
             "go-version",
             "install-artifact-path",
             "node-version",
+            "universal-request-json",
             "verify-artifact-path"
           ],
           "reverseAuditSource": ".github/workflows"
@@ -5951,12 +6036,13 @@
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 4,
+          "inputCount": 5,
           "inputs": [
             "artifact-retention-days",
             "consumer-policy-receipt-json",
             "macos-finalization-command",
-            "request-json"
+            "request-json",
+            "universal-request-json"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -7505,6 +7591,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 481
+    "publicSurfaceCount": 484
   }
 }

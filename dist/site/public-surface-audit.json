@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 77,
+    "workflowCount": 80,
     "actionCount": 8,
     "sitePageCount": 84,
     "docCommandRefCount": 1050,
@@ -614,9 +614,10 @@
           "require-trusted-event",
           "source-artifact-digest",
           "source-artifact-name",
-          "source-ref"
+          "source-ref",
+          "universal-request-json"
         ],
-        "inputCount": 11,
+        "inputCount": 12,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -655,9 +656,10 @@
           "publication-version",
           "release-tag",
           "source-sha",
-          "target-ref"
+          "target-ref",
+          "universal-request-json"
         ],
-        "inputCount": 15,
+        "inputCount": 16,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -757,12 +759,13 @@
           "setup-rust",
           "shifu-cache-profile-digest",
           "shifu-cache-profile-ref",
+          "universal-request-json",
           "untrusted-policy",
           "verify-command",
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 93,
+        "inputCount": 94,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -828,8 +831,10 @@
         "id": ".bump-minor-version",
         "path": ".github/workflows/.bump-minor-version.yml",
         "reusable": true,
-        "inputs": [],
-        "inputCount": 0,
+        "inputs": [
+          "universal-request-json"
+        ],
+        "inputCount": 1,
         "secrets": [
           "GITHUB_PUSH_TOKEN"
         ],
@@ -853,9 +858,10 @@
           "render-media",
           "renderer-image",
           "scenario-path",
-          "source-ref"
+          "source-ref",
+          "universal-request-json"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [
           "DEMO_UPDATE_TOKEN"
         ],
@@ -904,10 +910,11 @@
           "shifu-cache-profile-digest",
           "shifu-cache-profile-ref",
           "source-ref",
+          "universal-request-json",
           "untrusted-policy",
           "working-directory"
         ],
-        "inputCount": 30,
+        "inputCount": 31,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -969,9 +976,10 @@
           "runner-provenance-json",
           "source-sha",
           "target-ref",
+          "universal-request-json",
           "used-nonces-json"
         ],
-        "inputCount": 37,
+        "inputCount": 38,
         "secrets": [
           "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
@@ -1111,9 +1119,10 @@
           "standalone-binary-distribution",
           "target-ref",
           "target-sha",
-          "trusted-publishing"
+          "trusted-publishing",
+          "universal-request-json"
         ],
-        "inputCount": 121,
+        "inputCount": 122,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1290,10 +1299,11 @@
           "python-version",
           "setup-env-timeout-minutes",
           "setup-python-enabled",
+          "universal-request-json",
           "use-pipenv",
           "use-poetry"
         ],
-        "inputCount": 41,
+        "inputCount": 42,
         "secrets": [
           "APPLE_CSC_KEY",
           "APPLE_CSC_KEY_PASSWORD",
@@ -1337,9 +1347,10 @@
           "aws-region",
           "aws-role",
           "aws-root",
-          "manager"
+          "manager",
+          "universal-request-json"
         ],
-        "inputCount": 4,
+        "inputCount": 5,
         "secrets": [
           "AWS_ACCOUNT_ID",
           "NODE_AUTH_TOKEN"
@@ -1365,9 +1376,10 @@
           "release-path",
           "release-url",
           "repo",
+          "universal-request-json",
           "upper-edge"
         ],
-        "inputCount": 13,
+        "inputCount": 14,
         "secrets": [
           "AIRTABLE_API_KEY",
           "GITHUB_PUSH_TOKEN"
@@ -1384,9 +1396,10 @@
           "force",
           "remote-host",
           "remote-path",
-          "remote-repo"
+          "remote-repo",
+          "universal-request-json"
         ],
-        "inputCount": 4,
+        "inputCount": 5,
         "secrets": [
           "REMOTE_CREDENTIAL",
           "REMOTE_USER"
@@ -1441,10 +1454,11 @@
           "staging-apply",
           "staging-aws-role-arn",
           "staging-environment",
+          "universal-request-json",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 43,
+        "inputCount": 44,
         "secrets": [
           "production-release-app-private-key"
         ],
@@ -1503,9 +1517,10 @@
           "bucket-release",
           "max-preview-links",
           "node-version",
-          "preview-files"
+          "preview-files",
+          "universal-request-json"
         ],
-        "inputCount": 5,
+        "inputCount": 6,
         "secrets": [
           "AWS_USER_ACCESS_KEY_ID",
           "AWS_USER_SECRET_ACCESS_KEY",
@@ -1569,6 +1584,28 @@
         "secretCount": 0,
         "outputs": [],
         "outputCount": 0
+      },
+      {
+        "id": "bootstrap",
+        "path": ".github/workflows/bootstrap.yml",
+        "reusable": true,
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "admission-root",
+          "backflow-root",
+          "request-root",
+          "result-json",
+          "result-root",
+          "runtime-sha",
+          "terminal-receipt-json",
+          "terminal-receipt-root"
+        ],
+        "outputCount": 8
       },
       {
         "id": "build-surface-fixture",
@@ -1678,12 +1715,13 @@
           "setup-rust",
           "shifu-cache-profile-digest",
           "shifu-cache-profile-ref",
+          "universal-request-json",
           "untrusted-policy",
           "verify-command",
           "verify-substage-evidence-path",
           "working-directory"
         ],
-        "inputCount": 96,
+        "inputCount": 97,
         "secrets": [
           "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
           "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
@@ -1834,9 +1872,10 @@
           "require-approval",
           "required-status-checks",
           "same-repository-only",
-          "target-branch"
+          "target-branch",
+          "universal-request-json"
         ],
-        "inputCount": 16,
+        "inputCount": 17,
         "secrets": [
           "github-token"
         ],
@@ -1920,10 +1959,11 @@
           "source-proof-policy-paths-json",
           "source-proof-required-contexts-json",
           "source-proof-reuse",
+          "universal-request-json",
           "upload-artifacts",
           "working-directory"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -1961,9 +2001,10 @@
           "reactivation-authorized",
           "settlement-authorized",
           "source-branch",
-          "target-branch"
+          "target-branch",
+          "universal-request-json"
         ],
-        "inputCount": 15,
+        "inputCount": 16,
         "secrets": [
           "promotion-token"
         ],
@@ -2005,9 +2046,10 @@
           "outcome",
           "reason",
           "target-branch",
-          "terminal-evidence-root"
+          "terminal-evidence-root",
+          "universal-request-json"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [
           "github-token"
         ],
@@ -2036,9 +2078,10 @@
           "replay-tree-sha",
           "required-context-roots-json",
           "target-branch",
-          "terminal-evidence-root"
+          "terminal-evidence-root",
+          "universal-request-json"
         ],
-        "inputCount": 13,
+        "inputCount": 14,
         "secrets": [
           "github-token"
         ],
@@ -2110,9 +2153,10 @@
           "source-workflow-run-id",
           "target-branch",
           "toolchain-root",
+          "universal-request-json",
           "warrant-lease-seconds"
         ],
-        "inputCount": 44,
+        "inputCount": 45,
         "secrets": [
           "github-token"
         ],
@@ -2154,9 +2198,10 @@
           "mutation-authorized",
           "preflight-workflow-path",
           "priority-workflows-json",
-          "source-branch"
+          "source-branch",
+          "universal-request-json"
         ],
-        "inputCount": 10,
+        "inputCount": 11,
         "secrets": [
           "qualification-token"
         ],
@@ -2223,9 +2268,10 @@
           "stale-days",
           "stale-pull-request-label",
           "target-branch",
-          "temporary-branch-patterns"
+          "temporary-branch-patterns",
+          "universal-request-json"
         ],
-        "inputCount": 14,
+        "inputCount": 15,
         "secrets": [
           "housekeeper_app_id",
           "housekeeper_app_private_key",
@@ -2262,9 +2308,10 @@
           "retention-days",
           "source-sha",
           "subject-artifact-name",
-          "subject-relative-path"
+          "subject-relative-path",
+          "universal-request-json"
         ],
-        "inputCount": 13,
+        "inputCount": 14,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -2327,10 +2374,11 @@
           "target-ref",
           "target-sha",
           "toolchain-type",
+          "universal-request-json",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 26,
+        "inputCount": 27,
         "secrets": [
           "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
           "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
@@ -2391,10 +2439,11 @@
           "toolchain-digest",
           "toolchain-image",
           "toolchain-type",
+          "universal-request-json",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 38,
+        "inputCount": 39,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -2430,9 +2479,10 @@
           "require-approval",
           "required-status-checks",
           "same-repository-only",
-          "target-branch"
+          "target-branch",
+          "universal-request-json"
         ],
-        "inputCount": 13,
+        "inputCount": 14,
         "secrets": [
           "github-token"
         ],
@@ -2454,9 +2504,10 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
-          "target-branch"
+          "target-branch",
+          "universal-request-json"
         ],
-        "inputCount": 4,
+        "inputCount": 5,
         "secrets": [
           "github-token"
         ],
@@ -2486,9 +2537,10 @@
           "production-aws-role-arn",
           "production-bucket",
           "production-environment",
+          "universal-request-json",
           "verify-command"
         ],
-        "inputCount": 12,
+        "inputCount": 13,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -2504,9 +2556,10 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
-          "target-branch"
+          "target-branch",
+          "universal-request-json"
         ],
-        "inputCount": 4,
+        "inputCount": 5,
         "secrets": [
           "github-token"
         ],
@@ -2546,10 +2599,11 @@
           "toolchain-digest",
           "toolchain-image",
           "toolchain-type",
+          "universal-request-json",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 23,
+        "inputCount": 24,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -2682,9 +2736,10 @@
           "standalone-binary-distribution",
           "target-ref",
           "target-sha",
-          "trusted-publishing"
+          "trusted-publishing",
+          "universal-request-json"
         ],
-        "inputCount": 106,
+        "inputCount": 107,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -2753,9 +2808,10 @@
           "apply",
           "branch",
           "buildchain-ref",
-          "candidate-sha"
+          "candidate-sha",
+          "universal-request-json"
         ],
-        "inputCount": 4,
+        "inputCount": 5,
         "secrets": [
           "BUILDCHAIN_PROMOTION_TOKEN",
           "governance-token"
@@ -2809,9 +2865,10 @@
           "pr-title",
           "refresh-managed-readme-badges",
           "source-node",
+          "universal-request-json",
           "upstream-release-json"
         ],
-        "inputCount": 19,
+        "inputCount": 20,
         "secrets": [
           "propagation-token"
         ],
@@ -2851,9 +2908,10 @@
           "rehearsal-capsule-path",
           "rehearsal-evidence-path",
           "rehearsal-mode",
-          "state-path"
+          "state-path",
+          "universal-request-json"
         ],
-        "inputCount": 14,
+        "inputCount": 15,
         "secrets": [
           "http-token"
         ],
@@ -2921,9 +2979,10 @@
           "required-checks",
           "revoke-reason",
           "revoked-versions",
-          "target-branch"
+          "target-branch",
+          "universal-request-json"
         ],
-        "inputCount": 16,
+        "inputCount": 17,
         "secrets": [
           "approval-token",
           "promotion-token"
@@ -2938,6 +2997,36 @@
           "stable-version"
         ],
         "outputCount": 6
+      },
+      {
+        "id": "universal-bootstrap-dogfood",
+        "path": ".github/workflows/universal-bootstrap-dogfood.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "universal-bootstrap-recovery",
+        "path": ".github/workflows/universal-bootstrap-recovery.yml",
+        "reusable": true,
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [
+          "backflow-root",
+          "result-json",
+          "runtime-sha",
+          "terminal-receipt-json",
+          "terminal-receipt-root"
+        ],
+        "outputCount": 5
       },
       {
         "id": "v4-adopter-delivery-dogfood",
@@ -2962,9 +3051,10 @@
           "consumer-repository",
           "input-path",
           "invocation-source-path",
-          "node-version"
+          "node-version",
+          "universal-request-json"
         ],
-        "inputCount": 8,
+        "inputCount": 9,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -3013,9 +3103,10 @@
           "go-version",
           "install-artifact-path",
           "node-version",
+          "universal-request-json",
           "verify-artifact-path"
         ],
-        "inputCount": 6,
+        "inputCount": 7,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -3029,9 +3120,10 @@
           "artifact-retention-days",
           "consumer-policy-receipt-json",
           "macos-finalization-command",
-          "request-json"
+          "request-json",
+          "universal-request-json"
         ],
-        "inputCount": 4,
+        "inputCount": 5,
         "secrets": [
           "BUILDCHAIN_EVIDENCE_READ_TOKEN",
           "BUILDCHAIN_SIGNING_TOKEN"
@@ -8941,8 +9033,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "aa81ffd608451b83ea0d81c36d522c707ee7c7c27ba2ff478a4771876bb0a57e",
-    "pageRegistryDigest": "c81347e800ca7ded1b69a8480e562e67dc46671deb39ec27ca4376e7c8a77afd"
+    "workflowRegistryDigest": "244c3b963d5e23381f1af3e736863ad61fb9acb7f735c1f500e4e25903705b17",
+    "pageRegistryDigest": "de6950c12144a9ca39c5bd59cf21770523587c8b3c63fbe7f1bed40464678b65"
   },
   "comparison": {
     "missingCliRegistry": [],

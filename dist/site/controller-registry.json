@@ -52,6 +52,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "upload-artifacts": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -94,7 +98,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:91aeff9ffcc598918626c24850a00063a79ddf26aa48702fa22e7dce8c761968"
+      "digest": "sha256:cdb7dc4e69031dcd2c590789c666ececbad6bcc9cb916ae5b7f4cee4cda6d63e"
     },
     {
       "schemaVersion": 1,
@@ -498,6 +502,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "untrusted-policy": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -564,7 +572,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:c36f7dcd859a460ce757bc080132e9bf1be6875ff90e0a44308b414198a494fe"
+      "digest": "sha256:939f1ac15513a0417b539b3d10e875a9f0ea02e885facac9fa4de0ab0e1f8ee5"
     },
     {
       "schemaVersion": 1,
@@ -980,6 +988,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "untrusted-policy": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1030,7 +1042,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:a653e831202898143b5e46cc42120a22290f416b9dc851c1bec7088eb42bcb17"
+      "digest": "sha256:382ae38afbf17236d093ec5bf945b7a151b99dacd1af53ac447c1ca5de73b956"
     },
     {
       "schemaVersion": 1,
@@ -1154,6 +1166,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "untrusted-policy": {
           "classification": "included",
           "source": "workflow-call-input"
@@ -1187,7 +1203,7 @@
         ]
       },
       "semanticBoundary": "References the Shifu aggregate digest and status without copying project Gate identifiers or Gate policy.",
-      "digest": "sha256:8e42956a2c10fa109500e72b97994f06b3d22a19cc63a46f66410b2e81706e9d"
+      "digest": "sha256:76c8da1ca1d7c6014cbda3ae3c82b2e28dafda45ddc7d3b4d6fccb6d3fd4853e"
     },
     {
       "schemaVersion": 1,
@@ -1367,6 +1383,10 @@
           "classification": "digest-only",
           "source": "workflow-call-input"
         },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "verify-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1419,7 +1439,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:834c08b0099b646075b1850548454986b7c150f808019c6ec7d8eae377214a19"
+      "digest": "sha256:8977c5222c4e30ee2d22e6519add1760cbbd917097b57f576d249001918217c8"
     },
     {
       "schemaVersion": 1,
@@ -1515,6 +1535,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "verify-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1558,7 +1582,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:e48bb7719886d3949d63ec69d638264b20c7de8a70ee2db3cca78d4369f5a41e"
+      "digest": "sha256:6768756f1a1855ffec164c9745a45805b775741d2ef72f464bfac093efffee7d"
     },
     {
       "schemaVersion": 1,
@@ -1714,6 +1738,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "verify-command": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -1771,7 +1799,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:6d71409659fbf8543c7e520b0c493d8afe86bdf60286b860bb917f0041ebc173"
+      "digest": "sha256:24602f0ed35bbfb794051921b90686c9eed2434b17fd5da14e9ad95355c01634"
     },
     {
       "schemaVersion": 1,
@@ -2306,6 +2334,10 @@
         "trusted-publishing": {
           "classification": "included",
           "source": "workflow-call-input"
+        },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
         }
       },
       "expected": {
@@ -2349,7 +2381,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:f4d2d311fa07f70310f1538c6274ddf17a78392db716687c25171c3ba495d21f"
+      "digest": "sha256:13a70da4c3234954c2acf5ff96c077e00b06297316bb2287ce28661ce1e62ef1"
     },
     {
       "schemaVersion": 1,
@@ -2437,6 +2469,10 @@
           "classification": "included",
           "source": "workflow-call-input"
         },
+        "universal-request-json": {
+          "classification": "digest-only",
+          "source": "workflow-call-input"
+        },
         "upstream-release-json": {
           "classification": "digest-only",
           "source": "workflow-call-input"
@@ -2493,7 +2529,7 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:660579b5561e8e33375a3f3b1fefbb8a5bd8241a55ba43374d786fb772c24a12"
+      "digest": "sha256:e5aca2f9ebac530742cae8aa1e5959179bc3eca29bba384dd8f7cdf5821f5648"
     },
     {
       "schemaVersion": 1,
@@ -2542,5 +2578,5 @@
       "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
     }
   ],
-  "digest": "sha256:e9fe5b78abb43be3daeebf5a6c214f0c53e6519e96edb76b284bb8b737e57474"
+  "digest": "sha256:8b299ccf80925444055224f027b94aaab73741bf14e9302976eb0354053d1d31"
 }
