@@ -31,6 +31,27 @@ function createNpmTarball(root, packageJson) {
 
 function createZipArchive(root, inputDir, filename) {
   const archivePath = path.join(root, filename);
+  if (process.platform === "win32") {
+    execFileSync(
+      "powershell.exe",
+      [
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory($env:BUILDCHAIN_TEST_ZIP_INPUT, $env:BUILDCHAIN_TEST_ZIP_OUTPUT)",
+      ],
+      {
+        cwd: root,
+        env: {
+          ...process.env,
+          BUILDCHAIN_TEST_ZIP_INPUT: inputDir,
+          BUILDCHAIN_TEST_ZIP_OUTPUT: archivePath,
+        },
+      },
+    );
+    return archivePath;
+  }
   const relativeArchivePath = path
     .relative(inputDir, archivePath)
     .split(path.sep)
