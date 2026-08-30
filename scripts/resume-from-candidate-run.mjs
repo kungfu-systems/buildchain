@@ -821,7 +821,7 @@ export async function resolveRecoveryTransaction({
   transactionId,
   publicationVersion,
 }) {
-  let transaction = publicationVersion
+  let transaction = transactionId && publicationVersion
     ? await readExistingTransaction({
         repoInfo,
         apiUrl,

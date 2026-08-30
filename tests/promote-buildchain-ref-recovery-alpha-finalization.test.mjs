@@ -274,7 +274,7 @@ test("publish transaction resumes partial alpha finalization with exact tag on r
   const { octokit, refs, commits } = createGitMock({
     refs: new Map([
       ["heads/alpha/v1/v1.0", mergeSha],
-      ["heads/dev/v1/v1.0", mergeSha],
+      ["heads/dev/v1/v1.0", oldAlphaSha],
       ["tags/v1.0.0-alpha.0", previousFinalizedSha],
     ]),
   });

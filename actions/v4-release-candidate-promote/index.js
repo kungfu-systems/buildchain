@@ -21,8 +21,17 @@ import {
 } from "../../packages/core/v4-publication-qualification.js";
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
 import {
+  activateExactPnpm,
   applyProductPublication,
   planProductPublication,
+  resolveCandidateBuildSummaryPath,
+  resolvePromotionTarget,
+} from "./product-provider.js";
+
+export {
+  activateExactPnpm,
+  resolveCandidateBuildSummaryPath,
+  resolvePromotionTarget,
 } from "./product-provider.js";
 
 const input = (name, required = false) =>
@@ -34,26 +43,6 @@ const write = (file, value) => {
   fs.writeFileSync(resolved, `${JSON.stringify(value, null, 2)}\n`);
   return resolved;
 };
-
-export function resolveCandidateBuildSummaryPath({
-  candidatePassportPath,
-  declaredPath = "",
-}) {
-  const selected = String(declaredPath || "").trim();
-  if (selected) return selected;
-  const fallback = path.join(
-    path.dirname(candidatePassportPath),
-    "..",
-    "summary",
-    "build-summary.json",
-  );
-  if (!fs.existsSync(path.resolve(fallback))) {
-    throw new Error(
-      "candidate-build-summary-path is required when the sealed candidate has no standard summary artifact",
-    );
-  }
-  return fallback;
-}
 
 export function aggregateV4ReleasePassport({
   candidate,
@@ -202,6 +191,13 @@ function productProviderRequest({
   buildSummaryPath,
   qualification,
 }) {
+  const sealedBundleRoot =
+    input("sealed-bundle-root") ||
+    path.resolve(path.dirname(candidatePassportPath), "../..");
+  const outputRoot = path.dirname(sealedBundleRoot);
+  const sealedBundleManifest =
+    input("sealed-bundle-manifest") ||
+    path.join(outputRoot, "sealed-bundle.json");
   return {
     octokit,
     mutationOctokit,
@@ -214,20 +210,24 @@ function productProviderRequest({
     qualification,
     requiredStatusCheck: input("required-status-check") || "check",
     publishCommand: input("publish-command"),
-    sealedBundleRoot: input("sealed-bundle-root", true),
-    sealedBundleManifest: input("sealed-bundle-manifest", true),
-    requiredArtifactsPath: input("required-artifacts-path", true),
+    sealedBundleRoot,
+    sealedBundleManifest,
+    requiredArtifactsPath:
+      input("required-artifacts-path") ||
+      path.join(outputRoot, "publish-required-artifacts.json"),
     publishMode: input("publish-mode"),
     publishAuth: input("publish-auth") || "trusted-publishing",
     publishDistTag: input("publish-dist-tag"),
     publishPackageSetOrder: input("publish-package-set-order") || "as-provided",
-    publishPackageMain: input("publish-package-main", true),
+    publishPackageMain:
+      input("publish-package-main") || read(sealedBundleManifest).npm?.name,
     publishRematerializeOnResume: core.getBooleanInput(
       "publish-rematerialize-on-resume",
     ),
     publishTransactionOverride: core.getBooleanInput(
       "publish-transaction-override",
     ),
+    expectedTransactionId: input("resume-transaction-id"),
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
   };
@@ -475,17 +475,31 @@ function setOutputs(documents, settlement) {
 
 async function main() {
   const repository = input("repository", true);
-  const sourceSha = input("source-sha", true);
+  const declaredSourceSha = input("source-sha", true);
   const fallbackVersion = input("version", true);
   const fallbackTag = input("tag", true);
   const channel = input("channel", true);
   const candidatePassportPath = input("candidate-passport-path", true);
-  const buildSummaryPath = input("candidate-build-summary-path", true);
+  const buildSummaryPath = resolveCandidateBuildSummaryPath({
+    candidatePassportPath,
+    declaredPath: input("candidate-build-summary-path"),
+  });
   const candidate = read(candidatePassportPath);
+  const { targetRef, targetSha } = resolvePromotionTarget({
+    candidatePassportPath,
+    candidate,
+    repository,
+    channel,
+    sourceSha: declaredSourceSha,
+    declaredTargetRef: input("target-ref"),
+    declaredTargetSha: input("target-sha"),
+  });
+  const sourceSha = targetSha;
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));
-  const octokit = github.getOctokit(input("token", true));
-  const mutationOctokit = github.getOctokit(input("mutation-token", true));
+  const token = input("token", true);
+  const octokit = github.getOctokit(token);
+  const mutationOctokit = github.getOctokit(input("mutation-token") || token);
   assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
   const sourceBinding = await observeProtectedPublicationSource({
     octokit,
@@ -497,8 +511,8 @@ async function main() {
     octokit,
     mutationOctokit,
     repository,
-    targetRef: input("target-ref", true),
-    targetSha: input("target-sha", true),
+    targetRef,
+    targetSha,
     candidate,
     candidatePassportPath,
     buildSummaryPath,
@@ -520,6 +534,7 @@ async function main() {
     publicationPlan,
     octokit,
   });
+  activateExactPnpm();
   const settlement = await applyAndSettle({
     repository,
     sourceSha,

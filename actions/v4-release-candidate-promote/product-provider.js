@@ -1,8 +1,106 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 import { promoteBuildchainRefs } from "../promote-buildchain-ref/lib.js";
+import { validateReleaseCandidateRecoveryReceipt } from "../../packages/core/release-candidate-recovery.js";
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
+
+const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
+
+export function resolveCandidateBuildSummaryPath({
+  candidatePassportPath,
+  declaredPath = "",
+}) {
+  const selected = String(declaredPath || "").trim();
+  if (selected) return selected;
+  const artifactsRoot = path.resolve(path.dirname(candidatePassportPath), "..");
+  const matches = fs
+    .readdirSync(artifactsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(artifactsRoot, entry.name, "build-summary.json"))
+    .filter((entry) => fs.existsSync(entry))
+    .sort();
+  if (matches.length !== 1) {
+    throw new Error(
+      `candidate-build-summary-path is required when the sealed candidate has ${matches.length === 0 ? "no" : "ambiguous"} standard summary artifacts`,
+    );
+  }
+  return matches[0];
+}
+
+export function resolvePromotionTarget({
+  candidatePassportPath,
+  candidate,
+  repository,
+  channel,
+  sourceSha,
+  declaredTargetRef = "",
+  declaredTargetSha = "",
+}) {
+  const sealedBundleRoot = path.resolve(
+    path.dirname(candidatePassportPath),
+    "../..",
+  );
+  const recoveryReceiptPath = path.join(
+    path.dirname(sealedBundleRoot),
+    "recovery-receipt.json",
+  );
+  const hasRecoveryReceipt = fs.existsSync(recoveryReceiptPath);
+  const recoveryReceipt = hasRecoveryReceipt ? read(recoveryReceiptPath) : null;
+  const targetRef = String(
+    declaredTargetRef || recoveryReceipt?.target?.ref || "",
+  ).trim();
+  const targetSha = String(
+    declaredTargetSha || recoveryReceipt?.target?.sha || "",
+  ).trim();
+  if (!targetRef || !targetSha) {
+    throw new Error(
+      "target-ref and target-sha are required when no standard recovery receipt supplies them",
+    );
+  }
+  if (!hasRecoveryReceipt) {
+    if (sourceSha !== targetSha)
+      throw new Error(
+        "protected source SHA must equal target-sha without recovery evidence",
+      );
+    return { targetRef, targetSha };
+  }
+  const validation = validateReleaseCandidateRecoveryReceipt({
+    receipt: recoveryReceipt,
+    passport: candidate,
+    repository,
+    targetChannel: channel,
+    targetRef,
+    targetSha,
+    targetTree: candidate.source?.treeHash,
+  });
+  if (!validation.ok)
+    throw new Error(
+      `standard recovery receipt is invalid: ${validation.errors.join("; ")}`,
+    );
+  if (![targetSha, candidate.source?.headSha].includes(sourceSha))
+    throw new Error(
+      "legacy source-sha is not bound to the recovered candidate or protected target",
+    );
+  return { targetRef, targetSha };
+}
+
+export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
+  const shimDirectory = fs.mkdtempSync(
+    path.join(temporaryRoot, "buildchain-pnpm-"),
+  );
+  const shimPath = path.join(shimDirectory, "pnpm");
+  fs.writeFileSync(shimPath, '#!/bin/sh\nexec corepack pnpm@11.7.0 "$@"\n', {
+    mode: 0o755,
+  });
+  fs.writeFileSync(
+    path.join(shimDirectory, "pnpm.cmd"),
+    "@echo off\r\ncorepack pnpm@11.7.0 %*\r\n",
+  );
+  process.env.PATH = `${shimDirectory}${path.delimiter}${process.env.PATH || ""}`;
+  return shimPath;
+}
 
 export function selectProductPublicationPlan(
   result,
@@ -98,6 +196,7 @@ function promotionOptions(
     publishPackageSetOrder: request.publishPackageSetOrder || "as-provided",
     publishPackageMain: request.publishPackageMain,
     publishRematerializeOnResume: request.publishRematerializeOnResume,
+    expectedTransactionId: request.expectedTransactionId,
     expectedPublicationVersion,
     requirePublicationQualification: false,
     publicationQualificationReceiptJson: JSON.stringify(request.qualification),

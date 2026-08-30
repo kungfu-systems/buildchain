@@ -957,11 +957,12 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Install exact protected channel dependencies without scripts
-        run: corepack pnpm@11.7.0 install --frozen-lockfile --ignore-scripts
-
-      - name: Install exact provider runtime dependencies without scripts
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+      - name: Install exact provider runtime dependencies and expose the verified bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --frozen-lockfile --ignore-scripts
+          ln -s .buildchain/runtime/node_modules node_modules
 
       - name: Restore the rooted QUALIFY cut
         uses: actions/download-artifact@v7.0.0
@@ -1003,6 +1004,7 @@ jobs:
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
+          resume-transaction-id: ${{ inputs.resume-transaction-id }}
           artifact-paths: ${{ needs.qualify.outputs.release-artifact-paths }}
           state-path: .buildchain/release-tail/state.json
           failure-after-capability: ${{ inputs.provider-failure-after-capability }}
