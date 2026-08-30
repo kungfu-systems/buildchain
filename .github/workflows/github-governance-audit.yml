@@ -133,6 +133,14 @@ jobs:
 
       - name: Enforce governance qualification
         if: steps.summary.outputs.non-qualifying != '0'
+        env:
+          FORK_PULL_REQUEST: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+          GOVERNANCE_AUDITOR_TOKEN: ${{ steps.auditor.outputs.token }}
+          GOVERNANCE_READ_TOKEN: ${{ secrets.BUILDCHAIN_GOVERNANCE_READ_TOKEN }}
         run: |
+          if [[ "$FORK_PULL_REQUEST" == "true" && -z "$GOVERNANCE_AUDITOR_TOKEN" && -z "$GOVERNANCE_READ_TOKEN" ]]; then
+            echo "::warning::Fork PR governance is credential-limited; the sanitized non-qualifying receipt is retained and protected independent review remains authoritative."
+            exit 0
+          fi
           echo "::error::Managed-zone GitHub governance is non-qualifying."
           exit 1

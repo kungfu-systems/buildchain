@@ -308,6 +308,10 @@ test("build surface fixture can dogfood artifact transfer modes declaratively", 
   assert.match(workflow, /secrets: inherit/);
   assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4-alpha/);
   assert.match(workflow, /buildchain-channel: alpha/);
+  assert.match(
+    workflow,
+    /untrusted-policy: \$\{\{ github\.event_name == 'pull_request' && github\.event\.pull_request\.head\.repo\.fork && 'skip' \|\| 'fail' \}\}/,
+  );
   assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.inputs\['buildchain-ref'\] \|\| 'v4-alpha' \}\}/);
   assert.match(workflow, /publish-channel: \$\{\{ github\.event\.inputs\['publish-source-ref'\] != '' && 'alpha' \|\| 'none' \}\}/);
   assert.match(workflow, /publish-anchor-request-json: \$\{\{ github\.event\.inputs\['publish-anchor-request-json'\] \}\}/);

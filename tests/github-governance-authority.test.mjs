@@ -1190,4 +1190,8 @@ test("governance audit degrades to a read-only receipt when fork credentials are
     workflow,
     /GH_TOKEN: \$\{\{ steps\.auditor\.outputs\.token \|\| secrets\.BUILDCHAIN_GOVERNANCE_READ_TOKEN \|\| github\.token \}\}/,
   );
+  assert.match(
+    workflow,
+    /FORK_PULL_REQUEST:[\s\S]+github\.event\.pull_request\.head\.repo\.fork[\s\S]+Fork PR governance is credential-limited/,
+  );
 });
