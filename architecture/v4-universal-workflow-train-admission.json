@@ -32,7 +32,7 @@
   "targetRef": "dev/v4/v4.0",
   "allowedReviewers": ["kungfu-origin"],
   "minimumApprovals": 1,
-  "requiredChecks": ["Verify / check"],
+  "requiredChecks": ["check"],
   "validFrom": "2026-08-30T00:00:00.000Z",
   "expiresAt": "2026-09-07T00:00:00.000Z"
 }

@@ -100,8 +100,15 @@ jobs:
             --argjson number "${CANDIDATE_REVIEW_PR}" '
               .head.repo.full_name == $repository and
               .head.sha == $expected and
-              .number == $number
+              .number == $number and
+              .base.ref == "dev/v4/v4.0"
             ' .buildchain/pr.json > /dev/null
+          jq -e --arg expected "${CANDIDATE_EXPECTED_SHA}" '
+            any(.[]; .state == "APPROVED" and .commit_id == $expected and (.user.login | ascii_downcase) == "kungfu-origin")
+          ' .buildchain/reviews.json > /dev/null
+          jq -e '
+            any(.[]; .name == "check" and .status == "completed" and .conclusion == "success")
+          ' .buildchain/checks.json > /dev/null
           observed_at="$(date -u '+%Y-%m-%dT%H:%M:%S.000Z')"
           jq -n --arg repository "${CANDIDATE_REPOSITORY}" \
             --arg expected "${CANDIDATE_EXPECTED_SHA}" \

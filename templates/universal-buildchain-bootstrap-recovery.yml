@@ -81,9 +81,11 @@ jobs:
             .base.ref == "dev/v4/v4.0"
           ' .buildchain-pr.json > /dev/null
           jq -e --arg sha "${EXPECTED_SHA}" '
-            any(.[]; .state == "APPROVED" and .commit_id == $sha and
-              (.user.login | ascii_downcase) == "kungfu-origin")
+            any(.[]; .state == "APPROVED" and .commit_id == $sha and (.user.login | ascii_downcase) == "kungfu-origin")
           ' .buildchain-reviews.json > /dev/null
+          jq -e '
+            any(.[]; .name == "check" and .status == "completed" and .conclusion == "success")
+          ' .buildchain-checks.json > /dev/null
 
       - name: Admit candidate policy and exact-head checks
         id: admit
