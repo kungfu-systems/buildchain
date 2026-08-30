@@ -1,4 +1,4 @@
-import { containedPublishedReleaseCandidateVersion, containedPublishedVersionState } from "./contained-published-version-state.js";
+import { containedPublishedGovernanceReleaseSha, containedPublishedReleaseCandidateVersion, containedPublishedVersionState } from "./contained-published-version-state.js";
 
 async function selectReleaseState(context) {
   const explicitReleaseTags = context.requestedTags
@@ -263,7 +263,10 @@ async function createReleasePromotionCommit(context, state) {
     const allowedPaths =
       releaseCommit.releaseTreeAllowedPaths || releaseCommit.files;
     await context.assertReleasePrOrVersionStateParent({
-      commitSha: releaseSha,
+      commitSha: containedPublishedGovernanceReleaseSha(
+        containedPublicationTransaction,
+        releaseSha,
+      ),
       targetRef: context.targetRef,
       alphaSha: state.sourceAlphaMaterial.sha,
       alphaTag: state.sourceAlphaMaterial.tag,

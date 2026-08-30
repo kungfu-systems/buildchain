@@ -62,7 +62,19 @@ function containedPublishedReleaseCandidateVersion(
   return candidateVersion;
 }
 
+function containedPublishedGovernanceReleaseSha(transaction, fallbackSha) {
+  if (!transaction) return fallbackSha;
+  const releaseSha = String(transaction.release_sha || "").trim();
+  if (!/^[0-9a-f]{40}$/u.test(releaseSha)) {
+    throw new Error(
+      "Contained published recovery omitted its immutable release commit",
+    );
+  }
+  return releaseSha;
+}
+
 export {
+  containedPublishedGovernanceReleaseSha,
   containedPublishedReleaseCandidateVersion,
   containedPublishedVersionState,
 };

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  containedPublishedGovernanceReleaseSha,
   containedPublishedReleaseCandidateVersion,
   containedPublishedVersionState,
 } from "../actions/promote-buildchain-ref/internal/contained-published-version-state.js";
@@ -85,5 +86,21 @@ test("contained recovery keeps the sealed release candidate version", () => {
       "4.0.1-alpha.57",
     ),
     "4.0.1-alpha.57",
+  );
+});
+
+test("contained recovery governs the immutable historical release commit", () => {
+  const historicalSha = "b".repeat(40);
+  assert.equal(
+    containedPublishedGovernanceReleaseSha(
+      { release_sha: historicalSha },
+      "c".repeat(40),
+    ),
+    historicalSha,
+  );
+  assert.equal(containedPublishedGovernanceReleaseSha(undefined, SHA), SHA);
+  assert.throws(
+    () => containedPublishedGovernanceReleaseSha({}, SHA),
+    /omitted its immutable release commit/u,
   );
 });
