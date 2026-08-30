@@ -2,13 +2,31 @@
   "schema": "kungfu-buildchain-v4-universal-workflow-admission-policy/v1",
   "sourceRepository": "kungfu-systems/buildchain",
   "allowedConsumers": ["kungfu-systems/buildchain", "kungfu-systems/taolu"],
-  "allowedCapabilities": ["bootstrap-conformance", "release-invocation"],
+  "allowedCapabilities": [
+    "bootstrap-conformance",
+    "release-candidate-promote",
+    "release-invocation",
+    "workflow-contract"
+  ],
   "permissionCeiling": {
-    "contents": "read"
+    "actions": "write",
+    "artifact-metadata": "write",
+    "attestations": "write",
+    "checks": "write",
+    "contents": "write",
+    "deployments": "write",
+    "id-token": "write",
+    "issues": "write",
+    "packages": "write",
+    "pages": "write",
+    "pull-requests": "write",
+    "security-events": "write",
+    "statuses": "write"
   },
   "contractRoots": [
     "sha256:676a1601c6ff67d9eeddd1f12394f6eb0603726b9b10e3d2ec294a92d31eeff2",
-    "sha256:7a8d9ec433055ef4b1e4e7dde958e1a55bb4d62ac20c39754723895f58378e9a"
+    "sha256:7a8d9ec433055ef4b1e4e7dde958e1a55bb4d62ac20c39754723895f58378e9a",
+    "sha256:de41ff2deab5063f0eab6a98eadd1220210a5119795303ccf00e2ced58813e25"
   ],
   "targetRef": "dev/v4/v4.0",
   "allowedReviewers": ["kungfu-origin"],
