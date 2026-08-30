@@ -279,6 +279,14 @@ function updateLaneBudgets() {
     ".github/workflows/universal-bootstrap-recovery.yml#recovery-execute",
     ".github/workflows/universal-bootstrap-recovery.yml#recovery-settle",
     ".github/workflows/universal-bootstrap-dogfood.yml#public-bootstrap",
+    ".github/workflows/universal-bootstrap-dogfood.yml#prepare",
+    ".github/workflows/universal-bootstrap-dogfood.yml#primary-conformance",
+    ".github/workflows/universal-bootstrap-dogfood.yml#recovery-conformance",
+    ".github/workflows/universal-bootstrap-dogfood.yml#primary-alpha",
+    ".github/workflows/universal-bootstrap-dogfood.yml#recovery-alpha",
+    ".github/workflows/universal-bootstrap-dogfood.yml#primary-stable",
+    ".github/workflows/universal-bootstrap-dogfood.yml#recovery-stable",
+    ".github/workflows/universal-bootstrap-dogfood.yml#reconcile",
   ]);
   policy.declarations = policy.declarations.filter(
     ({ laneId }) => !universalLaneIds.has(laneId),
@@ -330,12 +338,34 @@ function updateLaneBudgets() {
       metric: "consumer-owned terminal settlement latency",
     }),
     laneBudget({
-      laneId:
-        ".github/workflows/universal-bootstrap-dogfood.yml#public-bootstrap",
-      authorityClass: "governed-delegation",
-      triggerClass: "manual",
-      minutes: 60,
-      metric: "public Bootstrap dogfood latency",
+      laneId: ".github/workflows/universal-bootstrap-dogfood.yml#prepare",
+      authorityClass: "evidence",
+      triggerClass: "mixed",
+      minutes: 10,
+      metric: "Train-first self-dogfood admission latency",
+    }),
+    ...[
+      "primary-conformance",
+      "recovery-conformance",
+      "primary-alpha",
+      "recovery-alpha",
+      "primary-stable",
+      "recovery-stable",
+    ].map((job) =>
+      laneBudget({
+        laneId: `.github/workflows/universal-bootstrap-dogfood.yml#${job}`,
+        authorityClass: "governed-delegation",
+        triggerClass: "mixed",
+        minutes: 60,
+        metric: "Train-first exact-candidate self-dogfood latency",
+      }),
+    ),
+    laneBudget({
+      laneId: ".github/workflows/universal-bootstrap-dogfood.yml#reconcile",
+      authorityClass: "evidence",
+      triggerClass: "mixed",
+      minutes: 10,
+      metric: "primary and recovery equivalence latency",
     }),
   );
   fs.writeFileSync(laneBudgetPath, `${JSON.stringify(policy, null, 2)}\n`);
@@ -350,7 +380,9 @@ function main() {
       fs.readFileSync(recoveryWorkflowPath, "utf8") !==
       fs.readFileSync(recoveryTemplatePath, "utf8")
     )
-      fail("consumer recovery workflow differs from its pre-positioned template");
+      fail(
+        "consumer recovery workflow differs from its pre-positioned template",
+      );
   } else {
     fs.writeFileSync(
       recoveryWorkflowPath,

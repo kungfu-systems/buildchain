@@ -423,9 +423,26 @@
       }
     },
     {
-      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#public-bootstrap",
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#prepare",
+      "authorityClass": "evidence",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Train-first self-dogfood admission latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#primary-conformance",
       "authorityClass": "governed-delegation",
-      "triggerClass": "manual",
+      "triggerClass": "mixed",
       "concurrencyPolicy": {
         "mode": "none",
         "cancelInProgress": false
@@ -434,7 +451,109 @@
       "cancellationBehavior": "finish-started",
       "sloImpact": {
         "mergeCritical": false,
-        "metric": "public Bootstrap dogfood latency",
+        "metric": "Train-first exact-candidate self-dogfood latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#recovery-conformance",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Train-first exact-candidate self-dogfood latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#primary-alpha",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Train-first exact-candidate self-dogfood latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#recovery-alpha",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Train-first exact-candidate self-dogfood latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#primary-stable",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Train-first exact-candidate self-dogfood latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#recovery-stable",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Train-first exact-candidate self-dogfood latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#reconcile",
+      "authorityClass": "evidence",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "primary and recovery equivalence latency",
         "expectedContributionSeconds": 0,
         "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
       }

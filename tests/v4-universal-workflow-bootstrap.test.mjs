@@ -237,6 +237,10 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
   });
   const requestValue = request(policyValue);
   requestValue.capability.id = "bootstrap-conformance";
+  requestValue.payload = {
+    schema: "kungfu-buildchain-v4-universal-bootstrap-conformance/v1",
+    expectedGovernedWorkflowCount: 40,
+  };
   const engine = fileURLToPath(
     new URL("../scripts/v4-universal-workflow-engine.mjs", import.meta.url),
   );
@@ -263,7 +267,9 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
     BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
   });
   assert.equal(result.status, "succeeded");
-  assert.deepEqual(result.output.payload, requestValue.payload);
+  assert.equal(result.output.status, "candidate-engine-executed");
+  assert.equal(result.output.governedWorkflowCount, 40);
+  assert.match(result.output.engineRoot, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(result.runtime.sha, sha("1"));
   const receipt = run("terminal", {
     BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
@@ -423,45 +429,35 @@ test("candidate capability failures still produce one rooted terminal receipt", 
   assert.equal(receipt.status, "failed");
 });
 
-test("one schema-derived capability normalizes every active public workflow contract", () => {
-  const workflows = JSON.parse(
+test("production admission rejects contract-only false success", () => {
+  const policyValue = JSON.parse(
     fs.readFileSync(
-      new URL("../dist/site/workflow-registry.json", import.meta.url),
+      new URL(
+        "../architecture/v4-universal-workflow-train-admission.json",
+        import.meta.url,
+      ),
       "utf8",
     ),
-  ).workflows.filter((workflow) => workflow.reusable);
-  const policyValue = policy({ allowedCapabilities: ["workflow-contract"] });
-  const engine = fileURLToPath(
-    new URL("../scripts/v4-universal-workflow-engine.mjs", import.meta.url),
   );
-  for (const workflow of workflows) {
-    const requestValue = request(policyValue);
-    requestValue.capability.id = "workflow-contract";
-    requestValue.payload = {
-      schema: "kungfu-buildchain-v4-universal-workflow-contract/v1",
-      workflowId: workflow.id,
-      inputs: {},
-    };
-    const admission = admitV4UniversalWorkflow({
-      ...consumerObservation(),
-      request: requestValue,
-      policy: policyValue,
-      observedRefSha: sha("1"),
-      reviewEvidence: reviewEvidence(),
-      now: "2026-08-30T12:00:00.000Z",
-    });
-    const result = JSON.parse(
-      execFileSync(process.execPath, [engine, "execute"], {
-        encoding: "utf8",
-        env: {
-          ...process.env,
-          BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
-          BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
-          BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
-        },
+  assert.equal(
+    policyValue.allowedCapabilities.includes("workflow-contract"),
+    false,
+  );
+  const requestValue = request(policyValue);
+  requestValue.capability.id = "workflow-contract";
+  requestValue.capability.contractRoots = policyValue.contractRoots;
+  requestValue.candidate.admissionRoot =
+    v4UniversalWorkflowAdmissionRoot(policyValue);
+  assert.throws(
+    () =>
+      admitV4UniversalWorkflow({
+        ...consumerObservation(),
+        request: requestValue,
+        policy: policyValue,
+        observedRefSha: sha("1"),
+        reviewEvidence: reviewEvidence(),
+        now: "2026-08-30T12:00:00.000Z",
       }),
-    );
-    assert.equal(result.status, "succeeded", workflow.id);
-    assert.equal(result.output.workflowId, workflow.id);
-  }
+    { code: "capability-not-admitted" },
+  );
 });

@@ -137,6 +137,12 @@
     "crates/buildchain-v4-contracts/src/adopter_delivery.rs",
     "crates/buildchain-v4-contracts/src/compatibility_facts.rs",
     "crates/buildchain-v4-contracts/src/compatibility_facts",
+    "packages/core/v4-universal-workflow-bootstrap.js",
+    "scripts/check-v4-universal-workflow-bootstrap.mjs",
+    "scripts/generate-v4-universal-workflow-facades.mjs",
+    "scripts/v4-universal-workflow-backflow.mjs",
+    "scripts/v4-universal-workflow-engine.mjs",
+    "scripts/v4-universal-workflow-self-dogfood.mjs",
     "scripts/check-internal-architecture.mjs",
     "scripts/check-maintainability.mjs",
     "scripts/maintainability-metrics.mjs",
@@ -833,6 +839,39 @@
       "generatedOutputs": [],
       "validationCommands": [
         "node --test tests/v4-architecture.test.mjs tests/v4-bridge.test.mjs tests/v4-provider-operation-journal.test.mjs tests/v4-provider-readback-idempotency.test.mjs tests/v4-release-activation-shadow.test.mjs tests/v4-stable-publication-fence.test.mjs tests/v4-partial-mutation-recovery-qualification.test.mjs tests/v4-stage-capsule.test.mjs tests/v4-stage-capsule-store.test.mjs tests/v4-platform-stage-checkpoints.test.mjs tests/v4-stage-capsule-qualification.test.mjs tests/v4-runtime-ref-resume-authority.test.mjs tests/v4-tail-reseal.test.mjs tests/v4-tail-reseal-parity.test.mjs"
+      ]
+    },
+    {
+      "id": "v4-universal-workflow-bootstrap",
+      "owner": "Buildchain workflow maintainers",
+      "implementation": [
+        "packages/core/v4-universal-workflow-bootstrap.js",
+        "scripts/check-v4-universal-workflow-bootstrap.mjs",
+        "scripts/generate-v4-universal-workflow-facades.mjs",
+        "scripts/v4-universal-workflow-backflow.mjs",
+        "scripts/v4-universal-workflow-engine.mjs",
+        "scripts/v4-universal-workflow-self-dogfood.mjs"
+      ],
+      "tests": [
+        "tests/v4-universal-workflow-backflow.test.mjs",
+        "tests/v4-universal-workflow-bootstrap.test.mjs",
+        "tests/v4-universal-workflow-fault-campaign.test.mjs",
+        "tests/v4-universal-workflow-self-dogfood.test.mjs"
+      ],
+      "contracts": [
+        "architecture/v4-universal-workflow-bootstrap.json",
+        "architecture/v4-universal-workflow-fault-campaign.json",
+        "architecture/v4-universal-workflow-train-admission.json",
+        ".github/workflows/bootstrap.yml",
+        ".github/workflows/universal-bootstrap-dogfood.yml",
+        "templates/universal-buildchain-bootstrap-recovery.yml"
+      ],
+      "generatedOutputs": [
+        ".github/workflows/universal-bootstrap-recovery.yml"
+      ],
+      "validationCommands": [
+        "node scripts/check-v4-universal-workflow-bootstrap.mjs",
+        "node --test tests/v4-universal-workflow-bootstrap.test.mjs tests/v4-universal-workflow-backflow.test.mjs tests/v4-universal-workflow-fault-campaign.test.mjs tests/v4-universal-workflow-self-dogfood.test.mjs"
       ]
     },
     {

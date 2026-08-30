@@ -45,13 +45,22 @@ function validateTerminalReceipt(value, request) {
     !SHA.test(value.runtime?.sha || "") ||
     !ROOT.test(value.receiptRoot || "")
   )
-    fail("successful exact-candidate terminal receipt is required for backflow");
+    fail(
+      "successful exact-candidate terminal receipt is required for backflow",
+    );
   return value;
 }
 
-export function createV4UniversalBackflowPlan({ request: requestValue, receipt }) {
+export function createV4UniversalBackflowPlan({
+  request: requestValue,
+  receipt,
+}) {
   const request = validateV4UniversalWorkflowRequest(requestValue);
   if (request.mode !== "train") fail("only Train delivery can create backflow");
+  if (request.capability.id !== "release-candidate-promote")
+    fail("only a release-candidate-promote delivery can create backflow");
+  if (request.payload?.inputs?.["dry-run"] !== false)
+    fail("only a non-dry-run release delivery can create backflow");
   const terminal = validateTerminalReceipt(receipt, request);
   const marker = `<!-- buildchain-universal-backflow:${request.candidate.expectedSha} -->`;
   const binding = {
@@ -96,10 +105,9 @@ function githubHeaders(token) {
 }
 
 async function githubJson({ path, method = "GET", token, body, fetchImpl }) {
-  const api = String(process.env.GITHUB_API_URL || "https://api.github.com").replace(
-    /\/+$/u,
-    "",
-  );
+  const api = String(
+    process.env.GITHUB_API_URL || "https://api.github.com",
+  ).replace(/\/+$/u, "");
   const response = await fetchImpl(`${api}${path}`, {
     method,
     headers: githubHeaders(token),
@@ -108,7 +116,9 @@ async function githubJson({ path, method = "GET", token, body, fetchImpl }) {
   const text = await response.text();
   const value = text ? JSON.parse(text) : {};
   if (!response.ok)
-    fail(`GitHub API ${method} ${path} failed with ${response.status}: ${value.message || text}`);
+    fail(
+      `GitHub API ${method} ${path} failed with ${response.status}: ${value.message || text}`,
+    );
   return value;
 }
 
@@ -118,9 +128,22 @@ export async function upsertV4UniversalBackflow({
   token,
   fetchImpl = globalThis.fetch,
 }) {
+  const admitted = validateV4UniversalWorkflowRequest(request);
+  if (
+    admitted.mode !== "train" ||
+    admitted.capability.id !== "release-candidate-promote" ||
+    admitted.payload?.inputs?.["dry-run"] !== false
+  ) {
+    return {
+      schema: "kungfu-buildchain-v4-universal-workflow-backflow-result/v1",
+      action: "skipped",
+      reason: "not-a-successful-non-dry-run-release-delivery",
+      backflowRoot: "",
+    };
+  }
   if (!token) fail("GH_TOKEN is required for protected backflow");
   if (typeof fetchImpl !== "function") fail("fetch is required for backflow");
-  const plan = createV4UniversalBackflowPlan({ request, receipt });
+  const plan = createV4UniversalBackflowPlan({ request: admitted, receipt });
   const encodedRepository = plan.repository;
   const pull = await githubJson({
     path: `/repos/${encodedRepository}/pulls/${plan.pullRequest}`,
@@ -170,7 +193,8 @@ export async function upsertV4UniversalBackflow({
 
 async function main() {
   const request = JSON.parse(
-    process.env.BUILDCHAIN_UNIVERSAL_REQUEST_JSON || fail("request is required"),
+    process.env.BUILDCHAIN_UNIVERSAL_REQUEST_JSON ||
+      fail("request is required"),
   );
   const receipt = JSON.parse(
     process.env.BUILDCHAIN_UNIVERSAL_TERMINAL_RECEIPT_JSON ||
@@ -185,5 +209,6 @@ async function main() {
 }
 
 const isMain =
-  process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 if (isMain) await main();
