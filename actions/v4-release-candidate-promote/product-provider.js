@@ -149,13 +149,14 @@ export async function planProductPublication(
   request,
   { fallbackVersion = "", fallbackTag = "" } = {},
 ) {
+  const candidateVersion = sealedCandidateVersion(request);
   const result = await promoteBuildchainRefs(
-    promotionOptions(request, { dryRun: true }),
+    promotionOptions(request, { dryRun: true }, candidateVersion),
   );
   return selectProductPublicationPlan(result, {
     fallbackVersion,
     fallbackTag,
-    fallbackCandidateVersion: sealedCandidateVersion(request),
+    fallbackCandidateVersion: candidateVersion,
   });
 }
 

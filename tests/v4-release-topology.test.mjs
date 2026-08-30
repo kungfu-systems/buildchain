@@ -389,6 +389,10 @@ test("canonical APPLY activates the pnpm shim required by nested lifecycle scrip
     provider,
     /execFileSync\("corepack", \["enable", "pnpm"\], \{ stdio: "inherit" \}\);/u,
   );
+  assert.match(
+    provider,
+    /const candidateVersion = sealedCandidateVersion\(request\);[\s\S]*promotionOptions\(request, \{ dryRun: true \}, candidateVersion\)/u,
+  );
   assert.match(provider, /\}\s*,\s*plan\.candidateVersion,?\s*\),/u);
 });
 

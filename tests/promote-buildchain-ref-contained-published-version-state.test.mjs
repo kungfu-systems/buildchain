@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { containedPublishedVersionState } from "../actions/promote-buildchain-ref/internal/contained-published-version-state.js";
+import {
+  containedPublishedReleaseCandidateVersion,
+  containedPublishedVersionState,
+} from "../actions/promote-buildchain-ref/internal/contained-published-version-state.js";
 
 const SHA = "a".repeat(40);
 
@@ -50,5 +53,37 @@ test("ordinary publication keeps using version-state creation", () => {
       "4.0.1",
     ),
     undefined,
+  );
+});
+
+test("contained recovery keeps the sealed release candidate version", () => {
+  const context = {
+    releaseCandidateValidation: { recoveredCandidate: true },
+    releaseCandidateVersion: "4.0.1-alpha.56",
+  };
+  const state = {
+    containsPublishedMaterial: true,
+    releaseVersion: "4.0.1",
+  };
+  assert.equal(
+    containedPublishedReleaseCandidateVersion(context, state, "4.0.1-alpha.57"),
+    "4.0.1-alpha.56",
+  );
+  assert.throws(
+    () =>
+      containedPublishedReleaseCandidateVersion(
+        { ...context, releaseCandidateVersion: "4.0.2-alpha.0" },
+        state,
+        "4.0.1-alpha.57",
+      ),
+    /is not bound to release 4\.0\.1/u,
+  );
+  assert.equal(
+    containedPublishedReleaseCandidateVersion(
+      context,
+      { ...state, containsPublishedMaterial: false },
+      "4.0.1-alpha.57",
+    ),
+    "4.0.1-alpha.57",
   );
 });

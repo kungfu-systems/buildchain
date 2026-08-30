@@ -39,4 +39,30 @@ function containedPublishedVersionState(context, state, version) {
   };
 }
 
-export { containedPublishedVersionState };
+function containedPublishedReleaseCandidateVersion(
+  context,
+  state,
+  observedVersion,
+) {
+  if (
+    !state.containsPublishedMaterial ||
+    context.releaseCandidateValidation?.recoveredCandidate !== true
+  ) {
+    return observedVersion;
+  }
+  const candidateVersion = String(context.releaseCandidateVersion || "").trim();
+  const candidateBase = candidateVersion.match(
+    /^(\d+\.\d+\.\d+)-alpha\.\d+$/u,
+  )?.[1];
+  if (!candidateBase || candidateBase !== state.releaseVersion) {
+    throw new Error(
+      `Recovered publication candidate ${candidateVersion || "<missing>"} is not bound to release ${state.releaseVersion}`,
+    );
+  }
+  return candidateVersion;
+}
+
+export {
+  containedPublishedReleaseCandidateVersion,
+  containedPublishedVersionState,
+};
