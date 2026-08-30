@@ -129,6 +129,8 @@ jobs:
         shell: bash
         env:
           BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ inputs.request-json }}
+          BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_UNIVERSAL_CONSUMER_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON="$(jq -c '.' .buildchain/candidate/architecture/v4-universal-workflow-train-admission.json)"
@@ -222,3 +224,4 @@ jobs:
             echo "terminal-receipt-json=$(jq -c '.' .buildchain/terminal-receipt.json)"
             echo "terminal-receipt-root=$(jq -r '.receiptRoot' .buildchain/terminal-receipt.json)"
           } >> "${GITHUB_OUTPUT}"
+          test "$(jq -r '.status' <<< "${BUILDCHAIN_UNIVERSAL_RESULT_JSON}")" = "succeeded"

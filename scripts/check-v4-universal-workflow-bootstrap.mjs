@@ -90,6 +90,7 @@ assert.equal(contract.bootstrap.exactShaExecutionAuthority, true);
 assert.equal(contract.bootstrap.consumerSourceMutationPerIncident, false);
 assert.equal(contract.bootstrap.buildchainReleasePromotionPerIncident, false);
 assert.equal(contract.bootstrap.selfDogfoodUsesPublicContract, true);
+assert.equal(contract.bootstrap.recoveryDependsOnPublishedBuildchain, false);
 assert.deepEqual(admissionPolicy.contractRoots, [
   fileRoot("architecture/v4-universal-workflow-bootstrap.json"),
   fileRoot("packages/core/v4-universal-workflow-bootstrap.js"),
@@ -127,6 +128,15 @@ const selfDogfood = fs.readFileSync(
 assert.match(
   consumerTemplate,
   /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@v4/u,
+);
+assert.match(consumerTemplate, /recovery-admit:[\s\S]*recovery-execute:/u);
+assert.match(
+  consumerTemplate,
+  /Parse exact recovery coordinates without Buildchain code[\s\S]*Prove exact independent review before candidate code runs/u,
+);
+assert.match(
+  consumerTemplate,
+  /recovery-execute:[\s\S]*needs: recovery-admit[\s\S]*contents: write/u,
 );
 assert.match(
   selfDogfood,
