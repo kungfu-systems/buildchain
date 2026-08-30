@@ -15,19 +15,29 @@ function createNpmTarball(root, packageJson) {
     `${JSON.stringify(packageJson)}\n`,
   );
   const tarballPath = path.join(root, "buildchain.tgz");
-  execFileSync("tar", [
-    "-czf",
-    tarballPath,
-    "-C",
-    path.dirname(packageDir),
-    "package",
-  ]);
+  execFileSync(
+    "tar",
+    [
+      "-czf",
+      path.basename(tarballPath),
+      "-C",
+      path.relative(root, path.dirname(packageDir)),
+      "package",
+    ],
+    { cwd: root },
+  );
   return tarballPath;
 }
 
 function createZipArchive(root, inputDir, filename) {
   const archivePath = path.join(root, filename);
-  execFileSync("zip", ["-q", "-r", archivePath, "."], { cwd: inputDir });
+  const relativeArchivePath = path
+    .relative(inputDir, archivePath)
+    .split(path.sep)
+    .join("/");
+  execFileSync("zip", ["-q", "-r", relativeArchivePath, "."], {
+    cwd: inputDir,
+  });
   return archivePath;
 }
 
