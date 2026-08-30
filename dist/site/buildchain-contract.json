@@ -1361,7 +1361,7 @@
         "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification"
       ],
       "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-      "auditDigest": "sha256:586b31e137fb1692a6fe43093525c57708dd0395de41618f08f80c948032a369",
+      "auditDigest": "sha256:ce4fbf96de5b45c8b9e64645401175bef6f0d2dc96dc3d656615e6e44b92f1c0",
       "compatibleBreakingDigests": [
         "sha256:a6a35370d6b0d0f46e1b2712dcc01961fe53c2febde95409a27a485c10a36650"
       ],
@@ -1409,7 +1409,7 @@
         "alpha and stable channel selections use separate consumer contract locks by default"
       ],
       "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
-      "auditDigest": "sha256:520bedbe31621ab3a58e6cce46a7d79d6fc7753d04a6cb362451a20f3dc40a8b"
+      "auditDigest": "sha256:ae39d775f50ed5d0a20084067e36ae7337c6e1cf730e5311c54bba0420f4c8bf"
     },
     {
       "contractVersion": 1,
@@ -1492,7 +1492,7 @@
         "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
       ],
       "breakingDigest": "sha256:21b65d0746d2e8b3e8a7df4c6fab295a85c8fd42cc405ec3bc5df5cdab0421f0",
-      "auditDigest": "sha256:38de9c2bdda7c6209e2f38fc103f3b023a534f2f4b6cbf77fb872198195aa690"
+      "auditDigest": "sha256:88b3ff463686ee6dffc604886205f66d5f5f6fc445cd98c46623f0e6cc308839"
     },
     {
       "contractVersion": 1,
@@ -1591,7 +1591,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
-      "auditDigest": "sha256:5c66ab221b45a3a5d91746984aac2ad6c4d83d7100e1072e64593243e79c4fd0"
+      "auditDigest": "sha256:c4d5fed7a21a3dee45777aef0b3eff3cc6da9884cf64131ffc85217ef7c16503"
     },
     {
       "contractVersion": 1,
@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:f85d26bed9395911dfede2741c273570dbaff182ed1b7b757e17c4afda5563a7",
+      "auditDigest": "sha256:50818b92be789a7522d37a97727f15a8d8a2f35a6feff8b8097de6b9d95335a3",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -1699,7 +1699,7 @@
         "channel-aware artifact host facts are checked against the deploy plan before adapter side effects"
       ],
       "breakingDigest": "sha256:27f0cb9c7d97288850d215be8696b323471c41fd1cdf3a2ff3ebf21f62541960",
-      "auditDigest": "sha256:6372073da347a6f7f306b90781369f3defe9c5068bf1adf49000f2b707a6e5c6",
+      "auditDigest": "sha256:5c006ccc4e465649d971490a8cb40f4601a7a83b6496077e2a1d2a1baf90893b",
       "compatibleBreakingDigests": [
         "sha256:da569f90374e878948e3d5160ed9929338ce0572473ca8ee54867b0fe1aaeace"
       ],
@@ -1766,7 +1766,7 @@
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment"
       ],
       "breakingDigest": "sha256:425f8d3d1ba205dd6fe35a20f1dc6dad7d7c563872283e3af79fea4d5c475692",
-      "auditDigest": "sha256:7702aadb1083933c9cc8462c13cd70e05e68202d864a1463697b5b47db2251ef"
+      "auditDigest": "sha256:33d86446d6cbcce9ba7f386a32db0afbf32e52ff995ddd4b3cf1989831d7f2db"
     },
     {
       "contractVersion": 1,
@@ -1817,7 +1817,7 @@
         "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority"
       ],
       "breakingDigest": "sha256:0bcba689ab5060e12230db4118895242ecb48677ff581ea0360b1833bdac558c",
-      "auditDigest": "sha256:bdeeb08e3825e790acfb50c9c40215b806f0c105d17c020987bce9657a12a11f"
+      "auditDigest": "sha256:b00e330b547e6e823f9cf83ac97406ca7c93c688a9e80e63af5bc39cbf840941"
     },
     {
       "contractVersion": 1,
@@ -2399,7 +2399,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d4bd0f2a1921bfed71a4d9104d45934555bde74a5c189f93ad79f37074c02b87",
-      "auditDigest": "sha256:dae4afd1915b8885fe41336e1ef9841ccfa0e34490d16ab8cf5fb7695aa59cb7"
+      "auditDigest": "sha256:44797c1b64e54806e19cf401300a27e587d6a2f0730ee7509eb84aefb9b60f74"
     },
     {
       "contractVersion": 1,
@@ -2974,7 +2974,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-      "auditDigest": "sha256:586b31e137fb1692a6fe43093525c57708dd0395de41618f08f80c948032a369",
+      "auditDigest": "sha256:ce4fbf96de5b45c8b9e64645401175bef6f0d2dc96dc3d656615e6e44b92f1c0",
       "compatibleBreakingDigests": [
         "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
         "sha256:e264a79f9f399038c2fcfd21e4168c68c2e1485ee5c651c02242a02b622ac2be"
@@ -3568,7 +3568,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:30549aa26cd1e1dd81f10fe3529d3c6e3f8438a6efa0100c47ebae4d2f3d71df",
-      "auditDigest": "sha256:520bedbe31621ab3a58e6cce46a7d79d6fc7753d04a6cb362451a20f3dc40a8b",
+      "auditDigest": "sha256:ae39d775f50ed5d0a20084067e36ae7337c6e1cf730e5311c54bba0420f4c8bf",
       "compatibleBreakingDigests": [
         "sha256:d40dd05d7e07473d4b2dc1b62fbb0ed6f06449b4d3a7c44a2e8014313e3c0273"
       ],
@@ -3783,7 +3783,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:5f1868478b7ccd9fb79aea76bc771289d2ca6bd2dccd1abf57575426f1eae5fb",
-      "auditDigest": "sha256:2146c063ac48c70dcd9acb48296a38c03c0ad771b522c4059908f881e51695f9"
+      "auditDigest": "sha256:f5ad2bc08c4092aa27dc257d669a25fe27713c5df90f130ae4e70af983860ace"
     },
     {
       "contractVersion": 1,
@@ -4063,7 +4063,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:f14825324a16b51c2e9ed708ebe64e1932e05b6d5e0866f83aea8439decb4a27",
-      "auditDigest": "sha256:6372073da347a6f7f306b90781369f3defe9c5068bf1adf49000f2b707a6e5c6"
+      "auditDigest": "sha256:5c006ccc4e465649d971490a8cb40f4601a7a83b6496077e2a1d2a1baf90893b"
     },
     {
       "contractVersion": 1,
@@ -4238,7 +4238,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:3f76502666069c2727d23efcfdb08fb80f89ced1955a69e29f11525ae88aca1d",
-      "auditDigest": "sha256:bf5cd5c9517e9425de62d9f80e0142281c76f81650e7838a401c6baafc1603fd"
+      "auditDigest": "sha256:b224e107179552aa578d69e838a10f2da777ecabff92af4112f631aa9f506897"
     },
     {
       "contractVersion": 1,
@@ -4493,7 +4493,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:0eb318df455ef9cb737a7c2515a2411b685d34ed0bde7b5f5b173a7a42513114",
-      "auditDigest": "sha256:cc852df39bf0d9894b5427ce81226426887b25458d5549d2b159f6425dc54947"
+      "auditDigest": "sha256:e16dea163b7862a7dc010b3ebf8a16a6126603d8966d79974e00902eca4e3437"
     },
     {
       "contractVersion": 1,
@@ -5213,7 +5213,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:f85d26bed9395911dfede2741c273570dbaff182ed1b7b757e17c4afda5563a7"
+      "auditDigest": "sha256:50818b92be789a7522d37a97727f15a8d8a2f35a6feff8b8097de6b9d95335a3"
     },
     {
       "contractVersion": 1,
@@ -5374,7 +5374,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:b873ceb65618972bea615afcb9c616c138ce834b3246ec7237ef87c1618d68bd",
-      "auditDigest": "sha256:2f916979b6c786499de5f005f58130f281606e206f0a2428d3c8c2f7d677c42d",
+      "auditDigest": "sha256:5fc657f586de6f5a9ffa9e0be61c22b6f99318026d718bd518a04a40197faf97",
       "compatibleBreakingDigests": [
         "sha256:d7a1f15990ce8bd13149474888232c7d4451dd2a49bebf4d4ce1336695da430e"
       ],
@@ -5444,5 +5444,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:6a710857bb6f9903a3701a26295b977fb5d2b2a9b8625aa99293d66d2ef182a4"
+  "contractDigest": "sha256:2fafb5a63e35d9f9fc016355a8c980d7a9521ed8640557ca8e54642b6bb169d3"
 }
