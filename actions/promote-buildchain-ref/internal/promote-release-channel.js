@@ -222,7 +222,6 @@ async function resolveReleaseAlphaMaterial(context, state) {
     containsPublishedMaterial,
   };
 }
-
 async function createReleasePromotionCommit(context, state) {
   const releaseVersion = context.stripTagPrefix(
     state.selectedReleaseCandidate.tag,
@@ -231,6 +230,7 @@ async function createReleasePromotionCommit(context, state) {
     baseSha: context.sha,
     version: releaseVersion,
     message: `chore(release): release ${state.selectedReleaseCandidate.tag}`,
+    recoveredCandidate: Boolean(state.containsPublishedMaterial),
     preserveExistingLifecycleIdentity: Boolean(
       state.containsPublishedMaterial,
     ),

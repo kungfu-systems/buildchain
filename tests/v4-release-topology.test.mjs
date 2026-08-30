@@ -472,6 +472,10 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
     "utf8",
   );
+  const promoteRelease = fs.readFileSync(
+    path.join(root, "actions/promote-buildchain-ref/internal/promote-release-channel.js"),
+    "utf8",
+  );
   assert.deepEqual(topologyLedger.authorityClosure.runtimeEngines, [
     "actions/v4-release-candidate-promote/index.js",
   ]);
@@ -494,6 +498,10 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
   assert.match(
     recovery,
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@/u,
+  );
+  assert.match(
+    promoteRelease,
+    /recoveredCandidate: Boolean\(state\.containsPublishedMaterial\)/u,
   );
 });
 
