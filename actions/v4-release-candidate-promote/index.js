@@ -41,18 +41,19 @@ export function resolveCandidateBuildSummaryPath({
 }) {
   const selected = String(declaredPath || "").trim();
   if (selected) return selected;
-  const fallback = path.join(
-    path.dirname(candidatePassportPath),
-    "..",
-    "summary",
-    "build-summary.json",
-  );
-  if (!fs.existsSync(path.resolve(fallback))) {
+  const artifactsRoot = path.resolve(path.dirname(candidatePassportPath), "..");
+  const matches = fs
+    .readdirSync(artifactsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(artifactsRoot, entry.name, "build-summary.json"))
+    .filter((entry) => fs.existsSync(entry))
+    .sort();
+  if (matches.length !== 1) {
     throw new Error(
-      "candidate-build-summary-path is required when the sealed candidate has no standard summary artifact",
+      `candidate-build-summary-path is required when the sealed candidate has ${matches.length === 0 ? "no" : "ambiguous"} standard summary artifacts`,
     );
   }
-  return fallback;
+  return matches[0];
 }
 
 export function aggregateV4ReleasePassport({
@@ -202,6 +203,13 @@ function productProviderRequest({
   buildSummaryPath,
   qualification,
 }) {
+  const sealedBundleRoot =
+    input("sealed-bundle-root") ||
+    path.resolve(path.dirname(candidatePassportPath), "../..");
+  const outputRoot = path.dirname(sealedBundleRoot);
+  const sealedBundleManifest =
+    input("sealed-bundle-manifest") ||
+    path.join(outputRoot, "sealed-bundle.json");
   return {
     octokit,
     mutationOctokit,
@@ -214,14 +222,17 @@ function productProviderRequest({
     qualification,
     requiredStatusCheck: input("required-status-check") || "check",
     publishCommand: input("publish-command"),
-    sealedBundleRoot: input("sealed-bundle-root", true),
-    sealedBundleManifest: input("sealed-bundle-manifest", true),
-    requiredArtifactsPath: input("required-artifacts-path", true),
+    sealedBundleRoot,
+    sealedBundleManifest,
+    requiredArtifactsPath:
+      input("required-artifacts-path") ||
+      path.join(outputRoot, "publish-required-artifacts.json"),
     publishMode: input("publish-mode"),
     publishAuth: input("publish-auth") || "trusted-publishing",
     publishDistTag: input("publish-dist-tag"),
     publishPackageSetOrder: input("publish-package-set-order") || "as-provided",
-    publishPackageMain: input("publish-package-main", true),
+    publishPackageMain:
+      input("publish-package-main") || read(sealedBundleManifest).npm?.name,
     publishRematerializeOnResume: core.getBooleanInput(
       "publish-rematerialize-on-resume",
     ),
@@ -480,7 +491,10 @@ async function main() {
   const fallbackTag = input("tag", true);
   const channel = input("channel", true);
   const candidatePassportPath = input("candidate-passport-path", true);
-  const buildSummaryPath = input("candidate-build-summary-path", true);
+  const buildSummaryPath = resolveCandidateBuildSummaryPath({
+    candidatePassportPath,
+    declaredPath: input("candidate-build-summary-path"),
+  });
   const candidate = read(candidatePassportPath);
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));

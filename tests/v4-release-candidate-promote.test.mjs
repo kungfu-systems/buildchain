@@ -47,3 +47,22 @@ test("legacy promotion shells fail closed without the standard summary", () => {
     /candidate-build-summary-path is required/,
   );
 });
+
+test("legacy promotion shells fail closed on ambiguous build summaries", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
+  const passport = path.join(
+    root,
+    "passport",
+    "release-candidate-passport.json",
+  );
+  fs.mkdirSync(path.dirname(passport), { recursive: true });
+  fs.writeFileSync(passport, "{}\n");
+  for (const directory of ["summary-a", "summary-b"]) {
+    fs.mkdirSync(path.join(root, directory), { recursive: true });
+    fs.writeFileSync(path.join(root, directory, "build-summary.json"), "{}\n");
+  }
+  assert.throws(
+    () => resolveCandidateBuildSummaryPath({ candidatePassportPath: passport }),
+    /ambiguous standard summary artifacts/,
+  );
+});

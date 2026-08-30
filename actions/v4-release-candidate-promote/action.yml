@@ -34,18 +34,18 @@ inputs:
     { required: true, description: "Sealed publication qualification receipt" }
   candidate-build-summary-path:
     {
-      required: true,
+      required: false,
       description: "Downloaded release candidate build summary",
     }
   sealed-bundle-root:
-    { required: true, description: "Downloaded sealed product payload root" }
+    { required: false, description: "Downloaded sealed product payload root" }
   sealed-bundle-manifest:
     {
-      required: true,
+      required: false,
       description: "Downloaded sealed product payload manifest",
     }
   required-artifacts-path:
-    { required: true, description: "Downloaded required product artifact set" }
+    { required: false, description: "Downloaded required product artifact set" }
   publisher-workflow-sha:
     { required: true, description: "Exact canonical publisher workflow SHA" }
   runtime-commit:
@@ -71,7 +71,7 @@ inputs:
   publish-package-set-order:
     { default: "as-provided", description: "Package publication ordering" }
   publish-package-main:
-    { required: true, description: "Main package publication identity" }
+    { required: false, description: "Main package publication identity" }
   publish-auth:
     {
       default: "trusted-publishing",

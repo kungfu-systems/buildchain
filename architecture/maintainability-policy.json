@@ -27,7 +27,7 @@
   "repositoryBudgets": {
     "baselineRevision": "858dbe00b6206a8f356b4a12d2659bee7a72e71b",
     "maxHandMaintainedSourceFiles": 448,
-    "maxHandMaintainedSourceLines": 165760,
+    "maxHandMaintainedSourceLines": 165772,
     "maxWorkflowFiles": 77,
     "maxWorkflowLines": 26791,
     "latestTransition": "Legacy queued native candidates are quarantined from exact Warrant selection and heartbeat authority.",
