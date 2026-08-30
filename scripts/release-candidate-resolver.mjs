@@ -725,7 +725,6 @@ export async function resolveReleaseCandidateArtifacts({
     const noun = publishArtifactKind === "npm" ? "npm package tarballs" : "platform manifests";
     throw new Error(`expected at least ${minimumPayloadCount} downloaded ${noun}, found ${downloadedRequiredArtifactCount}`);
   }
-  const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
   const sealedBundle = publishArtifactKind === "npm"
     ? createResolvedPublicationSealedBundle({
         bundleRoot: payloadDir,
@@ -741,6 +740,7 @@ export async function resolveReleaseCandidateArtifacts({
         releaseAssetPaths,
       })
     : undefined;
+  const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
   const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
     manifests,
     version: [sealedBundle?.manifest?.npm?.version, passport.target?.version, ""].find(Boolean),

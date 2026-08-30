@@ -676,7 +676,7 @@ test(
         () => assertContainedSymlinks(root),
         /outside the app bundle/,
       );
-      fs.rmSync(path.join(root, "Contents", "escape"));
+      fs.unlinkSync(path.join(root, "Contents", "escape"));
       fs.symlinkSync(outsideLink, path.join(root, "Contents", "indirect"));
       fs.symlinkSync("indirect", path.join(root, "Contents", "escape"));
       assert.throws(

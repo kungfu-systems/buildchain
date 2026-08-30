@@ -12,6 +12,7 @@ import {
   createNativeCommandContract,
   devDeliveryContentRoot,
   normalizeDevDeliveryQueue,
+  rankDevDeliveryCandidates,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
@@ -203,10 +204,11 @@ test("legacy follower recovery preserves an unrelated exact active Warrant", () 
     evidence: [hostedTerminalEvidence(legacyFollower, 501)],
   };
 
-  assert.throws(
-    () => normalizeDevDeliveryQueue(legacy),
-    /live native candidate requires exact native proof/u,
-  );
+  const observed = normalizeDevDeliveryQueue(legacy);
+  assert.deepEqual(observed.activeWarrant, activeWarrant);
+  assert.equal(observed.candidates[1].status, "queued");
+  assert.deepEqual(rankDevDeliveryCandidates(observed), []);
+  assert.equal(observed.stateRoot, legacy.stateRoot);
 
   const recovered = recoverLegacyTerminalDevDeliveryQueue(legacy, request, {
     now: "2026-08-04T00:11:00Z",

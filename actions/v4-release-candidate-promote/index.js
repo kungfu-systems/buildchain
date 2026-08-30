@@ -480,10 +480,7 @@ async function main() {
   const fallbackTag = input("tag", true);
   const channel = input("channel", true);
   const candidatePassportPath = input("candidate-passport-path", true);
-  const buildSummaryPath = resolveCandidateBuildSummaryPath({
-    candidatePassportPath,
-    declaredPath: input("candidate-build-summary-path"),
-  });
+  const buildSummaryPath = input("candidate-build-summary-path", true);
   const candidate = read(candidatePassportPath);
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));

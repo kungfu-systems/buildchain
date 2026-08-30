@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64325,
-    "current": 56264
+    "measuredExcess": 64324,
+    "current": 56263
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -379,21 +379,21 @@
       "packages/core/dev-delivery-execution-transfer.js": {
         "baseline": {
           "functions": {
-            "verifyNativeExecutionTransfer@469": {
+            "verifyNativeExecutionTransfer@468": {
               "complexity": 36
             }
           }
         },
         "current": {
           "functions": {
-            "verifyNativeExecutionTransfer@469": {
+            "verifyNativeExecutionTransfer@468": {
               "complexity": 36
             }
           }
         },
         "target": {
           "functions": {
-            "verifyNativeExecutionTransfer@469": {
+            "verifyNativeExecutionTransfer@468": {
               "complexity": 25
             }
           }
@@ -2362,7 +2362,7 @@
           "lines": 806
         },
         "current": {
-          "lines": 806
+          "lines": 805
         },
         "target": {
           "lines": 600
@@ -3098,6 +3098,7 @@
     "scripts/check-v3-v4-capability-inventory.mjs",
     ".github/workflows/release-candidate-promote.yml",
     "actions/promote-buildchain-ref/lib.js",
+    "actions/v4-release-candidate-promote/index.js",
     "scripts/check-inventory.mjs",
     "tests/promote-buildchain-ref.test.mjs",
     "tests/promotion-channel-router.test.mjs",
@@ -3107,6 +3108,7 @@
     "scripts/buildchain-cli-help.mjs",
     "scripts/check-v4-floating-consumer-policy-contract.mjs",
     "tests/dev-delivery-warrant.test.mjs",
+    "packages/core/dev-delivery-warrant-state.js",
     "actions/promote-buildchain-ref/internal/version-state.js",
     "packages/core/v4-floating-consumer-release-passport.js",
     "packages/core/release-passport.js",

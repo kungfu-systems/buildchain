@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "4.0.2-alpha.2",
+    "version": "4.0.2-alpha.0",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v4",
@@ -1863,7 +1863,7 @@
         "no consumer command, script, shell, checkout, or executable tail hook is accepted"
       ],
       "breakingDigest": "sha256:9229eb3a000fb408feb6b8793c209c77afbf9327026467d68954470e22e4f8f4",
-      "auditDigest": "sha256:22f671f65179fd69a38de5963d383a0774208baee7e00dde7c581e7d7f27d5cb"
+      "auditDigest": "sha256:28f962e2c7542d650417975ea9d5922816f57c63798e895ed0eac61840a02af4"
     },
     {
       "contractVersion": 1,
@@ -5399,5 +5399,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:6deaf1241a5831a69a377150948220f8f39671c606ddaf10006e17ac40dbde69"
+  "contractDigest": "sha256:ff665fda447efb1d234404901acdb2b2cc092adfbf38a5fbc210709a1981471a"
 }
