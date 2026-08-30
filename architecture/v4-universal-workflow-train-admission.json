@@ -24,8 +24,8 @@
     "statuses": "write"
   },
   "contractRoots": [
-    "sha256:676a1601c6ff67d9eeddd1f12394f6eb0603726b9b10e3d2ec294a92d31eeff2",
     "sha256:7a8d9ec433055ef4b1e4e7dde958e1a55bb4d62ac20c39754723895f58378e9a",
+    "sha256:d6ccb4093fe2e14b439512368c176248ac239556ee8d9372e5def5e4ac4ace36",
     "sha256:de41ff2deab5063f0eab6a98eadd1220210a5119795303ccf00e2ced58813e25"
   ],
   "targetRef": "dev/v4/v4.0",
