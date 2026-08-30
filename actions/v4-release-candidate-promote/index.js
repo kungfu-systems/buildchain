@@ -20,6 +20,7 @@ import {
   validateV4PublicationQualificationReceipt,
 } from "../../packages/core/v4-publication-qualification.js";
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
+import { validateReleaseCandidateRecoveryReceipt } from "../../packages/core/release-candidate-recovery.js";
 import {
   applyProductPublication,
   planProductPublication,
@@ -54,6 +55,63 @@ export function resolveCandidateBuildSummaryPath({
     );
   }
   return matches[0];
+}
+
+export function resolvePromotionTarget({
+  candidatePassportPath,
+  candidate,
+  repository,
+  channel,
+  sourceSha,
+  declaredTargetRef = "",
+  declaredTargetSha = "",
+}) {
+  const sealedBundleRoot = path.resolve(
+    path.dirname(candidatePassportPath),
+    "../..",
+  );
+  const recoveryReceiptPath = path.join(
+    path.dirname(sealedBundleRoot),
+    "recovery-receipt.json",
+  );
+  const hasRecoveryReceipt = fs.existsSync(recoveryReceiptPath);
+  const recoveryReceipt = hasRecoveryReceipt ? read(recoveryReceiptPath) : null;
+  const targetRef = String(
+    declaredTargetRef || recoveryReceipt?.target?.ref || "",
+  ).trim();
+  const targetSha = String(
+    declaredTargetSha || recoveryReceipt?.target?.sha || "",
+  ).trim();
+  if (!targetRef || !targetSha) {
+    throw new Error(
+      "target-ref and target-sha are required when no standard recovery receipt supplies them",
+    );
+  }
+  if (!hasRecoveryReceipt) {
+    if (sourceSha !== targetSha)
+      throw new Error(
+        "protected source SHA must equal target-sha without recovery evidence",
+      );
+    return { targetRef, targetSha };
+  }
+  const validation = validateReleaseCandidateRecoveryReceipt({
+    receipt: recoveryReceipt,
+    passport: candidate,
+    repository,
+    targetChannel: channel,
+    targetRef,
+    targetSha,
+    targetTree: candidate.source?.treeHash,
+  });
+  if (!validation.ok)
+    throw new Error(
+      `standard recovery receipt is invalid: ${validation.errors.join("; ")}`,
+    );
+  if (![targetSha, candidate.source?.headSha].includes(sourceSha))
+    throw new Error(
+      "legacy source-sha is not bound to the recovered candidate or protected target",
+    );
+  return { targetRef, targetSha };
 }
 
 export function aggregateV4ReleasePassport({
@@ -486,7 +544,7 @@ function setOutputs(documents, settlement) {
 
 async function main() {
   const repository = input("repository", true);
-  const sourceSha = input("source-sha", true);
+  const declaredSourceSha = input("source-sha", true);
   const fallbackVersion = input("version", true);
   const fallbackTag = input("tag", true);
   const channel = input("channel", true);
@@ -496,6 +554,16 @@ async function main() {
     declaredPath: input("candidate-build-summary-path"),
   });
   const candidate = read(candidatePassportPath);
+  const { targetRef, targetSha } = resolvePromotionTarget({
+    candidatePassportPath,
+    candidate,
+    repository,
+    channel,
+    sourceSha: declaredSourceSha,
+    declaredTargetRef: input("target-ref"),
+    declaredTargetSha: input("target-sha"),
+  });
+  const sourceSha = targetSha;
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));
   const token = input("token", true);
@@ -512,8 +580,8 @@ async function main() {
     octokit,
     mutationOctokit,
     repository,
-    targetRef: input("target-ref", true),
-    targetSha: input("target-sha", true),
+    targetRef,
+    targetSha,
     candidate,
     candidatePassportPath,
     buildSummaryPath,

@@ -20,11 +20,14 @@ inputs:
   tag: { required: true, description: "Exact publication tag" }
   channel: { required: true, description: "alpha, release, or stable" }
   target-ref:
-    { required: true, description: "Protected release channel branch" }
+    {
+      required: false,
+      description: "Protected release channel branch; recovered from sealed candidate evidence for legacy shells",
+    }
   target-sha:
     {
-      required: true,
-      description: "Exact protected channel SHA admitted by QUALIFY",
+      required: false,
+      description: "Exact protected channel SHA admitted by QUALIFY; recovered from sealed candidate evidence for legacy shells",
     }
   candidate-passport-path:
     { required: true, description: "Downloaded release candidate Passport" }

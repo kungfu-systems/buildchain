@@ -4,7 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { resolveCandidateBuildSummaryPath } from "../actions/v4-release-candidate-promote/index.js";
+import {
+  resolveCandidateBuildSummaryPath,
+  resolvePromotionTarget,
+} from "../actions/v4-release-candidate-promote/index.js";
+
+import { sha256Json } from "../packages/core/release-candidate.js";
 
 test("legacy promotion shells recover the standard sealed build summary", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
@@ -64,5 +69,109 @@ test("legacy promotion shells fail closed on ambiguous build summaries", () => {
   assert.throws(
     () => resolveCandidateBuildSummaryPath({ candidatePassportPath: passport }),
     /ambiguous standard summary artifacts/,
+  );
+});
+
+function recoveredPromotionFixture() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
+  const candidatePassportPath = path.join(
+    root,
+    "sealed-candidate",
+    "artifacts",
+    "candidate",
+    "release-candidate-passport.json",
+  );
+  const candidate = {
+    repository: "kungfu-systems/buildchain",
+    candidateHash: "a".repeat(64),
+    source: { headSha: "1".repeat(40), treeHash: "2".repeat(40) },
+  };
+  const recoveryReceipt = {
+    schemaVersion: 1,
+    contract: "kungfu-buildchain-release-candidate-recovery/v1",
+    action: "reused",
+    repository: candidate.repository,
+    originalCandidate: {
+      sourceSha: candidate.source.headSha,
+      tree: candidate.source.treeHash,
+    },
+    target: {
+      channel: "alpha",
+      ref: "alpha/v4/v4.0",
+      sha: "3".repeat(40),
+      tree: candidate.source.treeHash,
+      version: "4.0.2-alpha.3",
+    },
+    recovered: { candidateRoot: `sha256:${candidate.candidateHash}` },
+    skippedBuildStages: ["install", "build", "verify", "platform-matrix"],
+    payloadBytes: "unchanged",
+  };
+  recoveryReceipt.root = `sha256:${sha256Json(recoveryReceipt)}`;
+  fs.mkdirSync(path.dirname(candidatePassportPath), { recursive: true });
+  fs.writeFileSync(candidatePassportPath, `${JSON.stringify(candidate)}\n`);
+  fs.writeFileSync(
+    path.join(root, "recovery-receipt.json"),
+    `${JSON.stringify(recoveryReceipt)}\n`,
+  );
+  return { candidatePassportPath, candidate, recoveryReceipt };
+}
+
+test("legacy promotion shells recover the protected target from rooted evidence", () => {
+  const { candidatePassportPath, candidate, recoveryReceipt } =
+    recoveredPromotionFixture();
+  assert.deepEqual(
+    resolvePromotionTarget({
+      candidatePassportPath,
+      candidate,
+      repository: candidate.repository,
+      channel: "alpha",
+      sourceSha: candidate.source.headSha,
+    }),
+    {
+      targetRef: recoveryReceipt.target.ref,
+      targetSha: recoveryReceipt.target.sha,
+    },
+  );
+});
+
+test("legacy promotion shells reject a drifted recovered target", () => {
+  const { candidatePassportPath, candidate } = recoveredPromotionFixture();
+  assert.throws(
+    () =>
+      resolvePromotionTarget({
+        candidatePassportPath,
+        candidate,
+        repository: candidate.repository,
+        channel: "alpha",
+        sourceSha: candidate.source.headSha,
+        declaredTargetRef: "alpha/v4/v4.1",
+      }),
+    /target ref mismatch/,
+  );
+});
+
+test("fresh promotion shells require exact protected source coordinates", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
+  const candidatePassportPath = path.join(
+    root,
+    "sealed-candidate",
+    "artifacts",
+    "candidate",
+    "release-candidate-passport.json",
+  );
+  const candidate = { source: { headSha: "1".repeat(40) } };
+  fs.mkdirSync(path.dirname(candidatePassportPath), { recursive: true });
+  assert.throws(
+    () =>
+      resolvePromotionTarget({
+        candidatePassportPath,
+        candidate,
+        repository: "kungfu-systems/buildchain",
+        channel: "alpha",
+        sourceSha: candidate.source.headSha,
+        declaredTargetRef: "alpha/v4/v4.0",
+        declaredTargetSha: "3".repeat(40),
+      }),
+    /protected source SHA must equal target-sha/,
   );
 });
