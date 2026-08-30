@@ -467,9 +467,9 @@ test("Bootstrap inherits caller authority without widening compatibility facades
     new URL("../.github/workflows/bootstrap.yml", import.meta.url),
     "utf8",
   );
-  assert.doesNotMatch(workflow.slice(0, workflow.indexOf("\njobs:")), /^permissions:/mu);
   assert.doesNotMatch(
-    workflow.slice(workflow.indexOf("\n  execute:"), workflow.indexOf("\n  settle:")),
-    /^    permissions:/mu,
+    workflow.slice(0, workflow.indexOf("\njobs:")),
+    /^permissions:/mu,
   );
+  assert.doesNotMatch(workflow, /^    permissions:/mu);
 });
