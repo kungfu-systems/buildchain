@@ -62,3 +62,18 @@ test("self-promotion recovery retains the sealed npm payload selector", () => {
   );
   assert.match(recovery, /artifact-patterns: buildchain-package-\*/);
 });
+
+test("protected alpha recovery bootstraps from the current workflow runtime", () => {
+  assert.match(
+    promotion,
+    /buildchain-ref: \$\{\{[^\n]*inputs\['recover-durable-transaction'\] == true && github\.sha \|\| 'v4-alpha' \}\}/,
+  );
+  assert.match(
+    promotion,
+    /github\.event_name == 'workflow_dispatch' &&\s*startsWith\(inputs\['target-ref'\], 'alpha\/'\) &&\s*\(inputs\['resume-candidate-run-id'\] != '' \|\| inputs\['recover-durable-transaction'\] == true\) &&\s*inputs\.sha != ''/,
+  );
+  assert.match(
+    promotion,
+    /inputs\['recover-durable-transaction'\] == true && inputs\.sha == ''/,
+  );
+});
