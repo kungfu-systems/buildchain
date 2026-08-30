@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { resolveFreshPublicationVersion } from "../scripts/release-candidate-resolver.mjs";
 
 const promotion = fs.readFileSync(
   path.resolve(".github/workflows/buildchain-ref-promotion.yml"),
@@ -83,5 +84,13 @@ test("protected alpha recovery bootstraps from the current workflow runtime", ()
 });
 
 test("candidate sealing precedes required-artifact version projection", () => {
-  assert.ok(resolver.indexOf("const sealedBundle =") < resolver.indexOf("sealedBundle?.manifest?.npm?.version"));
+  assert.ok(resolver.indexOf("const sealedBundle =") < resolver.lastIndexOf("resolveFreshPublicationVersion({ sealedBundle"));
+});
+
+test("fresh self-publication projects the sealed npm version instead of the fixture candidate version", () => {
+  assert.equal(resolveFreshPublicationVersion({
+    sealedBundle: { manifest: { npm: { version: "4.0.2-alpha.2" } } },
+    candidateVersion: "22.22.3-kf.0",
+  }), "4.0.2-alpha.2");
+  assert.equal(resolveFreshPublicationVersion({ candidateVersion: "22.22.3-kf.0" }), "22.22.3-kf.0");
 });

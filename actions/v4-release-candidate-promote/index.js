@@ -55,6 +55,50 @@ export function resolveCandidateBuildSummaryPath({
   return fallback;
 }
 
+function standardCandidatePath(candidatePassportPath, declaredPath, relativePath, label) {
+  if (String(declaredPath || "").trim()) return declaredPath;
+  const fallback = path.join(path.dirname(candidatePassportPath), "..", relativePath);
+  if (!fs.existsSync(path.resolve(fallback)))
+    throw new Error(`${label} is required when the sealed candidate has no standard ${relativePath}`);
+  return fallback;
+}
+
+export function resolveCandidateProviderInputs({ candidatePassportPath, sealedBundleRoot = "", sealedBundleManifest = "", requiredArtifactsPath = "", publishPackageMain = "" }) {
+  const resolved = {
+    sealedBundleRoot: standardCandidatePath(candidatePassportPath, sealedBundleRoot, "payloads", "sealed-bundle-root"),
+    sealedBundleManifest: standardCandidatePath(candidatePassportPath, sealedBundleManifest, "sealed-bundle.json", "sealed-bundle-manifest"),
+    requiredArtifactsPath: standardCandidatePath(candidatePassportPath, requiredArtifactsPath, "publish-required-artifacts.json", "required-artifacts-path"),
+    publishPackageMain: String(publishPackageMain || "").trim(),
+  };
+  if (!resolved.publishPackageMain) {
+    const main = read(resolved.requiredArtifactsPath).filter(({ role }) => role === "main");
+    if (main.length !== 1 || !String(main[0]?.name || "").trim())
+      throw new Error("publish-package-main is required when the sealed artifact set has no unique main package");
+    resolved.publishPackageMain = String(main[0].name).trim();
+  }
+  return resolved;
+}
+
+export async function resolvePublicationTarget({ octokit, repository, candidate, sourceSha, targetRef = "", targetSha = "" }) {
+  const declaredRef = String(targetRef || "").trim(), declaredSha = String(targetSha || "").trim();
+  if (declaredRef || declaredSha) {
+    if (!declaredRef || !declaredSha || sourceSha !== declaredSha)
+      throw new Error("declared publication target requires matching target-ref, target-sha, and source-sha");
+    return { sourceSha, targetRef: declaredRef, targetSha: declaredSha };
+  }
+  if (sourceSha !== candidate.source?.headSha)
+    throw new Error("legacy promotion target recovery requires the exact candidate source SHA");
+  const number = Number(candidate.pullRequest?.number || 0), baseRef = String(candidate.pullRequest?.baseRef || "").trim();
+  if (!Number.isSafeInteger(number) || number <= 0 || !baseRef)
+    throw new Error("legacy promotion target recovery requires an exact pull request and base ref");
+  const [owner, repo] = repository.split("/");
+  const { data } = await octokit.rest.pulls.get({ owner, repo, pull_number: number });
+  const mergeSha = String(data.merge_commit_sha || "").trim();
+  if (data.merged !== true || data.base?.ref !== baseRef || !/^[0-9a-f]{40}$/u.test(mergeSha))
+    throw new Error("legacy promotion target recovery requires the exact merged pull request");
+  return { sourceSha: mergeSha, targetRef: baseRef, targetSha: mergeSha };
+}
+
 export function aggregateV4ReleasePassport({
   candidate,
   stageCapsules,
@@ -201,6 +245,7 @@ function productProviderRequest({
   candidatePassportPath,
   buildSummaryPath,
   qualification,
+  providerInputs,
 }) {
   return {
     octokit,
@@ -214,14 +259,14 @@ function productProviderRequest({
     qualification,
     requiredStatusCheck: input("required-status-check") || "check",
     publishCommand: input("publish-command"),
-    sealedBundleRoot: input("sealed-bundle-root", true),
-    sealedBundleManifest: input("sealed-bundle-manifest", true),
-    requiredArtifactsPath: input("required-artifacts-path", true),
+    sealedBundleRoot: providerInputs.sealedBundleRoot,
+    sealedBundleManifest: providerInputs.sealedBundleManifest,
+    requiredArtifactsPath: providerInputs.requiredArtifactsPath,
     publishMode: input("publish-mode"),
     publishAuth: input("publish-auth") || "trusted-publishing",
     publishDistTag: input("publish-dist-tag"),
     publishPackageSetOrder: input("publish-package-set-order") || "as-provided",
-    publishPackageMain: input("publish-package-main", true),
+    publishPackageMain: providerInputs.publishPackageMain,
     publishRematerializeOnResume: core.getBooleanInput(
       "publish-rematerialize-on-resume",
     ),
@@ -475,7 +520,7 @@ function setOutputs(documents, settlement) {
 
 async function main() {
   const repository = input("repository", true);
-  const sourceSha = input("source-sha", true);
+  const declaredSourceSha = input("source-sha", true);
   const fallbackVersion = input("version", true);
   const fallbackTag = input("tag", true);
   const channel = input("channel", true);
@@ -487,25 +532,30 @@ async function main() {
   const candidate = read(candidatePassportPath);
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));
-  const octokit = github.getOctokit(input("token", true));
-  const mutationOctokit = github.getOctokit(input("mutation-token", true));
+  const token = input("token", true);
+  const octokit = github.getOctokit(token);
+  const mutationOctokit = github.getOctokit(input("mutation-token") || token);
   assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
+  const publicationTarget = await resolvePublicationTarget({ octokit, repository, candidate, sourceSha: declaredSourceSha, targetRef: input("target-ref"), targetSha: input("target-sha") });
+  const sourceSha = publicationTarget.sourceSha;
   const sourceBinding = await observeProtectedPublicationSource({
     octokit,
     repository,
     protectedSourceSha: sourceSha,
     candidate,
   });
+  const providerInputs = resolveCandidateProviderInputs({ candidatePassportPath, sealedBundleRoot: input("sealed-bundle-root"), sealedBundleManifest: input("sealed-bundle-manifest"), requiredArtifactsPath: input("required-artifacts-path"), publishPackageMain: input("publish-package-main") });
   const providerRequest = productProviderRequest({
     octokit,
     mutationOctokit,
     repository,
-    targetRef: input("target-ref", true),
-    targetSha: input("target-sha", true),
+    targetRef: publicationTarget.targetRef,
+    targetSha: publicationTarget.targetSha,
     candidate,
     candidatePassportPath,
     buildSummaryPath,
     qualification,
+    providerInputs,
   });
   const publicationPlan = await planProductPublication(providerRequest, {
     fallbackVersion,
