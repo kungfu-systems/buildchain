@@ -172,7 +172,7 @@ assert.match(
 assert.match(bootstrapSource, /settle:[\s\S]*needs: \[admit, execute\]/u);
 assert.match(
   bootstrapSource,
-  /ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*candidate\/architecture\/v4-universal-workflow-train-admission\.json/u,
+  /ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*map\(select\(\.status == "completed" and \(\.conclusion \/\/ ""\) != ""\)\)[\s\S]*candidate\/architecture\/v4-universal-workflow-train-admission\.json/u,
 );
 const consumerTemplate = fs.readFileSync(
   path.join(root, contract.bootstrap.consumerTemplate),
@@ -200,7 +200,7 @@ assert.match(
 );
 assert.match(
   consumerRecoveryTemplate,
-  /Parse exact recovery coordinates without Buildchain code[\s\S]*Prove exact independent review before candidate code runs[\s\S]*ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*Admit candidate policy and exact-head checks/u,
+  /Parse exact recovery coordinates without Buildchain code[\s\S]*Prove exact independent review before candidate code runs[\s\S]*ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*Admit candidate policy and exact-head checks[\s\S]*map\(select\(\.status == "completed" and \(\.conclusion \/\/ ""\) != ""\)\)/u,
 );
 assert.match(
   consumerRecoveryTemplate,

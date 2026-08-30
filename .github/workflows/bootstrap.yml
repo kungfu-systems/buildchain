@@ -132,7 +132,7 @@ jobs:
                       commitSha: .commit_id,
                       submittedAt: (.submitted_at | fromdateiso8601 | strftime("%Y-%m-%dT%H:%M:%S.000Z"))
                     })),
-                checks: ($checks[0] | map({name, status, conclusion})),
+                checks: ($checks[0] | map(select(.status == "completed" and (.conclusion // "") != "")) | map({name, status, conclusion})),
                 observedAt: $observed_at
               }
             ' > .buildchain/review-evidence.json
