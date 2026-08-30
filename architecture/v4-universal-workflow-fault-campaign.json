@@ -1,0 +1,72 @@
+{
+  "schema": "kungfu-buildchain-v4-universal-workflow-fault-campaign/v1",
+  "independentFaultsOnly": true,
+  "simultaneousPrimaryAndRecoveryFailureClaimed": false,
+  "externalBoundary": {
+    "id": "github-workflow-parser-or-service-unavailable",
+    "classification": "irreducible-external-availability",
+    "recovered": false
+  },
+  "faults": [
+    {
+      "id": "primary-facade",
+      "injectionTarget": "templates/universal-buildchain-bootstrap.yml",
+      "recoveryRoute": "pre-positioned-recovery-shell",
+      "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
+    },
+    {
+      "id": "typed-input-adapter",
+      "injectionTarget": "packages/core/v4-universal-workflow-bootstrap.js",
+      "recoveryRoute": "exact-train-candidate",
+      "recoveryTarget": "scripts/v4-universal-workflow-engine.mjs"
+    },
+    {
+      "id": "route-selector",
+      "injectionTarget": ".github/workflows/bootstrap.yml",
+      "recoveryRoute": "pre-positioned-recovery-shell",
+      "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
+    },
+    {
+      "id": "ordinary-candidate-loader",
+      "injectionTarget": ".github/workflows/bootstrap.yml",
+      "recoveryRoute": "pre-positioned-recovery-shell",
+      "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
+    },
+    {
+      "id": "router",
+      "injectionTarget": "packages/core/v4-release-invocation.js",
+      "recoveryRoute": "exact-train-candidate",
+      "recoveryTarget": "scripts/v4-universal-workflow-engine.mjs"
+    },
+    {
+      "id": "action",
+      "injectionTarget": "actions/v4-release-candidate-promote/action.yml",
+      "recoveryRoute": "exact-train-candidate",
+      "recoveryTarget": "actions/v4-release-candidate-promote/dist/index.js"
+    },
+    {
+      "id": "cli-runtime",
+      "injectionTarget": "scripts/v4-universal-workflow-engine.mjs",
+      "recoveryRoute": "exact-train-candidate",
+      "recoveryTarget": "scripts/v4-universal-workflow-engine.mjs"
+    },
+    {
+      "id": "recovery-logic",
+      "injectionTarget": "templates/universal-buildchain-bootstrap-recovery.yml",
+      "recoveryRoute": "primary-bootstrap-shell",
+      "recoveryTarget": "templates/universal-buildchain-bootstrap.yml"
+    },
+    {
+      "id": "result-projection",
+      "injectionTarget": ".github/workflows/bootstrap.yml",
+      "recoveryRoute": "pre-positioned-recovery-shell",
+      "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
+    },
+    {
+      "id": "self-dogfood-caller",
+      "injectionTarget": ".github/workflows/universal-bootstrap-dogfood.yml",
+      "recoveryRoute": "consumer-equivalent-recovery-shell",
+      "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
+    }
+  ]
+}

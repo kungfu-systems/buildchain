@@ -3,6 +3,11 @@ name: Dev Delivery Warrant Close
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       buildchain-repository:
         {
           description: "Buildchain runtime repository",
@@ -100,7 +105,15 @@ permissions:
   contents: write
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   close:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Close exact fenced delivery attempt
     runs-on: ubuntu-24.04
     outputs:

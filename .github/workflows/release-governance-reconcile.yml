@@ -3,6 +3,11 @@ name: Release Governance Reconcile
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       branch:
         description: "Managed dev/alpha/release branch whose required checks will be inspected"
         required: true
@@ -56,7 +61,15 @@ permissions:
   pull-requests: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   reconcile:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Reconcile required build aggregate
     runs-on: ubuntu-24.04
     env:

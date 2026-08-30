@@ -20,6 +20,9 @@ on:
       result-root:
         description: "Candidate result root"
         value: ${{ jobs.execute.outputs.result-root }}
+      result-json:
+        description: "Rooted candidate result for schema-derived facade output projection"
+        value: ${{ jobs.execute.outputs.result-json }}
       terminal-receipt-json:
         description: "Terminal receipt with exact runtime and review lineage"
         value: ${{ jobs.settle.outputs.terminal-receipt-json }}

@@ -102,7 +102,7 @@ test("workflow keeps trust ahead of dynamic CodeBuild runner selection", () => {
   );
   assert.match(
     nativeBlock,
-    /if: \$\{\{ needs\.trust-gate\.outputs\.trusted == 'true'/,
+    /if: \$\{\{ inputs\.universal-request-json == '' && \(needs\.trust-gate\.outputs\.trusted == 'true'/,
   );
   assert.match(nativeBlock, /codebuild-\{0\}-\{1\}-\{2\}/);
   assert.match(nativeBlock, /aws-runner-burst\.mjs evidence/);
