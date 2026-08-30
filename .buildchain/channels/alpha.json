@@ -1,0 +1,12 @@
+{
+  "schema": "kungfu.buildchain.signed-channel/v1",
+  "subject": {
+    "repository": "kungfu-systems/buildchain",
+    "sourceSha": "5d360cfe6c3bc5a522134c78f73904e97c949128",
+    "version": "4.0.2-alpha.7",
+    "tag": "v4.0.2-alpha.7",
+    "channel": "alpha"
+  },
+  "qualificationRoot": "sha256:e6cadf64471a9506977cf0d83650199012d840881815a1ac2592af6d912981a5",
+  "releaseAssetsRoot": "sha256:220124c72cd353c43a64416687956395a49c8567427446d3e3edda50cb5d3fd0"
+}
