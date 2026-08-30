@@ -15,6 +15,14 @@ const laneBudgetPath = path.join(
   root,
   "architecture/ci-lane-change-budget.json",
 );
+const recoveryTemplatePath = path.join(
+  root,
+  contract.bootstrap.consumerRecoveryTemplate,
+);
+const recoveryWorkflowPath = path.join(
+  root,
+  contract.bootstrap.consumerRecoveryWorkflow,
+);
 const universalInput = `      universal-request-json:
         description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
         default: ""
@@ -38,7 +46,9 @@ function activeFacadePaths() {
   const retired = new Set(contract.retiredWorkflowSurfaces || []);
   return contract.inventoryWorkflows.filter(
     (relative) =>
-      relative !== contract.bootstrap.publicWorkflow && !retired.has(relative),
+      relative !== contract.bootstrap.publicWorkflow &&
+      relative !== contract.bootstrap.consumerRecoveryWorkflow &&
+      !retired.has(relative),
   );
 }
 
@@ -265,6 +275,9 @@ function updateLaneBudgets() {
     ".github/workflows/bootstrap.yml#admit",
     ".github/workflows/bootstrap.yml#execute",
     ".github/workflows/bootstrap.yml#settle",
+    ".github/workflows/universal-bootstrap-recovery.yml#recovery-admit",
+    ".github/workflows/universal-bootstrap-recovery.yml#recovery-execute",
+    ".github/workflows/universal-bootstrap-recovery.yml#recovery-settle",
     ".github/workflows/universal-bootstrap-dogfood.yml#public-bootstrap",
   ]);
   policy.declarations = policy.declarations.filter(
@@ -294,6 +307,30 @@ function updateLaneBudgets() {
     }),
     laneBudget({
       laneId:
+        ".github/workflows/universal-bootstrap-recovery.yml#recovery-admit",
+      authorityClass: "evidence",
+      triggerClass: "reusable",
+      minutes: 10,
+      metric: "consumer-owned exact-candidate admission latency",
+    }),
+    laneBudget({
+      laneId:
+        ".github/workflows/universal-bootstrap-recovery.yml#recovery-execute",
+      authorityClass: "governed-delegation",
+      triggerClass: "reusable",
+      minutes: 60,
+      metric: "consumer-owned exact-candidate execution latency",
+    }),
+    laneBudget({
+      laneId:
+        ".github/workflows/universal-bootstrap-recovery.yml#recovery-settle",
+      authorityClass: "evidence",
+      triggerClass: "reusable",
+      minutes: 10,
+      metric: "consumer-owned terminal settlement latency",
+    }),
+    laneBudget({
+      laneId:
         ".github/workflows/universal-bootstrap-dogfood.yml#public-bootstrap",
       authorityClass: "governed-delegation",
       triggerClass: "manual",
@@ -308,6 +345,18 @@ function main() {
   const check = process.argv.includes("--check");
   const fresh = process.argv.includes("--fresh");
   materializeSourceRevision();
+  if (check) {
+    if (
+      fs.readFileSync(recoveryWorkflowPath, "utf8") !==
+      fs.readFileSync(recoveryTemplatePath, "utf8")
+    )
+      fail("consumer recovery workflow differs from its pre-positioned template");
+  } else {
+    fs.writeFileSync(
+      recoveryWorkflowPath,
+      fs.readFileSync(recoveryTemplatePath, "utf8"),
+    );
+  }
   for (const relative of activeFacadePaths()) {
     const target = path.join(root, relative);
     const source = fresh

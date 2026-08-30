@@ -14,6 +14,8 @@ on:
         value: ${{ jobs.bootstrap.outputs.terminal-receipt-json }}
       terminal-receipt-root:
         value: ${{ jobs.bootstrap.outputs.terminal-receipt-root }}
+      backflow-root:
+        value: ${{ jobs.bootstrap.outputs.backflow-root }}
 
 permissions:
   contents: read

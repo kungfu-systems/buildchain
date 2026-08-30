@@ -372,6 +372,57 @@
       }
     },
     {
+      "laneId": ".github/workflows/universal-bootstrap-recovery.yml#recovery-admit",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "consumer-owned exact-candidate admission latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-recovery.yml#recovery-execute",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "consumer-owned exact-candidate execution latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
+      "laneId": ".github/workflows/universal-bootstrap-recovery.yml#recovery-settle",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "consumer-owned terminal settlement latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
+      }
+    },
+    {
       "laneId": ".github/workflows/universal-bootstrap-dogfood.yml#public-bootstrap",
       "authorityClass": "governed-delegation",
       "triggerClass": "manual",
