@@ -3135,11 +3135,12 @@
       "secretCount": 0,
       "outputs": [
         "backflow-root",
+        "result-json",
         "runtime-sha",
         "terminal-receipt-json",
         "terminal-receipt-root"
       ],
-      "outputCount": 4,
+      "outputCount": 5,
       "surface": "repository-workflow",
       "capabilityGroup": "api-cli-reference",
       "status": "active",

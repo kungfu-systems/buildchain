@@ -118,6 +118,74 @@ function readGitHubOutputs(outputPath) {
   return outputs;
 }
 
+function rawFileRoot(relative) {
+  const hash = crypto.createHash("sha256");
+  hash.update(fs.readFileSync(new URL(`../${relative}`, import.meta.url)));
+  return `sha256:${hash.digest("hex")}`;
+}
+
+function executeBootstrapConformance(request, admission) {
+  exactObject(
+    request.payload,
+    ["schema", "expectedGovernedWorkflowCount"],
+    "bootstrap conformance payload",
+  );
+  if (
+    request.payload.schema !==
+    "kungfu-buildchain-v4-universal-bootstrap-conformance/v1"
+  )
+    fail("bootstrap conformance payload schema is unsupported");
+  if (
+    !Number.isSafeInteger(request.payload.expectedGovernedWorkflowCount) ||
+    request.payload.expectedGovernedWorkflowCount < 1
+  )
+    fail("bootstrap conformance workflow count is invalid");
+  const architecture = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../architecture/v4-universal-workflow-bootstrap.json",
+        import.meta.url,
+      ),
+    ),
+  );
+  const policy = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "../architecture/v4-universal-workflow-train-admission.json",
+        import.meta.url,
+      ),
+    ),
+  );
+  if (
+    architecture.bootstrapGovernedWorkflows.length !==
+      request.payload.expectedGovernedWorkflowCount ||
+    architecture.migration.candidateEngine !== "bounded-capability-adapters" ||
+    policy.allowedCapabilities.includes("workflow-contract")
+  )
+    fail("candidate Bootstrap conformance does not close execution semantics");
+  for (const relative of architecture.bootstrapGovernedWorkflows) {
+    const source = fs.readFileSync(
+      new URL(`../${relative}`, import.meta.url),
+      "utf8",
+    );
+    if (
+      relative !== architecture.bootstrap.publicWorkflow &&
+      !/(?:\.\/)?\.github\/workflows\/bootstrap\.yml/u.test(source)
+    )
+      fail(`candidate Bootstrap facade is not governed: ${relative}`);
+  }
+  return {
+    schema: "kungfu-buildchain-v4-universal-bootstrap-conformance-result/v1",
+    status: "candidate-engine-executed",
+    runtime: exactRuntime(admission),
+    governedWorkflowCount: architecture.bootstrapGovernedWorkflows.length,
+    architectureRoot: rawFileRoot(
+      "architecture/v4-universal-workflow-bootstrap.json",
+    ),
+    engineRoot: rawFileRoot("scripts/v4-universal-workflow-engine.mjs"),
+  };
+}
+
 async function observeReleaseRoute({
   repository,
   targetRef,
@@ -328,7 +396,7 @@ async function executeReleasePromotion(request, admission) {
 
 async function capabilityResult(request, admission) {
   if (request.capability.id === "bootstrap-conformance")
-    return { payload: request.payload };
+    return executeBootstrapConformance(request, admission);
   if (request.capability.id === "release-invocation") {
     const release = createV4ReleaseInvocation(request.payload);
     return {
@@ -338,28 +406,6 @@ async function capabilityResult(request, admission) {
   }
   if (request.capability.id === "release-candidate-promote")
     return executeReleasePromotion(request, admission);
-  if (request.capability.id === "workflow-contract") {
-    exactObject(
-      request.payload,
-      ["schema", "workflowId", "inputs"],
-      "workflow contract payload",
-    );
-    if (
-      request.payload.schema !==
-      "kungfu-buildchain-v4-universal-workflow-contract/v1"
-    )
-      fail("workflow contract payload schema is unsupported");
-    exactObject(
-      request.payload.inputs,
-      Object.keys(request.payload.inputs),
-      "workflow contract inputs",
-    );
-    validateWorkflowInputs(request.payload.workflowId, request.payload.inputs);
-    return {
-      workflowId: request.payload.workflowId,
-      normalizedInputs: request.payload.inputs,
-    };
-  }
   fail(`candidate capability is not implemented: ${request.capability.id}`);
 }
 

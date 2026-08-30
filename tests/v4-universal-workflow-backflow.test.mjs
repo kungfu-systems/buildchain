@@ -33,7 +33,15 @@ function request() {
       contractRoots: [root("b")],
       permissions: { contents: "write" },
     },
-    payload: { schema: "example/v1" },
+    payload: {
+      schema: "kungfu-buildchain-v4-universal-release-promotion/v1",
+      inputs: {
+        channel: "alpha",
+        "dry-run": false,
+        "target-ref": "alpha/v4/v4.0",
+        "target-sha": sha("2"),
+      },
+    },
   };
 }
 
@@ -64,17 +72,60 @@ test("successful Train delivery binds one exact protected backflow PR", () => {
   assert.equal(plan.pullRequest, 3320);
   assert.equal(plan.trainSha, sha("1"));
   assert.match(plan.backflowRoot, /^sha256:[0-9a-f]{64}$/u);
-  assert.match(plan.body, /does not designate the Train candidate as a Buildchain release/u);
+  assert.match(
+    plan.body,
+    /does not designate the Train candidate as a Buildchain release/u,
+  );
 });
 
 test("failed or non-Train deliveries cannot claim backflow", () => {
   const failed = receipt();
   failed.status = "failed";
-  assert.throws(() => createV4UniversalBackflowPlan({ request: request(), receipt: failed }));
+  assert.throws(() =>
+    createV4UniversalBackflowPlan({ request: request(), receipt: failed }),
+  );
   const exact = request();
   exact.mode = "exact";
   exact.candidate.discoveryRef = sha("1");
-  assert.throws(() => createV4UniversalBackflowPlan({ request: exact, receipt: receipt(exact) }));
+  assert.throws(() =>
+    createV4UniversalBackflowPlan({ request: exact, receipt: receipt(exact) }),
+  );
+  const dryRun = request();
+  dryRun.payload.inputs["dry-run"] = true;
+  assert.throws(() =>
+    createV4UniversalBackflowPlan({
+      request: dryRun,
+      receipt: receipt(dryRun),
+    }),
+  );
+});
+
+test("conformance and dry-run successes skip backflow without provider access", async () => {
+  for (const requestValue of [
+    (() => {
+      const value = request();
+      value.payload.inputs["dry-run"] = true;
+      return value;
+    })(),
+    (() => {
+      const value = request();
+      value.capability.id = "bootstrap-conformance";
+      value.payload = {
+        schema: "kungfu-buildchain-v4-universal-bootstrap-conformance/v1",
+        expectedGovernedWorkflowCount: 40,
+      };
+      return value;
+    })(),
+  ]) {
+    const result = await upsertV4UniversalBackflow({
+      request: requestValue,
+      receipt: receipt(requestValue),
+      token: "",
+      fetchImpl: async () => assert.fail("backflow must not access GitHub"),
+    });
+    assert.equal(result.action, "skipped");
+    assert.equal(result.backflowRoot, "");
+  }
 });
 
 test("the coordinator updates the exact existing backflow receipt", async () => {
@@ -91,8 +142,16 @@ test("the coordinator updates the exact existing backflow receipt", async () => 
           },
         }
       : url.includes("/issues/3320/comments?")
-        ? [{ id: 7, body: `<!-- buildchain-universal-backflow:${sha("1")} --> old` }]
-        : { html_url: "https://github.com/kungfu-systems/buildchain/pull/3320#issuecomment-7" };
+        ? [
+            {
+              id: 7,
+              body: `<!-- buildchain-universal-backflow:${sha("1")} --> old`,
+            },
+          ]
+        : {
+            html_url:
+              "https://github.com/kungfu-systems/buildchain/pull/3320#issuecomment-7",
+          };
     return { ok: true, status: 200, text: async () => JSON.stringify(value) };
   };
   const result = await upsertV4UniversalBackflow({
