@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,7 +6,6 @@ import {
   validateV4UniversalWorkflowRequest,
   v4UniversalWorkflowRequestRoot,
 } from "../packages/core/v4-universal-workflow-bootstrap.js";
-
 const SHA = /^[0-9a-f]{40}$/u;
 const ROOT = /^sha256:[0-9a-f]{64}$/u;
 
