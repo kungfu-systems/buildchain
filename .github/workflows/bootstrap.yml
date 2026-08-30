@@ -169,6 +169,12 @@ jobs:
       result-json: ${{ steps.execute.outputs.result-json }}
       result-root: ${{ steps.execute.outputs.result-root }}
     steps:
+      - name: Checkout unchanged consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
       - name: Checkout exact admitted candidate
         uses: actions/checkout@v7.0.0
         with:

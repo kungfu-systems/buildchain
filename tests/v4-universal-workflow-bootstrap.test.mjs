@@ -280,6 +280,17 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
       }),
     /candidate engine checkout does not match/u,
   );
+  const tamperedRequest = structuredClone(requestValue);
+  tamperedRequest.payload = { tampered: true };
+  assert.throws(
+    () =>
+      run("execute", {
+        BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(tamperedRequest),
+        BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
+        BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
+      }),
+    /does not match the admitted request root/u,
+  );
 });
 
 test("the shared candidate engine owns canonical ReleaseInvocation projection", () => {
@@ -326,6 +337,52 @@ test("the shared candidate engine owns canonical ReleaseInvocation projection", 
   );
 });
 
+test("release promotion inputs are schema-derived and dry-run before provider effects", () => {
+  const policyValue = policy({
+    allowedCapabilities: ["release-candidate-promote"],
+  });
+  const requestValue = request(policyValue);
+  requestValue.capability.id = "release-candidate-promote";
+  requestValue.payload = {
+    schema: "kungfu-buildchain-v4-universal-release-promotion/v1",
+    inputs: {
+      channel: "alpha",
+      "dry-run": true,
+      "target-ref": "alpha/v1/v1.0",
+      "target-sha": sha("2"),
+    },
+    dryRunObservation: {
+      observedSha: sha("2"),
+      comparisonStatus: "identical",
+    },
+  };
+  const admission = admitV4UniversalWorkflow({
+    ...consumerObservation(),
+    request: requestValue,
+    policy: policyValue,
+    observedRefSha: sha("1"),
+    reviewEvidence: reviewEvidence(),
+    now: "2026-08-30T12:00:00.000Z",
+  });
+  const engine = fileURLToPath(
+    new URL("../scripts/v4-universal-workflow-engine.mjs", import.meta.url),
+  );
+  const result = JSON.parse(
+    execFileSync(process.execPath, [engine, "execute"], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
+        BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
+        BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
+      },
+    }),
+  );
+  assert.equal(result.status, "succeeded");
+  assert.equal(result.output.dryRun, true);
+  assert.equal(result.output.route.decision, "Fresh");
+});
+
 test("candidate capability failures still produce one rooted terminal receipt", () => {
   const policyValue = policy({ allowedCapabilities: ["future-capability"] });
   const requestValue = request(policyValue);
@@ -364,4 +421,47 @@ test("candidate capability failures still produce one rooted terminal receipt", 
     }),
   );
   assert.equal(receipt.status, "failed");
+});
+
+test("one schema-derived capability normalizes every active public workflow contract", () => {
+  const workflows = JSON.parse(
+    fs.readFileSync(
+      new URL("../dist/site/workflow-registry.json", import.meta.url),
+      "utf8",
+    ),
+  ).workflows.filter((workflow) => workflow.reusable);
+  const policyValue = policy({ allowedCapabilities: ["workflow-contract"] });
+  const engine = fileURLToPath(
+    new URL("../scripts/v4-universal-workflow-engine.mjs", import.meta.url),
+  );
+  for (const workflow of workflows) {
+    const requestValue = request(policyValue);
+    requestValue.capability.id = "workflow-contract";
+    requestValue.payload = {
+      schema: "kungfu-buildchain-v4-universal-workflow-contract/v1",
+      workflowId: workflow.id,
+      inputs: {},
+    };
+    const admission = admitV4UniversalWorkflow({
+      ...consumerObservation(),
+      request: requestValue,
+      policy: policyValue,
+      observedRefSha: sha("1"),
+      reviewEvidence: reviewEvidence(),
+      now: "2026-08-30T12:00:00.000Z",
+    });
+    const result = JSON.parse(
+      execFileSync(process.execPath, [engine, "execute"], {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          BUILDCHAIN_UNIVERSAL_REQUEST_JSON: JSON.stringify(requestValue),
+          BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: JSON.stringify(admission),
+          BUILDCHAIN_UNIVERSAL_ENGINE_SHA: sha("1"),
+        },
+      }),
+    );
+    assert.equal(result.status, "succeeded", workflow.id);
+    assert.equal(result.output.workflowId, workflow.id);
+  }
 });
