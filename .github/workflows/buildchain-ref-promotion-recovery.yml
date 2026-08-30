@@ -39,7 +39,7 @@ permissions:
 jobs:
   resume:
     name: Adapt recovery inputs into the canonical v4 publisher
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@420e1e59bca6d3231b62914cb2a18f8a2f7dcbe4
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@6b14af53ff86bb3731d2d346a0d7fc9f8ac0f321
     permissions:
       actions: write
       artifact-metadata: write
