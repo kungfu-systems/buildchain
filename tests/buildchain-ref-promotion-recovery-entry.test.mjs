@@ -15,6 +15,10 @@ const publicPromotion = fs.readFileSync(
   path.resolve(".github/workflows/release-candidate-promote.yml"),
   "utf8",
 );
+const resolver = fs.readFileSync(
+  path.resolve("scripts/release-candidate-resolver.mjs"),
+  "utf8",
+);
 
 function nestedKeys(source, marker) {
   const lines = source.split("\n");
@@ -61,4 +65,6 @@ test("self-promotion recovery retains the sealed npm payload selector", () => {
     /artifact-patterns: \$\{\{ inputs\['resume-candidate-run-id'\] != '' && ''/,
   );
   assert.match(recovery, /artifact-patterns: buildchain-package-\*/);
+  assert.match(promotion, /required-artifact-count: 0/);
+  assert.match(recovery, /required-artifact-count: 0/);
 });

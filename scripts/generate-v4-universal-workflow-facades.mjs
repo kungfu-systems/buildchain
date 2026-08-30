@@ -37,11 +37,9 @@ const bootstrapJob = `  universal-bootstrap:
       request-json: \${{ inputs.universal-request-json }}
 
 `;
-
 function fail(message) {
   throw new Error(message);
 }
-
 function activeFacadePaths() {
   const retired = new Set(contract.retiredWorkflowSurfaces || []);
   return contract.inventoryWorkflows.filter(
@@ -51,14 +49,12 @@ function activeFacadePaths() {
       !retired.has(relative),
   );
 }
-
 function sourceRevision() {
   const revision = contract.migration.facadeSourceRevision;
   if (!/^[0-9a-f]{40}$/u.test(revision || ""))
     fail("migration.facadeSourceRevision must be an exact commit");
   return revision;
 }
-
 function materializeSourceRevision() {
   const revision = sourceRevision();
   try {
@@ -89,18 +85,15 @@ function materializeSourceRevision() {
     );
   }
 }
-
 function frozenFacadeSource(relative) {
   return execFileSync("git", ["show", `${sourceRevision()}:${relative}`], {
     cwd: root,
     encoding: "utf8",
   });
 }
-
 function isChannelGeneratedFacade(relative) {
   return (contract.migration.channelGeneratedFacades || []).includes(relative);
 }
-
 function addUniversalInput(source, relative) {
   if (source.includes("      universal-request-json:\n")) return source;
   const workflowCall = source.match(/^(\s*)workflow_call:\s*$/mu);
@@ -114,7 +107,6 @@ function addUniversalInput(source, relative) {
   }
   return `${source.slice(0, callEnd + 1)}\n${inputHeader}${universalInput}${source.slice(callEnd + 1)}`;
 }
-
 function conditionExpression(source, relative, jobId) {
   const child = source.match(/^(\s+)[A-Za-z0-9_-]+:/mu);
   const indent = child?.[1] || "    ";
@@ -154,7 +146,6 @@ function conditionExpression(source, relative, jobId) {
     value: `${indent}if: \${{ inputs.universal-request-json == '' && (${inner}) }}\n`,
   };
 }
-
 function guardCompatibilityJobs(source, relative) {
   const jobs = source.match(/^jobs:\s*$/mu);
   if (!jobs) fail(`${relative} has no jobs mapping`);
@@ -182,11 +173,9 @@ function guardCompatibilityJobs(source, relative) {
     ? withGuards
     : `${withGuards.slice(0, bodyStart)}${bootstrapJob}${withGuards.slice(bodyStart)}`;
 }
-
 export function migrateV4UniversalWorkflowFacade(source, relative) {
   return guardCompatibilityJobs(addUniversalInput(source, relative), relative);
 }
-
 function verify(source, relative) {
   for (const snippet of [
     "      universal-request-json:\n",
@@ -217,7 +206,6 @@ function verify(source, relative) {
       );
   }
 }
-
 function laneBudget({ laneId, authorityClass, triggerClass, minutes, metric }) {
   return {
     laneId,
@@ -235,7 +223,6 @@ function laneBudget({ laneId, authorityClass, triggerClass, minutes, metric }) {
     },
   };
 }
-
 function updateLaneBudgets() {
   const policy = JSON.parse(fs.readFileSync(laneBudgetPath, "utf8"));
   const mixed = new Set([
@@ -370,7 +357,6 @@ function updateLaneBudgets() {
   );
   fs.writeFileSync(laneBudgetPath, `${JSON.stringify(policy, null, 2)}\n`);
 }
-
 function main() {
   const check = process.argv.includes("--check");
   const fresh = process.argv.includes("--fresh");
@@ -414,7 +400,6 @@ function main() {
     );
   }
 }
-
 const isMain =
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

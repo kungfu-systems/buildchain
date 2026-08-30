@@ -785,14 +785,13 @@ async function recoverCandidateEvidence({
   for (const artifact of [selected.passport, selected.summary]) initialDownloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   const passport = readOnlyJson(initialDownloads[0].files.filter((file) => path.basename(file.path) === "release-candidate-passport.json"), "release-candidate-passport.json");
   const buildSummary = readOnlyJson(initialDownloads[1].files.filter((file) => path.basename(file.path) === "build-summary.json"), "build-summary.json");
-  const sidecarFiles = initialDownloads[0].files.filter(
-    (file) =>
-      path.basename(file.path) === "release-candidate-stage-capsules.json",
-  );
-  const stageCapsuleSidecar =
-    sidecarFiles.length === 1
-      ? readOnlyJson(sidecarFiles, "release-candidate-stage-capsules.json")
-      : undefined;
+  const [stageCapsuleFile, publicationQualificationFile] = [
+    "release-candidate-stage-capsules.json",
+    "release-candidate-publication-qualification.json",
+  ].map((name) => initialDownloads[0].files.find((file) => path.basename(file.path) === name));
+  const stageCapsuleSidecar = stageCapsuleFile
+    ? readOnlyJson([stageCapsuleFile], "release-candidate-stage-capsules.json")
+    : undefined;
   const { names: requiredNames, publicationNames } = candidateArtifactNames({ passport, selected, artifacts, artifactPatterns });
   const chosen = artifacts.filter((artifact) => requiredNames.has(artifact.name));
   if (chosen.length !== requiredNames.size) {
@@ -804,7 +803,7 @@ async function recoverCandidateEvidence({
   for (const artifact of chosen.filter((entry) => ![selected.passport.id, selected.summary.id].includes(entry.id))) downloads.push(await downloadArtifact({ artifact, repoInfo, apiUrl, token, archiveDir, bundleRoot, fetchImpl }));
   return {
     run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-    passport, buildSummary, stageCapsuleSidecar, chosen, downloads, publicationNames,
+    passport, buildSummary, stageCapsuleSidecar, stageCapsuleFile, publicationQualificationFile, chosen, downloads, publicationNames,
   };
 }
 
@@ -878,7 +877,7 @@ export async function resumeFromCandidateRun({
   try {
     const {
       run, workflow, selected, resolvedOutput, bundleRoot, initialDownloads,
-      passport, buildSummary, stageCapsuleSidecar, chosen, downloads, publicationNames,
+      passport, buildSummary, stageCapsuleSidecar, stageCapsuleFile, publicationQualificationFile, chosen, downloads, publicationNames,
     } = await recoverCandidateEvidence({
       repoInfo, runId, artifactName, artifactPatterns, requiredArtifactCount,
       outputDir, apiUrl, token, fetchImpl, archiveDir,
@@ -1023,9 +1022,9 @@ export async function resumeFromCandidateRun({
         sealedBundleRoot: publication.manifest ? outputPath(bundleRoot) : "",
         sealedBundleManifest: publication.manifest ? outputPath(sealedManifestPath) : "",
         recoveryReceipt: outputPath(recoveryReceiptPath),
-        runtimeResumeEvidence: runtimeResumeEvidencePath
-          ? outputPath(runtimeResumeEvidencePath)
-          : "",
+        stageCapsules: stageCapsuleFile ? outputPath(stageCapsuleFile.absolutePath) : "",
+        publicationQualification: publicationQualificationFile ? outputPath(publicationQualificationFile.absolutePath) : "",
+        runtimeResumeEvidence: runtimeResumeEvidencePath ? outputPath(runtimeResumeEvidencePath) : "",
       },
     };
   } finally {
@@ -1077,10 +1076,10 @@ export async function resumeFromCandidateRunCli() {
       "release-candidate-run-url": result.run.url,
       "release-candidate-recovery-receipt-path": result.paths.recoveryReceipt,
       "release-candidate-recovery-root": result.receipt.root,
+      "release-candidate-stage-capsules-path": result.paths.stageCapsules,
+      "release-candidate-publication-qualification-path": result.paths.publicationQualification,
       "v4-runtime-resume-evidence-path": result.paths.runtimeResumeEvidence,
-      "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence
-        ? "node .buildchain/runtime/promotion-shell/scripts/resume-from-candidate-run.mjs finalize"
-        : "",
+      "v4-runtime-resume-finalize-command": result.paths.runtimeResumeEvidence ? "node .buildchain/runtime/promotion-shell/scripts/resume-from-candidate-run.mjs finalize" : "",
       "release-candidate-root": result.candidateRoot,
       "release-candidate-artifact-root": result.artifactRoot,
       "publish-sealed-bundle-root": result.paths.sealedBundleRoot,

@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64325,
-    "current": 56264
+    "measuredExcess": 64324,
+    "current": 56263
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1741,7 +1741,7 @@
           "lines": 1125
         },
         "current": {
-          "lines": 1125
+          "lines": 1124
         },
         "target": {
           "lines": 600
@@ -3098,6 +3098,7 @@
     "scripts/check-v3-v4-capability-inventory.mjs",
     ".github/workflows/release-candidate-promote.yml",
     "actions/promote-buildchain-ref/lib.js",
+    "actions/v4-release-candidate-promote/index.js",
     "scripts/check-inventory.mjs",
     "tests/promote-buildchain-ref.test.mjs",
     "tests/promotion-channel-router.test.mjs",
