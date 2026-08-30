@@ -2492,6 +2492,7 @@ test("release-candidate resolver requires one merged PR-stage RC artifact", asyn
           html_url: "https://github.com/kungfu-systems/libnode/pull/42",
           merged_at: "2026-07-04T00:00:00Z",
           updated_at: "2026-07-04T00:00:00Z",
+          merge_commit_sha: targetSha,
           base: { ref: "alpha/v22/v22.22" },
           head: {
             sha: builtSourceSha,
@@ -2553,7 +2554,6 @@ test("release-candidate resolver requires one merged PR-stage RC artifact", asyn
   assert.equal(result.pullRequest.number, 42);
   assert.equal(seen.length, 3);
 });
-
 test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
   const workspace = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-action-"),
