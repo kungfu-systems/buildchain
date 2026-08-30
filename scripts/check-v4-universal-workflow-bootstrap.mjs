@@ -91,10 +91,14 @@ assert.equal(contract.bootstrap.consumerSourceMutationPerIncident, false);
 assert.equal(contract.bootstrap.buildchainReleasePromotionPerIncident, false);
 assert.equal(contract.bootstrap.selfDogfoodUsesPublicContract, true);
 assert.equal(contract.bootstrap.recoveryDependsOnPublishedBuildchain, false);
-assert.deepEqual(admissionPolicy.contractRoots, [
-  fileRoot("architecture/v4-universal-workflow-bootstrap.json"),
-  fileRoot("packages/core/v4-universal-workflow-bootstrap.js"),
-]);
+assert.deepEqual(
+  admissionPolicy.contractRoots,
+  [
+    fileRoot("architecture/v4-universal-workflow-bootstrap.json"),
+    fileRoot("packages/core/v4-universal-workflow-bootstrap.js"),
+    fileRoot("scripts/v4-universal-workflow-engine.mjs"),
+  ].sort(),
+);
 const bootstrapSource = fs.readFileSync(
   path.join(root, contract.bootstrap.publicWorkflow),
   "utf8",
