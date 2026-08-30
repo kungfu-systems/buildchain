@@ -15,6 +15,10 @@ const publicPromotion = fs.readFileSync(
   path.resolve(".github/workflows/release-candidate-promote.yml"),
   "utf8",
 );
+const resolver = fs.readFileSync(
+  path.resolve("scripts/release-candidate-resolver.mjs"),
+  "utf8",
+);
 
 function nestedKeys(source, marker) {
   const lines = source.split("\n");
@@ -76,4 +80,8 @@ test("protected alpha recovery bootstraps from the current workflow runtime", ()
     promotion,
     /inputs\['recover-durable-transaction'\] == true && inputs\.sha == ''/,
   );
+});
+
+test("candidate sealing precedes required-artifact version projection", () => {
+  assert.ok(resolver.indexOf("const sealedBundle =") < resolver.indexOf("sealedBundle?.manifest?.npm?.version"));
 });

@@ -726,15 +726,6 @@ export async function resolveReleaseCandidateArtifacts({
     throw new Error(`expected at least ${minimumPayloadCount} downloaded ${noun}, found ${downloadedRequiredArtifactCount}`);
   }
   const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
-  const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
-    manifests,
-    version: [sealedBundle?.manifest?.npm?.version, passport.target?.version, ""].find(Boolean),
-    kind: publishArtifactKind,
-    tarballPaths: npmTarballPaths,
-    mainPackage: publishPackageMain,
-  });
-  const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
-  fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
   const sealedBundle = publishArtifactKind === "npm"
     ? createResolvedPublicationSealedBundle({
         bundleRoot: payloadDir,
@@ -750,6 +741,15 @@ export async function resolveReleaseCandidateArtifacts({
         releaseAssetPaths,
       })
     : undefined;
+  const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
+    manifests,
+    version: [sealedBundle?.manifest?.npm?.version, passport.target?.version, ""].find(Boolean),
+    kind: publishArtifactKind,
+    tarballPaths: npmTarballPaths,
+    mainPackage: publishPackageMain,
+  });
+  const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
+  fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
   const sealedBundleManifestPath = sealedBundle
     ? path.join(resolvedOutput, "sealed-bundle.json")
     : "";
