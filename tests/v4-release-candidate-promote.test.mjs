@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  activateExactPnpm,
   resolveCandidateBuildSummaryPath,
   resolvePromotionTarget,
 } from "../actions/v4-release-candidate-promote/index.js";
@@ -174,4 +175,20 @@ test("fresh promotion shells require exact protected source coordinates", () => 
       }),
     /protected source SHA must equal target-sha/,
   );
+});
+
+test("provider verification exposes only the pinned pnpm runtime", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
+  const previousPath = process.env.PATH;
+  try {
+    const shim = activateExactPnpm({ temporaryRoot: root });
+    assert.equal(
+      fs.readFileSync(shim, "utf8"),
+      '#!/bin/sh\nexec corepack pnpm@11.7.0 "$@"\n',
+    );
+    assert.equal(fs.statSync(shim).mode & 0o777, 0o755);
+    assert.equal(process.env.PATH?.split(path.delimiter)[0], path.dirname(shim));
+  } finally {
+    process.env.PATH = previousPath;
+  }
 });

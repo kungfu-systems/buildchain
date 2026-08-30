@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -112,6 +113,20 @@ export function resolvePromotionTarget({
       "legacy source-sha is not bound to the recovered candidate or protected target",
     );
   return { targetRef, targetSha };
+}
+
+export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
+  const shimDirectory = fs.mkdtempSync(
+    path.join(temporaryRoot, "buildchain-pnpm-"),
+  );
+  const shimPath = path.join(shimDirectory, "pnpm");
+  fs.writeFileSync(
+    shimPath,
+    '#!/bin/sh\nexec corepack pnpm@11.7.0 "$@"\n',
+    { mode: 0o755 },
+  );
+  process.env.PATH = `${shimDirectory}${path.delimiter}${process.env.PATH || ""}`;
+  return shimPath;
 }
 
 export function aggregateV4ReleasePassport({
@@ -603,6 +618,7 @@ async function main() {
     publicationPlan,
     octokit,
   });
+  activateExactPnpm();
   const settlement = await applyAndSettle({
     repository,
     sourceSha,
