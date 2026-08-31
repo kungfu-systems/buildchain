@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1148,
+  "generation": 1149,
   "fencingCounter": 172,
   "policy": {
     "agingSeconds": 900,
@@ -8382,8 +8382,65 @@
         "sha256:48caafe7017f0c90e9477627abd846ed8064ea448762a2164e1ee3afb2a68986",
         "sha256:7125295a899f6f15eed3ae3b463784868de1e173152f8a9c01849a50553a19b9"
       ]
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3352,
+      "assignmentRoot": "sha256:b57f02d58ca6a746f584a725fe0f74d6e11096fe57e8f0d62133c78cea8b699c",
+      "initiativeRoot": "sha256:29e06777d4691651e86c828b557de10203ec50f978c57746887d1971011705c3",
+      "sourceIdentityRoot": "sha256:0c72cabea163d502e55c3fbb1a2e584b560872dd87233e4bb72dcd405496f2c9",
+      "deliveryClass": "native-proof-required",
+      "identitySemantics": "chained-attempt-v2",
+      "predecessorCandidateId": "sha256:1a8b9b5fb2b4725a13cff6d8c099977374808e89f422d29e2541871671935c9b",
+      "candidateId": "sha256:f8a6ad7b534c00ab56d1d4053e7b2381b144ac71150631e7f2a52fda20cc5422",
+      "sourceHead": "a688037ded1ee3ce3aaf80310890c632dd318013",
+      "sourcePatchRoot": "sha256:2cc3691ce862c014140f9d5239de6a9fbcf159ba1b4634533d505642806cc4c7",
+      "sourceProofRoot": "sha256:5fc7b07713e5b7a0299edca2c486253b9aa8b346b8f4dc51d46460871a669a1c",
+      "planRoot": "sha256:9abebffe92c4e92991276d5c648db934f564f911be763582633d86a4b0ee51ac",
+      "closureRoot": "sha256:e274b355c6556b844f7cd76a7ce0ccfdcbd0383cec23544b662910c353766619",
+      "dependencyRoot": "sha256:33a3252b1d3695aa779327f6afae1a49268fdbec8c2203e2e3d353a5fe5fe187",
+      "toolchainRoot": "sha256:4c2e60ceda0c716377ff8ec4fbe1be353cdeba089a4f98b8da5fc401ee39fc0b",
+      "environmentRoot": "sha256:64ba26c3354466bb389b5e68de0db097d5371ed4224c22616dbc095c3a328853",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "corepack enable && corepack pnpm run check",
+        "commandRoot": "sha256:08e07e6de2dc8307d570a36166780ccd01b0ad687c024fab4305ca5a36d7c850"
+      },
+      "sourceWorkflowRunId": 33374161891,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-31T08:58:20.893Z",
+      "updatedAt": "2026-08-31T08:58:20.893Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/.release-candidate-promote.yml",
+        "actions/promote-buildchain-ref/dist/index.js",
+        "actions/release-tail/dist/index.js",
+        "actions/v4-release-candidate-promote/dist/index.js",
+        "actions/v4-release-candidate-promote/product-provider-adapters.js",
+        "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
+        "architecture/maintainability-debt.json",
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/node-api-registry.json",
+        "packages/core/release-tail-provider-plane.js",
+        "packages/core/v4-product-publication.js",
+        "tests/release-tail-provider-plane.test.mjs",
+        "tests/v4-product-provider-adapters.test.mjs",
+        "tests/v4-product-publication-topology.test.mjs",
+        "tests/v4-release-candidate-promote-github-adapters.test.mjs",
+        "tests/v4-release-candidate-promote.test.mjs"
+      ],
+      "shardEvidenceRoots": [
+        "sha256:48caafe7017f0c90e9477627abd846ed8064ea448762a2164e1ee3afb2a68986",
+        "sha256:7125295a899f6f15eed3ae3b463784868de1e173152f8a9c01849a50553a19b9"
+      ]
     }
   ],
-  "updatedAt": "2026-08-31T08:55:40.068Z",
-  "stateRoot": "sha256:f73cb7cb4c7d300cfa1ea8a352722f28eb3112e5a65163ff5aca17e6c60b061e"
+  "updatedAt": "2026-08-31T08:58:20.893Z",
+  "stateRoot": "sha256:e819b21843a3b09a7c2c29aa6be51b877dd6af78616002677735035232108cb5"
 }
