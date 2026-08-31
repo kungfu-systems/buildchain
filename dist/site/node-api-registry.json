@@ -31035,7 +31035,7 @@
       "specifier": "@kungfu-tech/buildchain/release-tail-provider-plane",
       "export": "./release-tail-provider-plane",
       "target": "./packages/core/release-tail-provider-plane.js",
-      "digest": "sha256:83661b137cf7945ba263954d9e11933a767933ad3e223791909721c048e2d377",
+      "digest": "sha256:079dd76b4fea8226faca1c93e7c8a600424ee9d1a3228d3befdd060acc431d38",
       "summary": "Versioned declarative release-tail parsing, deterministic effect planning, durable transaction execution, readback, retry, and rooted receipt APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [

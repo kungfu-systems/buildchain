@@ -439,46 +439,61 @@ function createPackedPackage(context) {
   };
 }
 
-function npmReadback(context, packedPackage, effect) {
+const NPM_POST_PUBLISH_READBACK_DELAYS_MS = Object.freeze([
+  0, 1_000, 2_000, 4_000, 8_000, 15_000, 30_000,
+]);
+
+async function npmReadback(context, packedPackage, effect) {
   operationFor(context.plan, effect);
   const expected = packedPackage();
-  const result = context.spawn(
-    "npm",
-    [
-      "view",
-      `${context.intent.packageName}@${context.intent.version}`,
-      "dist.integrity",
-      "--json",
-      "--registry=https://registry.npmjs.org/",
-    ],
-    { cwd: context.cwd, encoding: "utf8" },
-  );
-  if (result.error) throw result.error;
-  if (result.status !== 0) {
-    const output = `${result.stdout || ""}\n${result.stderr || ""}`;
-    if (/\bE404\b|404 Not Found|is not in this registry/iu.test(output))
-      return absent("npm-version-absent");
-    throw providerError(
-      `npm readback failed: ${output.trim()}`,
-      "transient",
-      "npm-readback-failed",
+  const delays = context.packageEffectAttempted
+    ? NPM_POST_PUBLISH_READBACK_DELAYS_MS
+    : [0];
+  for (const [index, delayMs] of delays.entries()) {
+    if (delayMs > 0) await context.wait(delayMs);
+    const result = context.spawn(
+      "npm",
+      [
+        "view",
+        `${context.intent.packageName}@${context.intent.version}`,
+        "dist.integrity",
+        "--json",
+        "--prefer-online",
+        "--registry=https://registry.npmjs.org/",
+      ],
+      { cwd: context.cwd, encoding: "utf8" },
     );
+    if (result.error) throw result.error;
+    if (result.status !== 0) {
+      const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+      if (/\bE404\b|404 Not Found|is not in this registry/iu.test(output)) {
+        if (index + 1 < delays.length) continue;
+        return absent("npm-version-absent");
+      }
+      throw providerError(
+        `npm readback failed: ${output.trim()}`,
+        "transient",
+        "npm-readback-failed",
+      );
+    }
+    const integrity = JSON.parse(String(result.stdout || '""'));
+    if (integrity !== expected.integrity)
+      return conflict("npm-integrity-conflict");
+    return observed(effect, {
+      kind: "npm-package",
+      packageName: context.intent.packageName,
+      version: context.intent.version,
+      integrity,
+      sha256: expected.sha256,
+    });
   }
-  const integrity = JSON.parse(String(result.stdout || '""'));
-  if (integrity !== expected.integrity)
-    return conflict("npm-integrity-conflict");
-  return observed(effect, {
-    kind: "npm-package",
-    packageName: context.intent.packageName,
-    version: context.intent.version,
-    integrity,
-    sha256: expected.sha256,
-  });
+  return absent("npm-version-absent");
 }
 
 function npmApply(context, packedPackage, effect) {
   operationFor(context.plan, effect);
   const pack = packedPackage();
+  context.packageEffectAttempted = true;
   commandResult(
     context.spawn,
     "npm",
@@ -508,6 +523,7 @@ export function createV4ProductPublicationAdapters({
   plan,
   cwd = process.cwd(),
   spawn = spawnSyncCommand,
+  wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs)),
 }) {
   validateProviderRequest(request, intent);
   requiredProductArtifacts(request, intent);
@@ -519,6 +535,8 @@ export function createV4ProductPublicationAdapters({
     cwd,
     spawn,
     versionFiles: localVersionFiles(cwd, intent),
+    packageEffectAttempted: false,
+    wait,
     updates: [],
   };
   const packedPackage = createPackedPackage(context);
