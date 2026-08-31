@@ -11,6 +11,10 @@ on:
     types: [completed]
   workflow_dispatch:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        required: false
+        default: ""
       sha:
         description: "Verified alpha/release commit to promote. Defaults to the current workflow ref SHA."
         required: false
@@ -93,8 +97,30 @@ permissions:
   contents: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate promotion
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['universal-request-json'] != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    permissions:
+      actions: write
+      artifact-metadata: write
+      attestations: write
+      checks: write
+      contents: write
+      deployments: write
+      id-token: write
+      issues: write
+      packages: write
+      pages: write
+      pull-requests: write
+      security-events: write
+      statuses: write
+    secrets: inherit
+    with:
+      request-json: ${{ inputs['universal-request-json'] }}
+
   reject-manual-apply:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['recover-durable-transaction'] != true && inputs['resume-candidate-run-id'] == '' && inputs['publication-admission-json'] == '' }}
+    if: ${{ inputs['universal-request-json'] == '' && github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['recover-durable-transaction'] != true && inputs['resume-candidate-run-id'] == '' && inputs['publication-admission-json'] == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -106,7 +132,7 @@ jobs:
           exit 1
 
   reject-invalid-durable-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['recover-durable-transaction'] == true && inputs.sha == '' }}
+    if: ${{ inputs['universal-request-json'] == '' && github.event_name == 'workflow_dispatch' && inputs['recover-durable-transaction'] == true && inputs.sha == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -117,7 +143,7 @@ jobs:
           exit 1
 
   reject-invalid-candidate-recovery:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && ((!startsWith(inputs['target-ref'], 'alpha/') && !startsWith(inputs['target-ref'], 'release/')) || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || inputs['resume-expected-source-tree'] == '') }}
+    if: ${{ inputs['universal-request-json'] == '' && github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && ((!startsWith(inputs['target-ref'], 'alpha/') && !startsWith(inputs['target-ref'], 'release/')) || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || inputs['resume-expected-source-tree'] == '') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -130,13 +156,15 @@ jobs:
   promote:
     if: >-
       ${{
+        inputs['universal-request-json'] == '' &&
         (
+          (
           github.event_name == 'workflow_dispatch' &&
           startsWith(inputs['target-ref'], 'alpha/') &&
           (inputs['resume-candidate-run-id'] != '' || inputs['recover-durable-transaction'] == true) &&
           inputs.sha != ''
-        ) ||
-        (
+          ) ||
+          (
           github.event_name == 'workflow_run' &&
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
@@ -144,9 +172,10 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
           !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
+          )
         )
       }}
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write

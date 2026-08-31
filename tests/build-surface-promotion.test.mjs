@@ -167,7 +167,7 @@ test("v4 branch promotion excludes the stable publisher rollout", () => {
   assert.match(workflow, /^  promote:/m);
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
   assert.doesNotMatch(workflow, /^  promote-stable:/m);
   assert.doesNotMatch(
@@ -425,7 +425,7 @@ test("buildchain ref promotion delegates alpha evidence to the canonical publish
   assert.match(workflow, /^  promote:/m);
   assert.match(
     workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
   assert.match(workflow, /release-candidate-workflow-file: build-surface-fixture\.yml/);
   assert.match(workflow, /resume-candidate-run-id:/);
@@ -1417,7 +1417,7 @@ test("Buildchain self-dogfoods v4 through the floating canonical alpha publisher
   assert.match(promotion, /^  promote:/m);
   assert.match(
     promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
   assert.doesNotMatch(promotion, /^  promote-stable:/m);
 });

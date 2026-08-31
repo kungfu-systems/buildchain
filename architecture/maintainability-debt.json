@@ -1279,21 +1279,21 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@361": {
+            "evaluateMaintainability@253": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@361": {
+            "evaluateMaintainability@253": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@361": {
+            "evaluateMaintainability@253": {
               "complexity": 25
             }
           }
@@ -1491,21 +1491,21 @@
       "scripts/generate-channel-promotion-workflow.mjs": {
         "baseline": {
           "functions": {
-            "generateChannelPromotionWorkflow@278": {
+            "generateChannelPromotionWorkflow@279": {
               "lines": 282
             }
           }
         },
         "current": {
           "functions": {
-            "generateChannelPromotionWorkflow@278": {
+            "generateChannelPromotionWorkflow@279": {
               "lines": 240
             }
           }
         },
         "target": {
           "functions": {
-            "generateChannelPromotionWorkflow@278": {
+            "generateChannelPromotionWorkflow@279": {
               "lines": 180
             }
           }
@@ -3083,6 +3083,8 @@
     }
   },
   "hotspots": [
+    ".github/workflows/bootstrap.yml",
+    "scripts/check-v4-universal-workflow-bootstrap.mjs",
     "tests/v3-v4-capability-inventory.test.mjs",
     "tests/v4-floating-consumer-policy-contract.test.mjs",
     "tests/v4-publication-qualification.test.mjs",

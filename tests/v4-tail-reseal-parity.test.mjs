@@ -67,12 +67,15 @@ test("public v4 tail workflow keeps floating selectors durable and effects outsi
     "lifecycle run install",
     "lifecycle run build",
     "lifecycle run verify",
-    "uses: ./",
   ])
     assert.doesNotMatch(
       workflow,
       new RegExp(forbidden.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")),
     );
+  assert.doesNotMatch(
+    workflow,
+    /uses: \.\/(?!\.github\/workflows\/bootstrap\.yml(?:\s|$))/u,
+  );
   const signingTokenUses = workflow
     .split("\n")
     .filter((line) => line.includes("BUILDCHAIN_SIGNING_TOKEN"));

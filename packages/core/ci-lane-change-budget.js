@@ -10,6 +10,7 @@ const AUTHORITY_CLASSES = new Set([
   "post-merge-advisory",
   "diagnostic",
   "evidence",
+  "governed-delegation",
   "release",
 ]);
 const TRIGGER_CLASSES = new Set([
@@ -196,7 +197,19 @@ export function evaluateCiLaneChangeBudget({
   }
   const declarations = new Map();
   const diagnostics = [];
-  for (const declaration of policy.declarations || []) {
+  const familyDeclarations = (policy.declarationFamilies || []).flatMap(
+    ({ laneIds, ...declaration }) => {
+      if (!Array.isArray(laneIds) || laneIds.length === 0)
+        throw new Error("CI lane declaration family requires laneIds");
+      if (new Set(laneIds).size !== laneIds.length)
+        throw new Error("CI lane declaration family laneIds must be unique");
+      return laneIds.map((laneId) => ({ ...declaration, laneId }));
+    },
+  );
+  for (const declaration of [
+    ...(policy.declarations || []),
+    ...familyDeclarations,
+  ]) {
     const laneId = String(declaration?.laneId || "").trim();
     if (!laneId) throw new Error("CI lane declaration laneId is required");
     if (declarations.has(laneId))
