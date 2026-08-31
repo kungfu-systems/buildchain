@@ -26,7 +26,12 @@ test("fresh and recovered product versions are selected before APPLY without pro
     sealedBundleRoot: `sha256:${"1".repeat(64)}`,
     requiredArtifactsRoot: `sha256:${"2".repeat(64)}`,
     candidateVersion: "4.0.2-alpha.6",
-    observedVersions: ["4.0.2-alpha.5", "4.0.2-alpha.7", "3.9.0"],
+    observedVersions: [
+      "0.0.0-bootstrap.0",
+      "4.0.2-alpha.5",
+      "4.0.2-alpha.7",
+      "3.9.0",
+    ],
   };
   const fresh = selectV4ProductPublicationIntent(common);
   assert.equal(fresh.mode, "fresh");
