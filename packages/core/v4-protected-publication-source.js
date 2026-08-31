@@ -46,25 +46,21 @@ export function bindV4ProtectedPublicationSource({
   let pullRequestNumber = null;
   if (protectedSource.sha !== candidateSource.sha) {
     mode = "merge-equivalent";
+    pullRequestNumber = Number(pullRequest?.number || 0);
+    const pullRequestHead = exactSha(pullRequest?.headSha, "PR head SHA");
+    const pullRequestMerge = exactSha(pullRequest?.mergeSha, "PR merge SHA");
     const sameParents =
-      protectedSource.parents.length === candidateSource.parents.length &&
-      protectedSource.parents.every(
-        (parent, index) => parent === candidateSource.parents[index],
-      );
-    if (!sameParents) {
+      protectedSource.parents.join() === candidateSource.parents.join();
+    const singleCommitRebaseParents =
+      protectedSource.parents.length === 1 &&
+      candidateSource.parents.length === 2 &&
+      protectedSource.parents[0] === candidateSource.parents[0] &&
+      candidateSource.parents[1] === pullRequestHead;
+    if (!sameParents && !singleCommitRebaseParents) {
       throw new Error(
         "protected publication source is not parent-equivalent to the qualified merge candidate",
       );
     }
-    pullRequestNumber = Number(pullRequest?.number || 0);
-    const pullRequestHead = exactSha(
-      pullRequest?.headSha,
-      "publication pull request head SHA",
-    );
-    const pullRequestMerge = exactSha(
-      pullRequest?.mergeSha,
-      "publication pull request merge SHA",
-    );
     if (
       !Number.isSafeInteger(pullRequestNumber) ||
       pullRequestNumber <= 0 ||

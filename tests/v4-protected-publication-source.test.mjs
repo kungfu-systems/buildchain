@@ -33,13 +33,33 @@ test("protected publication source accepts the final PR merge over an equivalent
   assert.equal(result.pullRequestNumber, 3237);
 });
 
+test("protected publication source accepts a single-commit protected rebase over the qualification merge", () => {
+  const result = bindV4ProtectedPublicationSource({
+    repository: "kungfu-systems/buildchain",
+    protectedCommit: { sha: sha("a"), tree: sha("b"), parents: [sha("c")] },
+    candidateCommit: {
+      sha: sha("e"),
+      tree: sha("b"),
+      parents: [sha("c"), sha("d")],
+    },
+    pullRequest: {
+      number: 3355,
+      merged: true,
+      headSha: sha("d"),
+      mergeSha: sha("a"),
+    },
+  });
+  assert.equal(result.mode, "merge-equivalent");
+  assert.equal(result.pullRequestNumber, 3355);
+});
+
 test("protected publication source rejects tree, parent, or PR lineage drift", () => {
   const base = {
     repository: "kungfu-systems/buildchain",
     protectedCommit: {
       sha: sha("a"),
       tree: sha("b"),
-      parents: [sha("c"), sha("d")],
+      parents: [sha("c")],
     },
     candidateCommit: {
       sha: sha("e"),
