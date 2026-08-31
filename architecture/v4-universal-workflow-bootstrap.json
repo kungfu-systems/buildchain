@@ -166,7 +166,7 @@
   ],
   "migration": {
     "compatibilityFacadeGenerator": "scripts/generate-v4-universal-workflow-facades.mjs",
-    "facadeSourceRevision": "b6b963020be067064098012fa267d54a8b4c2037",
+    "facadeSourceRevision": "c963ba83702069668ad2bf5715a2d8735d7bc910",
     "channelGeneratedFacades": [
       ".github/workflows/build.yml",
       ".github/workflows/release-candidate-promote.yml"
