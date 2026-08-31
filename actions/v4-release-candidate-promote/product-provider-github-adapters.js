@@ -322,12 +322,58 @@ async function openProtectedRefPullRequest(
 ) {
   const { request, intent, updates } = context;
   const { owner, repo } = splitRepository(repository);
-  const head = `buildchain/v4-product-pr/${branch.replaceAll("/", "-")}/${sha.slice(0, 12)}`;
+  const current = await getRef(
+    request.octokit,
+    repository,
+    `refs/heads/${branch}`,
+  );
+  if (!current?.object?.sha)
+    throw providerError(
+      `protected branch ${branch} disappeared before pull request creation`,
+      "transient",
+      "protected-ref-absent",
+    );
+  const { data: stateCommit } = await request.octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: sha,
+  });
+  if (!stateCommit.tree?.sha)
+    throw providerError(
+      "rooted version-state commit omitted its tree",
+      "conflict",
+      "version-state-tree-absent",
+    );
+  const identity = {
+    ...COMMIT_IDENTITY,
+    date: intent.sourceTimestamp,
+  };
+  const { data: pullRequestCommit } =
+    await request.mutationOctokit.rest.git.createCommit({
+      owner,
+      repo,
+      message:
+        `chore(release): prepare ${intent.exactTag} for ${branch}\n\n` +
+        SIGN_OFF,
+      tree: stateCommit.tree.sha,
+      parents: [current.object.sha],
+      author: identity,
+      committer: identity,
+    });
+  const head =
+    `chore/v4-product-pr/${branch.replaceAll("/", "-")}/` +
+    `${sha.slice(0, 12)}-${current.object.sha.slice(0, 12)}`;
   await createRef(
     request.mutationOctokit,
     repository,
     `refs/heads/${head}`,
-    sha,
+    pullRequestCommit.sha,
+  );
+  await ensureGeneratedCheck(
+    context,
+    repository,
+    branch,
+    pullRequestCommit.sha,
   );
   const existing = await request.mutationOctokit.rest.pulls.list({
     owner,
@@ -347,7 +393,11 @@ async function openProtectedRefPullRequest(
         `Converge the rooted v4 product publication state for ${intent.exactTag}.\n\n` +
         `Direct protected ref update was rejected: ${error?.message || "provider policy"}`,
     });
-  updates.push({ action: "pending-protected-ref-pr", ref: branch, sha });
+  updates.push({
+    action: "pending-protected-ref-pr",
+    ref: branch,
+    sha: pullRequestCommit.sha,
+  });
 }
 
 async function convergeBranch(context, repository, ref, sha) {

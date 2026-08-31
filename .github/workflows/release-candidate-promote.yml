@@ -800,7 +800,7 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          SELECTED_SHELL_REF: train/v4/v4.0/release-topology-convergence-runtime-r15
+          SELECTED_SHELL_REF: v4-alpha
         run: |
           set -euo pipefail
           node .buildchain/router/scripts/promotion-identity-resolver.mjs \
@@ -900,7 +900,7 @@ jobs:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
           BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/release-candidate-promote.yml' || inputs.publication-publisher-workflow-path }}
           BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ needs.resolve-promotion.outputs.channel }}
-          BUILDCHAIN_INVOKED_WORKFLOW: ${{ (inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' || inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion.yml') && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}
+          BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: ${{ inputs.buildchain-stable-contract-lock-path }}
@@ -960,7 +960,7 @@ jobs:
   invoke:
     name: Invoke the single v4 publisher adapter
     needs: [resolve-promotion, consumer-admission]
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@train/v4/v4.0/release-topology-convergence-runtime-r15
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
     permissions:
       actions: write
       artifact-metadata: write

@@ -25,6 +25,7 @@ import { compileReleaseTailDeclaration } from "../packages/core/release-tail-pro
 
 const SOURCE = "a".repeat(40);
 const VERSION_STATE = "b".repeat(40);
+const REBASED_VERSION_STATE = "f".repeat(40);
 
 function digest(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -124,7 +125,9 @@ function githubProvider() {
     [SOURCE, { sha: SOURCE, tree: { sha: "source-tree" }, parents: [] }],
   ]);
   const pullRequests = [];
+  const checks = [];
   const protectedRefs = new Set();
+  let commitCount = 0;
   const rest = {
     git: {
       async getRef({ ref }) {
@@ -164,13 +167,15 @@ function githubProvider() {
       async getBlob({ file_sha }) {
         return { data: { content: blobs.get(file_sha), encoding: "base64" } };
       },
-      async createCommit({ tree, parents }) {
+      async createCommit({ tree, parents, message }) {
+        commitCount += 1;
         const commit = {
-          sha: VERSION_STATE,
+          sha: commitCount === 1 ? VERSION_STATE : REBASED_VERSION_STATE,
           tree: { sha: tree },
           parents: parents.map((sha) => ({ sha })),
+          message,
         };
-        commits.set(VERSION_STATE, commit);
+        commits.set(commit.sha, commit);
         return { data: commit };
       },
     },
@@ -183,7 +188,11 @@ function githubProvider() {
         return { data: { status: contained ? "ahead" : "diverged" } };
       },
     },
-    checks: { async create() {} },
+    checks: {
+      async create(input) {
+        checks.push(input);
+      },
+    },
     pulls: {
       async list() {
         return { data: pullRequests };
@@ -194,7 +203,14 @@ function githubProvider() {
       },
     },
   };
-  return { octokit: { rest }, refs, protectedRefs, pullRequests };
+  return {
+    octokit: { rest },
+    refs,
+    protectedRefs,
+    pullRequests,
+    checks,
+    commits,
+  };
 }
 
 function npmProvider(
@@ -495,9 +511,23 @@ test("protected-ref rejection blocks safely and resumes after PR merge without r
   assert.equal(interrupted.failure.code, "local-retry-exhausted");
   assert.equal(npm.publishCount, 1);
   assert.equal(github.pullRequests.length, 1);
+  const pullRequest = github.pullRequests[0];
+  assert.match(pullRequest.head, /^chore\/v4-product-pr\//u);
+  assert.equal(
+    github.refs.get(`heads/${pullRequest.head}`),
+    REBASED_VERSION_STATE,
+  );
+  assert.deepEqual(github.commits.get(REBASED_VERSION_STATE).parents, [
+    { sha: SOURCE },
+  ]);
+  assert.equal(
+    github.commits.get(REBASED_VERSION_STATE).tree.sha,
+    github.commits.get(VERSION_STATE).tree.sha,
+  );
+  assert.equal(github.checks.at(-1).head_sha, REBASED_VERSION_STATE);
   assert.equal(github.refs.has("tags/v4-alpha"), false);
 
-  github.refs.set("heads/alpha/v4/v4.0", VERSION_STATE);
+  github.refs.set("heads/alpha/v4/v4.0", REBASED_VERSION_STATE);
   const resumedRuntime = createV4ProductPublicationAdapters({
     request,
     intent,
@@ -511,5 +541,5 @@ test("protected-ref rejection blocks safely and resumes after PR merge without r
   );
   assert.equal(resumed.state, "complete");
   assert.equal(npm.publishCount, 1);
-  assert.equal(github.refs.get("tags/v4-alpha"), VERSION_STATE);
+  assert.equal(github.refs.get("tags/v4-alpha"), REBASED_VERSION_STATE);
 });
