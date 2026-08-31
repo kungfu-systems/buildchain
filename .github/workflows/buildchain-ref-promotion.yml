@@ -146,7 +146,7 @@ jobs:
           !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
         )
       }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@train/v4/v4.0/release-topology-convergence-runtime-r15
     permissions:
       actions: write
       artifact-metadata: write
@@ -160,8 +160,6 @@ jobs:
     with:
       buildchain-repository: kungfu-systems/buildchain
       buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && github.sha || 'v4-alpha' }}
-      buildchain-expected-channel: alpha
-      buildchain-expected-major: "4"
       buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
       buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
@@ -199,7 +197,6 @@ jobs:
       publication-auto-admission: true
       publication-auto-no-gate: true
       publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
-      publication-authority-workflow-path: .github/workflows/.release-candidate-promote.yml
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain
       publication-package-name: "@kungfu-tech/buildchain"
