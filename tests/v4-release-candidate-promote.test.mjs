@@ -71,6 +71,21 @@ test("legacy promotion shells recover standard sealed provider inputs", () => {
   });
 });
 
+test("legacy promotion shells infer the only required npm package", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
+  const passport = path.join(root, "passport", "release-candidate-passport.json");
+  fs.mkdirSync(path.dirname(passport), { recursive: true });
+  fs.mkdirSync(path.join(root, "payloads"));
+  fs.writeFileSync(path.join(root, "sealed-bundle.json"), "{}\n");
+  fs.writeFileSync(path.join(root, "publish-required-artifacts.json"), `${JSON.stringify([{ kind: "npm", name: "@kungfu-tech/buildchain", role: "platform", required: true }])}\n`);
+
+  assert.equal(
+    resolveCandidateProviderInputs({ candidatePassportPath: passport })
+      .publishPackageMain,
+    "@kungfu-tech/buildchain",
+  );
+});
+
 test("candidate recovery passes the rooted sibling receipt to the product provider", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-promote-"));
   const passport = path.join(root, "passport", "release-candidate-passport.json");

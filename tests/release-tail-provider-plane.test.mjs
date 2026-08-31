@@ -168,6 +168,36 @@ test("effect success with a lost response completes from post-effect readback", 
   assert.equal(result.operations[0].receipt.action, "applied-and-observed");
 });
 
+test("an attempted effect is reconciled by readback without repeating the mutation", async () => {
+  const input = declaration();
+  let readbacksAfterEffect = 0;
+  const memory = memoryAdapters(input, {
+    "artifact.publish": {
+      readback(effect, state) {
+        if (!state.has(effect.operationId))
+          return { outcome: "absent", providerCode: "memory-absent" };
+        readbacksAfterEffect += 1;
+        if (readbacksAfterEffect < 3)
+          return { outcome: "absent", providerCode: "eventual-consistency" };
+        return {
+          outcome: "observed",
+          subjectRoot: effect.subjectRoot,
+          targetRoot: state.get(effect.operationId),
+          evidenceRoots: [effect.targetRoot],
+          providerCode: "memory-observed",
+        };
+      },
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(input),
+    { adapters: memory.adapters },
+  );
+  assert.equal(result.state, "complete");
+  assert.equal(memory.calls.get("artifact.publish:apply"), 1);
+  assert.equal(memory.calls.get("artifact.publish:readback"), 4);
+});
+
 test("duplicate invocation returns the settled transaction without provider effects", async () => {
   const input = declaration();
   const firstMemory = memoryAdapters(input);
