@@ -132,6 +132,22 @@ See the normative
 and its machine declaration for the exact acceptance boundary. This policy does
 not change v3 behavior.
 
+### Universal Bootstrap verified-caller admission
+
+The v4 Universal Bootstrap does not maintain a repository allowlist. Any
+repository that can call the public reusable workflow may submit the single
+versioned request envelope. Admission still fails closed unless the request's
+consumer repository, caller workflow path, and source SHA exactly match the
+GitHub-observed caller context.
+
+Open consumer admission does not mean open execution authority. The candidate
+must still be an exact Buildchain SHA selected through a governed discovery
+ref, bind the current candidate-owned admission root, have exact-head
+independent review and required checks, request an admitted capability and
+contract-root set, stay within the permission ceiling and validity window, and
+inherit only authority available from the caller. The candidate engine exposes
+bounded capability adapters; it does not accept caller-provided shell or code.
+
 ## Advanced Workflow
 
 Consumers that need direct workflow-shell or runtime control call the advanced

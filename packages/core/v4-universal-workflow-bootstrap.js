@@ -282,7 +282,7 @@ function validatePolicy(value) {
     [
       "schema",
       "sourceRepository",
-      "allowedConsumers",
+      "consumerAdmission",
       "allowedCapabilities",
       "permissionCeiling",
       "contractRoots",
@@ -297,25 +297,19 @@ function validatePolicy(value) {
   );
   if (value.schema !== V4_UNIVERSAL_WORKFLOW_ADMISSION_POLICY)
     fail("unsupported-policy-schema", "policy schema is unsupported");
-  const allowedConsumers = [...value.allowedConsumers].map((entry, index) =>
-    repository(entry, `policy.allowedConsumers[${index}]`),
+  const consumerAdmission = nonEmpty(
+    value.consumerAdmission,
+    "consumer admission",
   );
-  const expectedConsumers = [...new Set(allowedConsumers)].sort();
-  if (
-    allowedConsumers.length !== expectedConsumers.length ||
-    allowedConsumers.some((entry, index) => entry !== expectedConsumers[index])
-  )
-    fail(
-      "non-canonical-consumers",
-      "policy.allowedConsumers must be sorted and duplicate-free",
-    );
+  if (consumerAdmission !== "verified-caller")
+    fail("unsupported-consumer-admission", "unsupported admission");
   const policy = {
     schema: value.schema,
     sourceRepository: repository(
       value.sourceRepository,
       "policy.sourceRepository",
     ),
-    allowedConsumers,
+    consumerAdmission,
     allowedCapabilities: sortedTokens(
       value.allowedCapabilities,
       "policy.allowedCapabilities",
@@ -431,6 +425,7 @@ export function admitV4UniversalWorkflow({
   observedRefSha,
   observedConsumerRepository,
   observedConsumerSha,
+  observedConsumerWorkflowRef,
   reviewEvidence: reviewEvidenceValue,
   now,
 } = {}) {
@@ -441,13 +436,16 @@ export function admitV4UniversalWorkflow({
     fail("stale-admission", "request is not bound to the current admission");
   if (policy.sourceRepository !== request.candidate.repository)
     fail("source-repository-mismatch", "admission source repository mismatch");
-  if (!policy.allowedConsumers.includes(request.consumer.repository))
-    fail("consumer-not-admitted", "consumer repository is not admitted");
+  const workflowRef = nonEmpty(observedConsumerWorkflowRef, "workflow ref");
+  const expectedWorkflowPrefix = `${request.consumer.repository}/${request.consumer.workflow}@`;
   if (
     request.consumer.repository !== observedConsumerRepository ||
-    request.consumer.sourceSha !== exactSha(observedConsumerSha, "observedConsumerSha")
+    request.consumer.sourceSha !==
+      exactSha(observedConsumerSha, "observedConsumerSha") ||
+    !workflowRef.startsWith(expectedWorkflowPrefix) ||
+    workflowRef.length === expectedWorkflowPrefix.length
   )
-    fail("consumer-identity-mismatch", "request does not bind the caller repository and SHA");
+    fail("consumer-identity-mismatch", "caller identity mismatch");
   if (!policy.allowedCapabilities.includes(request.capability.id))
     fail("capability-not-admitted", "capability is not admitted");
   if (

@@ -18,6 +18,7 @@
     "discoveryRefExecutionAuthority": false,
     "exactShaExecutionAuthority": true,
     "consumerSourceMutationPerIncident": false,
+    "consumerAdmission": "verified-caller-exact-repository-workflow-and-source",
     "buildchainReleasePromotionPerIncident": false,
     "selfDogfoodUsesPublicContract": true
   },

@@ -542,6 +542,8 @@ if (command === "inspect") {
       observedConsumerRepository:
         process.env.BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY,
       observedConsumerSha: process.env.BUILDCHAIN_UNIVERSAL_CONSUMER_SHA,
+      observedConsumerWorkflowRef:
+        process.env.BUILDCHAIN_UNIVERSAL_CONSUMER_WORKFLOW_REF,
       reviewEvidence: readJsonEnvironment(
         "BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON",
       ),

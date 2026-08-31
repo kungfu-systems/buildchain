@@ -98,6 +98,7 @@ jobs:
           BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ inputs.request-json }}
           BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_UNIVERSAL_CONSUMER_SHA: ${{ github.sha }}
+          BUILDCHAIN_UNIVERSAL_CONSUMER_WORKFLOW_REF: ${{ github.workflow_ref }}
           EXPECTED_SHA: ${{ steps.request.outputs.sha }}
           REVIEW_PR: ${{ steps.request.outputs.pr }}
         run: |

@@ -20,7 +20,7 @@ function policy(overrides = {}) {
   return {
     schema: V4_UNIVERSAL_WORKFLOW_ADMISSION_POLICY,
     sourceRepository: "kungfu-systems/buildchain",
-    allowedConsumers: ["kungfu-systems/taolu"],
+    consumerAdmission: "verified-caller",
     allowedCapabilities: ["consumer-release"],
     permissionCeiling: {
       contents: "write",
@@ -90,6 +90,8 @@ function reviewEvidence(overrides = {}) {
 const consumerObservation = () => ({
   observedConsumerRepository: "kungfu-systems/taolu",
   observedConsumerSha: sha("2"),
+  observedConsumerWorkflowRef:
+    "kungfu-systems/taolu/.github/workflows/release.yml@refs/heads/main",
 });
 
 test("an admitted Train resolves once to an exact execution identity", () => {
@@ -117,6 +119,62 @@ test("an admitted Train resolves once to an exact execution identity", () => {
   assert.equal(receipt.status, "succeeded");
   assert.match(receipt.receiptRoot, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(JSON.stringify(receipt).includes("train/v4"), false);
+});
+
+test("any exact verified caller is admitted without a repository allowlist", () => {
+  const policyValue = policy();
+  const requestValue = request(policyValue);
+  requestValue.consumer.repository = "example/downstream";
+  requestValue.consumer.workflow = ".github/workflows/publish.yml";
+  requestValue.candidate.admissionRoot =
+    v4UniversalWorkflowAdmissionRoot(policyValue);
+  const admission = admitV4UniversalWorkflow({
+    request: requestValue,
+    policy: policyValue,
+    observedRefSha: sha("1"),
+    observedConsumerRepository: "example/downstream",
+    observedConsumerSha: sha("2"),
+    observedConsumerWorkflowRef:
+      "example/downstream/.github/workflows/publish.yml@refs/heads/main",
+    reviewEvidence: reviewEvidence(),
+    now: "2026-08-30T12:00:00.000Z",
+  });
+  assert.equal(admission.status, "admitted");
+});
+
+test("legacy repository allowlists cannot replace verified-caller admission", () => {
+  const legacyPolicy = policy();
+  delete legacyPolicy.consumerAdmission;
+  legacyPolicy.allowedConsumers = ["kungfu-systems/taolu"];
+  assert.throws(() => v4UniversalWorkflowAdmissionRoot(legacyPolicy), {
+    code: "invalid-field-set",
+  });
+});
+
+test("verified-caller admission rejects repository, workflow, and source spoofing", () => {
+  const policyValue = policy();
+  for (const observation of [
+    { ...consumerObservation(), observedConsumerRepository: "example/other" },
+    { ...consumerObservation(), observedConsumerSha: sha("9") },
+    {
+      ...consumerObservation(),
+      observedConsumerWorkflowRef:
+        "kungfu-systems/taolu/.github/workflows/other.yml@refs/heads/main",
+    },
+  ]) {
+    assert.throws(
+      () =>
+        admitV4UniversalWorkflow({
+          ...observation,
+          request: request(policyValue),
+          policy: policyValue,
+          observedRefSha: sha("1"),
+          reviewEvidence: reviewEvidence(),
+          now: "2026-08-30T12:00:00.000Z",
+        }),
+      { code: "consumer-identity-mismatch" },
+    );
+  }
 });
 
 test("moved refs fail before candidate execution", () => {
@@ -258,6 +316,8 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
     BUILDCHAIN_UNIVERSAL_OBSERVED_SHA: sha("1"),
     BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY: "kungfu-systems/taolu",
     BUILDCHAIN_UNIVERSAL_CONSUMER_SHA: sha("2"),
+    BUILDCHAIN_UNIVERSAL_CONSUMER_WORKFLOW_REF:
+      "kungfu-systems/taolu/.github/workflows/release.yml@refs/heads/main",
     BUILDCHAIN_UNIVERSAL_OBSERVED_AT: "2026-08-30T12:00:00.000Z",
     BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON: JSON.stringify(reviewEvidence()),
   });
@@ -328,6 +388,8 @@ test("the shared candidate engine owns canonical ReleaseInvocation projection", 
     BUILDCHAIN_UNIVERSAL_OBSERVED_SHA: sha("1"),
     BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY: "kungfu-systems/taolu",
     BUILDCHAIN_UNIVERSAL_CONSUMER_SHA: sha("2"),
+    BUILDCHAIN_UNIVERSAL_CONSUMER_WORKFLOW_REF:
+      "kungfu-systems/taolu/.github/workflows/release.yml@refs/heads/main",
     BUILDCHAIN_UNIVERSAL_OBSERVED_AT: "2026-08-30T12:00:00.000Z",
     BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON: JSON.stringify(reviewEvidence()),
   });
