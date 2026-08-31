@@ -137,6 +137,7 @@ assert.deepEqual(
     fileRoot("scripts/v4-universal-workflow-backflow.mjs"),
     fileRoot("scripts/v4-universal-workflow-engine.mjs"),
     fileRoot("scripts/v4-universal-workflow-self-dogfood.mjs"),
+    fileRoot(contract.bootstrap.publicWorkflow),
   ].sort(),
 );
 assert.doesNotMatch(
