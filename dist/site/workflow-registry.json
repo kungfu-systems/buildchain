@@ -3537,6 +3537,7 @@
         "candidate-passport-path",
         "failure-after-capability",
         "mutation-token",
+        "product-publication-intent-path",
         "publication-qualification-path",
         "publish-auth",
         "publish-command",
@@ -3562,7 +3563,7 @@
         "target-sha",
         "token"
       ],
-      "inputCount": 29,
+      "inputCount": 30,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",

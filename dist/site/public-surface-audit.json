@@ -3308,6 +3308,7 @@
           "candidate-passport-path",
           "failure-after-capability",
           "mutation-token",
+          "product-publication-intent-path",
           "publication-qualification-path",
           "publish-auth",
           "publish-command",
@@ -3333,7 +3334,7 @@
           "target-sha",
           "token"
         ],
-        "inputCount": 29
+        "inputCount": 30
       },
       {
         "id": "validate-config",
@@ -8942,8 +8943,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "8b9714376d8bf8b7d7e5db1545d63a0ba6a3e2b4322ccdebedfdb63cc9a646b4",
-    "pageRegistryDigest": "c81347e800ca7ded1b69a8480e562e67dc46671deb39ec27ca4376e7c8a77afd"
+    "workflowRegistryDigest": "270ef6c682b834092ab23705451a39f1e497b14435d22ba762aca92f79b113ea",
+    "pageRegistryDigest": "225249f141d3242a46c66de72f005f119235b7e13b873594f1c503185d7a285e"
   },
   "comparison": {
     "missingCliRegistry": [],
