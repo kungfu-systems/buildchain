@@ -5276,7 +5276,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 64
+        "line": 67
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5305,7 +5305,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 88
+        "line": 91
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5772,7 +5772,7 @@
       ],
       "source": {
         "path": "packages/core/ci-lane-change-budget.js",
-        "line": 180
+        "line": 181
       },
       "example": "import { evaluateCiLaneChangeBudget } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -28903,7 +28903,7 @@
       "specifier": "@kungfu-tech/buildchain/ci-lane-change-budget",
       "export": "./ci-lane-change-budget",
       "target": "./packages/core/ci-lane-change-budget.js",
-      "digest": "sha256:0cabfc98dedfeeb37a49461e7fbb480e8bb1b5b22cf2ac4ae5bae31305977033",
+      "digest": "sha256:46ba0887f1be1ed096457ac757d6bc1ca07fac99e7a47e2b7e37c96d632d4bb8",
       "summary": "Exact-baseline CI lane admission requiring authority, trigger, concurrency, runner, cancellation, and merge-critical SLO budgets.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -30456,7 +30456,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:9e35546655e3591e04f985c09b06f2ee4ee9c26bbf733cb807e49698f29c492c",
+      "digest": "sha256:e0e1b11176245fa6d4e62f9db8ab3f753ba97a41a1fae7302160dfc6ad5707ff",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -31194,7 +31194,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:1f50b0f7a45632b6e08b492687818ccbd3e0f00d7f189a21e1512e1a61df7df8"
+      "digest": "sha256:a5863a53832a8f1f3fac531d94af8a07ebb1dba2c8852da628fd85179fb504a9"
     },
     {
       "id": "build-facts",
