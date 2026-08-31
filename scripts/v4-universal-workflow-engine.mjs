@@ -390,13 +390,13 @@ async function executeReleasePromotion(request, admission) {
   });
   if (!candidate.enabled)
     fail(candidate.reason || "release candidate is unavailable");
-  const productPublicationIntentPath =
-    await materializeProductPublicationIntent({
-      candidate,
-      inputs: payload.inputs,
-      repository,
-      route,
-    });
+  const productPublicationIntentPath = await materializeProductPublicationIntent({
+    candidate,
+    inputs: payload.inputs,
+    repository,
+    route,
+  });
+  const productPublicationIntent = JSON.parse(fs.readFileSync(productPublicationIntentPath));
   const runtimeTree = execFileSync(
     "git",
     ["-C", ".buildchain/candidate", "rev-parse", "HEAD^{tree}"],
@@ -408,8 +408,8 @@ async function executeReleasePromotion(request, admission) {
       process.env.BUILDCHAIN_PROMOTION_TOKEN || process.env.GH_TOKEN,
     repository,
     "source-sha": route.requestedSha,
-    version: candidate.publicationVersion || candidate.version,
-    tag: `v${candidate.publicationVersion || candidate.version}`,
+    version: productPublicationIntent.version,
+    tag: productPublicationIntent.exactTag,
     channel: route.channel,
     "target-ref": route.targetRef,
     "target-sha": route.requestedSha,

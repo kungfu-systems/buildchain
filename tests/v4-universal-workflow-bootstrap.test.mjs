@@ -475,7 +475,7 @@ test("real universal promotion materializes one rooted product intent before APP
   );
   assert.match(
     engine,
-    /BUILDCHAIN_CANDIDATE_VERSION:\s*candidate\.publicationVersion \|\| candidate\.version[\s\S]*version: candidate\.publicationVersion \|\| candidate\.version,\s*tag: `v\$\{candidate\.publicationVersion \|\| candidate\.version\}`/u,
+    /BUILDCHAIN_CANDIDATE_VERSION:\s*candidate\.publicationVersion \|\| candidate\.version[\s\S]*productPublicationIntent = JSON\.parse\(fs\.readFileSync\(productPublicationIntentPath\)\)[\s\S]*version: productPublicationIntent\.version,\s*tag: productPublicationIntent\.exactTag/u,
   );
 });
 
