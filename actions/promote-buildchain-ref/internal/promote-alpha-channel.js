@@ -1,3 +1,7 @@
+import {
+  convergeAlphaDev,
+  finalizeAdvancedAlpha,
+} from "./durable-transaction-operations.js";
 async function planAlphaPublication(context) {
   const ownsMajorAlphaTag = await context.ownsMajorAlphaFloatingTag();
   const sharedAlphaAuthorityMajor = context.getPublishContract(
@@ -52,7 +56,8 @@ async function planAlphaPublication(context) {
           releasePrefix: context.rule.releasePrefix,
           targetRef: context.targetRef,
           sourceSha: context.sha,
-          expectedVersion: context.expectedPublicationVersion || currentAlpha?.version,
+          expectedVersion:
+            context.expectedPublicationVersion || currentAlpha?.version,
         });
   const currentAlphaTagSha = currentAlpha
     ? await context.readRefSha(`tags/${currentAlpha.tag}`)
@@ -172,7 +177,6 @@ async function evaluateAlphaRecovery(context, plan) {
     needsContainedPublishedFinalization,
   };
 }
-
 async function finalizeContainedAlpha(context, state) {
   if (!state.needsContainedPublishedFinalization) return undefined;
   const transaction = state.currentAlphaTransaction;
@@ -234,6 +238,12 @@ async function finalizeContainedAlpha(context, state) {
         transaction.source_sha,
       ),
     });
+    const pending = await convergeAlphaDev(
+      context,
+      context.sha,
+      transaction.exact_tag,
+    );
+    if (pending) return pending;
     await context.updateTag(context.rule.alphaTag, transaction.release_sha);
     await context.updateMajorAlphaFloatingTag({ sha: transaction.release_sha });
     await context.markComplete({
@@ -280,8 +290,11 @@ function selectAlphaCandidate(context, state) {
   if (advanced) return { tag: advanced.exact_tag, transaction: advanced };
   if (state.explicitAlphaTags[0]) return { tag: state.explicitAlphaTags[0] };
   if (state.transactionOpen && state.containsTransaction && !state.settled) {
-    return ["publish_failed", "repair_required"].includes(state.currentAlphaTransaction?.state || "")
-      ? { ...state.currentAlpha, transaction: state.currentAlphaTransaction } : state.currentAlpha;
+    return ["publish_failed", "repair_required"].includes(
+      state.currentAlphaTransaction?.state || "",
+    )
+      ? { ...state.currentAlpha, transaction: state.currentAlphaTransaction }
+      : state.currentAlpha;
   }
   if (
     state.currentAlpha &&
@@ -306,7 +319,6 @@ function selectAlphaCandidate(context, state) {
     sha: context.sha,
   });
 }
-
 async function settleExistingAlpha(context, state, selectedAlpha) {
   if (!(await context.isSettledAlphaVersionState(selectedAlpha))) {
     return undefined;
@@ -370,7 +382,6 @@ async function settleExistingAlpha(context, state, selectedAlpha) {
     updates: context.updates,
   });
 }
-
 async function prepareAlphaCommit(context, candidate) {
   const version = context.stripTagPrefix(candidate.tag);
   if (candidate.transaction?.release_sha) {
@@ -400,7 +411,6 @@ async function prepareAlphaCommit(context, candidate) {
     sha: commit.sha,
   };
 }
-
 async function publishAlphaCandidate(context, state, initialCandidate) {
   let selectedAlpha = initialCandidate;
   let alpha = await prepareAlphaCommit(context, selectedAlpha);
@@ -429,7 +439,14 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
       exactTag: selectedAlpha.tag,
       channel: context.rule.channel,
       line: context.rule.releasePrefix,
-      releaseSha: alpha.sha, sourceShaOverride: selectedAlpha.transaction?.source_sha || context.sha, releaseMaterialShaOverride: selectedAlpha.transaction?.release_material_sha || selectedAlpha.transaction?.release_sha, publishToolingShaOverride: selectedAlpha.transaction?.publish_tooling_sha || selectedAlpha.transaction?.release_sha,
+      releaseSha: alpha.sha,
+      sourceShaOverride: selectedAlpha.transaction?.source_sha || context.sha,
+      releaseMaterialShaOverride:
+        selectedAlpha.transaction?.release_material_sha ||
+        selectedAlpha.transaction?.release_sha,
+      publishToolingShaOverride:
+        selectedAlpha.transaction?.publish_tooling_sha ||
+        selectedAlpha.transaction?.release_sha,
       publishDistTagOverride: state.alphaPublishDistTag,
       durablePublicationMaterial: selectedAlpha.transaction,
       allowVersionStateFinalization:
@@ -465,43 +482,10 @@ async function publishAlphaCandidate(context, state, initialCandidate) {
   }
   return { selectedAlpha, alpha };
 }
-
 async function finalizeAlphaPublication(context, state, publication) {
   const { selectedAlpha, alpha } = publication;
-  if (context.advancedPublicationTransaction) {
-    await context.markFinalizing();
-    const transaction =
-      context.getLatestPublishTransaction()?.transaction ||
-      context.advancedPublicationTransaction;
-    const exactTagSha = transaction?.source_sha || alpha.sha;
-    await context.ensureTag(selectedAlpha.tag, exactTagSha, {
-      acceptedExistingShas: context.transactionAcceptedExactTagShas(
-        transaction,
-        exactTagSha,
-      ),
-      acceptedExistingMaterialShas: context.transactionAcceptedExactTagShas(
-        transaction,
-        "",
-      ),
-    });
-    const finalizedChannelSha = context.advancedChannelSha || alpha.sha; await context.updateTag(context.rule.alphaTag, finalizedChannelSha); await context.updateMajorAlphaFloatingTag({ sha: finalizedChannelSha }); await context.markComplete();
-    context.updates.push({
-      action: "finalized-advanced-publication",
-      tag: selectedAlpha.tag,
-      sourceSha: context.sha,
-      releaseSha: alpha.sha,
-      currentChannelSha: context.advancedChannelSha,
-      sha: alpha.sha,
-    });
-    return context.withPublishTransaction({
-      owner: context.owner,
-      repo: context.repo,
-      sourceSha: context.sha,
-      sha: context.advancedChannelSha || context.sha,
-      targetRef: context.targetRef,
-      updates: context.updates,
-    });
-  }
+  const advanced = await finalizeAdvancedAlpha(context, publication);
+  if (advanced) return advanced;
   if (context.versionState) {
     await context.markFinalizing();
     const targetUpdate = await context.updateBranch(
@@ -536,8 +520,10 @@ async function finalizeAlphaPublication(context, state, publication) {
       {
         title: `Prepare ${selectedAlpha.tag}`,
         body: `Create the generated version-state commit for ${selectedAlpha.tag}.`,
-        allowPendingPullRequest: true, allowMergeCommitOnNonFastForward: true,
-        allowMergeCommitOnNonFastForwardPaths: alpha.commit.files, reconciliationVersion: alpha.version,
+        allowPendingPullRequest: true,
+        allowMergeCommitOnNonFastForward: true,
+        allowMergeCommitOnNonFastForwardPaths: alpha.commit.files,
+        reconciliationVersion: alpha.version,
       },
     );
     if (devUpdate.pending) {
@@ -591,7 +577,11 @@ async function promoteAlphaChannel(context) {
   const selectedAlpha = selectAlphaCandidate(context, state);
   const settled = await settleExistingAlpha(context, state, selectedAlpha);
   if (settled) return settled;
-  const publication = await publishAlphaCandidate(context, state, selectedAlpha);
+  const publication = await publishAlphaCandidate(
+    context,
+    state,
+    selectedAlpha,
+  );
   return finalizeAlphaPublication(context, state, publication);
 }
 

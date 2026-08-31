@@ -15,14 +15,28 @@ import {
   createV4ReleaseReceipt,
   createV4ReleaseTransaction,
 } from "../../packages/core/v4-release-invocation.js";
+import { createV4ProductPublicationPlan } from "../../packages/core/v4-product-publication.js";
 import {
   v4PublicationQualificationRoot,
   validateV4PublicationQualificationReceipt,
 } from "../../packages/core/v4-publication-qualification.js";
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
 import {
+  activateExactPnpm,
   applyProductPublication,
   planProductPublication,
+  resolveCandidateBuildSummaryPath,
+  resolveCandidateProviderInputs,
+  resolvePublicationTarget,
+  resolvePromotionTarget,
+} from "./product-provider.js";
+
+export {
+  activateExactPnpm,
+  resolveCandidateBuildSummaryPath,
+  resolveCandidateProviderInputs,
+  resolvePublicationTarget,
+  resolvePromotionTarget,
 } from "./product-provider.js";
 
 const input = (name, required = false) =>
@@ -34,26 +48,6 @@ const write = (file, value) => {
   fs.writeFileSync(resolved, `${JSON.stringify(value, null, 2)}\n`);
   return resolved;
 };
-
-export function resolveCandidateBuildSummaryPath({
-  candidatePassportPath,
-  declaredPath = "",
-}) {
-  const selected = String(declaredPath || "").trim();
-  if (selected) return selected;
-  const fallback = path.join(
-    path.dirname(candidatePassportPath),
-    "..",
-    "summary",
-    "build-summary.json",
-  );
-  if (!fs.existsSync(path.resolve(fallback))) {
-    throw new Error(
-      "candidate-build-summary-path is required when the sealed candidate has no standard summary artifact",
-    );
-  }
-  return fallback;
-}
 
 export function aggregateV4ReleasePassport({
   candidate,
@@ -201,6 +195,7 @@ function productProviderRequest({
   candidatePassportPath,
   buildSummaryPath,
   qualification,
+  providerInputs,
 }) {
   return {
     octokit,
@@ -214,20 +209,24 @@ function productProviderRequest({
     qualification,
     requiredStatusCheck: input("required-status-check") || "check",
     publishCommand: input("publish-command"),
-    sealedBundleRoot: input("sealed-bundle-root", true),
-    sealedBundleManifest: input("sealed-bundle-manifest", true),
-    requiredArtifactsPath: input("required-artifacts-path", true),
+    sealedBundleRoot: providerInputs.sealedBundleRoot,
+    sealedBundleManifest: providerInputs.sealedBundleManifest,
+    requiredArtifactsPath: providerInputs.requiredArtifactsPath,
     publishMode: input("publish-mode"),
     publishAuth: input("publish-auth") || "trusted-publishing",
     publishDistTag: input("publish-dist-tag"),
     publishPackageSetOrder: input("publish-package-set-order") || "as-provided",
-    publishPackageMain: input("publish-package-main", true),
+    publishPackageMain: providerInputs.publishPackageMain,
+    releaseCandidateRecoveryReceiptPath:
+      providerInputs.releaseCandidateRecoveryReceiptPath || "",
     publishRematerializeOnResume: core.getBooleanInput(
       "publish-rematerialize-on-resume",
     ),
     publishTransactionOverride: core.getBooleanInput(
       "publish-transaction-override",
     ),
+    expectedTransactionId: input("resume-transaction-id"),
+    publicationIntent: read(input("product-publication-intent-path", true)),
     actor: github.context.actor,
     runId: String(github.context.runId || ""),
   };
@@ -243,6 +242,7 @@ async function createReleaseDocuments({
   qualification,
   sourceBinding,
   publicationPlan,
+  publicationIntent,
   octokit,
 }) {
   const version = publicationPlan.version;
@@ -321,6 +321,11 @@ async function createReleaseDocuments({
     providerRoot: releaseInvocation.roots.providerRoot,
     parentRoot: releaseInvocation.roots.parentRoot,
   });
+  const productPublicationPlan = createV4ProductPublicationPlan({
+    intent: publicationIntent,
+    invocationRoot: releaseInvocation.roots.invocationRoot,
+    transactionRoot: releaseTransaction.transactionRoot,
+  });
   const outputDir = path.resolve(".buildchain/release-passport");
   write(invocationPath, releaseInvocation.invocation);
   const releaseTransactionPath = write(
@@ -329,6 +334,10 @@ async function createReleaseDocuments({
       ...releaseTransaction.transaction,
       transactionRoot: releaseTransaction.transactionRoot,
     },
+  );
+  const productPublicationPlanPath = write(
+    ".buildchain/release-tail/product-publication-plan.json",
+    productPublicationPlan,
   );
   const passportPath = write(
     path.join(outputDir, "buildchain.release.json"),
@@ -355,6 +364,8 @@ async function createReleaseDocuments({
     releaseInvocation,
     releaseTransaction,
     releaseTransactionPath,
+    productPublicationPlan,
+    productPublicationPlanPath,
     tag,
     version,
   };
@@ -374,7 +385,7 @@ async function applyAndSettle({
   try {
     productProviderResult = await applyProductPublication(
       providerRequest,
-      publicationPlan,
+      documents.productPublicationPlan,
     );
   } catch (error) {
     if (error.providerProjection)
@@ -475,17 +486,34 @@ function setOutputs(documents, settlement) {
 
 async function main() {
   const repository = input("repository", true);
-  const sourceSha = input("source-sha", true);
+  const declaredSourceSha = input("source-sha", true);
   const fallbackVersion = input("version", true);
   const fallbackTag = input("tag", true);
   const channel = input("channel", true);
+  const expectedTransactionId = input("resume-transaction-id");
   const candidatePassportPath = input("candidate-passport-path", true);
-  const buildSummaryPath = input("candidate-build-summary-path", true);
+  const buildSummaryPath = resolveCandidateBuildSummaryPath({
+    candidatePassportPath,
+    declaredPath: input("candidate-build-summary-path"),
+  });
   const candidate = read(candidatePassportPath);
   const stageCapsules = read(input("stage-capsules-path", true));
   const qualification = read(input("publication-qualification-path", true));
-  const octokit = github.getOctokit(input("token", true));
-  const mutationOctokit = github.getOctokit(input("mutation-token", true));
+  const token = input("token", true);
+  const octokit = github.getOctokit(token);
+  const mutationOctokit = github.getOctokit(input("mutation-token") || token);
+  const publicationTarget = await resolvePublicationTarget({
+    octokit,
+    candidatePassportPath,
+    candidate,
+    repository,
+    channel,
+    sourceSha: declaredSourceSha,
+    targetRef: input("target-ref"),
+    targetSha: input("target-sha"),
+    expectedTransactionId,
+  });
+  const sourceSha = publicationTarget.sourceSha;
   assertCandidateEvidenceBinding({ candidate, stageCapsules, repository });
   const sourceBinding = await observeProtectedPublicationSource({
     octokit,
@@ -493,16 +521,24 @@ async function main() {
     protectedSourceSha: sourceSha,
     candidate,
   });
+  const providerInputs = resolveCandidateProviderInputs({
+    candidatePassportPath,
+    sealedBundleRoot: input("sealed-bundle-root"),
+    sealedBundleManifest: input("sealed-bundle-manifest"),
+    requiredArtifactsPath: input("required-artifacts-path"),
+    publishPackageMain: input("publish-package-main"),
+  });
   const providerRequest = productProviderRequest({
     octokit,
     mutationOctokit,
     repository,
-    targetRef: input("target-ref", true),
-    targetSha: input("target-sha", true),
+    targetRef: publicationTarget.targetRef,
+    targetSha: publicationTarget.targetSha,
     candidate,
     candidatePassportPath,
     buildSummaryPath,
     qualification,
+    providerInputs,
   });
   const publicationPlan = await planProductPublication(providerRequest, {
     fallbackVersion,
@@ -518,8 +554,10 @@ async function main() {
     qualification,
     sourceBinding,
     publicationPlan,
+    publicationIntent: providerRequest.publicationIntent,
     octokit,
   });
+  activateExactPnpm();
   const settlement = await applyAndSettle({
     repository,
     sourceSha,

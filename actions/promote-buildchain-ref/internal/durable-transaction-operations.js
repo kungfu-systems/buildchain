@@ -8,6 +8,75 @@ function releasePassportOutputPath(context) {
 }
 
 function persistBeforePassport(context, transaction, enabled) { return !enabled || !context.fs.existsSync(transaction?.evidencePath || ""); }
+
+async function convergeAlphaDev(context, sha, tag) {
+  const devRef = `dev/v${context.rule.major}/v${context.rule.major}.${context.rule.minor}`;
+  const update = await context.updateBranch(devRef, sha, "updated", {
+    title: `Converge ${tag} into development`,
+    body: `Converge the protected alpha version-state result for ${tag} into ${devRef}.`,
+    allowPendingPullRequest: true,
+    allowMergeCommitOnNonFastForward: true,
+  });
+  if (!update.pending) return undefined;
+  return context.withPublishTransaction(
+    {
+      owner: context.owner,
+      repo: context.repo,
+      sourceSha: context.sha,
+      sha,
+      targetRef: context.targetRef,
+      pendingPullRequest: update.pullRequest.html_url || update.pullRequest.url,
+      updates: context.updates,
+    },
+    { finalizationNeeded: true },
+  );
+}
+
+async function finalizeAdvancedAlpha(context, publication) {
+  if (!context.advancedPublicationTransaction) return undefined;
+  const { selectedAlpha, alpha } = publication;
+  await context.markFinalizing();
+  const transaction =
+    context.getLatestPublishTransaction()?.transaction ||
+    context.advancedPublicationTransaction;
+  const exactTagSha = transaction?.source_sha || alpha.sha;
+  await context.ensureTag(selectedAlpha.tag, exactTagSha, {
+    acceptedExistingShas: context.transactionAcceptedExactTagShas(
+      transaction,
+      exactTagSha,
+    ),
+    acceptedExistingMaterialShas: context.transactionAcceptedExactTagShas(
+      transaction,
+      "",
+    ),
+  });
+  const finalizedChannelSha = context.advancedChannelSha || alpha.sha;
+  const pending = await convergeAlphaDev(
+    context,
+    finalizedChannelSha,
+    selectedAlpha.tag,
+  );
+  if (pending) return pending;
+  await context.updateTag(context.rule.alphaTag, finalizedChannelSha);
+  await context.updateMajorAlphaFloatingTag({ sha: finalizedChannelSha });
+  await context.markComplete();
+  context.updates.push({
+    action: "finalized-advanced-publication",
+    tag: selectedAlpha.tag,
+    sourceSha: context.sha,
+    releaseSha: alpha.sha,
+    currentChannelSha: context.advancedChannelSha,
+    sha: alpha.sha,
+  });
+  return context.withPublishTransaction({
+    owner: context.owner,
+    repo: context.repo,
+    sourceSha: context.sha,
+    sha: context.advancedChannelSha || context.sha,
+    targetRef: context.targetRef,
+    updates: context.updates,
+  });
+}
 function createDurableTransactionOperations(context) {
   const {
     octokit,
@@ -387,4 +456,8 @@ function createDurableTransactionOperations(context) {
   };
 }
 
-export { createDurableTransactionOperations };
+export {
+  convergeAlphaDev,
+  createDurableTransactionOperations,
+  finalizeAdvancedAlpha,
+};

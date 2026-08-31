@@ -25,8 +25,6 @@ import {
   discoverV4ReleaseTopology,
   findUnknownV4ReleaseTopology,
 } from "../scripts/check-v4-release-topology.mjs";
-import { resolveV4ReleaseCandidateAdapter } from "../scripts/v4-release-candidate-adapter.mjs";
-import { selectProductPublicationPlan } from "../actions/v4-release-candidate-promote/product-provider.js";
 
 const fixture = JSON.parse(
   fs.readFileSync(
@@ -247,65 +245,6 @@ test("fresh, resume, no-op, and blocked routing is provider-free and determinist
   );
 });
 
-test("fresh and recovery candidate discovery are data-only adapters into the same APPLY engine", () => {
-  assert.deepEqual(resolveV4ReleaseCandidateAdapter(), {
-    mode: "fresh",
-    script: "scripts/release-candidate-resolver.mjs",
-  });
-  assert.deepEqual(
-    resolveV4ReleaseCandidateAdapter({ resumeCandidateRunId: "123" }),
-    {
-      mode: "recovery",
-      script: "scripts/resume-from-candidate-run.mjs",
-    },
-  );
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /run: node \.buildchain\/runtime\/scripts\/v4-release-candidate-adapter\.mjs/u,
-  );
-  assert.doesNotMatch(
-    workflow,
-    /if \[ -n "\$BUILDCHAIN_RESUME_CANDIDATE_RUN_ID" \]/u,
-  );
-});
-
-test("canonical APPLY roots the product provider's planned exact version", () => {
-  assert.deepEqual(
-    selectProductPublicationPlan({
-      updates: [
-        {
-          action: "dry-run-publish-transaction",
-          version: "4.0.2-alpha.3",
-          tag: "v4.0.2-alpha.3",
-          releaseCandidateVersion: "4.0.2-alpha.2",
-        },
-      ],
-    }),
-    {
-      version: "4.0.2-alpha.3",
-      tag: "v4.0.2-alpha.3",
-      candidateVersion: "4.0.2-alpha.2",
-    },
-  );
-  assert.throws(
-    () =>
-      selectProductPublicationPlan({
-        updates: [
-          {
-            action: "dry-run-publish-transaction",
-            version: "4.0.2-alpha.3",
-            tag: "v22.22.3-kf.0",
-          },
-        ],
-      }),
-    /mismatched exact tag/u,
-  );
-});
-
 test("one three-phase ReleaseTransaction owns one terminal ReleaseReceipt", () => {
   const transaction = transactionFor(fixture.invocations.alpha);
   assert.deepEqual(transaction.transaction.phases, [
@@ -464,6 +403,27 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
   assert.deepEqual(topologyLedger.authorityClosure.runtimeEngines, [
     "actions/v4-release-candidate-promote/index.js",
   ]);
+  assert.deepEqual(
+    topologyLedger.authorityClosure.privilegedExecutableClosure.entrypoints,
+    ["actions/v4-release-candidate-promote/index.js"],
+  );
+  assert.match(
+    topologyLedger.authorityClosure.privilegedExecutableClosure.root,
+    /^sha256:[0-9a-f]{64}$/u,
+  );
+  assert.ok(
+    topologyLedger.authorityClosure.privilegedExecutableClosure.modules.includes(
+      "actions/v4-release-candidate-promote/product-provider.js",
+    ),
+  );
+  assert.deepEqual(
+    topologyLedger.authorityClosure.legacyEngineModules.filter((relative) =>
+      topologyLedger.authorityClosure.privilegedExecutableClosure.modules.includes(
+        relative,
+      ),
+    ),
+    [],
+  );
   assert.doesNotMatch(
     [canonical, publicWrapper, recovery].join("\n"),
     /legacy-promote|v4-declarative-promote/u,

@@ -166,9 +166,11 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `.github/workflows/release-candidate-promote.yml`
 - `actions/promote-buildchain-ref/lib.js`
 - `actions/v4-release-candidate-promote/index.js`
+- `actions/v4-release-candidate-promote/product-provider.js`
 - `scripts/check-inventory.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
 - `tests/promotion-channel-router.test.mjs`
+- `tests/v4-release-topology.test.mjs`
 - `scripts/site-capability-metadata.mjs`
 - `tests/v4-floating-consumer-policy.test.mjs`
 - `tests/v4-declarative-promotion-mode.test.mjs`
@@ -383,6 +385,7 @@ Owner: Buildchain action maintainers
 
 ### Implementation
 
+- `actions/promote-buildchain-ref/internal/contained-published-version-state.js`
 - `actions/promote-buildchain-ref/internal/promote-alpha-channel.js`
 - `actions/promote-buildchain-ref/internal/promote-major-channel.js`
 - `actions/promote-buildchain-ref/internal/promote-release-channel.js`
@@ -394,6 +397,7 @@ Owner: Buildchain action maintainers
 
 ### Tests
 
+- `tests/promote-buildchain-ref-contained-published-version-state.test.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
 - `tests/promote-buildchain-ref-recovery.test.mjs`
 - `tests/promote-buildchain-ref-governance.test.mjs`
@@ -405,7 +409,7 @@ Owner: Buildchain action maintainers
 
 ### Minimal validation
 
-- `node --test tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-recovery.test.mjs tests/promote-buildchain-ref-governance.test.mjs tests/promotion-responsibilities.test.mjs`
+- `node --test tests/promote-buildchain-ref-contained-published-version-state.test.mjs tests/promote-buildchain-ref.test.mjs tests/promote-buildchain-ref-recovery.test.mjs tests/promote-buildchain-ref-governance.test.mjs tests/promotion-responsibilities.test.mjs`
 
 ## promotion-github-transaction-store
 

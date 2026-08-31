@@ -23793,7 +23793,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 31
+        "line": 30
       },
       "example": "import { RELEASE_TAIL_CAPABILITY_REGISTRY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -31035,7 +31035,7 @@
       "specifier": "@kungfu-tech/buildchain/release-tail-provider-plane",
       "export": "./release-tail-provider-plane",
       "target": "./packages/core/release-tail-provider-plane.js",
-      "digest": "sha256:63860bdc066768c9fd69e8a64c2de245bdfc8798537e07d6a9a8f1e4b16cfb1e",
+      "digest": "sha256:83661b137cf7945ba263954d9e11933a767933ad3e223791909721c048e2d377",
       "summary": "Versioned declarative release-tail parsing, deterministic effect planning, durable transaction execution, readback, retry, and rooted receipt APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -31194,7 +31194,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:afc6f959491ea0360ee308ee476613a9b42ab37dc5755dc66d3edb484d5e81d3"
+      "digest": "sha256:1f50b0f7a45632b6e08b492687818ccbd3e0f00d7f189a21e1512e1a61df7df8"
     },
     {
       "id": "build-facts",

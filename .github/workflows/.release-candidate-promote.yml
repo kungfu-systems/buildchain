@@ -752,9 +752,11 @@ jobs:
       runtime-sha: ${{ steps.runtime.outputs.sha }}
       runtime-tree: ${{ steps.runtime.outputs.tree }}
       publisher-sha: ${{ steps.runtime.outputs.publisher-sha }}
-      version: ${{ steps.candidate.outputs.release-candidate-publication-version || steps.candidate.outputs.release-candidate-version }}
-      exact-tag: v${{ steps.candidate.outputs.release-candidate-publication-version || steps.candidate.outputs.release-candidate-version }}
+      version: ${{ steps.publication.outputs.version }}
+      exact-tag: ${{ steps.publication.outputs.exact-tag }}
       candidate-version: ${{ steps.candidate.outputs.release-candidate-version }}
+      product-publication-intent-path: ${{ steps.publication.outputs.intent-path }}
+      product-publication-intent-root: ${{ steps.publication.outputs.intent-root }}
       candidate-source-sha: ${{ steps.candidate.outputs.release-candidate-source-sha }}
       candidate-artifact: ${{ steps.candidate.outputs.release-candidate-artifact }}
       candidate-passport-path: ${{ steps.candidate.outputs.release-candidate-passport-path }}
@@ -813,6 +815,13 @@ jobs:
               ref: `heads/${targetRef}`,
             });
             const currentSha = current.data.object.sha;
+            const sourceCommit = await github.rest.git.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: requestedSha,
+            });
+            const sourceTimestamp = sourceCommit.data.committer?.date || sourceCommit.data.author?.date;
+            if (!sourceTimestamp) throw new Error("requested source commit has no provider timestamp");
             let comparisonStatus = "identical";
             if (currentSha !== requestedSha) {
               const comparison = await github.rest.repos.compareCommitsWithBasehead({
@@ -837,6 +846,7 @@ jobs:
             core.setOutput("channel", route.channel);
             core.setOutput("target-ref", route.targetRef);
             core.setOutput("requested-sha", route.requestedSha);
+            core.setOutput("source-timestamp", new Date(sourceTimestamp).toISOString());
             core.setOutput("current-sha", currentSha);
 
       - uses: actions/setup-node@v6.4.0
@@ -893,6 +903,24 @@ jobs:
           BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME: ${{ inputs.publish-rematerialize-on-resume }}
           BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: ${{ inputs.promotion-runtime-authorization-json }}
           BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: ${{ inputs.promotion-runtime-authorization-root }}
+
+      - name: Select and root the exact product publication intent
+        if: ${{ steps.intent.outputs.action == 'promote' }}
+        id: publication
+        shell: bash
+        run: node .buildchain/runtime/scripts/v4-product-publication-intent.mjs
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CHANNEL: ${{ steps.intent.outputs.channel }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.intent.outputs.target-ref }}
+          BUILDCHAIN_SOURCE_SHA: ${{ steps.intent.outputs.requested-sha }}
+          BUILDCHAIN_SOURCE_TIMESTAMP: ${{ steps.intent.outputs.source-timestamp }}
+          BUILDCHAIN_CANDIDATE_VERSION: ${{ steps.candidate.outputs.release-candidate-version }}
+          BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: ${{ steps.candidate.outputs.release-candidate-publication-version }}
+          BUILDCHAIN_SEALED_BUNDLE_MANIFEST: ${{ steps.candidate.outputs.publish-sealed-bundle-manifest }}
+          BUILDCHAIN_REQUIRED_ARTIFACTS_PATH: ${{ steps.candidate.outputs.publish-required-artifacts-path }}
+          BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
+          BUILDCHAIN_PUBLISH_DIST_TAG: ${{ inputs.publish-dist-tag }}
 
       - name: Retain the exact QUALIFY cut
         if: ${{ steps.intent.outputs.action == 'promote' }}
@@ -957,11 +985,12 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Install exact protected channel dependencies without scripts
-        run: corepack pnpm@11.7.0 install --frozen-lockfile --ignore-scripts
-
-      - name: Install exact provider runtime dependencies without scripts
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+      - name: Install exact provider runtime dependencies and expose the verified bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --frozen-lockfile --ignore-scripts
+          ln -s .buildchain/runtime/node_modules node_modules
 
       - name: Restore the rooted QUALIFY cut
         uses: actions/download-artifact@v7.0.0
@@ -991,6 +1020,7 @@ jobs:
           sealed-bundle-root: ${{ needs.qualify.outputs.sealed-bundle-root }}
           sealed-bundle-manifest: ${{ needs.qualify.outputs.sealed-bundle-manifest }}
           required-artifacts-path: ${{ needs.qualify.outputs.required-artifacts-path }}
+          product-publication-intent-path: ${{ needs.qualify.outputs.product-publication-intent-path }}
           publisher-workflow-sha: ${{ needs.qualify.outputs.publisher-sha }}
           runtime-commit: ${{ needs.qualify.outputs.runtime-sha }}
           runtime-tree: ${{ needs.qualify.outputs.runtime-tree }}
@@ -1003,6 +1033,7 @@ jobs:
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
+          resume-transaction-id: ${{ inputs.resume-transaction-id }}
           artifact-paths: ${{ needs.qualify.outputs.release-artifact-paths }}
           state-path: .buildchain/release-tail/state.json
           failure-after-capability: ${{ inputs.provider-failure-after-capability }}
