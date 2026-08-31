@@ -1102,7 +1102,7 @@ export async function executeReleaseTailTransaction(
         if (cycle + 1 < maxCycles) continue;
         break;
       }
-      if (applied && policy.class !== "provider-transient") continue;
+      if (applied) continue;
 
       operation = current.operations.find(
         (entry) => entry.operationId === pending.operationId,

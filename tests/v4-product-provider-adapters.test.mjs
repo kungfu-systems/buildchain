@@ -197,9 +197,13 @@ function githubProvider() {
   return { octokit: { rest }, refs, protectedRefs, pullRequests };
 }
 
-function npmProvider(cwd, { initialIntegrity = "" } = {}) {
+function npmProvider(
+  cwd,
+  { initialIntegrity = "", visibilityLagReads = 0 } = {},
+) {
   let integrity = initialIntegrity;
   let publishCount = 0;
+  let remainingVisibilityLagReads = 0;
   return {
     get publishCount() {
       return publishCount;
@@ -226,12 +230,17 @@ function npmProvider(cwd, { initialIntegrity = "" } = {}) {
         };
       }
       if (args[0] === "view") {
+        if (remainingVisibilityLagReads > 0) {
+          remainingVisibilityLagReads -= 1;
+          return { status: 1, stdout: "", stderr: "npm error E404" };
+        }
         return integrity
           ? { status: 0, stdout: JSON.stringify(integrity), stderr: "" }
           : { status: 1, stdout: "", stderr: "npm error E404" };
       }
       if (args[0] === "publish") {
         publishCount += 1;
+        remainingVisibilityLagReads = visibilityLagReads;
         integrity = `sha512-${crypto
           .createHash("sha512")
           .update(fs.readFileSync(args[1]))
@@ -407,6 +416,31 @@ test("rooted product effects publish once and replay entirely from provider read
     true,
   );
   assert.equal(npm.publishCount, 1);
+});
+
+test("npm publication waits for registry visibility without republishing an immutable version", async () => {
+  const files = fixture();
+  const github = githubProvider();
+  const npm = npmProvider(files.cwd, { visibilityLagReads: 3 });
+  const scenario = productScenario(files, github, ["a", "b"]);
+  const waits = [];
+  const runtime = createV4ProductPublicationAdapters({
+    request: scenario.request,
+    intent: scenario.intent,
+    plan: scenario.plan,
+    cwd: files.cwd,
+    spawn: npm.spawn,
+    wait(delayMs) {
+      waits.push(delayMs);
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(scenario.effectPlan),
+    { adapters: runtime.adapters },
+  );
+  assert.equal(result.state, "complete");
+  assert.equal(npm.publishCount, 1);
+  assert.deepEqual(waits, [1_000, 2_000, 4_000]);
 });
 
 test("protected-ref rejection blocks safely and resumes after PR merge without republishing npm", async () => {
