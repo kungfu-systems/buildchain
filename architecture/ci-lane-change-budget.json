@@ -270,6 +270,23 @@
       }
     },
     {
+      "laneId": ".github/workflows/buildchain-ref-promotion.yml#universal-bootstrap",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 60,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "canonical exact-candidate self-promotion latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The canonical publisher delegates one closed request to the exact reviewed candidate and keeps the compatibility path mutually exclusive."
+      }
+    },
+    {
       "laneId": ".github/workflows/release-candidate-promote.yml#invoke",
       "authorityClass": "release",
       "triggerClass": "reusable",

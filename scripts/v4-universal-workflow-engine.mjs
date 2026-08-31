@@ -222,6 +222,70 @@ async function observeReleaseRoute({
   });
 }
 
+async function observedSourceTimestamp(repository, sourceSha) {
+  const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "";
+  const apiUrl = process.env.GITHUB_API_URL || "https://api.github.com";
+  const commit = await githubJson({
+    apiUrl,
+    token,
+    path: `/repos/${repository}/git/commits/${sourceSha}`,
+  });
+  const observed = String(
+    commit?.committer?.date || commit?.author?.date || "",
+  ).trim();
+  if (!observed || Number.isNaN(Date.parse(observed)))
+    fail("protected publication source timestamp is unavailable");
+  return new Date(observed).toISOString();
+}
+
+async function materializeProductPublicationIntent({
+  candidate,
+  inputs,
+  repository,
+  route,
+}) {
+  const intentPath = path.resolve(
+    ".buildchain/release-candidate/v4-product-publication-intent.json",
+  );
+  const sourceTimestamp = await observedSourceTimestamp(
+    repository,
+    route.requestedSha,
+  );
+  execFileSync(
+    process.execPath,
+    [
+      path.resolve(
+        ".buildchain/candidate/scripts/v4-product-publication-intent.mjs",
+      ),
+    ],
+    {
+      env: {
+        ...process.env,
+        GITHUB_OUTPUT: "",
+        BUILDCHAIN_REPOSITORY: repository,
+        BUILDCHAIN_CHANNEL: route.channel,
+        BUILDCHAIN_TARGET_REF: route.targetRef,
+        BUILDCHAIN_SOURCE_SHA: route.requestedSha,
+        BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp,
+        BUILDCHAIN_CANDIDATE_VERSION:
+          candidate.publicationVersion || candidate.version,
+        BUILDCHAIN_RECOVERED_PUBLICATION_VERSION:
+          String(inputs["resume-transaction-id"] || "") !== ""
+            ? candidate.publicationVersion || candidate.version
+            : "",
+        BUILDCHAIN_SEALED_BUNDLE_MANIFEST: candidate.paths.sealedBundleManifest,
+        BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:
+          candidate.paths.publishRequiredArtifacts,
+        BUILDCHAIN_PUBLISH_PACKAGE_MAIN: inputs["publish-package-main"] || "",
+        BUILDCHAIN_PUBLISH_DIST_TAG: inputs["publish-dist-tag"] || "",
+        BUILDCHAIN_PRODUCT_PUBLICATION_INTENT_PATH: intentPath,
+      },
+      stdio: ["ignore", "ignore", "inherit"],
+    },
+  );
+  return intentPath;
+}
+
 function verifiedReleaseDocuments() {
   const base = path.resolve(".buildchain/release-tail");
   const invocation = JSON.parse(
@@ -326,6 +390,13 @@ async function executeReleasePromotion(request, admission) {
   });
   if (!candidate.enabled)
     fail(candidate.reason || "release candidate is unavailable");
+  const productPublicationIntentPath =
+    await materializeProductPublicationIntent({
+      candidate,
+      inputs: payload.inputs,
+      repository,
+      route,
+    });
   const runtimeTree = execFileSync(
     "git",
     ["-C", ".buildchain/candidate", "rev-parse", "HEAD^{tree}"],
@@ -349,6 +420,7 @@ async function executeReleasePromotion(request, admission) {
     "sealed-bundle-root": candidate.paths.sealedBundleRoot,
     "sealed-bundle-manifest": candidate.paths.sealedBundleManifest,
     "required-artifacts-path": candidate.paths.publishRequiredArtifacts,
+    "product-publication-intent-path": productPublicationIntentPath,
     "publisher-workflow-sha": admission.runtime.sha,
     "runtime-commit": admission.runtime.sha,
     "runtime-tree": runtimeTree,
@@ -365,6 +437,7 @@ async function executeReleasePromotion(request, admission) {
       payload.inputs["publish-rematerialize-on-resume"],
     "publish-transaction-override":
       payload.inputs["publish-transaction-override"],
+    "resume-transaction-id": payload.inputs["resume-transaction-id"],
     "artifact-paths": candidate.paths.releaseAssets.join("\n"),
     "state-path": ".buildchain/release-tail/state.json",
     "failure-after-capability":
