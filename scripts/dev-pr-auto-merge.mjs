@@ -723,6 +723,7 @@ function renderAdmissionComment(receipt, receiptRoot) {
     "GitHub auto-merge state is observed evidence only; it is not Buildchain admission authority.",
   ].join("\n");
 }
+
 async function publishAdmissionDiagnostic(client, options, receipt, receiptRoot) {
   const marker = `<!-- ${AGENT_ADMISSION_MARKER} pr=${receipt.pullRequestNumber} head=${receipt.expectedHeadSha} -->`;
   const body = renderAdmissionComment(receipt, receiptRoot);
@@ -742,6 +743,7 @@ async function publishAdmissionDiagnostic(client, options, receipt, receiptRoot)
   }
   return { commentId: comment?.id || null, commentUrl: comment?.html_url || "", statusPublished: Boolean(status) };
 }
+
 function createAdmissionReceipt({ options, pr = {}, state, reason, readiness, decision = {}, queue = null, warrant = null }) {
   return createDevPrAdmissionReceipt({ options, pr, state, reason, readiness, decision, queue, warrant, labels: labelsOf(pr), nextAction: nextAdmissionAction });
 }
@@ -749,21 +751,16 @@ function createAdmissionReceipt({ options, pr = {}, state, reason, readiness, de
 function targetedFailure({ options, pr, state, reason, readiness, decision, queue }) {
   const receipt = createAdmissionReceipt({ options, pr, state, reason, readiness, decision, queue });
   return {
-    schema: AGENT_ADMISSION_RESULT_SCHEMA, ok: false, mode: options.dryRun ? "plan" : "execute",
-    outcome: "targeted-admission-failed", receipt, receiptRoot: contentRoot(receipt), diagnostic: null,
+    schema: AGENT_ADMISSION_RESULT_SCHEMA,
+    ok: false,
+    mode: options.dryRun ? "plan" : "execute",
+    outcome: "targeted-admission-failed",
+    receipt,
+    receiptRoot: contentRoot(receipt),
+    diagnostic: null,
   };
 }
-async function readTargetPullRequest(client, number, options) {
-  let { pollMergeableAttempts: attempts, pollMergeableDelayMs: delayMs } = options;
-  for (; attempts > 1; attempts -= 1) {
-    try {
-      return await client.getPullRequest(number, { attempts, delayMs });
-    } catch {
-      await delay(delayMs);
-    }
-  }
-  return client.getPullRequest(number, { attempts, delayMs });
-}
+
 export async function runDevPrAdmission(optionsInput = {}, clientInput) {
   const options = normalizeOptions(optionsInput);
   if (!options.targetBranch) throw new Error("target branch is required");
@@ -779,9 +776,12 @@ export async function runDevPrAdmission(optionsInput = {}, clientInput) {
 
   let pr;
   try {
-    pr = await readTargetPullRequest(client, options.targetPullRequestNumber, options);
+    pr = await client.getPullRequest(options.targetPullRequestNumber, {
+      attempts: options.pollMergeableAttempts,
+      delayMs: options.pollMergeableDelayMs,
+    });
   } catch (error) {
-    return targetedFailure({ options, pr: {}, state: "blocked", reason: "pull-request-read-failed" });
+    return targetedFailure({ options, pr: {}, state: "missing", reason: "pull-request-not-found" });
   }
 
   const readinessFence = createPreReadinessQueueFence({ client, options, sleep: delay });

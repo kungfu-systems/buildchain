@@ -445,14 +445,7 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-function rawResponse(data, status = 200) {
-  return new Response(data, {
-    status,
-    headers: { "content-type": "application/json" },
-  });
-}
-
-test("GitHub state store reads its immutable queue blob through GitHub raw media", async () => {
+test("GitHub state store advances a non-forced child commit and verifies its immutable commit", async () => {
   const beforeCommit = "a".repeat(40);
   const nextCommit = "b".repeat(40);
   const state = initialQueue();
@@ -501,8 +494,12 @@ test("GitHub state store reads its immutable queue blob through GitHub raw media
       });
     }
     if (options.method === "GET" && url.endsWith("/git/blobs/blob-sha")) {
-      assert.equal(options.headers.accept, "application/vnd.github.raw+json");
-      return rawResponse(`${JSON.stringify(changed.queue, null, 2)}\n`);
+      return jsonResponse({
+        encoding: "base64",
+        content: Buffer.from(
+          `${JSON.stringify(changed.queue, null, 2)}\n`,
+        ).toString("base64"),
+      });
     }
     throw new Error(`unexpected request: ${options.method} ${url}`);
   };
@@ -603,7 +600,12 @@ test("GitHub state store deeply rejects recomputed but different readback bytes"
         tree: [{ path: "queue.json", type: "blob", sha: "blob-sha" }],
       });
     if (options.method === "GET" && url.endsWith("/git/blobs/blob-sha"))
-      return rawResponse(`${JSON.stringify(tampered, null, 2)}\n`);
+      return jsonResponse({
+        encoding: "base64",
+        content: Buffer.from(`${JSON.stringify(tampered, null, 2)}\n`).toString(
+          "base64",
+        ),
+      });
     throw new Error(`unexpected request: ${options.method} ${url}`);
   };
   const store = new GitHubDevDeliveryStore({

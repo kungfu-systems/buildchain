@@ -38,24 +38,6 @@ export function matchesExactDevDeliveryCandidate(existing, attempted) {
   );
 }
 
-export function reuseExactActiveDevDeliverySourceProof(active, input) {
-  const exact =
-    ["provisional", "qualified"].includes(active?.phase) &&
-    [
-      "pullRequestNumber",
-      "assignmentRoot",
-      "initiativeRoot",
-      "sourceIdentityRoot",
-      "deliveryClass",
-      "priority",
-    ].every((field) => active[field] === input[field]) &&
-    matchesExactDevDeliveryCandidate(active, {
-      ...input,
-      sourceProofRoot: active.sourceProofRoot,
-    });
-  return exact ? { ...input, sourceProofRoot: active.sourceProofRoot } : input;
-}
-
 export function createDevDeliveryCandidateIdentity(
   input,
   expected,

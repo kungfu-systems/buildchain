@@ -17,7 +17,6 @@ import {
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
 import { recoverLegacyTerminalDevDeliveryQueue } from "../packages/core/dev-delivery-warrant-legacy-recovery.js";
-import { reuseExactActiveDevDeliverySourceProof } from "../packages/core/dev-delivery-candidate-identity.js";
 import { runV4DeliveryWarrantReadCandidate } from "../packages/core/v4-delivery-warrant-read-candidate.js";
 
 import { GitHubDevDeliveryStore } from "./dev-delivery-warrant-store.mjs";
@@ -200,55 +199,54 @@ function transitionFor(command, queue, options) {
         "native command contract root does not match native-command",
       );
     }
-    const input = {
-      pullRequestNumber: positiveInteger(
-        options.pullRequestNumber,
-        "pullRequestNumber",
-      ),
-      sourceHead: exactSha(options.sourceHead, "sourceHead"),
-      assignmentRoot: exactRoot(options.assignmentRoot, "assignmentRoot"),
-      initiativeRoot: exactRoot(options.initiativeRoot, "initiativeRoot"),
-      sourceIdentityRoot: exactRoot(
-        options.sourceIdentityRoot,
-        "sourceIdentityRoot",
-      ),
-      sourcePatchRoot: exactRoot(options.sourcePatchRoot, "sourcePatchRoot"),
-      sourceProofRoot: exactRoot(options.sourceProofRoot, "sourceProofRoot"),
-      planRoot: exactRoot(options.planRoot, "planRoot"),
-      closureRoot: exactRoot(options.closureRoot, "closureRoot"),
-      dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
-      toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
-      ...(options.environmentRoot
-        ? {
-            environmentRoot: exactRoot(
-              options.environmentRoot,
-              "environmentRoot",
-            ),
-          }
-        : {}),
-      ...(nativeCommandContract ? { nativeCommandContract } : {}),
-      affectedPaths: jsonList(options.affectedPaths, "affected paths"),
-      shardEvidenceRoots: jsonList(
-        options.shardEvidenceRoots,
-        "shard evidence roots",
-      ),
-      sourceWorkflowRunId: options.sourceWorkflowRunId
-        ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId")
-        : 0,
-      deliveryClass: options.deliveryClass,
-      priority: options.priority || "ordinary",
-      ...(options.releaseBlockerPriority
-        ? {
-            releaseBlockerPriority: jsonObject(
-              options.releaseBlockerPriority,
-              "release blocker priority",
-            ),
-          }
-        : {}),
-    };
     return submitDevDeliveryCandidate(
       queue,
-      reuseExactActiveDevDeliverySourceProof(queue.activeWarrant, input),
+      {
+        pullRequestNumber: positiveInteger(
+          options.pullRequestNumber,
+          "pullRequestNumber",
+        ),
+        sourceHead: exactSha(options.sourceHead, "sourceHead"),
+        assignmentRoot: exactRoot(options.assignmentRoot, "assignmentRoot"),
+        initiativeRoot: exactRoot(options.initiativeRoot, "initiativeRoot"),
+        sourceIdentityRoot: exactRoot(
+          options.sourceIdentityRoot,
+          "sourceIdentityRoot",
+        ),
+        sourcePatchRoot: exactRoot(options.sourcePatchRoot, "sourcePatchRoot"),
+        sourceProofRoot: exactRoot(options.sourceProofRoot, "sourceProofRoot"),
+        planRoot: exactRoot(options.planRoot, "planRoot"),
+        closureRoot: exactRoot(options.closureRoot, "closureRoot"),
+        dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
+        toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
+        ...(options.environmentRoot
+          ? {
+              environmentRoot: exactRoot(
+                options.environmentRoot,
+                "environmentRoot",
+              ),
+            }
+          : {}),
+        ...(nativeCommandContract ? { nativeCommandContract } : {}),
+        affectedPaths: jsonList(options.affectedPaths, "affected paths"),
+        shardEvidenceRoots: jsonList(
+          options.shardEvidenceRoots,
+          "shard evidence roots",
+        ),
+        sourceWorkflowRunId: options.sourceWorkflowRunId
+          ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId")
+          : 0,
+        deliveryClass: options.deliveryClass,
+        priority: options.priority || "ordinary",
+        ...(options.releaseBlockerPriority
+          ? {
+              releaseBlockerPriority: jsonObject(
+                options.releaseBlockerPriority,
+                "release blocker priority",
+              ),
+            }
+          : {}),
+      },
       { now: options.now },
     );
   }
