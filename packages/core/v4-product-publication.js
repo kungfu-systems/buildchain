@@ -57,7 +57,7 @@ function assertLane({ channel, targetRef, version }) {
 }
 
 function observedAlphaNumber(version, expected) {
-  const parsed = parseVersion(version, "observed version");
+  const parsed = VERSION.test(version) ? parseVersion(version, "observed") : {};
   return parsed.major === expected.major &&
     parsed.minor === expected.minor &&
     parsed.patch === expected.patch
