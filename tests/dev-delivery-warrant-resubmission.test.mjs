@@ -76,7 +76,6 @@ test("selected duplicate reuses its active source proof without a write", async 
     {
       ...options,
       sourceProofRoot: root("f"),
-      reuseActiveSourceProof: true,
       execute: true,
       now: "2026-08-04T00:03:00Z",
     },
@@ -107,7 +106,6 @@ test("active source proof reuse rejects any other candidate drift", async () => 
         ...options,
         sourceProofRoot: root("f"),
         planRoot: root("e"),
-        reuseActiveSourceProof: true,
         execute: true,
         now: "2026-08-04T00:03:00Z",
       },

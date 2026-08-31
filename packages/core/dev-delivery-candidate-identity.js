@@ -38,9 +38,8 @@ export function matchesExactDevDeliveryCandidate(existing, attempted) {
   );
 }
 
-export function reuseExactActiveDevDeliverySourceProof(active, input, enabled) {
+export function reuseExactActiveDevDeliverySourceProof(active, input) {
   const exact =
-    enabled &&
     ["provisional", "qualified"].includes(active?.phase) &&
     [
       "pullRequestNumber",

@@ -365,7 +365,7 @@ jobs:
       runtime-selection-root: ${{ steps.runtime.outputs.root }}
       target-branch: ${{ steps.target.outputs.branch }}
       branch-artifact: ${{ steps.target.outputs.branch-artifact }}
-      source-proof-root: ${{ steps.submit.outputs.source-proof-root || steps.proof.outputs.source-proof-root }}
+      source-proof-root: ${{ steps.proof.outputs.source-proof-root }}
       warrant-receipt-root: ${{ steps.warrant.outputs.warrant-receipt-root }}
       warrant-state-root: ${{ steps.warrant.outputs.warrant-state-root }}
       warrant-state-commit: ${{ steps.warrant.outputs.warrant-state-commit }}
@@ -655,10 +655,9 @@ jobs:
             args+=(--source-workflow-run-id "${SOURCE_WORKFLOW_RUN_ID}")
           fi
           if [ "${WARRANT_MODE}" = "required" ]; then
-            args+=(--reuse-active-source-proof --execute)
+            args+=(--execute)
           fi
           node .buildchain/runtime/scripts/dev-delivery-warrant.mjs "${args[@]}"
-          echo "source-proof-root=$(jq -er '.receipt.sourceProofRoot' .buildchain/dev-delivery/submission.json)" >> "${GITHUB_OUTPUT}"
         env:
           GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
           TARGET_BRANCH: ${{ steps.target.outputs.branch }}

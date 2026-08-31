@@ -200,67 +200,55 @@ function transitionFor(command, queue, options) {
         "native command contract root does not match native-command",
       );
     }
+    const input = {
+      pullRequestNumber: positiveInteger(
+        options.pullRequestNumber,
+        "pullRequestNumber",
+      ),
+      sourceHead: exactSha(options.sourceHead, "sourceHead"),
+      assignmentRoot: exactRoot(options.assignmentRoot, "assignmentRoot"),
+      initiativeRoot: exactRoot(options.initiativeRoot, "initiativeRoot"),
+      sourceIdentityRoot: exactRoot(
+        options.sourceIdentityRoot,
+        "sourceIdentityRoot",
+      ),
+      sourcePatchRoot: exactRoot(options.sourcePatchRoot, "sourcePatchRoot"),
+      sourceProofRoot: exactRoot(options.sourceProofRoot, "sourceProofRoot"),
+      planRoot: exactRoot(options.planRoot, "planRoot"),
+      closureRoot: exactRoot(options.closureRoot, "closureRoot"),
+      dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
+      toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
+      ...(options.environmentRoot
+        ? {
+            environmentRoot: exactRoot(
+              options.environmentRoot,
+              "environmentRoot",
+            ),
+          }
+        : {}),
+      ...(nativeCommandContract ? { nativeCommandContract } : {}),
+      affectedPaths: jsonList(options.affectedPaths, "affected paths"),
+      shardEvidenceRoots: jsonList(
+        options.shardEvidenceRoots,
+        "shard evidence roots",
+      ),
+      sourceWorkflowRunId: options.sourceWorkflowRunId
+        ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId")
+        : 0,
+      deliveryClass: options.deliveryClass,
+      priority: options.priority || "ordinary",
+      ...(options.releaseBlockerPriority
+        ? {
+            releaseBlockerPriority: jsonObject(
+              options.releaseBlockerPriority,
+              "release blocker priority",
+            ),
+          }
+        : {}),
+    };
     return submitDevDeliveryCandidate(
       queue,
-      reuseExactActiveDevDeliverySourceProof(
-        queue.activeWarrant,
-        {
-          pullRequestNumber: positiveInteger(
-            options.pullRequestNumber,
-            "pullRequestNumber",
-          ),
-          sourceHead: exactSha(options.sourceHead, "sourceHead"),
-          assignmentRoot: exactRoot(options.assignmentRoot, "assignmentRoot"),
-          initiativeRoot: exactRoot(options.initiativeRoot, "initiativeRoot"),
-          sourceIdentityRoot: exactRoot(
-            options.sourceIdentityRoot,
-            "sourceIdentityRoot",
-          ),
-          sourcePatchRoot: exactRoot(
-            options.sourcePatchRoot,
-            "sourcePatchRoot",
-          ),
-          sourceProofRoot: exactRoot(
-            options.sourceProofRoot,
-            "sourceProofRoot",
-          ),
-          planRoot: exactRoot(options.planRoot, "planRoot"),
-          closureRoot: exactRoot(options.closureRoot, "closureRoot"),
-          dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
-          toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
-          ...(options.environmentRoot
-            ? {
-                environmentRoot: exactRoot(
-                  options.environmentRoot,
-                  "environmentRoot",
-                ),
-              }
-            : {}),
-          ...(nativeCommandContract ? { nativeCommandContract } : {}),
-          affectedPaths: jsonList(options.affectedPaths, "affected paths"),
-          shardEvidenceRoots: jsonList(
-            options.shardEvidenceRoots,
-            "shard evidence roots",
-          ),
-          sourceWorkflowRunId: options.sourceWorkflowRunId
-            ? positiveInteger(
-                options.sourceWorkflowRunId,
-                "sourceWorkflowRunId",
-              )
-            : 0,
-          deliveryClass: options.deliveryClass,
-          priority: options.priority || "ordinary",
-          ...(options.releaseBlockerPriority
-            ? {
-                releaseBlockerPriority: jsonObject(
-                  options.releaseBlockerPriority,
-                  "release blocker priority",
-                ),
-              }
-            : {}),
-        },
-        options.reuseActiveSourceProof,
-      ),
+      reuseExactActiveDevDeliverySourceProof(queue.activeWarrant, input),
       { now: options.now },
     );
   }
@@ -428,7 +416,6 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     stateRef: normalizeStateRef(optionsInput.stateRef, optionsInput.branch),
     now: new Date(optionsInput.now || Date.now()).toISOString(),
     execute: bool(optionsInput.execute, false),
-    reuseActiveSourceProof: bool(optionsInput.reuseActiveSourceProof, false),
   };
   requireTerminalEvidenceCas(options);
   if (
