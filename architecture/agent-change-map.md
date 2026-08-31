@@ -166,6 +166,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `.github/workflows/release-candidate-promote.yml`
 - `actions/promote-buildchain-ref/lib.js`
 - `actions/v4-release-candidate-promote/index.js`
+- `actions/v4-release-candidate-promote/product-provider.js`
 - `scripts/check-inventory.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
 - `tests/promotion-channel-router.test.mjs`

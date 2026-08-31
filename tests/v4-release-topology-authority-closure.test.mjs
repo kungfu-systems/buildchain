@@ -90,15 +90,16 @@ test("canonical APPLY activates the pnpm shim required by nested lifecycle scrip
     path.join(root, "actions/v4-release-candidate-promote/product-provider.js"),
     "utf8",
   );
+  const action = fs.readFileSync(
+    path.join(root, "actions/v4-release-candidate-promote/index.js"),
+    "utf8",
+  );
+  assert.match(provider, /exec corepack pnpm@11\.7\.0/u);
   assert.match(
     provider,
-    /execFileSync\("corepack", \["enable", "pnpm"\], \{ stdio: "inherit" \}\);/u,
+    /const candidateVersion = sealedCandidateVersion\(request\);[\s\S]*candidateVersion !== supplied\.candidateVersion/u,
   );
-  assert.match(
-    provider,
-    /const candidateVersion = sealedCandidateVersion\(request\);[\s\S]*promotionOptions\(request, \{ dryRun: true \}, candidateVersion\)/u,
-  );
-  assert.match(provider, /\}\s*,\s*plan\.candidateVersion,?\s*\),/u);
+  assert.match(action, /activateExactPnpm\(\);[\s\S]*await applyAndSettle\(/u);
 });
 
 test("fork governance retains a credential-limited receipt without claiming authority", () => {
