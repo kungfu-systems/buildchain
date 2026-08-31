@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1187,
+  "generation": 1188,
   "fencingCounter": 176,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:8020f5a5de3b1f078576c7098d30fed65ab4c7be4b1e8dc6d1b269672273d22d",
@@ -64,8 +64,13 @@
     "issuedAt": "2026-08-31T15:06:39.527Z",
     "expiresAt": "2026-08-31T16:11:02.636Z",
     "fencingToken": "sha256:5f61dbc725f66fb35647fbe9806e645f7b35cdbe836d7937ac83d05cc3ca59a0",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-31T15:11:02.636Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-31T15:11:02.636Z",
+    "nativeProofRoot": "sha256:8802f55304aa445617aa532e09d88cf682157dcc19f22aa0a2b0263c67b1434b",
+    "nativeExecutionReceiptRoot": "sha256:f71f4b6028acf670d999c64c41e606f6db152edb11cfb065891164d0405035bb",
+    "nativeProofReuseRoot": "sha256:de38155abb85ee5dc6136b07ab371a6bcac5445067fa0d26a9dca2509e8b7b49",
+    "qualificationReceiptRoot": "sha256:4506905a4839a06708fefe8831a5b71761695808774c64bc79a8803be9a7f773",
+    "qualifiedAt": "2026-08-31T15:11:33.726Z"
   },
   "candidates": [
     {
@@ -8840,10 +8845,10 @@
       "sourceWorkflowRunId": 33405202831,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-31T15:06:35.526Z",
-      "updatedAt": "2026-08-31T15:11:02.636Z",
+      "updatedAt": "2026-08-31T15:11:33.726Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/bootstrap.yml",
@@ -8867,6 +8872,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-31T15:11:02.636Z",
-  "stateRoot": "sha256:b1fcf98c0b8f93873483e9569b9c0b8abac893c57cf6dc72bfe9aca738e00104"
+  "updatedAt": "2026-08-31T15:11:33.726Z",
+  "stateRoot": "sha256:bb1a2a1d984173f22ca97ffcfa55662440c3e664446320b48380f7d85c46f2bf"
 }
