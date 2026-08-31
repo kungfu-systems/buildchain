@@ -93,17 +93,33 @@ async function createRef(octokit, repository, ref, sha) {
   }
 }
 
-async function commitContains(octokit, repository, ancestor, current) {
+export async function commitContainsReleaseState(
+  octokit,
+  repository,
+  ancestor,
+  current,
+) {
   if (ancestor === current) return true;
   const { owner, repo } = splitRepository(repository);
-  if (typeof octokit.rest.repos?.compareCommitsWithBasehead !== "function")
-    return false;
-  const { data } = await octokit.rest.repos.compareCommitsWithBasehead({
-    owner,
-    repo,
-    basehead: `${ancestor}...${current}`,
-  });
-  return data.status === "ahead" || data.status === "identical";
+  if (typeof octokit.rest.repos?.compareCommitsWithBasehead === "function") {
+    const { data } = await octokit.rest.repos.compareCommitsWithBasehead({
+      owner,
+      repo,
+      basehead: `${ancestor}...${current}`,
+    });
+    if (data.status === "ahead" || data.status === "identical") return true;
+  }
+  if (typeof octokit.rest.git?.getCommit !== "function") return false;
+  const [{ data: ancestorCommit }, { data: currentCommit }] = await Promise.all(
+    [
+      octokit.rest.git.getCommit({ owner, repo, commit_sha: ancestor }),
+      octokit.rest.git.getCommit({ owner, repo, commit_sha: current }),
+    ],
+  );
+  return Boolean(
+    ancestorCommit.tree?.sha &&
+    ancestorCommit.tree.sha === currentCommit.tree?.sha,
+  );
 }
 
 async function versionStateReadback(context, effect) {
@@ -248,7 +264,7 @@ async function refsReadback(context, effect) {
         return conflict("exact-release-tag-conflict");
     } else if (reference.ref === `refs/heads/${intent.targetRef}`) {
       if (
-        !(await commitContains(
+        !(await commitContainsReleaseState(
           request.octokit,
           operation.target.repository,
           stateSha,
@@ -259,7 +275,7 @@ async function refsReadback(context, effect) {
       channelSha = actual;
     } else if (reference.ref.startsWith("refs/heads/")) {
       if (
-        !(await commitContains(
+        !(await commitContainsReleaseState(
           request.octokit,
           operation.target.repository,
           stateSha,
@@ -340,7 +356,12 @@ async function convergeBranch(context, repository, ref, sha) {
   const current = await getRef(request.octokit, repository, ref);
   if (
     current?.object?.sha &&
-    (await commitContains(request.octokit, repository, sha, current.object.sha))
+    (await commitContainsReleaseState(
+      request.octokit,
+      repository,
+      sha,
+      current.object.sha,
+    ))
   )
     return true;
   await ensureGeneratedCheck(context, repository, branch, sha);
