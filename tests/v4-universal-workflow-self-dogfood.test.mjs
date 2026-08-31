@@ -10,7 +10,7 @@ const root = (value) => `sha256:${value.repeat(64)}`;
 const policy = {
   schema: "kungfu-buildchain-v4-universal-workflow-admission-policy/v1",
   sourceRepository: "kungfu-systems/buildchain",
-  allowedConsumers: ["kungfu-systems/buildchain"],
+  consumerAdmission: "verified-caller",
   allowedCapabilities: [
     "bootstrap-conformance",
     "release-candidate-promote",
