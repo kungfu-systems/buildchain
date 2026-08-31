@@ -17,6 +17,7 @@ import {
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
 import { recoverLegacyTerminalDevDeliveryQueue } from "../packages/core/dev-delivery-warrant-legacy-recovery.js";
+import { reuseExactActiveDevDeliverySourceProof } from "../packages/core/dev-delivery-candidate-identity.js";
 import { runV4DeliveryWarrantReadCandidate } from "../packages/core/v4-delivery-warrant-read-candidate.js";
 
 import { GitHubDevDeliveryStore } from "./dev-delivery-warrant-store.mjs";
@@ -182,111 +183,82 @@ function jsonObject(value, label) {
   return parsed;
 }
 
-function devDeliverySubmissionInput(options) {
-  const nativeCommandContract = options.environmentRoot
-    ? createNativeCommandContract(options.nativeCommand)
-    : null;
-  if (
-    options.nativeCommandRoot &&
-    nativeCommandContract?.commandRoot !==
-      exactRoot(options.nativeCommandRoot, "nativeCommandRoot")
-  ) {
-    throw new Error(
-      "native command contract root does not match native-command",
-    );
-  }
-  return {
-    pullRequestNumber: positiveInteger(
-      options.pullRequestNumber,
-      "pullRequestNumber",
-    ),
-    sourceHead: exactSha(options.sourceHead, "sourceHead"),
-    assignmentRoot: exactRoot(options.assignmentRoot, "assignmentRoot"),
-    initiativeRoot: exactRoot(options.initiativeRoot, "initiativeRoot"),
-    sourceIdentityRoot: exactRoot(
-      options.sourceIdentityRoot,
-      "sourceIdentityRoot",
-    ),
-    sourcePatchRoot: exactRoot(options.sourcePatchRoot, "sourcePatchRoot"),
-    sourceProofRoot: exactRoot(options.sourceProofRoot, "sourceProofRoot"),
-    planRoot: exactRoot(options.planRoot, "planRoot"),
-    closureRoot: exactRoot(options.closureRoot, "closureRoot"),
-    dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
-    toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
-    ...(options.environmentRoot
-      ? {
-          environmentRoot: exactRoot(
-            options.environmentRoot,
-            "environmentRoot",
-          ),
-        }
-      : {}),
-    ...(nativeCommandContract ? { nativeCommandContract } : {}),
-    affectedPaths: jsonList(options.affectedPaths, "affected paths"),
-    shardEvidenceRoots: jsonList(
-      options.shardEvidenceRoots,
-      "shard evidence roots",
-    ),
-    sourceWorkflowRunId: options.sourceWorkflowRunId
-      ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId")
-      : 0,
-    deliveryClass: options.deliveryClass,
-    priority: options.priority || "ordinary",
-    ...(options.releaseBlockerPriority
-      ? {
-          releaseBlockerPriority: jsonObject(
-            options.releaseBlockerPriority,
-            "release blocker priority",
-          ),
-        }
-      : {}),
-  };
-}
-
-function reuseActiveSourceProof(queue, input, enabled) {
-  const active = queue.activeWarrant;
-  if (!enabled || !["provisional", "qualified"].includes(active?.phase)) {
-    return input;
-  }
-  const fields = [
-    "pullRequestNumber",
-    "sourceHead",
-    "assignmentRoot",
-    "initiativeRoot",
-    "sourceIdentityRoot",
-    "sourcePatchRoot",
-    "planRoot",
-    "closureRoot",
-    "dependencyRoot",
-    "toolchainRoot",
-    "environmentRoot",
-    "sourceWorkflowRunId",
-    "deliveryClass",
-    "priority",
-  ];
-  const exact =
-    fields.every((field) => active[field] === input[field]) &&
-    JSON.stringify(active.affectedPaths || []) ===
-      JSON.stringify(input.affectedPaths || []) &&
-    JSON.stringify(active.shardEvidenceRoots || []) ===
-      JSON.stringify(input.shardEvidenceRoots || []) &&
-    active.nativeCommandContract?.commandRoot ===
-      input.nativeCommandContract?.commandRoot &&
-    active.releaseBlockerPriority?.claimRoot ===
-      input.releaseBlockerPriority?.claimRoot;
-  return exact ? { ...input, sourceProofRoot: active.sourceProofRoot } : input;
-}
-
 function transitionFor(command, queue, options) {
   if (command === "fence-writer-protocol") {
     return fenceDevDeliveryWriterProtocol(queue, { now: options.now });
   }
   if (command === "submit") {
+    const nativeCommandContract = options.environmentRoot
+      ? createNativeCommandContract(options.nativeCommand)
+      : null;
+    if (
+      options.nativeCommandRoot &&
+      nativeCommandContract?.commandRoot !==
+        exactRoot(options.nativeCommandRoot, "nativeCommandRoot")
+    ) {
+      throw new Error(
+        "native command contract root does not match native-command",
+      );
+    }
     return submitDevDeliveryCandidate(
       queue,
-      reuseActiveSourceProof(
-        queue,
-        devDeliverySubmissionInput(options),
+      reuseExactActiveDevDeliverySourceProof(
+        queue.activeWarrant,
+        {
+          pullRequestNumber: positiveInteger(
+            options.pullRequestNumber,
+            "pullRequestNumber",
+          ),
+          sourceHead: exactSha(options.sourceHead, "sourceHead"),
+          assignmentRoot: exactRoot(options.assignmentRoot, "assignmentRoot"),
+          initiativeRoot: exactRoot(options.initiativeRoot, "initiativeRoot"),
+          sourceIdentityRoot: exactRoot(
+            options.sourceIdentityRoot,
+            "sourceIdentityRoot",
+          ),
+          sourcePatchRoot: exactRoot(
+            options.sourcePatchRoot,
+            "sourcePatchRoot",
+          ),
+          sourceProofRoot: exactRoot(
+            options.sourceProofRoot,
+            "sourceProofRoot",
+          ),
+          planRoot: exactRoot(options.planRoot, "planRoot"),
+          closureRoot: exactRoot(options.closureRoot, "closureRoot"),
+          dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
+          toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
+          ...(options.environmentRoot
+            ? {
+                environmentRoot: exactRoot(
+                  options.environmentRoot,
+                  "environmentRoot",
+                ),
+              }
+            : {}),
+          ...(nativeCommandContract ? { nativeCommandContract } : {}),
+          affectedPaths: jsonList(options.affectedPaths, "affected paths"),
+          shardEvidenceRoots: jsonList(
+            options.shardEvidenceRoots,
+            "shard evidence roots",
+          ),
+          sourceWorkflowRunId: options.sourceWorkflowRunId
+            ? positiveInteger(
+                options.sourceWorkflowRunId,
+                "sourceWorkflowRunId",
+              )
+            : 0,
+          deliveryClass: options.deliveryClass,
+          priority: options.priority || "ordinary",
+          ...(options.releaseBlockerPriority
+            ? {
+                releaseBlockerPriority: jsonObject(
+                  options.releaseBlockerPriority,
+                  "release blocker priority",
+                ),
+              }
+            : {}),
+        },
         options.reuseActiveSourceProof,
       ),
       { now: options.now },
