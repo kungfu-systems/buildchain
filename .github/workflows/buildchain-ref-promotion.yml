@@ -159,7 +159,7 @@ jobs:
     secrets: inherit
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && 'train/v4/v4.0/release-topology-convergence-r14' || 'v4-alpha' }}
+      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && 'train/v4/v4.0/release-topology-convergence-runtime-r15' || 'v4-alpha' }}
       buildchain-expected-channel: alpha
       buildchain-expected-major: "4"
       buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
