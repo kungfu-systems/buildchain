@@ -234,3 +234,14 @@ jobs:
           set -euo pipefail
           node .buildchain/bootstrap/scripts/v4-universal-workflow-backflow.mjs > .buildchain/backflow.json
           echo "backflow-root=$(jq -r '.backflowRoot // empty' .buildchain/backflow.json)" >> "${GITHUB_OUTPUT}"
+
+      - name: Retain rooted terminal evidence
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-universal-terminal-${{ github.run_id }}
+          path: |
+            .buildchain/terminal-receipt.json
+            .buildchain/backflow.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 30

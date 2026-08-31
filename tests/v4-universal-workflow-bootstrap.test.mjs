@@ -389,6 +389,30 @@ test("release promotion inputs are schema-derived and dry-run before provider ef
   assert.equal(result.output.route.decision, "Fresh");
 });
 
+test("real universal promotion materializes one rooted product intent before APPLY", () => {
+  const engine = fs.readFileSync(
+    new URL("../scripts/v4-universal-workflow-engine.mjs", import.meta.url),
+    "utf8",
+  );
+  const intent = engine.indexOf("await materializeProductPublicationIntent({");
+  const apply = engine.indexOf(
+    '".buildchain/candidate/actions/v4-release-candidate-promote/dist/index.js"',
+  );
+  assert.ok(intent >= 0 && apply > intent);
+  assert.match(
+    engine,
+    /"product-publication-intent-path": productPublicationIntentPath/u,
+  );
+  assert.match(
+    engine,
+    /"resume-transaction-id": payload\.inputs\["resume-transaction-id"\]/u,
+  );
+  assert.match(
+    engine,
+    /BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp[\s\S]*BUILDCHAIN_SEALED_BUNDLE_MANIFEST:[\s\S]*BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:/u,
+  );
+});
+
 test("candidate capability failures still produce one rooted terminal receipt", () => {
   const policyValue = policy({ allowedCapabilities: ["future-capability"] });
   const requestValue = request(policyValue);
@@ -472,4 +496,7 @@ test("Bootstrap inherits caller authority without widening compatibility facades
     /^permissions:/mu,
   );
   assert.doesNotMatch(workflow, /^    permissions:/mu);
+  assert.match(workflow, /uses: actions\/upload-artifact@v7\.0\.1/u);
+  assert.match(workflow, /\.buildchain\/terminal-receipt\.json/u);
+  assert.match(workflow, /\.buildchain\/backflow\.json/u);
 });
