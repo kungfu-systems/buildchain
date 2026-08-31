@@ -800,7 +800,7 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          SELECTED_SHELL_REF: v4-alpha
+          SELECTED_SHELL_REF: train/v4/v4.0/release-topology-convergence-runtime-r15
         run: |
           set -euo pipefail
           node .buildchain/router/scripts/promotion-identity-resolver.mjs \
@@ -960,7 +960,7 @@ jobs:
   invoke:
     name: Invoke the single v4 publisher adapter
     needs: [resolve-promotion, consumer-admission]
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@train/v4/v4.0/release-topology-convergence-runtime-r15
     permissions:
       actions: write
       artifact-metadata: write
