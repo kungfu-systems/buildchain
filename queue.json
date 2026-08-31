@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1189,
+  "generation": 1190,
   "fencingCounter": 176,
   "policy": {
     "agingSeconds": 900,
@@ -8819,8 +8819,52 @@
         "tests/v4-universal-workflow-self-dogfood.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3360,
+      "assignmentRoot": "sha256:b57f02d58ca6a746f584a725fe0f74d6e11096fe57e8f0d62133c78cea8b699c",
+      "initiativeRoot": "sha256:d22831351d8e7598a91604c2a4d464270b1dbdc2e1912f513092c755385dd382",
+      "sourceIdentityRoot": "sha256:73da778b9d7660f4fb5a43c3ea82e155bfb637a8b225c765cfd6756a1e87d82b",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:2c49d52c4812e85bcea9e8ec4c0f07caf11f670f9dbb9b46a413e71d6edcebd7",
+      "sourceHead": "1a4a5cdfe6905d3c6ec3a4ee8bdc3f040c6ed588",
+      "sourcePatchRoot": "sha256:5d09753e7de03fff5b7d2875a2fe174d0332a5fefbf81b298829c512a96d6646",
+      "sourceProofRoot": "sha256:fcf35b1581ef060b9f397d3cd7870bdc10a0edfd15bab9cda15afbeb3b2a8342",
+      "planRoot": "sha256:629538bdfc84e8c9434b30831b4846dca2a655e68b57a3656f55984edf2dda44",
+      "closureRoot": "sha256:c53450e472051f7ed14fe6c23aee6209af9450dc8339b1847e3b1c92a122e2e8",
+      "dependencyRoot": "sha256:20a496623253661b666d021706c97c0748ec521db1585b126a2335cf2f7693ad",
+      "toolchainRoot": "sha256:6714561e43278ca697ebe1720d6e60f12e26b05fc437914a7c572a90bc2cdecc",
+      "environmentRoot": "sha256:04294faaa9ffa19506c49d853dfc295b024c2669ad3ead377dfa097406805ecf",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "mkdir -p \"$HOME/.local/bin\" && corepack enable --install-directory \"$HOME/.local/bin\" && export PATH=\"$HOME/.local/bin:$PATH\" && pnpm install --frozen-lockfile && pnpm run check",
+        "commandRoot": "sha256:c80aa61494655f6ff934d35012cdba3752978f8b702942ac3d4228c3b5f501a9"
+      },
+      "sourceWorkflowRunId": 33414835169,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-08-31T17:00:06.300Z",
+      "updatedAt": "2026-08-31T17:00:06.300Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/bootstrap.yml",
+        ".github/workflows/buildchain-ref-promotion.yml",
+        "architecture/ci-lane-change-budget.json",
+        "architecture/maintainability-policy.json",
+        "architecture/v4-universal-workflow-train-admission.json",
+        "scripts/check-v4-universal-workflow-bootstrap.mjs",
+        "scripts/v4-universal-workflow-engine.mjs",
+        "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
+        "tests/v4-universal-workflow-bootstrap.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-31T15:20:17.833Z",
-  "stateRoot": "sha256:a489962809b5d6d9f5c367c50783c8b0f8588abe387046aa5dc3c9b4c838c48f"
+  "updatedAt": "2026-08-31T17:00:06.300Z",
+  "stateRoot": "sha256:f07e77dd09d7ddf7418924536343367b131d5a0970417ee11aa331bd2aa47615"
 }
