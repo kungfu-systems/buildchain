@@ -19,6 +19,11 @@ on:
         default: ".buildchain/contract-lock.json"
         type: string
         required: false
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
@@ -700,7 +705,15 @@ permissions:
   pull-requests: write
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   resolve-promotion:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Resolve promotion workflow shell and runtime
     runs-on: ubuntu-24.04
     permissions:
@@ -872,6 +885,7 @@ jobs:
           [[ "$(git -C .buildchain/runtime rev-parse HEAD)" = "${RUNTIME_SHA}" ]] || { echo "::error::Promotion runtime checkout moved"; exit 1; }
 
   consumer-admission:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Admit v4 floating consumer policy
     needs: resolve-promotion
     runs-on: ubuntu-24.04
@@ -958,6 +972,7 @@ jobs:
           if-no-files-found: error
 
   invoke:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Invoke the single v4 publisher adapter
     needs: [resolve-promotion, consumer-admission]
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
@@ -971,6 +986,7 @@ jobs:
       issues: write
       pull-requests: write
     with:
+      universal-request-json: ${{ inputs.universal-request-json }}
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-promotion.outputs.runtime-sha }}
       buildchain-expected-channel: ${{ needs.resolve-promotion.outputs.channel }}

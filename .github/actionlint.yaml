@@ -20,6 +20,10 @@ config-variables: null
 # "ignore" is an array of regular expression patterns. Matched error messages
 # are ignored. This is similar to the "-ignore" command line option.
 paths:
+  .github/workflows/bootstrap.yml:
+    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'
   .github/workflows/build.yml:
     # GitHub.com exposes these job properties for called-workflow identity. Keep
     # these exact false-positives scoped until actionlint's context schema ships them.

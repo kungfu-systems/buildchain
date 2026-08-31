@@ -3,6 +3,11 @@ name: Buildchain Auditable Demo
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       buildchain-repository:
         description: "Repository that owns this reusable workflow"
         default: "kungfu-systems/buildchain"
@@ -102,7 +107,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   gate:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Auditable demo / required Gate
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -334,7 +347,7 @@ jobs:
 
   render:
     name: Auditable demo / selective render
-    if: ${{ inputs.render-media }}
+    if: ${{ inputs.universal-request-json == '' && (inputs.render-media) }}
     needs: gate
     runs-on: ubuntu-24.04
     timeout-minutes: 40

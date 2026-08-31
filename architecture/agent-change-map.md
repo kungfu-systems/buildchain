@@ -150,6 +150,8 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 ### Current top twenty maintenance hotspots
 
+- `.github/workflows/bootstrap.yml`
+- `scripts/check-v4-universal-workflow-bootstrap.mjs`
 - `tests/v3-v4-capability-inventory.test.mjs`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
 - `tests/v4-publication-qualification.test.mjs`
@@ -995,6 +997,44 @@ Owner: Buildchain publication rehearsal maintainers
 ### Minimal validation
 
 - `node --test tests/v4-publication-rehearsal.test.mjs`
+
+## v4-universal-workflow-bootstrap
+
+Owner: Buildchain workflow maintainers
+
+### Implementation
+
+- `packages/core/v4-universal-workflow-bootstrap.js`
+- `scripts/check-v4-universal-workflow-bootstrap.mjs`
+- `scripts/generate-v4-universal-workflow-facades.mjs`
+- `scripts/v4-universal-workflow-backflow.mjs`
+- `scripts/v4-universal-workflow-engine.mjs`
+- `scripts/v4-universal-workflow-self-dogfood.mjs`
+
+### Contracts
+
+- `architecture/v4-universal-workflow-bootstrap.json`
+- `architecture/v4-universal-workflow-fault-campaign.json`
+- `architecture/v4-universal-workflow-train-admission.json`
+- `.github/workflows/bootstrap.yml`
+- `.github/workflows/universal-bootstrap-dogfood.yml`
+- `templates/universal-buildchain-bootstrap-recovery.yml`
+
+### Tests
+
+- `tests/v4-universal-workflow-backflow.test.mjs`
+- `tests/v4-universal-workflow-bootstrap.test.mjs`
+- `tests/v4-universal-workflow-fault-campaign.test.mjs`
+- `tests/v4-universal-workflow-self-dogfood.test.mjs`
+
+### Generated outputs
+
+- `.github/workflows/universal-bootstrap-recovery.yml`
+
+### Minimal validation
+
+- `node scripts/check-v4-universal-workflow-bootstrap.mjs`
+- `node --test tests/v4-universal-workflow-bootstrap.test.mjs tests/v4-universal-workflow-backflow.test.mjs tests/v4-universal-workflow-fault-campaign.test.mjs tests/v4-universal-workflow-self-dogfood.test.mjs`
 
 ## web-surface-delivery
 
