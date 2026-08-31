@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1175,
+  "generation": 1176,
   "fencingCounter": 175,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:fe26afd8c24f58104668e76c590a877a9d83f3f9d155deb1d67772fec09b3250",
@@ -142,8 +142,13 @@
     "issuedAt": "2026-08-31T11:32:04.484Z",
     "expiresAt": "2026-08-31T12:35:54.102Z",
     "fencingToken": "sha256:6a165433924647fad903ce42d6bcf3176e90400f4f8781853949373e8a486a0b",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-08-31T11:35:54.102Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-08-31T11:35:54.102Z",
+    "nativeProofRoot": "sha256:cb64ee95466a8caee334355815da7c03769a59c3f5d5fd9c2c9b4725eae3fb58",
+    "nativeExecutionReceiptRoot": "sha256:96545470e994cd0fe81776f2b39324f2ccd1a89c28ae99a822f75fa0c67705d1",
+    "nativeProofReuseRoot": "sha256:f612619124947fb2cf11679fa0080d5e930c2ebe499a6440b0b756392f81cf9d",
+    "qualificationReceiptRoot": "sha256:e8d4e215b0e32b2562d127a29e08efd0dff8d94bce49d408b8eaa9f844811cee",
+    "qualifiedAt": "2026-08-31T11:36:17.622Z"
   },
   "candidates": [
     {
@@ -8780,10 +8785,10 @@
       "sourceWorkflowRunId": 33385769065,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-31T11:32:00.808Z",
-      "updatedAt": "2026-08-31T11:35:54.102Z",
+      "updatedAt": "2026-08-31T11:36:17.622Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         ".github/actionlint.yaml",
@@ -8885,6 +8890,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-08-31T11:35:54.102Z",
-  "stateRoot": "sha256:ce7fdb789e650e92bb3946f6a29f30251ec5b138be6a42cd81bee025567ca85c"
+  "updatedAt": "2026-08-31T11:36:17.622Z",
+  "stateRoot": "sha256:7d432842139cee3426e81f165baf289bb09db83ad7103eeac40ef9e158319526"
 }
