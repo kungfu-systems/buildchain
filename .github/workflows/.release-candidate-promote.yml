@@ -915,8 +915,8 @@ jobs:
           BUILDCHAIN_TARGET_REF: ${{ steps.intent.outputs.target-ref }}
           BUILDCHAIN_SOURCE_SHA: ${{ steps.intent.outputs.requested-sha }}
           BUILDCHAIN_SOURCE_TIMESTAMP: ${{ steps.intent.outputs.source-timestamp }}
-          BUILDCHAIN_CANDIDATE_VERSION: ${{ steps.candidate.outputs.release-candidate-version }}
-          BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: ${{ steps.candidate.outputs.release-candidate-publication-version }}
+          BUILDCHAIN_CANDIDATE_VERSION: ${{ steps.candidate.outputs.release-candidate-publication-version || steps.candidate.outputs.release-candidate-version }}
+          BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: ${{ inputs.resume-transaction-id != '' && steps.candidate.outputs.release-candidate-publication-version || '' }}
           BUILDCHAIN_SEALED_BUNDLE_MANIFEST: ${{ steps.candidate.outputs.publish-sealed-bundle-manifest }}
           BUILDCHAIN_REQUIRED_ARTIFACTS_PATH: ${{ steps.candidate.outputs.publish-required-artifacts-path }}
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
