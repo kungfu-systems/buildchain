@@ -45,6 +45,11 @@ on:
         type: string
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       consumer:
         description: Stable lowercase public adopter identity
         required: true
@@ -86,7 +91,15 @@ permissions:
   contents: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   consumer-admission:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Admit floating-only v4 adopter
     runs-on: ubuntu-24.04
     outputs:
@@ -185,6 +198,7 @@ jobs:
           if-no-files-found: error
 
   conformance:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Public adopter delivery (${{ matrix.platform }})
     needs: consumer-admission
     strategy:
@@ -292,6 +306,7 @@ jobs:
           if-no-files-found: error
 
   qualification:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Reconcile exact three-platform qualification
     needs: conformance
     runs-on: ubuntu-24.04

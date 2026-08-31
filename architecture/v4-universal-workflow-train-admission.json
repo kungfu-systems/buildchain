@@ -1,0 +1,39 @@
+{
+  "schema": "kungfu-buildchain-v4-universal-workflow-admission-policy/v1",
+  "sourceRepository": "kungfu-systems/buildchain",
+  "allowedConsumers": ["kungfu-systems/buildchain", "kungfu-systems/taolu"],
+  "allowedCapabilities": [
+    "bootstrap-conformance",
+    "release-candidate-promote",
+    "release-invocation"
+  ],
+  "permissionCeiling": {
+    "actions": "write",
+    "artifact-metadata": "write",
+    "attestations": "write",
+    "checks": "write",
+    "contents": "write",
+    "deployments": "write",
+    "id-token": "write",
+    "issues": "write",
+    "packages": "write",
+    "pages": "write",
+    "pull-requests": "write",
+    "security-events": "write",
+    "statuses": "write"
+  },
+  "contractRoots": [
+    "sha256:3d37153296150f4c138c775ac448ec038f86821f1d46c95a185c1abfd63040d1",
+    "sha256:65a0c2fc3faecaddf5076fff086b5d6e12eb9ba27796efc10aed19f2d93b9457",
+    "sha256:7a8d9ec433055ef4b1e4e7dde958e1a55bb4d62ac20c39754723895f58378e9a",
+    "sha256:994cbf50cdc9b083735c8d6da2ea39f06a14d9bfc6ffed9b73a658a17d3822c2",
+    "sha256:b6737ed958e8f53f7770b1c214c092591573ad63af41e05797117d9b7b212ed8",
+    "sha256:d6ad9cf661c0ba3825cabdc7185fd122a60fc1929dfc799cda3352650588663f"
+  ],
+  "targetRef": "dev/v4/v4.0",
+  "allowedReviewers": ["kungfu-origin"],
+  "minimumApprovals": 1,
+  "requiredChecks": ["check"],
+  "validFrom": "2026-08-30T00:00:00.000Z",
+  "expiresAt": "2026-09-07T00:00:00.000Z"
+}

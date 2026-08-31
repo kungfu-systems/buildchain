@@ -23,6 +23,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/auditable-demo.yml", "governance-write"],
   [".github/workflows/build-surface-fixture.yml", "non-publication-oidc"],
   [".github/workflows/build.yml", "non-publication-oidc"],
+  [".github/workflows/bootstrap.yml", "product-publication", true, ["universal-candidate-execution"], "caller-secrets", "none", "fixed", "caller-bound"],
   [".github/workflows/buildchain-alpha-self-dogfood.yml", "non-publication-oidc"],
   [".github/workflows/buildchain-dev-delivery.yml", "governance-write"],
   [".github/workflows/buildchain-patrol-daily.yml", "governance-write"],
@@ -58,6 +59,8 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/release-tail.yml", "product-publication", true, ["artifact.publish", "signed-channel.commit", "release.activate", "released-evidence.synthesize"], "caller-secrets", "caller-bound", "caller-bound", "fixed"],
   [".github/workflows/release-verify.yml", "governance-write"],
   [".github/workflows/stable-candidate-patrol.yml", "governance-write"],
+  [".github/workflows/universal-bootstrap-recovery.yml", "product-publication", true, ["universal-candidate-execution"], "caller-secrets", "none", "fixed", "caller-bound"],
+  [".github/workflows/universal-bootstrap-dogfood.yml", "product-publication", true, ["universal-candidate-execution"], "caller-secrets", "none", "fixed", "caller-bound"],
   [".github/workflows/v4-declarative-release-tail-dogfood.yml", "product-publication", true, ["artifact.publish", "signed-channel.commit", "release.activate", "released-evidence.synthesize"], "caller-secrets", "none", "fixed", "fixed"],
 ]);
 

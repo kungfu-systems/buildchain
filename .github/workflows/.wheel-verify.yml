@@ -1,6 +1,11 @@
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       node-version:
           default: "24"
           type: string
@@ -33,7 +38,15 @@ permissions:
   contents: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   prepare:
+    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -46,6 +59,7 @@ jobs:
           action: "verify"
 
   build:
+      if: ${{ inputs.universal-request-json == '' }}
       name: Build on ${{ matrix.os }} with Python ${{ matrix.python-version }}
       runs-on: ${{ matrix.os }}
       needs: prepare
@@ -137,7 +151,7 @@ jobs:
               max-preview-links: ${{ inputs.max-preview-links }}
 
   verify:
-    if: ${{ always() }}
+    if: ${{ inputs.universal-request-json == '' && (always()) }}
     needs: [prepare, build]
     runs-on: ubuntu-24.04
     steps:
