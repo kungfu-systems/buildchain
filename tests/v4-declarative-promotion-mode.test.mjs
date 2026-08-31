@@ -39,7 +39,7 @@ test("public and recovery adapters invoke only the floating alpha publisher", ()
 test("Buildchain self-promotion uses one current-major alpha publisher", () => {
   assert.match(
     selfPromotion,
-    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/m,
+    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/m,
   );
   assert.doesNotMatch(selfPromotion, /^  promote-(?:alpha|stable):/m);
   assert.doesNotMatch(

@@ -266,13 +266,13 @@
         "path": ".github/workflows/buildchain-ref-promotion.yml",
         "triggers": ["workflow_dispatch", "workflow_run:completed"],
         "jobs": [
-          "promote|reusable-call|kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write",
+          "promote|reusable-call|kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write",
           "reject-invalid-candidate-recovery|runner|-|read|-|-|-",
           "reject-invalid-durable-recovery|runner|-|read|-|-|-",
           "reject-manual-apply|runner|-|read|-|-|-"
         ],
         "reusableEdges": [
-          "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha"
+          "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha"
         ]
       },
       {

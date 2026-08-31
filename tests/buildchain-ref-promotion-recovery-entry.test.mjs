@@ -38,7 +38,7 @@ function nestedKeys(source, marker) {
 test("alpha convergence retains one standalone recovery adapter", () => {
   assert.match(
     promotion,
-    /^  promote:[\s\S]*\.release-candidate-promote\.yml@v4-alpha/m,
+    /^    uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha$/mu,
   );
   assert.doesNotMatch(promotion, /^  recover-stable-candidate:/mu);
   assert.doesNotMatch(promotion, /^  promote-stable:/mu);
