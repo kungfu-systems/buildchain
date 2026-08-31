@@ -13,7 +13,6 @@ import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
 import { v4PublicationQualificationRoot, validateV4PublicationQualificationReceipt } from "../packages/core/v4-publication-qualification.js";
 
 const DEFAULT_WORKFLOW_FILE = "build-surface-fixture.yml";
-
 function env(name, fallback = "") {
   return process.env[name] || fallback;
 }
@@ -21,7 +20,6 @@ function env(name, fallback = "") {
 export function releaseCandidateDownloadEnabled(value = "true") {
   return String(value || "true").trim().toLowerCase() !== "false";
 }
-
 function splitRepository(repository) {
   const match = String(repository || "").trim().match(/^([^/\s]+)\/([^/\s]+)$/);
   if (!match) {
@@ -44,7 +42,9 @@ function assertSha(value, label = "sha") {
 
 export const releaseCandidateRuntimeSha = (passport) =>
   assertSha(passport?.buildchain?.sha, "release candidate Passport Buildchain runtime SHA").toLowerCase();
-
+export const resolveFreshPublicationVersion = ({ sealedBundle, candidateVersion = "" } = {}) =>
+  String(sealedBundle?.manifest?.npm?.version || candidateVersion || "").trim();
+const optionalText = (value) => String(value || "");
 function githubHeaders(token) {
   const headers = {
     accept: "application/vnd.github+json",
@@ -740,19 +740,17 @@ export async function resolveReleaseCandidateArtifacts({
         releaseAssetPaths,
       })
     : undefined;
-  const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8")));
+  const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8"))), publicationVersion = resolveFreshPublicationVersion({ sealedBundle, candidateVersion: passport.target?.version });
   const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
     manifests,
-    version: [sealedBundle?.manifest?.npm?.version, passport.target?.version, ""].find(Boolean),
+    version: publicationVersion,
     kind: publishArtifactKind,
     tarballPaths: npmTarballPaths,
     mainPackage: publishPackageMain,
   });
   const requiredArtifactsPath = path.join(resolvedOutput, "publish-required-artifacts.json");
   fs.writeFileSync(requiredArtifactsPath, `${JSON.stringify(generatedRequiredArtifacts, null, 2)}\n`);
-  const sealedBundleManifestPath = sealedBundle
-    ? path.join(resolvedOutput, "sealed-bundle.json")
-    : "";
+  const sealedBundleManifestPath = sealedBundle ? path.join(resolvedOutput, "sealed-bundle.json") : "";
   if (sealedBundleManifestPath) {
     fs.writeFileSync(sealedBundleManifestPath, `${JSON.stringify(sealedBundle.manifest, null, 2)}\n`);
   }
@@ -772,6 +770,7 @@ export async function resolveReleaseCandidateArtifacts({
       sealedBundleManifest: sealedBundleManifestPath ? outputPath(sealedBundleManifestPath) : "",
     },
     version: passport.target?.version || "",
+    publicationVersion,
     candidateHash: passport.candidateHash || "",
     payloadCount: payloadArtifacts.length,
     platformManifestCount: platformManifestPaths.length,
@@ -811,6 +810,7 @@ export async function resolveReleaseCandidateArtifactsCli() {
     "release-candidate-publication-qualification-path": result.paths?.publicationQualification || "",
     "release-candidate-publication-qualification-root": result.publicationQualificationRoot || "",
     "release-candidate-version": result.version || "",
+    "release-candidate-publication-version": optionalText(result.publicationVersion),
     "release-candidate-source-sha": result.artifacts?.sourceSha || "",
     "release-candidate-artifact": result.artifacts?.passport || "",
     "release-candidate-build-summary-artifact": result.artifacts?.summary || "",
@@ -843,7 +843,6 @@ export async function resolveReleaseCandidateArtifactsCli() {
   console.log(JSON.stringify(result, null, 2));
   return result;
 }
-
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     await resolveReleaseCandidateArtifactsCli();

@@ -17,6 +17,7 @@ on:
 permissions: { actions: read, contents: read, issues: write, id-token: write }
 jobs:
   libnode-shaped:
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork }}
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
     secrets: inherit
     with:

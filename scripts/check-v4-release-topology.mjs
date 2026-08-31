@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   parseWorkflowDocument,
@@ -15,6 +16,71 @@ const ledgerPath = path.join(root, "architecture/v4-release-topology.json");
 
 function read(relative) {
   return fs.readFileSync(path.join(root, relative), "utf8");
+}
+
+const LOCAL_MODULE_EXTENSIONS = ["", ".js", ".mjs", ".cjs"];
+const PRIVILEGED_ENTRYPOINTS = [
+  "actions/v4-release-candidate-promote/index.js",
+];
+
+function localModuleSpecifiers(source) {
+  const specifiers = [];
+  const expression =
+    /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)["'](\.[^"']+)["']/gu;
+  for (const match of source.matchAll(expression)) specifiers.push(match[1]);
+  return [...new Set(specifiers)].sort();
+}
+
+function resolveLocalModule(importer, specifier) {
+  const unresolved = path.posix.normalize(
+    path.posix.join(path.posix.dirname(importer), specifier),
+  );
+  assert.ok(
+    !unresolved.startsWith("../") && !path.posix.isAbsolute(unresolved),
+    `local module import escapes the repository: ${importer} -> ${specifier}`,
+  );
+  const candidates = [
+    ...LOCAL_MODULE_EXTENSIONS.map((extension) => `${unresolved}${extension}`),
+    ...LOCAL_MODULE_EXTENSIONS.slice(1).map((extension) =>
+      path.posix.join(unresolved, `index${extension}`),
+    ),
+  ];
+  const matches = candidates.filter((relative) => {
+    const absolute = path.join(root, relative);
+    return fs.existsSync(absolute) && fs.statSync(absolute).isFile();
+  });
+  assert.equal(
+    matches.length,
+    1,
+    `local module import must resolve exactly once: ${importer} -> ${specifier}`,
+  );
+  return matches[0];
+}
+
+export function discoverStaticModuleClosure(entrypoints) {
+  const pending = [...entrypoints];
+  const visited = new Set();
+  while (pending.length > 0) {
+    const relative = pending.pop();
+    if (visited.has(relative)) continue;
+    assert.ok(
+      fs.statSync(path.join(root, relative)).isFile(),
+      `privileged entry is not a file: ${relative}`,
+    );
+    visited.add(relative);
+    for (const specifier of localModuleSpecifiers(read(relative))) {
+      const dependency = resolveLocalModule(relative, specifier);
+      if (!visited.has(dependency)) pending.push(dependency);
+    }
+  }
+  return [...visited].sort();
+}
+
+function rootedPathSet(paths) {
+  return `sha256:${crypto
+    .createHash("sha256")
+    .update(JSON.stringify([...paths].sort()))
+    .digest("hex")}`;
 }
 
 function productionFiles(relative, extensions) {
@@ -61,6 +127,17 @@ export function discoverV4ReleaseAuthorityClosure() {
     [".yml", ".yaml", ".js", ".mjs", ".cjs"],
     /(?:createV4ReleaseReceipt|release-receipt\.json|V4_RELEASE_RECEIPT_CONTRACT)/u,
   );
+  const privilegedModules = discoverStaticModuleClosure(PRIVILEGED_ENTRYPOINTS);
+  const legacyEngineModules = productionFiles(
+    "actions/promote-buildchain-ref",
+    [".js", ".mjs", ".cjs"],
+  )
+    .filter((relative) =>
+      /(?:^|\/)(?:lib|promote-(?:alpha|release|major)-channel|durable-transaction-operations)\.js$/u.test(
+        relative,
+      ),
+    )
+    .sort();
   return {
     providerAdapters: [
       ...new Set([
@@ -71,6 +148,12 @@ export function discoverV4ReleaseAuthorityClosure() {
     runtimeSelectors,
     runtimeEngines: ["actions/v4-release-candidate-promote/index.js"],
     terminalProjections,
+    privilegedExecutableClosure: {
+      entrypoints: PRIVILEGED_ENTRYPOINTS,
+      modules: privilegedModules,
+      root: rootedPathSet(privilegedModules),
+    },
+    legacyEngineModules,
   };
 }
 
@@ -274,6 +357,7 @@ function assertAuthorityClosure(ledger) {
     "runtimeSelectors",
     "runtimeEngines",
     "terminalProjections",
+    "legacyEngineModules",
   ]) {
     assert.ok(
       Array.isArray(closure[className]) && closure[className].length > 0,
@@ -292,6 +376,24 @@ function assertAuthorityClosure(ledger) {
       discovered[className],
       `authority closure class drifted: ${className}`,
     );
+  assert.deepEqual(
+    closure.privilegedExecutableClosure,
+    discovered.privilegedExecutableClosure,
+    "privileged executable transitive closure drifted",
+  );
+  assert.match(
+    closure.privilegedExecutableClosure.root,
+    /^sha256:[0-9a-f]{64}$/u,
+  );
+  const reachableLegacyEngines = closure.legacyEngineModules.filter(
+    (relative) =>
+      closure.privilegedExecutableClosure.modules.includes(relative),
+  );
+  assert.deepEqual(
+    reachableLegacyEngines,
+    [],
+    `legacy release engines remain reachable from APPLY: ${reachableLegacyEngines.join(", ")}`,
+  );
   assert.deepEqual(closure.runtimeEngines, [
     "actions/v4-release-candidate-promote/index.js",
   ]);
@@ -305,7 +407,7 @@ function assertAuthorityClosure(ledger) {
   );
   const engineSurface = [
     ".github/workflows/.release-candidate-promote.yml",
-    ...closure.runtimeEngines,
+    ...closure.privilegedExecutableClosure.modules,
   ]
     .map(read)
     .join("\n");
@@ -361,23 +463,28 @@ export function checkV4ReleaseTopology() {
   return actual;
 }
 
-if (process.argv.includes("--print-closure")) {
-  process.stdout.write(
-    `${JSON.stringify(discoverV4ReleaseAuthorityClosure(), null, 2)}\n`,
-  );
-} else if (process.argv.includes("--print")) {
-  const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8"));
-  process.stdout.write(
-    `${JSON.stringify(
-      discoverV4ReleaseTopology(
-        ledger.closedWorld.workflowPaths,
-        ledger.semanticScope.workflowPaths,
-      ),
-      null,
-      2,
-    )}\n`,
-  );
-} else {
-  checkV4ReleaseTopology();
-  process.stdout.write("v4 release topology: ok\n");
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  if (process.argv.includes("--print-closure")) {
+    process.stdout.write(
+      `${JSON.stringify(discoverV4ReleaseAuthorityClosure(), null, 2)}\n`,
+    );
+  } else if (process.argv.includes("--print")) {
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8"));
+    process.stdout.write(
+      `${JSON.stringify(
+        discoverV4ReleaseTopology(
+          ledger.closedWorld.workflowPaths,
+          ledger.semanticScope.workflowPaths,
+        ),
+        null,
+        2,
+      )}\n`,
+    );
+  } else {
+    checkV4ReleaseTopology();
+    process.stdout.write("v4 release topology: ok\n");
+  }
 }

@@ -2,9 +2,26 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { promoteBuildchainRefs } from "../promote-buildchain-ref/lib.js";
 import { validateReleaseCandidateRecoveryReceipt } from "../../packages/core/release-candidate-recovery.js";
-import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
+import {
+  compileReleaseTailDeclaration,
+  createReleaseTailTransaction,
+  executeReleaseTailTransaction,
+  readReleaseTailTransaction,
+  releaseTailRoot,
+  writeReleaseTailTransaction,
+} from "../../packages/core/release-tail-provider-plane.js";
+import {
+  createV4ProductPublicationDeclaration,
+  selectV4ProductPublicationIntent,
+} from "../../packages/core/v4-product-publication.js";
+import {
+  createV4ProductPublicationAdapters,
+  resolveCandidateProviderInputs,
+  resolvePublicationTarget as resolvePublicationTargetAdapter,
+} from "./product-provider-adapters.js";
+
+export { resolveCandidateProviderInputs } from "./product-provider-adapters.js";
 
 const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
 
@@ -37,6 +54,7 @@ export function resolvePromotionTarget({
   sourceSha,
   declaredTargetRef = "",
   declaredTargetSha = "",
+  expectedTransactionId = "",
 }) {
   const sealedBundleRoot = path.resolve(
     path.dirname(candidatePassportPath),
@@ -54,12 +72,15 @@ export function resolvePromotionTarget({
   const targetSha = String(
     declaredTargetSha || recoveryReceipt?.target?.sha || "",
   ).trim();
-  if (!targetRef || !targetSha) {
+  if (!targetRef || !targetSha)
     throw new Error(
       "target-ref and target-sha are required when no standard recovery receipt supplies them",
     );
-  }
   if (!hasRecoveryReceipt) {
+    if (expectedTransactionId)
+      throw new Error(
+        "resume-transaction-id requires a standard recovery receipt",
+      );
     if (sourceSha !== targetSha)
       throw new Error(
         "protected source SHA must equal target-sha without recovery evidence",
@@ -79,11 +100,20 @@ export function resolvePromotionTarget({
     throw new Error(
       `standard recovery receipt is invalid: ${validation.errors.join("; ")}`,
     );
+  if (
+    expectedTransactionId &&
+    recoveryReceipt.transaction?.identity !== expectedTransactionId
+  )
+    throw new Error("standard recovery receipt transaction identity mismatch");
   if (![targetSha, candidate.source?.headSha].includes(sourceSha))
     throw new Error(
       "legacy source-sha is not bound to the recovered candidate or protected target",
     );
   return { targetRef, targetSha };
+}
+
+export async function resolvePublicationTarget(args) {
+  return resolvePublicationTargetAdapter(args, resolvePromotionTarget);
 }
 
 export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
@@ -104,7 +134,11 @@ export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
 
 export function selectProductPublicationPlan(
   result,
-  { fallbackVersion = "", fallbackTag = "" } = {},
+  {
+    fallbackVersion = "",
+    fallbackTag = "",
+    fallbackCandidateVersion = "",
+  } = {},
 ) {
   const planned = result?.updates?.find(
     ({ action }) => action === "dry-run-publish-transaction",
@@ -121,122 +155,161 @@ export function selectProductPublicationPlan(
     throw new Error(
       "product publication planning produced a mismatched exact tag",
     );
+  const plannedCandidateVersion = String(
+    planned?.releaseCandidateVersion || "",
+  ).trim();
+  const sealedVersion = String(fallbackCandidateVersion || "").trim();
+  if (
+    plannedCandidateVersion &&
+    sealedVersion &&
+    plannedCandidateVersion !== sealedVersion
+  )
+    throw new Error(
+      "product publication planning drifted from the sealed candidate version",
+    );
   return {
     version,
     tag,
-    candidateVersion: String(planned?.releaseCandidateVersion || "").trim(),
+    candidateVersion: plannedCandidateVersion || sealedVersion,
   };
 }
 
-function providerProjection({ result, targetRef, targetSha, plan }) {
-  const transaction = result?.publishTransaction || null;
+export function sealedCandidateVersion(request) {
+  const manifest = read(request.sealedBundleManifest);
+  const name = String(manifest?.npm?.name || "").trim();
+  const version = String(manifest?.npm?.version || "").trim();
+  if (name !== request.publishPackageMain || !version)
+    throw new Error(
+      "sealed candidate manifest omitted the exact main package version",
+    );
+  return version;
+}
+
+function providerProjection({
+  transaction,
+  targetRef,
+  targetSha,
+  intent,
+  releaseSha,
+  updates,
+}) {
   const projection = {
     schema: "kungfu.buildchain.v4-product-provider-result/v1",
     target: { ref: targetRef, sha: targetSha },
     publication: {
-      version: String(transaction?.version || plan.version || ""),
-      exactTag: String(
-        transaction?.publicReleaseTag ||
-          transaction?.exactTag ||
-          plan.tag ||
-          "",
-      ),
-      releaseSha: String(transaction?.releaseSha || ""),
-      state: String(transaction?.state || ""),
-      finalizationNeeded: transaction?.finalizationNeeded === true,
+      version: intent.version,
+      exactTag: intent.exactTag,
+      releaseSha: String(releaseSha || ""),
+      state: transaction.state,
+      finalizationNeeded: transaction.state !== "complete",
     },
-    promotedSha: String(result?.sha || ""),
-    updates: (result?.updates || []).map(
-      ({ action, ref, tag, sha, version }) => ({
-        action: String(action || ""),
-        ref: String(ref || ""),
-        tag: String(tag || ""),
-        sha: String(sha || ""),
-        version: String(version || ""),
-      }),
-    ),
+    promotedSha: String(releaseSha || ""),
+    transaction: {
+      transactionRoot: transaction.transactionRoot,
+      stateRoot: transaction.stateRoot,
+      planRoot: transaction.planRoot,
+      receiptRoots: transaction.receipts
+        .map(({ receiptRoot }) => receiptRoot)
+        .sort(),
+      failure: transaction.failure,
+    },
+    updates: (updates || []).map(({ action, ref, tag, sha, version }) => ({
+      action: String(action || ""),
+      ref: String(ref || ""),
+      tag: String(tag || ""),
+      sha: String(sha || ""),
+      version: String(version || ""),
+    })),
   };
   return { ...projection, root: releaseTailRoot(projection) };
-}
-
-function promotionOptions(
-  request,
-  { dryRun, expectedPublicationVersion = "" },
-) {
-  const [owner, repo] = request.repository.split("/");
-  return {
-    octokit: request.octokit,
-    owner,
-    repo,
-    sha: request.targetSha,
-    targetRef: request.targetRef,
-    dryRun,
-    allowRepository: request.repository,
-    requireGovernance: !dryRun,
-    requireVersionState: true,
-    requiredStatusCheck: request.requiredStatusCheck || "check",
-    statusCheckOctokit: request.octokit,
-    pullRequestOctokit: request.mutationOctokit,
-    refUpdateOctokit: request.octokit,
-    tagUpdateOctokit: request.mutationOctokit,
-    branchProtectionBypassApps: "github-actions",
-    branchProtectionBypassUsers: "",
-    branchProtectionBypassTeams: "",
-    publishTransaction: true,
-    publishCommand: request.publishCommand,
-    publishSealedBundleRoot: request.sealedBundleRoot,
-    publishSealedBundleManifest: request.sealedBundleManifest,
-    publishRequiredArtifactsJson: fs.readFileSync(
-      path.resolve(request.requiredArtifactsPath),
-      "utf8",
-    ),
-    publishMode: request.publishMode,
-    publishAuth: request.publishAuth || "trusted-publishing",
-    publishDistTag: request.publishDistTag,
-    publishPackageSetOrder: request.publishPackageSetOrder || "as-provided",
-    publishPackageMain: request.publishPackageMain,
-    publishRematerializeOnResume: request.publishRematerializeOnResume,
-    expectedTransactionId: request.expectedTransactionId,
-    expectedPublicationVersion,
-    requirePublicationQualification: false,
-    publicationQualificationReceiptJson: JSON.stringify(request.qualification),
-    publicationUsedQualificationNoncesJson: "[]",
-    releasePassport: false,
-    promoteOnlyReleaseCandidate: true,
-    releaseCandidatePassportPath: request.candidatePassportPath,
-    releaseCandidateBuildSummaryPath: request.buildSummaryPath,
-    releaseCandidateVersion: String(request.candidate.target?.version || ""),
-    actor: request.actor,
-    runId: request.runId,
-    publishTransactionOverride: request.publishTransactionOverride,
-  };
 }
 
 export async function planProductPublication(
   request,
   { fallbackVersion = "", fallbackTag = "" } = {},
 ) {
-  const result = await promoteBuildchainRefs(
-    promotionOptions(request, { dryRun: true }),
-  );
-  return selectProductPublicationPlan(result, {
-    fallbackVersion,
-    fallbackTag,
+  const supplied = request.publicationIntent;
+  if (!supplied)
+    throw new Error("rooted product publication intent is required");
+  const candidateVersion = sealedCandidateVersion(request);
+  if (candidateVersion !== supplied.candidateVersion)
+    throw new Error(
+      "rooted product publication intent drifted from the sealed candidate version",
+    );
+  const intent = selectV4ProductPublicationIntent({
+    channel: supplied.channel,
+    targetRef: supplied.targetRef,
+    sourceSha: supplied.sourceSha,
+    sourceTimestamp: supplied.sourceTimestamp,
+    repository: supplied.repository,
+    packageName: supplied.packageName,
+    distTag: supplied.distTag,
+    sealedBundleRoot: supplied.sealedBundleRoot,
+    requiredArtifactsRoot: supplied.requiredArtifactsRoot,
+    candidateVersion: supplied.candidateVersion,
+    recoveredVersion: supplied.mode === "resume" ? supplied.version : "",
+    observedVersions: supplied.observedVersions,
   });
+  if (intent.intentRoot !== supplied.intentRoot)
+    throw new Error("product publication intent root mismatch");
+  if (intent.version !== fallbackVersion || intent.exactTag !== fallbackTag)
+    throw new Error("QUALIFY product publication intent drifted before APPLY");
+  return {
+    version: intent.version,
+    tag: intent.exactTag,
+    candidateVersion,
+    intentRoot: intent.intentRoot,
+  };
 }
 
 export async function applyProductPublication(request, plan) {
-  const result = await promoteBuildchainRefs(
-    promotionOptions(request, {
-      dryRun: false,
-      expectedPublicationVersion: plan.version,
-    }),
+  const declaration = createV4ProductPublicationDeclaration({
+    intent: request.publicationIntent,
+    plan,
+  });
+  const effectPlan = compileReleaseTailDeclaration(declaration);
+  const statePath = path.resolve(
+    ".buildchain/release-tail/product-provider-transaction.json",
   );
+  let transaction = fs.existsSync(statePath)
+    ? readReleaseTailTransaction(statePath)
+    : createReleaseTailTransaction(effectPlan);
+  if (
+    transaction.transactionRoot !== plan.transactionRoot ||
+    transaction.planRoot !== effectPlan.planRoot
+  )
+    throw new Error(
+      "retained product transaction drifted from the rooted plan",
+    );
+  if (
+    ![
+      "preparing",
+      "prepared",
+      "publishing",
+      "committing",
+      "reading-back",
+    ].includes(transaction.state) &&
+    transaction.state !== "complete"
+  )
+    transaction = createReleaseTailTransaction(effectPlan);
+  const runtime = createV4ProductPublicationAdapters({
+    request,
+    intent: request.publicationIntent,
+    plan,
+  });
+  transaction = await executeReleaseTailTransaction(transaction, {
+    adapters: runtime.adapters,
+    checkpoint: (next) => writeReleaseTailTransaction(statePath, next),
+  });
+  writeReleaseTailTransaction(statePath, transaction);
+  const releaseSha = await runtime.resolveReleaseSha();
   const projection = providerProjection({
-    result,
+    transaction,
     targetRef: request.targetRef,
     targetSha: request.targetSha,
-    plan,
+    intent: request.publicationIntent,
+    releaseSha,
+    updates: runtime.updates,
   });
   if (
     projection.publication.state !== "complete" ||
@@ -247,13 +320,6 @@ export async function applyProductPublication(request, plan) {
         `product provider stopped in ${projection.publication.state || "unknown"}: finalization-needed=${projection.publication.finalizationNeeded}`,
       ),
       { providerProjection: projection },
-    );
-  if (
-    projection.publication.version !== plan.version ||
-    projection.publication.exactTag !== plan.tag
-  )
-    throw new Error(
-      "product provider result drifted from the rooted publication plan",
     );
   if (!/^[0-9a-f]{40}$/u.test(projection.publication.releaseSha))
     throw new Error(
