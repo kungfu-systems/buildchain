@@ -475,6 +475,26 @@ test("real universal promotion materializes one rooted product intent before APP
   );
 });
 
+test("candidate action logs cannot corrupt the rooted result channel", () => {
+  const engine = fs.readFileSync(
+    new URL("../scripts/v4-universal-workflow-engine.mjs", import.meta.url),
+    "utf8",
+  );
+  const workflow = fs.readFileSync(
+    new URL("../.github/workflows/bootstrap.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(engine, /stdio: \["ignore", 2, 2\]/u);
+  assert.match(
+    workflow,
+    /result_json="\$\(jq -ce '[\s\S]*kungfu-buildchain-v4-universal-workflow-result\/v1[\s\S]*\.resultRoot \| test\("\^sha256:\[0-9a-f\]\{64\}\$"\)[\s\S]*' \.buildchain\/result\.json\)"/u,
+  );
+  assert.match(
+    workflow,
+    /result_root="\$\(jq -er '\.resultRoot' <<< "\$\{result_json\}"\)"/u,
+  );
+});
+
 test("candidate capability failures still produce one rooted terminal receipt", () => {
   const policyValue = policy({ allowedCapabilities: ["future-capability"] });
   const requestValue = request(policyValue);
