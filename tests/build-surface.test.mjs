@@ -851,7 +851,10 @@ test("sealed publication authority verifier is independent and credential-free",
     workflow,
     /--workflow "\$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}"/,
   );
-  assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"[\s\S]*--job apply/);
+  assert.match(
+    workflow,
+    /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"[\s\S]*--job apply/,
+  );
   assert.match(
     workflow,
     /BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: \$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}/,
@@ -993,23 +996,9 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
   assert.match(workflow, /actions\/upload-artifact@v7\.0\.1/);
   assert.match(workflow, /legacy-active-owner-binding-json:/);
   assert.match(workflow, /legacy-phase-less-active-owner/);
-  assert.match(
-    workflow,
-    /Reuse the exact active Warrant owner binding[\s\S]*dev-delivery-warrant\.mjs observe/,
-  );
-  assert.match(
-    workflow,
-    /\$w\.pullRequestNumber == \$pr[\s\S]*\$w\.sourceHead == \$head/,
-  );
-  assert.match(workflow, /activeWarrant\.sourceProofRoot/);
-  assert.match(
-    workflow,
-    /steps\.submit\.outcome == 'success' \|\| steps\.active-owner\.outputs\.exact-active == 'true'/,
-  );
-  assert.match(
-    workflow,
-    /\[ "\$\{EXACT_ACTIVE_OWNER\}" != "true" \][\s\S]*Exact source qualification failed/,
-  );
+  assert.match(workflow, /--reuse-active-source-proof --execute/);
+  assert.match(workflow, /\.receipt\.sourceProofRoot/);
+  assert.match(workflow, /steps\.submit\.outputs\.source-proof-root/);
   const legacyStart = workflow.indexOf(
     'if [ "$selected_phase" = "legacy-active" ]',
   );
@@ -2658,7 +2647,9 @@ test("binary distribution blocks invalid release uploads before the build matrix
 
 test("binary evidence publication remains isolated from the canonical v4 publisher", () => {
   const evidence = readRepoText(".github/workflows/binary-distribution.yml");
-  const publication = readRepoText(".github/workflows/.binary-release-assets.yml");
+  const publication = readRepoText(
+    ".github/workflows/.binary-release-assets.yml",
+  );
   const publicPublication = readRepoText(
     ".github/workflows/binary-release-assets.yml",
   );

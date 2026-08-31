@@ -114,6 +114,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
       "source-proof-root",
       environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_PROOF_ROOT,
     ),
+    reuseActiveSourceProof: hasFlag(rest, "reuse-active-source-proof"),
     sourceWorkflowRunId: flag(
       rest,
       "source-workflow-run-id",

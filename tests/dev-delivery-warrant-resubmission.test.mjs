@@ -49,7 +49,7 @@ class MemoryStore {
   }
 }
 
-test("selected duplicate preserves the exact active Warrant without a write", async () => {
+function selectedQueue() {
   const initial = createDevDeliveryQueue({
     repository: options.repository,
     protectedBase: options.branch,
@@ -66,13 +66,25 @@ test("selected duplicate preserves the exact active Warrant without a write", as
   const selected = selectDevDeliveryWarrant(submitted.queue, {
     now: "2026-08-04T00:02:00Z",
   });
+  return selected;
+}
+
+test("selected duplicate reuses its active source proof without a write", async () => {
+  const selected = selectedQueue();
   const store = new MemoryStore(selected.queue);
   const result = await runDevDeliveryCommand(
-    { ...options, execute: true, now: "2026-08-04T00:03:00Z" },
+    {
+      ...options,
+      sourceProofRoot: root("f"),
+      reuseActiveSourceProof: true,
+      execute: true,
+      now: "2026-08-04T00:03:00Z",
+    },
     store,
   );
 
   assert.equal(result.receipt.action, "active-warrant-noop");
+  assert.equal(result.receipt.sourceProofRoot, options.sourceProofRoot);
   assert.equal(result.before.stateRoot, result.after.stateRoot);
   assert.equal(result.mutationApplied, false);
   assert.equal(store.writes.length, 0);
@@ -84,4 +96,24 @@ test("selected duplicate preserves the exact active Warrant without a write", as
   legacy[1].enqueuedAt = "2026-08-06T00:00:00.000Z";
   // prettier-ignore
   assert.throws(() => validateDevDeliveryCandidateChain(legacy, terminalStates), /same-PR successor must chain/u);
+});
+
+test("active source proof reuse rejects any other candidate drift", async () => {
+  const selected = selectedQueue();
+  const store = new MemoryStore(selected.queue);
+  await assert.rejects(
+    runDevDeliveryCommand(
+      {
+        ...options,
+        sourceProofRoot: root("f"),
+        planRoot: root("e"),
+        reuseActiveSourceProof: true,
+        execute: true,
+        now: "2026-08-04T00:03:00Z",
+      },
+      store,
+    ),
+    /selected candidate sourceHead cannot change before terminal Warrant closeout/u,
+  );
+  assert.equal(store.writes.length, 0);
 });
