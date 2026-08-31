@@ -453,7 +453,7 @@ async function executeReleasePromotion(request, admission) {
         ".buildchain/candidate/actions/v4-release-candidate-promote/dist/index.js",
       ),
     ],
-    { env: actionEnvironment(actionInputs, actionOutput), stdio: "inherit" },
+    { env: actionEnvironment(actionInputs, actionOutput), stdio: ["ignore", 2, 2] },
   );
   return {
     route,

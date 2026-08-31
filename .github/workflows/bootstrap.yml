@@ -187,9 +187,17 @@ jobs:
         run: |
           set -euo pipefail
           node .buildchain/candidate/scripts/v4-universal-workflow-engine.mjs execute > .buildchain/result.json
+          result_json="$(jq -ce '
+            select(
+              .schema == "kungfu-buildchain-v4-universal-workflow-result/v1" and
+              (.status == "succeeded" or .status == "failed") and
+              (.resultRoot | test("^sha256:[0-9a-f]{64}$"))
+            )
+          ' .buildchain/result.json)"
+          result_root="$(jq -er '.resultRoot' <<< "${result_json}")"
           {
-            echo "result-json=$(jq -c '.' .buildchain/result.json)"
-            echo "result-root=$(jq -r '.resultRoot' .buildchain/result.json)"
+            echo "result-json=${result_json}"
+            echo "result-root=${result_root}"
           } >> "${GITHUB_OUTPUT}"
 
   settle:
