@@ -71,14 +71,22 @@ export function resolveCandidateProviderInputs({
   if (fs.existsSync(path.resolve(recoveryReceiptPath)))
     resolved.releaseCandidateRecoveryReceiptPath = recoveryReceiptPath;
   if (!resolved.publishPackageMain) {
-    const main = read(resolved.requiredArtifactsPath).filter(
-      ({ role }) => role === "main",
+    const artifacts = read(resolved.requiredArtifactsPath);
+    const main = artifacts.filter(({ role }) => role === "main");
+    const requiredNpm = artifacts.filter(
+      ({ kind, required }) => kind === "npm" && required !== false,
     );
-    if (main.length !== 1 || !String(main[0]?.name || "").trim())
+    const inferred =
+      main.length === 1 && String(main[0]?.name || "").trim()
+        ? main[0]
+        : requiredNpm.length === 1 && String(requiredNpm[0]?.name || "").trim()
+          ? requiredNpm[0]
+          : null;
+    if (!inferred)
       throw new Error(
         "publish-package-main is required when the sealed artifact set has no unique main package",
       );
-    resolved.publishPackageMain = String(main[0].name).trim();
+    resolved.publishPackageMain = String(inferred.name).trim();
   }
   return resolved;
 }
