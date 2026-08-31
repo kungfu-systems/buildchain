@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1139,
+  "generation": 1140,
   "fencingCounter": 170,
   "policy": {
     "agingSeconds": 900,
@@ -8160,11 +8160,20 @@
       "sourceWorkflowRunId": 33322312676,
       "priority": "ordinary",
       "enqueuedAt": "2026-08-30T16:48:57.865Z",
-      "updatedAt": "2026-08-30T16:48:57.865Z",
+      "updatedAt": "2026-08-31T02:20:12.603Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "PR #3342 closed to retire conflicting exact head before protected replay",
+        "evidenceRoot": "sha256:de6efc5a311e4c537067e6ab5b747ac7c93a1ca1c86d975ccd2665c76bedd597",
+        "authority": "queued-candidate-cancellation",
+        "expectedSourceHead": "d739c54967ac58d2645c86f3602b833c26920a82",
+        "observedSourceHead": "d739c54967ac58d2645c86f3602b833c26920a82",
+        "eventAction": "closed",
+        "closedAt": "2026-08-31T02:20:12.603Z"
+      },
       "affectedPaths": [
         ".github/actionlint.yaml",
         ".github/workflows/.auditable-demo.yml",
@@ -8262,6 +8271,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-08-31T01:52:35.162Z",
-  "stateRoot": "sha256:b62f8d485ab1cb3d8f29e219087196a66116e2a6443a807b817b717d3d13253e"
+  "updatedAt": "2026-08-31T02:20:12.603Z",
+  "stateRoot": "sha256:a6df5de455070e3db89e8642af6da5f2fe09d3d636b9e66a24e402e83633c62f"
 }
