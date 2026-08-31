@@ -365,7 +365,7 @@ jobs:
       runtime-selection-root: ${{ steps.runtime.outputs.root }}
       target-branch: ${{ steps.target.outputs.branch }}
       branch-artifact: ${{ steps.target.outputs.branch-artifact }}
-      source-proof-root: ${{ steps.proof.outputs.source-proof-root }}
+      source-proof-root: ${{ steps.proof.outputs.source-proof-root || steps.active-owner.outputs.source-proof-root }}
       warrant-receipt-root: ${{ steps.warrant.outputs.warrant-receipt-root }}
       warrant-state-root: ${{ steps.warrant.outputs.warrant-state-root }}
       warrant-state-commit: ${{ steps.warrant.outputs.warrant-state-commit }}
@@ -519,6 +519,74 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Reuse the exact active Warrant owner binding
+        id: active-owner
+        if: inputs.delivery-warrant-mode == 'required'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .buildchain/runtime/scripts/dev-delivery-warrant.mjs observe \
+            --repository "${GITHUB_REPOSITORY}" \
+            --branch "${TARGET_BRANCH}" \
+            --output .buildchain/dev-delivery/active-owner.json
+          exact_active="$(jq -r \
+            --argjson pr "${EXPECTED_PR}" \
+            --arg head "${EXPECTED_HEAD}" \
+            --arg assignment "${ASSIGNMENT_ROOT}" \
+            --arg initiative "${INITIATIVE_ROOT}" \
+            --arg identity "${SOURCE_IDENTITY_ROOT}" \
+            --arg patch "${SOURCE_PATCH_ROOT}" \
+            --arg plan "${PLAN_ROOT}" \
+            --arg closure "${CLOSURE_ROOT}" \
+            --arg dependency "${DEPENDENCY_ROOT}" \
+            --arg toolchain "${TOOLCHAIN_ROOT}" \
+            --arg environment "${ENVIRONMENT_ROOT}" \
+            --arg nativeCommand "${NATIVE_COMMAND}" \
+            --argjson affectedPaths "${AFFECTED_PATHS}" \
+            --argjson shardRoots "${SHARD_ROOTS}" \
+            --arg deliveryClass "${DELIVERY_CLASS}" \
+            '(.observation.activeWarrant // null) as $w
+             | ($w != null
+                and ($w.phase == "provisional" or $w.phase == "qualified")
+                and $w.pullRequestNumber == $pr
+                and $w.sourceHead == $head
+                and $w.assignmentRoot == $assignment
+                and $w.initiativeRoot == $initiative
+                and $w.sourceIdentityRoot == $identity
+                and $w.sourcePatchRoot == $patch
+                and $w.planRoot == $plan
+                and $w.closureRoot == $closure
+                and $w.dependencyRoot == $dependency
+                and $w.toolchainRoot == $toolchain
+                and $w.environmentRoot == $environment
+                and $w.nativeCommandContract.command == $nativeCommand
+                and $w.affectedPaths == $affectedPaths
+                and $w.shardEvidenceRoots == $shardRoots
+                and $w.deliveryClass == $deliveryClass)' \
+            .buildchain/dev-delivery/active-owner.json)"
+          echo "exact-active=${exact_active}" >> "${GITHUB_OUTPUT}"
+          if [ "${exact_active}" = "true" ]; then
+            echo "source-proof-root=$(jq -er '.observation.activeWarrant.sourceProofRoot' .buildchain/dev-delivery/active-owner.json)" >> "${GITHUB_OUTPUT}"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token || github.token }}
+          TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+          EXPECTED_PR: ${{ inputs.expected-pr-number }}
+          EXPECTED_HEAD: ${{ inputs.expected-head-sha }}
+          ASSIGNMENT_ROOT: ${{ inputs.assignment-root }}
+          INITIATIVE_ROOT: ${{ inputs.initiative-root }}
+          SOURCE_IDENTITY_ROOT: ${{ inputs.source-identity-root }}
+          SOURCE_PATCH_ROOT: ${{ inputs.source-patch-root }}
+          PLAN_ROOT: ${{ inputs.plan-root }}
+          CLOSURE_ROOT: ${{ inputs.closure-root }}
+          DEPENDENCY_ROOT: ${{ inputs.dependency-root }}
+          TOOLCHAIN_ROOT: ${{ inputs.toolchain-root }}
+          ENVIRONMENT_ROOT: ${{ inputs.environment-root }}
+          NATIVE_COMMAND: ${{ inputs.native-command }}
+          AFFECTED_PATHS: ${{ inputs.affected-paths-json }}
+          SHARD_ROOTS: ${{ inputs.shard-evidence-roots-json }}
+          DELIVERY_CLASS: ${{ inputs.delivery-class }}
+
       - name: Verify optional exact Project Cut replay proof
         id: project-cut
         if: inputs.project-cut-proof-json != ''
@@ -539,7 +607,7 @@ jobs:
 
       - name: Qualify exact source before scheduling
         id: qualify
-        if: inputs.delivery-warrant-mode != 'off'
+        if: inputs.delivery-warrant-mode != 'off' && steps.active-owner.outputs.exact-active != 'true'
         continue-on-error: true
         shell: bash
         run: |
@@ -685,7 +753,7 @@ jobs:
 
       - name: Select exact Delivery Warrant
         id: warrant
-        if: inputs.delivery-warrant-mode == 'required' && steps.submit.outcome == 'success'
+        if: inputs.delivery-warrant-mode == 'required' && (steps.submit.outcome == 'success' || steps.active-owner.outputs.exact-active == 'true')
         continue-on-error: true
         shell: bash
         run: |
@@ -808,7 +876,7 @@ jobs:
             --argjson pr "${EXPECTED_PR}" \
             --arg head "${EXPECTED_HEAD}" \
             --arg phase "$selected_phase" \
-            --arg legacyOwnerStateRoot "$(jq -er '.receipt.expectedOldStateRoot' .buildchain/dev-delivery/submission.json)" \
+            --arg legacyOwnerStateRoot "$(jq -er '.receipt.expectedOldStateRoot' .buildchain/dev-delivery/submission.json 2>/dev/null || true)" \
             --argjson legacyBinding "${LEGACY_ACTIVE_OWNER_BINDING:-null}" \
             '.schema == "kungfu.buildchain.dev-delivery-command-result/v1"
              and .mode == "execute"
@@ -863,11 +931,11 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [ "${WARRANT_MODE}" != "off" ] && [ "${QUALIFY_OUTCOME}" != "success" ]; then
+          if [ "${WARRANT_MODE}" != "off" ] && [ "${EXACT_ACTIVE_OWNER}" != "true" ] && [ "${QUALIFY_OUTCOME}" != "success" ]; then
             echo "::error::Exact source qualification failed before Warrant scheduling"
             exit 1
           fi
-          if [ "${WARRANT_MODE}" != "off" ] && [ "${SUBMIT_OUTCOME}" != "success" ]; then
+          if [ "${WARRANT_MODE}" != "off" ] && [ "${EXACT_ACTIVE_OWNER}" != "true" ] && [ "${SUBMIT_OUTCOME}" != "success" ]; then
             echo "::error::Delivery candidate submission failed"
             exit 1
           fi
@@ -884,6 +952,7 @@ jobs:
           QUALIFY_OUTCOME: ${{ steps.qualify.outcome }}
           SUBMIT_OUTCOME: ${{ steps.submit.outcome }}
           WARRANT_OUTCOME: ${{ steps.warrant.outcome }}
+          EXACT_ACTIVE_OWNER: ${{ steps.active-owner.outputs.exact-active }}
           HANDOFF_REQUIRED: ${{ steps.warrant.outputs.handoff-required }}
           HANDOFF_DISPATCHED: ${{ steps.warrant.outputs.handoff-dispatched }}
 
