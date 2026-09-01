@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
-
 test("the Bootstrap shell prepares a clean release consumer before candidate execution", () => {
   const workflow = fs.readFileSync(
     new URL("../.github/workflows/bootstrap.yml", import.meta.url),
@@ -22,7 +21,6 @@ test("the Bootstrap shell prepares a clean release consumer before candidate exe
     /if: \$\{\{ needs\.admit\.outputs\.capability-id == 'release-candidate-promote' \}\}[\s\S]*corepack pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts/u,
   );
 });
-
 test("the exact candidate runtime can prepare an older clean Bootstrap consumer", () => {
   const engine = fs.readFileSync(
     new URL("../scripts/v4-universal-workflow-engine.mjs", import.meta.url),
@@ -37,4 +35,10 @@ test("the exact candidate runtime can prepare an older clean Bootstrap consumer"
   );
   assert.match(engine, /pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts/u);
   assert.match(engine, /node_modules\/@kungfu-tech\/kfd\/package\.json/u);
+  assert.match(engine, /\.buildchain\/runtime\/node_modules/u);
+  assert.match(engine, /fs\.renameSync\(consumerModules, runtimeModules\)/u);
+  assert.match(
+    engine,
+    /fs\.symlinkSync\([\s\S]*runtimeModules[\s\S]*consumerModules[\s\S]*"dir"/u,
+  );
 });

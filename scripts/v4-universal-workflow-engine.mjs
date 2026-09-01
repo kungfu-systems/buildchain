@@ -88,17 +88,17 @@ function validateWorkflowInputs(workflowId, inputs) {
 function prepareReleasePromotionConsumerDependencies(repository) {
   if (repository !== "kungfu-systems/buildchain") return;
   const manifest = JSON.parse(fs.readFileSync("package.json", "utf8"));
-  if (
-    manifest.packageManager !== "pnpm@11.7.0" ||
-    !fs.existsSync("pnpm-lock.yaml")
-  )
-    fail("Buildchain release consumer dependency lock is unavailable");
-  if (fs.existsSync("node_modules/@kungfu-tech/kfd/package.json")) return;
-  const args =
-    "pnpm@11.7.0 install --frozen-lockfile --ignore-scripts".split(" ");
-  execFileSync("corepack", args, { stdio: "inherit" });
+  if (manifest.packageManager !== "pnpm@11.7.0" || !fs.existsSync("pnpm-lock.yaml")) fail("Buildchain release consumer dependency lock is unavailable");
+  const consumerModules = path.resolve("node_modules"), runtimeModules = path.resolve(".buildchain/runtime/node_modules");
+  if (!fs.existsSync(consumerModules) && fs.existsSync(runtimeModules)) fs.symlinkSync(path.relative(path.dirname(consumerModules), runtimeModules), consumerModules, "dir");
+  if (!fs.existsSync("node_modules/@kungfu-tech/kfd/package.json")) execFileSync("corepack", "pnpm@11.7.0 install --frozen-lockfile --ignore-scripts".split(" "), { stdio: "inherit" });
+  if (fs.existsSync(runtimeModules)) {
+    if (fs.realpathSync(consumerModules) !== fs.realpathSync(runtimeModules)) fail("Buildchain release consumer runtime bridge conflicts");
+    return;
+  }
+  fs.mkdirSync(path.dirname(runtimeModules), { recursive: true }); fs.renameSync(consumerModules, runtimeModules);
+  fs.symlinkSync(path.relative(path.dirname(consumerModules), runtimeModules), consumerModules, "dir");
 }
-
 function actionEnvironment(inputs, outputPath) {
   const environment = { ...process.env, GITHUB_OUTPUT: outputPath };
   for (const [name, value] of Object.entries(inputs))
