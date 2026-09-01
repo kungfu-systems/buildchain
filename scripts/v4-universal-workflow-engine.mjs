@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import {
   admitV4UniversalWorkflow,
   completeV4UniversalWorkflow,
-  selectV4RecoveredProductPublicationVersion,
+  selectV4RecoveredProductPublicationVersion, v4ProductStateVersion,
   validateV4UniversalWorkflowRequest,
   v4UniversalWorkflowRequestRoot,
 } from "../packages/core/v4-universal-workflow-bootstrap.js";
@@ -25,7 +25,6 @@ import {
 function fail(message) {
   throw new Error(message);
 }
-
 function readJsonEnvironment(name) {
   const source = process.env[name];
   if (!source) fail(`${name} is required`);
@@ -35,7 +34,6 @@ function readJsonEnvironment(name) {
     throw new Error(`${name} is not valid JSON`, { cause: error });
   }
 }
-
 function exactRuntime(admission) {
   const runtime = admission?.runtime;
   if (
@@ -46,7 +44,6 @@ function exactRuntime(admission) {
     fail("an exact admitted Buildchain runtime is required");
   return runtime;
 }
-
 function contentRoot(domain, value) {
   const hash = crypto.createHash("sha256");
   hash.update(domain, "utf8");
@@ -54,11 +51,9 @@ function contentRoot(domain, value) {
   hash.update(`${JSON.stringify(value)}\n`, "utf8");
   return `sha256:${hash.digest("hex")}`;
 }
-
 function emit(value) {
   process.stdout.write(`${JSON.stringify(value)}\n`);
 }
-
 function exactObject(value, keys, label) {
   if (!value || typeof value !== "object" || Array.isArray(value))
     fail(`${label} must be an object`);
@@ -269,6 +264,12 @@ async function observedSourceTimestamp(repository, sourceSha) {
     fail("protected publication source timestamp is unavailable");
   return new Date(observed).toISOString();
 }
+async function observeProductPublicationRecovery(repository, sourceSha, candidateVersion) {
+  const apiUrl = process.env.GITHUB_API_URL || "https://api.github.com", token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "", prefix = `heads/buildchain/v4-product-state/${sourceSha}-`;
+  const stateRefs = (await githubJson({ apiUrl, token, path: `/repos/${repository}/git/matching-refs/${prefix}`, allowNotFound: true })) || [];
+  const recoveryStates = await Promise.all(stateRefs.map(async (stateRef) => { const version = v4ProductStateVersion(stateRef, sourceSha); const [stateCommit, exactTagRef] = await Promise.all([githubJson({ apiUrl, token, path: `/repos/${repository}/git/commits/${stateRef.object.sha}` }), githubJson({ apiUrl, token, path: `/repos/${repository}/git/ref/tags/v${version}`, allowNotFound: true })]); return { stateRef, stateCommit, exactTagRef }; }));
+  const exactTagRef = recoveryStates.length ? undefined : await githubJson({ apiUrl, token, path: `/repos/${repository}/git/ref/tags/v${encodeURIComponent(candidateVersion)}`, allowNotFound: true }); return { recoveryStates, exactTagRef };
+}
 async function materializeProductPublicationIntent({
   candidate,
   inputs,
@@ -280,8 +281,8 @@ async function materializeProductPublicationIntent({
   );
   const sourceTimestamp = await observedSourceTimestamp(repository, route.requestedSha);
   const version = String(candidate.publicationVersion || candidate.version || "").trim(), explicitResume = String(inputs["resume-transaction-id"] || "") !== "";
-  const exactTagRef = route.decision !== "Resume" || explicitResume ? undefined : await githubJson({ apiUrl: process.env.GITHUB_API_URL || "https://api.github.com", token: process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "", path: `/repos/${repository}/git/ref/tags/v${version}`, allowNotFound: true });
-  const recoveredVersion = selectV4RecoveredProductPublicationVersion({ routeDecision: route.decision, candidateVersion: version, requestedSha: route.requestedSha, explicitResume, exactTagRef });
+  const recovery = route.decision !== "Resume" || explicitResume ? {} : await observeProductPublicationRecovery(repository, route.requestedSha, version);
+  const recoveredVersion = selectV4RecoveredProductPublicationVersion({ routeDecision: route.decision, candidateVersion: version, requestedSha: route.requestedSha, explicitResume, ...recovery });
   execFileSync(
     process.execPath,
     [
@@ -511,7 +512,6 @@ async function capabilityResult(request, admission) {
     return executeReleasePromotion(request, admission);
   fail(`candidate capability is not implemented: ${request.capability.id}`);
 }
-
 async function executeCandidate(request, admission) {
   const runtime = exactRuntime(admission);
   if (v4UniversalWorkflowRequestRoot(request) !== admission.requestRoot)

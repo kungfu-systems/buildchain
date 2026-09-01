@@ -8,7 +8,6 @@ export const V4_UNIVERSAL_WORKFLOW_ADMISSION =
   "kungfu-buildchain-v4-universal-workflow-admission/v1";
 export const V4_UNIVERSAL_WORKFLOW_TERMINAL_RECEIPT =
   "kungfu-buildchain-v4-universal-workflow-terminal-receipt/v1";
-
 const EXACT_SHA = /^[0-9a-f]{40}$/u;
 const ROOT = /^sha256:[0-9a-f]{64}$/u;
 const REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u;
@@ -36,7 +35,6 @@ const LEVELS = new Map([
   ["read", 1],
   ["write", 2],
 ]);
-
 function fail(code, message) {
   const error = new Error(message);
   error.code = code;
@@ -275,8 +273,10 @@ export function v4UniversalWorkflowRequestRoot(value) {
     validateV4UniversalWorkflowRequest(value),
   );
 }
+export function v4ProductStateVersion(value, requestedSha) { const sourceSha = exactSha(requestedSha, "requestedSha"), ref = nonEmpty(value?.ref, "productStateRef.ref"), prefix = `refs/heads/buildchain/v4-product-state/${sourceSha}-`; if (!ref.startsWith(prefix)) fail("recovery-state-mismatch", "release recovery product state does not bind the requested source"); const match = ref.slice(prefix.length).match(/^(\d+)-(\d+)-(\d+)(?:-alpha-(\d+))?$/u); if (!match) fail("invalid-recovery-version", "release recovery product state version is invalid"); return `${match[1]}.${match[2]}.${match[3]}${match[4] === undefined ? "" : `-alpha.${match[4]}`}`; }
 export function selectV4RecoveredProductPublicationVersion(value) {
-  if (value.routeDecision !== "Resume") return ""; const version = nonEmpty(value.candidateVersion, "candidateVersion"), sourceSha = exactSha(value.requestedSha, "requestedSha"); if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) fail("invalid-recovery-version", "release recovery candidate version is invalid"); if (value.explicitResume) return version;
+  if (value.routeDecision !== "Resume") return ""; const version = nonEmpty(value.candidateVersion, "candidateVersion"), sourceSha = exactSha(value.requestedSha, "requestedSha"), candidate = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-alpha\.(\d+))?$/u); if (!candidate) fail("invalid-recovery-version", "release recovery candidate version is invalid"); if (value.explicitResume) return version;
+  const states = Array.isArray(value.recoveryStates) ? value.recoveryStates : []; if (states.length) { const recovered = states.map(({ stateRef, stateCommit, exactTagRef }) => { const selected = v4ProductStateVersion(stateRef, sourceSha), parsed = selected.match(/^(\d+)\.(\d+)\.(\d+)(?:-alpha\.(\d+))?$/u), parents = stateCommit?.parents || []; if (stateRef?.object?.type !== "commit" || exactSha(stateRef?.object?.sha, "productStateRef.object.sha") !== exactSha(stateCommit?.sha, "productStateCommit.sha") || parents.length !== 1 || exactSha(parents[0]?.sha, "productStateCommit.parents[0].sha") !== sourceSha) fail("recovery-state-mismatch", "release recovery product state commit does not bind the requested source"); if (exactTagRef && (exactTagRef.ref !== `refs/tags/v${selected}` || exactTagRef.object?.type !== "commit" || exactSha(exactTagRef.object?.sha, "exactTagRef.object.sha") !== sourceSha)) fail("recovery-tag-mismatch", "release recovery exact tag does not bind the requested source"); if (parsed[1] !== candidate[1] || parsed[2] !== candidate[2] || parsed[3] !== candidate[3] || (parsed[4] === undefined) !== (candidate[4] === undefined)) fail("recovery-state-mismatch", "release recovery product state is outside the candidate release line"); return selected; }); recovered.sort((left, right) => Number(left.match(/(?:-alpha\.)?(\d+)$/u)[1]) - Number(right.match(/(?:-alpha\.)?(\d+)$/u)[1])); return recovered.at(-1); }
   if (!value.exactTagRef) fail("recovery-tag-missing", "release recovery requires an exact partial-publication tag"); if (value.exactTagRef.ref !== `refs/tags/v${version}` || value.exactTagRef.object?.type !== "commit" || exactSha(value.exactTagRef.object?.sha, "exactTagRef.object.sha") !== sourceSha) fail("recovery-tag-mismatch", "release recovery exact tag does not bind the requested source");
   return version;
 }
