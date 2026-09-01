@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1244,
+  "generation": 1245,
   "fencingCounter": 181,
   "policy": {
     "agingSeconds": 900,
@@ -9205,8 +9205,46 @@
         "tests/v4-universal-workflow-clean-consumer.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3389,
+      "assignmentRoot": "sha256:f63f64c7651307f2bffc8e9d87ef01185dbfe80f923a9dc33179154b90d5cff6",
+      "initiativeRoot": "sha256:ffb97b667c6765ee350ca980c0c3f9888f3c55903350bca94aa4f014fb3195ae",
+      "sourceIdentityRoot": "sha256:5a0319a4d43e42102dd0b702f2de3c491e2f9a0d4d4ef10404332538aa0c3e8b",
+      "deliveryClass": "native-proof-required",
+      "candidateId": "sha256:003eb02ce05df86daefaf7d3c036b6192bdd08b18076c0e2e731cdaf94045950",
+      "sourceHead": "248f04d193ca1ece36b74d311effa34e71d2d058",
+      "sourcePatchRoot": "sha256:c78695cdd59cc42d903f5ff05416a70ebeaa540c11a77e517d0527fb244a84a6",
+      "sourceProofRoot": "sha256:8027c40b2385620e86276056e7d6b7cb4f697785abda24eec0b676e33ddbf081",
+      "planRoot": "sha256:db1992d55958e6268d8ca35732a92ee1d0655b2f6fb37602be5a9620c7467bc4",
+      "closureRoot": "sha256:2eb211810b382514e641f4bd57a133977fcd804ec88a855939bdf468c8aefc39",
+      "dependencyRoot": "sha256:041be2d54d646cbc17a74264f1e5fb3f7daa917f1561ff7422d9d02bc5335794",
+      "toolchainRoot": "sha256:29b954175fdc43f3dd09a552fe86302cb93ee73b810f81858bb89b2286a98a72",
+      "environmentRoot": "sha256:ef7c29c4a4447716a126ecea25f67d6cf44a211ec319321f4a7216fee80b4fa3",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "pnpm run check",
+        "commandRoot": "sha256:f5e43c852df5adcad947a4a0727350b53a01a06805228ce2d4b5c53f5b742019"
+      },
+      "sourceWorkflowRunId": 33541628405,
+      "priority": "emergency",
+      "enqueuedAt": "2026-09-01T18:35:18.036Z",
+      "updatedAt": "2026-09-01T18:35:18.036Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/maintainability-policy.json",
+        "scripts/dev-delivery-warrant-store.mjs",
+        "tests/dev-delivery-warrant-store.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-01T10:41:26.439Z",
-  "stateRoot": "sha256:4fa54bdbcaf15ae31314460619e985155418e7a1c1eacc910b532d5b217bcbe1"
+  "updatedAt": "2026-09-01T18:35:18.036Z",
+  "stateRoot": "sha256:cec60c13deab08debdc2b4eaecdf5dfb4452d86b59befdc1da13f22968124a52"
 }
