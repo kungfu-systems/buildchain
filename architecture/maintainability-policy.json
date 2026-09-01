@@ -13,10 +13,10 @@
     "rationale": "Preserve the accepted 66,712 governance ledger at the exact protected Wave 4 cut while charging every subsequent source, Rust, test, and workflow line, function, job, step, and decision excess one-for-one. The fixed calibration offset cannot hide new debt because both the measured ledger and calibrated total are recomputed from the complete exact debt map."
   },
   "exceptionBudget": {
-    "maxTotal": 94,
+    "maxTotal": 95,
     "maxByCollection": {
       "approvedExistingDebtTransitions": 19,
-      "approvedNewFileTransitions": 21,
+      "approvedNewFileTransitions": 22,
       "approvedExtractedDebt": 20,
       "approvedPublicSurfaceTransitions": 19,
       "approvedTestDebtTransitions": 9,
@@ -142,6 +142,11 @@
     "packages/core/v4-runtime-selector-persistence.js": {
       "maxLines": 228,
       "rationale": "The isolated source scanner rejects persisted exact, train, authority, variable, secret, and environment selector authority while inventorying OIDC, IAM, and external authority metadata without reading credentials; this exact ceiling cannot grow implicitly.",
+      "governance": "legacy-debt-sunset-2026q4"
+    },
+    "scripts/v4-universal-workflow-engine.mjs": {
+      "maxLines": 620,
+      "rationale": "The exact candidate engine adds only a fail-closed OIDC preflight and a fixed npm 11.13.0 trusted-publishing shim under the already admitted ephemeral runtime path. This lets a reviewed Train candidate execute through an older floating Alpha Bootstrap shell without broadening capability, permission, provider, or mutation authority; this exact live-repair ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/resume-from-candidate-run.mjs": {

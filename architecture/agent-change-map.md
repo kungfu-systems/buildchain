@@ -84,6 +84,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `scripts/run-lifecycle-core.mjs`
 - sources: `scripts/stable-candidate-patrol.mjs`
 - sources: `scripts/stable-release-gate.mjs`
+- sources: `scripts/v4-universal-workflow-engine.mjs`
 - sources: `scripts/v4-architecture.mjs`
 - sources: `scripts/v4-warrant-shadow-plan.mjs`
 - sources: `scripts/web-surface-core.mjs`
@@ -152,12 +153,15 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 - `.github/workflows/bootstrap.yml`
 - `scripts/check-v4-universal-workflow-bootstrap.mjs`
+- `scripts/v4-universal-workflow-engine.mjs`
+- `tests/v4-universal-workflow-bootstrap.test.mjs`
 - `tests/v3-v4-capability-inventory.test.mjs`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
 - `tests/v4-publication-qualification.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
 - `tests/release-candidate-recovery.test.mjs`
+- `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
 - `.github/workflows/.release-candidate-promote.yml`
 - `tests/build-surface-promotion.test.mjs`
 - `.github/workflows/buildchain-ref-promotion-recovery.yml`

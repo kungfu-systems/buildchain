@@ -161,6 +161,7 @@ test("exact-head maintainability baseline is reproducible", () => {
   for (const route of [
     "scripts/buildchain-cli-help.mjs",
     "scripts/check-maintainability.mjs",
+    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
     "tests/maintainability.test.mjs",
   ])
     assert.ok(

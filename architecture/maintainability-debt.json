@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64345,
-    "current": 56284
+    "measuredExcess": 64361,
+    "current": 56300
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1804,6 +1804,17 @@
           }
         }
       },
+      "scripts/v4-universal-workflow-engine.mjs": {
+        "baseline": {
+          "lines": 620
+        },
+        "current": {
+          "lines": 616
+        },
+        "target": {
+          "lines": 600
+        }
+      },
       "scripts/v4-architecture.mjs": {
         "baseline": {
           "lines": 610
@@ -3085,12 +3096,15 @@
   "hotspots": [
     ".github/workflows/bootstrap.yml",
     "scripts/check-v4-universal-workflow-bootstrap.mjs",
+    "scripts/v4-universal-workflow-engine.mjs",
+    "tests/v4-universal-workflow-bootstrap.test.mjs",
     "tests/v3-v4-capability-inventory.test.mjs",
     "tests/v4-floating-consumer-policy-contract.test.mjs",
     "tests/v4-publication-qualification.test.mjs",
     ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/buildchain-ref-promotion.yml",
     "tests/release-candidate-recovery.test.mjs",
+    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
     ".github/workflows/.release-candidate-promote.yml",
     "tests/build-surface-promotion.test.mjs",
     ".github/workflows/buildchain-ref-promotion-recovery.yml",
