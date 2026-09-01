@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1246,
+  "generation": 1247,
   "fencingCounter": 181,
   "policy": {
     "agingSeconds": 900,
@@ -9252,8 +9252,52 @@
         "tests/dev-delivery-warrant-store.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3389,
+      "assignmentRoot": "sha256:f63f64c7651307f2bffc8e9d87ef01185dbfe80f923a9dc33179154b90d5cff6",
+      "initiativeRoot": "sha256:ffb97b667c6765ee350ca980c0c3f9888f3c55903350bca94aa4f014fb3195ae",
+      "sourceIdentityRoot": "sha256:16712be7a47b589e12aaaaa182885da12ef3c6bbc2b870f66e2a74c6f7f91d0d",
+      "deliveryClass": "native-proof-required",
+      "identitySemantics": "chained-attempt-v2",
+      "predecessorCandidateId": "sha256:003eb02ce05df86daefaf7d3c036b6192bdd08b18076c0e2e731cdaf94045950",
+      "candidateId": "sha256:6e326eab5a58479bf8ceae6abf97ba9801b97f75e37d91d5629dc133345b33a0",
+      "sourceHead": "a858db84b9ddcdda41429e3a2d3f343601b80a1e",
+      "sourcePatchRoot": "sha256:4cb7dbabfe92ae6b0c2a602d8e574e686b5abc62305aa687fdeb0948b6379254",
+      "sourceProofRoot": "sha256:d64d412137bfbac6cc8914f8dbcf4df3f7a5f7d5832ceda2647d6997a8411f9e",
+      "planRoot": "sha256:8a24210b5acd4f5dff865d86f113f14556c0ef3ec048540ad7669473d869f6b9",
+      "closureRoot": "sha256:ef4048fb4af0fdcdfa9a95b250832a6f261167b5d69144f07e1730cf3e811e7a",
+      "dependencyRoot": "sha256:259e1a39e854c97f08e807055a1a92e9e4a4dfaf97b885e20b4e6b3a6a67e0a2",
+      "toolchainRoot": "sha256:29b954175fdc43f3dd09a552fe86302cb93ee73b810f81858bb89b2286a98a72",
+      "environmentRoot": "sha256:04294faaa9ffa19506c49d853dfc295b024c2669ad3ead377dfa097406805ecf",
+      "nativeCommandContract": {
+        "schema": "kungfu.buildchain.native-command-contract/v1",
+        "runner": "bash-lc",
+        "command": "mkdir -p \"$HOME/.local/bin\" && corepack enable --install-directory \"$HOME/.local/bin\" && export PATH=\"$HOME/.local/bin:$PATH\" && pnpm install --frozen-lockfile && pnpm run check",
+        "commandRoot": "sha256:c80aa61494655f6ff934d35012cdba3752978f8b702942ac3d4228c3b5f501a9"
+      },
+      "sourceWorkflowRunId": 33546777939,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-01T19:42:56.840Z",
+      "updatedAt": "2026-09-01T19:42:56.840Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/maintainability-policy.json",
+        "scripts/dev-delivery-warrant-store.mjs",
+        "scripts/dev-delivery-warrant-transition.mjs",
+        "scripts/dev-delivery-warrant.mjs",
+        "tests/dev-delivery-warrant-reselection.test.mjs",
+        "tests/dev-delivery-warrant-store.test.mjs",
+        "tests/internal-architecture.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-01T19:39:58.405Z",
-  "stateRoot": "sha256:52a216b5cf702453bc2fb22f4648f98ea5c080c2863ac6870e1f2f0602442a2b"
+  "updatedAt": "2026-09-01T19:42:56.840Z",
+  "stateRoot": "sha256:00b62ccf9c341f47d8fd60028ba4d1a8bb2ecd17c62fd2364155e087e9528e5b"
 }
