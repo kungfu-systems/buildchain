@@ -8,6 +8,7 @@ import {
   V4_UNIVERSAL_WORKFLOW_REQUEST,
   admitV4UniversalWorkflow,
   completeV4UniversalWorkflow,
+  selectV4RecoveredProductPublicationVersion,
   validateV4UniversalWorkflowRequest,
   v4UniversalWorkflowAdmissionRoot,
   v4UniversalWorkflowRequestRoot,
@@ -461,22 +462,18 @@ test("real universal promotion materializes one rooted product intent before APP
     '".buildchain/candidate/actions/v4-release-candidate-promote/dist/index.js"',
   );
   assert.ok(intent >= 0 && apply > intent);
+  assert.match(engine, /"product-publication-intent-path": productPublicationIntentPath/u);
+  assert.match(engine, /"resume-transaction-id": payload\.inputs\["resume-transaction-id"\]/u);
+  assert.match(engine, /BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp[\s\S]*BUILDCHAIN_SEALED_BUNDLE_MANIFEST:[\s\S]*BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:/u);
   assert.match(
     engine,
-    /"product-publication-intent-path": productPublicationIntentPath/u,
+    /BUILDCHAIN_CANDIDATE_VERSION:\s*candidate\.publicationVersion \|\| candidate\.version[\s\S]*BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: recoveredVersion[\s\S]*productPublicationIntent = JSON\.parse\(fs\.readFileSync\(productPublicationIntentPath\)\)[\s\S]*version: productPublicationIntent\.version,\s*tag: productPublicationIntent\.exactTag/u,
   );
-  assert.match(
-    engine,
-    /"resume-transaction-id": payload\.inputs\["resume-transaction-id"\]/u,
-  );
-  assert.match(
-    engine,
-    /BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp[\s\S]*BUILDCHAIN_SEALED_BUNDLE_MANIFEST:[\s\S]*BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:/u,
-  );
-  assert.match(
-    engine,
-    /BUILDCHAIN_CANDIDATE_VERSION:\s*candidate\.publicationVersion \|\| candidate\.version[\s\S]*productPublicationIntent = JSON\.parse\(fs\.readFileSync\(productPublicationIntentPath\)\)[\s\S]*version: productPublicationIntent\.version,\s*tag: productPublicationIntent\.exactTag/u,
-  );
+  const version = "4.0.2-alpha.11", sourceSha = sha("4"), recovery = { candidateVersion: version, requestedSha: sourceSha };
+  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Fresh" }), "");
+  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", exactTagRef: { ref: `refs/tags/v${version}`, object: { type: "commit", sha: sourceSha } } }), version);
+  assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume" }), { code: "recovery-tag-missing" });
+  assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", exactTagRef: { ref: `refs/tags/v${version}`, object: { type: "commit", sha: sha("5") } } }), { code: "recovery-tag-mismatch" });
 });
 
 test("candidate action logs cannot corrupt the rooted result channel", () => {

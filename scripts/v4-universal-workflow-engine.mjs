@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import {
   admitV4UniversalWorkflow,
   completeV4UniversalWorkflow,
+  selectV4RecoveredProductPublicationVersion,
   validateV4UniversalWorkflowRequest,
   v4UniversalWorkflowRequestRoot,
 } from "../packages/core/v4-universal-workflow-bootstrap.js";
@@ -268,7 +269,6 @@ async function observedSourceTimestamp(repository, sourceSha) {
     fail("protected publication source timestamp is unavailable");
   return new Date(observed).toISOString();
 }
-
 async function materializeProductPublicationIntent({
   candidate,
   inputs,
@@ -278,10 +278,10 @@ async function materializeProductPublicationIntent({
   const intentPath = path.resolve(
     ".buildchain/release-candidate/v4-product-publication-intent.json",
   );
-  const sourceTimestamp = await observedSourceTimestamp(
-    repository,
-    route.requestedSha,
-  );
+  const sourceTimestamp = await observedSourceTimestamp(repository, route.requestedSha);
+  const version = String(candidate.publicationVersion || candidate.version || "").trim(), explicitResume = String(inputs["resume-transaction-id"] || "") !== "";
+  const exactTagRef = route.decision !== "Resume" || explicitResume ? undefined : await githubJson({ apiUrl: process.env.GITHUB_API_URL || "https://api.github.com", token: process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "", path: `/repos/${repository}/git/ref/tags/v${version}`, allowNotFound: true });
+  const recoveredVersion = selectV4RecoveredProductPublicationVersion({ routeDecision: route.decision, candidateVersion: version, requestedSha: route.requestedSha, explicitResume, exactTagRef });
   execFileSync(
     process.execPath,
     [
@@ -300,10 +300,7 @@ async function materializeProductPublicationIntent({
         BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp,
         BUILDCHAIN_CANDIDATE_VERSION:
           candidate.publicationVersion || candidate.version,
-        BUILDCHAIN_RECOVERED_PUBLICATION_VERSION:
-          String(inputs["resume-transaction-id"] || "") !== ""
-            ? candidate.publicationVersion || candidate.version
-            : "",
+        BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: recoveredVersion,
         BUILDCHAIN_SEALED_BUNDLE_MANIFEST: candidate.paths.sealedBundleManifest,
         BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:
           candidate.paths.publishRequiredArtifacts,
@@ -316,7 +313,6 @@ async function materializeProductPublicationIntent({
   );
   return intentPath;
 }
-
 function verifiedReleaseDocuments() {
   const base = path.resolve(".buildchain/release-tail");
   const invocation = JSON.parse(

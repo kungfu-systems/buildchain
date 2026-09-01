@@ -275,7 +275,11 @@ export function v4UniversalWorkflowRequestRoot(value) {
     validateV4UniversalWorkflowRequest(value),
   );
 }
-
+export function selectV4RecoveredProductPublicationVersion(value) {
+  if (value.routeDecision !== "Resume") return ""; const version = nonEmpty(value.candidateVersion, "candidateVersion"), sourceSha = exactSha(value.requestedSha, "requestedSha"); if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) fail("invalid-recovery-version", "release recovery candidate version is invalid"); if (value.explicitResume) return version;
+  if (!value.exactTagRef) fail("recovery-tag-missing", "release recovery requires an exact partial-publication tag"); if (value.exactTagRef.ref !== `refs/tags/v${version}` || value.exactTagRef.object?.type !== "commit" || exactSha(value.exactTagRef.object?.sha, "exactTagRef.object.sha") !== sourceSha) fail("recovery-tag-mismatch", "release recovery exact tag does not bind the requested source");
+  return version;
+}
 function validatePolicy(value) {
   exactKeys(
     value,
