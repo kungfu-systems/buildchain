@@ -85,6 +85,19 @@ function validateWorkflowInputs(workflowId, inputs) {
       `candidate payload has unregistered workflow inputs: ${unknown.sort().join(", ")}`,
     );
 }
+function prepareReleasePromotionConsumerDependencies(repository) {
+  if (repository !== "kungfu-systems/buildchain") return;
+  const manifest = JSON.parse(fs.readFileSync("package.json", "utf8"));
+  if (
+    manifest.packageManager !== "pnpm@11.7.0" ||
+    !fs.existsSync("pnpm-lock.yaml")
+  )
+    fail("Buildchain release consumer dependency lock is unavailable");
+  if (fs.existsSync("node_modules/@kungfu-tech/kfd/package.json")) return;
+  const args =
+    "pnpm@11.7.0 install --frozen-lockfile --ignore-scripts".split(" ");
+  execFileSync("corepack", args, { stdio: "inherit" });
+}
 
 function actionEnvironment(inputs, outputPath) {
   const environment = { ...process.env, GITHUB_OUTPUT: outputPath };
@@ -370,6 +383,7 @@ async function executeReleasePromotion(request, admission) {
     fail(`release route blocked: ${route.reason}`);
   if (route.decision === "NoOp" || payload.inputs["dry-run"] === true)
     return { route, dryRun: payload.inputs["dry-run"] === true };
+  prepareReleasePromotionConsumerDependencies(repository);
   const candidate = await resolveReleaseCandidateArtifacts({
     repository,
     targetRef: route.targetRef,
