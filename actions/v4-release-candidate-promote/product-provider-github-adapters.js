@@ -171,6 +171,32 @@ async function versionStateReadback(context, effect) {
   });
 }
 
+async function createVersionStateTree(
+  request,
+  repository,
+  baseTree,
+  versionFiles,
+) {
+  const { owner, repo } = splitRepository(repository);
+  const tree = [];
+  for (const file of versionFiles) {
+    const { data: blob } = await request.mutationOctokit.rest.git.createBlob({
+      owner,
+      repo,
+      content: file.content,
+      encoding: "utf-8",
+    });
+    tree.push({ path: file.path, mode: "100644", type: "blob", sha: blob.sha });
+  }
+  const { data } = await request.mutationOctokit.rest.git.createTree({
+    owner,
+    repo,
+    base_tree: baseTree,
+    tree,
+  });
+  return data.sha;
+}
+
 async function versionStateApply(context, effect) {
   const { request, plan, versionFiles, intent, updates } = context;
   const operation = operationFor(plan, effect);
@@ -188,22 +214,12 @@ async function versionStateApply(context, effect) {
     repo,
     commit_sha: operation.target.sourceSha,
   });
-  const tree = [];
-  for (const file of versionFiles) {
-    const { data: blob } = await request.mutationOctokit.rest.git.createBlob({
-      owner,
-      repo,
-      content: file.content,
-      encoding: "utf-8",
-    });
-    tree.push({ path: file.path, mode: "100644", type: "blob", sha: blob.sha });
-  }
-  const { data: nextTree } = await request.mutationOctokit.rest.git.createTree({
-    owner,
-    repo,
-    base_tree: baseCommit.tree.sha,
-    tree,
-  });
+  const nextTree = await createVersionStateTree(
+    request,
+    operation.target.repository,
+    baseCommit.tree.sha,
+    versionFiles,
+  );
   const identity = {
     ...COMMIT_IDENTITY,
     date: operation.target.sourceTimestamp,
@@ -212,7 +228,7 @@ async function versionStateApply(context, effect) {
     owner,
     repo,
     message: `chore(release): prepare ${intent.exactTag}\n\n${SIGN_OFF}`,
-    tree: nextTree.sha,
+    tree: nextTree,
     parents: [operation.target.sourceSha],
     author: identity,
     committer: identity,
@@ -320,7 +336,7 @@ async function openProtectedRefPullRequest(
   sha,
   error,
 ) {
-  const { request, intent, updates } = context;
+  const { request, intent, updates, versionFiles } = context;
   const { owner, repo } = splitRepository(repository);
   const current = await getRef(
     request.octokit,
@@ -333,17 +349,26 @@ async function openProtectedRefPullRequest(
       "transient",
       "protected-ref-absent",
     );
-  const { data: stateCommit } = await request.octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: sha,
-  });
-  if (!stateCommit.tree?.sha)
+  const [{ data: stateCommit }, { data: currentCommit }] = await Promise.all([
+    request.octokit.rest.git.getCommit({ owner, repo, commit_sha: sha }),
+    request.octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: current.object.sha,
+    }),
+  ]);
+  if (!stateCommit.tree?.sha || !currentCommit.tree?.sha)
     throw providerError(
-      "rooted version-state commit omitted its tree",
+      "protected ref finalization omitted a required tree",
       "conflict",
-      "version-state-tree-absent",
+      "protected-ref-tree-absent",
     );
+  const pullRequestTree = await createVersionStateTree(
+    request,
+    repository,
+    currentCommit.tree.sha,
+    versionFiles,
+  );
   const identity = {
     ...COMMIT_IDENTITY,
     date: intent.sourceTimestamp,
@@ -355,14 +380,15 @@ async function openProtectedRefPullRequest(
       message:
         `chore(release): prepare ${intent.exactTag} for ${branch}\n\n` +
         SIGN_OFF,
-      tree: stateCommit.tree.sha,
-      parents: [current.object.sha],
+      tree: pullRequestTree,
+      parents: [current.object.sha, sha],
       author: identity,
       committer: identity,
     });
   const head =
     `chore/v4-product-pr/${branch.replaceAll("/", "-")}/` +
-    `${sha.slice(0, 12)}-${current.object.sha.slice(0, 12)}`;
+    `${sha.slice(0, 12)}-${current.object.sha.slice(0, 12)}-` +
+    pullRequestCommit.sha.slice(0, 12);
   await createRef(
     request.mutationOctokit,
     repository,

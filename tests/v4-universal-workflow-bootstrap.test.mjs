@@ -8,14 +8,14 @@ import {
   V4_UNIVERSAL_WORKFLOW_REQUEST,
   admitV4UniversalWorkflow,
   completeV4UniversalWorkflow,
+  selectV4RecoveredProductPublicationVersion,
+  v4ProductStateVersion,
   validateV4UniversalWorkflowRequest,
   v4UniversalWorkflowAdmissionRoot,
   v4UniversalWorkflowRequestRoot,
 } from "../packages/core/v4-universal-workflow-bootstrap.js";
-
 const sha = (character) => character.repeat(40);
 const root = (character) => `sha256:${character.repeat(64)}`;
-
 function policy(overrides = {}) {
   return {
     schema: V4_UNIVERSAL_WORKFLOW_ADMISSION_POLICY,
@@ -37,7 +37,6 @@ function policy(overrides = {}) {
     ...overrides,
   };
 }
-
 function request(policyValue = policy(), overrides = {}) {
   return {
     schema: V4_UNIVERSAL_WORKFLOW_REQUEST,
@@ -67,7 +66,6 @@ function request(policyValue = policy(), overrides = {}) {
     ...overrides,
   };
 }
-
 function reviewEvidence(overrides = {}) {
   return {
     repository: "kungfu-systems/buildchain",
@@ -86,14 +84,12 @@ function reviewEvidence(overrides = {}) {
     ...overrides,
   };
 }
-
 const consumerObservation = () => ({
   observedConsumerRepository: "kungfu-systems/taolu",
   observedConsumerSha: sha("2"),
   observedConsumerWorkflowRef:
     "kungfu-systems/taolu/.github/workflows/release.yml@refs/heads/main",
 });
-
 test("an admitted Train resolves once to an exact execution identity", () => {
   const policyValue = policy();
   const admission = admitV4UniversalWorkflow({
@@ -120,7 +116,6 @@ test("an admitted Train resolves once to an exact execution identity", () => {
   assert.match(receipt.receiptRoot, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(JSON.stringify(receipt).includes("train/v4"), false);
 });
-
 test("any exact verified caller is admitted without a repository allowlist", () => {
   const policyValue = policy();
   const requestValue = request(policyValue);
@@ -461,18 +456,24 @@ test("real universal promotion materializes one rooted product intent before APP
     '".buildchain/candidate/actions/v4-release-candidate-promote/dist/index.js"',
   );
   assert.ok(intent >= 0 && apply > intent);
+  assert.match(engine, /"product-publication-intent-path": productPublicationIntentPath/u);
+  assert.match(engine, /"resume-transaction-id": payload\.inputs\["resume-transaction-id"\]/u);
+  assert.match(engine, /BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp[\s\S]*BUILDCHAIN_SEALED_BUNDLE_MANIFEST:[\s\S]*BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:/u);
   assert.match(
     engine,
-    /"product-publication-intent-path": productPublicationIntentPath/u,
+    /BUILDCHAIN_CANDIDATE_VERSION:\s*candidate\.publicationVersion \|\| candidate\.version[\s\S]*BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: recoveredVersion[\s\S]*productPublicationIntent = JSON\.parse\(fs\.readFileSync\(productPublicationIntentPath\)\)[\s\S]*version: productPublicationIntent\.version,\s*tag: productPublicationIntent\.exactTag/u,
   );
-  assert.match(
-    engine,
-    /"resume-transaction-id": payload\.inputs\["resume-transaction-id"\]/u,
-  );
-  assert.match(
-    engine,
-    /BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp[\s\S]*BUILDCHAIN_SEALED_BUNDLE_MANIFEST:[\s\S]*BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:/u,
-  );
+  const version = "4.0.2-alpha.11", candidateVersion = "4.0.2-alpha.10", sourceSha = sha("4"), recovery = { candidateVersion, requestedSha: sourceSha };
+  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Fresh" }), "");
+  const state = (selected, character = "5") => ({ stateRef: { ref: `refs/heads/buildchain/v4-product-state/${sourceSha}-${selected.replaceAll(".", "-")}`, object: { type: "commit", sha: sha(character) } }, stateCommit: { sha: sha(character), parents: [{ sha: sourceSha }] }, exactTagRef: { ref: `refs/tags/v${selected}`, object: { type: "commit", sha: sourceSha } } });
+  assert.equal(v4ProductStateVersion(state(version).stateRef, sourceSha), version);
+  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [state(candidateVersion), state(version, "6")] }), version);
+  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [{ ...state(version), exactTagRef: undefined }] }), version);
+  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", explicitResume: true }), candidateVersion);
+  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, candidateVersion: version, routeDecision: "Resume", exactTagRef: { ref: `refs/tags/v${version}`, object: { type: "commit", sha: sourceSha } } }), version);
+  assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume" }), { code: "recovery-tag-missing" });
+  assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [{ ...state(version), stateCommit: { sha: sha("5"), parents: [{ sha: sha("7") }] } }] }), { code: "recovery-state-mismatch" });
+  assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [{ ...state(version), exactTagRef: { ref: `refs/tags/v${version}`, object: { type: "commit", sha: sha("7") } } }] }), { code: "recovery-tag-mismatch" });
 });
 
 test("candidate action logs cannot corrupt the rooted result channel", () => {

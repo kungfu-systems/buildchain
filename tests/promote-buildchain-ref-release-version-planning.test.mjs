@@ -408,7 +408,9 @@ test("version verification ignores generated buildchain evidence", () => {
     path.join(cwd, ".buildchain/controller/plan.json"),
     "{}\n",
   );
-
+  fs.mkdirSync(path.join(cwd, ".buildchain/candidate"), { recursive: true }); fs.writeFileSync(path.join(cwd, ".buildchain/candidate/HEAD"), "candidate\n");
+  fs.writeFileSync(path.join(cwd, ".buildchain/result.json"), "{}\n");
+  fs.writeFileSync(path.join(cwd, ".buildchain/universal-release-action.out"), "provider=value\n");
   assert.doesNotThrow(() => assertAllowedLocalChanges(cwd, ["package.json"]));
 
   fs.writeFileSync(

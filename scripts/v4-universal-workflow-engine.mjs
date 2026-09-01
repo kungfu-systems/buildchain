@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import {
   admitV4UniversalWorkflow,
   completeV4UniversalWorkflow,
+  selectV4RecoveredProductPublicationVersion, v4ProductStateVersion,
   validateV4UniversalWorkflowRequest,
   v4UniversalWorkflowRequestRoot,
 } from "../packages/core/v4-universal-workflow-bootstrap.js";
@@ -24,7 +25,6 @@ import {
 function fail(message) {
   throw new Error(message);
 }
-
 function readJsonEnvironment(name) {
   const source = process.env[name];
   if (!source) fail(`${name} is required`);
@@ -34,7 +34,6 @@ function readJsonEnvironment(name) {
     throw new Error(`${name} is not valid JSON`, { cause: error });
   }
 }
-
 function exactRuntime(admission) {
   const runtime = admission?.runtime;
   if (
@@ -45,7 +44,6 @@ function exactRuntime(admission) {
     fail("an exact admitted Buildchain runtime is required");
   return runtime;
 }
-
 function contentRoot(domain, value) {
   const hash = crypto.createHash("sha256");
   hash.update(domain, "utf8");
@@ -53,11 +51,9 @@ function contentRoot(domain, value) {
   hash.update(`${JSON.stringify(value)}\n`, "utf8");
   return `sha256:${hash.digest("hex")}`;
 }
-
 function emit(value) {
   process.stdout.write(`${JSON.stringify(value)}\n`);
 }
-
 function exactObject(value, keys, label) {
   if (!value || typeof value !== "object" || Array.isArray(value))
     fail(`${label} must be an object`);
@@ -85,7 +81,38 @@ function validateWorkflowInputs(workflowId, inputs) {
       `candidate payload has unregistered workflow inputs: ${unknown.sort().join(", ")}`,
     );
 }
-
+const TRUSTED_PUBLISHING_NPM_VERSION = "11.13.0";
+function prepareTrustedPublishingNpm() {
+  if (
+    !process.env.ACTIONS_ID_TOKEN_REQUEST_URL ||
+    !process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
+  )
+    fail("trusted publishing requires GitHub Actions OIDC authority");
+  const binDirectory = path.resolve(".buildchain/runtime/bin");
+  const npmShim = path.join(binDirectory, "npm");
+  fs.mkdirSync(binDirectory, { recursive: true });
+  fs.writeFileSync(
+    npmShim,
+    `#!/bin/sh\nexec corepack pnpm@11.7.0 dlx npm@${TRUSTED_PUBLISHING_NPM_VERSION} "$@"\n`,
+    { mode: 0o755 },
+  );
+  fs.chmodSync(npmShim, 0o755);
+  process.env.PATH = `${binDirectory}${path.delimiter}${process.env.PATH || ""}`;
+}
+function prepareReleasePromotionConsumerDependencies(repository) {
+  if (repository !== "kungfu-systems/buildchain") return;
+  const manifest = JSON.parse(fs.readFileSync("package.json", "utf8"));
+  if (manifest.packageManager !== "pnpm@11.7.0" || !fs.existsSync("pnpm-lock.yaml")) fail("Buildchain release consumer dependency lock is unavailable");
+  const consumerModules = path.resolve("node_modules"), runtimeModules = path.resolve(".buildchain/runtime/node_modules");
+  if (!fs.existsSync(consumerModules) && fs.existsSync(runtimeModules)) fs.symlinkSync(path.relative(path.dirname(consumerModules), runtimeModules), consumerModules, "dir");
+  if (!fs.existsSync("node_modules/@kungfu-tech/kfd/package.json")) execFileSync("corepack", "pnpm@11.7.0 install --frozen-lockfile --ignore-scripts".split(" "), { stdio: ["ignore", 2, 2] });
+  if (fs.existsSync(runtimeModules)) {
+    if (fs.realpathSync(consumerModules) !== fs.realpathSync(runtimeModules)) fail("Buildchain release consumer runtime bridge conflicts");
+    return;
+  }
+  fs.mkdirSync(path.dirname(runtimeModules), { recursive: true }); fs.renameSync(consumerModules, runtimeModules);
+  fs.symlinkSync(path.relative(path.dirname(consumerModules), runtimeModules), consumerModules, "dir");
+}
 function actionEnvironment(inputs, outputPath) {
   const environment = { ...process.env, GITHUB_OUTPUT: outputPath };
   for (const [name, value] of Object.entries(inputs))
@@ -237,7 +264,12 @@ async function observedSourceTimestamp(repository, sourceSha) {
     fail("protected publication source timestamp is unavailable");
   return new Date(observed).toISOString();
 }
-
+async function observeProductPublicationRecovery(repository, sourceSha, candidateVersion) {
+  const apiUrl = process.env.GITHUB_API_URL || "https://api.github.com", token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "", prefix = `heads/buildchain/v4-product-state/${sourceSha}-`;
+  const stateRefs = (await githubJson({ apiUrl, token, path: `/repos/${repository}/git/matching-refs/${prefix}`, allowNotFound: true })) || [];
+  const recoveryStates = await Promise.all(stateRefs.map(async (stateRef) => { const version = v4ProductStateVersion(stateRef, sourceSha); const [stateCommit, exactTagRef] = await Promise.all([githubJson({ apiUrl, token, path: `/repos/${repository}/git/commits/${stateRef.object.sha}` }), githubJson({ apiUrl, token, path: `/repos/${repository}/git/ref/tags/v${version}`, allowNotFound: true })]); return { stateRef, stateCommit, exactTagRef }; }));
+  const exactTagRef = recoveryStates.length ? undefined : await githubJson({ apiUrl, token, path: `/repos/${repository}/git/ref/tags/v${encodeURIComponent(candidateVersion)}`, allowNotFound: true }); return { recoveryStates, exactTagRef };
+}
 async function materializeProductPublicationIntent({
   candidate,
   inputs,
@@ -247,10 +279,10 @@ async function materializeProductPublicationIntent({
   const intentPath = path.resolve(
     ".buildchain/release-candidate/v4-product-publication-intent.json",
   );
-  const sourceTimestamp = await observedSourceTimestamp(
-    repository,
-    route.requestedSha,
-  );
+  const sourceTimestamp = await observedSourceTimestamp(repository, route.requestedSha);
+  const version = String(candidate.publicationVersion || candidate.version || "").trim(), explicitResume = String(inputs["resume-transaction-id"] || "") !== "";
+  const recovery = route.decision !== "Resume" || explicitResume ? {} : await observeProductPublicationRecovery(repository, route.requestedSha, version);
+  const recoveredVersion = selectV4RecoveredProductPublicationVersion({ routeDecision: route.decision, candidateVersion: version, requestedSha: route.requestedSha, explicitResume, ...recovery });
   execFileSync(
     process.execPath,
     [
@@ -269,10 +301,7 @@ async function materializeProductPublicationIntent({
         BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp,
         BUILDCHAIN_CANDIDATE_VERSION:
           candidate.publicationVersion || candidate.version,
-        BUILDCHAIN_RECOVERED_PUBLICATION_VERSION:
-          String(inputs["resume-transaction-id"] || "") !== ""
-            ? candidate.publicationVersion || candidate.version
-            : "",
+        BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: recoveredVersion,
         BUILDCHAIN_SEALED_BUNDLE_MANIFEST: candidate.paths.sealedBundleManifest,
         BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:
           candidate.paths.publishRequiredArtifacts,
@@ -285,7 +314,6 @@ async function materializeProductPublicationIntent({
   );
   return intentPath;
 }
-
 function verifiedReleaseDocuments() {
   const base = path.resolve(".buildchain/release-tail");
   const invocation = JSON.parse(
@@ -370,6 +398,9 @@ async function executeReleasePromotion(request, admission) {
     fail(`release route blocked: ${route.reason}`);
   if (route.decision === "NoOp" || payload.inputs["dry-run"] === true)
     return { route, dryRun: payload.inputs["dry-run"] === true };
+  prepareReleasePromotionConsumerDependencies(repository);
+  if (payload.inputs["trusted-publishing"] === true)
+    prepareTrustedPublishingNpm();
   const candidate = await resolveReleaseCandidateArtifacts({
     repository,
     targetRef: route.targetRef,
@@ -390,13 +421,13 @@ async function executeReleasePromotion(request, admission) {
   });
   if (!candidate.enabled)
     fail(candidate.reason || "release candidate is unavailable");
-  const productPublicationIntentPath =
-    await materializeProductPublicationIntent({
-      candidate,
-      inputs: payload.inputs,
-      repository,
-      route,
-    });
+  const productPublicationIntentPath = await materializeProductPublicationIntent({
+    candidate,
+    inputs: payload.inputs,
+    repository,
+    route,
+  });
+  const productPublicationIntent = JSON.parse(fs.readFileSync(productPublicationIntentPath));
   const runtimeTree = execFileSync(
     "git",
     ["-C", ".buildchain/candidate", "rev-parse", "HEAD^{tree}"],
@@ -408,8 +439,8 @@ async function executeReleasePromotion(request, admission) {
       process.env.BUILDCHAIN_PROMOTION_TOKEN || process.env.GH_TOKEN,
     repository,
     "source-sha": route.requestedSha,
-    version: candidate.version,
-    tag: `v${candidate.version}`,
+    version: productPublicationIntent.version,
+    tag: productPublicationIntent.exactTag,
     channel: route.channel,
     "target-ref": route.targetRef,
     "target-sha": route.requestedSha,
@@ -481,7 +512,6 @@ async function capabilityResult(request, admission) {
     return executeReleasePromotion(request, admission);
   fail(`candidate capability is not implemented: ${request.capability.id}`);
 }
-
 async function executeCandidate(request, admission) {
   const runtime = exactRuntime(admission);
   if (v4UniversalWorkflowRequestRoot(request) !== admission.requestRoot)

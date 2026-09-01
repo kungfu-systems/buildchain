@@ -210,6 +210,7 @@ function githubProvider() {
     pullRequests,
     checks,
     commits,
+    trees,
   };
 }
 
@@ -519,10 +520,13 @@ test("protected-ref rejection blocks safely and resumes after PR merge without r
   );
   assert.deepEqual(github.commits.get(REBASED_VERSION_STATE).parents, [
     { sha: SOURCE },
+    { sha: VERSION_STATE },
   ]);
-  assert.equal(
-    github.commits.get(REBASED_VERSION_STATE).tree.sha,
-    github.commits.get(VERSION_STATE).tree.sha,
+  const rebasedTree = github.commits.get(REBASED_VERSION_STATE).tree.sha;
+  const releaseStateTree = github.commits.get(VERSION_STATE).tree.sha;
+  assert.deepEqual(
+    github.trees.get(rebasedTree),
+    github.trees.get(releaseStateTree),
   );
   assert.equal(github.checks.at(-1).head_sha, REBASED_VERSION_STATE);
   assert.equal(github.refs.has("tags/v4-alpha"), false);
