@@ -7,6 +7,7 @@ import {
 import { normalizeDevDeliveryAuthorityState } from "../packages/core/dev-delivery-authority-state.js";
 
 const STATE_PATH = "queue.json";
+const READ_ATTEMPTS = 3;
 
 function text(value = "") {
   return String(value ?? "").trim();
@@ -18,6 +19,14 @@ function exactSha(value, label) {
     throw new Error(`${label} must be a 40-character Git SHA`);
   }
   return normalized;
+}
+
+function positiveInteger(value, label) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(`${label} must be a positive integer`);
+  }
+  return parsed;
 }
 
 function normalizeRepository(value) {
@@ -70,6 +79,7 @@ export class GitHubDevDeliveryStore {
     apiUrl = "https://api.github.com",
     fetchImpl = globalThis.fetch,
     createInitialState = createDevDeliveryQueue,
+    readAttempts = READ_ATTEMPTS,
   } = {}) {
     this.repository = normalizeRepository(repository);
     if (!fetchImpl) throw new Error("fetch is required");
@@ -81,6 +91,22 @@ export class GitHubDevDeliveryStore {
     this.apiUrl = apiUrl.replace(/\/+$/, "");
     this.fetch = fetchImpl;
     this.createInitialState = createInitialState;
+    this.readAttempts = positiveInteger(readAttempts, "readAttempts");
+  }
+
+  async retryParseableRead(operation) {
+    let failure;
+    for (let attempt = 1; attempt <= this.readAttempts; attempt += 1) {
+      try {
+        return await operation();
+      } catch (error) {
+        failure = error;
+        if (!(error instanceof SyntaxError) || attempt === this.readAttempts) {
+          throw error;
+        }
+      }
+    }
+    throw failure;
   }
 
   async request(method, requestPath, body) {
@@ -132,6 +158,17 @@ export class GitHubDevDeliveryStore {
   }
 
   async read({ stateRef, protectedBase, now, allowLegacyV3Readback = false }) {
+    return this.retryParseableRead(async () =>
+      this.readOnce({ stateRef, protectedBase, now, allowLegacyV3Readback }),
+    );
+  }
+
+  async readOnce({
+    stateRef,
+    protectedBase,
+    now,
+    allowLegacyV3Readback = false,
+  }) {
     let ref;
     try {
       ref = await this.request(
@@ -158,6 +195,12 @@ export class GitHubDevDeliveryStore {
   }
 
   async readCommit(commitShaInput, { allowLegacyV3Readback = false } = {}) {
+    return this.retryParseableRead(async () =>
+      this.readCommitOnce(commitShaInput, { allowLegacyV3Readback }),
+    );
+  }
+
+  async readCommitOnce(commitShaInput, { allowLegacyV3Readback = false } = {}) {
     const commitSha = exactSha(commitShaInput, "state commit");
     const commit = await this.request(
       "GET",
