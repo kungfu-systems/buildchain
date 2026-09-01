@@ -473,6 +473,10 @@ test("real universal promotion materializes one rooted product intent before APP
     engine,
     /BUILDCHAIN_SOURCE_TIMESTAMP: sourceTimestamp[\s\S]*BUILDCHAIN_SEALED_BUNDLE_MANIFEST:[\s\S]*BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:/u,
   );
+  assert.match(
+    engine,
+    /BUILDCHAIN_CANDIDATE_VERSION:\s*candidate\.publicationVersion \|\| candidate\.version[\s\S]*productPublicationIntent = JSON\.parse\(fs\.readFileSync\(productPublicationIntentPath\)\)[\s\S]*version: productPublicationIntent\.version,\s*tag: productPublicationIntent\.exactTag/u,
+  );
 });
 
 test("candidate action logs cannot corrupt the rooted result channel", () => {

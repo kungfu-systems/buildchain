@@ -85,7 +85,38 @@ function validateWorkflowInputs(workflowId, inputs) {
       `candidate payload has unregistered workflow inputs: ${unknown.sort().join(", ")}`,
     );
 }
-
+const TRUSTED_PUBLISHING_NPM_VERSION = "11.13.0";
+function prepareTrustedPublishingNpm() {
+  if (
+    !process.env.ACTIONS_ID_TOKEN_REQUEST_URL ||
+    !process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
+  )
+    fail("trusted publishing requires GitHub Actions OIDC authority");
+  const binDirectory = path.resolve(".buildchain/runtime/bin");
+  const npmShim = path.join(binDirectory, "npm");
+  fs.mkdirSync(binDirectory, { recursive: true });
+  fs.writeFileSync(
+    npmShim,
+    `#!/bin/sh\nexec corepack pnpm@11.7.0 dlx npm@${TRUSTED_PUBLISHING_NPM_VERSION} "$@"\n`,
+    { mode: 0o755 },
+  );
+  fs.chmodSync(npmShim, 0o755);
+  process.env.PATH = `${binDirectory}${path.delimiter}${process.env.PATH || ""}`;
+}
+function prepareReleasePromotionConsumerDependencies(repository) {
+  if (repository !== "kungfu-systems/buildchain") return;
+  const manifest = JSON.parse(fs.readFileSync("package.json", "utf8"));
+  if (manifest.packageManager !== "pnpm@11.7.0" || !fs.existsSync("pnpm-lock.yaml")) fail("Buildchain release consumer dependency lock is unavailable");
+  const consumerModules = path.resolve("node_modules"), runtimeModules = path.resolve(".buildchain/runtime/node_modules");
+  if (!fs.existsSync(consumerModules) && fs.existsSync(runtimeModules)) fs.symlinkSync(path.relative(path.dirname(consumerModules), runtimeModules), consumerModules, "dir");
+  if (!fs.existsSync("node_modules/@kungfu-tech/kfd/package.json")) execFileSync("corepack", "pnpm@11.7.0 install --frozen-lockfile --ignore-scripts".split(" "), { stdio: "inherit" });
+  if (fs.existsSync(runtimeModules)) {
+    if (fs.realpathSync(consumerModules) !== fs.realpathSync(runtimeModules)) fail("Buildchain release consumer runtime bridge conflicts");
+    return;
+  }
+  fs.mkdirSync(path.dirname(runtimeModules), { recursive: true }); fs.renameSync(consumerModules, runtimeModules);
+  fs.symlinkSync(path.relative(path.dirname(consumerModules), runtimeModules), consumerModules, "dir");
+}
 function actionEnvironment(inputs, outputPath) {
   const environment = { ...process.env, GITHUB_OUTPUT: outputPath };
   for (const [name, value] of Object.entries(inputs))
@@ -370,6 +401,9 @@ async function executeReleasePromotion(request, admission) {
     fail(`release route blocked: ${route.reason}`);
   if (route.decision === "NoOp" || payload.inputs["dry-run"] === true)
     return { route, dryRun: payload.inputs["dry-run"] === true };
+  prepareReleasePromotionConsumerDependencies(repository);
+  if (payload.inputs["trusted-publishing"] === true)
+    prepareTrustedPublishingNpm();
   const candidate = await resolveReleaseCandidateArtifacts({
     repository,
     targetRef: route.targetRef,
@@ -390,13 +424,13 @@ async function executeReleasePromotion(request, admission) {
   });
   if (!candidate.enabled)
     fail(candidate.reason || "release candidate is unavailable");
-  const productPublicationIntentPath =
-    await materializeProductPublicationIntent({
-      candidate,
-      inputs: payload.inputs,
-      repository,
-      route,
-    });
+  const productPublicationIntentPath = await materializeProductPublicationIntent({
+    candidate,
+    inputs: payload.inputs,
+    repository,
+    route,
+  });
+  const productPublicationIntent = JSON.parse(fs.readFileSync(productPublicationIntentPath));
   const runtimeTree = execFileSync(
     "git",
     ["-C", ".buildchain/candidate", "rev-parse", "HEAD^{tree}"],
@@ -408,8 +442,8 @@ async function executeReleasePromotion(request, admission) {
       process.env.BUILDCHAIN_PROMOTION_TOKEN || process.env.GH_TOKEN,
     repository,
     "source-sha": route.requestedSha,
-    version: candidate.version,
-    tag: `v${candidate.version}`,
+    version: productPublicationIntent.version,
+    tag: productPublicationIntent.exactTag,
     channel: route.channel,
     "target-ref": route.targetRef,
     "target-sha": route.requestedSha,

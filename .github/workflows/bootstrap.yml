@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       runtime-sha: ${{ steps.admit.outputs.runtime-sha }}
+      capability-id: ${{ steps.inspect.outputs.capability-id }}
       request-root: ${{ steps.admit.outputs.request-root }}
       admission-root: ${{ steps.admit.outputs.admission-root }}
       admission-json: ${{ steps.admit.outputs.admission-json }}
@@ -64,6 +65,7 @@ jobs:
             echo "discovery-ref=$(jq -r '.candidate.discoveryRef' .buildchain/request-inspection.json)"
             echo "expected-sha=$(jq -r '.candidate.expectedSha' .buildchain/request-inspection.json)"
             echo "review-pr=$(jq -r '.candidate.reviewPullRequest' .buildchain/request-inspection.json)"
+            echo "capability-id=$(jq -r '.capability.id' .buildchain/request-inspection.json)"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Checkout candidate without persisted credentials
@@ -175,6 +177,20 @@ jobs:
           ref: ${{ needs.admit.outputs.runtime-sha }}
           path: .buildchain/candidate
           persist-credentials: false
+
+      - name: Set up release-promotion Node.js
+        if: ${{ needs.admit.outputs.capability-id == 'release-candidate-promote' }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install release-promotion consumer dependencies
+        if: ${{ needs.admit.outputs.capability-id == 'release-candidate-promote' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack prepare pnpm@11.7.0 --activate
+          corepack pnpm@11.7.0 install --frozen-lockfile --ignore-scripts
 
       - name: Execute candidate engine
         id: execute
