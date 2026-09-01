@@ -243,6 +243,7 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
   }).trimEnd();
   const ephemeralBuildchainEvidencePaths = [
     ".buildchain/admitted/",
+    ".buildchain/candidate/",
     ".buildchain/controller/",
     ".buildchain/contract-drift/",
     ".buildchain/kfd/",
@@ -254,7 +255,9 @@ function assertAllowedLocalChanges(cwd, allowedPaths) {
     ".buildchain/release-passport/",
     ".buildchain/release-state/",
     ".buildchain/release-tail/",
+    ".buildchain/result.json",
     ".buildchain/runtime/",
+    ".buildchain/universal-release-action.out",
   ];
   const isEphemeralBuildchainEvidence = (status, filePath) =>
     status === "??" &&

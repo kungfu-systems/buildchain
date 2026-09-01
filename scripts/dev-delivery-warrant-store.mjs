@@ -35,11 +35,10 @@ function encodeRef(ref) {
   return ref.split("/").map(encodeURIComponent).join("/");
 }
 
-function decodeBlob(blob) {
-  if (blob.encoding !== "base64")
-    throw new Error(
-      `unsupported Git blob encoding ${blob.encoding || "<empty>"}`,
-    );
+function decodeGitHubBlobEnvelope(raw) {
+  if (!/"encoding"\s*:\s*"base64"/.test(raw)) return raw;
+  const blob = JSON.parse(raw);
+  if (blob?.encoding !== "base64") return raw;
   return Buffer.from(
     String(blob.content || "").replace(/\s+/g, ""),
     "base64",
@@ -108,6 +107,30 @@ export class GitHubDevDeliveryStore {
     return data;
   }
 
+  async requestRaw(method, requestPath) {
+    const response = await this.fetch(`${this.apiUrl}${requestPath}`, {
+      method,
+      headers: {
+        accept: "application/vnd.github.raw+json",
+        authorization: `Bearer ${this.token}`,
+        "x-github-api-version": "2022-11-28",
+      },
+    });
+    const raw = await response.text();
+    if (!response.ok) {
+      let message = raw || `${method} ${requestPath} failed`;
+      try {
+        message = JSON.parse(raw)?.message || message;
+      } catch {
+        // Raw blob responses are not required to be JSON.
+      }
+      const error = new Error(message);
+      error.status = response.status;
+      throw error;
+    }
+    return raw;
+  }
+
   async read({ stateRef, protectedBase, now, allowLegacyV3Readback = false }) {
     let ref;
     try {
@@ -149,11 +172,11 @@ export class GitHubDevDeliveryStore {
     );
     if (!entry?.sha)
       throw new Error(`${commitSha} does not contain ${STATE_PATH}`);
-    const blob = await this.request(
+    const raw = await this.requestRaw(
       "GET",
       `/repos/${this.repository.fullName}/git/blobs/${entry.sha}`,
     );
-    const bytes = decodeBlob(blob);
+    const bytes = decodeGitHubBlobEnvelope(raw);
     const queue = validateStoredState(JSON.parse(bytes), {
       allowLegacyV3Readback,
     });
