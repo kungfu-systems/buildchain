@@ -35,8 +35,9 @@ test("the exact candidate runtime can prepare an older clean Bootstrap consumer"
   );
   assert.match(
     engine,
-    /pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts/u,
+    /pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts"\.split\(" "\), \{ stdio: \["ignore", 2, 2\] \}/u,
   );
+  assert.doesNotMatch(engine, /stdio: "inherit"/u);
   assert.match(engine, /node_modules\/@kungfu-tech\/kfd\/package\.json/u);
   assert.match(engine, /\.buildchain\/runtime\/node_modules/u);
   assert.match(engine, /fs\.renameSync\(consumerModules, runtimeModules\)/u);

@@ -110,7 +110,7 @@ function prepareReleasePromotionConsumerDependencies(repository) {
   if (manifest.packageManager !== "pnpm@11.7.0" || !fs.existsSync("pnpm-lock.yaml")) fail("Buildchain release consumer dependency lock is unavailable");
   const consumerModules = path.resolve("node_modules"), runtimeModules = path.resolve(".buildchain/runtime/node_modules");
   if (!fs.existsSync(consumerModules) && fs.existsSync(runtimeModules)) fs.symlinkSync(path.relative(path.dirname(consumerModules), runtimeModules), consumerModules, "dir");
-  if (!fs.existsSync("node_modules/@kungfu-tech/kfd/package.json")) execFileSync("corepack", "pnpm@11.7.0 install --frozen-lockfile --ignore-scripts".split(" "), { stdio: "inherit" });
+  if (!fs.existsSync("node_modules/@kungfu-tech/kfd/package.json")) execFileSync("corepack", "pnpm@11.7.0 install --frozen-lockfile --ignore-scripts".split(" "), { stdio: ["ignore", 2, 2] });
   if (fs.existsSync(runtimeModules)) {
     if (fs.realpathSync(consumerModules) !== fs.realpathSync(runtimeModules)) fail("Buildchain release consumer runtime bridge conflicts");
     return;
