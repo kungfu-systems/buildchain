@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1245,
+  "generation": 1246,
   "fencingCounter": 181,
   "policy": {
     "agingSeconds": 900,
@@ -9232,11 +9232,20 @@
       "sourceWorkflowRunId": 33541628405,
       "priority": "emergency",
       "enqueuedAt": "2026-09-01T18:35:18.036Z",
-      "updatedAt": "2026-09-01T18:35:18.036Z",
+      "updatedAt": "2026-09-01T19:39:58.405Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "superseded by exact current PR head a858db84b9ddcdda41429e3a2d3f343601b80a1e",
+        "evidenceRoot": "sha256:4cb7dbabfe92ae6b0c2a602d8e574e686b5abc62305aa687fdeb0948b6379254",
+        "authority": "queued-candidate-cancellation",
+        "expectedSourceHead": "248f04d193ca1ece36b74d311effa34e71d2d058",
+        "observedSourceHead": "a858db84b9ddcdda41429e3a2d3f343601b80a1e",
+        "eventAction": "synchronize",
+        "closedAt": "2026-09-01T19:39:58.405Z"
+      },
       "affectedPaths": [
         "architecture/maintainability-policy.json",
         "scripts/dev-delivery-warrant-store.mjs",
@@ -9245,6 +9254,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-01T18:35:18.036Z",
-  "stateRoot": "sha256:cec60c13deab08debdc2b4eaecdf5dfb4452d86b59befdc1da13f22968124a52"
+  "updatedAt": "2026-09-01T19:39:58.405Z",
+  "stateRoot": "sha256:52a216b5cf702453bc2fb22f4648f98ea5c080c2863ac6870e1f2f0602442a2b"
 }
