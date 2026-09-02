@@ -10,7 +10,6 @@ import {
   heartbeatDevDeliveryWarrant,
   observeDevDeliveryQueue,
   qualifyDevDeliveryWarrant,
-  recoverExpiredDevDeliveryWarrant,
   reconcileDevDeliveryTerminalEvidence,
   selectDevDeliveryWarrant,
   settleDevDeliveryTerminalEvent,
@@ -21,6 +20,7 @@ import { reuseExactActiveDevDeliverySourceProof } from "../packages/core/dev-del
 import { runV4DeliveryWarrantReadCandidate } from "../packages/core/v4-delivery-warrant-read-candidate.js";
 
 import { GitHubDevDeliveryStore } from "./dev-delivery-warrant-store.mjs";
+import { persistDevDeliveryTransition } from "./dev-delivery-warrant-transition.mjs";
 import { devDeliveryCliOptions } from "./dev-delivery-warrant-options.mjs";
 export { GitHubDevDeliveryStore, devDeliveryCliOptions };
 
@@ -463,51 +463,16 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
   }
   if (options.command === "observe") return observeQueue(loaded, options);
   const initialLoaded = loaded;
-  let changed = transitionFor(options.command, loaded.queue, options);
-  let mutates = changed.queue.stateRoot !== loaded.queue.stateRoot;
-  let write = null;
-  if (options.execute && mutates) {
-    if (changed.receipt.expectedOldStateRoot !== loaded.queue.stateRoot) {
-      throw new Error(
-        "transition receipt expected-old root does not match the loaded authority",
-      );
-    }
-    try {
-      write = await store.write({
-        stateRef: options.stateRef,
-        queue: changed.queue,
-        expectedCommitSha: loaded.commitSha,
-        expectedStateRoot: loaded.queue.stateRoot,
-        receiptRoot: changed.receiptRoot,
-      });
-    } catch (error) {
-      if (options.command !== "settle" || options.expectedOldStateRoot)
-        throw error;
-      const latest = await store.read({
-        stateRef: options.stateRef,
-        protectedBase: options.branch,
-        now: options.now,
-      });
-      const reconciled = transitionFor(options.command, latest.queue, options);
-      const reconciledMutates =
-        reconciled.queue.stateRoot !== latest.queue.stateRoot;
-      if (
-        reconciledMutates ||
-        reconciled.receipt.action !== "duplicate-terminal-event-noop"
-      )
-        throw error;
-      loaded = latest;
-      changed = reconciled;
-      mutates = false;
-      concurrencyRecovery = {
-        schema: "kungfu.buildchain.dev-delivery-concurrency-recovery/v1",
-        action: "terminal-settlement-race-noop",
-        initialCommitSha: initialLoaded.commitSha,
-        observedCommitSha: latest.commitSha,
-        observedStateRoot: latest.queue.stateRoot,
-      };
-    }
-  }
+  const persisted = await persistDevDeliveryTransition({
+    store,
+    options,
+    loaded,
+    initialLoaded,
+    changed: transitionFor(options.command, loaded.queue, options),
+    transitionFor,
+  });
+  loaded = persisted.loaded;
+  concurrencyRecovery = persisted.concurrencyRecovery || concurrencyRecovery;
   return {
     schema: "kungfu.buildchain.dev-delivery-command-result/v1",
     ok: true,
@@ -516,16 +481,21 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     stateRef: options.stateRef,
     before: { commitSha: loaded.commitSha, stateRoot: loaded.queue.stateRoot },
     after: {
-      commitSha: write?.commitSha || loaded.commitSha,
-      stateRoot: changed.queue.stateRoot,
+      commitSha: persisted.write?.commitSha || loaded.commitSha,
+      stateRoot: persisted.changed.queue.stateRoot,
     },
     mutationAuthorized: options.execute,
-    mutationApplied: Boolean(write),
+    mutationApplied: Boolean(persisted.write),
     concurrencyRecovery,
-    receipt: changed.receipt,
-    receiptRoot: changed.receiptRoot,
-    warrant: changed.warrant || changed.queue.activeWarrant || null,
-    observation: observeDevDeliveryQueue(changed.queue, { now: options.now }),
+    receipt: persisted.changed.receipt,
+    receiptRoot: persisted.changed.receiptRoot,
+    warrant:
+      persisted.changed.warrant ||
+      persisted.changed.queue.activeWarrant ||
+      null,
+    observation: observeDevDeliveryQueue(persisted.changed.queue, {
+      now: options.now,
+    }),
   };
 }
 
