@@ -345,67 +345,53 @@ function validatePolicy(value) {
 }
 
 function validateReviewEvidence(value) {
-  exactKeys(
-    value,
-    [
-      "repository",
-      "pullRequest",
-      "headSha",
-      "baseRef",
-      "approvals",
-      "checks",
-      "observedAt",
-    ],
-    "reviewEvidence",
-  );
+  const hasBinding = Object.hasOwn(value || {}, "runtimeBinding");
+  exactKeys(value, ["repository", "pullRequest", "headSha", "baseRef", "approvals", "checks", "observedAt", ...(hasBinding ? ["runtimeBinding"] : [])], "reviewEvidence");
   const approvals = value.approvals.map((approval, index) => {
-    exactKeys(
-      approval,
-      ["reviewer", "commitSha", "submittedAt"],
-      `reviewEvidence.approvals[${index}]`,
-    );
+    exactKeys(approval, ["reviewer", "commitSha", "submittedAt"], `reviewEvidence.approvals[${index}]`);
     return {
-      reviewer: nonEmpty(
-        approval.reviewer,
-        `reviewEvidence.approvals[${index}].reviewer`,
-      ),
-      commitSha: exactSha(
-        approval.commitSha,
-        `reviewEvidence.approvals[${index}].commitSha`,
-      ),
-      submittedAt: timestamp(
-        approval.submittedAt,
-        `reviewEvidence.approvals[${index}].submittedAt`,
-      ),
+      reviewer: nonEmpty(approval.reviewer, `reviewEvidence.approvals[${index}].reviewer`),
+      commitSha: exactSha(approval.commitSha, `reviewEvidence.approvals[${index}].commitSha`),
+      submittedAt: timestamp(approval.submittedAt, `reviewEvidence.approvals[${index}].submittedAt`),
     };
   });
   const checks = value.checks.map((check, index) => {
-    exactKeys(
-      check,
-      ["name", "status", "conclusion"],
-      `reviewEvidence.checks[${index}]`,
-    );
+    const hasCommit = Object.hasOwn(check || {}, "commitSha");
+    exactKeys(check, ["name", "status", "conclusion", ...(hasCommit ? ["commitSha"] : [])], `reviewEvidence.checks[${index}]`);
     return {
       name: nonEmpty(check.name, `reviewEvidence.checks[${index}].name`),
       status: nonEmpty(check.status, `reviewEvidence.checks[${index}].status`),
-      conclusion: nonEmpty(
-        check.conclusion,
-        `reviewEvidence.checks[${index}].conclusion`,
-      ),
+      conclusion: nonEmpty(check.conclusion, `reviewEvidence.checks[${index}].conclusion`),
+      ...(hasCommit ? { commitSha: exactSha(check.commitSha, `reviewEvidence.checks[${index}].commitSha`) } : {}),
     };
   });
+  let runtimeBinding;
+  if (hasBinding) {
+    exactKeys(value.runtimeBinding, ["kind", "runtimeSha", "parentShas", "mergedAt"], "reviewEvidence.runtimeBinding");
+    const kind = nonEmpty(value.runtimeBinding.kind, "reviewEvidence.runtimeBinding.kind");
+    if (!new Set(["reviewed-head", "protected-alpha-merge"]).has(kind)) fail("invalid-runtime-binding", "review evidence runtime binding kind is unsupported");
+    const parentShas = value.runtimeBinding.parentShas.map((parent, index) => exactSha(parent, `reviewEvidence.runtimeBinding.parentShas[${index}]`));
+    if (new Set(parentShas).size !== parentShas.length) fail("invalid-runtime-binding", "review evidence runtime parents must be duplicate-free");
+    runtimeBinding = { kind, runtimeSha: exactSha(value.runtimeBinding.runtimeSha, "reviewEvidence.runtimeBinding.runtimeSha"), parentShas, mergedAt: value.runtimeBinding.mergedAt === null ? null : timestamp(value.runtimeBinding.mergedAt, "reviewEvidence.runtimeBinding.mergedAt") };
+  }
   return {
     repository: repository(value.repository, "reviewEvidence.repository"),
-    pullRequest: positiveInteger(
-      value.pullRequest,
-      "reviewEvidence.pullRequest",
-    ),
+    pullRequest: positiveInteger(value.pullRequest, "reviewEvidence.pullRequest"),
     headSha: exactSha(value.headSha, "reviewEvidence.headSha"),
     baseRef: nonEmpty(value.baseRef, "reviewEvidence.baseRef"),
-    approvals,
-    checks,
+    approvals, checks,
     observedAt: timestamp(value.observedAt, "reviewEvidence.observedAt"),
+    ...(runtimeBinding ? { runtimeBinding } : {}),
   };
+}
+
+function reviewedRuntimeSha(request, policy, evidence, runtimeSha) {
+  const binding = evidence.runtimeBinding || { kind: "reviewed-head", runtimeSha: evidence.headSha, parentShas: [], mergedAt: null };
+  if (binding.runtimeSha !== runtimeSha) fail("review-runtime-mismatch", "review evidence runtime binding does not match the candidate");
+  const direct = binding.kind === "reviewed-head" && evidence.headSha === runtimeSha && evidence.baseRef === policy.targetRef && binding.mergedAt === null;
+  const alphaMerge = binding.kind === "protected-alpha-merge" && request.mode === "alpha" && evidence.baseRef === "alpha/v4/v4.0" && binding.parentShas.length === 2 && binding.parentShas.includes(evidence.headSha) && binding.mergedAt !== null && Date.parse(binding.mergedAt) <= Date.parse(evidence.observedAt);
+  if (!direct && !alphaMerge) fail("review-identity-mismatch", "review evidence does not bind the candidate runtime");
+  return evidence.headSha;
 }
 
 export function v4UniversalWorkflowAdmissionRoot(value) {
@@ -478,17 +464,16 @@ export function admitV4UniversalWorkflow({
   const reviewEvidence = validateReviewEvidence(reviewEvidenceValue);
   if (
     reviewEvidence.repository !== request.candidate.repository ||
-    reviewEvidence.pullRequest !== request.candidate.reviewPullRequest ||
-    reviewEvidence.headSha !== runtimeSha ||
-    reviewEvidence.baseRef !== policy.targetRef
+    reviewEvidence.pullRequest !== request.candidate.reviewPullRequest
   )
     fail(
       "review-identity-mismatch",
       "review evidence does not bind the candidate",
     );
+  const reviewedSha = reviewedRuntimeSha(request, policy, reviewEvidence, runtimeSha);
   const approvedReviewers = new Set(
     reviewEvidence.approvals
-      .filter((approval) => approval.commitSha === runtimeSha)
+      .filter((approval) => approval.commitSha === reviewedSha)
       .map((approval) => approval.reviewer),
   );
   const admittedApprovalCount = policy.allowedReviewers.filter((reviewer) =>
@@ -512,7 +497,8 @@ export function admitV4UniversalWorkflow({
         checks.length === 0 ||
         checks.some(
           (check) =>
-            check.status !== "completed" || check.conclusion !== "success",
+            check.status !== "completed" || check.conclusion !== "success" ||
+            (check.commitSha !== undefined && check.commitSha !== runtimeSha),
         )
       );
     })

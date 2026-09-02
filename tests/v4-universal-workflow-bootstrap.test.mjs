@@ -117,6 +117,11 @@ test("an admitted Train resolves once to an exact execution identity", () => {
   assert.match(receipt.receiptRoot, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(JSON.stringify(receipt).includes("train/v4"), false);
 });
+test("a protected Alpha merge binds reviewed head to the exact runtime", () => {
+  const policyValue = policy(), requestValue = request(policyValue, { mode: "alpha" }); requestValue.candidate.discoveryRef = "v4-alpha"; const binding = { kind: "protected-alpha-merge", runtimeSha: sha("1"), parentShas: [sha("0"), sha("3")], mergedAt: "2026-08-30T11:30:00.000Z" }; const evidence = reviewEvidence({ headSha: sha("3"), baseRef: "alpha/v4/v4.0", approvals: [{ reviewer: "kungfu-origin", commitSha: sha("3"), submittedAt: "2026-08-30T11:00:00.000Z" }], checks: [{ name: "Verify", status: "completed", conclusion: "success", commitSha: sha("1") }], runtimeBinding: binding });
+  const admit = (candidateRequest = requestValue, candidateEvidence = evidence) => admitV4UniversalWorkflow({ ...consumerObservation(), request: candidateRequest, policy: policyValue, observedRefSha: sha("1"), reviewEvidence: candidateEvidence, now: "2026-08-30T12:00:00.000Z" }); assert.equal(admit().runtime.sha, sha("1"));
+  for (const invalid of [{ ...evidence, baseRef: "dev/v4/v4.0" }, { ...evidence, runtimeBinding: { ...binding, runtimeSha: sha("9") } }, { ...evidence, runtimeBinding: { ...binding, parentShas: [sha("0"), sha("9")] } }, { ...evidence, runtimeBinding: { ...binding, mergedAt: "2026-08-30T12:30:00.000Z" } }, { ...evidence, checks: [{ ...evidence.checks[0], commitSha: sha("9") }] }]) assert.throws(() => admit(requestValue, invalid)); assert.throws(() => admit(request(policyValue), evidence));
+});
 test("any exact verified caller is admitted without a repository allowlist", () => {
   const policyValue = policy();
   const requestValue = request(policyValue);
