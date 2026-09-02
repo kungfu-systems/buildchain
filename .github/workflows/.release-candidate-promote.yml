@@ -3,6 +3,11 @@ name: Release Candidate Promote Advanced
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
@@ -735,7 +740,15 @@ permissions:
   contents: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   qualify:
+    if: ${{ inputs.universal-request-json == '' }}
     name: QUALIFY canonical v4 release invocation inputs
     runs-on: ubuntu-24.04
     permissions:
@@ -1002,7 +1015,7 @@ jobs:
   apply:
     name: APPLY one rooted provider transaction
     needs: qualify
-    if: ${{ needs.qualify.outputs.action == 'promote' && !inputs.dry-run }}
+    if: ${{ inputs.universal-request-json == '' && (needs.qualify.outputs.action == 'promote' && !inputs.dry-run) }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -1133,7 +1146,7 @@ jobs:
   settle:
     name: SETTLE terminal ReleaseReceipt projection
     needs: [qualify, apply]
-    if: ${{ always() && needs.qualify.result == 'success' }}
+    if: ${{ inputs.universal-request-json == '' && (always() && needs.qualify.result == 'success') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read

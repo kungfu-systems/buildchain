@@ -3,6 +3,11 @@ name: Dev PR Auto Merge
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       buildchain-repository:
         description: "Buildchain runtime repository"
         default: "kungfu-systems/buildchain"
@@ -344,7 +349,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   admission:
+    if: ${{ inputs.universal-request-json == '' }}
     name: Reserve exact delivery candidate
     runs-on: ubuntu-24.04
     outputs:
@@ -877,7 +890,7 @@ jobs:
   native-execution:
     name: Credentialless native execution
     needs: admission
-    if: needs.admission.outputs.run-native == 'true'
+    if: ${{ inputs.universal-request-json == '' && (needs.admission.outputs.run-native == 'true') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -1038,7 +1051,7 @@ jobs:
     needs:
       - admission
       - native-execution
-    if: always() && needs.admission.result == 'success' && needs.admission.outputs.run-native == 'true'
+    if: ${{ inputs.universal-request-json == '' && (always() && needs.admission.result == 'success' && needs.admission.outputs.run-native == 'true') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -1100,7 +1113,7 @@ jobs:
   delivery-heartbeat:
     name: Credentialed independent Warrant heartbeat
     needs: admission
-    if: needs.admission.outputs.run-native == 'true'
+    if: ${{ inputs.universal-request-json == '' && (needs.admission.outputs.run-native == 'true') }}
     runs-on: macos-15
     permissions:
       actions: read
@@ -1163,7 +1176,7 @@ jobs:
       - native-execution
       - seal-native-execution
       - delivery-heartbeat
-    if: always() && needs.admission.result == 'success' && needs.admission.outputs.handoff-required != 'true'
+    if: ${{ inputs.universal-request-json == '' && (always() && needs.admission.result == 'success' && needs.admission.outputs.handoff-required != 'true') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
