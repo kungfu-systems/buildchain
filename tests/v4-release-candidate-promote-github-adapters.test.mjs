@@ -218,3 +218,92 @@ test("protected dev finalization overlays version files and retains release-stat
   assert.equal(refs.get(`heads/${legacyHead}`), legacyHeadSha);
   assert.equal(checks.at(-1).head_sha, pullRequestSha);
 });
+
+test("protected finalization classifies GitHub mutation failures", async () => {
+  const repository = "kungfu-systems/buildchain";
+  const sourceSha = "1".repeat(40);
+  const stateSha = "2".repeat(40);
+  const alphaSha = "3".repeat(40);
+  const devSha = "4".repeat(40);
+  const stateRef = `refs/heads/buildchain/v4-product-state/${sourceSha}-4-0-2-alpha-11`;
+  const refs = new Map([
+    [stateRef.replace(/^refs\//u, ""), stateSha],
+    ["heads/alpha/v4/v4.0", alphaSha],
+    ["heads/dev/v4/v4.0", devSha],
+  ]);
+  const client = {
+    rest: {
+      git: {
+        getRef: async ({ ref }) => {
+          if (refs.has(ref))
+            return { data: { object: { sha: refs.get(ref) } } };
+          throw Object.assign(new Error("not found"), { status: 404 });
+        },
+        getCommit: async ({ commit_sha: sha }) => ({
+          data: { tree: { sha: `tree:${sha}` } },
+        }),
+        createBlob: async () => ({ data: { sha: "blob" } }),
+        createTree: async () => {
+          throw Object.assign(new Error("write denied"), { status: 403 });
+        },
+        createRef: async () => ({ data: {} }),
+        updateRef: async () => {
+          throw Object.assign(new Error("protected branch"), { status: 422 });
+        },
+      },
+      repos: {
+        compareCommitsWithBasehead: async ({ basehead }) => ({
+          data: {
+            status: basehead.endsWith(`...${alphaSha}`) ? "ahead" : "diverged",
+          },
+        }),
+      },
+      checks: { create: async () => ({ data: {} }) },
+    },
+  };
+  const operationRoot = "sha256:" + "6".repeat(64);
+  const operation = {
+    id: "product.refs.converge",
+    adapter: "github-release-refs",
+    operationRoot,
+    target: {
+      repository,
+      sourceSha,
+      stateRef,
+      references: [
+        { ref: "refs/tags/v4.0.2-alpha.11", target: "source" },
+        { ref: "refs/heads/alpha/v4/v4.0", target: "version-state" },
+        { ref: "refs/heads/dev/v4/v4.0", target: "version-state" },
+      ],
+    },
+  };
+  const context = {
+    request: {
+      octokit: client,
+      mutationOctokit: client,
+      requiredStatusCheck: "check",
+    },
+    plan: { operations: [operation] },
+    intent: {
+      exactTag: "v4.0.2-alpha.11",
+      targetRef: "alpha/v4/v4.0",
+      sourceTimestamp: "2026-09-01T00:00:00.000Z",
+    },
+    versionFiles: [{ path: "package.json", content: "{}\n" }],
+    updates: [],
+  };
+
+  await assert.rejects(
+    createV4GithubProductAdapters(context).adapters[
+      "github-release-refs"
+    ].apply({
+      capabilityId: operation.id,
+      adapter: operation.adapter,
+      targetRoot: operationRoot,
+      subjectRoot: "sha256:" + "7".repeat(64),
+    }),
+    (error) =>
+      error.releaseTailClass === "transient" &&
+      error.releaseTailCode === "github-protected-ref-finalization-403",
+  );
+});
