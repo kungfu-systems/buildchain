@@ -231,6 +231,7 @@ jobs:
           BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ inputs.request-json }}
           BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: ${{ needs.admit.outputs.admission-json }}
           BUILDCHAIN_UNIVERSAL_ENGINE_SHA: ${{ needs.admit.outputs.runtime-sha }}
+          BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail

@@ -167,6 +167,11 @@ execFileSync(
   { stdio: "inherit" },
 );
 assert.doesNotMatch(bootstrapSource, /^    permissions:/mu);
+assert.match(
+  bootstrapSource,
+  /execute:[\s\S]*BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}[\s\S]*GH_TOKEN: \$\{\{ github\.token \}\}/u,
+  "the privileged candidate executor must receive the protected-ref mutation token",
+);
 assert.match(bootstrapSource, /settle:[\s\S]*needs: \[admit, execute\]/u);
 assert.match(
   bootstrapSource,
