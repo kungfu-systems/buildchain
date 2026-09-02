@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64361,
-    "current": 56300
+    "measuredExcess": 64431,
+    "current": 56370
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1270,7 +1270,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1483
+          "lines": 1474
         },
         "target": {
           "lines": 600
@@ -2216,7 +2216,7 @@
           }
         },
         "current": {
-          "lines": 2727,
+          "lines": 2738,
           "functions": {
             "<anonymous@1559>@1559": {
               "lines": 206
@@ -2948,7 +2948,7 @@
           "lines": 2736
         },
         "current": {
-          "lines": 1147
+          "lines": 1215
         },
         "target": {
           "lines": 600
@@ -3155,7 +3155,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 1147
+      "current": 1215
     },
     {
       "domain": "sources",

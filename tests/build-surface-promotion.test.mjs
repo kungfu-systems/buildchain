@@ -175,16 +175,6 @@ test("v4 branch promotion excludes the stable publisher rollout", () => {
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4(?:\n|$)/,
   );
 });
-test("self promotion classifies finalization from rooted state instead of display titles", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /^  classify-workflow-run:/m);
-  assert.match(workflow, /selectV4FinalizedProductPublicationVersion/u);
-  assert.match(workflow, /needs\.classify-workflow-run\.outputs\.action == 'promote'/u);
-  assert.doesNotMatch(workflow, /workflow_run\.display_title/u);
-});
 test("SETTLE consumes APPLY evidence and emits the sole terminal receipt projection", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
@@ -2734,4 +2724,15 @@ test("run-lifecycle action samples a configured lifecycle stage from the bundled
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });
   }
+});
+
+test("self promotion classifies finalization from rooted state instead of display titles", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /^  classify-workflow-run:/m);
+  assert.match(workflow, /selectV4FinalizedProductPublicationVersion/u);
+  assert.match(workflow, /needs\.classify-workflow-run\.outputs\.action == 'promote'/u);
+  assert.doesNotMatch(workflow, /workflow_run\.display_title/u);
 });
