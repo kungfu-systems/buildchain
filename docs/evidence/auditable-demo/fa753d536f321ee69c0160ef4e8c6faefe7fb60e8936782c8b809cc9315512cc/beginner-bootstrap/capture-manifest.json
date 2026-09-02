@@ -1,0 +1,77 @@
+{
+  "artifact": {
+    "binaryRoot": "sha256:ec2a382842698d5a460e7d6a4ffdf1082ebffa8c3a850c89ac0e2bc7e25deec7",
+    "metadataContract": "kungfu-buildchain-standalone-binary",
+    "metadataRoot": "sha256:fba7c91db97f0947203e7ea5f0abedd6ec9cfd72d626702253c08ba0ae499961",
+    "platformId": "linux-x64",
+    "runtimeDependencies": []
+  },
+  "authority": {
+    "classification": "capture-source-evidence",
+    "grants": [],
+    "nonAuthorities": [
+      "first-party-identity",
+      "system-identity",
+      "kfd-compliance",
+      "product-system-metadata",
+      "package-metadata",
+      "registry-history",
+      "scan-output",
+      "standalone-generation"
+    ]
+  },
+  "demo": {
+    "claimBoundary": "This exact standalone-binary scenario proves deterministic local bootstrap behavior only; it does not grant release, repository, network, or production authority.",
+    "id": "beginner-bootstrap",
+    "title": "Buildchain beginner bootstrap"
+  },
+  "execution": {
+    "durationClass": "standard",
+    "playback": {
+      "activeDurationMs": 2800,
+      "finalHoldMs": 1000,
+      "mode": "deterministic-readable",
+      "schema": "buildchain.declarative-demo-playback/v1"
+    }
+  },
+  "networkIsolation": "docker-none",
+  "product": {
+    "binaryName": "buildchain",
+    "displayName": "Buildchain",
+    "distribution": "standalone-binary",
+    "id": "buildchain"
+  },
+  "renditions": [
+    {
+      "columns": 150,
+      "height": 1080,
+      "id": "1080p",
+      "role": "primary",
+      "rows": 36,
+      "runSummary": "renditions/1080p/run-summary.json",
+      "runSummaryRoot": "sha256:46017daf3fb5e93c0849d425d0b5332701ef2bb88dd7f8daa74da4ee535745fa",
+      "terminalCapture": "renditions/1080p/terminal-capture.json",
+      "terminalCaptureRoot": "sha256:16f8dd315a1228c44d6e6e8ca0b497a42a3ecd0decdab853c122fb377d134895",
+      "transcript": "renditions/1080p/complete-transcript.txt",
+      "width": 1920
+    },
+    {
+      "columns": 100,
+      "height": 720,
+      "id": "720p",
+      "role": "responsive",
+      "rows": 28,
+      "runSummary": "renditions/720p/run-summary.json",
+      "runSummaryRoot": "sha256:97bf5467a1d0ee54ebc983bd6d478708d12bc371d8895c9ad09f3083659ef473",
+      "terminalCapture": "renditions/720p/terminal-capture.json",
+      "terminalCaptureRoot": "sha256:7db0a3151e4c3aaf205a3e726d8922b7f2c27ecc069e3b71094c6d97e6f913a7",
+      "transcript": "renditions/720p/complete-transcript.txt",
+      "width": 1280
+    }
+  ],
+  "root": "sha256:bc93fc6bc855e80ec9441003e401570321c339fba2ea13a78053716d8ceaaca1",
+  "scenarioRoot": "sha256:0ebd716d5dd98ba90dd777c025a7717530be62b13951696556cac61607885648",
+  "schema": "buildchain.declarative-demo-capture/v1",
+  "sourceCoordinateRoot": "sha256:7bdd98b648c44ff9865f3710809bbe08a352ff7d233458830bea9e4246d63dff",
+  "status": "qualified"
+}
