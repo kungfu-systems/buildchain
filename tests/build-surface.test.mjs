@@ -851,10 +851,7 @@ test("sealed publication authority verifier is independent and credential-free",
     workflow,
     /--workflow "\$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}"/,
   );
-  assert.match(
-    workflow,
-    /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"[\s\S]*--job apply/,
-  );
+  assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"[\s\S]*--job apply/);
   assert.match(
     workflow,
     /BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: \$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}/,
@@ -929,14 +926,17 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
 });
 
 test("fully retired workflow tombstones are absent", () => {
-  for (const workflowName of [
+  const retiredWorkflowNames = [
     ".release-docker.yml",
     ".release-elastic-beanstalk.yml",
     ".release-new-version.yml",
     ".sam-release.yml",
     ".wheel-release.yml",
     "schedule-purge-artifacts.yml",
-  ]) {
+  ];
+  assert.equal(retiredWorkflowNames.length, 6);
+  assert.ok(retiredWorkflowNames.every((name) => name.endsWith(".yml")));
+  for (const workflowName of retiredWorkflowNames) {
     assert.equal(
       fs.existsSync(path.join(root, ".github/workflows", workflowName)),
       false,
@@ -2641,9 +2641,7 @@ test("binary distribution blocks invalid release uploads before the build matrix
 
 test("binary evidence publication remains isolated from the canonical v4 publisher", () => {
   const evidence = readRepoText(".github/workflows/binary-distribution.yml");
-  const publication = readRepoText(
-    ".github/workflows/.binary-release-assets.yml",
-  );
+  const publication = readRepoText(".github/workflows/.binary-release-assets.yml");
   const publicPublication = readRepoText(
     ".github/workflows/binary-release-assets.yml",
   );
