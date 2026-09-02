@@ -3,11 +3,6 @@ name: Buildchain Sealed Publication Authority
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
@@ -209,15 +204,7 @@ on:
 permissions:
   contents: read
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   verify:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Independently verify publication admission
     runs-on: ubuntu-24.04
     permissions:

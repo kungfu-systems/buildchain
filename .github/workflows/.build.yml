@@ -3,11 +3,6 @@ name: Buildchain Build
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
@@ -625,15 +620,7 @@ permissions:
   id-token: write
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   trust-gate:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Trust gate
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
@@ -1061,7 +1048,7 @@ jobs:
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
       - trust-gate
-    if: ${{ inputs.universal-request-json == '' && (needs.trust-gate.outputs.trusted == 'true') }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
     outputs:
       publish-source-ref: ${{ steps.manifest.outputs.publish-source-ref }}
       publish-source-sha: ${{ steps.manifest.outputs.publish-source-sha }}
@@ -1125,7 +1112,7 @@ jobs:
     needs:
       - trust-gate
       - resolve-source
-    if: ${{ inputs.universal-request-json == '' && (needs.trust-gate.outputs.trusted == 'true') }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
     outputs:
       evidence-artifact: ${{ steps.names.outputs.evidence-artifact }}
       applicable: ${{ steps.material.outputs.anchored-version-material-applicable }}
@@ -1212,7 +1199,6 @@ jobs:
           retention-days: ${{ inputs.artifact-retention-days }}
 
   resolve-contract:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Resolve reusable contract
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     needs:
@@ -1291,7 +1277,7 @@ jobs:
     needs:
       - trust-gate
       - resolve-source
-    if: ${{ inputs.universal-request-json == '' && (needs.trust-gate.result == 'success' && needs.resolve-source.result == 'success') }}
+    if: ${{ needs.trust-gate.result == 'success' && needs.resolve-source.result == 'success' }}
     outputs:
       controller-plan-artifact: ${{ steps.names.outputs.controller-plan-artifact }}
       controller-plan-json: ${{ steps.plan.outputs.controller-plan-json }}
@@ -1341,7 +1327,7 @@ jobs:
     needs:
       - trust-gate
       - resolve-contract
-    if: ${{ inputs.universal-request-json == '' && (needs.trust-gate.outputs.trusted == 'true') }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' }}
     outputs:
       mode: ${{ steps.transfer.outputs.mode }}
       s3-bucket: ${{ steps.transfer.outputs.s3-bucket }}
@@ -1390,7 +1376,7 @@ jobs:
       - controller-plan
       - anchored-release-preflight
       - artifact-transfer
-    if: ${{ inputs.universal-request-json == '' && (needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0') }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0' }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -1990,7 +1976,7 @@ jobs:
       - controller-plan
       - anchored-release-preflight
       - artifact-transfer
-    if: ${{ inputs.universal-request-json == '' && (needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0') }}
+    if: ${{ needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0' }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -2424,7 +2410,7 @@ jobs:
       - artifact-transfer
       - build-native
       - build-linux-container
-    if: ${{ inputs.universal-request-json == '' && (always() && needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success')) }}
+    if: ${{ always() && needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -2540,7 +2526,7 @@ jobs:
       - resolve-source
       - build-native
       - build-linux-container
-    if: ${{ inputs.universal-request-json == '' && (always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success')) }}
+    if: ${{ always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -2653,7 +2639,7 @@ jobs:
       - build-linux-container
       - relay-artifacts
       - artifact-signing-control
-    if: ${{ inputs.universal-request-json == '' && (always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && needs.artifact-signing-control.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success')) }}
+    if: ${{ always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && needs.artifact-signing-control.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
     strategy:
       fail-fast: ${{ inputs.fail-fast }}
       matrix:
@@ -2887,7 +2873,7 @@ jobs:
       - artifact-transfer
       - build-native
       - relay-artifacts
-    if: ${{ inputs.universal-request-json == '' && (always() && inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && inputs.credential-island-environment != '' && needs.trust-gate.outputs.trusted == 'true' && needs.build-native.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success')) }}
+    if: ${{ always() && inputs.credential-island-macos-app-path != '' && !inputs.credential-island-caller-owned && inputs.credential-island-environment != '' && needs.trust-gate.outputs.trusted == 'true' && needs.build-native.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') }}
     runs-on: macos-15
     timeout-minutes: 90
     environment:
@@ -3033,7 +3019,7 @@ jobs:
       - artifact-signing-control
       - finalize-artifact-signing
       - credential-island-macos
-    if: ${{ inputs.universal-request-json == '' && (always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && needs.artifact-signing-control.result == 'success' && needs.finalize-artifact-signing.result == 'success' && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || (inputs.credential-island-caller-owned && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success')) }}
+    if: ${{ always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && needs.artifact-signing-control.result == 'success' && needs.finalize-artifact-signing.result == 'success' && ((inputs.credential-island-macos-app-path == '' && needs.credential-island-macos.result == 'skipped') || (inputs.credential-island-caller-owned && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success') }}
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
@@ -3281,7 +3267,7 @@ jobs:
       - finalize-artifact-signing
       - credential-island-macos
       - summarize
-    if: ${{ inputs.universal-request-json == '' && (always() && needs.controller-plan.result == 'success') }}
+    if: ${{ always() && needs.controller-plan.result == 'success' }}
     outputs:
       controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
       controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}

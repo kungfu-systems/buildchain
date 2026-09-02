@@ -3,11 +3,6 @@ name: Declarative Release Tail
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-ref:
         description: "Exact Buildchain SHA or qualified train ref"
         type: string
@@ -102,15 +97,7 @@ on:
 # Permission-neutral: production callers grant provider authority explicitly.
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   release-tail:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Execute Buildchain release tail
     runs-on: ubuntu-24.04
     outputs:

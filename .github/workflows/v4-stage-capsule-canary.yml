@@ -3,11 +3,6 @@ name: V4 Stage Capsule Canary
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       consumer:
         description: Stable lowercase consumer identity used in exact evidence roots
         required: true
@@ -39,15 +34,7 @@ permissions:
   contents: read
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   consumer-admission:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Admit floating-only v4 consumer source
     runs-on: ubuntu-24.04
     outputs:
@@ -98,7 +85,6 @@ jobs:
           if-no-files-found: error
 
   qualify:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Real lifecycle (${{ matrix.platform }})
     needs: consumer-admission
     strategy:
@@ -220,7 +206,6 @@ jobs:
           if-no-files-found: error
 
   reconcile:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Reconcile exact three-platform evidence
     needs: [consumer-admission, qualify]
     runs-on: ubuntu-24.04

@@ -3,11 +3,6 @@ name: Buildchain GitHub Artifact Attestation
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-ref:
         description: "Exact Buildchain v3 commit that owns this signer workflow and evidence verifier."
         type: string
@@ -92,15 +87,7 @@ permissions:
   id-token: write
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   attest:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Attest sealed Linux release artifact
     runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}

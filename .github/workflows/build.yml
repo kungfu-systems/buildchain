@@ -19,11 +19,6 @@ on:
         default: ".buildchain/contract-lock.json"
         type: string
         required: false
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
@@ -650,15 +645,7 @@ permissions:
   id-token: write
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   resolve-channel:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Resolve Buildchain channel
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
@@ -757,7 +744,7 @@ jobs:
     needs:
       - resolve-channel
       - controller-plan
-    if: ${{ inputs.universal-request-json == '' && (needs.resolve-channel.outputs.runtime-override == 'true') }}
+    if: ${{ needs.resolve-channel.outputs.runtime-override == 'true' }}
     uses: ./.github/workflows/.build.yml
     permissions:
       actions: read
@@ -765,7 +752,6 @@ jobs:
       issues: write
       id-token: write
     with:
-      universal-request-json: ${{ inputs.universal-request-json }}
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
       buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
@@ -862,7 +848,6 @@ jobs:
     secrets: inherit
 
   controller-plan:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Plan channel router controller evidence
     needs: resolve-channel
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
@@ -924,7 +909,7 @@ jobs:
     needs:
       - resolve-channel
       - controller-plan
-    if: ${{ inputs.universal-request-json == '' && (needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'alpha') }}
+    if: ${{ needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'alpha' }}
     uses: ./.github/workflows/.build.yml
     permissions:
       actions: read
@@ -932,7 +917,6 @@ jobs:
       issues: write
       id-token: write
     with:
-      universal-request-json: ${{ inputs.universal-request-json }}
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
       buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
@@ -1033,7 +1017,7 @@ jobs:
     needs:
       - resolve-channel
       - controller-plan
-    if: ${{ inputs.universal-request-json == '' && (needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'stable') }}
+    if: ${{ needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'stable' }}
     uses: ./.github/workflows/.build.yml
     permissions:
       actions: read
@@ -1041,7 +1025,6 @@ jobs:
       issues: write
       id-token: write
     with:
-      universal-request-json: ${{ inputs.universal-request-json }}
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ needs.resolve-channel.outputs.buildchain-ref }}
       buildchain-expected-channel: ${{ needs.resolve-channel.outputs.channel }}
@@ -1145,7 +1128,7 @@ jobs:
       - override
       - alpha
       - stable
-    if: ${{ inputs.universal-request-json == '' && (always() && needs.controller-plan.result == 'success') }}
+    if: ${{ always() && needs.controller-plan.result == 'success' }}
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     outputs:
       controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
@@ -1208,7 +1191,7 @@ jobs:
       - alpha
       - stable
       - controller-receipt
-    if: ${{ inputs.universal-request-json == '' && (always()) }}
+    if: ${{ always() }}
     runs-on: ${{ fromJSON(inputs.control-runner-json) }}
     steps:
       - name: Enforce public channel router aggregate
