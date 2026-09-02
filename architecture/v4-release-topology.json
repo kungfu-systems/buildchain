@@ -14,11 +14,7 @@
       ".github/workflows/.declarative-auditable-demo.yml",
       ".github/workflows/.publication-authority.yml",
       ".github/workflows/.release-candidate-promote.yml",
-      ".github/workflows/.release-elastic-beanstalk.yml",
-      ".github/workflows/.release-new-version.yml",
-      ".github/workflows/.sam-release.yml",
       ".github/workflows/.web-surface.yml",
-      ".github/workflows/.wheel-release.yml",
       ".github/workflows/auditable-demo.yml",
       ".github/workflows/binary-release-assets.yml",
       ".github/workflows/build-surface-fixture.yml",
@@ -267,6 +263,7 @@
         "path": ".github/workflows/buildchain-ref-promotion.yml",
         "triggers": ["workflow_dispatch", "workflow_run:completed"],
         "jobs": [
+          "classify-workflow-run|runner|-|read|-|-|-",
           "promote|reusable-call|kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write",
           "reject-invalid-candidate-recovery|runner|-|read|-|-|-",
           "reject-invalid-durable-recovery|runner|-|read|-|-|-",
@@ -300,8 +297,8 @@
       }
     ],
     "metrics": {
-      "workflowCount": 37,
-      "jobCount": 92,
+      "workflowCount": 33,
+      "jobCount": 89,
       "reusableEdgeCount": 23,
       "mutationRelevantNodeCount": 74,
       "contentsWriteJobCount": 14,

@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 80,
+    "workflowCount": 74,
     "actionCount": 8,
     "sitePageCount": 84,
     "docCommandRefCount": 1050,
@@ -1172,90 +1172,6 @@
         "outputCount": 31
       },
       {
-        "id": ".release-docker",
-        "path": ".github/workflows/.release-docker.yml",
-        "reusable": true,
-        "inputs": [
-          "image-name"
-        ],
-        "inputCount": 1,
-        "secrets": [
-          "DOCKER_HUB_PASSWORD",
-          "DOCKER_HUB_USERNAME",
-          "GITHUB_PUSH_TOKEN"
-        ],
-        "secretCount": 3,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".release-elastic-beanstalk",
-        "path": ".github/workflows/.release-elastic-beanstalk.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-region",
-          "eb-application-name",
-          "eb-environment-name"
-        ],
-        "inputCount": 3,
-        "secrets": [
-          "AWS_USER_ACCESS_KEY_ID",
-          "AWS_USER_SECRET_ACCESS_KEY",
-          "GITHUB_PUSH_TOKEN"
-        ],
-        "secretCount": 3,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".release-new-version",
-        "path": ".github/workflows/.release-new-version.yml",
-        "reusable": true,
-        "inputs": [
-          "action-bump-version-path",
-          "action-bump-version-ref",
-          "action-bump-version-repository",
-          "aws-ci-region",
-          "aws-user-region",
-          "bucket-release-ci",
-          "bucket-release-user",
-          "bucket-staging-ci",
-          "bucket-staging-user",
-          "clean-release-ci",
-          "clean-release-user",
-          "close-issues",
-          "cloudfront-id-ci",
-          "cloudfront-id-user",
-          "cloudfront-paths-ci",
-          "cloudfront-paths-user",
-          "create-release-note",
-          "max-preview-links",
-          "need-qa-automated",
-          "node-version",
-          "protect-dev-branches",
-          "publish-aws-ci",
-          "publish-aws-user",
-          "publish-github-npm",
-          "publish-npmjs",
-          "publish-release-note",
-          "sync-extensions-version"
-        ],
-        "inputCount": 27,
-        "secrets": [
-          "AIRTABLE_API_KEY",
-          "AWS_CI_ACCESS_KEY_ID",
-          "AWS_CI_SECRET_ACCESS_KEY",
-          "AWS_USER_ACCESS_KEY_ID",
-          "AWS_USER_SECRET_ACCESS_KEY",
-          "GITHUB_PUSH_TOKEN",
-          "MONDAY_API_KEY",
-          "NPM_PUSH_TOKEN"
-        ],
-        "secretCount": 8,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
         "id": ".release-verify",
         "path": ".github/workflows/.release-verify.yml",
         "reusable": true,
@@ -1318,24 +1234,6 @@
           "WINDOWS_CSC_KEY"
         ],
         "secretCount": 11,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".sam-release",
-        "path": ".github/workflows/.sam-release.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-region",
-          "aws-role",
-          "aws-root",
-          "bucket-release"
-        ],
-        "inputCount": 4,
-        "secrets": [
-          "AWS_ACCOUNT_ID"
-        ],
-        "secretCount": 1,
         "outputs": [],
         "outputCount": 0
       },
@@ -1489,24 +1387,6 @@
           "web-surface-urls-json"
         ],
         "outputCount": 23
-      },
-      {
-        "id": ".wheel-release",
-        "path": ".github/workflows/.wheel-release.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-region",
-          "aws-user-region",
-          "bucket-release"
-        ],
-        "inputCount": 3,
-        "secrets": [
-          "AWS_USER_ACCESS_KEY_ID",
-          "AWS_USER_SECRET_ACCESS_KEY"
-        ],
-        "secretCount": 2,
-        "outputs": [],
-        "outputCount": 0
       },
       {
         "id": ".wheel-verify",
@@ -2929,17 +2809,6 @@
       {
         "id": "release-verify",
         "path": ".github/workflows/release-verify.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "schedule-purge-artifacts",
-        "path": ".github/workflows/schedule-purge-artifacts.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -9035,8 +8904,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "acf5c142b762faa4743b41974b5446d4f7112bc9d192a4f3857873275053803d",
-    "pageRegistryDigest": "8e2a30416d969f390d1fa57468c8d29f5e89d179b6d1ea1600159e72adff8130"
+    "workflowRegistryDigest": "abd9ad527ca964ca2b0b1b14d5311aeb8e0a9b67cb91109e639ff380385cb4f4",
+    "pageRegistryDigest": "ae0b1b9c7b883027cf53403221ff2fe2e41ad1aa4d16851d4550e89947d6d6d7"
   },
   "comparison": {
     "missingCliRegistry": [],

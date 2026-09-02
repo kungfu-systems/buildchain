@@ -148,7 +148,7 @@ test("fresh and recovery APPLY use the same rooted product provider transaction"
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: \$\{\{ inputs\.resume-transaction-id != '' && steps\.candidate\.outputs\.release-candidate-publication-version \|\| '' \}\}/u,
+    /name: Resolve one exact product publication recovery[\s\S]*selectV4RecoveredProductPublicationVersion[\s\S]*BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: \$\{\{ steps\.recovery\.outputs\.version \|\| '' \}\}/u,
   );
   assert.match(
     action,

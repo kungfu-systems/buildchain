@@ -1043,8 +1043,8 @@ for (const requiredSnippet of [
   "actions: write",
   "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha",
   "github.event.workflow_run.event == 'push'",
-  "!startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v')",
-  "!startsWith(github.event.workflow_run.display_title, 'chore(release): release v')",
+  "name: Classify generated product-state finalization",
+  "selectV4FinalizedProductPublicationVersion",
   "resume-candidate-run-id:",
   "resume-expected-source-tree:",
   "resume-buildchain-runtime-ref:",
@@ -1056,12 +1056,19 @@ for (const requiredSnippet of [
     throw new Error(`buildchain ref promotion workflow missing npm transaction snippet: ${requiredSnippet}`);
   }
 }
+if (buildchainRefPromotionWorkflow.includes("workflow_run.display_title")) {
+  throw new Error(
+    "buildchain ref promotion must classify finalization from rooted product state, not a display title",
+  );
+}
 const releaseCandidatePromoteWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.release-candidate-promote.yml"), "utf8");
 for (const requiredSnippet of [
   "name: QUALIFY canonical v4 release invocation inputs",
   "name: APPLY one rooted provider transaction",
   "name: SETTLE terminal ReleaseReceipt projection",
   "uses: ./.buildchain/runtime/actions/v4-release-candidate-promote",
+  "name: Resolve one exact product publication recovery",
+  "selectV4RecoveredProductPublicationVersion",
   "publisher-workflow-sha:",
   "runtime-commit:",
   "runtime-tree:",
@@ -1101,31 +1108,15 @@ for (const workflowFile of fs.readdirSync(workflowDir).filter((entry) => entry.e
   }
 }
 for (const retiredWorkflow of [
+  ".release-docker.yml",
   ".release-new-version.yml",
   ".release-elastic-beanstalk.yml",
   ".sam-release.yml",
   ".wheel-release.yml",
+  "schedule-purge-artifacts.yml",
 ]) {
-  const retiredSource = fs.readFileSync(path.join(workflowDir, retiredWorkflow), "utf8");
-  for (const requiredSnippet of [
-    "release path is retired",
-    "release-candidate-promote.yml@v3",
-    "publish-gate source-lock enforcement",
-  ]) {
-    if (!retiredSource.includes(requiredSnippet)) {
-      throw new Error(`${retiredWorkflow} must fail closed and point callers at the source-locked release-candidate-promote model: ${requiredSnippet}`);
-    }
-  }
-  for (const forbiddenSnippet of [
-    "npm publish --access=public",
-    "actions/publish-prebuilt@v2",
-    "actions/bump-version@v2",
-    "beanstalk-deploy@",
-    "sam deploy",
-  ]) {
-    if (retiredSource.includes(forbiddenSnippet)) {
-      throw new Error(`${retiredWorkflow} must not keep retired publish side effects: ${forbiddenSnippet}`);
-    }
+  if (fs.existsSync(path.join(workflowDir, retiredWorkflow))) {
+    throw new Error(`${retiredWorkflow} is fully retired and must remain deleted`);
   }
 }
 const promoteBuildchainRefAction = fs.readFileSync(path.join(root, "actions/promote-buildchain-ref/action.yml"), "utf8");
