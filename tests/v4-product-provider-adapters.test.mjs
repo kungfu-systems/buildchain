@@ -435,6 +435,40 @@ test("rooted product effects publish once and replay entirely from provider read
   assert.equal(npm.publishCount, 1);
 });
 
+test("GitHub product mutation retries a transient blob write without republishing npm", async () => {
+  const files = fixture();
+  const github = githubProvider();
+  const npm = npmProvider(files.cwd);
+  const scenario = productScenario(files, github, ["c", "d"]);
+  const createBlob = github.octokit.rest.git.createBlob;
+  let blobAttempts = 0;
+  github.octokit.rest.git.createBlob = async (input) => {
+    blobAttempts += 1;
+    if (blobAttempts === 1)
+      throw Object.assign(new Error("upstream reset"), { status: 502 });
+    return createBlob(input);
+  };
+  const waits = [];
+  const runtime = createV4ProductPublicationAdapters({
+    request: scenario.request,
+    intent: scenario.intent,
+    plan: scenario.plan,
+    cwd: files.cwd,
+    spawn: npm.spawn,
+    wait(delayMs) {
+      waits.push(delayMs);
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(scenario.effectPlan),
+    { adapters: runtime.adapters },
+  );
+  assert.equal(result.state, "complete");
+  assert.equal(npm.publishCount, 1);
+  assert.deepEqual(waits, [1_000]);
+  assert.equal(github.refs.get("tags/v4-alpha"), VERSION_STATE);
+});
+
 test("npm publication waits for registry visibility without republishing an immutable version", async () => {
   const files = fixture();
   const github = githubProvider();
@@ -464,6 +498,18 @@ test("protected-ref rejection blocks safely and resumes after PR merge without r
   const files = fixture();
   const github = githubProvider();
   github.protectedRefs.add("heads/alpha/v4/v4.0");
+  const createPullRequest = github.octokit.rest.pulls.create;
+  let losePullRequestResponse = true;
+  github.octokit.rest.pulls.create = async (input) => {
+    const result = await createPullRequest(input);
+    if (losePullRequestResponse) {
+      losePullRequestResponse = false;
+      throw Object.assign(new Error("response lost after PR creation"), {
+        code: "ECONNRESET",
+      });
+    }
+    return result;
+  };
   const npm = npmProvider(files.cwd);
   const intent = selectV4ProductPublicationIntent({
     channel: "alpha",
