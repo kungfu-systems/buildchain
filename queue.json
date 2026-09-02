@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1275,
-  "fencingCounter": 184,
+  "generation": 1276,
+  "fencingCounter": 185,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,55 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:15dbe84f7f9929ebdb158b8969ad4d509dcf72b895408a29ac776f4afdb6f713",
+    "pullRequestNumber": 3399,
+    "sourceHead": "5376a2c7edd780629596168736b02ba4da38ef16",
+    "assignmentRoot": "sha256:b57f02d58ca6a746f584a725fe0f74d6e11096fe57e8f0d62133c78cea8b699c",
+    "initiativeRoot": "sha256:bb5b9c0880109260a2c14021b3a71bd713ff57fb05f9b0f1504c0a8e6558872f",
+    "sourceIdentityRoot": "sha256:c0a83d2dbd98bdc0523018829ca1c8817106b46e09376186084803c3964df52b",
+    "sourcePatchRoot": "sha256:e4b935b3359e26c73b85e3526e0d91db1663e8f1e4e7d8c6dd3c88586ef36140",
+    "sourceProofRoot": "sha256:86fd52e14c663b25e2eba72c076bbb4fe809ac33c919f89e0d9bb97723dda353",
+    "planRoot": "sha256:08dd1c23dc8b1ba0d2c805b2893dd0a0ef990c119563b2c2483502912efbf561",
+    "closureRoot": "sha256:42c05ad949174b4f5bc74f063394676faf57ed93d84abb13c26719bcfb66a859",
+    "dependencyRoot": "sha256:b6d2e1ead46d636de70afa4a986e404fabe3796a1bd5ba2e1e300309cd3ba2f2",
+    "toolchainRoot": "sha256:7211ed3bc2b29a802901923b2c3c8d20ef083494343b1a63ebb378f1a4ab6816",
+    "environmentRoot": "sha256:d05d6e8ef9b30dfafdf00005700a134d36efbec3d43adbb04016bcfbf28eb7be",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "mkdir -p \"$HOME/.local/bin\" && corepack enable --install-directory \"$HOME/.local/bin\" && export PATH=\"$HOME/.local/bin:$PATH\" && pnpm install --frozen-lockfile && pnpm run check",
+      "commandRoot": "sha256:c80aa61494655f6ff934d35012cdba3752978f8b702942ac3d4228c3b5f501a9"
+    },
+    "affectedPaths": [
+      ".buildchain/release-impact.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/kfd-claims.json",
+      "dist/site/kfd-upstream-aggregate.json",
+      "dist/site/public-surface-audit.json",
+      "dist/site/publication-registry.json",
+      "dist/site/site-manifest.json",
+      "dist/site/workflow-registry.json",
+      "package.json"
+    ],
+    "shardEvidenceRoots": [
+      "sha256:d86b82fb0580daf08a222ecc26ff0696c9526d7372cba54605e48d414fb30250"
+    ],
+    "sourceWorkflowRunId": 33607224248,
+    "deliveryClass": "native-proof-required",
+    "priority": "ordinary",
+    "generation": 185,
+    "expectedOldStateRoot": "sha256:c49b685bae997cb44f90da45aecbc8e189b81dff4fa4a2b1986010e14e302f5c",
+    "issuedAt": "2026-09-02T08:23:09.400Z",
+    "expiresAt": "2026-09-02T09:23:09.400Z",
+    "fencingToken": "sha256:6f06e10d1e04cbbde38e1ccc363a5825ee0017b35299c1475b9daaf7e3ddde19",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -9395,10 +9443,10 @@
       "sourceWorkflowRunId": 33607224248,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-02T08:23:06.621Z",
-      "updatedAt": "2026-09-02T08:23:06.621Z",
+      "updatedAt": "2026-09-02T08:23:09.400Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".buildchain/release-impact.json",
@@ -9417,6 +9465,6 @@
       ]
     }
   ],
-  "updatedAt": "2026-09-02T08:23:06.621Z",
-  "stateRoot": "sha256:c49b685bae997cb44f90da45aecbc8e189b81dff4fa4a2b1986010e14e302f5c"
+  "updatedAt": "2026-09-02T08:23:09.400Z",
+  "stateRoot": "sha256:b1bcd9873a43a9b15aa2477d1783451bb85688e331debe926b518bc7d4a45780"
 }
