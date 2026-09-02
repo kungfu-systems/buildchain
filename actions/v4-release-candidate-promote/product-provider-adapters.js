@@ -15,6 +15,35 @@ import {
 } from "../promote-buildchain-ref/internal/version-state.js";
 import { createV4GithubProductAdapters } from "./product-provider-github-adapters.js";
 
+const GITHUB_MUTATION_RETRY_DELAYS_MS = Object.freeze([1_000, 2_000, 4_000]);
+
+function retryableGithubMutation(error) {
+  const status = Number(
+    error?.status || error?.statusCode || error?.response?.status || 0,
+  );
+  return (
+    [408, 429, 500, 502, 503, 504].includes(status) ||
+    (status === 403 && /rate limit/iu.test(error?.message || "")) ||
+    /^(?:ECONNABORTED|ECONNRESET|EAI_AGAIN|ENETRESET|ETIMEDOUT|UND_ERR_(?:BODY_TIMEOUT|CONNECT_TIMEOUT|HEADERS_TIMEOUT|REQ_RETRY|SOCKET))$/u.test(
+      String(error?.code || ""),
+    )
+  );
+}
+
+async function retryGithubMutation(wait, operation, readback) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!retryableGithubMutation(error)) throw error;
+      const observed = await readback?.();
+      if (observed) return observed;
+      if (attempt === GITHUB_MUTATION_RETRY_DELAYS_MS.length) throw error;
+      await wait(GITHUB_MUTATION_RETRY_DELAYS_MS[attempt]);
+    }
+  }
+}
+
 const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
 
 function standardCandidatePath(
@@ -545,6 +574,8 @@ export function createV4ProductPublicationAdapters({
     versionFiles: localVersionFiles(cwd, intent),
     packageEffectAttempted: false,
     wait,
+    githubMutation: (operation, readback) =>
+      retryGithubMutation(wait, operation, readback),
     updates: [],
   };
   const packedPackage = createPackedPackage(context);
