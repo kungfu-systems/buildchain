@@ -851,7 +851,10 @@ test("sealed publication authority verifier is independent and credential-free",
     workflow,
     /--workflow "\$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}"/,
   );
-  assert.match(workflow, /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"[\s\S]*--job apply/);
+  assert.match(
+    workflow,
+    /--workflow-ref "\$\{\{ inputs\.buildchain-ref \}\}"[\s\S]*--job apply/,
+  );
   assert.match(
     workflow,
     /BUILDCHAIN_AUTHORITY_WORKFLOW_PATH: \$\{\{ inputs\.authority-workflow-path \|\| '\.github\/workflows\/release-candidate-promote\.yml' \}\}/,
@@ -925,23 +928,20 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.doesNotMatch(script, /= \/NODE_AUTH_TOKEN\|NPM_TOKEN\|npm-token\|/);
 });
 
-test("legacy release workflows fail closed instead of bypassing publish-gate source locks", () => {
-  const retiredReleaseWorkflows = [
-    ".release-new-version.yml",
+test("fully retired workflow tombstones are absent", () => {
+  for (const workflowName of [
+    ".release-docker.yml",
     ".release-elastic-beanstalk.yml",
+    ".release-new-version.yml",
     ".sam-release.yml",
     ".wheel-release.yml",
-  ];
-  for (const workflowName of retiredReleaseWorkflows) {
-    const workflow = readRepoText(`.github/workflows/${workflowName}`);
-    assert.match(workflow, /release path is retired/);
-    assert.match(workflow, /release-candidate-promote\.yml@v3/);
-    assert.match(workflow, /publish-gate source-lock enforcement/);
-    assert.doesNotMatch(workflow, /npm publish --access=public/);
-    assert.doesNotMatch(workflow, /actions\/publish-prebuilt@v2/);
-    assert.doesNotMatch(workflow, /actions\/bump-version@v2/);
-    assert.doesNotMatch(workflow, /beanstalk-deploy@/);
-    assert.doesNotMatch(workflow, /sam deploy/);
+    "schedule-purge-artifacts.yml",
+  ]) {
+    assert.equal(
+      fs.existsSync(path.join(root, ".github/workflows", workflowName)),
+      false,
+      `${workflowName} must remain deleted`,
+    );
   }
 });
 
@@ -2641,7 +2641,9 @@ test("binary distribution blocks invalid release uploads before the build matrix
 
 test("binary evidence publication remains isolated from the canonical v4 publisher", () => {
   const evidence = readRepoText(".github/workflows/binary-distribution.yml");
-  const publication = readRepoText(".github/workflows/.binary-release-assets.yml");
+  const publication = readRepoText(
+    ".github/workflows/.binary-release-assets.yml",
+  );
   const publicPublication = readRepoText(
     ".github/workflows/binary-release-assets.yml",
   );

@@ -5276,7 +5276,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 67
+        "line": 199
       },
       "example": "import { buildchainPublicationAuthorityDescriptors } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5289,11 +5289,11 @@
       "id": "packages/core/buildchain-publication-authority.js#createBuildchainPublicationAuthorityRegistry",
       "name": "createBuildchainPublicationAuthorityRegistry",
       "kind": "function",
-      "signature": "function createBuildchainPublicationAuthorityRegistry({ root = process.cwd() } = {})",
+      "signature": "function createBuildchainPublicationAuthorityRegistry({ root = process.cwd(), } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ root = process.cwd() } = {}"
+          "signature": "{ root = process.cwd(), } = {}"
         }
       ],
       "returns": "unknown",
@@ -5305,7 +5305,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 91
+        "line": 225
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -30456,7 +30456,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:e0e1b11176245fa6d4e62f9db8ab3f753ba97a41a1fae7302160dfc6ad5707ff",
+      "digest": "sha256:1666e1c652703c8db3b56a17b8016663dfd933c1f55a8e89f347afb8f854835c",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -31194,7 +31194,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:a5863a53832a8f1f3fac531d94af8a07ebb1dba2c8852da628fd85179fb504a9"
+      "digest": "sha256:feb12b0dc8c716fa31b9e124d7451dc91e9d431dd9d05f92565468679947f5bf"
     },
     {
       "id": "build-facts",

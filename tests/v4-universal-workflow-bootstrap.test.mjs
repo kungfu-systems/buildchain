@@ -8,6 +8,7 @@ import {
   V4_UNIVERSAL_WORKFLOW_REQUEST,
   admitV4UniversalWorkflow,
   completeV4UniversalWorkflow,
+  selectV4FinalizedProductPublicationVersion,
   selectV4RecoveredProductPublicationVersion,
   v4ProductStateVersion,
   validateV4UniversalWorkflowRequest,
@@ -467,13 +468,21 @@ test("real universal promotion materializes one rooted product intent before APP
   assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Fresh" }), "");
   const state = (selected, character = "5") => ({ stateRef: { ref: `refs/heads/buildchain/v4-product-state/${sourceSha}-${selected.replaceAll(".", "-")}`, object: { type: "commit", sha: sha(character) } }, stateCommit: { sha: sha(character), parents: [{ sha: sourceSha }] }, exactTagRef: { ref: `refs/tags/v${selected}`, object: { type: "commit", sha: sourceSha } } });
   assert.equal(v4ProductStateVersion(state(version).stateRef, sourceSha), version);
-  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [state(candidateVersion), state(version, "6")] }), version);
+  assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [state(version, "6")] }), version);
+  assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [state(candidateVersion), state(version, "6")] }), { code: "recovery-state-ambiguous" });
   assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [{ ...state(version), exactTagRef: undefined }] }), version);
   assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", explicitResume: true }), candidateVersion);
   assert.equal(selectV4RecoveredProductPublicationVersion({ ...recovery, candidateVersion: version, routeDecision: "Resume", exactTagRef: { ref: `refs/tags/v${version}`, object: { type: "commit", sha: sourceSha } } }), version);
   assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume" }), { code: "recovery-tag-missing" });
   assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [{ ...state(version), stateCommit: { sha: sha("5"), parents: [{ sha: sha("7") }] } }] }), { code: "recovery-state-mismatch" });
   assert.throws(() => selectV4RecoveredProductPublicationVersion({ ...recovery, routeDecision: "Resume", recoveryStates: [{ ...state(version), exactTagRef: { ref: `refs/tags/v${version}`, object: { type: "commit", sha: sha("7") } } }] }), { code: "recovery-tag-mismatch" });
+});
+test("generated product-state finalization heads are semantic no-ops", () => {
+  const sourceSha = sha("3"), stateSha = sha("4"), headSha = sha("5"), treeSha = sha("6");
+  const state = { stateRef: { ref: `refs/heads/buildchain/v4-product-state/${sourceSha}-4-0-2-alpha-16`, object: { type: "commit", sha: stateSha } }, stateCommit: { sha: stateSha, tree: { sha: treeSha }, parents: [{ sha: sourceSha }] }, exactTagRef: { ref: "refs/tags/v4.0.2-alpha.16", object: { type: "commit", sha: sourceSha } }, headComparisonStatus: "ahead" };
+  assert.equal(selectV4FinalizedProductPublicationVersion({ requestedSha: headSha, requestedTree: treeSha, targetRef: "alpha/v4/v4.0", recoveryStates: [state] }), "4.0.2-alpha.16");
+  assert.equal(selectV4FinalizedProductPublicationVersion({ requestedSha: sourceSha, requestedTree: sha("7"), targetRef: "alpha/v4/v4.0", recoveryStates: [state] }), "");
+  assert.throws(() => selectV4FinalizedProductPublicationVersion({ requestedSha: headSha, requestedTree: treeSha, targetRef: "alpha/v4/v4.0", recoveryStates: [state, { ...state, stateRef: { ref: `refs/heads/buildchain/v4-product-state/${sourceSha}-4-0-2-alpha-17`, object: { type: "commit", sha: sha("8") } }, stateCommit: { sha: sha("8"), tree: { sha: treeSha }, parents: [{ sha: sourceSha }] }, exactTagRef: undefined }] }), { code: "finalization-state-ambiguous" });
 });
 
 test("candidate action logs cannot corrupt the rooted result channel", () => {

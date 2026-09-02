@@ -273,11 +273,172 @@ export function v4UniversalWorkflowRequestRoot(value) {
     validateV4UniversalWorkflowRequest(value),
   );
 }
-export function v4ProductStateVersion(value, requestedSha) { const sourceSha = exactSha(requestedSha, "requestedSha"), ref = nonEmpty(value?.ref, "productStateRef.ref"), prefix = `refs/heads/buildchain/v4-product-state/${sourceSha}-`; if (!ref.startsWith(prefix)) fail("recovery-state-mismatch", "release recovery product state does not bind the requested source"); const match = ref.slice(prefix.length).match(/^(\d+)-(\d+)-(\d+)(?:-alpha-(\d+))?$/u); if (!match) fail("invalid-recovery-version", "release recovery product state version is invalid"); return `${match[1]}.${match[2]}.${match[3]}${match[4] === undefined ? "" : `-alpha.${match[4]}`}`; }
+export function v4ProductStateVersion(value, requestedSha) {
+  const sourceSha = exactSha(requestedSha, "requestedSha"),
+    ref = nonEmpty(value?.ref, "productStateRef.ref"),
+    prefix = `refs/heads/buildchain/v4-product-state/${sourceSha}-`;
+  if (!ref.startsWith(prefix))
+    fail(
+      "recovery-state-mismatch",
+      "release recovery product state does not bind the requested source",
+    );
+  const match = ref
+    .slice(prefix.length)
+    .match(/^(\d+)-(\d+)-(\d+)(?:-alpha-(\d+))?$/u);
+  if (!match)
+    fail(
+      "invalid-recovery-version",
+      "release recovery product state version is invalid",
+    );
+  return `${match[1]}.${match[2]}.${match[3]}${match[4] === undefined ? "" : `-alpha.${match[4]}`}`;
+}
+export function selectV4FinalizedProductPublicationVersion(value) {
+  const requestedSha = exactSha(value.requestedSha, "requestedSha");
+  const requestedTree = exactSha(value.requestedTree, "requestedTree");
+  const lane = nonEmpty(value.targetRef, "targetRef").match(
+    /^(alpha|release)\/v(\d+)\/v(\d+)\.(\d+)$/u,
+  );
+  if (!lane || lane[2] !== lane[3])
+    fail(
+      "invalid-finalization-lane",
+      "product publication finalization target is not a release lane",
+    );
+  const expectedAlpha = lane[1] === "alpha";
+  const versions = [];
+  for (const row of Array.isArray(value.recoveryStates)
+    ? value.recoveryStates
+    : []) {
+    const stateRef = row?.stateRef;
+    const match = String(stateRef?.ref || "").match(
+      /^refs\/heads\/buildchain\/v4-product-state\/([0-9a-f]{40})-(\d+)-(\d+)-(\d+)(?:-alpha-(\d+))?$/u,
+    );
+    if (!match || match[2] !== lane[2] || match[3] !== lane[4]) continue;
+    const stateTree = exactSha(
+      row?.stateCommit?.tree?.sha,
+      "productStateCommit.tree.sha",
+    );
+    if (stateTree !== requestedTree) continue;
+    if (!new Set(["ahead", "identical"]).has(row.headComparisonStatus))
+      continue;
+    const sourceSha = exactSha(match[1], "productStateRef.sourceSha");
+    const version = v4ProductStateVersion(stateRef, sourceSha);
+    const parsed = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-alpha\.(\d+))?$/u);
+    if ((parsed[4] !== undefined) !== expectedAlpha) continue;
+    if (
+      stateRef?.object?.type !== "commit" ||
+      exactSha(stateRef?.object?.sha, "productStateRef.object.sha") !==
+        exactSha(row?.stateCommit?.sha, "productStateCommit.sha") ||
+      row.stateCommit.parents?.length !== 1 ||
+      exactSha(
+        row.stateCommit.parents[0]?.sha,
+        "productStateCommit.parents[0].sha",
+      ) !== sourceSha
+    )
+      fail(
+        "finalization-state-mismatch",
+        "product publication finalization state does not bind its source",
+      );
+    if (
+      row.exactTagRef &&
+      (row.exactTagRef.ref !== `refs/tags/v${version}` ||
+        row.exactTagRef.object?.type !== "commit" ||
+        exactSha(row.exactTagRef.object?.sha, "exactTagRef.object.sha") !==
+          sourceSha)
+    )
+      fail(
+        "finalization-tag-mismatch",
+        "product publication finalization tag does not bind its source",
+      );
+    versions.push(version);
+  }
+  const selected = [...new Set(versions)].sort();
+  if (selected.length > 1)
+    fail(
+      "finalization-state-ambiguous",
+      `publication head ${requestedSha} matches multiple product versions`,
+    );
+  return selected[0] || "";
+}
 export function selectV4RecoveredProductPublicationVersion(value) {
-  if (value.routeDecision !== "Resume") return ""; const version = nonEmpty(value.candidateVersion, "candidateVersion"), sourceSha = exactSha(value.requestedSha, "requestedSha"), candidate = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-alpha\.(\d+))?$/u); if (!candidate) fail("invalid-recovery-version", "release recovery candidate version is invalid"); if (value.explicitResume) return version;
-  const states = Array.isArray(value.recoveryStates) ? value.recoveryStates : []; if (states.length) { const recovered = states.map(({ stateRef, stateCommit, exactTagRef }) => { const selected = v4ProductStateVersion(stateRef, sourceSha), parsed = selected.match(/^(\d+)\.(\d+)\.(\d+)(?:-alpha\.(\d+))?$/u), parents = stateCommit?.parents || []; if (stateRef?.object?.type !== "commit" || exactSha(stateRef?.object?.sha, "productStateRef.object.sha") !== exactSha(stateCommit?.sha, "productStateCommit.sha") || parents.length !== 1 || exactSha(parents[0]?.sha, "productStateCommit.parents[0].sha") !== sourceSha) fail("recovery-state-mismatch", "release recovery product state commit does not bind the requested source"); if (exactTagRef && (exactTagRef.ref !== `refs/tags/v${selected}` || exactTagRef.object?.type !== "commit" || exactSha(exactTagRef.object?.sha, "exactTagRef.object.sha") !== sourceSha)) fail("recovery-tag-mismatch", "release recovery exact tag does not bind the requested source"); if (parsed[1] !== candidate[1] || parsed[2] !== candidate[2] || parsed[3] !== candidate[3] || (parsed[4] === undefined) !== (candidate[4] === undefined)) fail("recovery-state-mismatch", "release recovery product state is outside the candidate release line"); return selected; }); recovered.sort((left, right) => Number(left.match(/(?:-alpha\.)?(\d+)$/u)[1]) - Number(right.match(/(?:-alpha\.)?(\d+)$/u)[1])); return recovered.at(-1); }
-  if (!value.exactTagRef) fail("recovery-tag-missing", "release recovery requires an exact partial-publication tag"); if (value.exactTagRef.ref !== `refs/tags/v${version}` || value.exactTagRef.object?.type !== "commit" || exactSha(value.exactTagRef.object?.sha, "exactTagRef.object.sha") !== sourceSha) fail("recovery-tag-mismatch", "release recovery exact tag does not bind the requested source");
+  if (value.routeDecision !== "Resume") return "";
+  const version = nonEmpty(value.candidateVersion, "candidateVersion"),
+    sourceSha = exactSha(value.requestedSha, "requestedSha"),
+    candidate = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-alpha\.(\d+))?$/u);
+  if (!candidate)
+    fail(
+      "invalid-recovery-version",
+      "release recovery candidate version is invalid",
+    );
+  if (value.explicitResume) return version;
+  const states = Array.isArray(value.recoveryStates)
+    ? value.recoveryStates
+    : [];
+  if (states.length) {
+    const recovered = [
+      ...new Set(
+        states.map(({ stateRef, stateCommit, exactTagRef }) => {
+          const selected = v4ProductStateVersion(stateRef, sourceSha),
+            parsed = selected.match(/^(\d+)\.(\d+)\.(\d+)(?:-alpha\.(\d+))?$/u),
+            parents = stateCommit?.parents || [];
+          if (
+            stateRef?.object?.type !== "commit" ||
+            exactSha(stateRef?.object?.sha, "productStateRef.object.sha") !==
+              exactSha(stateCommit?.sha, "productStateCommit.sha") ||
+            parents.length !== 1 ||
+            exactSha(parents[0]?.sha, "productStateCommit.parents[0].sha") !==
+              sourceSha
+          )
+            fail(
+              "recovery-state-mismatch",
+              "release recovery product state commit does not bind the requested source",
+            );
+          if (
+            exactTagRef &&
+            (exactTagRef.ref !== `refs/tags/v${selected}` ||
+              exactTagRef.object?.type !== "commit" ||
+              exactSha(exactTagRef.object?.sha, "exactTagRef.object.sha") !==
+                sourceSha)
+          )
+            fail(
+              "recovery-tag-mismatch",
+              "release recovery exact tag does not bind the requested source",
+            );
+          if (
+            parsed[1] !== candidate[1] ||
+            parsed[2] !== candidate[2] ||
+            parsed[3] !== candidate[3] ||
+            (parsed[4] === undefined) !== (candidate[4] === undefined)
+          )
+            fail(
+              "recovery-state-mismatch",
+              "release recovery product state is outside the candidate release line",
+            );
+          return selected;
+        }),
+      ),
+    ];
+    if (recovered.length !== 1)
+      fail(
+        "recovery-state-ambiguous",
+        "release recovery requires one exact product publication state; provide an exact transaction identity",
+      );
+    return recovered[0];
+  }
+  if (!value.exactTagRef)
+    fail(
+      "recovery-tag-missing",
+      "release recovery requires an exact partial-publication tag",
+    );
+  if (
+    value.exactTagRef.ref !== `refs/tags/v${version}` ||
+    value.exactTagRef.object?.type !== "commit" ||
+    exactSha(value.exactTagRef.object?.sha, "exactTagRef.object.sha") !==
+      sourceSha
+  )
+    fail(
+      "recovery-tag-mismatch",
+      "release recovery exact tag does not bind the requested source",
+    );
   return version;
 }
 function validatePolicy(value) {

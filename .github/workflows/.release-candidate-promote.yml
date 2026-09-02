@@ -917,6 +917,74 @@ jobs:
           BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: ${{ inputs.promotion-runtime-authorization-json }}
           BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: ${{ inputs.promotion-runtime-authorization-root }}
 
+      - name: Resolve one exact product publication recovery
+        if: ${{ steps.intent.outputs.action == 'promote' && (inputs.publish-transaction-override || inputs.resume-transaction-id != '') }}
+        id: recovery
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_CANDIDATE_VERSION: ${{ steps.candidate.outputs.release-candidate-publication-version || steps.candidate.outputs.release-candidate-version }}
+          BUILDCHAIN_EXPLICIT_RESUME: ${{ inputs.resume-transaction-id != '' }}
+          BUILDCHAIN_REQUESTED_SHA: ${{ steps.intent.outputs.requested-sha }}
+          BUILDCHAIN_RUNTIME_ROOT: ${{ github.workspace }}/.buildchain/runtime
+        with:
+          script: |
+            const { pathToFileURL } = require("node:url");
+            const runtime = await import(pathToFileURL(
+              `${process.env.BUILDCHAIN_RUNTIME_ROOT}/packages/core/v4-universal-workflow-bootstrap.js`,
+            ).href);
+            const requestedSha = process.env.BUILDCHAIN_REQUESTED_SHA;
+            const explicitResume = process.env.BUILDCHAIN_EXPLICIT_RESUME === "true";
+            const refs = explicitResume ? [] : await github.paginate(
+              github.rest.git.listMatchingRefs,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `heads/buildchain/v4-product-state/${requestedSha}-`,
+                per_page: 100,
+              },
+            );
+            const recoveryStates = [];
+            for (const stateRef of refs) {
+              const version = runtime.v4ProductStateVersion(stateRef, requestedSha);
+              const stateCommit = (await github.rest.git.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: stateRef.object.sha,
+              })).data;
+              let exactTagRef;
+              try {
+                exactTagRef = (await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/v${version}`,
+                })).data;
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+              recoveryStates.push({ stateRef, stateCommit, exactTagRef });
+            }
+            let exactTagRef;
+            if (!explicitResume && recoveryStates.length === 0) {
+              try {
+                exactTagRef = (await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/v${process.env.BUILDCHAIN_CANDIDATE_VERSION}`,
+                })).data;
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+            }
+            const version = runtime.selectV4RecoveredProductPublicationVersion({
+              routeDecision: "Resume",
+              candidateVersion: process.env.BUILDCHAIN_CANDIDATE_VERSION,
+              requestedSha,
+              explicitResume,
+              recoveryStates,
+              exactTagRef,
+            });
+            core.setOutput("version", version);
+
       - name: Select and root the exact product publication intent
         if: ${{ steps.intent.outputs.action == 'promote' }}
         id: publication
@@ -929,7 +997,7 @@ jobs:
           BUILDCHAIN_SOURCE_SHA: ${{ steps.intent.outputs.requested-sha }}
           BUILDCHAIN_SOURCE_TIMESTAMP: ${{ steps.intent.outputs.source-timestamp }}
           BUILDCHAIN_CANDIDATE_VERSION: ${{ steps.candidate.outputs.release-candidate-publication-version || steps.candidate.outputs.release-candidate-version }}
-          BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: ${{ inputs.resume-transaction-id != '' && steps.candidate.outputs.release-candidate-publication-version || '' }}
+          BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: ${{ steps.recovery.outputs.version || '' }}
           BUILDCHAIN_SEALED_BUNDLE_MANIFEST: ${{ steps.candidate.outputs.publish-sealed-bundle-manifest }}
           BUILDCHAIN_REQUIRED_ARTIFACTS_PATH: ${{ steps.candidate.outputs.publish-required-artifacts-path }}
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
