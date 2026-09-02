@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "c1fd73f5ad525b625d4b61ccac52bbd0b3ca60248c009c5cc546953ac07baa99",
+    "sha256": "3fb829f94513e209f8bbf919b53e8ed3ab80b326183a561483dd358b558f74ff",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 80,
+      "workflowCount": 74,
       "actionCount": 8,
       "sitePageCount": 84,
       "docCommandRefCount": 1050,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "c1fd73f5ad525b625d4b61ccac52bbd0b3ca60248c009c5cc546953ac07baa99",
+      "sha256": "3fb829f94513e209f8bbf919b53e8ed3ab80b326183a561483dd358b558f74ff",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 80,
+        "workflowCount": 74,
         "actionCount": 8,
         "sitePageCount": 84,
         "docCommandRefCount": 1050,
@@ -4292,82 +4292,6 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
-          "id": "workflow:.release-docker",
-          "name": "workflow:.release-docker",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/.release-docker.yml",
-          "evidencePath": ".github/workflows/.release-docker.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 1,
-          "inputs": [
-            "image-name"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:.release-elastic-beanstalk",
-          "name": "workflow:.release-elastic-beanstalk",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/.release-elastic-beanstalk.yml",
-          "evidencePath": ".github/workflows/.release-elastic-beanstalk.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 3,
-          "inputs": [
-            "aws-region",
-            "eb-application-name",
-            "eb-environment-name"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:.release-new-version",
-          "name": "workflow:.release-new-version",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/.release-new-version.yml",
-          "evidencePath": ".github/workflows/.release-new-version.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 27,
-          "inputs": [
-            "action-bump-version-path",
-            "action-bump-version-ref",
-            "action-bump-version-repository",
-            "aws-ci-region",
-            "aws-user-region",
-            "bucket-release-ci",
-            "bucket-release-user",
-            "bucket-staging-ci",
-            "bucket-staging-user",
-            "clean-release-ci",
-            "clean-release-user",
-            "close-issues",
-            "cloudfront-id-ci",
-            "cloudfront-id-user",
-            "cloudfront-paths-ci",
-            "cloudfront-paths-user",
-            "create-release-note",
-            "max-preview-links",
-            "need-qa-automated",
-            "node-version",
-            "protect-dev-branches",
-            "publish-aws-ci",
-            "publish-aws-user",
-            "publish-github-npm",
-            "publish-npmjs",
-            "publish-release-note",
-            "sync-extensions-version"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
           "id": "workflow:.release-verify",
           "name": "workflow:.release-verify",
           "kind": "workflow",
@@ -4421,25 +4345,6 @@
             "universal-request-json",
             "use-pipenv",
             "use-poetry"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:.sam-release",
-          "name": "workflow:.sam-release",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/.sam-release.yml",
-          "evidencePath": ".github/workflows/.sam-release.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 4,
-          "inputs": [
-            "aws-region",
-            "aws-role",
-            "aws-root",
-            "bucket-release"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -4568,24 +4473,6 @@
             "universal-request-json",
             "verify-command",
             "working-directory"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:.wheel-release",
-          "name": "workflow:.wheel-release",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/.wheel-release.yml",
-          "evidencePath": ".github/workflows/.wheel-release.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 3,
-          "inputs": [
-            "aws-region",
-            "aws-user-region",
-            "bucket-release"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -5826,20 +5713,6 @@
           "kind": "workflow",
           "sourcePath": ".github/workflows/release-verify.yml",
           "evidencePath": ".github/workflows/release-verify.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 0,
-          "inputs": [],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:schedule-purge-artifacts",
-          "name": "workflow:schedule-purge-artifacts",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/schedule-purge-artifacts.yml",
-          "evidencePath": ".github/workflows/schedule-purge-artifacts.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
@@ -7593,6 +7466,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 484
+    "publicSurfaceCount": 478
   }
 }

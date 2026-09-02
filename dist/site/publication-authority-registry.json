@@ -101,19 +101,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/.sam-release.yml",
-      "authorityClass": "retired-deny",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.sam-release.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/.sam-verify.yml",
       "authorityClass": "retired-deny",
       "publicationCapable": false,
@@ -152,19 +139,6 @@
       "environment": "consumer-defined",
       "environmentMode": "caller-bound",
       "runnerPolicy": "qualified-measured",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/.wheel-release.yml",
-      "authorityClass": "retired-deny",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.wheel-release.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
       "notes": ""
     },
     {
@@ -853,31 +827,11 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/.release-docker.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/.release-elastic-beanstalk.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/.release-new-version.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
       "path": ".github/workflows/.release-verify.yml",
       "signals": [
         "write-permission",
         "cloud-credential"
       ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.sam-release.yml",
-      "signals": [],
       "classified": true
     },
     {
@@ -907,11 +861,6 @@
         "environment",
         "cloud-credential"
       ],
-      "classified": true
-    },
-    {
-      "path": ".github/workflows/.wheel-release.yml",
-      "signals": [],
       "classified": true
     },
     {
@@ -1248,11 +1197,6 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/schedule-purge-artifacts.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
       "path": ".github/workflows/self-hosted-runner-smoke.yml",
       "signals": [],
       "classified": false
@@ -1325,5 +1269,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "266f19363d4d067bc07a41b2145e1699284ed2b25f4adf7e1d07e4f3b7ed49d2"
+  "registryDigest": "3fb8f77f124ae720c5935fb1a571028360f0ba9993641033190b4ff2fe418594"
 }
