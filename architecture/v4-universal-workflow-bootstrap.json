@@ -19,6 +19,7 @@
     "exactShaExecutionAuthority": true,
     "consumerSourceMutationPerIncident": false,
     "consumerAdmission": "verified-caller-exact-repository-workflow-and-source",
+    "reviewRuntimeBinding": "reviewed-head-or-protected-alpha-merge-to-exact-runtime",
     "buildchainReleasePromotionPerIncident": false,
     "selfDogfoodUsesPublicContract": true
   },
