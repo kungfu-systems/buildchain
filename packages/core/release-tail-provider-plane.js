@@ -1012,7 +1012,7 @@ function failOperation(
 async function checkpoint(callback, transaction) {
   if (callback) await callback(structuredClone(transaction));
 }
-
+const failureCode = (error, fallback) => error?.releaseTailCode || fallback;
 export async function executeReleaseTailTransaction(
   transaction,
   { adapters, checkpoint: checkpointCallback } = {},
@@ -1038,7 +1038,7 @@ export async function executeReleaseTailTransaction(
     const maxCycles = 1 + policy.localAttempts;
     let applied = pending.effectAttempts > 0;
     let completed = false;
-
+    let transientApplyCode = "";
     for (let cycle = 0; cycle < maxCycles; cycle += 1) {
       current.state = "reading-back";
       current = refreshTransaction(current);
@@ -1050,7 +1050,7 @@ export async function executeReleaseTailTransaction(
         rawReadback = {
           outcome:
             error?.releaseTailClass === "conflict" ? "conflict" : "transient",
-          providerCode: error?.releaseTailCode || "readback-error",
+          providerCode: failureCode(error, "readback-error"),
         };
       }
       let operation = current.operations.find(
@@ -1123,9 +1123,9 @@ export async function executeReleaseTailTransaction(
           await checkpoint(checkpointCallback, current);
           return current;
         }
+        transientApplyCode = failureCode(error, "provider-apply-error");
       }
       applied = true;
-
       current.state = "reading-back";
       current = refreshTransaction(current);
       await checkpoint(checkpointCallback, current);
@@ -1195,7 +1195,7 @@ export async function executeReleaseTailTransaction(
         current,
         pending.operationId,
         policy.exhausted,
-        "local-retry-exhausted",
+        transientApplyCode || "local-retry-exhausted",
       );
       await checkpoint(checkpointCallback, current);
       return current;
