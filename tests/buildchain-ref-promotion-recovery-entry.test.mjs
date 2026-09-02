@@ -20,6 +20,10 @@ const resolver = fs.readFileSync(
   path.resolve("scripts/release-candidate-resolver.mjs"),
   "utf8",
 );
+const universalEngine = fs.readFileSync(
+  path.resolve("scripts/v4-universal-workflow-engine.mjs"),
+  "utf8",
+);
 
 function nestedKeys(source, marker) {
   const lines = source.split("\n");
@@ -71,6 +75,13 @@ test("canonical publisher accepts one closed universal request", () => {
       `${jobId} can overlap universal execution`,
     );
   }
+});
+
+test("universal inspection preserves request mode for alpha admission", () => {
+  assert.match(
+    universalEngine,
+    /requestRoot: v4UniversalWorkflowRequestRoot\(request\),\s+mode: request\.mode,\s+candidate: request\.candidate/u,
+  );
 });
 
 test("alpha convergence retains one standalone recovery adapter", () => {
