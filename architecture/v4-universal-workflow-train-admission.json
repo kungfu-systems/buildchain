@@ -23,13 +23,13 @@
     "statuses": "write"
   },
   "contractRoots": [
+    "sha256:00d8a6acaead6c5738de0c187dd6f37c2b1cdaaa6bd39d4fabe7d8a9816a42c7",
     "sha256:65a0c2fc3faecaddf5076fff086b5d6e12eb9ba27796efc10aed19f2d93b9457",
     "sha256:73a0dc2af04d1df238d0aec27d5d1a9d9c2774e53f1a6b252eaaa2cbfc3fe9b4",
     "sha256:7ca5dffff9eaff8b9265d35c7d8573b8cedd56a69dc26c12e4a5c26e723412b0",
     "sha256:83d6b141d3c60ac5b861029a7c6241ee0ca8e6674dd346d27d476151dd16ea6c",
     "sha256:b6737ed958e8f53f7770b1c214c092591573ad63af41e05797117d9b7b212ed8",
-    "sha256:d6ad9cf661c0ba3825cabdc7185fd122a60fc1929dfc799cda3352650588663f",
-    "sha256:f7b625164843f6f3b09e0acd7e770be66cfd8937396017b5efcb817238e861fc"
+    "sha256:d6ad9cf661c0ba3825cabdc7185fd122a60fc1929dfc799cda3352650588663f"
   ],
   "targetRef": "dev/v4/v4.0",
   "allowedReviewers": ["kungfu-origin"],
