@@ -76,16 +76,11 @@
     ".github/workflows/.gate-profile.yml",
     ".github/workflows/.publication-authority.yml",
     ".github/workflows/.release-candidate-promote.yml",
-    ".github/workflows/.release-docker.yml",
-    ".github/workflows/.release-elastic-beanstalk.yml",
-    ".github/workflows/.release-new-version.yml",
     ".github/workflows/.release-verify.yml",
-    ".github/workflows/.sam-release.yml",
     ".github/workflows/.sam-verify.yml",
     ".github/workflows/.sync-release-page.yml",
     ".github/workflows/.sync-remote-git.yml",
     ".github/workflows/.web-surface.yml",
-    ".github/workflows/.wheel-release.yml",
     ".github/workflows/.wheel-verify.yml",
     ".github/workflows/bootstrap.yml",
     ".github/workflows/build.yml",
@@ -115,13 +110,7 @@
     ".github/workflows/v4-stage-capsule-canary.yml",
     ".github/workflows/v4-tail-reseal.yml"
   ],
-  "retiredWorkflowSurfaces": [
-    ".github/workflows/.release-docker.yml",
-    ".github/workflows/.release-elastic-beanstalk.yml",
-    ".github/workflows/.release-new-version.yml",
-    ".github/workflows/.sam-release.yml",
-    ".github/workflows/.wheel-release.yml"
-  ],
+  "retiredWorkflowSurfaces": [],
   "bootstrapGovernedWorkflows": [
     ".github/workflows/.auditable-demo.yml",
     ".github/workflows/.binary-release-assets.yml",
@@ -166,7 +155,7 @@
   ],
   "migration": {
     "compatibilityFacadeGenerator": "scripts/generate-v4-universal-workflow-facades.mjs",
-    "facadeSourceRevision": "e211a3535b4b3c9a921324ea1a81522a4e271b98",
+    "facadeSourceRevision": "7f9ce215cf05bfd6b190624bfc1de8545065767d",
     "channelGeneratedFacades": [
       ".github/workflows/build.yml",
       ".github/workflows/release-candidate-promote.yml"

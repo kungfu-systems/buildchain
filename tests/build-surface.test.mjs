@@ -925,23 +925,23 @@ test("publication control-plane audit defers npm OIDC authorization to the publi
   assert.doesNotMatch(script, /= \/NODE_AUTH_TOKEN\|NPM_TOKEN\|npm-token\|/);
 });
 
-test("legacy release workflows fail closed instead of bypassing publish-gate source locks", () => {
-  const retiredReleaseWorkflows = [
-    ".release-new-version.yml",
+test("fully retired workflow tombstones are absent", () => {
+  const retiredWorkflowNames = [
+    ".release-docker.yml",
     ".release-elastic-beanstalk.yml",
+    ".release-new-version.yml",
     ".sam-release.yml",
     ".wheel-release.yml",
+    "schedule-purge-artifacts.yml",
   ];
-  for (const workflowName of retiredReleaseWorkflows) {
-    const workflow = readRepoText(`.github/workflows/${workflowName}`);
-    assert.match(workflow, /release path is retired/);
-    assert.match(workflow, /release-candidate-promote\.yml@v3/);
-    assert.match(workflow, /publish-gate source-lock enforcement/);
-    assert.doesNotMatch(workflow, /npm publish --access=public/);
-    assert.doesNotMatch(workflow, /actions\/publish-prebuilt@v2/);
-    assert.doesNotMatch(workflow, /actions\/bump-version@v2/);
-    assert.doesNotMatch(workflow, /beanstalk-deploy@/);
-    assert.doesNotMatch(workflow, /sam deploy/);
+  assert.equal(retiredWorkflowNames.length, 6);
+  assert.ok(retiredWorkflowNames.every((name) => name.endsWith(".yml")));
+  for (const workflowName of retiredWorkflowNames) {
+    assert.equal(
+      fs.existsSync(path.join(root, ".github/workflows", workflowName)),
+      false,
+      `${workflowName} must remain deleted`,
+    );
   }
 });
 

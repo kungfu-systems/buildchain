@@ -153,9 +153,98 @@ jobs:
           echo "::error::Candidate recovery requires an exact channel, source, candidate, tree, and runtime identity."
           exit 1
 
+  classify-workflow-run:
+    name: Classify exact Alpha head
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && startsWith(github.event.workflow_run.head_branch, 'alpha/') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      action: ${{ steps.classify.outputs.action }}
+      finalized-version: ${{ steps.classify.outputs.finalized-version }}
+    steps:
+      - name: Checkout the exact verified Alpha head
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Classify generated product-state finalization
+        id: classify
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_TARGET_REF: ${{ github.event.workflow_run.head_branch }}
+          BUILDCHAIN_TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+        with:
+          script: |
+            const { pathToFileURL } = require("node:url");
+            const runtime = await import(pathToFileURL(
+              `${process.env.GITHUB_WORKSPACE}/packages/core/v4-universal-workflow-bootstrap.js`,
+            ).href);
+            const requestedSha = process.env.BUILDCHAIN_TARGET_SHA;
+            const head = await github.rest.git.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: requestedSha,
+            });
+            const refs = await github.paginate(github.rest.git.listMatchingRefs, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "heads/buildchain/v4-product-state/",
+              per_page: 100,
+            });
+            const recoveryStates = [];
+            for (const stateRef of refs) {
+              const match = stateRef.ref.match(
+                /^refs\/heads\/buildchain\/v4-product-state\/([0-9a-f]{40})-/,
+              );
+              if (!match) continue;
+              const stateCommit = (await github.rest.git.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: stateRef.object.sha,
+              })).data;
+              if (stateCommit.tree?.sha !== head.data.tree?.sha) continue;
+              const comparison = await github.rest.repos.compareCommitsWithBasehead({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                basehead: `${stateRef.object.sha}...${requestedSha}`,
+              });
+              const version = runtime.v4ProductStateVersion(stateRef, match[1]);
+              let exactTagRef;
+              try {
+                exactTagRef = (await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/v${version}`,
+                })).data;
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+              recoveryStates.push({
+                stateRef,
+                stateCommit,
+                exactTagRef,
+                headComparisonStatus: comparison.data.status,
+              });
+            }
+            const finalizedVersion = runtime.selectV4FinalizedProductPublicationVersion({
+              requestedSha,
+              requestedTree: head.data.tree.sha,
+              targetRef: process.env.BUILDCHAIN_TARGET_REF,
+              recoveryStates,
+            });
+            core.setOutput("action", finalizedVersion ? "noop" : "promote");
+            core.setOutput("finalized-version", finalizedVersion);
+            if (finalizedVersion) {
+              core.info(`Alpha head is generated finalization for v${finalizedVersion}; no new promotion is required.`);
+            }
+
   promote:
+    needs: classify-workflow-run
     if: >-
       ${{
+        always() &&
         inputs['universal-request-json'] == '' &&
         (
           (
@@ -169,9 +258,8 @@ jobs:
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
           startsWith(github.event.workflow_run.head_branch, 'alpha/') &&
-          !startsWith(github.event.workflow_run.display_title, 'Prepare v') &&
-          !startsWith(github.event.workflow_run.display_title, 'chore(release): prepare v') &&
-          !startsWith(github.event.workflow_run.display_title, 'chore(release): release v')
+          needs.classify-workflow-run.result == 'success' &&
+          needs.classify-workflow-run.outputs.action == 'promote'
           )
         )
       }}

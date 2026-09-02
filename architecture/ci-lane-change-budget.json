@@ -253,6 +253,23 @@
       }
     },
     {
+      "laneId": ".github/workflows/buildchain-ref-promotion.yml#classify-workflow-run",
+      "authorityClass": "evidence",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 2,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Alpha finalization classification latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The read-only classifier binds the verified head to exact product state before suppressing a duplicate publication transaction."
+      }
+    },
+    {
       "laneId": ".github/workflows/buildchain-ref-promotion.yml#promote",
       "authorityClass": "release",
       "triggerClass": "mixed",
