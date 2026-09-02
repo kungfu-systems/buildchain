@@ -13,6 +13,15 @@ function providerError(message, releaseTailClass, releaseTailCode) {
   });
 }
 
+function transientMutationError(error, code) {
+  const status = Number(error?.status || error?.response?.status || 0);
+  return providerError(
+    `${code} failed: ${error?.message || "provider mutation failed"}`,
+    "transient",
+    status ? `${code}-${status}` : code,
+  );
+}
+
 function notFound(error) {
   return error?.status === 404 || error?.response?.status === 404;
 }
@@ -457,7 +466,12 @@ async function convergeBranch(context, repository, ref, sha) {
   } catch (error) {
     if (![403, 409, 422].includes(error?.status || error?.response?.status))
       throw error;
-    await openProtectedRefPullRequest(context, repository, branch, sha, error);
+    try {
+      await openProtectedRefPullRequest(context, repository, branch, sha, error);
+    } catch (cause) {
+      if (cause?.releaseTailClass) throw cause;
+      throw transientMutationError(cause, "github-protected-ref-finalization");
+    }
     return false;
   }
 }

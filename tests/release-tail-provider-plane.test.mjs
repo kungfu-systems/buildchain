@@ -168,6 +168,27 @@ test("effect success with a lost response completes from post-effect readback", 
   assert.equal(result.operations[0].receipt.action, "applied-and-observed");
 });
 
+test("exhausted reconciliation preserves the transient apply failure code", async () => {
+  const input = declaration();
+  const memory = memoryAdapters(input, {
+    "artifact.publish": {
+      apply() {
+        throw new ReleaseTailProviderError("provider mutation rejected", {
+          code: "protected-ref-pr-create-failed",
+          classification: "transient",
+        });
+      },
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(input),
+    { adapters: memory.adapters },
+  );
+  assert.equal(result.state, "repair-required");
+  assert.equal(result.failure.code, "protected-ref-pr-create-failed");
+  assert.equal(memory.calls.get("artifact.publish:apply"), 1);
+});
+
 test("an attempted effect is reconciled by readback without repeating the mutation", async () => {
   const input = declaration();
   let readbacksAfterEffect = 0;
