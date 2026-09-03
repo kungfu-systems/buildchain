@@ -1,6 +1,11 @@
 on:
   workflow_call:
     inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
       aws-role-arn:
         default: "arn:aws-cn:iam::186931371703:role/github-actions-role-dev"
         type: string
@@ -58,7 +63,15 @@ permissions:
   contents: read
 
 jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
   sync-release-page:
+    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Reject retired Airtable release page sync

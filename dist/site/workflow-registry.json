@@ -3470,6 +3470,7 @@
         "mutation-token",
         "product-publication-intent-path",
         "publication-qualification-path",
+        "publish-artifact-kind",
         "publish-auth",
         "publish-command",
         "publish-dist-tag",
@@ -3494,7 +3495,7 @@
         "target-sha",
         "token"
       ],
-      "inputCount": 30,
+      "inputCount": 31,
       "capabilityGroup": "api-cli-reference",
       "status": "active",
       "owner": "buildchain-actions",

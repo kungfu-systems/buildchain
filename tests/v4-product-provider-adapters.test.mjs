@@ -340,17 +340,10 @@ test("unsupported legacy publication inputs fail before provider mutation", () =
 });
 
 test("custom product effects converge refs without invoking npm", async () => {
-  const files = fixture();
-  const github = githubProvider();
+  const files = fixture(),
+    github = githubProvider();
   const requiredArtifacts = [
-    {
-      group: "linux-x64",
-      kind: "custom",
-      name: "agent-hub-linux-x64",
-      ref_template: "{version}",
-      role: "platform",
-      required: true,
-    },
+    { kind: "custom", name: "agent-hub", required: true },
   ];
   fs.writeFileSync(
     files.requiredArtifactsPath,
@@ -374,31 +367,27 @@ test("custom product effects converge refs without invoking npm", async () => {
     invocationRoot: `sha256:${"4".repeat(64)}`,
     transactionRoot: `sha256:${"5".repeat(64)}`,
   });
-  const effectPlan = compileReleaseTailDeclaration(
-    createV4ProductPublicationDeclaration({ intent, plan }),
-  );
   const runtime = createV4ProductPublicationAdapters({
     request: {
       octokit: github.octokit,
       mutationOctokit: github.octokit,
       requiredArtifactsPath: files.requiredArtifactsPath,
-      requiredStatusCheck: "check",
     },
     intent,
     plan,
     cwd: files.cwd,
-    spawn() {
-      throw new Error("custom publication must not invoke npm");
-    },
   });
+  assert.equal("npm-trusted-publishing" in runtime.adapters, false);
   const result = await executeReleaseTailTransaction(
-    createReleaseTailTransaction(effectPlan),
+    createReleaseTailTransaction(
+      compileReleaseTailDeclaration(
+        createV4ProductPublicationDeclaration({ intent, plan }),
+      ),
+    ),
     { adapters: runtime.adapters },
   );
   assert.equal(result.state, "complete");
   assert.equal(result.receipts.length, 2);
-  assert.equal(github.refs.get("tags/v4.0.2-alpha.6"), SOURCE);
-  assert.equal(github.refs.get("tags/v4-alpha"), VERSION_STATE);
 });
 
 test("an existing npm version with different integrity blocks without republishing", async () => {

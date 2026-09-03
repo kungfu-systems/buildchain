@@ -41,6 +41,29 @@ function channelName(value) {
   fail(`unsupported channel '${value}'`);
 }
 
+function publicationArtifactKind(value) {
+  if (!value || value === "npm") return "npm";
+  if (value === "custom") return "custom";
+  fail(`unsupported artifactKind '${value}'`);
+}
+
+function publicationProductCoordinates({
+  artifactKind,
+  packageName,
+  distTag,
+  sealedBundleRoot,
+}) {
+  if (artifactKind === "custom") return { artifactKind };
+  const normalizedDistTag = requiredString(distTag, "distTag");
+  if (!/^[a-z0-9][a-z0-9._-]*$/u.test(normalizedDistTag))
+    fail("distTag must be an npm dist-tag");
+  return {
+    packageName: requiredString(packageName, "packageName"),
+    distTag: normalizedDistTag,
+    sealedBundleRoot: requiredRoot(sealedBundleRoot, "sealedBundleRoot"),
+  };
+}
+
 function assertLane({ channel, targetRef, version }) {
   const expression =
     channel === "alpha"
@@ -103,20 +126,15 @@ export function selectV4ProductPublicationIntent({
   );
   if (Number.isNaN(Date.parse(normalizedTimestamp)))
     fail("sourceTimestamp must be an ISO timestamp");
-  const normalizedArtifactKind = String(artifactKind || "npm").trim();
-  if (!new Set(["npm", "custom"]).has(normalizedArtifactKind))
-    fail(`unsupported artifactKind '${normalizedArtifactKind}'`);
-  const normalizedPackageName =
-    normalizedArtifactKind === "npm"
-      ? requiredString(packageName, "packageName")
-      : "";
-  const normalizedDistTag =
-    normalizedArtifactKind === "npm" ? requiredString(distTag, "distTag") : "";
-  if (
-    normalizedArtifactKind === "npm" &&
-    !/^[a-z0-9][a-z0-9._-]*$/u.test(normalizedDistTag)
-  )
-    fail("distTag must be an npm dist-tag");
+  const normalizedArtifactKind = publicationArtifactKind(
+    String(artifactKind || "").trim(),
+  );
+  const productCoordinates = publicationProductCoordinates({
+    artifactKind: normalizedArtifactKind,
+    packageName,
+    distTag,
+    sealedBundleRoot,
+  });
   if (!Array.isArray(observedVersions))
     fail("observedVersions must be an array");
   const candidate = parseVersion(candidateVersion, "candidateVersion");
@@ -160,13 +178,7 @@ export function selectV4ProductPublicationIntent({
     sourceSha,
     sourceTimestamp: new Date(normalizedTimestamp).toISOString(),
     repository,
-    ...(normalizedArtifactKind === "npm"
-      ? {
-          packageName: normalizedPackageName,
-          distTag: normalizedDistTag,
-          sealedBundleRoot: requiredRoot(sealedBundleRoot, "sealedBundleRoot"),
-        }
-      : { artifactKind: normalizedArtifactKind }),
+    ...productCoordinates,
     requiredArtifactsRoot: requiredRoot(
       requiredArtifactsRoot,
       "requiredArtifactsRoot",
