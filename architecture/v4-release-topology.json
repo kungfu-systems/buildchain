@@ -141,6 +141,7 @@
         "packages/core/kfd-gate.js",
         "packages/core/kfd-product-gates.js",
         "packages/core/kungfu-temporal-fact.js",
+        "packages/core/next-development-transition.js",
         "packages/core/package-manager.js",
         "packages/core/public-surface-audit.js",
         "packages/core/public-surface-cli.js",
@@ -171,7 +172,7 @@
         "packages/core/workflow-yaml-contract.js",
         "scripts/ensure-github-release.mjs"
       ],
-      "root": "sha256:31d13d74b8b3dadbfe4b5061c99f6f6711be6c3b06449114f2708427374f9c85"
+      "root": "sha256:99778d732c9502a933880edbe63648e23d6610d19e1ea255579f20b599afc7ac"
     },
     "legacyEngineModules": [
       "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",

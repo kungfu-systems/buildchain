@@ -23,6 +23,7 @@ import {
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
 import {
   activateExactPnpm,
+  advanceAlphaNextDevelopment,
   applyProductPublication,
   planProductPublication,
   resolveCandidateBuildSummaryPath,
@@ -568,6 +569,26 @@ async function main() {
     publicationPlan,
     documents,
   });
+  if (canonicalChannel(channel) === "alpha") {
+    const nextDevelopment = await advanceAlphaNextDevelopment({
+      repository,
+      completedAlpha: {
+        outcome: "succeeded",
+        version: documents.version,
+        exactTag: documents.tag,
+        releaseSha: settlement.productProviderResult.publication.releaseSha,
+        treeSha: sourceBinding.protectedSource.tree,
+        publicationRoot: settlement.releaseReceipt.receiptRoot,
+        completedAt: providerRequest.publicationIntent.sourceTimestamp,
+      },
+      octokit,
+      mutationOctokit,
+    });
+    write(
+      ".buildchain/release-tail/next-development-controller.json",
+      nextDevelopment,
+    );
+  }
   setOutputs(documents, settlement);
 }
 

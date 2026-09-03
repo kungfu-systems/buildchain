@@ -56,15 +56,6 @@ function assertLane({ channel, targetRef, version }) {
     fail("target ref does not match the publication version line");
 }
 
-function observedAlphaNumber(version, expected) {
-  const parsed = VERSION.test(version) ? parseVersion(version, "observed") : {};
-  return parsed.major === expected.major &&
-    parsed.minor === expected.minor &&
-    parsed.patch === expected.patch
-    ? parsed.alpha
-    : null;
-}
-
 function requiredString(value, label) {
   const normalized = String(value || "").trim();
   if (!normalized) fail(`${label} must be a non-empty string`);
@@ -123,17 +114,14 @@ export function selectV4ProductPublicationIntent({
       (normalizedChannel === "stable" && recovered.alpha !== null)
     )
       fail("recoveredVersion is incompatible with the candidate release line");
+    if (normalizedChannel === "alpha" && recovered.value !== candidate.value)
+      fail("recovered alpha version must equal the sealed candidate version");
     version = recovered.value;
     mode = "resume";
   } else if (normalizedChannel === "alpha") {
     if (candidate.alpha === null)
       fail("fresh alpha publication requires an alpha candidate version");
-    const highest = observed.reduce(
-      (current, entry) =>
-        Math.max(current, observedAlphaNumber(entry, candidate) ?? -1),
-      candidate.alpha,
-    );
-    version = `${candidate.major}.${candidate.minor}.${candidate.patch}-alpha.${highest + 1}`;
+    version = candidate.value;
   } else {
     version = `${candidate.major}.${candidate.minor}.${candidate.patch}`;
   }
@@ -167,13 +155,9 @@ function alphaReferences(intent, version) {
   const line = `v${version.major}.${version.minor}`;
   return [
     { ref: `refs/tags/${intent.exactTag}`, target: "source" },
-    { ref: `refs/heads/${intent.targetRef}`, target: "version-state" },
-    {
-      ref: `refs/heads/dev/v${version.major}/${line}`,
-      target: "version-state",
-    },
-    { ref: `refs/tags/${line}-alpha`, target: "version-state" },
-    { ref: `refs/tags/v${version.major}-alpha`, target: "version-state" },
+    { ref: `refs/heads/${intent.targetRef}`, target: "source" },
+    { ref: `refs/tags/${line}-alpha`, target: "source" },
+    { ref: `refs/tags/v${version.major}-alpha`, target: "source" },
   ];
 }
 
