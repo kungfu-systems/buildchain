@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1354,
+  "generation": 1355,
   "fencingCounter": 191,
   "policy": {
     "agingSeconds": 900,
@@ -9826,11 +9826,20 @@
       "sourceWorkflowRunId": 33729502018,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-03T08:02:11.895Z",
-      "updatedAt": "2026-09-03T08:02:11.895Z",
+      "updatedAt": "2026-09-03T08:07:44.444Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "superseded-failed-wake-instance-before-native-start",
+        "evidenceRoot": "sha256:58c2d6dde5170055e07fa0e6d2316c50b1f43df712446b25fac01ba0378c71ca",
+        "authority": "queued-candidate-cancellation",
+        "expectedSourceHead": "b494dd3bee464c1de07c82aeeb6d5ad899cef6c7",
+        "observedSourceHead": "b494dd3bee464c1de07c82aeeb6d5ad899cef6c7",
+        "eventAction": "closed",
+        "closedAt": "2026-09-03T08:07:44.444Z"
+      },
       "affectedPaths": [
         ".github/workflows/.release-candidate-promote.yml",
         "actions/v4-release-candidate-promote/action.yml",
@@ -9858,6 +9867,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-03T08:05:14.970Z",
-  "stateRoot": "sha256:333c0585383a229435b31c8b17d479475b9604b2895fca39e180e9e65e17f90c"
+  "updatedAt": "2026-09-03T08:07:44.444Z",
+  "stateRoot": "sha256:91e5eb793446ede16ffb3cb48f90c33dc98c33ff6385f1284154c4663a7aee75"
 }
