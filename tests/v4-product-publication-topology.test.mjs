@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
@@ -8,8 +9,10 @@ import {
   createV4ProductPublicationPlan,
   selectV4ProductPublicationIntent,
 } from "../packages/core/v4-product-publication.js";
+import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
 import { compileReleaseTailDeclaration } from "../packages/core/release-tail-provider-plane.js";
 import { resolveV4ReleaseCandidateAdapter } from "../scripts/v4-release-candidate-adapter.mjs";
+import { createV4ProductPublicationAdapters } from "../actions/v4-release-candidate-promote/product-provider-adapters.js";
 import { selectProductPublicationPlan } from "../actions/v4-release-candidate-promote/product-provider.js";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -99,6 +102,9 @@ test("one rooted product plan declares version, package, and ref effects before 
 });
 
 test("custom product publication preserves the sealed candidate version and omits npm effects", () => {
+  const requiredArtifacts = [
+    { kind: "custom", name: "agent-hub", required: true },
+  ];
   const intent = selectV4ProductPublicationIntent({
     channel: "alpha",
     targetRef: "alpha/v0/v0.2",
@@ -106,7 +112,10 @@ test("custom product publication preserves the sealed candidate version and omit
     sourceTimestamp: "2026-09-03T00:00:00.000Z",
     repository: "kungfu-systems/agent-hub-demo",
     artifactKind: "custom",
-    requiredArtifactsRoot: `sha256:${"2".repeat(64)}`,
+    requiredArtifactsRoot: v4ContentRoot(
+      "v4-product-required-artifacts",
+      requiredArtifacts,
+    ),
     candidateVersion: "0.2.0-alpha.9",
     observedVersions: ["0.2.0-alpha.99"],
   });
@@ -132,6 +141,25 @@ test("custom product publication preserves the sealed candidate version and omit
     ),
     plan.operationOrder,
   );
+  const temporaryRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "v4-custom-product-"),
+  );
+  const requiredArtifactsPath = path.join(
+    temporaryRoot,
+    "required-artifacts.json",
+  );
+  fs.writeFileSync(
+    path.join(temporaryRoot, "package.json"),
+    JSON.stringify({ name: "agent-hub-demo", version: intent.version }),
+  );
+  fs.writeFileSync(requiredArtifactsPath, JSON.stringify(requiredArtifacts));
+  const runtime = createV4ProductPublicationAdapters({
+    request: { octokit: {}, mutationOctokit: {}, requiredArtifactsPath },
+    intent,
+    plan,
+    cwd: temporaryRoot,
+  });
+  assert.equal("npm-trusted-publishing" in runtime.adapters, false);
 });
 
 test("fresh and recovery candidate discovery are data-only adapters into the same APPLY engine", () => {
