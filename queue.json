@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1380,
+  "generation": 1381,
   "fencingCounter": 194,
   "policy": {
     "agingSeconds": 900,
@@ -14,7 +14,7 @@
   },
   "activeWarrant": {
     "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "phase": "provisional",
+    "phase": "qualified",
     "repository": "kungfu-systems/buildchain",
     "protectedBase": "dev/v4/v4.0",
     "candidateId": "sha256:99f47390ec9e3e72eb2e50ad1ba6dc9bb426c763dbbb58e9c639ea29b92b676a",
@@ -52,8 +52,13 @@
     "issuedAt": "2026-09-03T10:52:22.014Z",
     "expiresAt": "2026-09-03T11:56:40.584Z",
     "fencingToken": "sha256:f3155ada70821f5129d5ce372e617695633a95c486f3db2b352694edf8029442",
-    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission.",
-    "heartbeatAt": "2026-09-03T10:56:40.584Z"
+    "nextAction": "Enter the GitHub merge queue at the exact fenced PR head; merge_group remains final authority.",
+    "heartbeatAt": "2026-09-03T10:56:40.584Z",
+    "nativeProofRoot": "sha256:eada437c3d0200b471493bee81e8413c2412952736d2d757e4769b0325072b69",
+    "nativeExecutionReceiptRoot": "sha256:a8a83bfe138eaae46e23665ed5747fc12d55c1393b5ff9ab72719f267c8b1a7e",
+    "nativeProofReuseRoot": "sha256:e5c6eefb146cf4aac28ebddc9fa3e9fce28878a452b9ce6ed2ca90f8e89d1e88",
+    "qualificationReceiptRoot": "sha256:ca34a56a2b7f862741ac159de2ade6a6d5e0a65e8706b7404dd4a498d45b4cf6",
+    "qualifiedAt": "2026-09-03T10:57:13.591Z"
   },
   "candidates": [
     {
@@ -10034,10 +10039,10 @@
       "sourceWorkflowRunId": 33743908133,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-03T10:40:19.535Z",
-      "updatedAt": "2026-09-03T10:56:40.584Z",
+      "updatedAt": "2026-09-03T10:57:13.591Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "proving",
+      "status": "qualified",
       "terminal": null,
       "affectedPaths": [
         "actions/v4-release-candidate-promote/dist/index.js",
@@ -10049,6 +10054,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-03T10:56:40.584Z",
-  "stateRoot": "sha256:837453c436ccbd25c4b218c2020f7703be795f63468b48499372697bb50d273c"
+  "updatedAt": "2026-09-03T10:57:13.591Z",
+  "stateRoot": "sha256:97f98c04dcda1cab98eaf2c508b7c91759b24aaee3080cd1abcdd6d091d24af5"
 }
