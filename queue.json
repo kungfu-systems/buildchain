@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1368,
-  "fencingCounter": 192,
+  "generation": 1369,
+  "fencingCounter": 193,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,65 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:09c3f93329985bccbcf8c4858a119649bf9969227cc5d00c6c55395ef7c664df",
+    "pullRequestNumber": 3439,
+    "sourceHead": "b494dd3bee464c1de07c82aeeb6d5ad899cef6c7",
+    "assignmentRoot": "sha256:3eea33fe921b7fbc4263c84af36d215102f87435c775463be9aaa19d95a0ca1e",
+    "initiativeRoot": "sha256:f4c5ba0457c25f6a54234a6fc189b8498dcf76afae6e670d9069300a30342990",
+    "sourceIdentityRoot": "sha256:9d0c4f712dffcff2bc24db9d5a11e44ee5db72069dd979a7acffcaf4788d5361",
+    "sourcePatchRoot": "sha256:72e18f932cb9b31646b766d8fd917b802a5ce7be4c142934904c74b6ccd2c26f",
+    "sourceProofRoot": "sha256:cdb0a5ea581584545afefa57f43c6c7ec623aad6029358bfda015eaf6f1fcde6",
+    "planRoot": "sha256:2427bec902ded0f413c754262e78c4ef7de917a67df97f5c4a717640989b0c19",
+    "closureRoot": "sha256:cd29234b200690e7992f5e1c742ed88dceb6f37c66e28b67f7b4480f7392945a",
+    "dependencyRoot": "sha256:7d17d0443ec2ee9b44bda03d0b25b1773cf6b0fa6847840772a3244a3d526b3f",
+    "toolchainRoot": "sha256:54d4bcefcb0ffbcc24697ccc897151ede149a2ad40a6c3b0f75fe46c977872b2",
+    "environmentRoot": "sha256:bb9739cfb63d0ebad5255d8bf8fa4f7f21abe68bce7f1af9453a59f0c1e00f14",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "mkdir -p \"$HOME/.local/bin\" && corepack enable --install-directory \"$HOME/.local/bin\" && export PATH=\"$HOME/.local/bin:$PATH\" && pnpm install --frozen-lockfile && pnpm run check",
+      "commandRoot": "sha256:c80aa61494655f6ff934d35012cdba3752978f8b702942ac3d4228c3b5f501a9"
+    },
+    "affectedPaths": [
+      ".github/workflows/.release-candidate-promote.yml",
+      "actions/v4-release-candidate-promote/action.yml",
+      "actions/v4-release-candidate-promote/dist/index.js",
+      "actions/v4-release-candidate-promote/index.js",
+      "actions/v4-release-candidate-promote/product-provider-adapters.js",
+      "actions/v4-release-candidate-promote/product-provider.js",
+      "architecture/agent-change-map.md",
+      "architecture/maintainability-debt.json",
+      "architecture/maintainability-policy.json",
+      "architecture/v4-universal-workflow-bootstrap.json",
+      "architecture/v4-universal-workflow-train-admission.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/kfd-claims.json",
+      "dist/site/public-surface-audit.json",
+      "dist/site/workflow-registry.json",
+      "packages/core/v4-product-publication.js",
+      "scripts/v4-product-publication-intent.mjs",
+      "tests/internal-architecture.test.mjs",
+      "tests/maintainability.test.mjs",
+      "tests/v4-product-provider-adapters.test.mjs",
+      "tests/v4-product-publication-topology.test.mjs",
+      "tests/v4-release-candidate-promote.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 33729502018,
+    "deliveryClass": "native-proof-required",
+    "priority": "ordinary",
+    "generation": 193,
+    "expectedOldStateRoot": "sha256:39c78431ea5e94f039e168bae55b3235ec7484e163842159c87da09621b83e8f",
+    "issuedAt": "2026-09-03T10:40:22.669Z",
+    "expiresAt": "2026-09-03T11:40:22.669Z",
+    "fencingToken": "sha256:1e3ad653c060396cb46ce204cfb7436112f6ce4d332268eb8d59b7dcf91c26e8",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -9897,7 +9955,7 @@
       "updatedAt": "2026-09-03T10:40:22.669Z",
       "attempts": 2,
       "recoveries": 1,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".github/workflows/.release-candidate-promote.yml",
@@ -9967,5 +10025,5 @@
     }
   ],
   "updatedAt": "2026-09-03T10:40:22.669Z",
-  "stateRoot": "sha256:39c78431ea5e94f039e168bae55b3235ec7484e163842159c87da09621b83e8f"
+  "stateRoot": "sha256:d6ded828048c098fc4f456e07e41d70918a9b6c4a719cba4e474b4aef37053cb"
 }
