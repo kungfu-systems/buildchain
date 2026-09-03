@@ -151,6 +151,8 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 ### Current top twenty maintenance hotspots
 
+- `.github/workflows/.build.yml`
+- `.github/workflows/.publication-authority.yml`
 - `.github/workflows/bootstrap.yml`
 - `scripts/check-v4-universal-workflow-bootstrap.mjs`
 - `scripts/v4-universal-workflow-engine.mjs`

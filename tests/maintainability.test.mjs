@@ -159,6 +159,8 @@ test("exact-head maintainability baseline is reproducible", () => {
   assert.equal(report.hotspots.createReleaseCheckReport.lines, 65);
   assert.equal(report.hotspots.createReleaseCheckReport.complexity, 5);
   for (const route of [
+    ".github/workflows/.build.yml",
+    ".github/workflows/.publication-authority.yml",
     "scripts/buildchain-cli-help.mjs",
     "scripts/check-maintainability.mjs",
     "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
