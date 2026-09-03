@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1371,
-  "fencingCounter": 193,
+  "generation": 1372,
+  "fencingCounter": 194,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,48 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "phase": "provisional",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:99f47390ec9e3e72eb2e50ad1ba6dc9bb426c763dbbb58e9c639ea29b92b676a",
+    "pullRequestNumber": 3444,
+    "sourceHead": "5fe3567c44878e12e93bd6432285ebeff4f7cf7f",
+    "assignmentRoot": "sha256:44d1c2f0b54e348f9e68e841d7634656980effa8aa7714d78f753166ae1d0084",
+    "initiativeRoot": "sha256:f4c5ba0457c25f6a54234a6fc189b8498dcf76afae6e670d9069300a30342990",
+    "sourceIdentityRoot": "sha256:0bd58e0de6c5132bb8961eb8bbbed886d4fe3f0e5d21efe67d0c5f92283f020d",
+    "sourcePatchRoot": "sha256:edcc3cad5fcdc5a1a73e9367b30980ca0f6fec547feb327f8f1ca0110b79894f",
+    "sourceProofRoot": "sha256:da6168f42385e1eb11547eddc23eda910066f5d74e724ee853f78d35e1a9fb27",
+    "planRoot": "sha256:be64e2494ee156a37f015e46201b075ceb54fc3e2af64b999ea28b72bd328fdc",
+    "closureRoot": "sha256:c1e5b36971e0a73bdb673309a6259f94be3dae1b6d96249329534929bae6e278",
+    "dependencyRoot": "sha256:1dd6f3b3514d6cfe6784864370293d0074364e7b26768d2c317374799e8791ca",
+    "toolchainRoot": "sha256:f207323ec512d6d4c8da3142f28e3a1143d5c5f1e3fd66fc536f8c01fb5aa7c5",
+    "environmentRoot": "sha256:bb9739cfb63d0ebad5255d8bf8fa4f7f21abe68bce7f1af9453a59f0c1e00f14",
+    "nativeCommandContract": {
+      "schema": "kungfu.buildchain.native-command-contract/v1",
+      "runner": "bash-lc",
+      "command": "mkdir -p \"$HOME/.local/bin\" && corepack enable --install-directory \"$HOME/.local/bin\" && export PATH=\"$HOME/.local/bin:$PATH\" && pnpm install --frozen-lockfile && pnpm run check",
+      "commandRoot": "sha256:c80aa61494655f6ff934d35012cdba3752978f8b702942ac3d4228c3b5f501a9"
+    },
+    "affectedPaths": [
+      "actions/v4-release-candidate-promote/dist/index.js",
+      "actions/v4-release-candidate-promote/product-provider-adapters.js",
+      "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
+      "architecture/maintainability-policy.json",
+      "tests/v4-product-provider-zero-delta.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 33743908133,
+    "deliveryClass": "native-proof-required",
+    "priority": "ordinary",
+    "generation": 194,
+    "expectedOldStateRoot": "sha256:ce291e2c23e376a438d14afb48274beaf263186b920e3f294ac90364efe49716",
+    "issuedAt": "2026-09-03T10:52:22.014Z",
+    "expiresAt": "2026-09-03T11:52:22.014Z",
+    "fencingToken": "sha256:f3155ada70821f5129d5ce372e617695633a95c486f3db2b352694edf8029442",
+    "nextAction": "Run or reuse exact native proof under this fence, then atomically qualify before merge admission."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -9992,10 +10033,10 @@
       "sourceWorkflowRunId": 33743908133,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-03T10:40:19.535Z",
-      "updatedAt": "2026-09-03T10:40:19.535Z",
+      "updatedAt": "2026-09-03T10:52:22.014Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         "actions/v4-release-candidate-promote/dist/index.js",
@@ -10007,6 +10048,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-03T10:52:18.078Z",
-  "stateRoot": "sha256:ce291e2c23e376a438d14afb48274beaf263186b920e3f294ac90364efe49716"
+  "updatedAt": "2026-09-03T10:52:22.014Z",
+  "stateRoot": "sha256:ab2949b42dac4420335f97c35b5659c3890e78d803eed0ae99a210fed2fa0a69"
 }
