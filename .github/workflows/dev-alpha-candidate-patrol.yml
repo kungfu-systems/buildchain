@@ -3,11 +3,6 @@ name: Buildchain Dev to Alpha Candidate Patrol
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
         description: Buildchain runtime repository
         default: kungfu-systems/buildchain
@@ -131,15 +126,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   observe:
-    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -247,18 +234,13 @@ jobs:
   settle:
     needs: observe
     if: >-
-      ${{
-        inputs.universal-request-json == '' &&
-        (
-          (inputs.settlement-authorized || inputs.create-pull-request) &&
-          !inputs.dry-run &&
-          (needs.observe.outputs.controller-state == 'eligible-for-settlement' ||
-          needs.observe.outputs.controller-state == 'active' ||
-          needs.observe.outputs.controller-state == 'held' ||
-          needs.observe.outputs.controller-state == 'superseded' ||
-          needs.observe.outputs.controller-state == 'retained-next')
-        )
-      }}
+      (inputs.settlement-authorized || inputs.create-pull-request) &&
+      !inputs.dry-run &&
+      (needs.observe.outputs.controller-state == 'eligible-for-settlement' ||
+       needs.observe.outputs.controller-state == 'active' ||
+       needs.observe.outputs.controller-state == 'held' ||
+       needs.observe.outputs.controller-state == 'superseded' ||
+       needs.observe.outputs.controller-state == 'retained-next')
     runs-on: ubuntu-24.04
     permissions:
       actions: read

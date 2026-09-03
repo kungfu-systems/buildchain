@@ -3,11 +3,6 @@ name: Buildchain Paper Release
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
@@ -232,15 +227,7 @@ permissions:
   contents: read
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   publication-authority:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Seal paper publication capability
     permissions:
       actions: read
@@ -265,7 +252,7 @@ jobs:
   paper-release:
     name: Build and publish paper package
     needs: publication-authority
-    if: ${{ inputs.universal-request-json == '' && (needs.publication-authority.result == 'success') }}
+    if: ${{ needs.publication-authority.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       checks: write

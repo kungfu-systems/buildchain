@@ -3,11 +3,6 @@ name: Patrol Observed Evidence
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-ref:
         type: string
         default: v3
@@ -59,15 +54,7 @@ permissions:
   id-token: write
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   publish:
-    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     environment: ${{ inputs.production-environment }}
     concurrency:

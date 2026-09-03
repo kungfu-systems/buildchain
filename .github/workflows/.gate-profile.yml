@@ -3,11 +3,6 @@ name: Buildchain Shifu Gate Profile
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
         default: "kungfu-systems/buildchain"
         type: string
@@ -198,15 +193,7 @@ permissions:
   contents: read
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   plan:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Gate profile / plan
     runs-on: ubuntu-24.04
     outputs:
@@ -423,7 +410,7 @@ jobs:
   run-gates:
     name: Gate profile / ${{ matrix.gate.name }}
     needs: plan
-    if: ${{ inputs.universal-request-json == '' && (needs.plan.outputs.trusted == 'true') }}
+    if: ${{ needs.plan.outputs.trusted == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -604,7 +591,7 @@ jobs:
     needs:
       - plan
       - run-gates
-    if: ${{ inputs.universal-request-json == '' && (always() && needs.plan.outputs.trusted == 'true') }}
+    if: ${{ always() && needs.plan.outputs.trusted == 'true' }}
     runs-on: ubuntu-24.04
     outputs:
       gate-aggregate-artifact: ${{ steps.names.outputs.gate-aggregate-artifact }}

@@ -1,11 +1,6 @@
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       remote-host:
         default: "git-codecommit.cn-northwest-1.amazonaws.com.cn"
         type: string
@@ -30,15 +25,7 @@ on:
         required: false
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   sync:
-    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
