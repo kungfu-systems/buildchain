@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64432,
-    "current": 56371
+    "measuredExcess": 64434,
+    "current": 56373
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -2948,7 +2948,7 @@
           "lines": 2736
         },
         "current": {
-          "lines": 1215
+          "lines": 1217
         },
         "target": {
           "lines": 600
@@ -3094,6 +3094,8 @@
     }
   },
   "hotspots": [
+    ".github/workflows/.build.yml",
+    ".github/workflows/.publication-authority.yml",
     ".github/workflows/bootstrap.yml",
     "scripts/check-v4-universal-workflow-bootstrap.mjs",
     "scripts/v4-universal-workflow-engine.mjs",
@@ -3155,7 +3157,7 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 1215
+      "current": 1217
     },
     {
       "domain": "sources",

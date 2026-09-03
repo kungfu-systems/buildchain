@@ -1000,6 +1000,7 @@ jobs:
           BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: ${{ steps.recovery.outputs.version || '' }}
           BUILDCHAIN_SEALED_BUNDLE_MANIFEST: ${{ steps.candidate.outputs.publish-sealed-bundle-manifest }}
           BUILDCHAIN_REQUIRED_ARTIFACTS_PATH: ${{ steps.candidate.outputs.publish-required-artifacts-path }}
+          BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
           BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
           BUILDCHAIN_PUBLISH_DIST_TAG: ${{ inputs.publish-dist-tag }}
 
@@ -1111,6 +1112,7 @@ jobs:
           publish-dist-tag: ${{ inputs.publish-dist-tag }}
           publish-package-set-order: ${{ inputs.publish-package-set-order }}
           publish-package-main: ${{ inputs.publish-package-main }}
+          publish-artifact-kind: ${{ inputs.publish-artifact-kind }}
           publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
           publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
           publish-transaction-override: ${{ inputs.publish-transaction-override }}
