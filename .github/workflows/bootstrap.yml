@@ -61,6 +61,7 @@ jobs:
           set -euo pipefail
           node .buildchain/bootstrap/scripts/v4-universal-workflow-engine.mjs inspect > .buildchain/request-inspection.json
           {
+            echo "mode=$(jq -r '.mode' .buildchain/request-inspection.json)"
             echo "repository=$(jq -r '.candidate.repository' .buildchain/request-inspection.json)"
             echo "discovery-ref=$(jq -r '.candidate.discoveryRef' .buildchain/request-inspection.json)"
             echo "expected-sha=$(jq -r '.candidate.expectedSha' .buildchain/request-inspection.json)"
@@ -80,6 +81,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          CANDIDATE_MODE: ${{ steps.inspect.outputs.mode }}
           CANDIDATE_REPOSITORY: ${{ steps.inspect.outputs.repository }}
           CANDIDATE_EXPECTED_SHA: ${{ steps.inspect.outputs.expected-sha }}
           CANDIDATE_REVIEW_PR: ${{ steps.inspect.outputs.review-pr }}
@@ -93,41 +95,71 @@ jobs:
           gh api --paginate -H 'Accept: application/vnd.github+json' \
             "repos/${CANDIDATE_REPOSITORY}/commits/${CANDIDATE_EXPECTED_SHA}/check-runs?per_page=100" \
             | jq -s '[.[].check_runs[]]' > .buildchain/checks.json
-          jq -e --arg repository "${CANDIDATE_REPOSITORY}" \
+          gh api "repos/${CANDIDATE_REPOSITORY}/git/commits/${CANDIDATE_EXPECTED_SHA}" \
+            > .buildchain/runtime-commit.json
+          binding_kind="$(jq -er --arg mode "${CANDIDATE_MODE}" \
+            --arg repository "${CANDIDATE_REPOSITORY}" \
             --arg expected "${CANDIDATE_EXPECTED_SHA}" \
             --argjson number "${CANDIDATE_REVIEW_PR}" '
-              .head.repo.full_name == $repository and
-              .head.sha == $expected and
-              .number == $number and
-              .base.ref == "dev/v4/v4.0"
-            ' .buildchain/pr.json > /dev/null
-          jq -e --arg expected "${CANDIDATE_EXPECTED_SHA}" '
-            any(.[]; .state == "APPROVED" and .commit_id == $expected and (.user.login | ascii_downcase) == "kungfu-origin")
+              if (
+                .head.repo.full_name == $repository and
+                .head.sha == $expected and
+                .number == $number and
+                .base.ref == "dev/v4/v4.0"
+              ) then "reviewed-head"
+              elif (
+                $mode == "alpha" and
+                .head.repo.full_name == $repository and
+                .number == $number and
+                .merged == true and
+                .merge_commit_sha == $expected and
+                .base.ref == "alpha/v4/v4.0"
+              ) then "protected-alpha-merge"
+              else error("review does not bind the exact candidate runtime")
+              end
+            ' .buildchain/pr.json)"
+          reviewed_sha="$(jq -er '.head.sha | ascii_downcase' .buildchain/pr.json)"
+          jq -e --arg reviewed "${reviewed_sha}" '
+            any(.[]; .state == "APPROVED" and .commit_id == $reviewed and (.user.login | ascii_downcase) == "kungfu-origin")
           ' .buildchain/reviews.json > /dev/null
           jq -e '
             any(.[]; .name == "check" and .status == "completed" and .conclusion == "success")
           ' .buildchain/checks.json > /dev/null
           observed_at="$(date -u '+%Y-%m-%dT%H:%M:%S.000Z')"
           jq -n --arg repository "${CANDIDATE_REPOSITORY}" \
+            --arg binding_kind "${binding_kind}" \
             --arg expected "${CANDIDATE_EXPECTED_SHA}" \
+            --arg reviewed "${reviewed_sha}" \
             --arg observed_at "${observed_at}" \
             --argjson pull_request "${CANDIDATE_REVIEW_PR}" \
             --slurpfile pr .buildchain/pr.json \
             --slurpfile reviews .buildchain/reviews.json \
-            --slurpfile checks .buildchain/checks.json '
+            --slurpfile checks .buildchain/checks.json \
+            --slurpfile runtime .buildchain/runtime-commit.json '
               {
                 repository: $repository,
                 pullRequest: $pull_request,
-                headSha: $expected,
+                headSha: $reviewed,
                 baseRef: $pr[0].base.ref,
                 approvals: ($reviews[0]
-                  | map(select(.state == "APPROVED" and .commit_id == $expected))
+                  | map(select(.state == "APPROVED" and .commit_id == $reviewed))
                   | map({
                       reviewer: (.user.login | ascii_downcase),
                       commitSha: .commit_id,
                       submittedAt: (.submitted_at | fromdateiso8601 | strftime("%Y-%m-%dT%H:%M:%S.000Z"))
                     })),
-                checks: ($checks[0] | map(select(.status == "completed" and (.conclusion // "") != "")) | map({name, status, conclusion})),
+                checks: ($checks[0]
+                  | map(select(.status == "completed" and (.conclusion // "") != ""))
+                  | map({name, status, conclusion, commitSha: $expected})),
+                runtimeBinding: {
+                  kind: $binding_kind,
+                  runtimeSha: $expected,
+                  parentShas: ($runtime[0].parents | map(.sha | ascii_downcase)),
+                  mergedAt: (if $binding_kind == "protected-alpha-merge"
+                    then ($pr[0].merged_at | fromdateiso8601 | strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+                    else null
+                    end)
+                },
                 observedAt: $observed_at
               }
             ' > .buildchain/review-evidence.json
@@ -199,6 +231,7 @@ jobs:
           BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ inputs.request-json }}
           BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: ${{ needs.admit.outputs.admission-json }}
           BUILDCHAIN_UNIVERSAL_ENGINE_SHA: ${{ needs.admit.outputs.runtime-sha }}
+          BUILDCHAIN_PROMOTION_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail

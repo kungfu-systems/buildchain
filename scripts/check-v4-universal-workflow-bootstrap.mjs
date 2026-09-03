@@ -118,6 +118,10 @@ assert.equal(contract.bootstrap.consumerSourceMutationPerIncident, false);
 assert.equal(contract.bootstrap.buildchainReleasePromotionPerIncident, false);
 assert.equal(contract.bootstrap.selfDogfoodUsesPublicContract, true);
 assert.equal(contract.bootstrap.recoveryDependsOnPublishedBuildchain, false);
+assert.equal(
+  contract.bootstrap.reviewRuntimeBinding,
+  "reviewed-head-or-protected-alpha-merge-to-exact-runtime",
+);
 assert.deepEqual(
   contract.capabilityAdapters.map(({ id }) => id).sort(),
   [...admissionPolicy.allowedCapabilities].sort(),
@@ -163,10 +167,19 @@ execFileSync(
   { stdio: "inherit" },
 );
 assert.doesNotMatch(bootstrapSource, /^    permissions:/mu);
+assert.match(
+  bootstrapSource,
+  /execute:[\s\S]*BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}[\s\S]*GH_TOKEN: \$\{\{ github\.token \}\}/u,
+  "the privileged candidate executor must receive the protected-ref mutation token",
+);
 assert.match(bootstrapSource, /settle:[\s\S]*needs: \[admit, execute\]/u);
 assert.match(
   bootstrapSource,
   /ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*map\(select\(\.status == "completed" and \(\.conclusion \/\/ ""\) != ""\)\)[\s\S]*candidate\/architecture\/v4-universal-workflow-train-admission\.json/u,
+);
+assert.match(
+  bootstrapSource,
+  /CANDIDATE_MODE:[\s\S]*\.merged == true[\s\S]*\.merge_commit_sha == \$expected[\s\S]*\.base\.ref == "alpha\/v4\/v4\.0"[\s\S]*commitSha: \$expected[\s\S]*runtimeBinding:/u,
 );
 const consumerTemplate = fs.readFileSync(
   path.join(root, contract.bootstrap.consumerTemplate),

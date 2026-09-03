@@ -326,7 +326,12 @@ export async function applyProductPublication(request, plan) {
       new Error(
         `product provider stopped in ${projection.publication.state || "unknown"}: finalization-needed=${projection.publication.finalizationNeeded}`,
       ),
-      { providerProjection: projection },
+      {
+        code:
+          projection.transaction.failure?.code ||
+          "product-publication-finalization-needed",
+        providerProjection: projection,
+      },
     );
   if (!/^[0-9a-f]{40}$/u.test(projection.publication.releaseSha))
     throw new Error(

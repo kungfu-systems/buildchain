@@ -559,6 +559,7 @@ if (command === "inspect") {
   emit({
     schema: "kungfu-buildchain-v4-universal-workflow-inspection/v1",
     requestRoot: v4UniversalWorkflowRequestRoot(request),
+    mode: request.mode,
     candidate: request.candidate,
     consumer: request.consumer,
     capability: request.capability,
