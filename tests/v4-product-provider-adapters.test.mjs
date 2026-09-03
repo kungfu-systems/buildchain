@@ -269,7 +269,7 @@ function npmProvider(
   };
 }
 
-function productScenario(files, github, roots = ["6", "7"]) {
+function productScenario(files, github, roots = ["6", "7"], overrides = {}) {
   const intent = selectV4ProductPublicationIntent({
     channel: "alpha",
     targetRef: "alpha/v4/v4.0",
@@ -285,6 +285,7 @@ function productScenario(files, github, roots = ["6", "7"]) {
     ),
     candidateVersion: "4.0.2-alpha.6",
     observedVersions: ["4.0.2-alpha.6"],
+    ...overrides,
   });
   const plan = createV4ProductPublicationPlan({
     intent,

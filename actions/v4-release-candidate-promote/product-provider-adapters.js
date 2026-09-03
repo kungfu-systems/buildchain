@@ -46,80 +46,6 @@ async function retryGithubMutation(wait, operation, readback) {
 
 const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
 
-function standardCandidatePath(
-  candidatePassportPath,
-  declaredPath,
-  relativePath,
-  label,
-) {
-  if (String(declaredPath || "").trim()) return declaredPath;
-  const fallback = path.join(
-    path.dirname(candidatePassportPath),
-    "..",
-    relativePath,
-  );
-  if (!fs.existsSync(path.resolve(fallback)))
-    throw new Error(
-      `${label} is required when the sealed candidate has no standard ${relativePath}`,
-    );
-  return fallback;
-}
-
-export function resolveCandidateProviderInputs({
-  candidatePassportPath,
-  sealedBundleRoot = "",
-  sealedBundleManifest = "",
-  requiredArtifactsPath = "",
-  publishPackageMain = "",
-}) {
-  const resolved = {
-    sealedBundleRoot: standardCandidatePath(
-      candidatePassportPath,
-      sealedBundleRoot,
-      "payloads",
-      "sealed-bundle-root",
-    ),
-    sealedBundleManifest: standardCandidatePath(
-      candidatePassportPath,
-      sealedBundleManifest,
-      "sealed-bundle.json",
-      "sealed-bundle-manifest",
-    ),
-    requiredArtifactsPath: standardCandidatePath(
-      candidatePassportPath,
-      requiredArtifactsPath,
-      "publish-required-artifacts.json",
-      "required-artifacts-path",
-    ),
-    publishPackageMain: String(publishPackageMain || "").trim(),
-  };
-  const recoveryReceiptPath = path.join(
-    path.dirname(resolved.sealedBundleManifest),
-    "recovery-receipt.json",
-  );
-  if (fs.existsSync(path.resolve(recoveryReceiptPath)))
-    resolved.releaseCandidateRecoveryReceiptPath = recoveryReceiptPath;
-  if (!resolved.publishPackageMain) {
-    const artifacts = read(resolved.requiredArtifactsPath);
-    const main = artifacts.filter(({ role }) => role === "main");
-    const requiredNpm = artifacts.filter(
-      ({ kind, required }) => kind === "npm" && required !== false,
-    );
-    const inferred =
-      main.length === 1 && String(main[0]?.name || "").trim()
-        ? main[0]
-        : requiredNpm.length === 1 && String(requiredNpm[0]?.name || "").trim()
-          ? requiredNpm[0]
-          : null;
-    if (!inferred)
-      throw new Error(
-        "publish-package-main is required when the sealed artifact set has no unique main package",
-      );
-    resolved.publishPackageMain = String(inferred.name).trim();
-  }
-  return resolved;
-}
-
 function standardPublicationTarget({
   resolveStandardTarget,
   candidatePassportPath,
@@ -285,6 +211,7 @@ function unsupported(label, value) {
 }
 
 function validateProviderRequest(request, intent) {
+  const artifactKind = String(intent.artifactKind || "npm").trim();
   const publishCommand = String(request.publishCommand || "").trim();
   const publishMode = String(request.publishMode || "").trim();
   const publishAuth = String(
@@ -299,9 +226,13 @@ function validateProviderRequest(request, intent) {
   ).trim();
   if (publishCommand) unsupported("publish command", publishCommand);
   if (publishMode) unsupported("publish mode", publishMode);
-  if (publishAuth !== "trusted-publishing")
+  if (artifactKind === "npm" && publishAuth !== "trusted-publishing")
     unsupported("publish auth", publishAuth);
-  if (publishDistTag && publishDistTag !== intent.distTag)
+  if (
+    artifactKind === "npm" &&
+    publishDistTag &&
+    publishDistTag !== intent.distTag
+  )
     throw providerError(
       `publish dist-tag ${publishDistTag} conflicts with rooted ${intent.distTag}`,
       "conflict",
@@ -309,7 +240,7 @@ function validateProviderRequest(request, intent) {
     );
   if (packageSetOrder !== "as-provided")
     unsupported("package set order", packageSetOrder);
-  if (packageMain !== intent.packageName)
+  if (artifactKind === "npm" && packageMain !== intent.packageName)
     throw providerError(
       `main package ${packageMain} conflicts with rooted ${intent.packageName}`,
       "conflict",
@@ -409,12 +340,21 @@ function requiredProductArtifacts(request, intent) {
     intent.requiredArtifactsRoot
   )
     throw new Error("required product artifacts drifted from QUALIFY intent");
-  const npmArtifacts = requiredArtifacts.filter(
-    ({ kind, required }) => kind === "npm" && required !== false,
+  const artifactKind = String(intent.artifactKind || "npm").trim();
+  const matchingArtifacts = requiredArtifacts.filter(
+    ({ kind, required }) => kind === artifactKind && required !== false,
   );
-  if (npmArtifacts.length !== 1 || npmArtifacts[0].name !== intent.packageName)
+  if (
+    artifactKind === "npm" &&
+    (matchingArtifacts.length !== 1 ||
+      matchingArtifacts[0].name !== intent.packageName)
+  )
     throw new Error(
       "v4 product publication currently requires one exact main npm artifact",
+    );
+  if (artifactKind === "custom" && matchingArtifacts.length === 0)
+    throw new Error(
+      "v4 custom product publication requires at least one exact required artifact",
     );
   return requiredArtifacts;
 }
@@ -564,7 +504,8 @@ export function createV4ProductPublicationAdapters({
 }) {
   validateProviderRequest(request, intent);
   requiredProductArtifacts(request, intent);
-  verifyRootedBundle(request, intent);
+  if ((intent.artifactKind || "npm") === "npm")
+    verifyRootedBundle(request, intent);
   const context = {
     request,
     intent,
@@ -580,13 +521,19 @@ export function createV4ProductPublicationAdapters({
   };
   const packedPackage = createPackedPackage(context);
   const github = createV4GithubProductAdapters(context);
+  const npmAdapters =
+    (intent.artifactKind || "npm") === "npm"
+      ? {
+          "npm-trusted-publishing": {
+            readback: (effect) => npmReadback(context, packedPackage, effect),
+            apply: (effect) => npmApply(context, packedPackage, effect),
+          },
+        }
+      : {};
   return {
     adapters: {
       ...github.adapters,
-      "npm-trusted-publishing": {
-        readback: (effect) => npmReadback(context, packedPackage, effect),
-        apply: (effect) => npmApply(context, packedPackage, effect),
-      },
+      ...npmAdapters,
     },
     updates: context.updates,
     resolveReleaseSha: github.resolveReleaseSha,
