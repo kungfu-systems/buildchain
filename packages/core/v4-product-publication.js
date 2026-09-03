@@ -83,6 +83,7 @@ export function selectV4ProductPublicationIntent({
   sourceSha,
   sourceTimestamp,
   repository,
+  artifactKind = "npm",
   packageName,
   distTag,
   sealedBundleRoot,
@@ -102,9 +103,19 @@ export function selectV4ProductPublicationIntent({
   );
   if (Number.isNaN(Date.parse(normalizedTimestamp)))
     fail("sourceTimestamp must be an ISO timestamp");
-  const normalizedPackageName = requiredString(packageName, "packageName");
-  const normalizedDistTag = requiredString(distTag, "distTag");
-  if (!/^[a-z0-9][a-z0-9._-]*$/u.test(normalizedDistTag))
+  const normalizedArtifactKind = String(artifactKind || "npm").trim();
+  if (!new Set(["npm", "custom"]).has(normalizedArtifactKind))
+    fail(`unsupported artifactKind '${normalizedArtifactKind}'`);
+  const normalizedPackageName =
+    normalizedArtifactKind === "npm"
+      ? requiredString(packageName, "packageName")
+      : "";
+  const normalizedDistTag =
+    normalizedArtifactKind === "npm" ? requiredString(distTag, "distTag") : "";
+  if (
+    normalizedArtifactKind === "npm" &&
+    !/^[a-z0-9][a-z0-9._-]*$/u.test(normalizedDistTag)
+  )
     fail("distTag must be an npm dist-tag");
   if (!Array.isArray(observedVersions))
     fail("observedVersions must be an array");
@@ -128,12 +139,16 @@ export function selectV4ProductPublicationIntent({
   } else if (normalizedChannel === "alpha") {
     if (candidate.alpha === null)
       fail("fresh alpha publication requires an alpha candidate version");
-    const highest = observed.reduce(
-      (current, entry) =>
-        Math.max(current, observedAlphaNumber(entry, candidate) ?? -1),
-      candidate.alpha,
-    );
-    version = `${candidate.major}.${candidate.minor}.${candidate.patch}-alpha.${highest + 1}`;
+    if (normalizedArtifactKind === "custom") {
+      version = candidate.value;
+    } else {
+      const highest = observed.reduce(
+        (current, entry) =>
+          Math.max(current, observedAlphaNumber(entry, candidate) ?? -1),
+        candidate.alpha,
+      );
+      version = `${candidate.major}.${candidate.minor}.${candidate.patch}-alpha.${highest + 1}`;
+    }
   } else {
     version = `${candidate.major}.${candidate.minor}.${candidate.patch}`;
   }
@@ -145,9 +160,13 @@ export function selectV4ProductPublicationIntent({
     sourceSha,
     sourceTimestamp: new Date(normalizedTimestamp).toISOString(),
     repository,
-    packageName: normalizedPackageName,
-    distTag: normalizedDistTag,
-    sealedBundleRoot: requiredRoot(sealedBundleRoot, "sealedBundleRoot"),
+    ...(normalizedArtifactKind === "npm"
+      ? {
+          packageName: normalizedPackageName,
+          distTag: normalizedDistTag,
+          sealedBundleRoot: requiredRoot(sealedBundleRoot, "sealedBundleRoot"),
+        }
+      : { artifactKind: normalizedArtifactKind }),
     requiredArtifactsRoot: requiredRoot(
       requiredArtifactsRoot,
       "requiredArtifactsRoot",
@@ -202,6 +221,7 @@ export function createV4ProductPublicationPlan({
     sourceSha: intent.sourceSha,
     sourceTimestamp: intent.sourceTimestamp,
     repository: intent.repository,
+    artifactKind: intent.artifactKind,
     packageName: intent.packageName,
     distTag: intent.distTag,
     sealedBundleRoot: intent.sealedBundleRoot,
@@ -231,18 +251,22 @@ export function createV4ProductPublicationPlan({
         stateRef,
       },
     },
-    {
-      id: "product.package.publish",
-      adapter: "npm-trusted-publishing",
-      authority: "oidc-provider-mutation",
-      target: {
-        packageName: intent.packageName,
-        version: intent.version,
-        distTag: intent.distTag,
-        sealedBundleRoot: intent.sealedBundleRoot,
-        requiredArtifactsRoot: intent.requiredArtifactsRoot,
-      },
-    },
+    ...(intent.artifactKind === "custom"
+      ? []
+      : [
+          {
+            id: "product.package.publish",
+            adapter: "npm-trusted-publishing",
+            authority: "oidc-provider-mutation",
+            target: {
+              packageName: intent.packageName,
+              version: intent.version,
+              distTag: intent.distTag,
+              sealedBundleRoot: intent.sealedBundleRoot,
+              requiredArtifactsRoot: intent.requiredArtifactsRoot,
+            },
+          },
+        ]),
     {
       id: "product.release-refs.converge",
       adapter: "github-release-refs",

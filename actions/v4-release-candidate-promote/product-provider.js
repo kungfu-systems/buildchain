@@ -175,6 +175,12 @@ export function selectProductPublicationPlan(
 }
 
 export function sealedCandidateVersion(request) {
+  if (request.publicationIntent?.artifactKind === "custom") {
+    const version = String(request.candidate?.target?.version || "").trim();
+    if (!version)
+      throw new Error("sealed candidate passport omitted the exact version");
+    return version;
+  }
   const manifest = read(request.sealedBundleManifest);
   const name = String(manifest?.npm?.name || "").trim();
   const version = String(manifest?.npm?.version || "").trim();
@@ -242,6 +248,7 @@ export async function planProductPublication(
     sourceSha: supplied.sourceSha,
     sourceTimestamp: supplied.sourceTimestamp,
     repository: supplied.repository,
+    artifactKind: supplied.artifactKind,
     packageName: supplied.packageName,
     distTag: supplied.distTag,
     sealedBundleRoot: supplied.sealedBundleRoot,

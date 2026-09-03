@@ -98,6 +98,42 @@ test("one rooted product plan declares version, package, and ref effects before 
   assert.equal(effectPlan.transactionRoot, plan.transactionRoot);
 });
 
+test("custom product publication preserves the sealed candidate version and omits npm effects", () => {
+  const intent = selectV4ProductPublicationIntent({
+    channel: "alpha",
+    targetRef: "alpha/v0/v0.2",
+    sourceSha: "a".repeat(40),
+    sourceTimestamp: "2026-09-03T00:00:00.000Z",
+    repository: "kungfu-systems/agent-hub-demo",
+    artifactKind: "custom",
+    requiredArtifactsRoot: `sha256:${"2".repeat(64)}`,
+    candidateVersion: "0.2.0-alpha.9",
+    observedVersions: ["0.2.0-alpha.99"],
+  });
+  assert.equal(intent.version, "0.2.0-alpha.9");
+  assert.equal(intent.exactTag, "v0.2.0-alpha.9");
+  assert.equal(intent.artifactKind, "custom");
+  assert.equal("packageName" in intent, false);
+  assert.equal("sealedBundleRoot" in intent, false);
+
+  const plan = createV4ProductPublicationPlan({
+    intent,
+    invocationRoot: `sha256:${"b".repeat(64)}`,
+    transactionRoot: `sha256:${"c".repeat(64)}`,
+  });
+  assert.deepEqual(plan.operationOrder, [
+    "product.version-state.materialize",
+    "product.release-refs.converge",
+  ]);
+  const declaration = createV4ProductPublicationDeclaration({ intent, plan });
+  assert.deepEqual(
+    compileReleaseTailDeclaration(declaration).effects.map(
+      ({ capabilityId }) => capabilityId,
+    ),
+    plan.operationOrder,
+  );
+});
+
 test("fresh and recovery candidate discovery are data-only adapters into the same APPLY engine", () => {
   assert.deepEqual(resolveV4ReleaseCandidateAdapter(), {
     mode: "fresh",

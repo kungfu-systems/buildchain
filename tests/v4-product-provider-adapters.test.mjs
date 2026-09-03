@@ -339,6 +339,68 @@ test("unsupported legacy publication inputs fail before provider mutation", () =
   assert.equal(github.refs.size, 2);
 });
 
+test("custom product effects converge refs without invoking npm", async () => {
+  const files = fixture();
+  const github = githubProvider();
+  const requiredArtifacts = [
+    {
+      group: "linux-x64",
+      kind: "custom",
+      name: "agent-hub-linux-x64",
+      ref_template: "{version}",
+      role: "platform",
+      required: true,
+    },
+  ];
+  fs.writeFileSync(
+    files.requiredArtifactsPath,
+    `${JSON.stringify(requiredArtifacts, null, 2)}\n`,
+  );
+  const intent = selectV4ProductPublicationIntent({
+    channel: "alpha",
+    targetRef: "alpha/v4/v4.0",
+    sourceSha: SOURCE,
+    sourceTimestamp: "2026-08-30T00:00:00.000Z",
+    repository: "kungfu-systems/buildchain",
+    artifactKind: "custom",
+    requiredArtifactsRoot: v4ContentRoot(
+      "v4-product-required-artifacts",
+      requiredArtifacts,
+    ),
+    candidateVersion: "4.0.2-alpha.6",
+  });
+  const plan = createV4ProductPublicationPlan({
+    intent,
+    invocationRoot: `sha256:${"4".repeat(64)}`,
+    transactionRoot: `sha256:${"5".repeat(64)}`,
+  });
+  const effectPlan = compileReleaseTailDeclaration(
+    createV4ProductPublicationDeclaration({ intent, plan }),
+  );
+  const runtime = createV4ProductPublicationAdapters({
+    request: {
+      octokit: github.octokit,
+      mutationOctokit: github.octokit,
+      requiredArtifactsPath: files.requiredArtifactsPath,
+      requiredStatusCheck: "check",
+    },
+    intent,
+    plan,
+    cwd: files.cwd,
+    spawn() {
+      throw new Error("custom publication must not invoke npm");
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(effectPlan),
+    { adapters: runtime.adapters },
+  );
+  assert.equal(result.state, "complete");
+  assert.equal(result.receipts.length, 2);
+  assert.equal(github.refs.get("tags/v4.0.2-alpha.6"), SOURCE);
+  assert.equal(github.refs.get("tags/v4-alpha"), VERSION_STATE);
+});
+
 test("an existing npm version with different integrity blocks without republishing", async () => {
   const files = fixture();
   const github = githubProvider();
