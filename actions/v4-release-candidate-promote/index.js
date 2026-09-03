@@ -523,6 +523,7 @@ async function main() {
   });
   const providerInputs = resolveCandidateProviderInputs({
     candidatePassportPath,
+    artifactKind: input("publish-artifact-kind") || "npm",
     sealedBundleRoot: input("sealed-bundle-root"),
     sealedBundleManifest: input("sealed-bundle-manifest"),
     requiredArtifactsPath: input("required-artifacts-path"),

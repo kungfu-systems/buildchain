@@ -18,7 +18,8 @@ function readJson(file) {
   return JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
 }
 
-function packageName() {
+function packageName(artifactKind) {
+  if (artifactKind !== "npm") return "";
   const declared = env("BUILDCHAIN_PUBLISH_PACKAGE_MAIN");
   if (declared) return declared;
   const manifestPath = env("BUILDCHAIN_SEALED_BUNDLE_MANIFEST", true);
@@ -59,9 +60,14 @@ function writeOutput(name, value) {
 }
 
 export function resolveV4ProductPublicationIntent() {
-  const name = packageName();
+  const artifactKind = env("BUILDCHAIN_PUBLISH_ARTIFACT_KIND") || "npm";
+  const name = packageName(artifactKind);
   const sourceSha = env("BUILDCHAIN_SOURCE_SHA", true);
-  const manifest = readJson(env("BUILDCHAIN_SEALED_BUNDLE_MANIFEST", true));
+  const manifestPath = env(
+    "BUILDCHAIN_SEALED_BUNDLE_MANIFEST",
+    artifactKind === "npm",
+  );
+  const manifest = manifestPath ? readJson(manifestPath) : null;
   const requiredArtifacts = readJson(
     env("BUILDCHAIN_REQUIRED_ARTIFACTS_PATH", true),
   );
@@ -72,18 +78,19 @@ export function resolveV4ProductPublicationIntent() {
     sourceSha,
     sourceTimestamp: env("BUILDCHAIN_SOURCE_TIMESTAMP", true),
     repository: env("BUILDCHAIN_REPOSITORY", true),
+    artifactKind,
     packageName: name,
     distTag:
       env("BUILDCHAIN_PUBLISH_DIST_TAG") ||
       (channel === "alpha" ? "alpha" : "latest"),
-    sealedBundleRoot: manifest.root,
+    sealedBundleRoot: manifest?.root,
     requiredArtifactsRoot: v4ContentRoot(
       "v4-product-required-artifacts",
       requiredArtifacts,
     ),
     candidateVersion: env("BUILDCHAIN_CANDIDATE_VERSION", true),
     recoveredVersion: env("BUILDCHAIN_RECOVERED_PUBLICATION_VERSION"),
-    observedVersions: observedVersions(name),
+    observedVersions: artifactKind === "npm" ? observedVersions(name) : [],
   });
   const outputPath = path.resolve(
     env("BUILDCHAIN_PRODUCT_PUBLICATION_INTENT_PATH") ||
@@ -95,7 +102,7 @@ export function resolveV4ProductPublicationIntent() {
   writeOutput("exact-tag", intent.exactTag);
   writeOutput("intent-path", outputPath);
   writeOutput("intent-root", intent.intentRoot);
-  return { name, intent, outputPath };
+  return { name: name || artifactKind, intent, outputPath };
 }
 
 if (
