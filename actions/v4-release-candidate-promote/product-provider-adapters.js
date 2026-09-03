@@ -21,24 +21,39 @@ function retryableGithubMutation(error) {
   const status = Number(
     error?.status || error?.statusCode || error?.response?.status || 0,
   );
-  return (
-    [408, 429, 500, 502, 503, 504].includes(status) ||
-    (status === 403 && /rate limit/iu.test(error?.message || "")) ||
-    /^(?:ECONNABORTED|ECONNRESET|EAI_AGAIN|ENETRESET|ETIMEDOUT|UND_ERR_(?:BODY_TIMEOUT|CONNECT_TIMEOUT|HEADERS_TIMEOUT|REQ_RETRY|SOCKET))$/u.test(
-      String(error?.code || ""),
-    )
+  if ([408, 429, 500, 502, 503, 504].includes(status)) return true;
+  if (status === 403 && /rate limit/iu.test(error?.message || "")) return true;
+  if (status) return false;
+  return /^(?:ECONNABORTED|ECONNRESET|EAI_AGAIN|ENETRESET|ETIMEDOUT|UND_ERR_(?:BODY_TIMEOUT|CONNECT_TIMEOUT|HEADERS_TIMEOUT|REQ_RETRY|SOCKET))$/u.test(
+    String(error?.code || ""),
   );
 }
 
-async function retryGithubMutation(wait, operation, readback) {
+function githubMutationFailure(error) {
+  if (error?.releaseTailClass) return error;
+  const status = Number(
+    error?.status || error?.statusCode || error?.response?.status || 0,
+  );
+  const failure = {
+    releaseTailClass: "transient",
+    releaseTailCode: status
+      ? `github-mutation-${status}`
+      : "github-mutation-error",
+  };
+  if (status) failure.status = status;
+  return Object.assign(new Error("GitHub provider mutation failed"), failure);
+}
+
+export async function retryGithubMutation(wait, operation, readback) {
   for (let attempt = 0; ; attempt += 1) {
     try {
       return await operation();
     } catch (error) {
-      if (!retryableGithubMutation(error)) throw error;
+      if (!retryableGithubMutation(error)) throw githubMutationFailure(error);
       const observed = await readback?.();
       if (observed) return observed;
-      if (attempt === GITHUB_MUTATION_RETRY_DELAYS_MS.length) throw error;
+      if (attempt === GITHUB_MUTATION_RETRY_DELAYS_MS.length)
+        throw githubMutationFailure(error);
       await wait(GITHUB_MUTATION_RETRY_DELAYS_MS[attempt]);
     }
   }

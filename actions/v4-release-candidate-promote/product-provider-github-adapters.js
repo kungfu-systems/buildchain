@@ -196,6 +196,7 @@ async function createVersionStateTree(
   baseTree,
   versionFiles,
 ) {
+  if (versionFiles.length === 0) return baseTree;
   const { owner, repo } = splitRepository(repository);
   const tree = [];
   for (const file of versionFiles) {
@@ -219,7 +220,6 @@ async function createVersionStateTree(
   );
   return data.sha;
 }
-
 async function versionStateApply(context, effect) {
   const { request, plan, versionFiles, intent, updates } = context;
   const operation = operationFor(plan, effect);
