@@ -7,7 +7,10 @@ import {
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
-import { validateDevDeliveryCandidateChain } from "../packages/core/dev-delivery-candidate-identity.js";
+import {
+  reuseExactActiveDevDeliverySourceProof,
+  validateDevDeliveryCandidateChain,
+} from "../packages/core/dev-delivery-candidate-identity.js";
 
 const root = (digit) => `sha256:${digit.repeat(64)}`;
 const options = {
@@ -95,6 +98,38 @@ test("selected duplicate reuses its active source proof without a write", async 
   legacy[1].enqueuedAt = "2026-08-06T00:00:00.000Z";
   // prettier-ignore
   assert.throws(() => validateDevDeliveryCandidateChain(legacy, terminalStates), /same-PR successor must chain/u);
+});
+
+test("phase-less non-native active owner reuses its exact source proof across retry", () => {
+  const attempted = {
+    pullRequestNumber: 200,
+    sourceRoot: root("1"),
+    sourceIdentityRoot: root("3"),
+    sourcePatchRoot: root("4"),
+    sourceProofRoot: root("f"),
+    planRoot: root("5"),
+    closureRoot: root("6"),
+    dependencyRoot: root("7"),
+    toolchainRoot: root("8"),
+    sourceWorkflowRunId: 123,
+    deliveryClass: "non-native-fast",
+    priority: "ordinary",
+    affectedPaths: ["package.json"],
+    shardEvidenceRoots: [],
+  };
+  const active = { ...attempted, sourceProofRoot: root("9") };
+
+  assert.equal(
+    reuseExactActiveDevDeliverySourceProof(active, attempted).sourceProofRoot,
+    active.sourceProofRoot,
+  );
+  assert.equal(
+    reuseExactActiveDevDeliverySourceProof(active, {
+      ...attempted,
+      planRoot: root("e"),
+    }).sourceProofRoot,
+    attempted.sourceProofRoot,
+  );
 });
 
 test("active source proof reuse rejects any other candidate drift", async () => {
