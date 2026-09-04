@@ -70,7 +70,12 @@ switch (command) {
   case "pr view": process.stdout.write('{"number":7,"state":"OPEN","isDraft":false,"baseRefName":"dev/v4/v4.0","headRefOid":"${head}","headRepository":{"nameWithOwner":"kungfu-systems/buildchain"},"statusCheckRollup":[{"workflowName":"Verify","conclusion":"SUCCESS","detailsUrl":"https://github.com/kungfu-systems/buildchain/actions/runs/123/job/1","name":"check"}]}\\n'); break;
   case "api repos/kungfu-systems/buildchain/actions/runs/123": process.stdout.write('{"conclusion":"success","event":"pull_request","head_sha":"${head}","path":".github/workflows/verify.yml@refs/pull/7/merge","pull_requests":[{"number":7,"base":{"sha":"${base}"}}]}\\n'); break;
   case "api repos/kungfu-systems/buildchain/contents/.github/workflows/buildchain-dev-delivery.yml?ref=dev/v4/v4.0": process.stdout.write("{}\\n"); break;
-  case "api --method": fs.writeFileSync(${JSON.stringify(payloadPath)}, fs.readFileSync(0)); break;
+  case "api --method": {
+    const inputIndex = args.indexOf("--input");
+    if (inputIndex < 0 || !args[inputIndex + 1]) process.exit(1);
+    fs.copyFileSync(args[inputIndex + 1], ${JSON.stringify(payloadPath)});
+    break;
+  }
   default: process.exit(1);
 }
 `);

@@ -134,7 +134,10 @@ payload="$(jq -n --arg ref "$base" --arg runtime "$runtime_sha" --arg number "$n
     "delivery-priority":"ordinary"}}')"
 
 if [ "$execute" = true ]; then
-  printf '%s\n' "$payload" | gh api --method POST "repos/$repository/actions/workflows/$workflow/dispatches" --input - >/dev/null
+  payload_file="$(mktemp "${TMPDIR:-/tmp}/buildchain-dev-delivery.XXXXXX.json")"
+  trap 'rm -f "$payload_file"' EXIT
+  printf '%s\n' "$payload" >"$payload_file"
+  gh api --method POST "repos/$repository/actions/workflows/$workflow/dispatches" --input "$payload_file" >/dev/null
 fi
 mode=plan
 [ "$execute" = true ] && mode=execute
