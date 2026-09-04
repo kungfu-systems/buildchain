@@ -727,8 +727,7 @@ jobs:
               -f "expected-pr-number=$selected_pr"
               -f "expected-head-sha=$selected_head"
               -f "source-workflow-run-id=$source_run_id"
-              -f "assignment-root=$(jq -er '.observation.activeWarrant.assignmentRoot' .buildchain/dev-delivery/warrant.json)"
-              -f "initiative-root=$(jq -er '.observation.activeWarrant.initiativeRoot' .buildchain/dev-delivery/warrant.json)"
+              -f "native-roots-json=$(jq -c '{sourceRoot:.observation.activeWarrant.sourceRoot}' .buildchain/dev-delivery/warrant.json)"
               -f "source-identity-root=$(jq -er '.observation.activeWarrant.sourceIdentityRoot' .buildchain/dev-delivery/warrant.json)"
               -f "source-patch-root=$(jq -er '.observation.activeWarrant.sourcePatchRoot' .buildchain/dev-delivery/warrant.json)"
               -f "plan-root=$(jq -er '.observation.activeWarrant.planRoot' .buildchain/dev-delivery/warrant.json)"
@@ -740,7 +739,6 @@ jobs:
               -f "release-blocker-priority-json=$(jq -c '.observation.activeWarrant.releaseBlockerPriority // empty' .buildchain/dev-delivery/warrant.json)"
               -f "delivery-class=$(jq -er '.observation.activeWarrant.deliveryClass' .buildchain/dev-delivery/warrant.json)"
               -f "delivery-priority=$(jq -r '.observation.activeWarrant.priority // "ordinary"' .buildchain/dev-delivery/warrant.json)"
-              -f dry-run=false
             )
             if [ "$selected_phase" = "legacy-active" ]; then
               handoff_args+=(
@@ -793,7 +791,16 @@ jobs:
               } >> "$GITHUB_OUTPUT"
               ;;
             legacy-active)
-              if [ -z "$LEGACY_ACTIVE_OWNER_BINDING" ]; then
+              if [ -z "$LEGACY_ACTIVE_OWNER_BINDING" ] && ! jq -e \
+                --argjson pr "$EXPECTED_PR" \
+                --arg head "$EXPECTED_HEAD" \
+                --slurpfile submission .buildchain/dev-delivery/submission.json \
+                '.observation.activeWarrant.pullRequestNumber == $pr
+                 and .observation.activeWarrant.sourceHead == $head
+                 and (.observation.activeWarrant.sourceRoot | test("^sha256:[0-9a-f]{64}$"))
+                 and .observation.activeWarrant.sourceRoot == .observation.activeCandidate.sourceRoot
+                 and .observation.activeWarrant.candidateId == $submission[0].receipt.candidateId' \
+                .buildchain/dev-delivery/warrant.json >/dev/null; then
                 echo "::error::Phase-less active Warrant requires the explicit legacy-safe active-owner command path"
                 exit 1
               fi
@@ -810,6 +817,7 @@ jobs:
             --arg phase "$selected_phase" \
             --arg legacyOwnerStateRoot "$(jq -er '.receipt.expectedOldStateRoot' .buildchain/dev-delivery/submission.json)" \
             --argjson legacyBinding "${LEGACY_ACTIVE_OWNER_BINDING:-null}" \
+            --slurpfile submission .buildchain/dev-delivery/submission.json \
             '.schema == "kungfu.buildchain.dev-delivery-command-result/v1"
              and .mode == "execute"
              and (.after.commitSha | test("^[0-9a-f]{40}$"))
@@ -818,10 +826,13 @@ jobs:
              and (($phase == "legacy-active" and (.observation.activeWarrant | has("phase") | not)
                    and .observation.activeCandidate.deliveryClass == "non-native-fast"
                    and (.observation.activeCandidate | has("environmentRoot") | not)
-                   and $legacyBinding.schema == "kungfu.buildchain.legacy-active-owner-binding/v1"
-                   and $legacyBinding.stateRoot == $legacyOwnerStateRoot
-                   and $legacyBinding.fencingToken == .observation.activeWarrant.fencingToken
-                   and $legacyBinding.generation == .observation.activeWarrant.generation)
+                   and (($legacyBinding.schema == "kungfu.buildchain.legacy-active-owner-binding/v1"
+                         and $legacyBinding.stateRoot == $legacyOwnerStateRoot
+                         and $legacyBinding.fencingToken == .observation.activeWarrant.fencingToken
+                         and $legacyBinding.generation == .observation.activeWarrant.generation)
+                        or ((.observation.activeWarrant.sourceRoot | test("^sha256:[0-9a-f]{64}$"))
+                            and .observation.activeWarrant.sourceRoot == .observation.activeCandidate.sourceRoot
+                            and .observation.activeWarrant.candidateId == $submission[0].receipt.candidateId)))
                   or .observation.activeWarrant.phase == $phase)
              and (.observation.activeWarrant.pullRequestNumber == $pr)
              and (.observation.activeWarrant.sourceHead == $head)

@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "4.0.2-alpha.30",
+    "version": "4.0.2-alpha.31",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v4",
@@ -1492,7 +1492,7 @@
         "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
       ],
       "breakingDigest": "sha256:21b65d0746d2e8b3e8a7df4c6fab295a85c8fd42cc405ec3bc5df5cdab0421f0",
-      "auditDigest": "sha256:88b3ff463686ee6dffc604886205f66d5f5f6fc445cd98c46623f0e6cc308839"
+      "auditDigest": "sha256:d86830e186b6ec56816e875adfebd33d705ae309983cc37106717ce05ec9ccca"
     },
     {
       "contractVersion": 1,
@@ -2257,7 +2257,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:078a652a180550b349e37dfa2ae5389c384f7118541ffefaf43a3df9a28b5074"
+      "auditDigest": "sha256:1a6a84869fc898263bb531ccfd6ec77260b618d16f0927f41d0da5ede708fab5"
     },
     {
       "contractVersion": 1,
@@ -2279,7 +2279,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:b64ca3023b9088ad5e7d77cd3e9c6a3e1a1c1861c1ee8d006354c77a1afb3ef5"
+      "auditDigest": "sha256:318ce9c5c5ada815227a11e89418ab72854860cb61fd46ec58c6a69cd3dea58e"
     },
     {
       "contractVersion": 1,
@@ -5444,5 +5444,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:5a76cf045e2f9e7b14967526ce646d20e5e6d75ffca92e190313c0267bda852a"
+  "contractDigest": "sha256:f6d7a27fb92a6cd552e0c4f9108dcac36202a17bde5c77049bf533efc2794b9e"
 }

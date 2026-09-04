@@ -7,7 +7,10 @@ import {
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
-import { validateDevDeliveryCandidateChain } from "../packages/core/dev-delivery-candidate-identity.js";
+import {
+  reuseExactActiveDevDeliverySourceProof,
+  validateDevDeliveryCandidateChain,
+} from "../packages/core/dev-delivery-candidate-identity.js";
 
 const root = (digit) => `sha256:${digit.repeat(64)}`;
 const options = {
@@ -95,6 +98,82 @@ test("selected duplicate reuses its active source proof without a write", async 
   legacy[1].enqueuedAt = "2026-08-06T00:00:00.000Z";
   // prettier-ignore
   assert.throws(() => validateDevDeliveryCandidateChain(legacy, terminalStates), /same-PR successor must chain/u);
+});
+
+test("phase-less non-native active owner reuses its exact source proof across retry", () => {
+  const attempted = {
+    pullRequestNumber: 200,
+    sourceRoot: root("1"),
+    sourceIdentityRoot: root("3"),
+    sourcePatchRoot: root("4"),
+    sourceProofRoot: root("f"),
+    planRoot: root("5"),
+    closureRoot: root("6"),
+    dependencyRoot: root("7"),
+    toolchainRoot: root("8"),
+    sourceWorkflowRunId: 123,
+    deliveryClass: "non-native-fast",
+    priority: "ordinary",
+    affectedPaths: ["package.json"],
+    shardEvidenceRoots: [],
+  };
+  const active = { ...attempted, sourceProofRoot: root("9") };
+
+  assert.equal(
+    reuseExactActiveDevDeliverySourceProof(active, attempted).sourceProofRoot,
+    active.sourceProofRoot,
+  );
+  assert.equal(
+    reuseExactActiveDevDeliverySourceProof(active, {
+      ...attempted,
+      planRoot: root("e"),
+    }).sourceProofRoot,
+    attempted.sourceProofRoot,
+  );
+});
+
+test("source-root retry normalizes empty retired root inputs", async () => {
+  const sourceOptions = {
+    ...options,
+    sourceRoot: root("1"),
+    assignmentRoot: "",
+    initiativeRoot: "",
+    environmentRoot: "",
+    nativeCommand: "",
+    deliveryClass: "non-native-fast",
+  };
+  const initial = createDevDeliveryQueue({
+    repository: sourceOptions.repository,
+    protectedBase: sourceOptions.branch,
+    now: "2026-08-04T00:00:00Z",
+  });
+  const submitted = submitDevDeliveryCandidate(
+    initial,
+    {
+      ...sourceOptions,
+      assignmentRoot: undefined,
+      initiativeRoot: undefined,
+    },
+    { now: "2026-08-04T00:01:00Z" },
+  );
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:02:00Z",
+  });
+  const store = new MemoryStore(selected.queue);
+  const result = await runDevDeliveryCommand(
+    {
+      ...sourceOptions,
+      sourceProofRoot: root("f"),
+      execute: true,
+      now: "2026-08-04T00:03:00Z",
+    },
+    store,
+  );
+
+  assert.equal(result.receipt.action, "active-warrant-noop");
+  assert.equal(result.receipt.sourceProofRoot, options.sourceProofRoot);
+  assert.equal(result.mutationApplied, false);
+  assert.equal(store.writes.length, 0);
 });
 
 test("active source proof reuse rejects any other candidate drift", async () => {

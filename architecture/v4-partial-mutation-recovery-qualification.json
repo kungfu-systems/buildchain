@@ -39,7 +39,10 @@
   ],
   "implementations": {
     "rustDomain": "crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs",
-    "typescript": "packages/core/v4-partial-mutation-recovery-qualification.js"
+    "typescript": "packages/core/v4-partial-mutation-recovery-qualification.js",
+    "wasmRuntime": "packages/core/v4-domain-wasm.js",
+    "wasmArtifact": "packages/core/buildchain-v4-domain.wasm",
+    "artifactMetadata": "packages/core/v4-domain-wasm-artifact.js"
   },
   "roots": [
     "partial-mutation-recovery-checkpoint",

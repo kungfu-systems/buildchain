@@ -54,7 +54,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `packages/core/readme-badges.js`
 - sources: `packages/core/release-candidate.js`
 - sources: `packages/core/release-passport.js`
-- sources: `packages/core/release-tail-provider-plane.js`
 - sources: `packages/core/release-train.js`
 - sources: `packages/core/stable-release-gate.js`
 - sources: `packages/core/v4-runtime-ref-resume-authority.js`
@@ -93,6 +92,9 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `actions/promote-buildchain-ref/internal/promotion-operations.js`
 - rust: `crates/buildchain-v4-bridge/src/main.rs`
 - rust: `crates/buildchain-v4-contracts/src/main.rs`
+- rust: `crates/buildchain-v4-contracts/src/product_publication.rs`
+- rust: `crates/buildchain-v4-contracts/src/release_tail.rs`
+- rust: `crates/buildchain-v4-contracts/src/wasm.rs`
 - rust: `crates/buildchain-v4-contracts/src/provider_operation_journal.rs`
 - rust: `crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs`
 - rust: `crates/buildchain-v4-contracts/src/warrant.rs`
@@ -162,6 +164,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `tests/v4-publication-qualification.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
+- `.github/workflows/dev-pr-auto-merge.yml`
 - `tests/release-candidate-recovery.test.mjs`
 - `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
 - `.github/workflows/.release-candidate-promote.yml`

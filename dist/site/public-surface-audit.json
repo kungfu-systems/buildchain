@@ -6,7 +6,7 @@
     "cliCommandCount": 117,
     "workflowCount": 74,
     "actionCount": 8,
-    "sitePageCount": 84,
+    "sitePageCount": 85,
     "docCommandRefCount": 1050,
     "failureCount": 0
   },
@@ -3624,6 +3624,10 @@
       },
       {
         "id": "manual:v4-runtime-ref-resume-authority",
+        "category": "manual"
+      },
+      {
+        "id": "manual:v4-rust-wasm-production-authority",
         "category": "manual"
       },
       {
@@ -8905,8 +8909,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "2ed63e5df83b2a9e069c9ffb139612ab7d25db037e275625c0c15e38b822b517",
-    "pageRegistryDigest": "182e0474bd22e436c079396460f654a0fa310cef11316c03a0996852e9dcdc5b"
+    "workflowRegistryDigest": "70c811241bae06a3b5b3e8e1b1edd14737de2b1543053858ea59e64552895177",
+    "pageRegistryDigest": "4b5eeaee910e192ec173c6678a16656c90ec9400508f087dc0b8593a932b8019"
   },
   "comparison": {
     "missingCliRegistry": [],

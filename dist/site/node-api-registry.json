@@ -23616,7 +23616,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 584
+        "line": 96
       },
       "example": "import { compileReleaseTailDeclaration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23649,7 +23649,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 1217
+        "line": 237
       },
       "example": "import { createReleaseTailAdapterSet } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23671,14 +23671,14 @@
       ],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 697
+        "line": 107
       },
       "example": "import { createReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23691,7 +23691,7 @@
       "id": "packages/core/release-tail-provider-plane.js#executeReleaseTailTransaction",
       "name": "executeReleaseTailTransaction",
       "kind": "function",
-      "signature": "async function executeReleaseTailTransaction(transaction, { adapters, checkpoint: checkpointCallback } = {})",
+      "signature": "async function executeReleaseTailTransaction(transaction, { adapters, checkpoint } = {})",
       "parameters": [
         {
           "name": "transaction",
@@ -23699,7 +23699,7 @@
         },
         {
           "name": "parameter2",
-          "signature": "{ adapters, checkpoint: checkpointCallback } = {}"
+          "signature": "{ adapters, checkpoint } = {}"
         }
       ],
       "returns": "Promise<unknown>",
@@ -23711,7 +23711,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 1016
+        "line": 172
       },
       "example": "import { executeReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23733,14 +23733,14 @@
       ],
       "returns": "unknown",
       "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 491
+        "line": 82
       },
       "example": "import { parseReleaseTailDeclaration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23769,7 +23769,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 830
+        "line": 115
       },
       "example": "import { readReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23793,7 +23793,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 30
+        "line": 33
       },
       "example": "import { RELEASE_TAIL_CAPABILITY_REGISTRY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23817,7 +23817,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 5
+        "line": 7
       },
       "example": "import { RELEASE_TAIL_DECLARATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23841,7 +23841,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 10
+        "line": 12
       },
       "example": "import { RELEASE_TAIL_EFFECT_SCHEMA } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23865,7 +23865,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 12
+        "line": 14
       },
       "example": "import { RELEASE_TAIL_OBSERVATION_SCHEMA } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23889,7 +23889,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 14
+        "line": 16
       },
       "example": "import { RELEASE_TAIL_RECEIPT_SCHEMA } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23913,7 +23913,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 17
+        "line": 19
       },
       "example": "import { RELEASE_TAIL_STATES } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23937,7 +23937,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 7
+        "line": 9
       },
       "example": "import { RELEASE_TAIL_TRANSACTION_POLICY } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23961,7 +23961,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 8
+        "line": 10
       },
       "example": "import { RELEASE_TAIL_TRANSACTION_SCHEMA } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -23990,7 +23990,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 1207
+        "line": 227
       },
       "example": "import { releaseTailRetryPolicyFromDeclaration } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24012,14 +24012,14 @@
       ],
       "returns": "unknown",
       "errors": [
-        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 164
+        "line": 78
       },
       "example": "import { releaseTailRoot } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24048,7 +24048,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 149
+        "line": 73
       },
       "example": "import { releaseTailStableJson } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24077,7 +24077,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 602
+        "line": 103
       },
       "example": "import { validateReleaseTailEffectPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24106,7 +24106,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 744
+        "line": 111
       },
       "example": "import { validateReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -24139,7 +24139,7 @@
       ],
       "source": {
         "path": "packages/core/release-tail-provider-plane.js",
-        "line": 841
+        "line": 126
       },
       "example": "import { writeReleaseTailTransaction } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -31035,7 +31035,7 @@
       "specifier": "@kungfu-tech/buildchain/release-tail-provider-plane",
       "export": "./release-tail-provider-plane",
       "target": "./packages/core/release-tail-provider-plane.js",
-      "digest": "sha256:eee5a8f948a7c8aaa2b491037f6000547434d5bcd55139f4e5a3380f45e61e19",
+      "digest": "sha256:525575c9d4330c7fa0760491342757be80a186be589f18d9bba64b5a1ea69c5d",
       "summary": "Versioned declarative release-tail parsing, deterministic effect planning, durable transaction execution, readback, retry, and rooted receipt APIs.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -31194,7 +31194,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:5bf8600323e802258023088612be0f68d86fef9ea409e9250dd55358c907f65a"
+      "digest": "sha256:359d5dd02044c10cc82ba8b76c9f290bc335ad0fd0567f3cb6f50ae64bebac13"
     },
     {
       "id": "build-facts",

@@ -74,7 +74,6 @@
       "packages/core/publication-rehearsal-runtime.js",
       "packages/core/release-tail-provider-adapters.js",
       "packages/core/release-tail-provider-plane.js",
-      "packages/core/v4-product-publication.js",
       "packages/core/v4-publication-rehearsal-capsule.js",
       "packages/core/v4-publication-rehearsal.js"
     ],
@@ -141,6 +140,7 @@
         "packages/core/kfd-gate.js",
         "packages/core/kfd-product-gates.js",
         "packages/core/kungfu-temporal-fact.js",
+        "packages/core/next-development-transition.js",
         "packages/core/package-manager.js",
         "packages/core/public-surface-audit.js",
         "packages/core/public-surface-cli.js",
@@ -158,6 +158,8 @@
         "packages/core/spawn-command.js",
         "packages/core/surface-manifest.js",
         "packages/core/v4-canonical-contracts.js",
+        "packages/core/v4-domain-wasm-artifact.js",
+        "packages/core/v4-domain-wasm.js",
         "packages/core/v4-floating-consumer-evidence.js",
         "packages/core/v4-floating-consumer-policy.js",
         "packages/core/v4-floating-consumer-release-passport.js",
@@ -171,7 +173,20 @@
         "packages/core/workflow-yaml-contract.js",
         "scripts/ensure-github-release.mjs"
       ],
-      "root": "sha256:31d13d74b8b3dadbfe4b5061c99f6f6711be6c3b06449114f2708427374f9c85"
+      "root": "sha256:288290a0da4e608869026688fc4981ded81cbc97b9e7bd7c031b9b8369653a39"
+    },
+    "rustWasmAuthority": {
+      "loader": "packages/core/v4-domain-wasm.js",
+      "metadata": "packages/core/v4-domain-wasm-artifact.js",
+      "artifact": "packages/core/buildchain-v4-domain.wasm",
+      "artifactRoot": "sha256:32a808ba9b749d1297c0ce4b7be1586afdae3d849e44f3f7ffb1742e572f5627",
+      "distributedArtifacts": [
+        "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
+        "actions/release-tail/dist/buildchain-v4-domain.wasm",
+        "actions/v4-release-candidate-promote/dist/buildchain-v4-domain.wasm"
+      ],
+      "byteIdenticalDistributions": true,
+      "fallbackWriterCount": 0
     },
     "legacyEngineModules": [
       "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
