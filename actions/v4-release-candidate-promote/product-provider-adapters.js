@@ -16,7 +16,6 @@ import {
 import { createV4GithubProductAdapters } from "./product-provider-github-adapters.js";
 
 const GITHUB_MUTATION_RETRY_DELAYS_MS = Object.freeze([1_000, 2_000, 4_000]);
-
 function retryableGithubMutation(error) {
   const status = Number(
     error?.status || error?.statusCode || error?.response?.status || 0,
@@ -28,7 +27,6 @@ function retryableGithubMutation(error) {
     String(error?.code || ""),
   );
 }
-
 function githubMutationFailure(error) {
   if (error?.releaseTailClass) return error;
   const status = Number(
@@ -58,9 +56,7 @@ export async function retryGithubMutation(wait, operation, readback) {
     }
   }
 }
-
 const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
-
 function standardPublicationTarget({
   resolveStandardTarget,
   candidatePassportPath,
@@ -263,7 +259,7 @@ function validateProviderRequest(request, intent) {
     );
 }
 
-function localVersionFiles(cwd, intent) {
+export function localVersionFiles(cwd, intent) {
   const discovered = discoverVersionStateFiles(cwd);
   if (discovered.files.length === 0)
     throw new Error("v4 product publication requires package version state");
@@ -384,7 +380,8 @@ function verifyRootedBundle(request, intent) {
   });
   if (
     sealedBundle.root !== intent.sealedBundleRoot ||
-    sealedBundle.npm.name !== intent.packageName
+    sealedBundle.npm.name !== intent.packageName ||
+    (intent.channel === "alpha" && sealedBundle.npm.version !== intent.version)
   )
     throw new Error("sealed product bundle drifted from QUALIFY intent");
   return sealedBundle;
@@ -394,6 +391,14 @@ function createPackedPackage(context) {
   let packed;
   return () => {
     if (packed) return packed;
+    if (context.intent.channel === "alpha") {
+      packed = {
+        tarballPath: context.sealedBundle.npm.absolutePath,
+        integrity: context.sealedBundle.npm.integrity,
+        sha256: context.sealedBundle.npm.sha256,
+      };
+      return packed;
+    }
     const temporaryRoot = fs.mkdtempSync(
       path.join(os.tmpdir(), "buildchain-v4-product-"),
     );
@@ -519,15 +524,19 @@ export function createV4ProductPublicationAdapters({
 }) {
   validateProviderRequest(request, intent);
   requiredProductArtifacts(request, intent);
-  if ((intent.artifactKind || "npm") === "npm")
-    verifyRootedBundle(request, intent);
+  const sealedBundle =
+    (intent.artifactKind || "npm") === "npm"
+      ? verifyRootedBundle(request, intent)
+      : undefined;
   const context = {
     request,
     intent,
     plan,
     cwd,
     spawn,
-    versionFiles: localVersionFiles(cwd, intent),
+    sealedBundle,
+    versionFiles:
+      intent.channel === "alpha" ? [] : localVersionFiles(cwd, intent),
     packageEffectAttempted: false,
     wait,
     githubMutation: (operation, readback) =>

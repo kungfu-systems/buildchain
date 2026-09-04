@@ -1,18 +1,12 @@
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
-
-const COMMIT_IDENTITY = {
-  name: "Keren Dong",
-  email: "keren.dong@kungfu.link",
-};
+const COMMIT_IDENTITY = { name: "Keren Dong", email: "keren.dong@kungfu.link" };
 const SIGN_OFF = `Signed-off-by: ${COMMIT_IDENTITY.name} <${COMMIT_IDENTITY.email}>`;
-
 function providerError(message, releaseTailClass, releaseTailCode) {
   return Object.assign(new Error(message), {
     releaseTailClass,
     releaseTailCode,
   });
 }
-
 function transientMutationError(error, code) {
   const status = Number(error?.status || error?.response?.status || 0);
   return providerError(
@@ -21,20 +15,15 @@ function transientMutationError(error, code) {
     status ? `${code}-${status}` : code,
   );
 }
-
 function notFound(error) {
   return error?.status === 404 || error?.response?.status === 404;
 }
-
-const githubMutation = (context, operation, readback) =>
-  context.githubMutation?.(operation, readback) || operation();
-
+const githubMutation = (context, operation, readback) => context.githubMutation?.(operation, readback) || operation();
 function splitRepository(repository) {
   const match = String(repository || "").match(/^([^/\s]+)\/([^/\s]+)$/u);
   if (!match) throw new Error(`invalid publication repository: ${repository}`);
   return { owner: match[1], repo: match[2] };
 }
-
 function operationFor(plan, effect) {
   const operation = plan.operations.find(
     ({ id }) => id === effect.capabilityId,
@@ -51,7 +40,6 @@ function operationFor(plan, effect) {
     );
   return operation;
 }
-
 function observed(effect, evidence) {
   return {
     outcome: "observed",
@@ -61,19 +49,13 @@ function observed(effect, evidence) {
     evidenceRoots: [releaseTailRoot(evidence)],
   };
 }
-
 function absent(code) {
   return { outcome: "absent", providerCode: code, evidenceRoots: [] };
 }
-
 function conflict(code) {
   return { outcome: "conflict", providerCode: code, evidenceRoots: [] };
 }
-
-function refName(value) {
-  return String(value || "").replace(/^refs\//u, "");
-}
-
+const refName = (value) => String(value || "").replace(/^refs\//u, "");
 async function getRef(octokit, repository, ref) {
   const { owner, repo } = splitRepository(repository);
   try {
@@ -88,7 +70,6 @@ async function getRef(octokit, repository, ref) {
     throw error;
   }
 }
-
 async function createRef(context, repository, ref, sha) {
   const { owner, repo } = splitRepository(repository);
   try {
@@ -111,7 +92,6 @@ async function createRef(context, repository, ref, sha) {
       );
   }
 }
-
 export async function commitContainsReleaseState(
   octokit,
   repository,
@@ -140,10 +120,17 @@ export async function commitContainsReleaseState(
     ancestorCommit.tree.sha === currentCommit.tree?.sha,
   );
 }
-
 async function versionStateReadback(context, effect) {
-  const { request, plan, versionFiles } = context;
+  const { request, plan, versionFiles, intent } = context;
   const operation = operationFor(plan, effect);
+  if (intent.channel === "alpha")
+    return observed(effect, {
+      kind: "github-version-state",
+      stateRef: "",
+      releaseSha: operation.target.sourceSha,
+      files: [],
+      materialization: "sealed-candidate",
+    });
   const state = await getRef(
     request.octokit,
     operation.target.repository,
@@ -189,7 +176,6 @@ async function versionStateReadback(context, effect) {
     files: versionFiles.map(({ path }) => path).sort(),
   });
 }
-
 async function createVersionStateTree(
   context,
   repository,
@@ -271,7 +257,6 @@ async function versionStateApply(context, effect) {
     version: intent.version,
   });
 }
-
 async function resolvedVersionStateSha(context, operation) {
   const ref = await getRef(
     context.request.octokit,
@@ -286,11 +271,13 @@ async function resolvedVersionStateSha(context, operation) {
     );
   return ref.object.sha;
 }
-
 async function refsReadback(context, effect) {
   const { request, plan, intent } = context;
   const operation = operationFor(plan, effect);
-  const stateSha = await resolvedVersionStateSha(context, operation);
+  const stateSha =
+    intent.channel === "alpha"
+      ? operation.target.sourceSha
+      : await resolvedVersionStateSha(context, operation);
   let channelSha = "";
   for (const reference of operation.target.references) {
     const ref = await getRef(
@@ -335,7 +322,6 @@ async function refsReadback(context, effect) {
     references: operation.target.references,
   });
 }
-
 async function ensureGeneratedCheck(context, repository, branch, sha) {
   const { request, intent } = context;
   if (typeof request.octokit.rest.checks?.create !== "function") return;
@@ -355,7 +341,6 @@ async function ensureGeneratedCheck(context, repository, branch, sha) {
     }),
   );
 }
-
 async function openProtectedRefPullRequest(
   context,
   repository,
@@ -459,7 +444,6 @@ async function openProtectedRefPullRequest(
     sha: pullRequestCommit.sha,
   });
 }
-
 async function convergeBranch(context, repository, ref, sha) {
   const { request, updates } = context;
   const branch = ref.replace(/^refs\/heads\//u, "");
@@ -508,7 +492,6 @@ async function convergeBranch(context, repository, ref, sha) {
     return false;
   }
 }
-
 async function updateTag(context, repository, ref, sha) {
   const { request, updates } = context;
   const current = await getRef(request.octokit, repository, ref);
@@ -526,13 +509,15 @@ async function updateTag(context, repository, ref, sha) {
     );
   updates.push({ action: "converged-release-tag", ref, sha });
 }
-
 async function refsApply(context, effect) {
   const { request, plan, intent } = context;
   const operation = operationFor(plan, effect);
-  const stateSha = await resolvedVersionStateSha(context, operation);
+  const stateSha =
+    intent.channel === "alpha"
+      ? operation.target.sourceSha
+      : await resolvedVersionStateSha(context, operation);
   const exact = operation.target.references.find(
-    ({ target }) => target === "source",
+    ({ ref }) => ref === `refs/tags/${intent.exactTag}`,
   );
   await createRef(
     context,
@@ -543,7 +528,21 @@ async function refsApply(context, effect) {
   const branches = operation.target.references.filter(({ ref }) =>
     ref.startsWith("refs/heads/"),
   );
-  for (const reference of branches)
+  for (const reference of branches) {
+    if (reference.target === "source") {
+      const current = await getRef(
+        request.octokit,
+        operation.target.repository,
+        reference.ref,
+      );
+      if (current?.object?.sha !== operation.target.sourceSha)
+        throw providerError(
+          "alpha branch must already contain the exact reviewed candidate",
+          "conflict",
+          "alpha-candidate-ref-not-converged",
+        );
+      continue;
+    }
     if (
       !(await convergeBranch(
         context,
@@ -553,6 +552,7 @@ async function refsApply(context, effect) {
       ))
     )
       return;
+  }
   const channel = await getRef(
     request.octokit,
     operation.target.repository,
@@ -566,16 +566,15 @@ async function refsApply(context, effect) {
       "channel-ref-absent",
     );
   for (const reference of operation.target.references.filter(
-    ({ ref, target }) => ref.startsWith("refs/tags/") && target !== "source",
+    ({ ref }) => ref.startsWith("refs/tags/") && ref !== exact.ref,
   ))
     await updateTag(
       context,
       operation.target.repository,
       reference.ref,
-      channelSha,
+      reference.target === "source" ? operation.target.sourceSha : channelSha,
     );
 }
-
 export function createV4GithubProductAdapters(context) {
   return {
     adapters: {

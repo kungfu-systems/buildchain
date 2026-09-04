@@ -140,6 +140,7 @@
         "packages/core/kfd-gate.js",
         "packages/core/kfd-product-gates.js",
         "packages/core/kungfu-temporal-fact.js",
+        "packages/core/next-development-transition.js",
         "packages/core/package-manager.js",
         "packages/core/public-surface-audit.js",
         "packages/core/public-surface-cli.js",
@@ -172,13 +173,13 @@
         "packages/core/workflow-yaml-contract.js",
         "scripts/ensure-github-release.mjs"
       ],
-      "root": "sha256:d364bf52a30cb2297cbd59e7b7b3abff4d96c84459e727bfc953b64f7698de90"
+      "root": "sha256:288290a0da4e608869026688fc4981ded81cbc97b9e7bd7c031b9b8369653a39"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/v4-domain-wasm.js",
       "metadata": "packages/core/v4-domain-wasm-artifact.js",
       "artifact": "packages/core/buildchain-v4-domain.wasm",
-      "artifactRoot": "sha256:1269c300f2d808e52375b8187e5f28528f01aa79f901e44b0b367725e2d1fa59",
+      "artifactRoot": "sha256:32a808ba9b749d1297c0ce4b7be1586afdae3d849e44f3f7ffb1742e572f5627",
       "distributedArtifacts": [
         "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
         "actions/release-tail/dist/buildchain-v4-domain.wasm",

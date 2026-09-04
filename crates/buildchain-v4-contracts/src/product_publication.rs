@@ -130,13 +130,27 @@ fn repository(value: &str) -> bool {
             .all(|part| !part.is_empty() && !part.chars().any(char::is_whitespace))
 }
 
-fn observed_alpha(value: &str, expected: &Version) -> Option<u64> {
-    let parsed = parse_version(value, "observed").ok()?;
-    (parsed.major == expected.major
-        && parsed.minor == expected.minor
-        && parsed.patch == expected.patch)
-        .then_some(parsed.alpha)
-        .flatten()
+fn validate_recovered_version(
+    channel: &str,
+    candidate: &Version,
+    recovered: &Version,
+) -> ContractResult<()> {
+    if recovered.major != candidate.major
+        || recovered.minor != candidate.minor
+        || recovered.patch != candidate.patch
+        || (channel == "alpha" && recovered.alpha.is_none())
+        || (channel == "stable" && recovered.alpha.is_some())
+    {
+        return Err(fault(
+            "recoveredVersion is incompatible with the candidate release line",
+        ));
+    }
+    if channel == "alpha" && recovered.value != candidate.value {
+        return Err(fault(
+            "recovered alpha version must equal the sealed candidate version",
+        ));
+    }
+    Ok(())
 }
 
 pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value> {
@@ -198,39 +212,13 @@ pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value>
     let recovered = string(value, "recoveredVersion");
     let (version, mode) = if !recovered.is_empty() {
         let recovered = parse_version(&recovered, "recoveredVersion")?;
-        if recovered.major != candidate.major
-            || recovered.minor != candidate.minor
-            || recovered.patch != candidate.patch
-            || (normalized_channel == "alpha" && recovered.alpha.is_none())
-            || (normalized_channel == "stable" && recovered.alpha.is_some())
-        {
-            return Err(fault(
-                "recoveredVersion is incompatible with the candidate release line",
-            ));
-        }
+        validate_recovered_version(normalized_channel, &candidate, &recovered)?;
         (recovered.value, "resume")
     } else if normalized_channel == "alpha" {
-        let alpha = candidate
+        candidate
             .alpha
             .ok_or_else(|| fault("fresh alpha publication requires an alpha candidate version"))?;
-        if artifact_kind == "custom" {
-            (candidate.value.clone(), "fresh")
-        } else {
-            let highest = observed
-                .iter()
-                .filter_map(|entry| observed_alpha(entry, &candidate))
-                .fold(alpha, u64::max);
-            (
-                format!(
-                    "{}.{}.{}-alpha.{}",
-                    candidate.major,
-                    candidate.minor,
-                    candidate.patch,
-                    highest + 1
-                ),
-                "fresh",
-            )
-        }
+        (candidate.value.clone(), "fresh")
     } else {
         (
             format!(
@@ -310,18 +298,16 @@ fn references(intent: &Value, version: &Version) -> Value {
         .get("targetRef")
         .and_then(Value::as_str)
         .unwrap_or_default();
-    let mut values = vec![
-        json!({"ref": format!("refs/tags/{tag}"), "target": "source"}),
-        json!({"ref": format!("refs/heads/{target_ref}"), "target": "version-state"}),
-    ];
+    let mut values = vec![json!({"ref": format!("refs/tags/{tag}"), "target": "source"})];
     if intent.get("channel").and_then(Value::as_str) == Some("alpha") {
         values.extend([
-            json!({"ref": format!("refs/heads/dev/v{}/v{}.{}", version.major, version.major, version.minor), "target": "version-state"}),
-            json!({"ref": format!("refs/tags/v{}.{}-alpha", version.major, version.minor), "target": "version-state"}),
-            json!({"ref": format!("refs/tags/v{}-alpha", version.major), "target": "version-state"}),
+            json!({"ref": format!("refs/heads/{target_ref}"), "target": "source"}),
+            json!({"ref": format!("refs/tags/v{}.{}-alpha", version.major, version.minor), "target": "source"}),
+            json!({"ref": format!("refs/tags/v{}-alpha", version.major), "target": "source"}),
         ]);
     } else {
         values.extend([
+            json!({"ref": format!("refs/heads/{target_ref}"), "target": "version-state"}),
             json!({"ref": format!("refs/tags/v{}.{}", version.major, version.minor), "target": "version-state"}),
             json!({"ref": format!("refs/tags/v{}", version.major), "target": "version-state"}),
         ]);
