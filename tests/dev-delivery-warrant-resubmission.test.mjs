@@ -132,6 +132,50 @@ test("phase-less non-native active owner reuses its exact source proof across re
   );
 });
 
+test("source-root retry normalizes empty retired root inputs", async () => {
+  const sourceOptions = {
+    ...options,
+    sourceRoot: root("1"),
+    assignmentRoot: "",
+    initiativeRoot: "",
+    environmentRoot: "",
+    nativeCommand: "",
+    deliveryClass: "non-native-fast",
+  };
+  const initial = createDevDeliveryQueue({
+    repository: sourceOptions.repository,
+    protectedBase: sourceOptions.branch,
+    now: "2026-08-04T00:00:00Z",
+  });
+  const submitted = submitDevDeliveryCandidate(
+    initial,
+    {
+      ...sourceOptions,
+      assignmentRoot: undefined,
+      initiativeRoot: undefined,
+    },
+    { now: "2026-08-04T00:01:00Z" },
+  );
+  const selected = selectDevDeliveryWarrant(submitted.queue, {
+    now: "2026-08-04T00:02:00Z",
+  });
+  const store = new MemoryStore(selected.queue);
+  const result = await runDevDeliveryCommand(
+    {
+      ...sourceOptions,
+      sourceProofRoot: root("f"),
+      execute: true,
+      now: "2026-08-04T00:03:00Z",
+    },
+    store,
+  );
+
+  assert.equal(result.receipt.action, "active-warrant-noop");
+  assert.equal(result.receipt.sourceProofRoot, options.sourceProofRoot);
+  assert.equal(result.mutationApplied, false);
+  assert.equal(store.writes.length, 0);
+});
+
 test("active source proof reuse rejects any other candidate drift", async () => {
   const selected = selectedQueue();
   const store = new MemoryStore(selected.queue);
