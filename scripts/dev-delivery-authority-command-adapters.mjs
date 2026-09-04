@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import path from "node:path";
 import {
   acquireDevDeliveryLandingWarrant,
@@ -66,6 +65,7 @@ function submitCandidate(state, options) {
     {
       pullRequestNumber: options.pullRequestNumber,
       sourceHead: options.sourceHead,
+      sourceRoot: options.sourceRoot,
       assignmentRoot: options.assignmentRoot,
       initiativeRoot: options.initiativeRoot,
       sourceIdentityRoot: options.sourceIdentityRoot,
