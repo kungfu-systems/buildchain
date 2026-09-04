@@ -42,6 +42,12 @@ test("fresh and recovered product versions are selected before APPLY without pro
   assert.equal(fresh.exactTag, "v4.0.2-alpha.8");
   assert.match(fresh.intentRoot, /^sha256:[0-9a-f]{64}$/u);
 
+  const offsetTimestamp = selectV4ProductPublicationIntent({
+    ...common,
+    sourceTimestamp: "2026-08-30T08:00:00+08:00",
+  });
+  assert.equal(offsetTimestamp.sourceTimestamp, "2026-08-30T08:00:00+08:00");
+
   const resume = selectV4ProductPublicationIntent({
     ...common,
     recoveredVersion: "4.0.2-alpha.7",

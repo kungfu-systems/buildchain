@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "ab074f705fa1842de328c50d59aefc5d158807e5589b1ab3f565afac9b9058b3",
+    "sha256": "95a35753bf34c3ad02996d8bcdcb0c21d000ad37b58df14b14c9ef6b9b6bcb21",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 74,
       "actionCount": 8,
-      "sitePageCount": 84,
+      "sitePageCount": 85,
       "docCommandRefCount": 1050,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "ab074f705fa1842de328c50d59aefc5d158807e5589b1ab3f565afac9b9058b3",
+      "sha256": "95a35753bf34c3ad02996d8bcdcb0c21d000ad37b58df14b14c9ef6b9b6bcb21",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 74,
         "actionCount": 8,
-        "sitePageCount": 84,
+        "sitePageCount": 85,
         "docCommandRefCount": 1050,
         "failureCount": 0
       },
@@ -7237,6 +7237,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:v4-rust-wasm-production-authority",
+          "name": "site-page:manual:v4-rust-wasm-production-authority",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:v4-stage-capsule",
           "name": "site-page:manual:v4-stage-capsule",
           "kind": "site-page",
@@ -7467,6 +7479,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 478
+    "publicSurfaceCount": 479
   }
 }

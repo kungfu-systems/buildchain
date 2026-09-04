@@ -38,6 +38,8 @@ jobs:
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
+      - name: Load the committed Rust/WASM production authority
+        run: node --test tests/v4-domain-wasm.test.mjs
       - name: Rehearse declared Stage Capsule checkpoint in clean processes
         run: >-
           node scripts/v4-platform-stage-checkpoint-rehearsal.mjs rehearse
@@ -86,6 +88,11 @@ jobs:
       - uses: actions/setup-go@v6.5.0
         with:
           go-version: "1.25.x"
+      - name: Install the exact Rust/WASM build toolchain
+        run: >-
+          rustup toolchain install 1.96.0
+          --profile minimal
+          --target wasm32-unknown-unknown
       - name: Enable package manager shims
         run: |
           corepack prepare pnpm@11.7.0 --activate

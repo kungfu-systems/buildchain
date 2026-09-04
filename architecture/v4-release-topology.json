@@ -74,7 +74,6 @@
       "packages/core/publication-rehearsal-runtime.js",
       "packages/core/release-tail-provider-adapters.js",
       "packages/core/release-tail-provider-plane.js",
-      "packages/core/v4-product-publication.js",
       "packages/core/v4-publication-rehearsal-capsule.js",
       "packages/core/v4-publication-rehearsal.js"
     ],
@@ -158,6 +157,8 @@
         "packages/core/spawn-command.js",
         "packages/core/surface-manifest.js",
         "packages/core/v4-canonical-contracts.js",
+        "packages/core/v4-domain-wasm-artifact.js",
+        "packages/core/v4-domain-wasm.js",
         "packages/core/v4-floating-consumer-evidence.js",
         "packages/core/v4-floating-consumer-policy.js",
         "packages/core/v4-floating-consumer-release-passport.js",
@@ -171,7 +172,20 @@
         "packages/core/workflow-yaml-contract.js",
         "scripts/ensure-github-release.mjs"
       ],
-      "root": "sha256:31d13d74b8b3dadbfe4b5061c99f6f6711be6c3b06449114f2708427374f9c85"
+      "root": "sha256:d364bf52a30cb2297cbd59e7b7b3abff4d96c84459e727bfc953b64f7698de90"
+    },
+    "rustWasmAuthority": {
+      "loader": "packages/core/v4-domain-wasm.js",
+      "metadata": "packages/core/v4-domain-wasm-artifact.js",
+      "artifact": "packages/core/buildchain-v4-domain.wasm",
+      "artifactRoot": "sha256:1269c300f2d808e52375b8187e5f28528f01aa79f901e44b0b367725e2d1fa59",
+      "distributedArtifacts": [
+        "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
+        "actions/release-tail/dist/buildchain-v4-domain.wasm",
+        "actions/v4-release-candidate-promote/dist/buildchain-v4-domain.wasm"
+      ],
+      "byteIdenticalDistributions": true,
+      "fallbackWriterCount": 0
     },
     "legacyEngineModules": [
       "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",

@@ -108,6 +108,20 @@ test("declaration parser rejects executable data and identity drift", () => {
     () => parseReleaseTailDeclaration(drifted),
     /capabilityId must match/u,
   );
+
+  const invalidPattern = declaration();
+  invalidPattern.capabilities[0].channelPolicy.tagPattern = "[";
+  assert.throws(
+    () => parseReleaseTailDeclaration(invalidPattern),
+    /tagPattern is not a valid expression/u,
+  );
+
+  const nonMatchingPattern = declaration();
+  nonMatchingPattern.capabilities[0].channelPolicy.tagPattern = "^v5";
+  assert.throws(
+    () => parseReleaseTailDeclaration(nonMatchingPattern),
+    /tagPattern does not match subject\.tag/u,
+  );
 });
 
 test("effect plans are rooted and reject post-compilation tampering", () => {
@@ -119,6 +133,10 @@ test("effect plans are rooted and reject post-compilation tampering", () => {
     () => createReleaseTailTransaction(tampered),
     /operationId mismatch|effectRoot mismatch|planRoot mismatch/u,
   );
+
+  const extraField = structuredClone(plan);
+  extraField.effects[0].unexpected = true;
+  assert.equal(validateReleaseTailEffectPlan(extraField).valid, false);
 });
 
 test("all capabilities settle through one transaction and standardized envelopes", async () => {
