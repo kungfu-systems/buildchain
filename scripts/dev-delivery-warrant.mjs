@@ -206,8 +206,9 @@ function transitionFor(command, queue, options) {
         "pullRequestNumber",
       ),
       sourceHead: exactSha(options.sourceHead, "sourceHead"),
-      assignmentRoot: exactRoot(options.assignmentRoot, "assignmentRoot"),
-      initiativeRoot: exactRoot(options.initiativeRoot, "initiativeRoot"),
+      sourceRoot: options.sourceRoot,
+      assignmentRoot: options.assignmentRoot,
+      initiativeRoot: options.initiativeRoot,
       sourceIdentityRoot: exactRoot(
         options.sourceIdentityRoot,
         "sourceIdentityRoot",

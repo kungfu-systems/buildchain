@@ -36,6 +36,7 @@
     "actions/release-tail/index.js",
     "scripts/authorize-promotion-runtime-override.cjs",
     "scripts/build-contract-core.mjs",
+    "scripts/github-output.mjs",
     "scripts/buildchain-cli-help.mjs",
     "scripts/generate-channel-build-workflow.mjs",
     "scripts/promotion-routing-evidence.mjs",
@@ -420,12 +421,14 @@
       "owner": "Buildchain contract maintainers",
       "implementation": [
         "packages/core/buildchain-contract.js",
-        "scripts/build-contract-core.mjs"
+        "scripts/build-contract-core.mjs",
+        "scripts/github-output.mjs"
       ],
       "tests": [
         "tests/buildchain-contract.test.mjs",
         "tests/build-surface.test.mjs",
-        "tests/build-surface-promotion.test.mjs"
+        "tests/build-surface-promotion.test.mjs",
+        "tests/github-output.test.mjs"
       ],
       "contracts": [
         "dist/site/buildchain-contract.json",
