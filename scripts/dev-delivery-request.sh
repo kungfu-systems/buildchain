@@ -86,14 +86,45 @@ predicates="$(node "$runtime_root/scripts/dev-delivery-source-proof-reuse.mjs" p
   --contract-digest "$runtime_sha" --node-version "${BUILDCHAIN_NODE_VERSION:-24}" \
   --policy-paths-json "$policy_paths" --closure-paths-json "$existing_paths" \
   --dependency-paths-json "$dependency_paths" --required-contexts-json "$required_contexts")"
+
+# Hide phase-less Warrant recovery inside Buildchain; it is not operator input.
+legacy_active_owner_binding=""
+github_token="${GITHUB_TOKEN:-${GH_TOKEN:-$(gh auth token 2>/dev/null || true)}}"
+if [ -n "$github_token" ]; then
+  observation="$(GITHUB_TOKEN="$github_token" node "$runtime_root/scripts/dev-delivery-warrant.mjs" observe --repository "$repository" --branch "$base" --json 2>/dev/null || true)"
+  active_pr="$(jq -r '.observation.activeWarrant.pullRequestNumber // empty' <<<"${observation:-}" 2>/dev/null || true)"
+  active_head="$(jq -r '.observation.activeWarrant.sourceHead // empty' <<<"${observation:-}" 2>/dev/null || true)"
+  if [ "$execute" = true ] && [ -n "$active_pr" ] && { [ "$active_pr" != "$number" ] || [ "$active_head" != "$source_head" ]; }; then
+    active_pr_state="$(gh pr view "$active_pr" --repo "$repository" --json state,headRefOid 2>/dev/null || true)"
+    observed_state="$(jq -r '.state // empty' <<<"${active_pr_state:-}" 2>/dev/null || true)"
+    observed_head="$(jq -r '.headRefOid // empty' <<<"${active_pr_state:-}" 2>/dev/null || true)"
+    if [ "$observed_state" = CLOSED ] || { [ "$active_pr" = "$number" ] && [ -n "$observed_head" ] && [ "$observed_head" != "$active_head" ]; }; then
+      stale_fact="$(jq -cn --arg repository "$repository" --arg base "$base" --argjson pr "$active_pr" --arg recorded "$active_head" \
+        --arg observed "${observed_head:-$active_head}" --arg state "$observed_state" '{repository:$repository,protectedBase:$base,pullRequestNumber:$pr,recordedHead:$recorded,observedHead:$observed,observedState:$state}')"
+      stale_evidence_root="$(node --input-type=module -e 'const {devDeliveryContentRoot:root}=await import(process.argv[1]);process.stdout.write(root(JSON.parse(process.argv[2])))' "$runtime_root/packages/core/dev-delivery-warrant.js" "$stale_fact")"
+      GITHUB_TOKEN="$github_token" node "$runtime_root/scripts/dev-delivery-warrant.mjs" settle \
+        --repository "$repository" --branch "$base" --pull-request "$active_pr" --expected-source-head "$active_head" \
+        --fencing-token "$(jq -er '.observation.activeWarrant.fencingToken' <<<"$observation")" --lease-generation "$(jq -er '.observation.activeWarrant.generation' <<<"$observation")" \
+        --outcome "$([ "$observed_state" = CLOSED ] && printf cancelled || printf dequeued)" \
+        --evidence-root "$stale_evidence_root" \
+        --reason "Buildchain observed a closed PR or changed PR head before a new minimal delivery request." --execute >/dev/null
+      observation="$(GITHUB_TOKEN="$github_token" node "$runtime_root/scripts/dev-delivery-warrant.mjs" observe --repository "$repository" --branch "$base" --json)"
+    fi
+  fi
+  legacy_active_owner_binding="$(jq -c --argjson number "$number" --arg head "$source_head" '
+    select(.observation.activeWarrant.pullRequestNumber == $number and .observation.activeWarrant.sourceHead == $head and
+      (.observation.activeWarrant | has("phase") | not)) | {schema:"kungfu.buildchain.legacy-active-owner-binding/v1",
+      stateRoot:.observation.stateRoot,fencingToken:.observation.activeWarrant.fencingToken,generation:.observation.activeWarrant.generation}
+  ' <<<"${observation:-}" 2>/dev/null || true)"
+fi
 workflow="buildchain-dev-delivery.yml"
 gh api "repos/$repository/contents/.github/workflows/$workflow?ref=$base" >/dev/null 2>&1 || workflow="native-dev-delivery.yml"
 payload="$(jq -n --arg ref "$base" --arg runtime "$runtime_sha" --arg number "$number" \
   --arg head "$source_head" --arg roots "$(jq -cn --arg root "$source_root" '{sourceRoot:$root}')" \
-  --arg run "$run_id" --argjson proof "$predicates" '{ref:$ref,inputs:{
+  --arg run "$run_id" --arg legacyBinding "$legacy_active_owner_binding" --argjson proof "$predicates" '{ref:$ref,inputs:{
     "buildchain-ref":$runtime,"target-branch":$ref,"expected-pr-number":$number,
     "expected-head-sha":$head,"native-roots-json":$roots,"source-workflow-run-id":$run,
-    "legacy-active-owner-binding-json":"","source-identity-root":$proof.sourceIdentityRoot,
+    "legacy-active-owner-binding-json":$legacyBinding,"source-identity-root":$proof.sourceIdentityRoot,
     "source-patch-root":$proof.sourcePatchRoot,"plan-root":$proof.planRoot,
     "closure-root":$proof.closureRoot,"dependency-root":$proof.dependencyRoot,
     "toolchain-root":$proof.toolchainRoot,"environment-root":"",

@@ -46,3 +46,45 @@ test("dev delivery request plans from only a PR number and machine source bindin
   assert.equal(result.stdout.trim(), "Buildchain dev delivery: plan PR #7");
   fs.rmSync(directory, { recursive: true, force: true });
 });
+
+test("dev delivery request hides phase-less owner recovery inside Buildchain", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-recovery-"));
+  const gh = path.join(directory, "gh");
+  const node = path.join(directory, "node");
+  const payloadPath = path.join(directory, "payload.json");
+  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, encoding: "utf8" }).stdout.trim();
+  const base = spawnSync("git", ["rev-parse", "HEAD^"], { cwd: repositoryRoot, encoding: "utf8" }).stdout.trim();
+  fs.writeFileSync(node, `#!/bin/bash
+if [ "$1" = "${repositoryRoot}/scripts/dev-delivery-warrant.mjs" ]; then
+  echo '{"observation":{"stateRoot":"sha256:${"3".repeat(64)}","activeWarrant":{"pullRequestNumber":7,"sourceHead":"${head}","fencingToken":"sha256:${"4".repeat(64)}","generation":9}}}'
+  exit 0
+fi
+exec "${process.execPath}" "$@"
+`);
+  fs.writeFileSync(gh, `#!/bin/bash
+case "$1 $2" in
+  "repo view") echo 'kungfu-systems/buildchain' ;;
+  "pr view") echo '{"number":7,"state":"OPEN","isDraft":false,"baseRefName":"dev/v4/v4.0","headRefOid":"${head}","headRepository":{"nameWithOwner":"kungfu-systems/buildchain"},"statusCheckRollup":[{"workflowName":"Verify","conclusion":"SUCCESS","detailsUrl":"https://github.com/kungfu-systems/buildchain/actions/runs/123/job/1","name":"check"}]}' ;;
+  "api repos/kungfu-systems/buildchain/actions/runs/123") echo '{"conclusion":"success","event":"pull_request","head_sha":"${head}","path":".github/workflows/verify.yml@refs/pull/7/merge","pull_requests":[{"number":7,"base":{"sha":"${base}"}}]}' ;;
+  "api repos/kungfu-systems/buildchain/contents/.github/workflows/buildchain-dev-delivery.yml?ref=dev/v4/v4.0") echo '{}' ;;
+  "api --method") cat > "${payloadPath}" ;;
+  *) exit 1 ;;
+esac
+`);
+  fs.chmodSync(node, 0o755);
+  fs.chmodSync(gh, 0o755);
+  const result = spawnSync("bash", [path.join(repositoryRoot, "scripts/dev-delivery-request.sh"), "7", "--execute", "--json"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+    env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, GITHUB_TOKEN: "test-token", BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const payload = JSON.parse(fs.readFileSync(payloadPath, "utf8"));
+  assert.deepEqual(JSON.parse(payload.inputs["legacy-active-owner-binding-json"]), {
+    schema: "kungfu.buildchain.legacy-active-owner-binding/v1",
+    stateRoot: `sha256:${"3".repeat(64)}`,
+    fencingToken: `sha256:${"4".repeat(64)}`,
+    generation: 9,
+  });
+  fs.rmSync(directory, { recursive: true, force: true });
+});
