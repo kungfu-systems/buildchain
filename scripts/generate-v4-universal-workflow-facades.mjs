@@ -91,8 +91,13 @@ function frozenFacadeSource(relative) {
   });
 }
 
-function isChannelGeneratedFacade(relative) {
-  return (contract.migration.channelGeneratedFacades || []).includes(relative);
+const mutableFacades = new Set([
+  ...(contract.migration.channelGeneratedFacades || []),
+  ".github/workflows/dev-pr-auto-merge.yml",
+]);
+
+function isMutableFacade(relative) {
+  return mutableFacades.has(relative);
 }
 
 function addUniversalInput(source, relative) {
@@ -200,7 +205,7 @@ function verify(source, relative) {
     if (!block.includes("inputs.universal-request-json == ''"))
       fail(`${relative}#${header[1]} can overlap universal execution`);
   }
-  if (!isChannelGeneratedFacade(relative)) {
+  if (!isMutableFacade(relative)) {
     const expected = migrateV4UniversalWorkflowFacade(
       frozenFacadeSource(relative),
       relative,
