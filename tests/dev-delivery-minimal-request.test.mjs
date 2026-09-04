@@ -55,7 +55,7 @@ test("dev delivery request hides phase-less owner recovery inside Buildchain", (
   const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, encoding: "utf8" }).stdout.trim();
   const base = spawnSync("git", ["rev-parse", "HEAD^"], { cwd: repositoryRoot, encoding: "utf8" }).stdout.trim();
   fs.writeFileSync(node, `#!/bin/bash
-if [ "$1" = "${repositoryRoot}/scripts/dev-delivery-warrant.mjs" ]; then
+if [ "$(basename "$1")" = "dev-delivery-warrant.mjs" ]; then
   echo '{"observation":{"stateRoot":"sha256:${"3".repeat(64)}","activeWarrant":{"pullRequestNumber":7,"sourceHead":"${head}","fencingToken":"sha256:${"4".repeat(64)}","generation":9}}}'
   exit 0
 fi
