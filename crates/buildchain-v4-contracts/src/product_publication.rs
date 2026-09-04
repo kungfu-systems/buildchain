@@ -168,7 +168,7 @@ pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value>
         if !tag.bytes().enumerate().all(|(index, byte)| {
             byte.is_ascii_lowercase()
                 || byte.is_ascii_digit()
-                || (index > 0 && [b'.', b'_', b'-'].contains(&byte))
+                || (index > 0 && b"._-".contains(&byte))
         }) {
             return Err(fault("distTag must be an npm dist-tag"));
         }
