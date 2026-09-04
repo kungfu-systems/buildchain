@@ -7,16 +7,22 @@ use sha2::{Digest, Sha256};
 mod adopter_delivery;
 mod compatibility_facts;
 mod partial_mutation_recovery;
+mod product_publication;
 mod provider_operation_journal;
 mod provider_readback_idempotency;
 mod release_activation_shadow;
 mod release_invocation;
+mod release_runtime;
+mod release_tail;
 mod stable_publication_fence;
 mod stage_capsule;
 mod stage_capsule_resume;
 mod stage_capsule_store;
 mod trace;
 mod warrant;
+
+#[cfg(target_arch = "wasm32")]
+mod wasm;
 
 pub use adopter_delivery::{
     ADOPTER_DELIVERY_PARITY_INPUT_CONTRACT, ADOPTER_DELIVERY_PARITY_PROJECTION_CONTRACT,
@@ -33,6 +39,10 @@ pub use partial_mutation_recovery::{
     PARTIAL_MUTATION_RECOVERY_PLAN_CONTRACT, PARTIAL_MUTATION_RECOVERY_REQUEST_CONTRACT,
     PartialMutationRecoveryPlan, PartialMutationRecoveryRequest, plan_partial_mutation_recovery,
     plan_partial_mutation_recovery_bytes,
+};
+pub use product_publication::{
+    create_product_publication_declaration, create_product_publication_plan,
+    select_product_publication_intent,
 };
 pub use provider_operation_journal::{
     ProviderOperationEntry, ProviderOperationFixtureProjection, ProviderOperationIdentity,
@@ -54,6 +64,16 @@ pub use release_activation_shadow::{
 pub use release_invocation::{
     RELEASE_INVOCATION_CONTRACT, ReleaseInvocation, ReleaseInvocationProjection,
     project_release_invocation, project_release_invocation_bytes,
+};
+pub use release_runtime::{
+    adapt_release_invocation, create_release_receipt, create_release_transaction,
+    plan_release_route,
+};
+pub use release_tail::{
+    advance_release_tail_execution, compile_release_tail_declaration,
+    create_release_tail_transaction, parse_release_tail_declaration, release_tail_root,
+    start_release_tail_execution, validate_release_tail_effect_plan,
+    validate_release_tail_transaction,
 };
 pub use stable_publication_fence::{
     STABLE_PUBLICATION_FENCE_CONTRACT, STABLE_PUBLICATION_PLAN_CONTRACT,
@@ -159,6 +179,11 @@ const ROOT_DOMAINS: &[&str] = &[
     "v4-product-publication-intent",
     "v4-product-publication-operation",
     "v4-product-publication-plan",
+    "tail-reseal-plan",
+    "tail-reseal-admission",
+    "tail-reseal-artifact-files",
+    "tail-reseal-receipt",
+    "release-candidate-passport",
     "release-invocation-publisher",
     "release-invocation-runtime",
     "release-invocation-candidate",
@@ -441,6 +466,77 @@ pub fn validate_clock(value: &str, path: &str) -> ContractResult<()> {
         )));
     }
     Ok(())
+}
+
+pub fn validate_iso_timestamp(value: &str) -> bool {
+    let Some((date, time_and_zone)) = value.split_once('T') else {
+        return false;
+    };
+    let Ok(date_parts) = date
+        .split('-')
+        .map(str::parse::<u32>)
+        .collect::<Result<Vec<_>, _>>()
+    else {
+        return false;
+    };
+    if date_parts.len() != 3 {
+        return false;
+    }
+    let [year, month, day] = [date_parts[0], date_parts[1], date_parts[2]];
+    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
+    let days = [
+        0,
+        31,
+        if leap { 29 } else { 28 },
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+    ];
+    if year == 0 || !(1..=12).contains(&month) || day == 0 || day > days[month as usize] {
+        return false;
+    }
+    let (time, zone) = if let Some(time) = time_and_zone.strip_suffix('Z') {
+        (time, "Z")
+    } else if let Some(index) = time_and_zone
+        .char_indices()
+        .skip(1)
+        .find_map(|(index, character)| ['+', '-'].contains(&character).then_some(index))
+    {
+        (&time_and_zone[..index], &time_and_zone[index..])
+    } else {
+        return false;
+    };
+    let (whole_time, fraction) = time.split_once('.').unwrap_or((time, ""));
+    if (!fraction.is_empty() && !fraction.bytes().all(|byte| byte.is_ascii_digit()))
+        || (time.contains('.') && fraction.is_empty())
+    {
+        return false;
+    }
+    let Ok(parts) = whole_time
+        .split(':')
+        .map(str::parse::<u32>)
+        .collect::<Result<Vec<_>, _>>()
+    else {
+        return false;
+    };
+    if parts.len() != 3 || parts[0] > 23 || parts[1] > 59 || parts[2] > 59 {
+        return false;
+    }
+    if zone == "Z" {
+        return true;
+    }
+    let zone_parts = zone[1..]
+        .split(':')
+        .map(str::parse::<u32>)
+        .collect::<Result<Vec<_>, _>>();
+    matches!(zone_parts.as_deref(), Ok([hour, minute]) if *hour <= 23 && *minute <= 59)
 }
 
 #[cfg(test)]

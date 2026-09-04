@@ -162,7 +162,7 @@ test("architecture freezes one schema authority, one fold writer, and the v4 pro
     productionWriterCount: 1,
     stateFoldAuthority: "rust-v4-core",
     stateFoldWriterCount: 1,
-    typescript: "provider-adapter-and-conformance-plane",
+    typescript: "wasm-calling-provider-adapter-and-conformance-plane",
     productionWriteChange: true,
   });
   assert.deepEqual(contract.budgets, {

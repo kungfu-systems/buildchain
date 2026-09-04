@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-rust-wasm-production-authority/v1",
+  "mode": "production",
+  "sourceAuthority": {
+    "crate": "crates/buildchain-v4-contracts",
+    "toolchain": "crates/buildchain-v4-contracts/rust-toolchain.toml",
+    "build": "scripts/build-v4-domain-wasm.mjs",
+    "reproducibilityCheck": "pnpm run check:v4-wasm"
+  },
+  "runtimeAuthority": {
+    "loader": "packages/core/v4-domain-wasm.js",
+    "metadata": "packages/core/v4-domain-wasm-artifact.js",
+    "artifact": "packages/core/buildchain-v4-domain.wasm",
+    "abiVersion": 1,
+    "fallbackWriterCount": 0,
+    "failurePolicy": "fail-closed"
+  },
+  "rustOwnedSemantics": [
+    "canonical-json-and-content-roots",
+    "release-invocation-plan-transaction-and-receipt",
+    "product-publication-plan-and-version-intent",
+    "provider-operation-journal-and-readback-fold",
+    "release-activation-plan-and-fold",
+    "stable-publication-fence",
+    "partial-mutation-recovery-plan",
+    "release-tail-plan-transaction-retry-readback-and-receipt"
+  ],
+  "nodeOwnedEffects": [
+    "provider-sdk-calls",
+    "filesystem-io",
+    "credential-and-environment-access",
+    "workflow-input-and-output-transport",
+    "provider-error-classification"
+  ],
+  "distribution": {
+    "npmPackage": "packages/core/buildchain-v4-domain.wasm",
+    "actionArtifacts": [
+      "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
+      "actions/release-tail/dist/buildchain-v4-domain.wasm",
+      "actions/v4-release-candidate-promote/dist/buildchain-v4-domain.wasm"
+    ],
+    "artifactBinding": "sha256-metadata-before-instantiation",
+    "runtimeCompilation": false
+  },
+  "qualification": {
+    "platforms": ["linux-x64", "macos-arm64", "windows-x64"],
+    "productionRuntime": "node-24",
+    "checks": [
+      "tracked-artifact-reproducibility",
+      "abi-and-digest-binding",
+      "clean-process-loading-without-rust",
+      "missing-or-tampered-artifact-fails-closed",
+      "action-artifact-byte-identity"
+    ]
+  }
+}

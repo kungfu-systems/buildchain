@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import { V4DomainWasmFault, invokeV4DomainWasm } from "./v4-domain-wasm.js";
 
 export const V4_CANONICAL_JSON_CONTRACT = "buildchain-canonical-json/v1";
 export const V4_EVENT_ENVELOPE_CONTRACT = "buildchain-v4-event-envelope/v1";
@@ -110,89 +110,23 @@ function exactKeys(value, keys, path) {
     fault("invalid-envelope-shape", path, `${path} keys are not canonical`);
 }
 
-function canonicalize(value, path, active) {
-  if (value === null || typeof value === "boolean") return value;
-  if (typeof value === "string") {
-    for (let index = 0; index < value.length; index += 1) {
-      const code = value.charCodeAt(index);
-      if (code >= 0xd800 && code <= 0xdbff) {
-        const next = value.charCodeAt(index + 1);
-        if (!(next >= 0xdc00 && next <= 0xdfff))
-          fault(
-            "unsupported-string",
-            path,
-            `${path} contains an unpaired surrogate`,
-          );
-        index += 1;
-      } else if (code >= 0xdc00 && code <= 0xdfff) {
-        fault(
-          "unsupported-string",
-          path,
-          `${path} contains an unpaired surrogate`,
-        );
-      }
-    }
-    return value;
-  }
-  if (typeof value === "number") {
-    if (!Number.isSafeInteger(value) || Object.is(value, -0))
-      fault(
-        "unsupported-number",
-        path,
-        `${path} must be a safe base-10 integer and must not be negative zero`,
-      );
-    return value;
-  }
-  if (!value || typeof value !== "object")
-    fault("unsupported-json-value", path, `${path} is not a JSON value`);
-  if (active.has(value))
-    fault("cyclic-json-value", path, `${path} contains a cycle`);
-  active.add(value);
+function wasm(operation, payload) {
   try {
-    if (Array.isArray(value))
-      return Array.from(value, (entry, index) =>
-        canonicalize(entry, `${path}/${index}`, active),
-      );
-    const prototype = Object.getPrototypeOf(value);
-    if (prototype !== Object.prototype && prototype !== null)
-      fault("unsupported-json-value", path, `${path} must be a plain object`);
-    const result = Object.create(null);
-    for (const key of Object.keys(value).sort((left, right) =>
-      left < right ? -1 : left > right ? 1 : 0,
-    )) {
-      if (!ASCII_KEY_PATTERN.test(key))
-        fault(
-          "unsupported-object-key",
-          `${path}/${key}`,
-          "object keys must be non-empty printable ASCII",
-        );
-      result[key] = canonicalize(value[key], `${path}/${key}`, active);
+    return invokeV4DomainWasm(operation, payload);
+  } catch (error) {
+    if (error instanceof V4DomainWasmFault) {
+      fault(error.code, error.path, error.message);
     }
-    return result;
-  } finally {
-    active.delete(value);
+    throw error;
   }
 }
 
 export function v4CanonicalBytes(value) {
-  return Buffer.from(
-    `${JSON.stringify(canonicalize(value, "$", new Set()))}\n`,
-    "utf8",
-  );
+  return Buffer.from(wasm("canonical-json", value).canonicalUtf8, "utf8");
 }
 
 export function v4ContentRoot(domain, value) {
-  if (!ROOT_DOMAINS.has(domain))
-    fault(
-      "unsupported-root-domain",
-      "$.domain",
-      `unsupported root domain: ${domain}`,
-    );
-  const hash = crypto.createHash("sha256");
-  hash.update(domain, "ascii");
-  hash.update(Buffer.from([0]));
-  hash.update(v4CanonicalBytes(value));
-  return `sha256:${hash.digest("hex")}`;
+  return wasm("content-root", { domain, value }).root;
 }
 
 export function validateV4Root(value, path = "$.root") {

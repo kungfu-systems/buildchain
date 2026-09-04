@@ -43,8 +43,8 @@ ledger.
 Dependencies point inward only:
 
 ```text
-workflows -> TypeScript adapters -> libnode host -> Rust domain -> contracts
-legacy compatibility -> TypeScript adapters / contracts
+workflows -> Node provider/IO adapters -> tracked Rust/WASM domain -> contracts
+legacy compatibility -> Node facades / contracts
 ```
 
 Contracts contain serialization and compatibility facts, not provider SDK
@@ -55,12 +55,12 @@ or Rust domain are hard-zero violations. Cycles are forbidden.
 ## 3. Single-writer rule
 
 Every state machine has exactly one authoritative writer. The v4 cutover marks
-the TypeScript v4 control and provider plane authoritative and the legacy v3
-writer retired. Rust v4 owns the deterministic release-activation, journal,
-stable-fence, and recovery domain semantics while the TypeScript v4 adapter
-remains byte-equivalent at that boundary. A second writer, permanent dual
-write, cross-machine mutable file, or implicit compatibility authority has a
-hard-zero budget.
+the Rust/WASM domain authoritative and the legacy v3 and duplicate TypeScript
+semantic writers retired. Node owns provider and IO effects and exposes
+compatibility facades, but every deterministic release plan, fold, root, retry,
+and receipt decision crosses the checked WASM ABI. A second writer, permanent
+dual write, semantic fallback, cross-machine mutable file, or implicit
+compatibility authority has a hard-zero budget.
 
 ## 4. Explicit complexity budgets
 
@@ -85,10 +85,14 @@ second hand-maintained architecture list is authoritative.
 ## 6. Production cutover boundary
 
 The v4 line owns Delivery Warrant, Release Transaction, activation,
-publication, propagation, and release-tail state. This does not introduce a
-daemon, a service database, provider SDKs in contracts or Rust domain code, or
-a second writer. The retained `release/v3/v3.0` coordinate is rollback evidence
-only and cannot regain production authority without a new reviewed cutover.
+publication, propagation, and release-tail state. Its production domain is the
+tracked artifact governed by
+[`v4-rust-wasm-production-authority.json`](v4-rust-wasm-production-authority.json):
+Node verifies the artifact digest and ABI before use and fails closed without a
+JavaScript semantic fallback. This does not introduce a daemon, a service
+database, provider SDKs in contracts or Rust domain code, or a second writer.
+The retained `release/v3/v3.0` coordinate is rollback evidence only and cannot
+regain production authority without a new reviewed cutover.
 
 ## 7. Wave 0 host boundary
 
@@ -133,9 +137,8 @@ The executable provider operation journal contract is
 [`v4-provider-operation-journal-contract.json`](v4-provider-operation-journal-contract.json).
 It freezes one closed schema authority and one Rust v4 state-fold authority
 for append-only intent, attempt, rooted observation, confirmation, and
-reconciliation records. The TypeScript v4 plane performs provider adaptation
-and conformance projection against the same fixtures; v4 is the sole
-production writer.
+reconciliation records. The Node v4 plane performs provider adaptation and
+calls the tracked Rust/WASM authority; it contains no second state fold.
 
 Logical operation identity excludes attempt ordinals and mutable provider or
 runner facts. Every retry preserves `operationRoot`, while every attempt and
@@ -161,9 +164,9 @@ The executable release activation boundary is
 [`v4-release-activation-shadow-domain.json`](v4-release-activation-shadow-domain.json).
 It consumes an explicit qualification root, dependency graph, compensation
 boundaries, provider-operation identities, and append-only journal facts to
-derive one deterministic activation plan and resume state. Rust is the sole v4
-plan-and-fold authority; TypeScript must remain byte-equivalent against
-the same closed schema and fixture.
+derive one deterministic activation plan and resume state. Rust/WASM is the
+sole v4 plan-and-fold authority; the Node facade delegates through the checked
+ABI and retains only provider adaptation.
 
 Confirmed operations are never eligible for replay. Attempting, observed, and
 confirmable operations require provider-neutral readback before any retry,
@@ -203,8 +206,8 @@ Every nonterminal operation maps deterministically to `retry`, `wait`,
 `terminal-noop` facts and never re-enter the next-operation set. Missing,
 expired, corrupt, conflicting, cross-boundary, or attempt-budget-exhausted
 evidence fails closed at an exact Stage Capsule or provider-operation
-checkpoint. The Rust domain is the sole v4 planner and TypeScript is a
-byte-equivalent projection. Both are pure: they perform zero provider,
+checkpoint. The Rust/WASM domain is the sole v4 planner and the Node facade
+delegates to it. The planner is pure: it performs zero provider,
 filesystem, network, credential, ref, package, image, or release mutation.
 Their exact plan is the only recovery authority consumed by the TypeScript v4
 provider adapter.

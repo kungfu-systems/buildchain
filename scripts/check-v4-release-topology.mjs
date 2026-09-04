@@ -83,6 +83,13 @@ function rootedPathSet(paths) {
     .digest("hex")}`;
 }
 
+function fileSha256(relative) {
+  return `sha256:${crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(path.join(root, relative)))
+    .digest("hex")}`;
+}
+
 function productionFiles(relative, extensions) {
   const absolute = path.join(root, relative);
   if (!fs.existsSync(absolute)) return [];
@@ -128,6 +135,12 @@ export function discoverV4ReleaseAuthorityClosure() {
     /(?:createV4ReleaseReceipt|release-receipt\.json|V4_RELEASE_RECEIPT_CONTRACT)/u,
   );
   const privilegedModules = discoverStaticModuleClosure(PRIVILEGED_ENTRYPOINTS);
+  const rustWasmArtifact = "packages/core/buildchain-v4-domain.wasm";
+  const rustWasmDistributions = [
+    "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
+    "actions/release-tail/dist/buildchain-v4-domain.wasm",
+    "actions/v4-release-candidate-promote/dist/buildchain-v4-domain.wasm",
+  ];
   const legacyEngineModules = productionFiles(
     "actions/promote-buildchain-ref",
     [".js", ".mjs", ".cjs"],
@@ -152,6 +165,17 @@ export function discoverV4ReleaseAuthorityClosure() {
       entrypoints: PRIVILEGED_ENTRYPOINTS,
       modules: privilegedModules,
       root: rootedPathSet(privilegedModules),
+    },
+    rustWasmAuthority: {
+      loader: "packages/core/v4-domain-wasm.js",
+      metadata: "packages/core/v4-domain-wasm-artifact.js",
+      artifact: rustWasmArtifact,
+      artifactRoot: fileSha256(rustWasmArtifact),
+      distributedArtifacts: rustWasmDistributions,
+      byteIdenticalDistributions: rustWasmDistributions.every(
+        (relative) => fileSha256(relative) === fileSha256(rustWasmArtifact),
+      ),
+      fallbackWriterCount: 0,
     },
     legacyEngineModules,
   };
@@ -183,31 +207,32 @@ function workflowSnapshot(relative) {
   const jobs = document.jobs
     .filter((job) => job.id !== "universal-bootstrap")
     .map((job) => {
-    const block = jobBlock(source, job.id);
-    const uses = job.uses || null;
-    return {
-      id: job.id,
-      kind: uses ? "reusable-call" : "runner",
-      uses,
-      permissions: {
-        contents: permission(block, "contents"),
-        idToken: permission(block, "id-token"),
-      },
-      carriers: {
-        artifactDownload: /uses:\s+actions\/download-artifact@/u.test(block),
-        artifactUpload: /uses:\s+actions\/upload-artifact@/u.test(block),
-        jobOutput: /GITHUB_OUTPUT/u.test(block),
-      },
-      mutationSignals: [
-        /contents:\s*write/u.test(block) && "contents-write",
-        /id-token:\s*write/u.test(block) && "oidc-write",
-        /(?:promote-buildchain-ref|v4-release-candidate-promote)/u.test(
-          block,
-        ) && "promotion-runtime",
-        /(?:git push|npm publish|gh release (?:create|upload))/u.test(block) &&
-          "direct-publication-command",
-      ].filter(Boolean),
-    };
+      const block = jobBlock(source, job.id);
+      const uses = job.uses || null;
+      return {
+        id: job.id,
+        kind: uses ? "reusable-call" : "runner",
+        uses,
+        permissions: {
+          contents: permission(block, "contents"),
+          idToken: permission(block, "id-token"),
+        },
+        carriers: {
+          artifactDownload: /uses:\s+actions\/download-artifact@/u.test(block),
+          artifactUpload: /uses:\s+actions\/upload-artifact@/u.test(block),
+          jobOutput: /GITHUB_OUTPUT/u.test(block),
+        },
+        mutationSignals: [
+          /contents:\s*write/u.test(block) && "contents-write",
+          /id-token:\s*write/u.test(block) && "oidc-write",
+          /(?:promote-buildchain-ref|v4-release-candidate-promote)/u.test(
+            block,
+          ) && "promotion-runtime",
+          /(?:git push|npm publish|gh release (?:create|upload))/u.test(
+            block,
+          ) && "direct-publication-command",
+        ].filter(Boolean),
+      };
     });
   return {
     path: relative,
