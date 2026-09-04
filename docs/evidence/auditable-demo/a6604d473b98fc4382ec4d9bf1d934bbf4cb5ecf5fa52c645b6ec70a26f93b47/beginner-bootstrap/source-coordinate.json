@@ -1,0 +1,14 @@
+{
+  "createdAt": "2026-08-26T08:33:44Z",
+  "digest": "sha256:d872b5fa0d0b6cf35444390e226eafe9b86c83ffe911a322f6e30e07b53e474a",
+  "expiresAt": "2026-09-09T08:33:42Z",
+  "id": "9599138389",
+  "name": "buildchain-auditable-demo-binary-cd3fb4b4a727-32948351814-1",
+  "nodeId": "MDg6QXJ0aWZhY3Q5NTk5MTM4Mzg5",
+  "repository": "kungfu-systems/buildchain",
+  "runAttempt": "1",
+  "runId": "32948351814",
+  "schema": "buildchain.github-artifact-coordinate/v1",
+  "sizeInBytes": 128454972,
+  "sourceSha": "cd3fb4b4a7275a4c75bfbe046ad52e7059769353"
+}
