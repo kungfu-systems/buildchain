@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64786,
-    "current": 56725
+    "measuredExcess": 64779,
+    "current": 56718
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -2005,21 +2005,21 @@
       "crates/buildchain-v4-contracts/src/product_publication.rs": {
         "baseline": {
           "functions": {
-            "select_product_publication_intent@142": {
+            "select_product_publication_intent@156": {
               "complexity": 38
             }
           }
         },
         "current": {
           "functions": {
-            "select_product_publication_intent@142": {
-              "complexity": 38
+            "select_product_publication_intent@156": {
+              "complexity": 31
             }
           }
         },
         "target": {
           "functions": {
-            "select_product_publication_intent@142": {
+            "select_product_publication_intent@156": {
               "complexity": 30
             }
           }

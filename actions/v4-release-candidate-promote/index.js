@@ -3,7 +3,6 @@ import * as github from "@actions/github";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-
 import { publishDeclarativeGitHubReleaseEvidence } from "../promote-buildchain-ref/github-release.js";
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
 import { v4ContentRoot } from "../../packages/core/v4-canonical-contracts.js";
@@ -23,6 +22,7 @@ import {
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
 import {
   activateExactPnpm,
+  advanceAlphaNextDevelopment,
   applyProductPublication,
   planProductPublication,
   resolveCandidateBuildSummaryPath,
@@ -569,6 +569,26 @@ async function main() {
     publicationPlan,
     documents,
   });
+  if (canonicalChannel(channel) === "alpha") {
+    const nextDevelopment = await advanceAlphaNextDevelopment({
+      repository,
+      completedAlpha: {
+        outcome: "succeeded",
+        version: documents.version,
+        exactTag: documents.tag,
+        releaseSha: settlement.productProviderResult.publication.releaseSha,
+        treeSha: sourceBinding.protectedSource.tree,
+        publicationRoot: settlement.releaseReceipt.receiptRoot,
+        completedAt: providerRequest.publicationIntent.sourceTimestamp,
+      },
+      octokit,
+      mutationOctokit,
+    });
+    write(
+      ".buildchain/release-tail/next-development-controller.json",
+      nextDevelopment,
+    );
+  }
   setOutputs(documents, settlement);
 }
 

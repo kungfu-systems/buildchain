@@ -17,27 +17,220 @@ import {
 } from "../../packages/core/v4-product-publication.js";
 import {
   createV4ProductPublicationAdapters,
+  localVersionFiles,
   resolvePublicationTarget as resolvePublicationTargetAdapter,
 } from "./product-provider-adapters.js";
+import { discoverConfiguredDerivedVersionMaterial } from "../../packages/core/buildchain-config.js";
+import { createNextDevelopmentTransition } from "../../packages/core/next-development-transition.js";
+import { discoverVersionStateFiles } from "../promote-buildchain-ref/internal/version-state.js";
+import { commitContainsReleaseState } from "./product-provider-github-adapters.js";
+
+const NEXT_DEVELOPMENT_POLL_MS = 15_000;
+const NEXT_DEVELOPMENT_MAX_POLLS = 480;
+const NEXT_DEVELOPMENT_SIGN_OFF =
+  "Signed-off-by: Keren Dong <keren.dong@kungfu.link>";
+
+function repositoryParts(repository) {
+  const [owner, repo] = String(repository || "").split("/");
+  if (!owner || !repo) throw new Error(`invalid repository: ${repository}`);
+  return { owner, repo };
+}
+
+async function readRef(octokit, repository, ref) {
+  const { owner, repo } = repositoryParts(repository);
+  try {
+    return (
+      await octokit.rest.git.getRef({
+        owner,
+        repo,
+        ref: ref.replace(/^refs\//u, ""),
+      })
+    ).data.object.sha;
+  } catch (error) {
+    if (Number(error?.status || error?.response?.status) === 404) return "";
+    throw error;
+  }
+}
+
+async function remotePackageVersion(octokit, repository, ref) {
+  const { owner, repo } = repositoryParts(repository);
+  const { data } = await octokit.rest.repos.getContent({
+    owner,
+    repo,
+    path: "package.json",
+    ref,
+  });
+  return JSON.parse(Buffer.from(data.content, data.encoding).toString())
+    .version;
+}
+
+export async function advanceAlphaNextDevelopment({
+  cwd = process.cwd(),
+  repository,
+  completedAlpha,
+  octokit,
+  mutationOctokit,
+  wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs)),
+  pollIntervalMs = NEXT_DEVELOPMENT_POLL_MS,
+  maxPolls = NEXT_DEVELOPMENT_MAX_POLLS,
+}) {
+  const discovered = discoverVersionStateFiles(cwd);
+  const sourcePaths = discovered.files.map(({ path: filePath }) => filePath);
+  const derivedPaths = discoverConfiguredDerivedVersionMaterial(
+    cwd,
+    discovered.config,
+  ).map(({ path: filePath }) => filePath);
+  const transition = createNextDevelopmentTransition({
+    repository,
+    completedAlpha,
+    model: { strategy: "semver", next: "auto" },
+    sourcePaths,
+    derivedPaths,
+  });
+  const match = completedAlpha.version.match(/^(\d+)\.(\d+)\./u);
+  const devBranch = `dev/v${match[1]}/v${match[1]}.${match[2]}`;
+  const devSha = await readRef(octokit, repository, `refs/heads/${devBranch}`);
+  if (!devSha) throw new Error(`protected Dev branch ${devBranch} is absent`);
+  if (
+    (await remotePackageVersion(octokit, repository, devSha)) ===
+    transition.target.version
+  )
+    return { status: "already-current", transition, devSha };
+  const { owner, repo } = repositoryParts(repository);
+  const devCommit = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: devSha,
+  });
+  if (devCommit.data.tree.sha !== completedAlpha.treeSha)
+    throw new Error(
+      "protected Dev tree drifted before next-version materialization",
+    );
+
+  const versionFiles = localVersionFiles(cwd, {
+    channel: "alpha",
+    version: transition.target.version,
+    sourceSha: devSha,
+    sourceTimestamp: completedAlpha.completedAt,
+  });
+  const suffix = transition.idempotencyKey
+    .replace(/^sha256:/u, "")
+    .slice(0, 16);
+  const head = `chore/next-development/${transition.target.version}-${suffix}`;
+  let headSha = await readRef(octokit, repository, `refs/heads/${head}`);
+  if (!headSha) {
+    const tree = [];
+    for (const file of versionFiles) {
+      const blob = await mutationOctokit.rest.git.createBlob({
+        owner,
+        repo,
+        content: file.content,
+        encoding: "utf-8",
+      });
+      tree.push({
+        path: file.path,
+        mode: "100644",
+        type: "blob",
+        sha: blob.data.sha,
+      });
+    }
+    const preparedTree = await mutationOctokit.rest.git.createTree({
+      owner,
+      repo,
+      base_tree: devCommit.data.tree.sha,
+      tree,
+    });
+    const commit = await mutationOctokit.rest.git.createCommit({
+      owner,
+      repo,
+      message:
+        `chore(release): prepare ${transition.target.version}\n\n` +
+        NEXT_DEVELOPMENT_SIGN_OFF,
+      tree: preparedTree.data.sha,
+      parents: [devSha],
+    });
+    headSha = commit.data.sha;
+    await mutationOctokit.rest.git.createRef({
+      owner,
+      repo,
+      ref: `refs/heads/${head}`,
+      sha: headSha,
+    });
+  }
+
+  const listed = await mutationOctokit.rest.pulls.list({
+    owner,
+    repo,
+    state: "all",
+    base: devBranch,
+    head: `${owner}:${head}`,
+  });
+  let pull = listed.data[0];
+  if (!pull)
+    pull = (
+      await mutationOctokit.rest.pulls.create({
+        owner,
+        repo,
+        head,
+        base: devBranch,
+        title: `Prepare ${transition.target.version}`,
+        body: `Advance protected development to ${transition.target.version} after the completed Alpha publication.`,
+      })
+    ).data;
+  if (pull.state === "closed" && !pull.merged_at)
+    throw new Error("next-development pull request was closed without merge");
+  if (!pull.merged_at) {
+    try {
+      await mutationOctokit.graphql(
+        `mutation BuildchainEnqueuePullRequest($input: EnqueuePullRequestInput!) {
+          enqueuePullRequest(input: $input) { mergeQueueEntry { id } }
+        }`,
+        { input: { pullRequestId: pull.node_id, expectedHeadOid: headSha } },
+      );
+    } catch (error) {
+      if (!/already.*queue|queue.*already/iu.test(String(error?.message || "")))
+        throw error;
+    }
+  }
+  for (let poll = 0; !pull.merged_at && poll <= maxPolls; poll += 1) {
+    if (poll > 0) await wait(pollIntervalMs);
+    pull = (
+      await octokit.rest.pulls.get({ owner, repo, pull_number: pull.number })
+    ).data;
+  }
+  if (!pull.merged_at)
+    throw new Error("next-development merge queue timed out");
+  const mergedDevSha = await readRef(
+    octokit,
+    repository,
+    `refs/heads/${devBranch}`,
+  );
+  if (
+    !(await commitContainsReleaseState(
+      octokit,
+      repository,
+      headSha,
+      mergedDevSha,
+    )) ||
+    (await remotePackageVersion(octokit, repository, mergedDevSha)) !==
+      transition.target.version
+  )
+    throw new Error("next-development protected Dev readback failed");
+  return {
+    status: "verified",
+    transition,
+    devSha: mergedDevSha,
+    pullRequest: { number: pull.number, url: pull.html_url },
+  };
+}
 
 const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
 
-function standardCandidatePath(
-  candidatePassportPath,
-  declaredPath,
-  relativePath,
-  label,
-) {
+function standardCandidatePath(candidatePassportPath, declaredPath, relativePath, label) {
   if (String(declaredPath || "").trim()) return declaredPath;
-  const fallback = path.join(
-    path.dirname(candidatePassportPath),
-    "..",
-    relativePath,
-  );
+  const fallback = path.join(path.dirname(candidatePassportPath), "..", relativePath);
   if (!fs.existsSync(path.resolve(fallback)))
-    throw new Error(
-      `${label} is required when the sealed candidate has no standard ${relativePath}`,
-    );
+    throw new Error(`${label} is required when the sealed candidate has no standard ${relativePath}`);
   return fallback;
 }
 
@@ -49,26 +242,18 @@ export function resolveCandidateProviderInputs({
   requiredArtifactsPath = "",
   publishPackageMain = "",
 }) {
-  const normalizedArtifactKind = String(artifactKind || "npm").trim();
+  const kind = String(artifactKind || "npm").trim();
+  const npmPath = (declared, relativePath, label) =>
+    kind === "npm"
+      ? standardCandidatePath(candidatePassportPath, declared, relativePath, label)
+      : "";
   const resolved = {
-    sealedBundleRoot:
-      normalizedArtifactKind === "npm"
-        ? standardCandidatePath(
-            candidatePassportPath,
-            sealedBundleRoot,
-            "payloads",
-            "sealed-bundle-root",
-          )
-        : "",
-    sealedBundleManifest:
-      normalizedArtifactKind === "npm"
-        ? standardCandidatePath(
-            candidatePassportPath,
-            sealedBundleManifest,
-            "sealed-bundle.json",
-            "sealed-bundle-manifest",
-          )
-        : "",
+    sealedBundleRoot: npmPath(sealedBundleRoot, "payloads", "sealed-bundle-root"),
+    sealedBundleManifest: npmPath(
+      sealedBundleManifest,
+      "sealed-bundle.json",
+      "sealed-bundle-manifest",
+    ),
     requiredArtifactsPath: standardCandidatePath(
       candidatePassportPath,
       requiredArtifactsPath,
@@ -78,29 +263,20 @@ export function resolveCandidateProviderInputs({
     publishPackageMain: String(publishPackageMain || "").trim(),
   };
   if (resolved.sealedBundleManifest) {
-    const recoveryReceiptPath = path.join(
-      path.dirname(resolved.sealedBundleManifest),
-      "recovery-receipt.json",
-    );
-    if (fs.existsSync(path.resolve(recoveryReceiptPath)))
-      resolved.releaseCandidateRecoveryReceiptPath = recoveryReceiptPath;
+    const receipt = path.join(path.dirname(resolved.sealedBundleManifest), "recovery-receipt.json");
+    if (fs.existsSync(path.resolve(receipt))) resolved.releaseCandidateRecoveryReceiptPath = receipt;
   }
-  if (normalizedArtifactKind === "npm" && !resolved.publishPackageMain) {
+  if (kind === "npm" && !resolved.publishPackageMain) {
     const artifacts = read(resolved.requiredArtifactsPath);
     const main = artifacts.filter(({ role }) => role === "main");
-    const requiredNpm = artifacts.filter(
-      ({ kind, required }) => kind === "npm" && required !== false,
-    );
-    const inferred =
-      main.length === 1 && String(main[0]?.name || "").trim()
-        ? main[0]
-        : requiredNpm.length === 1 && String(requiredNpm[0]?.name || "").trim()
-          ? requiredNpm[0]
-          : null;
+    const required = artifacts.filter(({ kind: type, required }) => type === "npm" && required !== false);
+    const inferred = main.length === 1 && String(main[0]?.name || "").trim()
+      ? main[0]
+      : required.length === 1 && String(required[0]?.name || "").trim()
+        ? required[0]
+        : null;
     if (!inferred)
-      throw new Error(
-        "publish-package-main is required when the sealed artifact set has no unique main package",
-      );
+      throw new Error("publish-package-main is required when the sealed artifact set has no unique main package");
     resolved.publishPackageMain = String(inferred.name).trim();
   }
   return resolved;
