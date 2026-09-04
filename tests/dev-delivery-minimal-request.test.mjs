@@ -61,15 +61,18 @@ if [ "$1" = "${repositoryRoot}/scripts/dev-delivery-warrant.mjs" ]; then
 fi
 exec "${process.execPath}" "$@"
 `);
-  fs.writeFileSync(gh, `#!/bin/bash
-case "$1 $2" in
-  "repo view") echo 'kungfu-systems/buildchain' ;;
-  "pr view") echo '{"number":7,"state":"OPEN","isDraft":false,"baseRefName":"dev/v4/v4.0","headRefOid":"${head}","headRepository":{"nameWithOwner":"kungfu-systems/buildchain"},"statusCheckRollup":[{"workflowName":"Verify","conclusion":"SUCCESS","detailsUrl":"https://github.com/kungfu-systems/buildchain/actions/runs/123/job/1","name":"check"}]}' ;;
-  "api repos/kungfu-systems/buildchain/actions/runs/123") echo '{"conclusion":"success","event":"pull_request","head_sha":"${head}","path":".github/workflows/verify.yml@refs/pull/7/merge","pull_requests":[{"number":7,"base":{"sha":"${base}"}}]}' ;;
-  "api repos/kungfu-systems/buildchain/contents/.github/workflows/buildchain-dev-delivery.yml?ref=dev/v4/v4.0") echo '{}' ;;
-  "api --method") cat > "${payloadPath.replaceAll("\\", "/")}" ;;
-  *) exit 1 ;;
-esac
+  fs.writeFileSync(gh, `#!/usr/bin/env node
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+const command = [args[0] || "", args[1] || ""].join(" ");
+switch (command) {
+  case "repo view": process.stdout.write("kungfu-systems/buildchain\\n"); break;
+  case "pr view": process.stdout.write('{"number":7,"state":"OPEN","isDraft":false,"baseRefName":"dev/v4/v4.0","headRefOid":"${head}","headRepository":{"nameWithOwner":"kungfu-systems/buildchain"},"statusCheckRollup":[{"workflowName":"Verify","conclusion":"SUCCESS","detailsUrl":"https://github.com/kungfu-systems/buildchain/actions/runs/123/job/1","name":"check"}]}\\n'); break;
+  case "api repos/kungfu-systems/buildchain/actions/runs/123": process.stdout.write('{"conclusion":"success","event":"pull_request","head_sha":"${head}","path":".github/workflows/verify.yml@refs/pull/7/merge","pull_requests":[{"number":7,"base":{"sha":"${base}"}}]}\\n'); break;
+  case "api repos/kungfu-systems/buildchain/contents/.github/workflows/buildchain-dev-delivery.yml?ref=dev/v4/v4.0": process.stdout.write("{}\\n"); break;
+  case "api --method": fs.writeFileSync(${JSON.stringify(payloadPath)}, fs.readFileSync(0)); break;
+  default: process.exit(1);
+}
 `);
   fs.chmodSync(node, 0o755);
   fs.chmodSync(gh, 0o755);
