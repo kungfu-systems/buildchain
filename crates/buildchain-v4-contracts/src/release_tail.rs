@@ -1044,9 +1044,7 @@ fn normalize_observation(effect: &Value, raw: &Value, phase: &str) -> ContractRe
             !value.is_empty()
                 && value.len() <= 160
                 && value.bytes().all(|byte| {
-                    byte.is_ascii_lowercase()
-                        || byte.is_ascii_digit()
-                        || [b'.', b'_', b'-'].contains(&byte)
+                    byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"._-".contains(&byte)
                 })
         })
         .unwrap_or(status);

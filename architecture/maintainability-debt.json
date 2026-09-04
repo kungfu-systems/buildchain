@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64788,
-    "current": 56727
+    "measuredExcess": 64786,
+    "current": 56725
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -2033,19 +2033,19 @@
               "lines": 245,
               "complexity": 51
             },
-            "advance_release_tail_execution@1207": {
+            "advance_release_tail_execution@1205": {
               "lines": 193
             }
           }
         },
         "current": {
-          "lines": 1399,
+          "lines": 1397,
           "functions": {
             "normalize_capability@228": {
               "lines": 245,
               "complexity": 51
             },
-            "advance_release_tail_execution@1207": {
+            "advance_release_tail_execution@1205": {
               "lines": 193
             }
           }
@@ -2057,7 +2057,7 @@
               "lines": 140,
               "complexity": 30
             },
-            "advance_release_tail_execution@1207": {
+            "advance_release_tail_execution@1205": {
               "lines": 140
             }
           }
