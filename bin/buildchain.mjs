@@ -204,9 +204,9 @@ function runDoctor({ cwd = process.cwd(), requirePublishSourceLock = false } = {
   };
 }
 
-function runScript(scriptName, args) {
+function runScript(scriptName, args, runner = process.execPath) {
   const scriptPath = path.join(root, "scripts", scriptName);
-  const result = spawnSync(process.execPath, [scriptPath, ...args], {
+  const result = spawnSync(runner, [scriptPath, ...args], {
     cwd: process.cwd(),
     env: process.env,
     stdio: "inherit",
@@ -1378,13 +1378,11 @@ async function handleDoctorCommand(args) {
       }
     }
     return;
-
 }
-
 async function handleDevCommand(args) {
     const [subcommand = "", ...devArgs] = args;
-    if (subcommand === "pr-admit") {
-      runScript("dev-pr-auto-merge.mjs", devArgs);
+    const directScript = { deliver: ["dev-delivery-request.sh", "/bin/bash"], "pr-admit": ["dev-pr-auto-merge.mjs", process.execPath] }[subcommand]; if (directScript) {
+      runScript(directScript[0], devArgs, directScript[1]);
       return;
     }
     if (subcommand === "warrant") {
@@ -1404,10 +1402,12 @@ async function handleDevCommand(args) {
       return;
     }
     if (subcommand !== "merge-queue") {
-      throw new Error("usage: buildchain dev <pr-admit|merge-queue|warrant|authority|proof|two-phase> [options]");
+      throw new Error("usage: buildchain dev <deliver|pr-admit|merge-queue|warrant|authority|proof|two-phase> [options]");
     }
     runScript("dev-merge-queue.mjs", devArgs);
     return;
+
+
 
 }
 
