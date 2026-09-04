@@ -67,7 +67,7 @@ case "$1 $2" in
   "pr view") echo '{"number":7,"state":"OPEN","isDraft":false,"baseRefName":"dev/v4/v4.0","headRefOid":"${head}","headRepository":{"nameWithOwner":"kungfu-systems/buildchain"},"statusCheckRollup":[{"workflowName":"Verify","conclusion":"SUCCESS","detailsUrl":"https://github.com/kungfu-systems/buildchain/actions/runs/123/job/1","name":"check"}]}' ;;
   "api repos/kungfu-systems/buildchain/actions/runs/123") echo '{"conclusion":"success","event":"pull_request","head_sha":"${head}","path":".github/workflows/verify.yml@refs/pull/7/merge","pull_requests":[{"number":7,"base":{"sha":"${base}"}}]}' ;;
   "api repos/kungfu-systems/buildchain/contents/.github/workflows/buildchain-dev-delivery.yml?ref=dev/v4/v4.0") echo '{}' ;;
-  "api --method") cat > "${payloadPath}" ;;
+  "api --method") cat > "${payloadPath.replaceAll("\\", "/")}" ;;
   *) exit 1 ;;
 esac
 `);
