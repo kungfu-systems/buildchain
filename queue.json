@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1418,
+  "generation": 1419,
   "fencingCounter": 205,
   "policy": {
     "agingSeconds": 900,
@@ -10608,8 +10608,57 @@
         "tests/v4-provider-operation-journal.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3482,
+      "sourceRoot": "sha256:4b4d404b317f3e22c4e1304e94a6df6a4f2ef0c9eab08f3b2188568773eed92c",
+      "sourceIdentityRoot": "sha256:91a7dc6c6bcbb4d13d485326aca97036b8599867dc495dbd6af02efcfeee644a",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:f2314619a50d5ed54785dc4790da7fa8f4c2813eb73f5174b228fd0460bc1927",
+      "sourceHead": "90055078acc1d3774be48bb0a3d9b407f91937a7",
+      "sourcePatchRoot": "sha256:2c3524f36d30b3caafd597e7d7f0f60bae71e0a6f9c3e7cc9821d37931d155a1",
+      "sourceProofRoot": "sha256:024f9cd0d78fd6e12be7f6c4e228440f69dd24bc27e8ce9ead8de9a3fa219635",
+      "planRoot": "sha256:b3af6cf05e2df7fdf6f6e617d54127287d6a9f2383eab3a481869d26e00bfab4",
+      "closureRoot": "sha256:ca301f8c6562c1977eb7894e30264276682e0edca2ee4e5cac0a4ed3db7dca32",
+      "dependencyRoot": "sha256:6ae0aac0b6cab18c6a9a1073abc519766960156b63caefa83300fefc5209f28d",
+      "toolchainRoot": "sha256:faa09fec25a40892e907b1a6ba7a712ad87cf056458ee1a63cb353e515c313a6",
+      "sourceWorkflowRunId": 33878552957,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-04T13:53:16.330Z",
+      "updatedAt": "2026-09-04T13:53:16.330Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/buildchain.toml",
+        "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
+        "actions/promote-buildchain-ref/dist/index.js",
+        "actions/release-tail/dist/buildchain-v4-domain.wasm",
+        "actions/release-tail/dist/index.js",
+        "actions/v4-release-candidate-promote/dist/buildchain-v4-domain.wasm",
+        "actions/v4-release-candidate-promote/dist/index.js",
+        "actions/v4-release-candidate-promote/index.js",
+        "actions/v4-release-candidate-promote/product-provider-adapters.js",
+        "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
+        "actions/v4-release-candidate-promote/product-provider.js",
+        "architecture/maintainability-debt.json",
+        "architecture/maintainability-policy.json",
+        "architecture/v4-release-topology.json",
+        "crates/buildchain-v4-contracts/src/product_publication.rs",
+        "packages/core/buildchain-v4-domain.wasm",
+        "packages/core/v4-domain-wasm-artifact.js",
+        "scripts/build-v4-domain-wasm.mjs",
+        "tests/internal-architecture.test.mjs",
+        "tests/v4-alpha-next-development-provider.test.mjs",
+        "tests/v4-product-provider-adapters.test.mjs",
+        "tests/v4-product-publication-topology.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-04T13:00:50.935Z",
-  "stateRoot": "sha256:fb2cc84bfbdc2f5c722eb1f4bcf1a194ab6d76cfd5505a6016b070555c0dfa62"
+  "updatedAt": "2026-09-04T13:53:16.330Z",
+  "stateRoot": "sha256:eecc8273361bcb3875a637863b64feabccb25bcb7e127c3c0aaf2d65b8a6c31a"
 }
