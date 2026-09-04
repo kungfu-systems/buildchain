@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1430,
+  "generation": 1431,
   "fencingCounter": 209,
   "policy": {
     "agingSeconds": 900,
@@ -10804,8 +10804,47 @@
         "package.json"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3485,
+      "sourceRoot": "sha256:c8a33697af487f7698e3b89d7bd50b1d5d660d1ad60c8ba2f40ff5e8e6b8e9ec",
+      "sourceIdentityRoot": "sha256:45f14de27ec4ba52e1bc6b95a9e0c8cb0286b051c34c46a72b7bab7f762f19c0",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:16cedabb0d48d5d693e74d0d998f6702ac3704b69ecc6c6606acc0bd6a39820a",
+      "sourceHead": "7179809165ee03d00ebb2715225ea95c51c8dc25",
+      "sourcePatchRoot": "sha256:8f096e65b5ba217f53ed9a48eed9ad7d5221e33802be6bd3ac4c8e37973f4808",
+      "sourceProofRoot": "sha256:16a64620c2c8712498cb4f3091fd98eadc9fd44cd702eb049e5f3a5d70ee4466",
+      "planRoot": "sha256:5717e2a455847aa19ef85f03051cf45ef419fd6ece5d4c3cc62fe47e89c699a2",
+      "closureRoot": "sha256:1e573e0bd21ef3df70e3abd5e1210abb20eb7f92cc5b84a297629988b82dbf1c",
+      "dependencyRoot": "sha256:b298c7309c034d7815dbbc83606a57ec4c9bd23a1d9a7ba2916ad20d36443699",
+      "toolchainRoot": "sha256:23a92fc18921c536927b96d3234751f7fc7e0b07bdd6e0b4adea37227e850f7d",
+      "sourceWorkflowRunId": 33893608672,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-04T16:21:37.351Z",
+      "updatedAt": "2026-09-04T16:21:37.351Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".buildchain/release-impact.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/kfd-upstream-aggregate.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/publication-registry.json",
+        "dist/site/site-manifest.json",
+        "dist/site/workflow-registry.json",
+        "package.json",
+        "scripts/dev-delivery-warrant.mjs",
+        "tests/dev-delivery-warrant-resubmission.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-04T16:20:51.565Z",
-  "stateRoot": "sha256:f1c8288b535512599711970338d6c1990cf497a87129c1937b2903f7154a98d7"
+  "updatedAt": "2026-09-04T16:21:37.351Z",
+  "stateRoot": "sha256:3ff1a20434cd873973c5d7d6d1a78f6c8fd13e7f5ff3cdb134caf29972c25d22"
 }
