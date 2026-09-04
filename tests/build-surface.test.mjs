@@ -1089,11 +1089,11 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
   );
   assert.match(
     workflow,
-    /assignment-root: \$\{\{ github\.event\.client_payload\.candidate\.assignmentRoot \|\| github\.event\.inputs\.assignment-root \|\| fromJSON\(github\.event\.inputs\.native-roots-json\)\.assignmentRoot \}\}/,
+    /assignment-root: \$\{\{ github\.event\.client_payload\.candidate\.assignmentRoot \|\| fromJSON\(github\.event\.inputs\.native-roots-json \|\| '\{\}'\)\.assignmentRoot \|\| '' \}\}/,
   );
   assert.match(
     workflow,
-    /initiative-root: \$\{\{ github\.event\.client_payload\.candidate\.initiativeRoot \|\| github\.event\.inputs\.initiative-root \|\| fromJSON\(github\.event\.inputs\.native-roots-json\)\.initiativeRoot \}\}/,
+    /initiative-root: \$\{\{ github\.event\.client_payload\.candidate\.initiativeRoot \|\| fromJSON\(github\.event\.inputs\.native-roots-json \|\| '\{\}'\)\.initiativeRoot \|\| '' \}\}/,
   );
   assert.match(workflow, /source-identity-root:/);
   assert.match(workflow, /source-patch-root:/);
@@ -1163,8 +1163,6 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
     "expected-pr-number",
     "expected-head-sha",
     "native-roots-json",
-    "assignment-root",
-    "initiative-root",
     "source-workflow-run-id",
     "legacy-active-owner-binding-json",
     "source-identity-root",
@@ -1217,6 +1215,8 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
   );
   assert.match(template, /default: "v4-alpha"/u);
   assert.match(template, /default: "native-proof-required"/u);
+  assert.match(template, /native-roots-json:/u);
+  assert.doesNotMatch(template, /^      (assignment|initiative)-root:\n        description:/mu);
   assert.match(template, /queue-admission-context: Queue admission lease/u);
   assert.match(template, /active-lease-context: Queue family lease\/exact/u);
   assert.doesNotMatch(template, /dev-pr-auto-merge\.yml@v3(?:\b|-)/u);

@@ -1,8 +1,8 @@
+import fs from "node:fs";
 export function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);
   return index === -1 ? fallback : args[index + 1] || "";
 }
-
 export function hasFlag(args, name) {
   return args.includes(`--${name}`);
 }
@@ -79,16 +79,16 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
       "source-head",
       environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_HEAD,
     ),
-    expectedSourceHead: flag(
+    sourceRoot: flag(
       rest,
-      "expected-source-head",
-      environment.BUILDCHAIN_DEV_DELIVERY_EXPECTED_SOURCE_HEAD,
+      "source-root",
+      environment.BUILDCHAIN_WORK_SOURCE_ROOT ||
+        environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_ROOT ||
+        sourceRootFromGitHubEvent(environment),
     ),
-    observedSourceHead: flag(
-      rest,
-      "observed-source-head",
-      environment.BUILDCHAIN_DEV_DELIVERY_OBSERVED_SOURCE_HEAD,
-    ),
+    // prettier-ignore
+    ...{ expectedSourceHead: flag(rest, "expected-source-head", environment.BUILDCHAIN_DEV_DELIVERY_EXPECTED_SOURCE_HEAD), observedSourceHead: flag(rest, "observed-source-head", environment.BUILDCHAIN_DEV_DELIVERY_OBSERVED_SOURCE_HEAD) },
+
     assignmentRoot: flag(
       rest,
       "assignment-root",
@@ -290,4 +290,9 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
     execute: hasFlag(rest, "execute"),
     json: hasFlag(rest, "json"),
   };
+}
+
+// prettier-ignore
+function sourceRootFromGitHubEvent(environment) {
+  try { const event = JSON.parse(fs.readFileSync(environment.GITHUB_EVENT_PATH, "utf8")); return event.client_payload?.candidate?.sourceRoot || JSON.parse(event.inputs?.["native-roots-json"] || "{}").sourceRoot || ""; } catch { return ""; }
 }
