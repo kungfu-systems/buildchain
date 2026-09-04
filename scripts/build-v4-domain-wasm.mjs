@@ -28,6 +28,44 @@ const sha256 = (bytes) =>
   crypto.createHash("sha256").update(bytes).digest("hex");
 const normalize = (value) => value.split(path.sep).join("/");
 
+function rustBuildEnvironment() {
+  const environment = {
+    ...process.env,
+    RUSTUP_TOOLCHAIN: toolchain,
+    CARGO_INCREMENTAL: "0",
+    SOURCE_DATE_EPOCH: "0",
+  };
+  delete environment.RUSTFLAGS;
+  delete environment.CARGO_ENCODED_RUSTFLAGS;
+
+  const metadata = spawnSyncCommand(
+    "cargo",
+    [
+      "metadata",
+      "--format-version",
+      "1",
+      "--locked",
+      "--manifest-path",
+      path.join(crate, "Cargo.toml"),
+    ],
+    { cwd: root, encoding: "utf8", env: environment },
+  );
+  if (metadata.error) throw metadata.error;
+  if (metadata.status !== 0) process.exit(metadata.status ?? 1);
+  const dependencyRemaps = JSON.parse(metadata.stdout)
+    .packages.filter((entry) => entry.source)
+    .map((entry) => [
+      path.dirname(entry.manifest_path),
+      `/buildchain/dependencies/${entry.name}-${entry.version}`,
+    ])
+    .sort(([left], [right]) => right.length - left.length);
+  const remaps = [[root, "/buildchain/source"], ...dependencyRemaps].map(
+    ([from, to]) => `--remap-path-prefix=${from}=${to}`,
+  );
+  environment.CARGO_ENCODED_RUSTFLAGS = remaps.join("\x1f");
+  return environment;
+}
+
 function sourceFiles(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const absolute = path.join(directory, entry.name);
@@ -62,6 +100,7 @@ for (const file of sourceInputs) {
   sourceHash.update("\0");
 }
 const sourceSha256 = sourceHash.digest("hex");
+const buildEnvironment = rustBuildEnvironment();
 
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-wasm-"));
 try {
@@ -82,7 +121,7 @@ try {
     {
       cwd: root,
       stdio: "inherit",
-      env: { ...process.env, RUSTUP_TOOLCHAIN: toolchain },
+      env: buildEnvironment,
     },
   );
   if (build.error) throw build.error;

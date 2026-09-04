@@ -178,7 +178,7 @@
       "loader": "packages/core/v4-domain-wasm.js",
       "metadata": "packages/core/v4-domain-wasm-artifact.js",
       "artifact": "packages/core/buildchain-v4-domain.wasm",
-      "artifactRoot": "sha256:9600c149b8fea05f5f86250efd599a71885e7fa12a0308406f815c2c31125b39",
+      "artifactRoot": "sha256:1269c300f2d808e52375b8187e5f28528f01aa79f901e44b0b367725e2d1fa59",
       "distributedArtifacts": [
         "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
         "actions/release-tail/dist/buildchain-v4-domain.wasm",

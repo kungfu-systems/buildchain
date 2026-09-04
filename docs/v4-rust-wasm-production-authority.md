@@ -39,7 +39,8 @@ ABI 调用领域操作。
 ## 构建和审计
 
 `pnpm run build:v4-wasm` 使用锁定的 Rust 工具链和 `wasm32-unknown-unknown` target 生成
-artifact 与绑定元数据。`pnpm run check:v4-wasm` 在干净临时 target 目录重新构建并逐字节
+artifact 与绑定元数据，并把 Cargo 依赖源目录映射到稳定的虚拟路径，禁止主机 Cargo
+registry 路径进入 artifact。`pnpm run check:v4-wasm` 在干净临时 target 目录重新构建并逐字节
 比较已跟踪 artifact。这个检查不是生产运行时的重复编译：生产只加载已提交字节；检查
 用于证明这些字节仍能由当前 Rust 真相源和锁定工具链唯一导出，从而阻止源码、二进制或
 生成元数据静默漂移。
