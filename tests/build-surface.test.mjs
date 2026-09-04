@@ -1079,6 +1079,7 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
   assert.match(workflow, /expected-pr-number:/);
   assert.match(workflow, /expected-head-sha:/);
   assert.match(workflow, /native-roots-json:/);
+  assert.match(workflow, /source-root:/);
   assert.match(
     workflow,
     /repository_dispatch:\n    types: \[buildchain-dev-delivery-wake\]/,
@@ -1089,12 +1090,9 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
   );
   assert.match(
     workflow,
-    /assignment-root: \$\{\{ github\.event\.client_payload\.candidate\.assignmentRoot \|\| github\.event\.inputs\.assignment-root \|\| fromJSON\(github\.event\.inputs\.native-roots-json\)\.assignmentRoot \}\}/,
+    /assignment-root: .*candidate\.sourceRoot .*inputs\.source-root/,
   );
-  assert.match(
-    workflow,
-    /initiative-root: \$\{\{ github\.event\.client_payload\.candidate\.initiativeRoot \|\| github\.event\.inputs\.initiative-root \|\| fromJSON\(github\.event\.inputs\.native-roots-json\)\.initiativeRoot \}\}/,
-  );
+  assert.match(workflow, /initiative-root: .*candidate\.sourceRoot .*inputs\.source-root/);
   assert.match(workflow, /source-identity-root:/);
   assert.match(workflow, /source-patch-root:/);
   assert.match(workflow, /plan-root:/);
@@ -1149,6 +1147,7 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
     workflow.slice(workflow.indexOf("    with:")),
     /\$\{\{ inputs\./,
   );
+
   const dispatchInputs = [
     ...workflow
       .slice(
@@ -1157,14 +1156,15 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
       )
       .matchAll(/^      ([a-z][a-z0-9-]+):/gmu),
   ].map((match) => match[1]);
+  assert.equal(dispatchInputs.includes("assignment-root"), false);
+  assert.equal(dispatchInputs.includes("initiative-root"), false);
   assert.deepEqual(dispatchInputs, [
     "buildchain-ref",
     "target-branch",
     "expected-pr-number",
     "expected-head-sha",
     "native-roots-json",
-    "assignment-root",
-    "initiative-root",
+    "source-root",
     "source-workflow-run-id",
     "legacy-active-owner-binding-json",
     "source-identity-root",

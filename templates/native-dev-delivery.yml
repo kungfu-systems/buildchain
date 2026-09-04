@@ -38,11 +38,8 @@ on:
       source-patch-root:
         description: "Semantic patch root"
         required: true
-      assignment-root:
-        description: "Native Assignment root"
-        required: true
-      initiative-root:
-        description: "Parent Initiative root"
+      source-root:
+        description: "Canonical native Work source root"
         required: true
       plan-root:
         description: "Native qualification plan root"
@@ -117,8 +114,8 @@ jobs:
       delivery-warrant-mode: required
       handoff-workflow-id: native-dev-delivery.yml
       source-workflow-id: ${{ inputs.source-workflow-id || '' }}
-      assignment-root: ${{ github.event.client_payload.candidate.assignmentRoot || inputs.assignment-root }}
-      initiative-root: ${{ github.event.client_payload.candidate.initiativeRoot || inputs.initiative-root }}
+      assignment-root: ${{ github.event.client_payload.candidate.sourceRoot || inputs.source-root || github.event.client_payload.candidate.assignmentRoot }}
+      initiative-root: ${{ github.event.client_payload.candidate.sourceRoot || inputs.source-root || github.event.client_payload.candidate.initiativeRoot }}
       source-identity-root: ${{ github.event.client_payload.candidate.sourceIdentityRoot || inputs.source-identity-root }}
       source-patch-root: ${{ github.event.client_payload.candidate.sourcePatchRoot || inputs.source-patch-root }}
       plan-root: ${{ github.event.client_payload.candidate.planRoot || inputs.plan-root }}

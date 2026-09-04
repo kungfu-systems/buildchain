@@ -31,21 +31,14 @@ on:
         }
       native-roots-json:
         {
-          description: "Compatibility JSON with Assignment and Initiative roots",
+          description: "Compatibility JSON with sourceRoot or historical Assignment and Initiative roots",
           type: string,
           required: false,
           default: "",
         }
-      assignment-root:
+      source-root:
         {
-          description: "Exact native Assignment root",
-          type: string,
-          required: false,
-          default: "",
-        }
-      initiative-root:
-        {
-          description: "Exact parent Initiative root",
+          description: "Canonical native Work source root",
           type: string,
           required: false,
           default: "",
@@ -192,8 +185,9 @@ jobs:
       delivery-warrant-mode: required
       handoff-workflow-id: buildchain-dev-delivery.yml
       source-workflow-id: verify.yml
-      assignment-root: ${{ github.event.client_payload.candidate.assignmentRoot || github.event.inputs.assignment-root || fromJSON(github.event.inputs.native-roots-json).assignmentRoot }}
-      initiative-root: ${{ github.event.client_payload.candidate.initiativeRoot || github.event.inputs.initiative-root || fromJSON(github.event.inputs.native-roots-json).initiativeRoot }}
+      # Project canonical sourceRoot through the current v4-alpha compatibility slots.
+      assignment-root: ${{ github.event.client_payload.candidate.sourceRoot || github.event.inputs.source-root || github.event.client_payload.candidate.assignmentRoot || fromJSON(github.event.inputs.native-roots-json || '{}').sourceRoot || fromJSON(github.event.inputs.native-roots-json || '{}').assignmentRoot || '' }}
+      initiative-root: ${{ github.event.client_payload.candidate.sourceRoot || github.event.inputs.source-root || github.event.client_payload.candidate.initiativeRoot || fromJSON(github.event.inputs.native-roots-json || '{}').sourceRoot || fromJSON(github.event.inputs.native-roots-json || '{}').initiativeRoot || '' }}
       source-identity-root: ${{ github.event.client_payload.candidate.sourceIdentityRoot || github.event.inputs.source-identity-root }}
       source-patch-root: ${{ github.event.client_payload.candidate.sourcePatchRoot || github.event.inputs.source-patch-root }}
       plan-root: ${{ github.event.client_payload.candidate.planRoot || github.event.inputs.plan-root }}
