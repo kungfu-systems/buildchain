@@ -164,6 +164,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `tests/v4-publication-qualification.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
+- `.github/workflows/dev-pr-auto-merge.yml`
 - `tests/release-candidate-recovery.test.mjs`
 - `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
 - `.github/workflows/.release-candidate-promote.yml`

@@ -94,20 +94,27 @@ if [ -n "$github_token" ]; then
   observation="$(GITHUB_TOKEN="$github_token" node "$runtime_root/scripts/dev-delivery-warrant.mjs" observe --repository "$repository" --branch "$base" --json 2>/dev/null || true)"
   active_pr="$(jq -r '.observation.activeWarrant.pullRequestNumber // empty' <<<"${observation:-}" 2>/dev/null || true)"
   active_head="$(jq -r '.observation.activeWarrant.sourceHead // empty' <<<"${observation:-}" 2>/dev/null || true)"
+  active_phase="$(jq -r '.observation.activeWarrant.phase // empty' <<<"${observation:-}" 2>/dev/null || true)"
   if [ "$execute" = true ] && [ -n "$active_pr" ] && { [ "$active_pr" != "$number" ] || [ "$active_head" != "$source_head" ]; }; then
     active_pr_state="$(gh pr view "$active_pr" --repo "$repository" --json state,headRefOid 2>/dev/null || true)"
     observed_state="$(jq -r '.state // empty' <<<"${active_pr_state:-}" 2>/dev/null || true)"
     observed_head="$(jq -r '.headRefOid // empty' <<<"${active_pr_state:-}" 2>/dev/null || true)"
-    if [ "$observed_state" = CLOSED ] || { [ "$active_pr" = "$number" ] && [ -n "$observed_head" ] && [ "$observed_head" != "$active_head" ]; }; then
+    stale_outcome=""
+    if [ "$observed_state" = CLOSED ] || { [ "$observed_state" = MERGED ] && [ -z "$active_phase" ]; }; then
+      stale_outcome="cancelled"
+    elif [ "$active_pr" = "$number" ] && [ -n "$observed_head" ] && [ "$observed_head" != "$active_head" ]; then
+      stale_outcome="dequeued"
+    fi
+    if [ -n "$stale_outcome" ]; then
       stale_fact="$(jq -cn --arg repository "$repository" --arg base "$base" --argjson pr "$active_pr" --arg recorded "$active_head" \
         --arg observed "${observed_head:-$active_head}" --arg state "$observed_state" '{repository:$repository,protectedBase:$base,pullRequestNumber:$pr,recordedHead:$recorded,observedHead:$observed,observedState:$state}')"
-      stale_evidence_root="$(node --input-type=module -e 'const {devDeliveryContentRoot:root}=await import(process.argv[1]);process.stdout.write(root(JSON.parse(process.argv[2])))' "$runtime_root/packages/core/dev-delivery-warrant.js" "$stale_fact")"
+      stale_evidence_root="$(node --input-type=module -e 'const {pathToFileURL}=await import("node:url");const {devDeliveryContentRoot:root}=await import(pathToFileURL(process.argv[1]).href);process.stdout.write(root(JSON.parse(process.argv[2])))' "$runtime_root/packages/core/dev-delivery-warrant.js" "$stale_fact")"
       GITHUB_TOKEN="$github_token" node "$runtime_root/scripts/dev-delivery-warrant.mjs" settle \
         --repository "$repository" --branch "$base" --pull-request "$active_pr" --expected-source-head "$active_head" \
         --fencing-token "$(jq -er '.observation.activeWarrant.fencingToken' <<<"$observation")" --lease-generation "$(jq -er '.observation.activeWarrant.generation' <<<"$observation")" \
-        --outcome "$([ "$observed_state" = CLOSED ] && printf cancelled || printf dequeued)" \
+        --outcome "$stale_outcome" \
         --evidence-root "$stale_evidence_root" \
-        --reason "Buildchain observed a closed PR or changed PR head before a new minimal delivery request." --execute >/dev/null
+        --reason "Buildchain observed a terminal PR or changed PR head before a new minimal delivery request." --execute >/dev/null
       observation="$(GITHUB_TOKEN="$github_token" node "$runtime_root/scripts/dev-delivery-warrant.mjs" observe --repository "$repository" --branch "$base" --json)"
     fi
   fi
