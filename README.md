@@ -1,10 +1,9 @@
 # Buildchain
 
 <!-- buildchain-auditable-demo:start -->
-
 ## Buildchain beginner bootstrap
 
-[![Buildchain beginner bootstrap](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo.gif)](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/public-evidence.json)
+[![Buildchain beginner bootstrap](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/demo.gif)](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/public-evidence.json)
 
 Animation scenario:
 
@@ -14,16 +13,16 @@ $ buildchain layout --cwd ./starter --json
 $ buildchain version
 ```
 
-Native renditions: [1080p MP4](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo.mp4) · [1080p WebM](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo.webm) · [720p MP4](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo-720p.mp4) · [720p WebM](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/demo-720p.webm)
+Native renditions: [1080p MP4](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/demo.mp4) · [1080p WebM](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/demo.webm) · [720p MP4](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/demo-720p.mp4) · [720p WebM](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/demo-720p.webm)
 
-[Static poster / reduced-motion fallback](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/poster.png)
+[Static poster / reduced-motion fallback](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/poster.png)
 
 <details>
 <summary>Evidence and claim boundary</summary>
 
 This exact standalone-binary scenario proves deterministic local bootstrap behavior only; it does not grant release, repository, network, or production authority.
 
-[Release Passport](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/release-passport.json) · [auditable evidence](docs/evidence/auditable-demo/aa5cc40f4a62ed516e163e7e2c9dae0bcf32b3c77143a17105dfc4e5eaf9f01a/beginner-bootstrap/public-evidence.json)
+[Release Passport](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/release-passport.json) · [auditable evidence](docs/evidence/auditable-demo/c5968aa8d25c7c2ae9ecdd1574f4110073f7110b9441ee6f8fd1360a95ca2b8a/beginner-bootstrap/public-evidence.json)
 
 </details>
 <!-- buildchain-auditable-demo:end -->
