@@ -38,17 +38,25 @@ test("fresh and recovered product versions are selected before APPLY without pro
   };
   const fresh = selectV4ProductPublicationIntent(common);
   assert.equal(fresh.mode, "fresh");
-  assert.equal(fresh.version, "4.0.2-alpha.8");
-  assert.equal(fresh.exactTag, "v4.0.2-alpha.8");
+  assert.equal(fresh.version, "4.0.2-alpha.6");
+  assert.equal(fresh.exactTag, "v4.0.2-alpha.6");
   assert.match(fresh.intentRoot, /^sha256:[0-9a-f]{64}$/u);
 
   const resume = selectV4ProductPublicationIntent({
     ...common,
-    recoveredVersion: "4.0.2-alpha.7",
+    recoveredVersion: "4.0.2-alpha.6",
   });
   assert.equal(resume.mode, "resume");
-  assert.equal(resume.version, "4.0.2-alpha.7");
+  assert.equal(resume.version, "4.0.2-alpha.6");
   assert.notEqual(resume.intentRoot, fresh.intentRoot);
+  assert.throws(
+    () =>
+      selectV4ProductPublicationIntent({
+        ...common,
+        recoveredVersion: "4.0.2-alpha.7",
+      }),
+    /must equal the sealed candidate version/u,
+  );
 });
 
 test("one rooted product plan declares version, package, and ref effects before credentials", () => {
@@ -84,12 +92,17 @@ test("one rooted product plan declares version, package, and ref effects before 
   assert.deepEqual(
     plan.operations.at(-1).target.references.map(({ ref }) => ref),
     [
-      "refs/tags/v4.0.2-alpha.7",
+      "refs/tags/v4.0.2-alpha.6",
       "refs/heads/alpha/v4/v4.0",
-      "refs/heads/dev/v4/v4.0",
       "refs/tags/v4.0-alpha",
       "refs/tags/v4-alpha",
     ],
+  );
+  assert.equal(
+    plan.operations
+      .at(-1)
+      .target.references.every(({ target }) => target === "source"),
+    true,
   );
   assert.match(plan.planRoot, /^sha256:[0-9a-f]{64}$/u);
   const declaration = createV4ProductPublicationDeclaration({ intent, plan });
