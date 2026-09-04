@@ -58,6 +58,9 @@ async function assertAuthorityUnavailable(directory) {
 test("tracked Rust/WASM artifact is bound to its ABI metadata", () => {
   const bytes = fs.readFileSync(artifactPath);
   assert.equal(sha256(bytes), V4_DOMAIN_WASM_SHA256);
+  assert.equal(bytes.includes(Buffer.from("/home/")), false);
+  assert.equal(bytes.includes(Buffer.from("\\Users\\")), false);
+  assert.equal(bytes.includes(Buffer.from("/buildchain/dependencies/")), true);
   assert.deepEqual(v4DomainWasmInfo(), {
     abiVersion: V4_DOMAIN_WASM_ABI_VERSION,
     requestContract: V4_DOMAIN_WASM_REQUEST_CONTRACT,
