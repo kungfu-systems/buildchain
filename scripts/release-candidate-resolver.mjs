@@ -272,7 +272,7 @@ export function selectReleaseAssetPaths({
     else if (digest(existing) !== digest(filePath))
       throw new Error(`release candidate public asset basename is not unique: ${basename}`);
   }
-
+  // Repeated paths are safe only when they name the same immutable bytes.
   return [...selectedByBasename.values()];
 }
 
