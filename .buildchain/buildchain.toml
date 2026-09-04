@@ -51,6 +51,7 @@ command = "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:s
 
 [lifecycle.verify]
 commands = [
+  "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown",
   "corepack pnpm@11.7.0 run check",
 ]
 

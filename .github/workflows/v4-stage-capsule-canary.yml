@@ -146,11 +146,6 @@ jobs:
         if: inputs.go-version != ''
         with:
           go-version: ${{ inputs.go-version }}
-      - name: Install the exact Rust/WASM build toolchain
-        run: >-
-          rustup toolchain install 1.96.0
-          --profile minimal
-          --target wasm32-unknown-unknown
       - name: Bootstrap Buildchain runtime dependencies
         run: |
           corepack prepare pnpm@11.7.0 --activate
