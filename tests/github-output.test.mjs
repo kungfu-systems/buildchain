@@ -16,6 +16,7 @@ test("writeGitHubOutputs preserves single-line and multiline values", () => {
     writeGitHubOutputs({
       plain: "one",
       "release-assets": "dist/linux\ndist/macos\ndist/windows",
+      "trailing-release-assets": "dist/linux\ndist/macos\n",
     });
 
     const output = fs.readFileSync(outputPath, "utf8");
@@ -25,6 +26,10 @@ test("writeGitHubOutputs preserves single-line and multiline values", () => {
     );
     assert.ok(match);
     assert.equal(match[2], "dist/linux\ndist/macos\ndist/windows");
+    const trailing = output.match(
+      /^trailing-release-assets<<(BUILDCHAIN_OUTPUT_[0-9a-f]{64})\n([\s\S]+)\n\1$/mu,
+    );
+    assert.equal(trailing?.[2], "dist/linux\ndist/macos");
   } finally {
     if (previousOutput === undefined) delete process.env.GITHUB_OUTPUT;
     else process.env.GITHUB_OUTPUT = previousOutput;
