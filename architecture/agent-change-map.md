@@ -651,6 +651,7 @@ Owner: Buildchain contract maintainers
 
 - `packages/core/buildchain-contract.js`
 - `scripts/build-contract-core.mjs`
+- `scripts/github-output.mjs`
 
 ### Contracts
 
@@ -662,6 +663,7 @@ Owner: Buildchain contract maintainers
 - `tests/buildchain-contract.test.mjs`
 - `tests/build-surface.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
+- `tests/github-output.test.mjs`
 
 ### Generated outputs
 
