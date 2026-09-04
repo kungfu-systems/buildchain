@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1390,
+  "generation": 1391,
   "fencingCounter": 197,
   "policy": {
     "agingSeconds": 900,
@@ -10196,8 +10196,44 @@
         "tests/dev-delivery-minimal-request.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3459,
+      "sourceRoot": "sha256:fc0294650d863f0e95debea6f92f5866c8f38786ab106127d13e77881d88968b",
+      "sourceIdentityRoot": "sha256:6aa64853e55b316a5fd8b1afd3a46f8b6c5ef27e233c882d4683de9ec44bec62",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:fd368dd789f2f6d82c8c753e15f165c8b32c9934263a5ef55cd53d030949640c",
+      "sourceHead": "824a65eb9f0f8fb6f71f00b5750dcb5e55c5f1af",
+      "sourcePatchRoot": "sha256:9fae2fcb2c0a10f5c8a49786c0df6cd494262ed24d8b2c84c3a8b45314ba337f",
+      "sourceProofRoot": "sha256:64f52f4bbedcaa1c0866c0ea0d8b01a22d988a974ca05f2ac43a8ced74bc565f",
+      "planRoot": "sha256:1fb68485d37f375871b5cc28a09977e83cc0f36250a8f07ba18372dd1084e1c4",
+      "closureRoot": "sha256:5c198ba55e83b7607071a7861a4e5206e09350f9f0416f766539316b11d67dad",
+      "dependencyRoot": "sha256:ae1b2398f6dd5783cc39b500b03e49d7ce045dac98bb3cf761fb4c0234e9d1ad",
+      "toolchainRoot": "sha256:b398ded028ae50df9f864407b56fb19e4d3cade8ccdd65ca100305a527bcbe4e",
+      "sourceWorkflowRunId": 33836958102,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-04T04:46:31.000Z",
+      "updatedAt": "2026-09-04T04:46:31.000Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/run-lifecycle/dist/index.js",
+        "architecture/agent-change-map.md",
+        "architecture/internal-capabilities.json",
+        "architecture/maintainability-debt.json",
+        "architecture/maintainability-policy.json",
+        "scripts/build-contract-core.mjs",
+        "scripts/github-output.mjs",
+        "tests/github-output.test.mjs",
+        "tests/internal-architecture.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-04T04:26:46.219Z",
-  "stateRoot": "sha256:cf00a75d652fe7bd90684e719d320d0544a23433608e2ca1ad78985cc466609e"
+  "updatedAt": "2026-09-04T04:46:31.000Z",
+  "stateRoot": "sha256:52729b187ce2a7dff05cd6abd02930804d5075fab8777507c0585262d0448d6c"
 }
