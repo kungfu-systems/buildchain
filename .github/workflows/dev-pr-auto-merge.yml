@@ -727,8 +727,7 @@ jobs:
               -f "expected-pr-number=$selected_pr"
               -f "expected-head-sha=$selected_head"
               -f "source-workflow-run-id=$source_run_id"
-              -f "assignment-root=$(jq -er '.observation.activeWarrant.assignmentRoot' .buildchain/dev-delivery/warrant.json)"
-              -f "initiative-root=$(jq -er '.observation.activeWarrant.initiativeRoot' .buildchain/dev-delivery/warrant.json)"
+              -f "native-roots-json=$(jq -c '{sourceRoot:.observation.activeWarrant.sourceRoot}' .buildchain/dev-delivery/warrant.json)"
               -f "source-identity-root=$(jq -er '.observation.activeWarrant.sourceIdentityRoot' .buildchain/dev-delivery/warrant.json)"
               -f "source-patch-root=$(jq -er '.observation.activeWarrant.sourcePatchRoot' .buildchain/dev-delivery/warrant.json)"
               -f "plan-root=$(jq -er '.observation.activeWarrant.planRoot' .buildchain/dev-delivery/warrant.json)"
@@ -740,7 +739,6 @@ jobs:
               -f "release-blocker-priority-json=$(jq -c '.observation.activeWarrant.releaseBlockerPriority // empty' .buildchain/dev-delivery/warrant.json)"
               -f "delivery-class=$(jq -er '.observation.activeWarrant.deliveryClass' .buildchain/dev-delivery/warrant.json)"
               -f "delivery-priority=$(jq -r '.observation.activeWarrant.priority // "ordinary"' .buildchain/dev-delivery/warrant.json)"
-              -f dry-run=false
             )
             if [ "$selected_phase" = "legacy-active" ]; then
               handoff_args+=(
