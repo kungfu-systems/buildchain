@@ -134,7 +134,7 @@ payload="$(jq -n --arg ref "$base" --arg runtime "$runtime_sha" --arg number "$n
     "delivery-priority":"ordinary"}}')"
 
 if [ "$execute" = true ]; then
-  gh api --method POST "repos/$repository/actions/workflows/$workflow/dispatches" --input - <<<"$payload" >/dev/null
+  printf '%s\n' "$payload" | gh api --method POST "repos/$repository/actions/workflows/$workflow/dispatches" --input - >/dev/null
 fi
 mode=plan
 [ "$execute" = true ] && mode=execute
