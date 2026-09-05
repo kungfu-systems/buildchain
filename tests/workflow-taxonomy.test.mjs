@@ -263,7 +263,10 @@ test("lane projection conserves every logical job and refuses divergent aliases"
   assert.equal(projected.length, policy.entries.length);
   for (const entry of policy.entries) {
     assert.equal(
-      projected.find((item) => item.path === entry.migration.previousPath).text,
+      projected.find(
+        (item) =>
+          item.path === (entry.migration?.previousPath || workflowPath(entry)),
+      ).text,
       physical.find((item) => item.path === workflowPath(entry)).text,
     );
   }

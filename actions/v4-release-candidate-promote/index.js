@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { publishDeclarativeGitHubReleaseEvidence } from "../promote-buildchain-ref/github-release.js";
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
 import { v4ContentRoot } from "../../packages/core/v4-canonical-contracts.js";
+import { completePublicationDevelopment } from "./publication-completion.js";
 import {
   V4_RELEASE_INVOCATION_CONTRACT,
   V4_RELEASE_PROVIDER_CONTRACT,
@@ -22,13 +23,11 @@ import {
 import { bindV4ProtectedPublicationSource } from "../../packages/core/v4-protected-publication-source.js";
 import {
   activateExactPnpm,
-  advanceAlphaNextDevelopment,
   applyProductPublication,
   planProductPublication,
   resolveCandidateBuildSummaryPath,
   resolveCandidateProviderInputs,
   resolvePublicationTarget,
-  resolvePromotionTarget,
 } from "./product-provider.js";
 
 export {
@@ -569,26 +568,18 @@ async function main() {
     publicationPlan,
     documents,
   });
-  if (canonicalChannel(channel) === "alpha") {
-    const nextDevelopment = await advanceAlphaNextDevelopment({
-      repository,
-      completedAlpha: {
-        outcome: "succeeded",
-        version: documents.version,
-        exactTag: documents.tag,
-        releaseSha: settlement.productProviderResult.publication.releaseSha,
-        treeSha: sourceBinding.protectedSource.tree,
-        publicationRoot: settlement.releaseReceipt.receiptRoot,
-        completedAt: providerRequest.publicationIntent.sourceTimestamp,
-      },
-      octokit,
-      mutationOctokit,
-    });
-    write(
-      ".buildchain/release-tail/next-development-controller.json",
-      nextDevelopment,
-    );
-  }
+  await completePublicationDevelopment({
+    repository,
+    sourceSha,
+    token,
+    channel: canonicalChannel(channel),
+    settlement,
+    documents,
+    sourceBinding,
+    providerRequest,
+    octokit,
+    mutationOctokit,
+  });
   setOutputs(documents, settlement);
 }
 

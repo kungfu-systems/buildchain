@@ -7,7 +7,7 @@ export function nextDevelopmentQueueFailure(error) {
   if (/already.*queue|queue.*already/iu.test(message)) return "queued";
   if (/already.*merged|merged.*already/iu.test(message)) return "merged";
   if (
-    /mergeability check has not yet completed|required status check .+ (?:expected|pending)/iu.test(
+    /mergeability check has not yet completed|required status check .+ (?:expected|pending)|waiting on code owner review|at least \d+ approving review/iu.test(
       message,
     )
   )

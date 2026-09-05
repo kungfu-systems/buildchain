@@ -6380,6 +6380,36 @@
       "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
+      "id": "self-release-next-development",
+      "path": ".github/workflows/self-release-next-development.yml",
+      "reusable": false,
+      "inputs": [],
+      "inputCount": 0,
+      "secrets": [],
+      "secretCount": 0,
+      "outputs": [],
+      "outputCount": 0,
+      "taxonomy": {
+        "id": "next-development-review",
+        "role": "self",
+        "category": "release",
+        "purpose": "next-development",
+        "status": "active",
+        "canonicalPath": ".github/workflows/self-release-next-development.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
       "id": "self-release-npm-dry-run",
       "path": ".github/workflows/self-release-npm-dry-run.yml",
       "reusable": false,

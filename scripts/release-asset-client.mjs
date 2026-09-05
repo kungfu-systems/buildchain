@@ -8,7 +8,7 @@ import {
 
 export function releaseAssetClient(
   repository,
-  { execute = execFileSync } = {},
+  { execute = execFileSync, token } = {},
 ) {
   if (!/^[\w.-]+\/[\w.-]+$/u.test(repository))
     throw new Error("exact repository required");
@@ -17,6 +17,7 @@ export function releaseAssetClient(
     execute("gh", ["api", endpoint, ...args], {
       maxBuffer: 128 * 1024 * 1024,
       stdio: ["ignore", "pipe", "pipe"],
+      ...(token ? { env: { ...process.env, GH_TOKEN: token } } : {}),
     });
   const json = (endpoint) => JSON.parse(raw(endpoint));
   const assetBytes = (asset) =>

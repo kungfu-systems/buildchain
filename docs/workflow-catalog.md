@@ -145,6 +145,7 @@ all related declarations. Run `pnpm run generate:workflows` and
 | [self-release-binary-assets.yml](../.github/workflows/self-release-binary-assets.yml) | release | repository | active | Binary Release Assets | — |
 | [self-release-line-open.yml](../.github/workflows/self-release-line-open.yml) | release | repository | active | Release Line Bootstrap | — |
 | [self-release-new-version-compat.yml](../.github/workflows/self-release-new-version-compat.yml) | release | repository | compatibility | Release - New Version | — |
+| [self-release-next-development.yml](../.github/workflows/self-release-next-development.yml) | release | repository | active | Next Development Review | — |
 | [self-release-npm-dry-run.yml](../.github/workflows/self-release-npm-dry-run.yml) | release | repository | active | Publish npm package | — |
 | [self-release-promote.yml](../.github/workflows/self-release-promote.yml) | release | repository | active | Buildchain Ref Promotion | — |
 | [self-release-rehearsal-dogfood.yml](../.github/workflows/self-release-rehearsal-dogfood.yml) | release | repository | active | V4 Publication Rehearsal Dogfood | — |

@@ -862,6 +862,17 @@
       "rationale": "Classify the existing .github/workflows/github-governance-audit.yml capability without adding execution behavior."
     },
     {
+      "id": "next-development-review",
+      "role": "self",
+      "category": "release",
+      "purpose": "next-development",
+      "summary": "Next Development Review",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "rationale": "Independently regenerate the exact version-only delta from protected development, verify the completed alpha publication, then approve and enqueue the exact head under existing CODEOWNER and queue policy."
+    },
+    {
       "id": "npm-publish",
       "role": "self",
       "category": "release",
