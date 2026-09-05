@@ -34,10 +34,12 @@ paths:
   .github/workflows/v4-stage-capsule-canary.yml:
     # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
     ignore:
+      - 'property "workflow_ref" is not defined in object type'
       - 'property "workflow_sha" is not defined in object type'
   .github/workflows/v4-adopter-delivery.yml:
     # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
     ignore:
+      - 'property "workflow_ref" is not defined in object type'
       - 'property "workflow_sha" is not defined in object type'
   .github/workflows/v4-tail-reseal.yml:
     # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
@@ -106,11 +108,13 @@ paths:
   .github/workflows/public-build-stage-capsule-canary.yml:
     # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
     ignore:
+      - 'property "workflow_ref" is not defined in object type'
       - 'property "workflow_sha" is not defined in object type'
 
   .github/workflows/public-build-adopter-qualification.yml:
     # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
     ignore:
+      - 'property "workflow_ref" is not defined in object type'
       - 'property "workflow_sha" is not defined in object type'
 
   .github/workflows/public-ops-tail-reseal.yml:

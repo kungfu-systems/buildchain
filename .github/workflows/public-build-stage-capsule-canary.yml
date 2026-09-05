@@ -83,7 +83,7 @@ jobs:
         shell: bash
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
-          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-stage-capsule-canary.yml
+          BUILDCHAIN_INVOKED_WORKFLOW: ${{ startsWith(job.workflow_ref, 'kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@') && '.github/workflows/public-build-stage-capsule-canary.yml' || '.github/workflows/v4-stage-capsule-canary.yml' }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json

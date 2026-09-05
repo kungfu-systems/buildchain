@@ -345,6 +345,17 @@ export function writeWorkflowSource(root, relative, text) {
 
 export function rewriteRepositoryWorkflowPaths(root, text) {
   for (const entry of readWorkflowTaxonomy(root)?.entries || []) {
+    if (
+      ["v4-adopter-delivery", "v4-stage-capsule-canary"].includes(entry.id) &&
+      entry.compatibility
+    ) {
+      const canonical = workflowPath(entry);
+      const legacy = entry.compatibility.path;
+      text = text.replaceAll(
+        `BUILDCHAIN_INVOKED_WORKFLOW: ${legacy}\n`,
+        `BUILDCHAIN_INVOKED_WORKFLOW: \${{ startsWith(job.workflow_ref, 'kungfu-systems/buildchain/${canonical}@') && '${canonical}' || '${legacy}' }}\n`,
+      );
+    }
     if (entry.role === "self" && entry.migration)
       text = text.replaceAll(entry.migration.previousPath, workflowPath(entry));
     if (entry.id === "build-surface-fixture")
