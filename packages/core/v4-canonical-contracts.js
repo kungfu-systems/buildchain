@@ -28,6 +28,7 @@ const ROOT_DOMAINS = new Set([
   "stage-capsule-quarantine",
   "stage-capsule-resume-observation",
   "stage-capsule-resume-plan",
+  "source-verification-evidence",
   "stage-capsule-artifact-manifest",
   "stage-capsule-artifact-content",
   "stage-capsule-fault-campaign",

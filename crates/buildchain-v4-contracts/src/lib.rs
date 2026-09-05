@@ -14,6 +14,7 @@ mod release_activation_shadow;
 mod release_invocation;
 mod release_runtime;
 mod release_tail;
+mod source_verification;
 mod stable_publication_fence;
 mod stage_capsule;
 mod stage_capsule_resume;
@@ -23,6 +24,10 @@ mod warrant;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm;
+
+pub use source_verification::{
+    plan_source_verification, seal_source_verification, validate_source_version_projection,
+};
 
 pub use adopter_delivery::{
     ADOPTER_DELIVERY_PARITY_INPUT_CONTRACT, ADOPTER_DELIVERY_PARITY_PROJECTION_CONTRACT,
@@ -147,6 +152,7 @@ const ROOT_DOMAINS: &[&str] = &[
     "stage-capsule-quarantine",
     "stage-capsule-resume-observation",
     "stage-capsule-resume-plan",
+    "source-verification-evidence",
     "stage-capsule-artifact-manifest",
     "stage-capsule-artifact-content",
     "stage-capsule-fault-campaign",
