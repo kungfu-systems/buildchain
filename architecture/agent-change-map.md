@@ -198,6 +198,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/buildchain-cli-help.mjs`
 - `scripts/check-maintainability.mjs`
 - `tests/maintainability.test.mjs`
+- `scripts/generate-v4-universal-workflow-facades.mjs`
 
 ## cli-command-registry
 

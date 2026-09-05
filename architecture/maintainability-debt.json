@@ -3169,7 +3169,8 @@
     "tests/promote-buildchain-ref-governance.test.mjs",
     "scripts/buildchain-cli-help.mjs",
     "scripts/check-maintainability.mjs",
-    "tests/maintainability.test.mjs"
+    "tests/maintainability.test.mjs",
+    "scripts/generate-v4-universal-workflow-facades.mjs"
   ],
   "burnDownSlices": [
     {
