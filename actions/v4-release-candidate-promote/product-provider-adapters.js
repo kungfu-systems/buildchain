@@ -3,6 +3,37 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+const ENQUEUE_POLL_MS = 2_000;
+const ENQUEUE_MAX_POLLS = 30;
+
+export async function enqueueNextDevelopmentPullRequest({
+  mutationOctokit,
+  pull,
+  headSha,
+  wait,
+}) {
+  for (let poll = 0; poll <= ENQUEUE_MAX_POLLS; poll += 1) {
+    try {
+      await mutationOctokit.graphql(
+        `mutation BuildchainEnqueuePullRequest($input: EnqueuePullRequestInput!) {
+          enqueuePullRequest(input: $input) { mergeQueueEntry { id } }
+        }`,
+        { input: { pullRequestId: pull.node_id, expectedHeadOid: headSha } },
+      );
+      return;
+    } catch (error) {
+      const message = String(error?.message || "");
+      if (/already.*queue|queue.*already/iu.test(message)) return;
+      if (
+        !/mergeability check has not yet completed/iu.test(message) ||
+        poll === ENQUEUE_MAX_POLLS
+      )
+        throw error;
+      await wait(ENQUEUE_POLL_MS);
+    }
+  }
+}
+
 import { spawnSyncCommand } from "../../packages/core/spawn-command.js";
 import { verifyPublicationSealedBundle } from "../../packages/core/publication-sealed-bundle.js";
 import { v4ContentRoot } from "../../packages/core/v4-canonical-contracts.js";
