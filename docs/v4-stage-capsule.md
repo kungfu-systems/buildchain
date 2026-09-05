@@ -137,7 +137,7 @@ shadow-only: it does not skip a v3 production stage or move v3 authority.
 qualification boundary. Buildchain and external repositories use the same
 Buildchain-owned public reusable workflow,
 `.github/workflows/v4-stage-capsule-canary.yml`. Buildchain's caller is the thin
-`.github/workflows/v4-public-consumer-dogfood.yml`; it has no steps, copied
+`.github/workflows/self-build-public-consumer-dogfood.yml`; it has no steps, copied
 orchestration, local action, direct qualification invocation, or private
 consumer profile. Candidate recursion is resolved only by publishing the exact
 candidate at `train/v4/v4.0/<capability>` and calling that fully qualified

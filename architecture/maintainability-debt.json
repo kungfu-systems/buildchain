@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64779,
-    "current": 56718
+    "measuredExcess": 64771,
+    "current": 56710
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1435,21 +1435,21 @@
       "scripts/generate-channel-promotion-workflow.mjs": {
         "baseline": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 282
             }
           }
         },
         "current": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 240
             }
           }
         },
         "target": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 180
             }
           }
@@ -1459,7 +1459,7 @@
         "baseline": {
           "lines": 1410,
           "functions": {
-            "buildSiteBundle@719": {
+            "buildSiteBundle@720": {
               "lines": 637
             }
           }
@@ -1467,15 +1467,15 @@
         "current": {
           "lines": 1410,
           "functions": {
-            "buildSiteBundle@719": {
-              "lines": 637
+            "buildSiteBundle@720": {
+              "lines": 636
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "buildSiteBundle@719": {
+            "buildSiteBundle@720": {
               "lines": 180
             }
           }
@@ -2075,7 +2075,7 @@
         "current": {
           "functions": {
             "dispatch@61": {
-              "lines": 214,
+              "lines": 207,
               "complexity": 64
             }
           }
@@ -3150,6 +3150,7 @@
     "actions/promote-buildchain-ref/lib.js",
     "actions/v4-release-candidate-promote/index.js",
     "actions/v4-release-candidate-promote/product-provider.js",
+    "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
     "tests/v4-release-candidate-promote.test.mjs",
     "scripts/check-inventory.mjs",
     "tests/promote-buildchain-ref.test.mjs",
@@ -3168,7 +3169,8 @@
     "tests/promote-buildchain-ref-governance.test.mjs",
     "scripts/buildchain-cli-help.mjs",
     "scripts/check-maintainability.mjs",
-    "tests/maintainability.test.mjs"
+    "tests/maintainability.test.mjs",
+    "scripts/generate-v4-universal-workflow-facades.mjs"
   ],
   "burnDownSlices": [
     {

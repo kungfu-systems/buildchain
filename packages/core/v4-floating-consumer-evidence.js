@@ -10,7 +10,7 @@ export const V4_FLOATING_CONSUMER_CERTIFICATION =
 const SHA256_ROOT = /^sha256:[0-9a-f]{64}$/u;
 const ALPHA_RECOVERY_BOOTSTRAP = Object.freeze({
   repository: "kungfu-systems/buildchain",
-  sourcePath: ".github/workflows/buildchain-ref-promotion-recovery.yml",
+  sourcePath: ".github/workflows/self-ops-promotion-recovery.yml",
   workflow: ".github/workflows/.release-candidate-promote.yml",
   selector: "alpha/v4/v4.0",
 });

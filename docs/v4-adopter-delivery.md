@@ -115,7 +115,7 @@ stable use and `@v4-alpha` during prerelease evaluation. It resolves the exact
 called-workflow SHA, enforces floating selector plus dual-lock consumer
 admission, and runs the same CLI on Linux, macOS, and Windows. Buildchain
 dogfoods it through the thin
-[`v4-adopter-delivery-dogfood.yml`](../.github/workflows/v4-adopter-delivery-dogfood.yml)
+[`self-build-adopter-dogfood.yml`](../.github/workflows/self-build-adopter-dogfood.yml)
 caller, which contains no steps or local orchestration and persists only the
 floating `@v4-alpha` selector.
 

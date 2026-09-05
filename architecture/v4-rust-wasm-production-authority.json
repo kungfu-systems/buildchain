@@ -17,6 +17,7 @@
     "failurePolicy": "fail-closed"
   },
   "rustOwnedSemantics": [
+    "source-verification-evidence-identity-and-reuse",
     "canonical-json-and-content-roots",
     "release-invocation-plan-transaction-and-receipt",
     "product-publication-plan-and-version-intent",

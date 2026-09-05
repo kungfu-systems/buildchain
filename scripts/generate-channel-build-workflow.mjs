@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { writeWorkflowSource } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { migrateV4UniversalWorkflowFacade } from "./generate-v4-universal-workflow-facades.mjs";
@@ -421,7 +422,7 @@ function main() {
     }
     return;
   }
-  fs.writeFileSync(targetPath, generated);
+  writeWorkflowSource(root, path.relative(root, targetPath), generated);
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

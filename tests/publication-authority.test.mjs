@@ -718,7 +718,7 @@ test("control-plane snapshot explicitly qualifies caller-bound npm publishing wi
   const receipt = evaluatePublicationControlPlaneSnapshot({
     repository: "kungfu-systems/buildchain",
     workflowPath: ".github/workflows/release-candidate-promote.yml",
-    publisherWorkflowPath: ".github/workflows/buildchain-ref-promotion.yml",
+    publisherWorkflowPath: ".github/workflows/self-release-promote.yml",
     environment: "none",
     branch: "dev/v2/v2.12",
     packageName: "@kungfu-tech/buildchain",
@@ -728,8 +728,8 @@ test("control-plane snapshot explicitly qualifies caller-bound npm publishing wi
       actions: { defaultWorkflowPermissions: "read", canApprovePullRequestReviews: false },
       branch: { ref: "dev/v2/v2.12", strict: true, requiredApprovals: 1, requireConversationResolution: true, enforceAdmins: true },
     environment: { name: "none", declared: false, exists: false, protected: false },
-    oidc: { workflowPath: ".github/workflows/buildchain-ref-promotion.yml", environment: "", idTokenJobScoped: true, longLivedCredentialPresent: false },
-    publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "buildchain-ref-promotion.yml", environment: "", allowPublish: false, enforcement: "provider-at-transaction", authorizationDeferred: true, configurationRead: false, longLivedWorkflowCredentialPresent: false },
+    oidc: { workflowPath: ".github/workflows/self-release-promote.yml", environment: "", idTokenJobScoped: true, longLivedCredentialPresent: false },
+    publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "self-release-promote.yml", environment: "", allowPublish: false, enforcement: "provider-at-transaction", authorizationDeferred: true, configurationRead: false, longLivedWorkflowCredentialPresent: false },
     runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
     },
   });
@@ -741,7 +741,7 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
   const common = {
     repository: "kungfu-systems/buildchain",
     workflowPath: ".github/workflows/release-candidate-promote.yml",
-    publisherWorkflowPath: ".github/workflows/buildchain-ref-promotion.yml",
+    publisherWorkflowPath: ".github/workflows/self-release-promote.yml",
     environment: "none",
     branch: "alpha/v2/v2.12",
     packageName: "@kungfu-tech/buildchain",
@@ -771,8 +771,8 @@ test("control-plane snapshot qualifies an exact provider-enforced protected-bran
       configurationRead: false,
     },
       environment: { name: "none", declared: false, exists: false, protected: false },
-      oidc: { workflowPath: ".github/workflows/buildchain-ref-promotion.yml", environment: "", idTokenJobScoped: true, longLivedCredentialPresent: false },
-      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "buildchain-ref-promotion.yml", environment: "", allowPublish: false, enforcement: "provider-at-transaction", authorizationDeferred: true, configurationRead: false, longLivedWorkflowCredentialPresent: false },
+      oidc: { workflowPath: ".github/workflows/self-release-promote.yml", environment: "", idTokenJobScoped: true, longLivedCredentialPresent: false },
+      publisher: { packageName: "@kungfu-tech/buildchain", provider: "github", repository: "kungfu-systems/buildchain", workflowFilename: "self-release-promote.yml", environment: "", allowPublish: false, enforcement: "provider-at-transaction", authorizationDeferred: true, configurationRead: false, longLivedWorkflowCredentialPresent: false },
       runner: { class: "ephemeral", label: "ubuntu-24.04", githubHosted: true, selfHostedAuthorized: false },
   };
   const receipt = evaluatePublicationControlPlaneSnapshot({ ...common, snapshot });
@@ -943,8 +943,8 @@ test("control-plane snapshot audit supports scoped GitHub tokens and sanitized O
   };
   const common = {
     repository: "kungfu-systems/buildchain",
-    workflowPath: ".github/workflows/.binary-release-assets.yml",
-    publisherWorkflowPath: ".github/workflows/binary-release-assets.yml",
+    workflowPath: ".github/workflows/.self-release-binary-assets.yml",
+    publisherWorkflowPath: ".github/workflows/self-release-binary-assets.yml",
     environment: "release-assets",
     branch: "release/v2/v2.12",
     observedAt: "2026-07-14T00:00:00.000Z",

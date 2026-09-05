@@ -145,39 +145,39 @@ const requiredPaths = [
   ".buildchain/alpha-contract-lock.json",
   ".buildchain/release-impact.json",
   ".github/actionlint.yaml",
-  ".github/workflows/self-hosted-runner-smoke.yml",
-  ".github/workflows/buildchain-ref-promotion.yml",
-  ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
-  ".github/workflows/release-line-bootstrap.yml",
+  ".github/workflows/self-ops-runner-smoke.yml",
+  ".github/workflows/self-release-promote.yml",
+  ".github/workflows/self-ops-recovery-failure-dogfood.yml",
+  ".github/workflows/self-release-line-open.yml",
   ".github/workflows/release-governance-reconcile.yml",
   ".github/workflows/dev-pr-auto-merge.yml",
-  ".github/workflows/buildchain-dev-delivery.yml",
+  ".github/workflows/self-ops-dev-delivery.yml",
   ".github/workflows/buildchain-patrol.yml",
   ".github/workflows/patrol-daily.yml",
   ".github/workflows/patrol-weekly.yml",
   ".github/workflows/patrol-monthly.yml",
   ".github/workflows/patrol-observed-evidence.yml",
-  ".github/workflows/buildchain-patrol-daily.yml",
-  ".github/workflows/buildchain-patrol-weekly.yml",
-  ".github/workflows/buildchain-patrol-monthly.yml",
-  ".github/workflows/buildchain-alpha-self-dogfood.yml",
+  ".github/workflows/self-ops-patrol-daily.yml",
+  ".github/workflows/self-ops-patrol-weekly.yml",
+  ".github/workflows/self-ops-patrol-monthly.yml",
+  ".github/workflows/self-build-alpha-dogfood.yml",
   ".github/workflows/release-candidate-promote.yml",
   ".github/workflows/.release-candidate-promote.yml",
   ".github/workflows/release-propagation.yml",
-  ".github/workflows/npm-publish.yml",
+  ".github/workflows/self-release-npm-dry-run.yml",
   ".github/workflows/paper-release.yml",
-  ".github/workflows/binary-distribution.yml",
+  ".github/workflows/self-build-binary-distribution.yml",
   ".github/workflows/.binary-release-assets.yml",
-  ".github/workflows/binary-release-assets.yml",
-  ".github/workflows/verify.yml",
+  ".github/workflows/self-release-binary-assets.yml",
+  ".github/workflows/self-build-verify.yml",
   ".github/workflows/.build.yml",
   ".github/workflows/.gate-profile.yml",
   ".github/workflows/.auditable-demo.yml",
   ".github/workflows/.declarative-auditable-demo.yml",
-  ".github/workflows/auditable-demo.yml",
+  ".github/workflows/self-build-demo-dogfood.yml",
   ".github/workflows/build.yml",
-  ".github/workflows/build-surface-fixture.yml",
-  ".github/workflows/candidate-lab.yml",
+  ".github/workflows/self-build-fixture.yml",
+  ".github/workflows/self-build-candidate-lab.yml",
   "fixtures/libnode-shaped/buildchain.toml",
   "fixtures/libnode-shaped/.github/workflows/build.yml",
   "fixtures/libnode-shaped/package.json"
@@ -197,7 +197,7 @@ if (rootPackage.private !== false) {
   throw new Error("root package must be publishable with private=false");
 }
 const selfDogfoodWorkflow = fs.readFileSync(
-  path.join(root, ".github/workflows/buildchain-alpha-self-dogfood.yml"),
+  path.join(root, ".github/workflows/self-build-alpha-dogfood.yml"),
   "utf8",
 );
 const selfDogfoodAlphaLock = JSON.parse(
@@ -285,7 +285,7 @@ const channelPromotionWorkflow = fs.readFileSync(
   "utf8",
 );
 const boundedAlphaRecoveryWorkflow = fs.readFileSync(
-  path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
+  path.join(root, ".github/workflows/self-ops-promotion-recovery.yml"),
   "utf8",
 );
 const promotionShellRouting = parsePromotionShellRouting(
@@ -1000,11 +1000,11 @@ for (const requiredSnippet of [
 if (commonJsSourcePattern.test(standaloneBinaryScript)) {
   throw new Error("scripts/build-standalone-binary.mjs must use ESM syntax");
 }
-const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/npm-publish.yml"), "utf8");
-const buildchainRefPromotionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/buildchain-ref-promotion.yml"), "utf8");
-const binaryDistributionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/binary-distribution.yml"), "utf8");
+const npmPublishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-release-npm-dry-run.yml"), "utf8");
+const buildchainRefPromotionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-release-promote.yml"), "utf8");
+const binaryDistributionWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-build-binary-distribution.yml"), "utf8");
 const binaryReleaseAssetsWorkflow = fs.readFileSync(path.join(root, ".github/workflows/.binary-release-assets.yml"), "utf8");
-const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-hosted-runner-smoke.yml"), "utf8");
+const selfHostedRunnerSmokeWorkflow = fs.readFileSync(path.join(root, ".github/workflows/self-ops-runner-smoke.yml"), "utf8");
 const npmDryRunScript = fs.readFileSync(path.join(root, "scripts/npm-publish-dry-run.mjs"), "utf8");
 const npmPublishTransactionScript = fs.readFileSync(path.join(root, "scripts/npm-publish-transaction.mjs"), "utf8");
 const rootPackageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));

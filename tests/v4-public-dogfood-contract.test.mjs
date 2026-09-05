@@ -13,6 +13,7 @@ import {
 const root = path.resolve(import.meta.dirname, "..");
 const protectedDogfoodRef = V4_PUBLIC_DOGFOOD_ALPHA_REF;
 const fixturePaths = [
+  "architecture/workflow-taxonomy.json",
   ".buildchain/buildchain.toml",
   ".gitattributes",
   ".github/workflows",
@@ -49,7 +50,7 @@ test("the tracked v4 dogfood path is one thin public consumer caller", () => {
   assert.deepEqual(checkV4PublicDogfoodContract(root), {
     schema: "buildchain-v4-public-dogfood-contract-check/v1",
     ok: true,
-    caller: ".github/workflows/v4-public-consumer-dogfood.yml",
+    caller: ".github/workflows/self-build-public-consumer-dogfood.yml",
     reusable: ".github/workflows/v4-stage-capsule-canary.yml",
     validationRef: protectedDogfoodRef,
     productionAuthority: "v3",
@@ -58,7 +59,7 @@ test("the tracked v4 dogfood path is one thin public consumer caller", () => {
 
 test("the gate rejects copied orchestration and relative reusable calls", () => {
   const copied = mutate(
-    ".github/workflows/v4-public-consumer-dogfood.yml",
+    ".github/workflows/self-build-public-consumer-dogfood.yml",
     (text) => `${text}\n    steps:\n      - run: echo bypass\n`,
   );
   assert.throws(
@@ -67,7 +68,7 @@ test("the gate rejects copied orchestration and relative reusable calls", () => 
   );
 
   const relative = mutate(
-    ".github/workflows/v4-public-consumer-dogfood.yml",
+    ".github/workflows/self-build-public-consumer-dogfood.yml",
     (text) =>
       text.replace(
         "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@",
@@ -113,11 +114,13 @@ test("the gate rejects legacy profiles and removal from protected Verify", () =>
     /retains private marker/u,
   );
 
-  const unprotected = mutate(".github/workflows/verify.yml", (text) =>
-    text.replace(
-      "run: node scripts/check-v4-public-dogfood-contract.mjs",
-      "run: true",
-    ),
+  const unprotected = mutate(
+    ".github/workflows/self-build-verify.yml",
+    (text) =>
+      text.replace(
+        "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
+        "run: true",
+      ),
   );
   assert.throws(
     () => checkV4PublicDogfoodContract(unprotected),

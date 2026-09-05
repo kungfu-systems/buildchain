@@ -5,11 +5,11 @@ import test from "node:test";
 import { resolveFreshPublicationVersion } from "../scripts/release-candidate-resolver.mjs";
 
 const promotion = fs.readFileSync(
-  path.resolve(".github/workflows/buildchain-ref-promotion.yml"),
+  path.resolve(".github/workflows/self-release-promote.yml"),
   "utf8",
 );
 const recovery = fs.readFileSync(
-  path.resolve(".github/workflows/buildchain-ref-promotion-recovery.yml"),
+  path.resolve(".github/workflows/self-ops-promotion-recovery.yml"),
   "utf8",
 );
 const publicPromotion = fs.readFileSync(
@@ -95,7 +95,7 @@ test("alpha convergence retains one standalone recovery adapter", () => {
   assert.doesNotMatch(recovery, /^  workflow_call:/mu);
   assert.match(
     recovery,
-    /publication-publisher-workflow-path: \.github\/workflows\/buildchain-ref-promotion-recovery\.yml/,
+    /publication-publisher-workflow-path: \.github\/workflows\/self-ops-promotion-recovery\.yml/,
   );
 });
 

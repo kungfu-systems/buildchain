@@ -7,12 +7,12 @@ source_level: repository-contracts + protected-provider-readback
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-08-13
+review_state: unreviewed
+last_reviewed: 2026-09-05
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-13
+  generated_at: 2026-09-05
   invisible_context: Provider credentials and private provider state were not read.
 ---
 
@@ -26,8 +26,9 @@ dev/v4/v4.0 -> alpha/v4/v4.0 -> release/v4/v4.0
 ```
 
 Public consumers use `v4-alpha` for the current prerelease channel and `v4`
-for stable. Reproducible consumers may pin an exact 40-character commit or an
-exact immutable release tag such as `v4.0.0`.
+for stable, with matching stable and alpha contract locks. Exact commits and
+immutable release tags identify retained evidence and explicitly admitted runtime
+inputs; tracked v4 reusable-workflow selectors remain `@v4` or `@v4-alpha`.
 
 The release transaction is fail-closed. The v4 provider-operation journal,
 activation plan, stable publication fence, and partial-mutation recovery plan
@@ -51,8 +52,9 @@ exact alpha tag, and npm's `alpha` tag.
 ## Non-destructive rollback
 
 Rollback never rewrites an exact tag, release, package version, Passport, or
-provider journal. Stop forward promotion, pin consumers to the last verified
-exact v4 SHA or exact stable tag, and use the retained `release/v3/v3.0`
+provider journal. Stop forward promotion and select the last verified exact
+v4 runtime through an admitted, non-persistent recovery input; keep tracked v4
+workflow selectors on their locked floating channel. Use `release/v3/v3.0`
 coordinate only as an explicit compatibility rollback reference. Restoring v3
 as production authority requires a new reviewed cutover; it is not an implicit
 fallback.
@@ -61,3 +63,38 @@ Before any retry, compare the current provider state with the retained
 transaction and operation roots. Resume only missing eligible operations.
 Conflicting state remains `repair-required` or terminal and must not be
 converted into success by moving a floating ref.
+
+## Publication settlement and binary recovery
+
+Publication, next-development advancement, and binary distribution have separate
+results. A completed native ReleaseReceipt remains publication evidence when the
+later generated Dev PR is still pending or its enqueue call fails. SETTLE verifies
+the immutable invocation, transaction, both provider states, receipt and Passport
+roots even when APPLY fails after publication. It has no provider write permission.
+
+APPLY retains that exact chain in the existing GitHub Release as
+`buildchain-publication-settlement.json`; it reads the exact tag and original
+`buildchain.release.json` before adding the packet. The APPLY artifact also retains
+`delivery-summary.json`, which reports publication and next-development separately.
+A green workflow label cannot substitute for this receipt verification.
+
+Binary Distribution reads this settlement and the original publication Passport.
+Tag creation can precede settlement, so it waits at most 40 observations, 15 seconds
+apart, for missing evidence. A mismatched source, tag, Passport or receipt fails
+immediately. It no longer requires a legacy `buildchain/release-state/*` ref for v4.
+
+The sealed binary publisher retains the publication Passport and writes its own
+Passport as `buildchain.binary.release.json`. All v4 asset collisions are checked
+before uploads: identical bytes are preserved, absent assets are added, and
+conflicting bytes are rejected. Each publication authorization is retained as
+`buildchain.binary.capability-<sha256>.json`, so a fresh recovery capability does
+not overwrite an earlier grant. Existing assets are never clobbered. Recovery uses
+the same exact successful Binary Distribution evidence run through
+`self-release-binary-assets.yml`; it does not rebuild already admitted archives or
+create another npm version. Read back all three platform archives, checksums,
+both Passports and the settlement packet before declaring distribution complete.
+
+The native publication receipt authorizes no stable promotion and makes no claim
+that a pending next-development PR has merged. Inspect the exact PR head, protected
+base and merge result independently. A retry of the publication phase must first
+read retained provider facts and resume only missing operations.

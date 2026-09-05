@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { writeWorkflowSource } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { migrateV4UniversalWorkflowFacade } from "./generate-v4-universal-workflow-facades.mjs";
@@ -215,9 +216,9 @@ function consumerAdmissionJob() {
         id: policy
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
-          BUILDCHAIN_INVOCATION_SOURCE_PATH: \${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/release-candidate-promote.yml' || inputs.publication-publisher-workflow-path }}
+          BUILDCHAIN_INVOCATION_SOURCE_PATH: \${{ inputs.publication-publisher-workflow-path == '.github/workflows/self-ops-promotion-recovery.yml' && '.github/workflows/release-candidate-promote.yml' || inputs.publication-publisher-workflow-path }}
           BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: \${{ needs.resolve-promotion.outputs.channel }}
-          BUILDCHAIN_INVOKED_WORKFLOW: \${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}
+          BUILDCHAIN_INVOKED_WORKFLOW: \${{ inputs.publication-publisher-workflow-path == '.github/workflows/self-ops-promotion-recovery.yml' && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}
           BUILDCHAIN_WORKFLOW_SHA: \${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_RUNTIME_SHA: \${{ needs.resolve-promotion.outputs.router-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: \${{ inputs.buildchain-stable-contract-lock-path }}
@@ -532,7 +533,7 @@ function main() {
     }
     return;
   }
-  fs.writeFileSync(targetPath, generated);
+  writeWorkflowSource(root, path.relative(root, targetPath), generated);
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

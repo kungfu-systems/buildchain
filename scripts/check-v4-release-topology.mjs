@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import { workflowCompatibilityIdentity } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -21,6 +22,8 @@ function read(relative) {
 const LOCAL_MODULE_EXTENSIONS = ["", ".js", ".mjs", ".cjs"];
 const PRIVILEGED_ENTRYPOINTS = [
   "actions/v4-release-candidate-promote/index.js",
+  "scripts/binary-publication-evidence.mjs",
+  "scripts/v4-publication-settlement.mjs",
 ];
 
 function localModuleSpecifiers(source) {
@@ -341,7 +344,7 @@ export function findUnknownV4ReleaseTopology(
 ) {
   const declared = new Set(workflowPaths);
   return allWorkflowPaths
-    .filter((relative) => !declared.has(relative))
+    .filter((relative) => !declared.has(workflowCompatibilityIdentity(root, relative, readWorkflow(relative))))
     .filter((relative) => {
       const source = readWorkflow(relative);
       const usesReleaseAuthority = parseYamlUses(source).some(({ value }) =>
@@ -431,7 +434,7 @@ function assertAuthorityClosure(ledger) {
   );
   assert.equal(
     closure.recoveryEntry,
-    ".github/workflows/buildchain-ref-promotion-recovery.yml",
+    ".github/workflows/self-ops-promotion-recovery.yml",
   );
   const engineSurface = [
     ".github/workflows/.release-candidate-promote.yml",

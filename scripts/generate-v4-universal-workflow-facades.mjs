@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import crypto from "node:crypto";
+import { writeWorkflowSource, rewriteRepositoryWorkflowPaths } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -198,11 +200,27 @@ function addRuntimeBootstrapDependencies(source, relative) {
   );
 }
 
+function applyPublicationFacadePatches(source, relative) {
+  const document = JSON.parse(fs.readFileSync(path.join(root,
+    "architecture/v4-publication-facade-patches.json"), "utf8"));
+  const patch = document.facades.find(entry => entry.workflow === relative);
+  if (!patch) return source;
+  const digest = value => crypto.createHash("sha256").update(value).digest("hex");
+  if (digest(source) === patch.afterSha256) return source;
+  if (digest(source) !== patch.beforeSha256) fail(`${relative}: publication facade source drift`);
+  for (const { before, after } of patch.replacements) {
+    if (source.split(before).length !== 2) fail(`${relative}: ambiguous publication patch`);
+    source = source.replace(before, () => after);
+  }
+  if (digest(source) !== patch.afterSha256) fail(`${relative}: publication facade result drift`);
+  return source;
+}
+
 export function migrateV4UniversalWorkflowFacade(source, relative) {
-  return guardCompatibilityJobs(
+  return rewriteRepositoryWorkflowPaths(root, applyPublicationFacadePatches(guardCompatibilityJobs(
     addUniversalInput(addRuntimeBootstrapDependencies(source, relative), relative),
     relative,
-  );
+  ), relative));
 }
 
 function verify(source, relative) {
@@ -402,8 +420,8 @@ function main() {
         "consumer recovery workflow differs from its pre-positioned template",
       );
   } else {
-    fs.writeFileSync(
-      recoveryWorkflowPath,
+    writeWorkflowSource(
+      root, path.relative(root, recoveryWorkflowPath),
       fs.readFileSync(recoveryTemplatePath, "utf8"),
     );
   }
@@ -414,8 +432,8 @@ function main() {
       : fs.readFileSync(target, "utf8");
     if (check) verify(source, relative);
     else
-      fs.writeFileSync(
-        target,
+      writeWorkflowSource(
+        root, relative,
         migrateV4UniversalWorkflowFacade(source, relative),
       );
   }

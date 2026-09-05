@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-09-05T03:44:46.000Z",
-  "publishedAt": "2026-09-05T03:44:46.000Z",
+  "generatedAt": "2026-09-05T04:49:38.000Z",
+  "publishedAt": "2026-09-05T04:49:38.000Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "9e6f415fd781ea9d420658c9ef31243ceb57a772",
+  "sourceRevision": "197aae1caff67cb0d02250d82b2d1e962d1a101c",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "4.0.2-alpha.34",
+    "version": "4.0.2-alpha.35",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:cbbc69f9f88b6f7fe8c065de495aa15c30bae46208a81e757b254d43bc6d8ebe"
+      "digest": "sha256:aef677bb3e37882f73daf65b7052989fc549e3b40d70bc4036beb2738b608345"
     },
     {
       "id": "getting-started",
@@ -69,7 +69,7 @@
       "path": "docs/auditable-demo.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:c49e734fdfe3b74d317e23a523e198f1194b2c7cd16cca87e8e3a3ffc7bf589f"
+      "digest": "sha256:8039e9f759da1a39b6ef908a421b2e573dadb9bfea0aaaf53494eb8a02598cc8"
     },
     {
       "id": "install",
@@ -109,7 +109,7 @@
       "path": "docs/publication-authority.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:a1650158943d95b979d164ca98a73d7919fda577d648e4a4a9d04588ec698796"
+      "digest": "sha256:227d20e70604b9f003a9d75364f39e01cb37f6936ac9ac0f0f495fb92afc7da9"
     },
     {
       "id": "github-governance-authority",
@@ -125,7 +125,7 @@
       "path": "docs/release-candidate.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:4e79bc9094c929e43c819045e2a2d4132430cd9b307db62e5e21573b7d0a6f53"
+      "digest": "sha256:bf242de8bb97d73ef4489931940844f48223dfd66bf52b046869ca70d2454143"
     },
     {
       "id": "release-train",
@@ -141,7 +141,7 @@
       "path": "docs/next-development-transition.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:c33c017ae163650b422f7ec294a05f3db8b8e99b87c55ab2d8ac3cce1726448f"
+      "digest": "sha256:1e92b92b24888df1668cbffe60c9455336ee1285dbbc78d4a8d62c2919a0b9db"
     },
     {
       "id": "release-propagation",
@@ -237,7 +237,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:60208f0862195df44b27ada15e474ff1808dee6d492cd6303402b92fd72f06bc"
+      "digest": "sha256:78d1e3f0e476823b339b9e4515808e14f56ff2a1e7456f8a62f2c63b8ffa79c4"
     },
     {
       "id": "cli-reference",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:359d5dd02044c10cc82ba8b76c9f290bc335ad0fd0567f3cb6f50ae64bebac13"
+      "digest": "sha256:cc63793fb6b1dfeb7d362d2d29e139f89fa871cc57ff7ed7fe196bbba6e2ee63"
     },
     {
       "id": "build-facts",
@@ -301,7 +301,7 @@
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:aa8881cb2c9529aefd33147b5bd6f94e8f1ab567a4550bdbd01253252353465e"
+      "digest": "sha256:cf9beccd0ad6ecbd021c2d5273ab91e54cc3ab225b7b8f33f240ac6d6bd23a48"
     },
     {
       "id": "publish-transaction",
@@ -333,7 +333,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:6dfe8a9b974040fc1465b0da696519b4e97b0b901e30d852ffacda0d193810af"
+      "digest": "sha256:dab1c9cdc92b96fc79a45d33916973a6006c0be834d2a3adbf70f63f23bf00b5"
     },
     {
       "id": "v4-compatibility-facts",
@@ -349,7 +349,7 @@
       "path": "docs/release-flow.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:f2086d06a64f9321d7c1d62f93b37a169f781ba5bed4b714b5a8cb6509953c6e"
+      "digest": "sha256:1b97defb4f635937ea96f92e1180625cf1a5bc3454191062ec3c76b168d4c451"
     },
     {
       "id": "runtime-train-validation",
