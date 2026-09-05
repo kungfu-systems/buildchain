@@ -73,7 +73,9 @@ switch (command) {
   case "api --method": {
     const inputIndex = args.indexOf("--input");
     if (inputIndex < 0 || !args[inputIndex + 1]) process.exit(1);
-    fs.copyFileSync(args[inputIndex + 1], ${JSON.stringify(payloadPath)});
+    const payload = fs.readFileSync(args[inputIndex + 1], "utf8");
+    if (!payload.trim()) throw new Error("dev-delivery dispatch input is empty");
+    fs.writeFileSync(process.env.BUILDCHAIN_TEST_PAYLOAD_PATH, payload);
     break;
   }
   default: process.exit(1);
@@ -84,7 +86,7 @@ switch (command) {
   const result = spawnSync("bash", [path.join(repositoryRoot, "scripts/dev-delivery-request.sh"), "7", "--execute", "--json"], {
     cwd: repositoryRoot,
     encoding: "utf8",
-    env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, GITHUB_TOKEN: "test-token", BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
+    env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, GITHUB_TOKEN: "test-token", BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot, BUILDCHAIN_TEST_PAYLOAD_PATH: payloadPath },
   });
   assert.equal(result.status, 0, result.stderr);
   const payload = JSON.parse(fs.readFileSync(payloadPath, "utf8"));
