@@ -1,0 +1,1230 @@
+name: Release Candidate Promote Advanced
+
+on:
+  workflow_call:
+    inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Optional Buildchain runtime ref. Empty uses the workflow shell ref."
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-channel:
+        description: "Explicit stable or alpha lane expected when a bootstrap workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
+      buildchain-expected-major:
+        description: "Explicit Buildchain major expected when a bootstrap workflow shell ref is opaque"
+        default: ""
+        type: string
+        required: false
+      promotion-router-ref:
+        description: "Router workflow ref bound by the generated public wrapper"
+        default: ""
+        type: string
+        required: false
+      promotion-router-sha:
+        description: "Resolved router workflow SHA bound by the generated public wrapper"
+        default: ""
+        type: string
+        required: false
+      promotion-shell-ref:
+        description: "Selected advanced promotion workflow-shell ref"
+        default: ""
+        type: string
+        required: false
+      promotion-shell-sha:
+        description: "Resolved advanced promotion workflow-shell SHA"
+        default: ""
+        type: string
+        required: false
+      promotion-runtime-ref:
+        description: "Requested Buildchain runtime ref selected by the router"
+        default: ""
+        type: string
+        required: false
+      promotion-runtime-sha:
+        description: "Resolved Buildchain runtime SHA selected by the router"
+        default: ""
+        type: string
+        required: false
+      promotion-contract-lock-path:
+        description: "Selected consumer contract-lock path bound by the router"
+        default: ""
+        type: string
+        required: false
+      promotion-contract-lock-digest:
+        description: "Selected consumer contract-lock sha256 digest bound by the router"
+        default: ""
+        type: string
+        required: false
+      promotion-publication-channel:
+        description: "Publication channel derived by the router"
+        default: ""
+        type: string
+        required: false
+      promotion-target-ref:
+        description: "Promotion target ref derived by the router"
+        default: ""
+        type: string
+        required: false
+      promotion-override-used:
+        description: "Whether a trusted train or exact-SHA runtime override was selected"
+        default: false
+        type: boolean
+        required: false
+      promotion-runtime-authorization-json:
+        description: "Rooted transient runtime authorization receipt supplied by the public router"
+        default: ""
+        type: string
+        required: false
+      promotion-runtime-authorization-root:
+        description: "sha256 root of the transient runtime authorization receipt"
+        default: ""
+        type: string
+        required: false
+      buildchain-contract-lock-path:
+        description: "Consumer-owned Buildchain contract lock path"
+        default: ".buildchain/contract-lock.json"
+        type: string
+        required: false
+      buildchain-alpha-contract-lock-path:
+        description: "Consumer-owned alpha contract lock path"
+        default: ".buildchain/alpha-contract-lock.json"
+        type: string
+        required: false
+      buildchain-stable-contract-lock-path:
+        description: "Consumer-owned stable contract lock path"
+        default: ".buildchain/contract-lock.json"
+        type: string
+        required: false
+      buildchain-contract-compatibility-policy:
+        description: "Contract compatibility policy: major-compatible, allow-additive, or exact"
+        default: "major-compatible"
+        type: string
+        required: false
+      buildchain-contract-drift-issue-mode:
+        description: "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking"
+        default: "compatible-and-breaking"
+        type: string
+        required: false
+      allow-repository:
+        description: "Repository allowed to promote. Empty defaults to the caller repository."
+        default: ""
+        type: string
+        required: false
+      channel:
+        description: "Promotion channel: alpha, release, or major. Empty derives from target-ref."
+        default: ""
+        type: string
+        required: false
+      target-ref:
+        description: "Channel ref to promote. Defaults to the current ref name."
+        default: ""
+        type: string
+        required: false
+      target-sha:
+        description: "Channel commit SHA to promote. Defaults to the current workflow SHA."
+        default: ""
+        type: string
+        required: false
+      package-manager:
+        description: "Package manager recorded for audit: npm, pnpm, yarn, or custom"
+        default: "npm"
+        type: string
+        required: false
+      artifact-name:
+        description: "Base artifact name used by the PR-stage reusable build"
+        default: "buildchain-artifact"
+        type: string
+        required: false
+      release-candidate-workflow-file:
+        description: "PR-stage release-candidate workflow file name"
+        default: "build.yml"
+        type: string
+        required: false
+      release-candidate-workflow-name:
+        description: "PR-stage release-candidate workflow display name"
+        default: "Build"
+        type: string
+        required: false
+      release-candidate-wait-seconds:
+        description: "Bounded wait for the complete PR-stage release-candidate workflow, including post-required-check evidence tails"
+        default: 10800
+        type: number
+        required: false
+      resume-candidate-repository:
+        description: "Repository that owns the sealed candidate run; empty selects normal candidate discovery"
+        default: ""
+        type: string
+        required: false
+      resume-candidate-run-id:
+        description: "Exact successful candidate workflow run ID to recover through this fresh workflow event"
+        default: ""
+        type: string
+        required: false
+      resume-expected-workflow-file:
+        description: "Exact trusted Build workflow file that produced the candidate"
+        default: ""
+        type: string
+        required: false
+      resume-expected-workflow-name:
+        description: "Exact trusted Build workflow display name that produced the candidate"
+        default: ""
+        type: string
+        required: false
+      resume-expected-source-tree:
+        description: "Optional exact candidate Git tree; required when expected candidate root is empty"
+        default: ""
+        type: string
+        required: false
+      resume-expected-candidate-root:
+        description: "Optional exact sha256 Release Candidate root; required when expected source tree is empty"
+        default: ""
+        type: string
+        required: false
+      resume-expected-candidate-runtime-sha:
+        description: "Exact Buildchain runtime SHA recorded by the original candidate"
+        default: ""
+        type: string
+        required: false
+      resume-buildchain-runtime-sha:
+        description: "Exact current Buildchain tooling SHA authorized to perform recovery"
+        default: ""
+        type: string
+        required: false
+      resume-transaction-id:
+        description: "Optional exact durable publication transaction identity to resume"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-evidence-required:
+        description: "Require exact Initiative-family evidence before protected promotion"
+        default: false
+        type: boolean
+        required: false
+      release-candidate-family-evidence-root:
+        description: "Optional expected Initiative-family evidence content root"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-initiative-id:
+        description: "Optional expected Initiative identity"
+        default: ""
+        type: string
+        required: false
+      release-candidate-family-assignment-id:
+        description: "Optional expected child Assignment identity"
+        default: ""
+        type: string
+        required: false
+      artifact-patterns:
+        description: "Newline-separated payload artifact patterns expected from the RC bundle"
+        default: ""
+        type: string
+        required: false
+      required-status-check:
+        description: "Exact required protected-branch status check context"
+        default: "check / check"
+        type: string
+        required: false
+      branch-protection-bypass-apps:
+        description: "GitHub App slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates"
+        default: "github-actions"
+        type: string
+        required: false
+      branch-protection-bypass-users:
+        description: "Reserved compatibility input; managed channel protection rejects user bypass actors"
+        default: ""
+        type: string
+        required: false
+      branch-protection-bypass-teams:
+        description: "Reserved compatibility input; managed channel protection rejects team bypass actors"
+        default: ""
+        type: string
+        required: false
+      publish-target:
+        description: "Publish target recorded for audit: npm, github-release, custom"
+        default: "npm"
+        type: string
+        required: false
+      github-release:
+        description: "Create/update the public GitHub Release and upload Buildchain release passport/evidence assets after a complete release transaction"
+        default: true
+        type: boolean
+        required: false
+      declarative-release-tail:
+        description: "Publish and read back GitHub Release assets through the Buildchain declarative release-tail provider plane"
+        default: false
+        type: boolean
+        required: false
+      provider-failure-after-capability:
+        description: "Dogfood-only deterministic failure injection after one checkpointed provider capability"
+        default: ""
+        type: string
+        required: false
+      github-release-title:
+        description: "Optional GitHub Release title. Empty defaults to the public release tag."
+        default: ""
+        type: string
+        required: false
+      github-release-notes:
+        description: "Optional GitHub Release notes. Empty uses a Buildchain release-passport asset note."
+        default: ""
+        type: string
+        required: false
+      github-release-payload-patterns:
+        description: "Newline-separated basename patterns selecting PR-stage payload files for the immutable public GitHub Release"
+        default: ""
+        type: string
+        required: false
+      publication-commit-command:
+        description: "Optional consumer command that commits the well-known publication authority after every artifact, passport, and public read-back prerequisite succeeds"
+        default: ""
+        type: string
+        required: false
+      publication-commit-evidence-path:
+        description: "Consumer evidence JSON written by publication-commit-command under .buildchain/"
+        default: ".buildchain/publication-commit/evidence.json"
+        type: string
+        required: false
+      release-activation-command:
+        description: "Optional consumer command that completes exact site publication/readback and writes the authoritative activation receipt set"
+        default: ""
+        type: string
+        required: false
+      release-activation-receipt-set-path:
+        description: "Consumer activation receipt set written under .buildchain/"
+        default: ".buildchain/release-activation/receipt-set.json"
+        type: string
+        required: false
+      release-passport-evidence-command:
+        description: "Optional consumer command that synthesizes released evidence only from the validated activation receipt set"
+        default: ""
+        type: string
+        required: false
+      release-passport-evidence-path:
+        description: "Released evidence JSON written by release-passport-evidence-command under .buildchain/"
+        default: ".buildchain/release-evidence/product-released-evidence.json"
+        type: string
+        required: false
+      standalone-binary-distribution:
+        description: "Dispatch binary-distribution.yml after promotion; enable only when the caller repository provides that workflow"
+        default: false
+        type: boolean
+        required: false
+      runner-preset:
+        description: "Runner preset recorded for audit"
+        default: "github-hosted"
+        type: string
+        required: false
+      trusted-publishing:
+        description: "Whether the publish target uses GitHub OIDC trusted publishing"
+        default: true
+        type: boolean
+        required: false
+      publish-command:
+        description: "Optional publish command. Defaults to lifecycle.publish from buildchain.toml."
+        default: ""
+        type: string
+        required: false
+      publish-rematerialize-on-resume:
+        description: "Replay the consumer publish materialization step after valid durable evidence is restored; use only when the command is idempotent and recreates ephemeral Passport inputs or release assets"
+        default: false
+        type: boolean
+        required: false
+      publish-transaction-override:
+        description: "Explicitly allow ancestry-bound finalization recovery for an already published durable transaction"
+        default: false
+        type: boolean
+        required: false
+      publish-required-artifacts-json:
+        description: "Required publish artifacts JSON passed to the promotion action; ref_template may contain one {version} placeholder"
+        default: ""
+        type: string
+        required: false
+      publish-artifact-kind:
+        description: "Artifact kind used when generating publish-required-artifacts-json from downloaded payloads"
+        default: "npm"
+        type: string
+        required: false
+      publish-mode:
+        description: "Publish mode passed to promote-buildchain-ref"
+        default: ""
+        type: string
+        required: false
+      publish-dist-tag:
+        description: "Expected dist-tag passed to promote-buildchain-ref"
+        default: ""
+        type: string
+        required: false
+      publish-package-set-order:
+        description: "Package-set ordering passed to promote-buildchain-ref"
+        default: "as-provided"
+        type: string
+        required: false
+      publish-package-main:
+        description: "Main package name for package-set ordering"
+        default: ""
+        type: string
+        required: false
+      release-passport:
+        description: "Generate and persist the release passport after publish finalization"
+        default: true
+        type: boolean
+        required: false
+      release-propagation-config-path:
+        description: "Optional source-controlled package propagation capture config read from the exact finalized release SHA"
+        default: ""
+        type: string
+        required: false
+      release-passport-output-dir:
+        description: "Release passport output directory"
+        default: ".buildchain/release-passport"
+        type: string
+        required: false
+      release-passport-product-name:
+        description: "Product name recorded in buildchain.release.json"
+        default: ""
+        type: string
+        required: false
+      release-passport-impact-json:
+        description: "Surface-aware release impact JSON or path passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
+      release-passport-v4-runtime-resume-evidence-json:
+        description: "Rooted v4 transient runtime authorization and fresh-attempt Stage Capsule resume lineage JSON or path"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-1-witness-jsons:
+        description: "Newline- or comma-separated KFD-1 contract-world witness JSON paths passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-2-claim-jsons:
+        description: "Newline- or comma-separated KFD-2 public release trust claim JSON paths passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-3-prebuild-witness-jsons:
+        description: "Newline- or comma-separated KFD-3 collaboration-interface pre-build witness JSON paths passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-3-artifact-witness-jsons:
+        description: "Newline- or comma-separated KFD-3 artifact-side collaboration-interface witness JSON paths passed to the release passport collector"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-3-artifact-verify-command:
+        description: "Product-owned command that emits KFD-3 artifact-side collaboration-interface witness JSON"
+        default: ""
+        type: string
+      release-passport-adopter-delivery-json:
+        description: "Compatibility-only v3 adopter delivery input; v4 requires adopter manifest plus product gates"
+        default: ""
+        type: string
+      release-passport-kfd-adopter-manifest-gate-json:
+        description: "Compatibility-only v3 producer gate input; v4 derives the gate from source-bound evidence"
+        default: ""
+        type: string
+      release-passport-kfd-adopter-manifest-json:
+        description: "Standard full-cut adopter conformance manifest JSON path"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-support-matrix-json:
+        description: "Legacy KFD support projection JSON path accepted only for exact manifest comparison"
+        default: ""
+        type: string
+        required: false
+      release-passport-kfd-product-gate-jsons:
+        description: "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths"
+        default: ""
+        type: string
+        required: false
+      release-passport-invariant-passport-jsons:
+        description: "Newline- or comma-separated invariant Passport JSON paths passed to the release gate"
+        default: ""
+        type: string
+        required: false
+      release-passport-invariant-passport-command:
+        description: "Product-owned command that emits a canonical invariant Passport JSON document"
+        default: ""
+        type: string
+        required: false
+      release-passport-evidence-jsons:
+        description: "Newline- or comma-separated product-owned release evidence attachment paths bound to the exact release coordinates"
+        default: ""
+        type: string
+        required: false
+      release-passport-attachment-command:
+        description: "Product-owned command that emits generated release evidence attachment paths as JSON"
+        default: ""
+        type: string
+        required: false
+      release-passport-buildchain-self-kfd:
+        description: "Generate Buildchain-owned KFD-1/2/3 self witnesses and claims from the checked-out package source before release passport finalization"
+        default: false
+        type: boolean
+        required: false
+      github-artifact-attestation-policy-json:
+        description: "One GitHub artifact attestation policy JSON path from the sealed release candidate; empty disables attestation"
+        default: ""
+        type: string
+        required: false
+      github-artifact-attestation-environment:
+        description: "Caller-repository protected environment governing the keyless attestation"
+        default: "buildchain-artifact-attestation"
+        type: string
+        required: false
+      github-artifact-attestation-retention-days:
+        description: "Retention for offline GitHub/Sigstore evidence artifacts"
+        default: 90
+        type: number
+        required: false
+      release-passport-platform-manifest-paths:
+        description: "Optional platform manifest paths for release passport; defaults to downloaded PR-stage payload manifests"
+        default: ""
+        type: string
+        required: false
+      required-artifact-count:
+        description: "Minimum downloaded payload count required before publish; npm counts package tarballs"
+        default: 3
+        type: number
+        required: false
+      publication-admission-json:
+        description: "Fresh sealed publication admission JSON; required for non-dry-run publication"
+        default: ""
+        type: string
+        required: false
+      publication-runner-provenance-json:
+        description: "Runner provenance receipt bound by the admission"
+        default: ""
+        type: string
+        required: false
+      publication-control-plane-audit-json:
+        description: "Fresh external control-plane audit receipt bound by the admission"
+        default: ""
+        type: string
+        required: false
+      github-governance-receipt-json:
+        description: "Fresh qualifying governance receipt for the exact publication repository and target ref"
+        default: ""
+        type: string
+        required: false
+      publication-gate-aggregate-json:
+        description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
+        default: ""
+        type: string
+        required: false
+      publication-gate-command:
+        description: "Consumer-owned read-only command that assembles a qualifying Gate aggregate from the exact downloaded release-candidate evidence"
+        default: ""
+        type: string
+        required: false
+      publication-gate-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer Gate command; empty uses the publication source SHA"
+        default: ""
+        type: string
+        required: false
+      publication-expected-json:
+        description: "Independent exact source/runtime/product/channel/artifact bindings"
+        default: ""
+        type: string
+        required: false
+      publication-used-nonces-json:
+        description: "JSON array of already consumed admission nonces"
+        default: "[]"
+        type: string
+        required: false
+      publication-consumer-qualification-command:
+        description: "Opt-in consumer-owned predicate command; writes its decision to BUILDCHAIN_PUBLICATION_QUALIFICATION_RESULT_PATH"
+        default: ""
+        type: string
+        required: false
+      publication-consumer-qualification-controller-sha:
+        description: "Exact caller-repository commit that owns the consumer qualification command; empty uses the Gate controller SHA, then the publication source SHA"
+        default: ""
+        type: string
+        required: false
+      publication-consumer-predicate-id:
+        description: "Stable identifier for the opt-in consumer-owned publication predicate"
+        default: ""
+        type: string
+        required: false
+      publication-used-qualification-nonces-json:
+        description: "JSON array of already consumed qualification nonces"
+        default: "[]"
+        type: string
+        required: false
+      publication-auto-admission:
+        description: "Assemble sealed evidence from the caller repository's exact managed release candidate"
+        default: false
+        type: boolean
+        required: false
+      publication-auto-no-gate:
+        description: "Explicitly declare that this managed publication has no consumer-owned Shifu Gate registry"
+        default: false
+        type: boolean
+        required: false
+      publication-publisher-workflow-path:
+        description: "Caller workflow path bound by the provider trusted-publisher policy"
+        default: ""
+        type: string
+        required: false
+      publication-authority-workflow-path:
+        description: "Buildchain workflow path exposed as the publication authority; empty uses the internal promotion shell path"
+        default: ".github/workflows/.release-candidate-promote.yml"
+        type: string
+        required: false
+      publication-product:
+        default: "Buildchain"
+        type: string
+        required: false
+      publication-target:
+        default: "npm:@kungfu-tech/buildchain"
+        type: string
+        required: false
+      publication-package-name:
+        default: "@kungfu-tech/buildchain"
+        type: string
+        required: false
+      dry-run:
+        description: "Plan only; do not publish or move refs"
+        default: false
+        type: boolean
+        required: false
+    secrets:
+      BUILDCHAIN_PROMOTION_TOKEN:
+        description: "Optional bypass-capable token used only for generated protected ref updates"
+        required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_TOKEN:
+        description: "Optional consumer-owned credential exposed only to the final publication commit command"
+        required: false
+      BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY:
+        description: "Optional consumer-owned private signing material exposed only to the final publication commit command"
+        required: false
+      KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY:
+        description: "Private key for the dedicated read-only GitHub governance auditor App"
+        required: false
+      buildchain-issue-token:
+        description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
+        required: false
+      BUILDCHAIN_ISSUE_TOKEN:
+        description: "Optional token with issues:write on the Buildchain repository for workflow-friction reports"
+        required: false
+      buildchain-issue-app-id:
+        description: "Optional GitHub App ID used to mint a Buildchain issue-report token"
+        required: false
+      BUILDCHAIN_ISSUE_APP_ID:
+        description: "Optional GitHub App ID used to mint a Buildchain issue-report token"
+        required: false
+      buildchain-issue-app-private-key:
+        description: "Optional GitHub App private key used to mint a Buildchain issue-report token"
+        required: false
+      BUILDCHAIN_ISSUE_APP_PRIVATE_KEY:
+        description: "Optional GitHub App private key used to mint a Buildchain issue-report token"
+        required: false
+    outputs:
+      promoted-sha:
+        description: "Promoted channel SHA"
+        value: ${{ jobs.apply.outputs.promoted-sha || jobs.qualify.outputs.current-sha }}
+      built-source-sha:
+        description: "PR-stage built source SHA"
+        value: ${{ jobs.apply.outputs.built-source-sha }}
+      release-candidate-artifact:
+        description: "Resolved release-candidate artifact name"
+        value: ${{ jobs.apply.outputs.release-candidate-artifact }}
+      release-candidate-action:
+        description: "Candidate admission action: discovered or reused"
+        value: ${{ jobs.apply.outputs.release-candidate-action }}
+      release-candidate-recovery-root:
+        description: "Exact sha256 recovery receipt root"
+        value: ${{ jobs.apply.outputs.release-invocation-root }}
+      release-candidate-recovery-receipt-artifact:
+        description: "Immutable recovery receipt Actions artifact name"
+        value: ${{ '' }}
+      release-propagation-work-artifact:
+        description: "Captured package release propagation Work artifact"
+        value: ${{ '' }}
+      publication-commit-evidence-path:
+        description: "Validated consumer publication commit evidence path"
+        value: ${{ '' }}
+      publication-commit-evidence-digest:
+        description: "sha256 digest of validated consumer publication commit evidence"
+        value: ${{ '' }}
+      publication-commit-url:
+        description: "Canonical public authority URL validated after the final commit"
+        value: ${{ '' }}
+      publication-commit-payload-root:
+        description: "Exact public authority payload root validated after the final commit"
+        value: ${{ '' }}
+      controller-plan-artifact:
+        description: "Controller plan artifact name"
+        value: ${{ '' }}
+      controller-plan-json:
+        description: "Compact controller plan JSON"
+        value: ${{ '' }}
+      controller-plan-digest:
+        description: "Controller plan digest"
+        value: ${{ jobs.apply.outputs.release-invocation-root }}
+      publication-capability-digest:
+        description: "Sealed publication capability receipt digest"
+        value: ${{ jobs.apply.outputs.release-invocation-root }}
+      github-artifact-attestation-id:
+        description: "GitHub keyless attestation id for the declared Linux release artifact"
+        value: ${{ '' }}
+      github-artifact-attestation-url:
+        description: "GitHub keyless attestation URL"
+        value: ${{ '' }}
+      github-artifact-attestation-evidence-root:
+        description: "Verified Buildchain attestation evidence root published with the GitHub Release"
+        value: ${{ '' }}
+      github-artifact-attestation-publication-receipt-digest:
+        description: "Read-back verified GitHub Release evidence publication receipt digest"
+        value: ${{ '' }}
+      release-tail-declaration-root:
+        description: "Root of the declarative release-tail contract"
+        value: ${{ jobs.apply.outputs.release-tail-declaration-root }}
+      release-tail-transaction-state:
+        description: "Final declarative release-tail transaction state"
+        value: ${{ jobs.apply.outputs.release-tail-transaction-state }}
+      release-tail-transaction-root:
+        description: "Stable declarative release-tail transaction root"
+        value: ${{ jobs.apply.outputs.release-tail-transaction-root }}
+      release-tail-state-root:
+        description: "Root of the final declarative release-tail transaction state"
+        value: ${{ jobs.apply.outputs.release-tail-state-root }}
+      release-tail-receipt-roots-json:
+        description: "JSON array of standardized declarative release-tail receipt roots"
+        value: ${{ jobs.apply.outputs.release-tail-receipt-roots-json }}
+      release-invocation-root:
+        description: "Canonical post-admission ReleaseInvocation root"
+        value: ${{ jobs.apply.outputs.release-invocation-root }}
+      release-transaction-root:
+        description: "Canonical three-phase ReleaseTransaction root"
+        value: ${{ jobs.apply.outputs.release-transaction-root }}
+      release-receipt-root:
+        description: "Single terminal ReleaseReceipt root"
+        value: ${{ jobs.apply.outputs.release-receipt-root }}
+      controller-receipt-artifact:
+        description: "Controller receipt artifact name"
+        value: ${{ jobs.settle.outputs.controller-receipt-artifact }}
+      controller-receipt-json:
+        description: "Compact controller receipt JSON"
+        value: ${{ jobs.settle.outputs.controller-receipt-json }}
+      controller-receipt-digest:
+        description: "Controller receipt digest"
+        value: ${{ jobs.settle.outputs.controller-receipt-digest }}
+      controller-receipt-status:
+        description: "Controller receipt status"
+        value: ${{ jobs.settle.outputs.controller-receipt-status }}
+
+concurrency:
+  group: buildchain-release-promotion-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
+  qualify:
+    if: ${{ inputs.universal-request-json == '' }}
+    name: QUALIFY canonical v4 release invocation inputs
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      action: ${{ steps.intent.outputs.action }}
+      reason: ${{ steps.intent.outputs.reason }}
+      channel: ${{ steps.intent.outputs.channel }}
+      target-ref: ${{ steps.intent.outputs.target-ref }}
+      requested-sha: ${{ steps.intent.outputs.requested-sha }}
+      current-sha: ${{ steps.intent.outputs.current-sha }}
+      runtime-sha: ${{ steps.runtime.outputs.sha }}
+      runtime-tree: ${{ steps.runtime.outputs.tree }}
+      publisher-sha: ${{ steps.runtime.outputs.publisher-sha }}
+      version: ${{ steps.publication.outputs.version }}
+      exact-tag: ${{ steps.publication.outputs.exact-tag }}
+      candidate-version: ${{ steps.candidate.outputs.release-candidate-version }}
+      product-publication-intent-path: ${{ steps.publication.outputs.intent-path }}
+      product-publication-intent-root: ${{ steps.publication.outputs.intent-root }}
+      candidate-source-sha: ${{ steps.candidate.outputs.release-candidate-source-sha }}
+      candidate-artifact: ${{ steps.candidate.outputs.release-candidate-artifact }}
+      candidate-passport-path: ${{ steps.candidate.outputs.release-candidate-passport-path }}
+      candidate-build-summary-path: ${{ steps.candidate.outputs.release-candidate-build-summary-path }}
+      stage-capsules-path: ${{ steps.candidate.outputs.release-candidate-stage-capsules-path }}
+      publication-qualification-path: ${{ steps.candidate.outputs.release-candidate-publication-qualification-path }}
+      sealed-bundle-root: ${{ steps.candidate.outputs.publish-sealed-bundle-root }}
+      sealed-bundle-manifest: ${{ steps.candidate.outputs.publish-sealed-bundle-manifest }}
+      required-artifacts-path: ${{ steps.candidate.outputs.publish-required-artifacts-path }}
+      release-artifact-paths: ${{ steps.candidate.outputs.release-candidate-github-release-artifact-paths }}
+    steps:
+      - name: Checkout the selected runtime for read-only qualification
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.promotion-runtime-sha || inputs.buildchain-ref || inputs.promotion-shell-sha || job.workflow_sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Root publisher and runtime identities
+        id: runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git -C .buildchain/runtime rev-parse HEAD)"
+          tree="$(git -C .buildchain/runtime rev-parse 'HEAD^{tree}')"
+          [[ "$sha" =~ ^[0-9a-f]{40}$ && "$tree" =~ ^[0-9a-f]{40}$ ]]
+          {
+            echo "sha=${sha}"
+            echo "tree=${tree}"
+            echo "publisher-sha=${{ job.workflow_sha }}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Revalidate queued source intent
+        id: intent
+        uses: actions/github-script@v8
+        env:
+          INPUT_CHANNEL: ${{ inputs.channel }}
+          INPUT_TARGET_REF: ${{ inputs.target-ref }}
+          INPUT_TARGET_SHA: ${{ inputs.target-sha }}
+          INPUT_DRY_RUN: ${{ inputs.dry-run }}
+          INPUT_RESUME: ${{ inputs.resume-candidate-run-id != '' || inputs.publish-transaction-override }}
+          BUILDCHAIN_RUNTIME_ROOT: ${{ github.workspace }}/.buildchain/runtime
+        with:
+          script: |
+            const { pathToFileURL } = require("node:url");
+            const runtime = await import(pathToFileURL(
+              `${process.env.BUILDCHAIN_RUNTIME_ROOT}/packages/core/v4-release-invocation.js`,
+            ).href);
+            const targetRef = (process.env.INPUT_TARGET_REF || context.ref.replace(/^refs\/heads\//, ""))
+              .replace(/^refs\/heads\//, "");
+            const requestedSha = process.env.INPUT_TARGET_SHA || context.sha;
+            const current = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `heads/${targetRef}`,
+            });
+            const currentSha = current.data.object.sha;
+            const sourceCommit = await github.rest.git.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: requestedSha,
+            });
+            const sourceTimestamp = sourceCommit.data.committer?.date || sourceCommit.data.author?.date;
+            if (!sourceTimestamp) throw new Error("requested source commit has no provider timestamp");
+            let comparisonStatus = "identical";
+            if (currentSha !== requestedSha) {
+              const comparison = await github.rest.repos.compareCommitsWithBasehead({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                basehead: `${requestedSha}...${currentSha}`,
+              });
+              comparisonStatus = comparison.data.status;
+            }
+            const route = runtime.planV4ReleaseRoute({
+              requestedSha,
+              observedSha: currentSha,
+              comparisonStatus,
+              requestedChannel: process.env.INPUT_CHANNEL,
+              targetRef,
+              dryRun: process.env.INPUT_DRY_RUN === "true",
+              resume: process.env.INPUT_RESUME === "true",
+            });
+            if (route.decision === "Blocked") throw new Error(`release route blocked: ${route.reason}`);
+            core.setOutput("action", route.decision === "NoOp" ? "noop" : "promote");
+            core.setOutput("reason", route.reason);
+            core.setOutput("channel", route.channel);
+            core.setOutput("target-ref", route.targetRef);
+            core.setOutput("requested-sha", route.requestedSha);
+            core.setOutput("source-timestamp", new Date(sourceTimestamp).toISOString());
+            core.setOutput("current-sha", currentSha);
+
+      - uses: actions/setup-node@v6.4.0
+        if: ${{ steps.intent.outputs.action == 'promote' }}
+        with:
+          node-version: "24"
+
+      - name: Install exact qualification runtime dependencies
+        if: ${{ steps.intent.outputs.action == 'promote' }}
+        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+
+      - name: Translate and admit legacy-compatible inputs
+        if: ${{ steps.intent.outputs.action == 'promote' }}
+        env:
+          BUILDCHAIN_PROMOTION_INPUTS_JSON: ${{ toJSON(inputs) }}
+          BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.sha }}
+          BUILDCHAIN_DECLARATIVE_RELEASE_TAIL: "true"
+        run: node .buildchain/runtime/scripts/v4-declarative-promotion-admission.mjs
+
+      - name: Resolve and qualify the sealed release candidate
+        if: ${{ steps.intent.outputs.action == 'promote' }}
+        id: candidate
+        shell: bash
+        run: node .buildchain/runtime/scripts/v4-release-candidate-adapter.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_TARGET_SHA: ${{ steps.intent.outputs.requested-sha }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.intent.outputs.target-ref }}
+          BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          BUILDCHAIN_ARTIFACT_PATTERNS: ${{ inputs.artifact-patterns }}
+          BUILDCHAIN_GITHUB_RELEASE_PAYLOAD_PATTERNS: ${{ inputs.github-release-payload-patterns }}
+          BUILDCHAIN_RC_WORKFLOW_FILE: ${{ inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_RC_WORKFLOW_NAME: ${{ inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RC_WAIT_SECONDS: ${{ inputs.release-candidate-wait-seconds }}
+          BUILDCHAIN_REQUIRED_ARTIFACT_COUNT: ${{ inputs.required-artifact-count }}
+          BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
+          BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
+          BUILDCHAIN_RC_DOWNLOAD: "true"
+          BUILDCHAIN_RC_OUTPUT_DIR: .buildchain/release-candidate
+          BUILDCHAIN_RESUME_CANDIDATE_REPOSITORY: ${{ inputs.resume-candidate-repository }}
+          BUILDCHAIN_RESUME_CANDIDATE_RUN_ID: ${{ inputs.resume-candidate-run-id }}
+          BUILDCHAIN_RESUME_EXPECTED_WORKFLOW_FILE: ${{ inputs.resume-expected-workflow-file || inputs.release-candidate-workflow-file }}
+          BUILDCHAIN_RESUME_EXPECTED_WORKFLOW_NAME: ${{ inputs.resume-expected-workflow-name || inputs.release-candidate-workflow-name }}
+          BUILDCHAIN_RESUME_CHANNEL: ${{ inputs.promotion-publication-channel || steps.intent.outputs.channel }}
+          BUILDCHAIN_RESUME_TARGET_REF: ${{ steps.intent.outputs.target-ref }}
+          BUILDCHAIN_RESUME_TARGET_SHA: ${{ steps.intent.outputs.requested-sha }}
+          BUILDCHAIN_RESUME_EXPECTED_SOURCE_TREE: ${{ inputs.resume-expected-source-tree }}
+          BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_ROOT: ${{ inputs.resume-expected-candidate-root }}
+          BUILDCHAIN_RESUME_EXPECTED_CANDIDATE_RUNTIME_SHA: ${{ inputs.resume-expected-candidate-runtime-sha }}
+          BUILDCHAIN_RESUME_RUNTIME_SHA: ${{ inputs.resume-buildchain-runtime-sha }}
+          BUILDCHAIN_CURRENT_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
+          BUILDCHAIN_RESUME_TRANSACTION_ID: ${{ inputs.resume-transaction-id }}
+          BUILDCHAIN_PUBLISH_REMATERIALIZE_ON_RESUME: ${{ inputs.publish-rematerialize-on-resume }}
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: ${{ inputs.promotion-runtime-authorization-json }}
+          BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: ${{ inputs.promotion-runtime-authorization-root }}
+
+      - name: Resolve one exact product publication recovery
+        if: ${{ steps.intent.outputs.action == 'promote' && (inputs.publish-transaction-override || inputs.resume-transaction-id != '') }}
+        id: recovery
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_CANDIDATE_VERSION: ${{ steps.candidate.outputs.release-candidate-publication-version || steps.candidate.outputs.release-candidate-version }}
+          BUILDCHAIN_EXPLICIT_RESUME: ${{ inputs.resume-transaction-id != '' }}
+          BUILDCHAIN_REQUESTED_SHA: ${{ steps.intent.outputs.requested-sha }}
+          BUILDCHAIN_RUNTIME_ROOT: ${{ github.workspace }}/.buildchain/runtime
+        with:
+          script: |
+            const { pathToFileURL } = require("node:url");
+            const runtime = await import(pathToFileURL(
+              `${process.env.BUILDCHAIN_RUNTIME_ROOT}/packages/core/v4-universal-workflow-bootstrap.js`,
+            ).href);
+            const requestedSha = process.env.BUILDCHAIN_REQUESTED_SHA;
+            const explicitResume = process.env.BUILDCHAIN_EXPLICIT_RESUME === "true";
+            const refs = explicitResume ? [] : await github.paginate(
+              github.rest.git.listMatchingRefs,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `heads/buildchain/v4-product-state/${requestedSha}-`,
+                per_page: 100,
+              },
+            );
+            const recoveryStates = [];
+            for (const stateRef of refs) {
+              const version = runtime.v4ProductStateVersion(stateRef, requestedSha);
+              const stateCommit = (await github.rest.git.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: stateRef.object.sha,
+              })).data;
+              let exactTagRef;
+              try {
+                exactTagRef = (await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/v${version}`,
+                })).data;
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+              recoveryStates.push({ stateRef, stateCommit, exactTagRef });
+            }
+            let exactTagRef;
+            if (!explicitResume && recoveryStates.length === 0) {
+              try {
+                exactTagRef = (await github.rest.git.getRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/v${process.env.BUILDCHAIN_CANDIDATE_VERSION}`,
+                })).data;
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+            }
+            const version = runtime.selectV4RecoveredProductPublicationVersion({
+              routeDecision: "Resume",
+              candidateVersion: process.env.BUILDCHAIN_CANDIDATE_VERSION,
+              requestedSha,
+              explicitResume,
+              recoveryStates,
+              exactTagRef,
+            });
+            core.setOutput("version", version);
+
+      - name: Select and root the exact product publication intent
+        if: ${{ steps.intent.outputs.action == 'promote' }}
+        id: publication
+        shell: bash
+        run: node .buildchain/runtime/scripts/v4-product-publication-intent.mjs
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_CHANNEL: ${{ steps.intent.outputs.channel }}
+          BUILDCHAIN_TARGET_REF: ${{ steps.intent.outputs.target-ref }}
+          BUILDCHAIN_SOURCE_SHA: ${{ steps.intent.outputs.requested-sha }}
+          BUILDCHAIN_SOURCE_TIMESTAMP: ${{ steps.intent.outputs.source-timestamp }}
+          BUILDCHAIN_CANDIDATE_VERSION: ${{ steps.candidate.outputs.release-candidate-publication-version || steps.candidate.outputs.release-candidate-version }}
+          BUILDCHAIN_RECOVERED_PUBLICATION_VERSION: ${{ steps.recovery.outputs.version || '' }}
+          BUILDCHAIN_SEALED_BUNDLE_MANIFEST: ${{ steps.candidate.outputs.publish-sealed-bundle-manifest }}
+          BUILDCHAIN_REQUIRED_ARTIFACTS_PATH: ${{ steps.candidate.outputs.publish-required-artifacts-path }}
+          BUILDCHAIN_PUBLISH_ARTIFACT_KIND: ${{ inputs.publish-artifact-kind }}
+          BUILDCHAIN_PUBLISH_PACKAGE_MAIN: ${{ inputs.publish-package-main }}
+          BUILDCHAIN_PUBLISH_DIST_TAG: ${{ inputs.publish-dist-tag }}
+
+      - name: Retain the exact QUALIFY cut
+        if: ${{ steps.intent.outputs.action == 'promote' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v4-release-qualify-${{ steps.intent.outputs.requested-sha }}
+          path: .buildchain/release-candidate/
+          include-hidden-files: true
+          if-no-files-found: error
+
+  apply:
+    name: APPLY one rooted provider transaction
+    needs: qualify
+    if: ${{ inputs.universal-request-json == '' && (needs.qualify.outputs.action == 'promote' && !inputs.dry-run) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      checks: write
+      contents: write
+      id-token: write
+      pull-requests: write
+    outputs:
+      promoted-sha: ${{ needs.qualify.outputs.requested-sha }}
+      built-source-sha: ${{ needs.qualify.outputs.candidate-source-sha }}
+      release-candidate-artifact: ${{ needs.qualify.outputs.candidate-artifact }}
+      release-candidate-action: canonical-release-invocation
+      release-candidate-outcome: success
+      promotion-outcome: success
+      finalization-needed: "false"
+      release-tail-transaction-state: ${{ steps.provider.outputs.transaction-state || steps.resume.outputs.transaction-state }}
+      release-tail-declaration-root: ${{ steps.provider.outputs.declaration-root || steps.resume.outputs.declaration-root }}
+      release-tail-transaction-root: ${{ steps.provider.outputs.transaction-root || steps.resume.outputs.transaction-root }}
+      release-tail-state-root: ${{ steps.provider.outputs.state-root || steps.resume.outputs.state-root }}
+      release-tail-receipt-roots-json: ${{ steps.provider.outputs.receipt-roots-json || steps.resume.outputs.receipt-roots-json }}
+      release-invocation-root: ${{ steps.provider.outputs.release-invocation-root || steps.resume.outputs.release-invocation-root }}
+      release-transaction-root: ${{ steps.provider.outputs.release-transaction-root || steps.resume.outputs.release-transaction-root }}
+      release-receipt-root: ${{ steps.provider.outputs.release-receipt-root || steps.resume.outputs.release-receipt-root }}
+    steps:
+      - name: Checkout the admitted protected channel state
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.qualify.outputs.requested-sha }}
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout the admitted runtime only
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ needs.qualify.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Verify the privileged executable closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .buildchain/runtime rev-parse HEAD)" = "${{ needs.qualify.outputs.runtime-sha }}"
+          test "$(git -C .buildchain/runtime rev-parse 'HEAD^{tree}')" = "${{ needs.qualify.outputs.runtime-tree }}"
+
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Install exact provider runtime dependencies and expose the verified bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --frozen-lockfile --ignore-scripts
+          ln -s .buildchain/runtime/node_modules node_modules
+
+      - name: Restore the rooted QUALIFY cut
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-v4-release-qualify-${{ needs.qualify.outputs.requested-sha }}
+          path: .buildchain/release-candidate
+
+      - name: Execute Provider Plane with requested dogfood interruption
+        id: interrupted-provider
+        if: ${{ inputs.provider-failure-after-capability != '' }}
+        continue-on-error: true
+        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        with: &provider-inputs
+          token: ${{ github.token }}
+          mutation-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
+          repository: ${{ github.repository }}
+          source-sha: ${{ needs.qualify.outputs.requested-sha }}
+          version: ${{ needs.qualify.outputs.version }}
+          tag: ${{ needs.qualify.outputs.exact-tag }}
+          channel: ${{ needs.qualify.outputs.channel }}
+          target-ref: ${{ needs.qualify.outputs.target-ref }}
+          target-sha: ${{ needs.qualify.outputs.requested-sha }}
+          candidate-passport-path: ${{ needs.qualify.outputs.candidate-passport-path }}
+          candidate-build-summary-path: ${{ needs.qualify.outputs.candidate-build-summary-path }}
+          stage-capsules-path: ${{ needs.qualify.outputs.stage-capsules-path }}
+          publication-qualification-path: ${{ needs.qualify.outputs.publication-qualification-path }}
+          sealed-bundle-root: ${{ needs.qualify.outputs.sealed-bundle-root }}
+          sealed-bundle-manifest: ${{ needs.qualify.outputs.sealed-bundle-manifest }}
+          required-artifacts-path: ${{ needs.qualify.outputs.required-artifacts-path }}
+          product-publication-intent-path: ${{ needs.qualify.outputs.product-publication-intent-path }}
+          publisher-workflow-sha: ${{ needs.qualify.outputs.publisher-sha }}
+          runtime-commit: ${{ needs.qualify.outputs.runtime-sha }}
+          runtime-tree: ${{ needs.qualify.outputs.runtime-tree }}
+          required-status-check: ${{ inputs.required-status-check }}
+          publish-command: ${{ inputs.publish-command }}
+          publish-mode: ${{ inputs.publish-mode }}
+          publish-dist-tag: ${{ inputs.publish-dist-tag }}
+          publish-package-set-order: ${{ inputs.publish-package-set-order }}
+          publish-package-main: ${{ inputs.publish-package-main }}
+          publish-artifact-kind: ${{ inputs.publish-artifact-kind }}
+          publish-auth: ${{ inputs.trusted-publishing && 'trusted-publishing' || 'npm-token' }}
+          publish-rematerialize-on-resume: ${{ inputs.publish-rematerialize-on-resume }}
+          publish-transaction-override: ${{ inputs.publish-transaction-override }}
+          resume-transaction-id: ${{ inputs.resume-transaction-id }}
+          artifact-paths: ${{ needs.qualify.outputs.release-artifact-paths }}
+          state-path: .buildchain/release-tail/state.json
+          failure-after-capability: ${{ inputs.provider-failure-after-capability }}
+
+      - name: Execute Provider Plane
+        id: provider
+        if: ${{ inputs.provider-failure-after-capability == '' }}
+        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        with: *provider-inputs
+
+      - name: Resume the same transaction journal
+        id: resume
+        if: ${{ steps.interrupted-provider.outcome == 'failure' }}
+        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        with: *provider-inputs
+
+      - name: Retain canonical APPLY and ReleaseReceipt evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v4-release-apply-${{ needs.qualify.outputs.requested-sha }}
+          path: |
+            .buildchain/release-candidate/
+            .buildchain/release-passport/
+            .buildchain/release-tail/
+          include-hidden-files: true
+          if-no-files-found: error
+
+  settle:
+    name: SETTLE terminal ReleaseReceipt projection
+    needs: [qualify, apply]
+    if: ${{ inputs.universal-request-json == '' && (always() && needs.qualify.result == 'success') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      controller-receipt-artifact: buildchain-v4-release-settle-${{ needs.qualify.outputs.requested-sha }}
+      controller-receipt-json: ${{ steps.verify.outputs.receipt-json }}
+      controller-receipt-digest: ${{ steps.verify.outputs.receipt-root }}
+      controller-receipt-status: ${{ steps.verify.outputs.status || steps.projection-state.outputs.status }}
+    steps:
+      - name: Checkout the admitted receipt verifier
+        if: ${{ needs.apply.result == 'success' }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ needs.qualify.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Restore canonical APPLY evidence
+        if: ${{ needs.apply.result == 'success' }}
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: buildchain-v4-release-apply-${{ needs.qualify.outputs.requested-sha }}
+          path: .buildchain/evidence
+
+      - name: Verify the single terminal receipt
+        id: verify
+        if: ${{ needs.apply.result == 'success' }}
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import {
+            createV4ReleaseInvocation,
+            createV4ReleaseReceipt,
+            createV4ReleaseTransaction,
+          } from "./.buildchain/runtime/packages/core/v4-release-invocation.js";
+          const base = ".buildchain/evidence/release-tail";
+          const invocation = JSON.parse(fs.readFileSync(`${base}/release-invocation.json`, "utf8"));
+          const transaction = JSON.parse(fs.readFileSync(`${base}/release-transaction.json`, "utf8"));
+          const storedReceipt = JSON.parse(fs.readFileSync(`${base}/release-receipt.json`, "utf8"));
+          const invocationProjection = createV4ReleaseInvocation(invocation);
+          const transactionProjection = createV4ReleaseTransaction({
+            invocationRoot: transaction.invocationRoot,
+            publisherRoot: transaction.publisherRoot,
+            runtimeRoot: transaction.runtimeRoot,
+            providerRoot: transaction.providerRoot,
+            parentRoot: transaction.parentRoot,
+          });
+          const { receiptRoot, ...receipt } = storedReceipt;
+          const receiptProjection = createV4ReleaseReceipt(receipt);
+          if (transaction.invocationRoot !== invocationProjection.roots.invocationRoot ||
+              transaction.transactionRoot !== transactionProjection.transactionRoot ||
+              receipt.transactionRoot !== transactionProjection.transactionRoot ||
+              receiptProjection.receiptRoot !== receiptRoot || receipt.outcome !== "complete") {
+            throw new Error("terminal ReleaseReceipt lineage does not verify");
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,
+            `receipt-json=${JSON.stringify(storedReceipt)}\nreceipt-root=${receiptRoot}\nstatus=complete\n`);
+          NODE
+
+      - name: Record non-terminal projection state
+        id: projection-state
+        if: ${{ needs.apply.result != 'success' }}
+        shell: bash
+        run: |
+          echo "status=${{ inputs.dry-run && 'dry-run' || needs.qualify.outputs.action == 'noop' && 'noop' || 'blocked' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Retain SETTLE projection
+        if: ${{ steps.verify.outcome == 'success' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: buildchain-v4-release-settle-${{ needs.qualify.outputs.requested-sha }}
+          path: |
+            .buildchain/evidence/release-tail/release-invocation.json
+            .buildchain/evidence/release-tail/release-transaction.json
+            .buildchain/evidence/release-tail/release-receipt.json
+          if-no-files-found: error

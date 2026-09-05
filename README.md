@@ -324,9 +324,9 @@ The active reusable workflow surfaces are:
   heavy build;
 - `.github/workflows/.web-surface.yml` for preview, staging, production, and
   cleanup plans for site/app repositories;
-- `.github/workflows/buildchain-ref-promotion.yml` for protected release
+- `.github/workflows/self-release-promote.yml` for protected release
   promotion and version-state transactions;
-- `.github/workflows/binary-distribution.yml` for Buildchain's own release
+- `.github/workflows/self-build-binary-distribution.yml` for Buildchain's own release
   passport proof case.
 
 Stable consumers should reference actions and workflows through floating major

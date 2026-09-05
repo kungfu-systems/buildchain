@@ -196,6 +196,9 @@ function descriptorDigest(descriptor) {
 
 export function createControllerRegistry({ workflows = [] } = {}) {
   const workflowById = new Map(workflows.map((entry) => [entry.id, entry]));
+  for (const entry of workflows) {
+    if (entry.taxonomy && !entry.taxonomy.compatibilityAlias && !workflowById.has(entry.taxonomy.id)) workflowById.set(entry.taxonomy.id, entry);
+  }
   const controllers = CONTROLLER_SPECS.map((spec) => {
     const workflow = workflowById.get(spec.workflowId);
     if (!workflow) throw new Error(`controller ${spec.id} requires workflow descriptor ${spec.workflowId}`);
@@ -215,7 +218,7 @@ export function createControllerRegistry({ workflows = [] } = {}) {
       contract: BUILDCHAIN_CONTROLLER_DESCRIPTOR_CONTRACT,
       id: spec.id,
       version: spec.version,
-      workflow: { id: workflow.id, path: workflow.path },
+      workflow: { id: workflow.id, path: workflow.path, ...(workflow.taxonomy?.contractPath ? { contractPath: workflow.taxonomy.contractPath } : {}) },
       inputs,
       expected: {
         stages: spec.stages.map((id) => ({ id, required: !optionalStages.has(id) })),

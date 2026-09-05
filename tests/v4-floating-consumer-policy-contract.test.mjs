@@ -41,7 +41,7 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ inputs\['invocation-source-path'\] \|\| \(github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/v4-adopter-delivery-dogfood\.yml' \|\| ''\) \}\}/u,
+    /BUILDCHAIN_INVOCATION_SOURCE_PATH: \$\{\{ inputs\['invocation-source-path'\] \|\| \(github\.repository == 'kungfu-systems\/buildchain' && '\.github\/workflows\/self-build-adopter-dogfood\.yml' \|\| ''\) \}\}/u,
   );
   assert.match(
     workflow,
@@ -60,7 +60,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
     repository: "kungfu-systems/buildchain",
     sourceSha: "a".repeat(40),
     invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
-    invocationSourcePath: ".github/workflows/buildchain-ref-promotion.yml",
+    invocationSourcePath: ".github/workflows/self-release-promote.yml",
     expectedInvocationChannel: "alpha",
     resolvedWorkflowSha: "b".repeat(40),
     resolvedRuntimeSha: "b".repeat(40),
@@ -75,7 +75,7 @@ test("alpha promotion caller passes the same runtime admission used in GitHub", 
 });
 
 test("bounded recovery is a one-way adapter into the same public publisher", () => {
-  const relative = ".github/workflows/buildchain-ref-promotion-recovery.yml";
+  const relative = ".github/workflows/self-ops-promotion-recovery.yml";
   const workflow = fs.readFileSync(path.join(root, relative), "utf8");
   const publicPromotion = fs.readFileSync(
     path.join(root, ".github/workflows/release-candidate-promote.yml"),
@@ -142,12 +142,12 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
   );
   assert.ok(
     publicPromotion.includes(
-      "BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/release-candidate-promote.yml' || inputs.publication-publisher-workflow-path }}",
+      "BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/self-ops-promotion-recovery.yml' && '.github/workflows/release-candidate-promote.yml' || inputs.publication-publisher-workflow-path }}",
     ),
   );
   assert.ok(
     publicPromotion.includes(
-      "BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/buildchain-ref-promotion-recovery.yml' && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}",
+      "BUILDCHAIN_INVOKED_WORKFLOW: ${{ inputs.publication-publisher-workflow-path == '.github/workflows/self-ops-promotion-recovery.yml' && '.github/workflows/.release-candidate-promote.yml' || '.github/workflows/release-candidate-promote.yml' }}",
     ),
   );
   assert.doesNotMatch(workflow, /^  consumer-admission:/mu);

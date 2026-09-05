@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64779,
-    "current": 56718
+    "measuredExcess": 64778,
+    "current": 56717
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1435,21 +1435,21 @@
       "scripts/generate-channel-promotion-workflow.mjs": {
         "baseline": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 282
             }
           }
         },
         "current": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 240
             }
           }
         },
         "target": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 180
             }
           }
@@ -1459,7 +1459,7 @@
         "baseline": {
           "lines": 1410,
           "functions": {
-            "buildSiteBundle@719": {
+            "buildSiteBundle@720": {
               "lines": 637
             }
           }
@@ -1467,15 +1467,15 @@
         "current": {
           "lines": 1410,
           "functions": {
-            "buildSiteBundle@719": {
-              "lines": 637
+            "buildSiteBundle@720": {
+              "lines": 636
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "buildSiteBundle@719": {
+            "buildSiteBundle@720": {
               "lines": 180
             }
           }
@@ -3135,13 +3135,13 @@
     "tests/v4-floating-consumer-policy-contract.test.mjs",
     "tests/v4-publication-qualification.test.mjs",
     ".github/workflows/v4-adopter-delivery.yml",
-    ".github/workflows/buildchain-ref-promotion.yml",
+    ".github/workflows/self-release-promote.yml",
     ".github/workflows/dev-pr-auto-merge.yml",
     "tests/release-candidate-recovery.test.mjs",
     "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
     ".github/workflows/.release-candidate-promote.yml",
     "tests/build-surface-promotion.test.mjs",
-    ".github/workflows/buildchain-ref-promotion-recovery.yml",
+    ".github/workflows/self-ops-promotion-recovery.yml",
     "tests/build-surface.test.mjs",
     "tests/internal-architecture.test.mjs",
     "scripts/resume-from-candidate-run.mjs",

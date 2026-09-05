@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { readWorkflowTaxonomy, workflowPath } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -8,7 +9,7 @@ const DEFAULT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const CALLER_PATH = ".github/workflows/v4-public-consumer-dogfood.yml";
+const CALLER_PATH = ".github/workflows/self-build-public-consumer-dogfood.yml";
 const REUSABLE_PATH = ".github/workflows/v4-stage-capsule-canary.yml";
 export const V4_PUBLIC_DOGFOOD_ALPHA_REF = "v4-alpha";
 const PRIVATE_CONSUMER = ["buildchain", "self", "dogfood"].join("-");
@@ -93,10 +94,19 @@ function assertReusableWorkflow(root) {
 
 function assertWorkflowInventory(root) {
   const workflowRoot = path.join(root, ".github/workflows");
+  const taxonomy = readWorkflowTaxonomy(root);
   for (const entry of fs.readdirSync(workflowRoot, { withFileTypes: true })) {
     if (!entry.isFile() || !/\.ya?ml$/u.test(entry.name)) continue;
-    const relative = `.github/workflows/${entry.name}`;
+    let relative = `.github/workflows/${entry.name}`;
     const text = read(root, relative);
+    const canonical = taxonomy?.entries.find(
+      (item) => workflowPath(item) === relative && item.compatibility,
+    );
+    if (canonical) {
+      if (read(root, canonical.compatibility.path) !== text)
+        fail(`${relative} differs from its public compatibility identity`);
+      relative = canonical.compatibility.path;
+    }
     if (
       relative !== REUSABLE_PATH &&
       text.includes("scripts/v4-stage-capsule-qualification.mjs")
@@ -113,7 +123,7 @@ function assertWorkflowInventory(root) {
 }
 
 function assertProtectedVerify(root) {
-  const verify = read(root, ".github/workflows/verify.yml");
+  const verify = read(root, ".github/workflows/self-build-verify.yml");
   for (const required of [
     "needs: stage-capsule-checkpoints",
     "name: Enforce public consumer-only v4 dogfood",

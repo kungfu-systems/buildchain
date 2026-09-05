@@ -161,7 +161,7 @@ test("qualification installs the exact runtime before legacy input admission", (
 });
 test("v4 branch promotion excludes the stable publisher rollout", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    path.join(root, ".github/workflows/self-release-promote.yml"),
     "utf8",
   );
   assert.match(workflow, /^  promote:/m);
@@ -291,7 +291,7 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
 
 test("build surface fixture can dogfood artifact transfer modes declaratively", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/build-surface-fixture.yml"),
+    path.join(root, ".github/workflows/self-build-fixture.yml"),
     "utf8",
   );
   assert.match(workflow, /- dev\/v\*\/v\*/);
@@ -419,7 +419,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
 
 test("buildchain ref promotion delegates alpha evidence to the canonical publisher", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    path.join(root, ".github/workflows/self-release-promote.yml"),
     "utf8",
   );
   assert.match(workflow, /^  promote:/m);
@@ -427,7 +427,7 @@ test("buildchain ref promotion delegates alpha evidence to the canonical publish
     workflow,
     /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
   );
-  assert.match(workflow, /release-candidate-workflow-file: build-surface-fixture\.yml/);
+  assert.match(workflow, /release-candidate-workflow-file: self-build-fixture\.yml/);
   assert.match(workflow, /resume-candidate-run-id:/);
   assert.match(workflow, /declarative-release-tail: true/);
   assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
@@ -1404,11 +1404,11 @@ test("generated release model publishes the generic major alpha channel contract
 
 test("Buildchain self-dogfoods v4 through the floating canonical alpha publisher", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-alpha-self-dogfood.yml"),
+    path.join(root, ".github/workflows/self-build-alpha-dogfood.yml"),
     "utf8",
   );
   const promotion = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    path.join(root, ".github/workflows/self-release-promote.yml"),
     "utf8",
   );
   assert.match(workflow, /workflows: \["Buildchain Ref Promotion"\]/);
@@ -2502,7 +2502,7 @@ test("release-candidate resolver requires one merged PR-stage RC artifact", asyn
         },
       ]);
     }
-    if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+    if (url.includes("actions/workflows/self-build-fixture.yml/runs")) {
       return jsonResponse({
         workflow_runs: [
           {
@@ -2543,7 +2543,7 @@ test("release-candidate resolver requires one merged PR-stage RC artifact", asyn
     repository: "kungfu-systems/libnode",
     targetSha,
     targetRef: "alpha/v22/v22.22",
-    workflowFile: "build-surface-fixture.yml",
+    workflowFile: "self-build-fixture.yml",
     workflowName: "Build Surface Fixture",
     fetchImpl,
     download: false,
@@ -2728,7 +2728,7 @@ test("run-lifecycle action samples a configured lifecycle stage from the bundled
 
 test("self promotion classifies finalization from rooted state instead of display titles", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion.yml"),
+    path.join(root, ".github/workflows/self-release-promote.yml"),
     "utf8",
   );
   assert.match(workflow, /^  classify-workflow-run:/m);
