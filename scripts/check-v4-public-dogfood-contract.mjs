@@ -126,8 +126,10 @@ function assertProtectedVerify(root) {
   const verify = read(root, ".github/workflows/self-build-verify.yml");
   for (const required of [
     "needs: stage-capsule-checkpoints",
-    "name: Enforce public consumer-only v4 dogfood",
-    "run: node scripts/check-v4-public-dogfood-contract.mjs",
+    "name: Run declared verify lifecycle (full source tests and generated artifact checks)",
+    "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
+    "run: node scripts/source-verification-evidence.mjs plan",
+    "run: node scripts/source-verification-evidence.mjs seal",
   ])
     if (!verify.includes(required))
       fail(`Verify is missing protected gate ${required}`);
@@ -203,6 +205,7 @@ function assertConsumerLifecycle(root) {
     '[lifecycle.install]\ncommand = "corepack enable pnpm && corepack pnpm@11.7.0 install --frozen-lockfile"',
     '[lifecycle.build]\ncommand = "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:site"',
     "[lifecycle.verify]\ncommands = [",
+    '"corepack pnpm@11.7.0 run check",',
   ])
     if (!lifecycle.includes(declaration))
       fail(

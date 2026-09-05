@@ -178,6 +178,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `actions/promote-buildchain-ref/lib.js`
 - `actions/v4-release-candidate-promote/index.js`
 - `actions/v4-release-candidate-promote/product-provider.js`
+- `actions/v4-release-candidate-promote/product-provider-github-adapters.js`
 - `tests/v4-release-candidate-promote.test.mjs`
 - `scripts/check-inventory.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
@@ -197,6 +198,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/buildchain-cli-help.mjs`
 - `scripts/check-maintainability.mjs`
 - `tests/maintainability.test.mjs`
+- `scripts/generate-v4-universal-workflow-facades.mjs`
 
 ## cli-command-registry
 

@@ -262,6 +262,21 @@ fn dispatch(request: WasmRequest) -> Result<Value, ContractFault> {
             plan_partial_mutation_recovery_bytes(&payload_bytes(&request.payload)?)
                 .map_err(|error| *error)?,
         ),
+        _ => dispatch_verification(request),
+    }
+}
+
+fn dispatch_verification(request: WasmRequest) -> Result<Value, ContractFault> {
+    match request.operation.as_str() {
+        "source-version-projection" => {
+            crate::validate_source_version_projection(&request.payload).map_err(|error| *error)
+        }
+        "source-verification-seal" => {
+            crate::seal_source_verification(&request.payload).map_err(|error| *error)
+        }
+        "source-verification-plan" => {
+            crate::plan_source_verification(&request.payload).map_err(|error| *error)
+        }
         _ => Err(fault(
             "unsupported-wasm-operation",
             "$/operation",

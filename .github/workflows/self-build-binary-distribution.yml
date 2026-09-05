@@ -64,6 +64,17 @@ jobs:
       - uses: actions/checkout@v7.0.0
         with:
           persist-credentials: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Resolve exact binary source
+        shell: bash
+        run: |
+          source_sha="$(git rev-parse HEAD)"
+          if [[ "$source_sha" != "$GITHUB_SHA" ]]; then
+            echo "::error::Dispatch Binary Distribution at the exact release tag so workflow, runtime and source identities agree."
+            exit 1
+          fi
+          echo "SOURCE_SHA=$source_sha" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v6.4.0
         with:
@@ -133,6 +144,17 @@ jobs:
       - uses: actions/checkout@v7.0.0
         with:
           persist-credentials: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Resolve exact binary source
+        shell: bash
+        run: |
+          source_sha="$(git rev-parse HEAD)"
+          if [[ "$source_sha" != "$GITHUB_SHA" ]]; then
+            echo "::error::Dispatch Binary Distribution at the exact release tag so workflow, runtime and source identities agree."
+            exit 1
+          fi
+          echo "SOURCE_SHA=$source_sha" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v6.4.0
         with:
@@ -163,11 +185,11 @@ jobs:
           BUILDCHAIN_CONTROLLER_REGISTRY: dist/site/controller-registry.json
           BUILDCHAIN_CONTROLLER_ID: binary-distribution
           BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ github.sha }}
+          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ env.SOURCE_SHA }}
           BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ github.sha }}
           BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ github.sha }}
           BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ fromJSON(steps.contract.outputs.json).contractDigest }}
-          BUILDCHAIN_CONTROLLER_INPUTS_JSON: '{}'
+          BUILDCHAIN_CONTROLLER_INPUTS_JSON: "{}"
           BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
         run: node scripts/controller-evidence.mjs --mode plan
 
@@ -192,9 +214,15 @@ jobs:
           mv "$checksum_path" dist/binary/checksums.txt
           test -s dist/binary/checksums.txt
 
+      - name: Read exact v4 publication settlement
+        if: ${{ startsWith(env.RELEASE_TAG, 'v4.') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/binary-publication-evidence.mjs read
+
       - name: Fetch durable release-state passport
         id: fetch-durable-release-state
-        if: ${{ startsWith(github.ref, 'refs/tags/') || inputs.upload-release }}
+        if: ${{ !startsWith(env.RELEASE_TAG, 'v4.') && (startsWith(github.ref, 'refs/tags/') || inputs.upload-release) }}
         shell: bash
         run: |
           set -euo pipefail
@@ -251,7 +279,7 @@ jobs:
             collect github-release
             --tag "${RELEASE_TAG}"
             --repository "${GITHUB_REPOSITORY}"
-            --source-sha "${GITHUB_SHA}"
+            --source-sha "${SOURCE_SHA}"
             --assets-dir dist/binary
             --output-dir .buildchain/release-passport
           )
@@ -260,6 +288,12 @@ jobs:
               --base-passport-json .buildchain/release-passport/authoritative-release-state-passport.json
               --impact-json .buildchain/release-evidence/authoritative-release-state-impact.json
               --require-base-kfd
+            )
+          fi
+          if [ -f .buildchain/publication-evidence/buildchain-publication-settlement.json ]; then
+            args+=(
+              --release-evidence-json .buildchain/publication-evidence/buildchain-publication-settlement.json
+              --release-extra-json .buildchain/publication-evidence/release.json
             )
           fi
           node bin/buildchain.mjs span \
@@ -310,7 +344,7 @@ jobs:
             --passport-dir .buildchain/release-passport \
             --output-dir .buildchain/release-passport \
             --tag "${{ env.RELEASE_TAG }}" \
-            --source-sha "${{ github.sha }}"
+            --source-sha "${{ env.SOURCE_SHA }}"
           test -f .buildchain/release-passport/buildchain-release-bundle.tar.gz
           test -f .buildchain/release-passport/buildchain-release-bundle.json
 
