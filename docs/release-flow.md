@@ -18,7 +18,7 @@ ai_provenance:
 
 # Release Flow Diagrams
 
-This document describes the Buildchain v4 branch, tag, and version-state flow.
+This document describes v4 alpha publication and the legacy v3 release flow.
 See [Release governance](release-governance.md) for the design rationale.
 
 ## Architecture
@@ -142,7 +142,21 @@ published. Queue reconciliation runs after branch protection and before the
 default-branch switch, so a failed governance apply leaves the old active line
 in place and the idempotently created new refs can be retried.
 
-## Alpha Promotion
+## V4 Alpha Publication
+
+The protected `dev/v4/v4.0 -> alpha/v4/v4.0` channel PR admits the source.
+Publication creates the immutable `v4.0.Z-alpha.N` tag and advances the eligible
+floating alpha refs to that published source. Its completed receipt and original
+Release Passport remain the publication authority.
+
+A separate protected next-development PR prepares `4.0.Z-alpha.(N+1)` on
+`dev/v4/v4.0`. Preparing that version does not publish another exact tag or move
+the alpha refs. A review, queue, or transient API failure in that PR leaves
+publication complete and next-development incomplete; recovery resumes the
+missing tail. Binary distribution has its own evidence and completion state.
+See [What each verification proves](#what-each-verification-proves).
+
+## Legacy V3 Alpha Promotion
 
 ```mermaid
 sequenceDiagram
@@ -180,7 +194,7 @@ dev/vX/vX.Y
 
 all point at the generated alpha version-state commit.
 
-## Release Promotion
+## Legacy V3 Release Promotion
 
 ```mermaid
 sequenceDiagram
@@ -234,7 +248,7 @@ dev/vX/vX.Y
 
 point at the next alpha version-state commit.
 
-## State Machine
+## Legacy V3 State Machine
 
 ```mermaid
 stateDiagram-v2
@@ -249,28 +263,28 @@ stateDiagram-v2
 
 The same minor line can loop through this state machine many times.
 
-## Version Examples
+## Legacy V3 Version Examples
 
-Assume `v4.0.2-alpha.1` has been tested and a maintainer merges
-`alpha/v4/v4.0 -> release/v4/v4.0`.
+Assume `v3.0.2-alpha.1` has been tested and a maintainer merges
+`alpha/v3/v3.0 -> release/v3/v3.0`.
 
 Buildchain should produce:
 
 ```text
-v4.0.2                  exact production tag
-v4.0                    floating minor tag
-v4                      floating major tag when v4.0 is the selected major line
-release/v4/v4.0         production channel branch
+v3.0.2                  exact production tag
+v3.0                    floating minor tag
+v3                      floating major tag when v3.0 is the selected major line
+release/v3/v3.0         production channel branch
 ```
 
 It should also prepare:
 
 ```text
-v4.0.3-alpha.0          exact next alpha tag
-v4.0-alpha              floating alpha tag
-v4-alpha                floating major alpha tag when v4.0 is the highest published alpha minor
-alpha/v4/v4.0           alpha channel branch
-dev/v4/v4.0             development channel branch
+v3.0.3-alpha.0          exact next alpha tag
+v3.0-alpha              floating alpha tag
+v3-alpha                floating major alpha tag when v3.0 is the highest published alpha minor
+alpha/v3/v3.0           alpha channel branch
+dev/v3/v3.0             development channel branch
 ```
 
 This is expected behavior. A production release closes one patch and opens the

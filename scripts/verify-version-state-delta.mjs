@@ -37,7 +37,7 @@ export function verifyVersionStateDelta({
     fs.mkdirSync(source);
     const archive = path.join(temporary, "base.tar");
     git("archive", "--format=tar", `--output=${archive}`, baseSha);
-    execute("tar", ["-xf", archive, "-C", source]);
+    execute("tar", ["-xf", "base.tar", "-C", "source"], { cwd: temporary });
     fs.symlinkSync(nodeModules, path.join(source, "node_modules"), "junction");
     const planSource = `
       import fs from 'node:fs';

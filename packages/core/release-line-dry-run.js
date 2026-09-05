@@ -201,7 +201,7 @@ function explainReleaseLineDryRun({
     );
     plan.branchUpdates.push(
       { ref: targetRef, action: "would move to alpha version-state commit" },
-      { ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`, action: "would align dev with the published alpha state" },
+      { ref: `dev/v${rule.major}/v${rule.major}.${rule.minor}`, action: rule.major === 4 ? "would prepare the next alpha version on dev through a separate protected PR after publication" : "would align dev with the published alpha state" },
     );
     plan.versionState.targetVersions = [exactAlpha.replace(/^next v?/, "").replace(/^v/, "")];
     plan.notes.push("Alpha promotion opens or advances the test channel; it does not move production refs.");

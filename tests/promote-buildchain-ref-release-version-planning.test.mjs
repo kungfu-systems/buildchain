@@ -45,6 +45,10 @@ test("release line dry-run explains alpha promotion semantics", () => {
   ]);
   assert.deepEqual(plan.floatingRefs.map((update) => update.ref), ["v2.0-alpha", "v2-alpha"]);
   assert.match(formatReleaseLineDryRun(plan), /No refs, tags, packages, or files were modified/);
+  assert.match(plan.branchUpdates[1].action, /align dev with the published alpha state/);
+  const v4 = explainReleaseLineDryRun({ cwd, targetRef: "alpha/v4/v4.0", sha: SHA });
+  assert.match(v4.branchUpdates[1].action, /next alpha version on dev through a separate protected PR after publication/);
+  assert.deepEqual(v4.exactTags.map(({ kind }) => kind), ["alpha"]);
 });
 
 test("release line dry-run explains production and next-alpha semantics", () => {

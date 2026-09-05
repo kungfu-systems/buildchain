@@ -534,7 +534,7 @@
       "title": "Release flow",
       "path": "docs/release-flow.md",
       "plane": "verify",
-      "digest": "sha256:2a5540587fa578d3914849b464b5f83c2398d79fed4e8c167642a603bc1bf924",
+      "digest": "sha256:1b97defb4f635937ea96f92e1180625cf1a5bc3454191062ec3c76b168d4c451",
       "capabilityGroup": "governance-versioning",
       "audience": [
         "release-operator",
