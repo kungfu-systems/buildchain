@@ -17,6 +17,7 @@ import {
 } from "../../packages/core/v4-product-publication.js";
 import {
   createV4ProductPublicationAdapters,
+  enqueueNextDevelopmentPullRequest,
   localVersionFiles,
   resolvePublicationTarget as resolvePublicationTargetAdapter,
 } from "./product-provider-adapters.js";
@@ -179,19 +180,13 @@ export async function advanceAlphaNextDevelopment({
     ).data;
   if (pull.state === "closed" && !pull.merged_at)
     throw new Error("next-development pull request was closed without merge");
-  if (!pull.merged_at) {
-    try {
-      await mutationOctokit.graphql(
-        `mutation BuildchainEnqueuePullRequest($input: EnqueuePullRequestInput!) {
-          enqueuePullRequest(input: $input) { mergeQueueEntry { id } }
-        }`,
-        { input: { pullRequestId: pull.node_id, expectedHeadOid: headSha } },
-      );
-    } catch (error) {
-      if (!/already.*queue|queue.*already/iu.test(String(error?.message || "")))
-        throw error;
-    }
-  }
+  if (!pull.merged_at)
+    await enqueueNextDevelopmentPullRequest({
+      mutationOctokit,
+      pull,
+      headSha,
+      wait,
+    });
   for (let poll = 0; !pull.merged_at && poll <= maxPolls; poll += 1) {
     if (poll > 0) await wait(pollIntervalMs);
     pull = (

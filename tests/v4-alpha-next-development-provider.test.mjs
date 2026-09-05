@@ -65,7 +65,10 @@ fs.writeFileSync("dist/site/kfd-claims.json", JSON.stringify({ version: process.
   return cwd;
 }
 
-function githubProvider(cwd, { devTree = SOURCE_TREE } = {}) {
+function githubProvider(
+  cwd,
+  { devTree = SOURCE_TREE, enqueueFailures = [] } = {},
+) {
   const refs = new Map([["heads/dev/v4/v4.0", SOURCE]]);
   const blobs = new Map();
   const sourceFiles = ["package.json", "dist/site/kfd-claims.json"].map(
@@ -194,6 +197,8 @@ function githubProvider(cwd, { devTree = SOURCE_TREE } = {}) {
     rest,
     async graphql() {
       enqueued += 1;
+      const failure = enqueueFailures.shift();
+      if (failure) throw failure;
       refs.set("heads/dev/v4/v4.0", PREPARED);
       return { enqueuePullRequest: { mergeQueueEntry: { id: "queue" } } };
     },
@@ -244,6 +249,72 @@ test("completed Alpha creates and merges one next-version Dev PR", async () => {
     execFileSync("git", ["status", "--short"], { cwd, encoding: "utf8" }),
     "",
   );
+});
+
+test("next-development retries GitHub's temporary mergeability window", async () => {
+  const cwd = fixture();
+  const github = githubProvider(cwd, {
+    enqueueFailures: [
+      new Error(
+        "Pull request mergeability check has not yet completed and Pull request not in mergeable state",
+      ),
+    ],
+  });
+  const waits = [];
+  const result = await advanceAlphaNextDevelopment({
+    cwd,
+    repository: "kungfu-systems/buildchain",
+    completedAlpha: {
+      outcome: "succeeded",
+      version: "4.0.2-alpha.6",
+      exactTag: "v4.0.2-alpha.6",
+      releaseSha: ALPHA_RELEASE,
+      treeSha: SOURCE_TREE,
+      publicationRoot: nextDevelopmentRoot({ publication: "alpha.6" }),
+      completedAt: "2026-09-03T00:00:00.000Z",
+    },
+    octokit: github.octokit,
+    mutationOctokit: github.mutationOctokit,
+    wait(delayMs) {
+      waits.push(delayMs);
+    },
+    pollIntervalMs: 0,
+    maxPolls: 2,
+  });
+  assert.equal(result.status, "verified");
+  assert.equal(github.enqueued, 2);
+  assert.deepEqual(waits, [2_000]);
+});
+
+test("next-development does not retry a non-transient queue rejection", async () => {
+  const cwd = fixture();
+  const github = githubProvider(cwd, {
+    enqueueFailures: [new Error("Pull request not in mergeable state")],
+  });
+  const waits = [];
+  await assert.rejects(
+    advanceAlphaNextDevelopment({
+      cwd,
+      repository: "kungfu-systems/buildchain",
+      completedAlpha: {
+        outcome: "succeeded",
+        version: "4.0.2-alpha.6",
+        exactTag: "v4.0.2-alpha.6",
+        releaseSha: ALPHA_RELEASE,
+        treeSha: SOURCE_TREE,
+        publicationRoot: nextDevelopmentRoot({ publication: "alpha.6" }),
+        completedAt: "2026-09-03T00:00:00.000Z",
+      },
+      octokit: github.octokit,
+      mutationOctokit: github.mutationOctokit,
+      wait(delayMs) {
+        waits.push(delayMs);
+      },
+    }),
+    /not in mergeable state/u,
+  );
+  assert.equal(github.enqueued, 1);
+  assert.deepEqual(waits, []);
 });
 
 test("next-development rejects Dev content drift after Alpha publication", async () => {
