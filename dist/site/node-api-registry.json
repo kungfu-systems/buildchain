@@ -5265,11 +5265,16 @@
       "id": "packages/core/buildchain-publication-authority.js#buildchainPublicationAuthorityDescriptors",
       "name": "buildchainPublicationAuthorityDescriptors",
       "kind": "function",
-      "signature": "function buildchainPublicationAuthorityDescriptors()",
-      "parameters": [],
+      "signature": "function buildchainPublicationAuthorityDescriptors({ root = process.cwd() } = {})",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ root = process.cwd() } = {}"
+        }
+      ],
       "returns": "unknown",
       "errors": [
-        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
       ],
       "sideEffects": [
         "none-detected-by-static-source-scan"
@@ -5305,7 +5310,7 @@
       ],
       "source": {
         "path": "packages/core/buildchain-publication-authority.js",
-        "line": 89
+        "line": 104
       },
       "example": "import { createBuildchainPublicationAuthorityRegistry } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5801,7 +5806,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 449
+        "line": 452
       },
       "example": "import { aggregateControllerReceipts } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5955,7 +5960,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 287
+        "line": 290
       },
       "example": "import { createControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -5984,7 +5989,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 363
+        "line": 366
       },
       "example": "import { createControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6013,7 +6018,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 491
+        "line": 494
       },
       "example": "import { createControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6071,7 +6076,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 532
+        "line": 535
       },
       "example": "import { normalizeControllerReceiptReferences } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6100,7 +6105,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 325
+        "line": 328
       },
       "example": "import { validateControllerPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6133,7 +6138,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 423
+        "line": 426
       },
       "example": "import { validateControllerReceipt } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -6166,7 +6171,7 @@
       ],
       "source": {
         "path": "packages/core/controller-evidence.js",
-        "line": 505
+        "line": 508
       },
       "example": "import { validateControllerReceiptReference } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -28767,7 +28772,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-contract",
       "export": "./buildchain-contract",
       "target": "./packages/core/buildchain-contract.js",
-      "digest": "sha256:3a8e9c3c834af04e1e22807030106efeecf053bda7911e939055b2654c54cbd6",
+      "digest": "sha256:6e09b31bef967205e33464fd5ef6e2a2a4a3b464ec22f346bc810d8993dd232d",
       "summary": "Runtime contract world and compatibility digest APIs for floating-ref drift checks.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -28981,7 +28986,7 @@
       "specifier": "@kungfu-tech/buildchain/controller-evidence",
       "export": "./controller-evidence",
       "target": "./packages/core/controller-evidence.js",
-      "digest": "sha256:bc75e2163af58aaffceec415f617b667b6be25888185a30818a80c07a5f0da3d",
+      "digest": "sha256:54af316639618918889d26407726e7eed97511ac37c015c89cad42456f2076f8",
       "summary": "Project-independent controller descriptors, source/runtime-bound plans, receipts, aggregates, and validation APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -29594,7 +29599,7 @@
       "specifier": "@kungfu-tech/buildchain/v4-floating-consumer-policy",
       "export": "./v4-floating-consumer-policy",
       "target": "./packages/core/v4-floating-consumer-policy.js",
-      "digest": "sha256:df1b9d27dc28324fc89dc5af7838d8d1b57aa91355e43653882286070ff2308c",
+      "digest": "sha256:5232bc56e9c438514814cc06c9cb5268abbb0d574516adb36061741cd0d41fd1",
       "summary": "Semantic floating-selector admission, dual-lock receipt, and independent v4 consumer certification APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -30456,7 +30461,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-publication-authority",
       "export": "./buildchain-publication-authority",
       "target": "./packages/core/buildchain-publication-authority.js",
-      "digest": "sha256:3aaf784f43534ad7191e369417760a872973f381dd753a4b1eec22b524f24790",
+      "digest": "sha256:abc25223046d3329ae970871c85187ca02c86f1d72ee9c2a28c2749babe3f11a",
       "summary": "Buildchain-owned closed-world publication authority descriptor registry.",
       "capabilityGroup": "release-passport-trust",
       "audience": [
@@ -30480,7 +30485,7 @@
       "specifier": "@kungfu-tech/buildchain/github-governance-authority",
       "export": "./github-governance-authority",
       "target": "./packages/core/github-governance-authority.js",
-      "digest": "sha256:4eb7b9a3616b16178062cc88d430f0fb3bd11c16c8e926ebc9fd98396859732c",
+      "digest": "sha256:f90f7b17d84e0c9a13680a89270437e6792836b56579068e1595c5509feb358b",
       "summary": "Fail-closed GitHub ownership, effective-policy, managed-zone admission, rollout-plan, and immutable receipt APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -30788,7 +30793,7 @@
       "specifier": "@kungfu-tech/buildchain/next-development-projection",
       "export": "./next-development-projection",
       "target": "./packages/core/next-development-projection.js",
-      "digest": "sha256:9dbc60f511bfca92fb8160024ec58454212e20b7c17df01345e4a2e65ca86b3f",
+      "digest": "sha256:b0d84f5d2853892cd1564f5fb6d2b131c963ee57f1531a3ea480e489e9969eb7",
       "summary": "Canonical generated config, Agent, workflow-header, and manual projections for the next-development transition contract.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -31156,7 +31161,7 @@
       "specifier": "@kungfu-tech/buildchain/buildchain-kfd-claims",
       "export": "./buildchain-kfd-claims",
       "target": "./packages/core/buildchain-kfd-claims.js",
-      "digest": "sha256:8bfde25d056cfdce1e84ceb71d75f5790b41d61db6f60e73d8f33fc2077e9331",
+      "digest": "sha256:82e513efff1070a681e944f225dd82932fb440f999af3088632540e6db2d54d0",
       "summary": "Buildchain self KFD claim registry, witnesses, and public claim APIs.",
       "capabilityGroup": "kfd-trust",
       "audience": [
@@ -31189,12 +31194,12 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:60208f0862195df44b27ada15e474ff1808dee6d492cd6303402b92fd72f06bc"
+      "digest": "sha256:78d1e3f0e476823b339b9e4515808e14f56ff2a1e7456f8a62f2c63b8ffa79c4"
     },
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:359d5dd02044c10cc82ba8b76c9f290bc335ad0fd0567f3cb6f50ae64bebac13"
+      "digest": "sha256:cc63793fb6b1dfeb7d362d2d29e139f89fa871cc57ff7ed7fe196bbba6e2ee63"
     },
     {
       "id": "build-facts",

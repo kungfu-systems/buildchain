@@ -64,7 +64,7 @@
     },
     {
       "id": "self-dogfood-caller",
-      "injectionTarget": ".github/workflows/universal-bootstrap-dogfood.yml",
+      "injectionTarget": ".github/workflows/self-ops-bootstrap-dogfood.yml",
       "recoveryRoute": "consumer-equivalent-recovery-shell",
       "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
     }

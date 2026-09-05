@@ -286,7 +286,7 @@ test("daily, weekly, and monthly callers remain thin reusable workflow policy", 
   for (const cadence of ["daily", "weekly", "monthly"]) {
     const caller = fs.readFileSync(
       new URL(
-        `../.github/workflows/engineering-housekeeper-${cadence}.yml`,
+        `../.github/workflows/self-ops-housekeeping-${cadence}.yml`,
         import.meta.url,
       ),
       "utf8",

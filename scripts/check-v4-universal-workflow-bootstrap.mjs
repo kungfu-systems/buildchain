@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { projectWorkflowIdentities } from "./workflow-taxonomy.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -25,16 +26,11 @@ const fileRoot = (relative) =>
     .digest("hex")}`;
 
 const workflowRoot = path.join(root, ".github/workflows");
-const discovered = fs
-  .readdirSync(workflowRoot)
+const discovered = projectWorkflowIdentities(root, fs.readdirSync(workflowRoot)
   .filter((name) => /\.ya?ml$/u.test(name))
-  .map((name) => `.github/workflows/${name}`)
-  .filter((relative) =>
-    /(?:^|\n)\s*workflow_call:\s*(?:\n|$)/u.test(
-      fs.readFileSync(path.join(root, relative), "utf8"),
-    ),
-  )
-  .sort();
+  .map((name) => ({ path: `.github/workflows/${name}`, text: fs.readFileSync(path.join(workflowRoot, name), "utf8") })))
+  .filter((entry) => /(?:^|\n)\s*workflow_call:\s*(?:\n|$)/u.test(entry.text))
+  .map((entry) => entry.path).sort();
 
 assert.equal(
   contract.schema,

@@ -15,43 +15,43 @@
       ".github/workflows/.publication-authority.yml",
       ".github/workflows/.release-candidate-promote.yml",
       ".github/workflows/.web-surface.yml",
-      ".github/workflows/auditable-demo.yml",
-      ".github/workflows/binary-release-assets.yml",
-      ".github/workflows/build-surface-fixture.yml",
+      ".github/workflows/self-build-demo-dogfood.yml",
+      ".github/workflows/self-release-binary-assets.yml",
+      ".github/workflows/self-build-fixture.yml",
       ".github/workflows/build.yml",
-      ".github/workflows/buildchain-alpha-self-dogfood.yml",
-      ".github/workflows/buildchain-dev-delivery.yml",
-      ".github/workflows/buildchain-ref-promotion-recovery.yml",
-      ".github/workflows/buildchain-ref-promotion.yml",
-      ".github/workflows/buildchain-patrol-daily.yml",
-      ".github/workflows/buildchain-patrol-monthly.yml",
-      ".github/workflows/buildchain-patrol-weekly.yml",
-      ".github/workflows/buildchain-stable-candidate-patrol.yml",
+      ".github/workflows/self-build-alpha-dogfood.yml",
+      ".github/workflows/self-ops-dev-delivery.yml",
+      ".github/workflows/self-ops-promotion-recovery.yml",
+      ".github/workflows/self-release-promote.yml",
+      ".github/workflows/self-ops-patrol-daily.yml",
+      ".github/workflows/self-ops-patrol-monthly.yml",
+      ".github/workflows/self-ops-patrol-weekly.yml",
+      ".github/workflows/self-ops-stable-candidate-patrol.yml",
       ".github/workflows/dev-alpha-candidate-patrol.yml",
       ".github/workflows/dev-pr-auto-merge.yml",
       ".github/workflows/github-artifact-attestation.yml",
-      ".github/workflows/npm-publish.yml",
+      ".github/workflows/self-release-npm-dry-run.yml",
       ".github/workflows/paper-release-sealed.yml",
       ".github/workflows/paper-release.yml",
       ".github/workflows/patrol-observed-evidence.yml",
       ".github/workflows/release-candidate-promote.yml",
-      ".github/workflows/release-line-bootstrap.yml",
-      ".github/workflows/release-new-version.yml",
+      ".github/workflows/self-release-line-open.yml",
+      ".github/workflows/self-release-new-version-compat.yml",
       ".github/workflows/release-propagation.yml",
       ".github/workflows/release-tail.yml",
       ".github/workflows/stable-candidate-patrol.yml",
-      ".github/workflows/v4-publication-rehearsal-dogfood.yml",
-      ".github/workflows/v4-declarative-release-tail-dogfood.yml"
+      ".github/workflows/self-release-rehearsal-dogfood.yml",
+      ".github/workflows/self-release-tail-dogfood.yml"
     ],
     "unknownTopologyPolicy": "fail-closed"
   },
   "semanticScope": {
     "workflowPaths": [
       ".github/workflows/.release-candidate-promote.yml",
-      ".github/workflows/buildchain-ref-promotion-recovery.yml",
-      ".github/workflows/buildchain-ref-promotion.yml",
+      ".github/workflows/self-ops-promotion-recovery.yml",
+      ".github/workflows/self-release-promote.yml",
       ".github/workflows/release-candidate-promote.yml",
-      ".github/workflows/v4-declarative-release-tail-dogfood.yml"
+      ".github/workflows/self-release-tail-dogfood.yml"
     ],
     "excludedMechanisms": [
       "Paper product release",
@@ -78,14 +78,21 @@
       "packages/core/v4-publication-rehearsal.js"
     ],
     "runtimeSelectors": [
+      ".github/workflows/.build-engine.yml",
       ".github/workflows/.build.yml",
       ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.release-promote.yml",
       ".github/workflows/.web-surface.yml",
-      ".github/workflows/buildchain-ref-promotion-recovery.yml",
-      ".github/workflows/buildchain-ref-promotion.yml",
       ".github/workflows/paper-release.yml",
+      ".github/workflows/public-build-publication.yml",
+      ".github/workflows/public-ops-tail-reseal.yml",
+      ".github/workflows/public-release-paper.yml",
+      ".github/workflows/public-release-promote.yml",
+      ".github/workflows/public-release-web.yml",
       ".github/workflows/publication-artifact.yml",
       ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/self-ops-promotion-recovery.yml",
+      ".github/workflows/self-release-promote.yml",
       ".github/workflows/v4-tail-reseal.yml",
       "packages/core/buildchain-contract.js",
       "packages/core/v4-runtime-ref-resume-authority.js",
@@ -105,6 +112,7 @@
     "runtimeEngines": ["actions/v4-release-candidate-promote/index.js"],
     "terminalProjections": [
       ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.release-promote.yml",
       "actions/v4-release-candidate-promote/index.js",
       "packages/core/v4-release-invocation.js",
       "scripts/v4-universal-workflow-engine.mjs"
@@ -196,7 +204,7 @@
       "actions/promote-buildchain-ref/lib.js"
     ],
     "freshEntry": ".github/workflows/release-candidate-promote.yml",
-    "recoveryEntry": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+    "recoveryEntry": ".github/workflows/self-ops-promotion-recovery.yml",
     "forbiddenLegacyEnginePatterns": [
       "legacy-promote",
       "v4-declarative-promote",
@@ -265,7 +273,7 @@
         "reusableEdges": []
       },
       {
-        "path": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+        "path": ".github/workflows/self-ops-promotion-recovery.yml",
         "triggers": ["workflow_dispatch"],
         "jobs": [
           "resume|reusable-call|kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write"
@@ -275,7 +283,7 @@
         ]
       },
       {
-        "path": ".github/workflows/buildchain-ref-promotion.yml",
+        "path": ".github/workflows/self-release-promote.yml",
         "triggers": ["workflow_dispatch", "workflow_run:completed"],
         "jobs": [
           "classify-workflow-run|runner|-|read|-|-|-",
@@ -301,7 +309,7 @@
         ]
       },
       {
-        "path": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+        "path": ".github/workflows/self-release-tail-dogfood.yml",
         "triggers": ["workflow_dispatch"],
         "jobs": [
           "publish|reusable-call|kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha|-|-|-|-"

@@ -300,7 +300,7 @@ test("CLI and public self-dogfood workflow expose the same public boundary", () 
   assert.equal(JSON.parse(completed.stdout).gateResult.status, "passed");
 
   const caller = fs.readFileSync(
-    path.join(root, ".github/workflows/v4-adopter-delivery-dogfood.yml"),
+    path.join(root, ".github/workflows/self-build-adopter-dogfood.yml"),
     "utf8",
   );
   assert.match(

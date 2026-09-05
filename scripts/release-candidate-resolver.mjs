@@ -12,7 +12,7 @@ import { writeGitHubOutputs } from "./build-contract-core.mjs";
 import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
 import { v4PublicationQualificationRoot, validateV4PublicationQualificationReceipt } from "../packages/core/v4-publication-qualification.js";
 
-const DEFAULT_WORKFLOW_FILE = "build-surface-fixture.yml";
+const DEFAULT_WORKFLOW_FILE = "self-build-fixture.yml";
 function env(name, fallback = "") {
   return process.env[name] || fallback;
 }

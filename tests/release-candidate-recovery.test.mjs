@@ -175,7 +175,7 @@ function fixture(overrides = {}) {
     candidateRepository: "kungfu-systems/buildchain",
     targetRepository: "kungfu-systems/buildchain",
     expectedRunId: "100",
-    expectedWorkflowFile: "build-surface-fixture.yml",
+    expectedWorkflowFile: "self-build-fixture.yml",
     expectedWorkflowName: "Build Surface Fixture",
     channel: "alpha",
     targetRef: "alpha/v3/v3.0",
@@ -195,7 +195,7 @@ function fixture(overrides = {}) {
       headSha: SOURCE_SHA,
       headBranch: "feature/recovery",
     },
-    workflow: { path: ".github/workflows/build-surface-fixture.yml", name: "Build Surface Fixture", state: "active" },
+    workflow: { path: ".github/workflows/self-build-fixture.yml", name: "Build Surface Fixture", state: "active" },
     pullRequest: {
       number: 42,
       merged: true,
@@ -1035,11 +1035,11 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "utf8",
   );
   const recovery = fs.readFileSync(
-    new URL("../.github/workflows/buildchain-ref-promotion-recovery.yml", import.meta.url),
+    new URL("../.github/workflows/self-ops-promotion-recovery.yml", import.meta.url),
     "utf8",
   );
   const refPromotion = fs.readFileSync(
-    new URL("../.github/workflows/buildchain-ref-promotion.yml", import.meta.url),
+    new URL("../.github/workflows/self-release-promote.yml", import.meta.url),
     "utf8",
   );
   const candidateAdapter = fs.readFileSync(

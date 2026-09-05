@@ -59,11 +59,11 @@ jobs:
       target-sha: ${{ inputs.sha }}
       package-manager: pnpm
       artifact-name: libnode-shaped
-      release-candidate-workflow-file: build-surface-fixture.yml
+      release-candidate-workflow-file: self-build-fixture.yml
       release-candidate-workflow-name: Build Surface Fixture
       resume-candidate-repository: ${{ inputs['resume-candidate-repository'] }}
       resume-candidate-run-id: ${{ inputs['resume-candidate-run-id'] }}
-      resume-expected-workflow-file: build-surface-fixture.yml
+      resume-expected-workflow-file: self-build-fixture.yml
       resume-expected-workflow-name: Build Surface Fixture
       resume-expected-source-tree: ${{ inputs['resume-expected-source-tree'] }}
       resume-expected-candidate-root: ${{ inputs['resume-expected-candidate-root'] }}
@@ -84,7 +84,7 @@ jobs:
       release-passport-buildchain-self-kfd: true
       publication-auto-admission: true
       publication-auto-no-gate: true
-      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion-recovery.yml
+      publication-publisher-workflow-path: .github/workflows/self-ops-promotion-recovery.yml
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain
       publication-package-name: "@kungfu-tech/buildchain"
