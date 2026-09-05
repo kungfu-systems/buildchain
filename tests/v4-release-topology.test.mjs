@@ -405,7 +405,11 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
   ]);
   assert.deepEqual(
     topologyLedger.authorityClosure.privilegedExecutableClosure.entrypoints,
-    ["actions/v4-release-candidate-promote/index.js"],
+    [
+      "actions/v4-release-candidate-promote/index.js",
+      "scripts/binary-publication-evidence.mjs",
+      "scripts/v4-publication-settlement.mjs",
+    ],
   );
   assert.match(
     topologyLedger.authorityClosure.privilegedExecutableClosure.root,

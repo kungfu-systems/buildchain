@@ -21,6 +21,8 @@ function read(relative) {
 const LOCAL_MODULE_EXTENSIONS = ["", ".js", ".mjs", ".cjs"];
 const PRIVILEGED_ENTRYPOINTS = [
   "actions/v4-release-candidate-promote/index.js",
+  "scripts/binary-publication-evidence.mjs",
+  "scripts/v4-publication-settlement.mjs",
 ];
 
 function localModuleSpecifiers(source) {

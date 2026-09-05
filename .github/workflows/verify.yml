@@ -67,6 +67,9 @@ jobs:
   check:
     needs: stage-capsule-checkpoints
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v7.0.0
         with:
@@ -81,10 +84,6 @@ jobs:
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: "24"
-      - name: Enforce public consumer-only v4 dogfood
-        run: node scripts/check-v4-public-dogfood-contract.mjs
-      - name: Enforce v4 floating consumer policy contract
-        run: node scripts/check-v4-floating-consumer-policy-contract.mjs
       - uses: actions/setup-go@v6.5.0
         with:
           go-version: "1.25.x"
@@ -100,13 +99,23 @@ jobs:
           pnpm --version
       - name: Install Buildchain runtime dependencies
         run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
+      - name: Select full source, exact proof, or version-state validation
+        id: source-verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/source-verification-evidence.mjs plan
+      - name: Record full source verification identity
+        if: ${{ github.event_name == 'merge_group' && steps.source-verification.outputs.decision == 'execute' }}
+        run: node scripts/source-verification-evidence.mjs start
       - name: Validate declared check lifecycle
+        if: ${{ steps.source-verification.outputs.decision == 'execute' }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs validate
           --cwd .
           --require-version-state
           --require-lifecycle-stages install,verify
       - name: Run declared install lifecycle
+        if: ${{ steps.source-verification.outputs.decision == 'execute' }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs lifecycle run install
           --cwd .
@@ -114,7 +123,8 @@ jobs:
           --artifact-name buildchain-check-install
           --manifest-path .buildchain/artifacts/check-install-manifest.json
           --summary-path .buildchain/artifacts/check-install-summary.json
-      - name: Run declared verify lifecycle
+      - name: Execute full source tests and generated artifact checks
+        if: ${{ steps.source-verification.outputs.decision == 'execute' }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify
           --cwd .
@@ -122,10 +132,25 @@ jobs:
           --artifact-name buildchain-check
           --manifest-path .buildchain/artifacts/check-manifest.json
           --summary-path .buildchain/artifacts/check-summary.json
+      - name: Seal successful full source verification evidence
+        if: ${{ github.event_name == 'merge_group' && steps.source-verification.outputs.decision == 'execute' }}
+        run: node scripts/source-verification-evidence.mjs seal
+      - name: Upload immutable source verification proof
+        if: ${{ github.event_name == 'merge_group' && steps.source-verification.outputs.decision == 'execute' }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: source-verification-${{ github.sha }}-${{ github.run_attempt }}
+          path: .buildchain/source-verification/evidence.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
       - name: Upload check evidence
         if: always()
         uses: actions/upload-artifact@v7.0.1
         with:
           name: buildchain-check
-          path: .buildchain/artifacts/
+          path: |
+            .buildchain/artifacts/
+            .buildchain/source-verification/decision.json
+          include-hidden-files: true
           if-no-files-found: error

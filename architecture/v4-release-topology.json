@@ -107,16 +107,22 @@
       ".github/workflows/.release-candidate-promote.yml",
       "actions/v4-release-candidate-promote/index.js",
       "packages/core/v4-release-invocation.js",
+      "scripts/v4-publication-settlement.mjs",
       "scripts/v4-universal-workflow-engine.mjs"
     ],
     "privilegedExecutableClosure": {
-      "entrypoints": ["actions/v4-release-candidate-promote/index.js"],
+      "entrypoints": [
+        "actions/v4-release-candidate-promote/index.js",
+        "scripts/binary-publication-evidence.mjs",
+        "scripts/v4-publication-settlement.mjs"
+      ],
       "modules": [
         "actions/promote-buildchain-ref/github-release.js",
         "actions/promote-buildchain-ref/internal/version-state.js",
         "actions/promote-buildchain-ref/reuse-complete-release.js",
         "actions/promote-buildchain-ref/v4-provider-plane.js",
         "actions/v4-release-candidate-promote/index.js",
+        "actions/v4-release-candidate-promote/next-development-queue.js",
         "actions/v4-release-candidate-promote/product-provider-adapters.js",
         "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
         "actions/v4-release-candidate-promote/product-provider.js",
@@ -171,15 +177,18 @@
         "packages/core/v4-runtime-selector-persistence.js",
         "packages/core/web-surface-publication-candidate.js",
         "packages/core/workflow-yaml-contract.js",
-        "scripts/ensure-github-release.mjs"
+        "scripts/binary-publication-evidence.mjs",
+        "scripts/ensure-github-release.mjs",
+        "scripts/release-asset-client.mjs",
+        "scripts/v4-publication-settlement.mjs"
       ],
-      "root": "sha256:288290a0da4e608869026688fc4981ded81cbc97b9e7bd7c031b9b8369653a39"
+      "root": "sha256:58d343a7ec944ebe2c12a04c389d362733de196b7d34e39e330d2b8053c5e3f6"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/v4-domain-wasm.js",
       "metadata": "packages/core/v4-domain-wasm-artifact.js",
       "artifact": "packages/core/buildchain-v4-domain.wasm",
-      "artifactRoot": "sha256:32a808ba9b749d1297c0ce4b7be1586afdae3d849e44f3f7ffb1742e572f5627",
+      "artifactRoot": "sha256:b18cb52d4a5ed682412fd6d8f3ab838d09f042e083452a9d2c49d469946d92e0",
       "distributedArtifacts": [
         "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
         "actions/release-tail/dist/buildchain-v4-domain.wasm",

@@ -330,7 +330,7 @@ async function ensureGeneratedCheck(context, repository, branch, sha) {
     request.octokit.rest.checks.create({
       owner,
       repo,
-      name: request.requiredStatusCheck || "check",
+      name: `Version-state projection / ${request.requiredStatusCheck || "check"}`,
       head_sha: sha,
       status: "completed",
       conclusion: "success",

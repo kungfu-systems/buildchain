@@ -24,6 +24,7 @@ import {
 import { discoverConfiguredDerivedVersionMaterial } from "../../packages/core/buildchain-config.js";
 import { createNextDevelopmentTransition } from "../../packages/core/next-development-transition.js";
 import { discoverVersionStateFiles } from "../promote-buildchain-ref/internal/version-state.js";
+import { assertNextDevelopmentPull } from "./next-development-queue.js";
 import { commitContainsReleaseState } from "./product-provider-github-adapters.js";
 
 const NEXT_DEVELOPMENT_POLL_MS = 15_000;
@@ -166,6 +167,7 @@ export async function advanceAlphaNextDevelopment({
     base: devBranch,
     head: `${owner}:${head}`,
   });
+  if (listed.data.length > 1) throw new Error("ambiguous next-development pull requests");
   let pull = listed.data[0];
   if (!pull)
     pull = (
@@ -178,8 +180,7 @@ export async function advanceAlphaNextDevelopment({
         body: `Advance protected development to ${transition.target.version} after the completed Alpha publication.`,
       })
     ).data;
-  if (pull.state === "closed" && !pull.merged_at)
-    throw new Error("next-development pull request was closed without merge");
+  assertNextDevelopmentPull(pull, headSha, devBranch);
   if (!pull.merged_at)
     await enqueueNextDevelopmentPullRequest({
       mutationOctokit,
@@ -193,8 +194,8 @@ export async function advanceAlphaNextDevelopment({
       await octokit.rest.pulls.get({ owner, repo, pull_number: pull.number })
     ).data;
   }
-  if (!pull.merged_at)
-    throw new Error("next-development merge queue timed out");
+  assertNextDevelopmentPull(pull, headSha, devBranch);
+  if (!pull.merged_at) throw new Error("next-development merge queue timed out");
   const mergedDevSha = await readRef(
     octokit,
     repository,

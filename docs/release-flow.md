@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-05
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-09-05
   invisible_context: not asserted
 ---
 
@@ -333,3 +333,37 @@ the current target ref contains or corresponds to the recorded
 `release_material_sha`. It must then tolerate exact tags, dev refs, or alpha
 refs that have already moved and continue filling any missing floating tags
 before writing the transaction state as `complete`.
+
+## What each verification proves
+
+| Evidence | Meaning and reuse boundary |
+| --- | --- |
+| Full source execution | `pnpm run check` runs source tests, Rust gates, policy checks and generated artifact checks. Each Node test file runs once; the focused `check:v4-contracts` command still includes its 22 contract test files. |
+| Merge queue proof | A successful full merge-group run seals its exact source SHA/tree, workflow, check definition, WASM runtime, toolchain versions, dependency locks, hosted image and platform. The proof expires after six hours and is verified against the completed GitHub run attempt and artifact archive digest. |
+| Push reuse | A Dev push may reuse that exact full execution. Its summary links the original run and proof; it does not claim to have rerun tests. Missing, failed, expired, ambiguous, tampered or unavailable evidence executes the full check. |
+| Version-state projection | Requires an authenticated full-source proof for the exact base and an ancestor-bound delta containing only declared version files and derived material. The base generator reconstructs every tracked byte, including derived digests. Any source, workflow, lock, configuration, file-mode or unexplained output change executes the full check. Projection results cannot issue a new full-source proof. |
+| Generated version-state check | `Version-state projection / <context>` describes generated material. It never uses a protected full-source check's name on v4. Required PR lineage, review and merge queue gates remain independent. |
+| Candidate qualification | Validates the sealed candidate, admitted runtime, source lock and publication authority. Source test reuse grants no provider mutation authority. |
+| Provider readback and settlement | Verifies actual tags, npm integrity, release assets and native receipt roots. Publication, next-development and binary distribution are reported separately. |
+
+The protected `check` context keeps its stable name while step names and summaries
+identify full execution, exact proof reuse, or generated projection. The two
+consumer-policy checks execute inside the root check, without duplicate Verify
+pre-steps. The root check uses the Rust-only contract command before its complete
+Node suite, removing 22 repeated test-file executions without removing tests.
+
+The public v4 consumer remains a thin floating-channel caller with both locks.
+Linux, macOS and Windows each execute the declared lifecycle, clean-process
+restore and runtime/source binding. Their platform and called-runtime identities
+differ from the source Verify lane, so a Linux source proof cannot replace them.
+The Stage Capsule checkpoint matrix also retains all three platforms. Shared
+platform-independent logic lives in the root check and public runtime; there is
+no Buildchain-only dogfood exception or persisted candidate runtime selector.
+
+A local Linux sample on 2026-09-05 measured the original full check at
+`a41c00a0c0b2dbd57c238cd9b326b167a1d27ca8` at 148.772 seconds and the updated check
+at 126.731 seconds, both exit 0. The original plan executed 226 Node test files
+plus 22 duplicate selections; the updated plan executes all 231 files once,
+including the new negative and recovery tests (2,047 tests). These are individual
+local measurements with existing tool caches; hosted queue/push reuse is proved
+separately by the exact run attempt and evidence roots in each job summary.
