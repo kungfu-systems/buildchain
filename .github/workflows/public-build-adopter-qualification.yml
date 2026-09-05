@@ -178,7 +178,7 @@ jobs:
         id: policy
         env:
           BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
-          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/v4-adopter-delivery.yml
+          BUILDCHAIN_INVOKED_WORKFLOW: ${{ startsWith(job.workflow_ref, 'kungfu-systems/buildchain/.github/workflows/public-build-adopter-qualification.yml@') && '.github/workflows/public-build-adopter-qualification.yml' || '.github/workflows/v4-adopter-delivery.yml' }}
           BUILDCHAIN_INVOCATION_SOURCE_PATH: ${{ inputs['invocation-source-path'] || (github.repository == 'kungfu-systems/buildchain' && '.github/workflows/self-build-adopter-dogfood.yml' || '') }}
           BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
