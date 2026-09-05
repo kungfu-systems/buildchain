@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1441,
-  "fencingCounter": 212,
+  "generation": 1442,
+  "fencingCounter": 213,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,42 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:9604ca2449a7266c67458932e4df86315287ed067c4b70348f76c957ab78b02a",
+    "pullRequestNumber": 3508,
+    "sourceHead": "853a1dfd93032fd341b6d85a8a3ca647a698f980",
+    "sourceRoot": "sha256:4aa1a0d588f6ce4430e7b68b9ea1798c6711a364b4fd25a610d441d57a89a931",
+    "sourceIdentityRoot": "sha256:6863902e0ee20c181dde3e8da4d6cc0e3f92c5dbaf7ce06b0fc6b0974a88decb",
+    "sourcePatchRoot": "sha256:18f67db2d04b106694f394460e5427e5320387c0124ed501925cee7c4268d1af",
+    "sourceProofRoot": "sha256:2d24737f5dee53607da24d0054e4d0897abde669602182c900b776c46931b6f2",
+    "planRoot": "sha256:7ea5137d569d4daf06abd20de9d58bbe4bc67308221112a159277e19c2e71272",
+    "closureRoot": "sha256:f1054f0006b18401190b1bb74c7e0ee25fa4d7ecf452dcbdd690b5cb4cd5638b",
+    "dependencyRoot": "sha256:adee0e88862e93cb5b0f90356fb75da98809e0e4a34940e0a0b5d026f4d9e336",
+    "toolchainRoot": "sha256:9b57c08d4b1924866f907e399f5b4d64c8e204ac52e24d80dbce8a0f0616a244",
+    "affectedPaths": [
+      ".github/actionlint.yaml",
+      ".github/workflows/public-build-adopter-qualification.yml",
+      ".github/workflows/public-build-stage-capsule-canary.yml",
+      ".github/workflows/v4-adopter-delivery.yml",
+      ".github/workflows/v4-stage-capsule-canary.yml",
+      "architecture/maintainability-policy.json",
+      "scripts/workflow-taxonomy.mjs",
+      "tests/workflow-taxonomy.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 33965197415,
+    "deliveryClass": "non-native-fast",
+    "priority": "ordinary",
+    "generation": 213,
+    "expectedOldStateRoot": "sha256:a52e81193bf0a0583c449ed1e3fce40bf5932dc57b2b3a95264b151bdb359cff",
+    "issuedAt": "2026-09-05T12:32:18.245Z",
+    "expiresAt": "2026-09-05T13:32:18.245Z",
+    "fencingToken": "sha256:f5c81440b31a83c0f80e6cc90211b57029add71138184527f44abb01cbe64d0d",
+    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -11254,10 +11289,10 @@
       "sourceWorkflowRunId": 33965197415,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-05T12:25:18.394Z",
-      "updatedAt": "2026-09-05T12:25:18.394Z",
+      "updatedAt": "2026-09-05T12:32:18.245Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".github/actionlint.yaml",
@@ -11363,6 +11398,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-05T12:32:12.522Z",
-  "stateRoot": "sha256:a52e81193bf0a0583c449ed1e3fce40bf5932dc57b2b3a95264b151bdb359cff"
+  "updatedAt": "2026-09-05T12:32:18.245Z",
+  "stateRoot": "sha256:6df0863372df98c15d8444e2e9df0b79b5d32758349919cbab5cc3d862e516db"
 }
