@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
 import { verifyVersionStateDelta } from "../scripts/verify-version-state-delta.mjs";
 import { planVersionProjection } from "../scripts/source-verification-evidence.mjs";
@@ -114,6 +114,15 @@ test("version-only delta regenerates all declared outputs from the exact base", 
     () => verifyVersionStateDelta({ ...f, headSha: f.commit() }),
     /regeneration mismatch/u,
   );
+});
+
+test("version projection ignores ambient archive line-ending conversion", (t) => {
+  const { cwd, baseSha, headSha, nodeModules } = fixture(t);
+  const moduleUrl = new URL("../scripts/verify-version-state-delta.mjs", import.meta.url).href;
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e",
+    `import { verifyVersionStateDelta } from ${JSON.stringify(moduleUrl)}; verifyVersionStateDelta(${JSON.stringify({ cwd, baseSha, headSha, nodeModules })});`,
+  ], { encoding: "utf8", env: { ...process.env, GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "core.autocrlf", GIT_CONFIG_VALUE_0: "true" } });
+  assert.equal(result.status, 0, result.stderr);
 });
 
 test("undeclared source, dependency, deletion and metadata changes cannot become projections", (t) => {
