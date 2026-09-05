@@ -1030,8 +1030,8 @@ jobs:
       release-candidate-artifact: ${{ needs.qualify.outputs.candidate-artifact }}
       release-candidate-action: canonical-release-invocation
       release-candidate-outcome: success
-      promotion-outcome: success
-      finalization-needed: "false"
+      promotion-outcome: ${{ steps.publication-settlement.outputs.status == 'complete' && 'success' || 'failure' }}
+      finalization-needed: ${{ steps.publication-settlement.outputs.status != 'complete' }}
       release-tail-transaction-state: ${{ steps.provider.outputs.transaction-state || steps.resume.outputs.transaction-state }}
       release-tail-declaration-root: ${{ steps.provider.outputs.declaration-root || steps.resume.outputs.declaration-root }}
       release-tail-transaction-root: ${{ steps.provider.outputs.transaction-root || steps.resume.outputs.transaction-root }}
@@ -1039,7 +1039,7 @@ jobs:
       release-tail-receipt-roots-json: ${{ steps.provider.outputs.receipt-roots-json || steps.resume.outputs.receipt-roots-json }}
       release-invocation-root: ${{ steps.provider.outputs.release-invocation-root || steps.resume.outputs.release-invocation-root }}
       release-transaction-root: ${{ steps.provider.outputs.release-transaction-root || steps.resume.outputs.release-transaction-root }}
-      release-receipt-root: ${{ steps.provider.outputs.release-receipt-root || steps.resume.outputs.release-receipt-root }}
+      release-receipt-root: ${{ steps.publication-settlement.outputs.receipt-root || steps.provider.outputs.release-receipt-root || steps.resume.outputs.release-receipt-root }}
     steps:
       - name: Checkout the admitted protected channel state
         uses: actions/checkout@v7.0.0
@@ -1133,6 +1133,15 @@ jobs:
         uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
         with: *provider-inputs
 
+      - name: Retain completed publication independently of next-development
+        id: publication-settlement
+        if: ${{ always() && hashFiles('.buildchain/release-tail/release-receipt.json') != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SHA: ${{ needs.qualify.outputs.requested-sha }}
+          APPLY_OUTCOME: ${{ (steps.resume.outcome == 'success' || steps.resume.outcome == 'failure') && steps.resume.outcome || steps.provider.outcome }}
+        run: node .buildchain/runtime/scripts/v4-publication-settlement.mjs .buildchain
+
       - name: Retain canonical APPLY and ReleaseReceipt evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.1
@@ -1160,7 +1169,7 @@ jobs:
       controller-receipt-status: ${{ steps.verify.outputs.status || steps.projection-state.outputs.status }}
     steps:
       - name: Checkout the admitted receipt verifier
-        if: ${{ needs.apply.result == 'success' }}
+        if: ${{ needs.qualify.outputs.action == 'promote' && !inputs.dry-run }}
         uses: actions/checkout@v7.0.0
         with:
           repository: kungfu-systems/buildchain
@@ -1169,7 +1178,7 @@ jobs:
           persist-credentials: false
 
       - name: Restore canonical APPLY evidence
-        if: ${{ needs.apply.result == 'success' }}
+        if: ${{ needs.qualify.outputs.action == 'promote' && !inputs.dry-run }}
         uses: actions/download-artifact@v7.0.0
         with:
           name: buildchain-v4-release-apply-${{ needs.qualify.outputs.requested-sha }}
@@ -1177,43 +1186,30 @@ jobs:
 
       - name: Verify the single terminal receipt
         id: verify
-        if: ${{ needs.apply.result == 'success' }}
+        env:
+          CANDIDATE_SHA: ${{ needs.qualify.outputs.requested-sha }}
+        if: ${{ needs.qualify.outputs.action == 'promote' && !inputs.dry-run }}
         shell: bash
         run: |
           node --input-type=module <<'NODE'
           import fs from "node:fs";
-          import {
-            createV4ReleaseInvocation,
-            createV4ReleaseReceipt,
-            createV4ReleaseTransaction,
-          } from "./.buildchain/runtime/packages/core/v4-release-invocation.js";
-          const base = ".buildchain/evidence/release-tail";
-          const invocation = JSON.parse(fs.readFileSync(`${base}/release-invocation.json`, "utf8"));
-          const transaction = JSON.parse(fs.readFileSync(`${base}/release-transaction.json`, "utf8"));
-          const storedReceipt = JSON.parse(fs.readFileSync(`${base}/release-receipt.json`, "utf8"));
-          const invocationProjection = createV4ReleaseInvocation(invocation);
-          const transactionProjection = createV4ReleaseTransaction({
-            invocationRoot: transaction.invocationRoot,
-            publisherRoot: transaction.publisherRoot,
-            runtimeRoot: transaction.runtimeRoot,
-            providerRoot: transaction.providerRoot,
-            parentRoot: transaction.parentRoot,
+          const { readApplyDocuments, verifyPublicationSettlement } = await import("./.buildchain/runtime/scripts/v4-publication-settlement.mjs");
+          const documents = readApplyDocuments(".buildchain/evidence");
+          verifyPublicationSettlement(documents, {
+            repository: process.env.GITHUB_REPOSITORY,
+            candidateSha: process.env.CANDIDATE_SHA,
+            tag: documents.invocation.target.tag,
+            sourceSha: documents.product.publication.releaseSha,
           });
-          const { receiptRoot, ...receipt } = storedReceipt;
-          const receiptProjection = createV4ReleaseReceipt(receipt);
-          if (transaction.invocationRoot !== invocationProjection.roots.invocationRoot ||
-              transaction.transactionRoot !== transactionProjection.transactionRoot ||
-              receipt.transactionRoot !== transactionProjection.transactionRoot ||
-              receiptProjection.receiptRoot !== receiptRoot || receipt.outcome !== "complete") {
-            throw new Error("terminal ReleaseReceipt lineage does not verify");
-          }
+          const storedReceipt = documents.receipt;
+          const receiptRoot = storedReceipt.receiptRoot;
           fs.appendFileSync(process.env.GITHUB_OUTPUT,
             `receipt-json=${JSON.stringify(storedReceipt)}\nreceipt-root=${receiptRoot}\nstatus=complete\n`);
           NODE
 
       - name: Record non-terminal projection state
         id: projection-state
-        if: ${{ needs.apply.result != 'success' }}
+        if: ${{ always() && steps.verify.outcome != 'success' }}
         shell: bash
         run: |
           echo "status=${{ inputs.dry-run && 'dry-run' || needs.qualify.outputs.action == 'noop' && 'noop' || 'blocked' }}" >> "$GITHUB_OUTPUT"
@@ -1227,4 +1223,6 @@ jobs:
             .buildchain/evidence/release-tail/release-invocation.json
             .buildchain/evidence/release-tail/release-transaction.json
             .buildchain/evidence/release-tail/release-receipt.json
+            .buildchain/evidence/release-tail/delivery-summary.json
+            .buildchain/evidence/release-tail/buildchain-publication-settlement.json
           if-no-files-found: error

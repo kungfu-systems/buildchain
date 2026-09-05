@@ -6,6 +6,7 @@ node_modules/
 crates/*/target/
 .buildchain/artifacts/
 .buildchain/diagnostics/
+.buildchain/dev-delivery/
 .buildchain/logs/
 .buildchain/tmp/
 .buildchain/runtime/

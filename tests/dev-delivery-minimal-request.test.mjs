@@ -40,7 +40,7 @@ for (const availableWorkflow of ["self-ops-dev-delivery.yml", "buildchain-dev-de
   const result = spawnSync("bash", [path.join(repositoryRoot, "scripts/dev-delivery-request.sh"), "7", "--json"], {
     cwd: repositoryRoot,
     encoding: "utf8",
-    env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
+    env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
   });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(JSON.parse(result.stdout).workflowId, availableWorkflow);
@@ -77,7 +77,7 @@ esac
   const result = spawnSync("bash", [path.join(repositoryRoot, "scripts/dev-delivery-request.sh"), "7", "--execute", "--json"], {
     cwd: repositoryRoot,
     encoding: "utf8",
-    env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, GITHUB_TOKEN: "test-token", BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
+    env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "test-token", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
   });
   assert.equal(result.status, 0, result.stderr);
   const payload = JSON.parse(fs.readFileSync(payloadPath, "utf8"));
@@ -136,7 +136,7 @@ esac
   const result = spawnSync("bash", [path.join(repositoryRoot, "scripts/dev-delivery-request.sh"), "7", "--execute", "--json"], {
     cwd: repositoryRoot,
     encoding: "utf8",
-    env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, GITHUB_TOKEN: "test-token", BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
+    env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "test-token", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
   });
   assert.equal(result.status, 0, result.stderr);
   const settleArgs = fs.readFileSync(settleArgsPath, "utf8").split("\n");

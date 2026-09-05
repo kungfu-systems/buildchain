@@ -118,7 +118,7 @@ test("the gate rejects legacy profiles and removal from protected Verify", () =>
     ".github/workflows/self-build-verify.yml",
     (text) =>
       text.replace(
-        "run: node scripts/check-v4-public-dogfood-contract.mjs",
+        "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
         "run: true",
       ),
   );
