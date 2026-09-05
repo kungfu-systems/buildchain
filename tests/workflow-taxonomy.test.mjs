@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { runInNewContext } from "node:vm";
 import {
   checkWorkflowTaxonomy,
   projectWorkflowIdentities,
@@ -20,6 +21,30 @@ const repository = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
+
+test("canonical and compatibility workflow calls bind their actual admission identity", () => {
+  const policy = readWorkflowTaxonomy(repository);
+  for (const id of ["v4-adopter-delivery", "v4-stage-capsule-canary"]) {
+    const entry = policy.entries.find((item) => item.id === id);
+    for (const invoked of [workflowPath(entry), entry.compatibility.path]) {
+      const source = fs.readFileSync(path.join(repository, invoked), "utf8");
+      const expression = source.match(
+        /BUILDCHAIN_INVOKED_WORKFLOW: \$\{\{ (.+) \}\}/u,
+      )?.[1];
+      assert.ok(
+        expression,
+        `${invoked} must bind its called-workflow identity`,
+      );
+      for (const ref of ["refs/tags/v4", "refs/tags/v4-alpha"]) {
+        const value = runInNewContext(expression, {
+          job: { workflow_ref: `kungfu-systems/buildchain/${invoked}@${ref}` },
+          startsWith: (text, prefix) => text.startsWith(prefix),
+        });
+        assert.equal(value, invoked);
+      }
+    }
+  }
+});
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-taxonomy-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
