@@ -1,0 +1,75 @@
+{
+  "authority": {
+    "authorizationSources": [
+      "exact-release-passport",
+      "core-policy",
+      "work-or-warrant",
+      "explicit-capability-grant",
+      "runtime-isolation"
+    ],
+    "grants": [],
+    "nonAuthorities": [
+      "first-party-identity",
+      "system-identity",
+      "kfd-compliance",
+      "product-system-metadata",
+      "package-metadata",
+      "registry-history",
+      "scan-output",
+      "standalone-generation"
+    ],
+    "productSystemRole": "assembly-and-distribution-metadata-only"
+  },
+  "capture": {
+    "binary": {
+      "binaryRoot": "sha256:892bf23d401a69e7bff278ad2428db9396777cb0d4e354d1a502bc984b3fa0dc",
+      "metadataContract": "kungfu-buildchain-standalone-binary",
+      "metadataRoot": "sha256:968e76c1177e35a2a9edc5d27fa8660e8e47750737b00dc59063003c3974477f",
+      "platformId": "linux-x64",
+      "runtimeDependencies": []
+    },
+    "networkIsolation": "docker-none",
+    "root": "sha256:36c4bda23b1424573a35c1e20b4ef835d428064524eeae60938906ffb1487318"
+  },
+  "demo": {
+    "claimBoundary": "This exact standalone-binary scenario proves deterministic local bootstrap behavior only; it does not grant release, repository, network, or production authority.",
+    "id": "beginner-bootstrap",
+    "title": "Buildchain beginner bootstrap"
+  },
+  "evidenceRoot": "sha256:21140927f309d728f9bf71d6bb9c1964b0474b436f5707b1df101e774ac3f64e",
+  "gate": {
+    "root": "sha256:ff4b36dea43b6f96fb198d26cc140e13aba955bfe5e32fff8cab1ada6eee2663"
+  },
+  "media": {
+    "profile": "responsive-web-delivery-v1",
+    "qualificationRoot": "sha256:72d39a0ca17cb9c2774bdd14b72e8911cf19ef0ec3666c799b3b2ce92cf46a95",
+    "root": "sha256:f6bc2b449da3f570c125d377a90222084501656f4f7301c0547638bdb0006c4f"
+  },
+  "passportRoot": "sha256:f075d1ab1e94a3eddf9d58a6f486bd5f235b771f8dae4b5b78d5f69b75063de8",
+  "product": {
+    "binaryName": "buildchain",
+    "displayName": "Buildchain",
+    "id": "buildchain"
+  },
+  "scenarioRoot": "sha256:0ebd716d5dd98ba90dd777c025a7717530be62b13951696556cac61607885648",
+  "schema": "buildchain.declarative-demo-release-passport/v1",
+  "source": {
+    "createdAt": "2026-09-05T14:44:04Z",
+    "digest": "sha256:71ec28f1089dd08f60138454d5bc096e43a223c4c11e5ecb21d9df4b188c0ec7",
+    "expiresAt": "2026-09-19T14:44:02Z",
+    "id": "9971386462",
+    "name": "buildchain-auditable-demo-binary-feab078f5d7c-33972665319-1",
+    "nodeId": "MDg6QXJ0aWZhY3Q5OTcxMzg2NDYy",
+    "repository": "kungfu-systems/buildchain",
+    "runAttempt": "1",
+    "runId": "33972665319",
+    "schema": "buildchain.github-artifact-coordinate/v1",
+    "sizeInBytes": 128913724,
+    "sourceSha": "feab078f5d7c9927a3525154003e321700e8ca30"
+  },
+  "status": "qualified",
+  "toolchain": {
+    "buildchainSha": "feab078f5d7c9927a3525154003e321700e8ca30",
+    "rendererImage": "ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:3a49708163fedaaabe07b45bba910026a1828151b5d4e9bbdaf0d62e75c927c1"
+  }
+}
