@@ -199,6 +199,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/check-maintainability.mjs`
 - `tests/maintainability.test.mjs`
 - `scripts/generate-v4-universal-workflow-facades.mjs`
+- `scripts/check-v4-release-topology.mjs`
 
 ## cli-command-registry
 
