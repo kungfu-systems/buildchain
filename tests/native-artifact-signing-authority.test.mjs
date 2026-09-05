@@ -467,7 +467,7 @@ test("Buildchain authority owns native credentials and performs provider verific
     "utf8",
   );
   const releaseVerify = fs.readFileSync(
-    path.join(root, ".github/workflows/release-verify.yml"),
+    path.join(root, ".github/workflows/self-build-release-verify-compat.yml"),
     "utf8",
   );
   const reusableDocs = fs.readFileSync(

@@ -265,7 +265,7 @@ in the release passport.
 
 Standalone binary publication is a separate consumer capability. The promotion
 wrapper does not assume that an npm-only repository provides
-`.github/workflows/binary-distribution.yml`. Repositories that own that workflow
+`.github/workflows/self-build-binary-distribution.yml`. Repositories that own that workflow
 opt in with `standalone-binary-distribution: true`; Buildchain's self-promotion
 does so explicitly. Once enabled, a missing or invalid binary workflow remains a
 hard failure rather than being silently skipped.
@@ -303,7 +303,7 @@ short-lived admission JSON in repository-specific workflow code:
 ```yaml
       publication-auto-admission: true
       publication-auto-no-gate: true
-      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-publisher-workflow-path: .github/workflows/self-release-promote.yml
       publication-product: Example Product
       publication-target: npm:@example/product
       publication-package-name: "@example/product"
@@ -339,7 +339,7 @@ an npm package identity:
 ```yaml
       publication-auto-admission: true
       publication-auto-no-gate: true
-      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-publisher-workflow-path: .github/workflows/self-release-promote.yml
       publication-product: Example Binary
       publication-target: github-release:example/example-binary
       publication-package-name: ""

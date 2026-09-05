@@ -158,9 +158,9 @@ to plans, reports, receipts, summaries, or artifacts.
 
 Buildchain dogfoods the reusable contract through three thin callers:
 
-- `engineering-housekeeper-daily.yml` uses a 30-day window and a 10-action cap;
-- `engineering-housekeeper-weekly.yml` uses a 45-day window and a 20-action cap;
-- `engineering-housekeeper-monthly.yml` uses a 60-day window and a 50-action cap.
+- `self-ops-housekeeping-daily.yml` uses a 30-day window and a 10-action cap;
+- `self-ops-housekeeping-weekly.yml` uses a 45-day window and a 20-action cap;
+- `self-ops-housekeeping-monthly.yml` uses a 60-day window and a 50-action cap.
 
 All three schedules run unattended apply with repository-wide mainline
 discovery. They delete only exact merged heads from the positive temporary

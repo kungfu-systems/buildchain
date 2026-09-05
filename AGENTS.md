@@ -79,6 +79,15 @@ pnpm install --frozen-lockfile
 pnpm run check
 ```
 
+Workflow paths are governed by [`architecture/workflow-taxonomy.json`](architecture/workflow-taxonomy.json)
+and the generated [`Workflow Catalog`](docs/workflow-catalog.md). Before adding,
+renaming, or editing workflow YAML, register its role (`public`, component `.`,
+or `self`) and category (`build`, `release`, or `ops`). Use the derived filename;
+do not invent prefixes, categories, or compatibility aliases. Edit canonical
+implementations, run `pnpm run generate:workflows`, and pass
+`pnpm run check:workflows` plus the full check. Taxonomy and gate changes require
+independent `@kungfu-origin` review through CODEOWNERS.
+
 Buildchain v4 Stage Capsule checkpoint work is governed by
 `architecture/v4-platform-stage-checkpoints.json`. Agents must use that single
 platform/stage declaration for shadow emission and clean-process restore. Do

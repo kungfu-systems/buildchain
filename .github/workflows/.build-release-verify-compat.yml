@@ -1,0 +1,825 @@
+on:
+  workflow_call:
+    inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
+      prebuild:
+        default: true
+        type: boolean
+        required: false
+      node-version:
+        default: "24"
+        type: string
+        required: false
+      python-version:
+        default: "3.9"
+        type: string
+        required: false
+      setup-python-enabled:
+        default: true
+        type: boolean
+        required: false
+      java-version:
+        default: "8"
+        type: string
+        required: false
+      pipenv-version:
+        default: "2023.9.1"
+        type: string
+        required: false
+      poetry-version:
+        default: "1.6.1"
+        type: string
+        required: false
+      builder-container:
+        default: ""
+        type: string
+        required: false
+      build-container-enabled:
+        default: false
+        type: boolean
+        required: false
+      build-runner-linux:
+        default: ubuntu-24.04
+        type: string
+        required: false
+      build-runner-linux-labels:
+        default: ""
+        type: string
+        required: false
+      build-runner-macos:
+        default: macos-13
+        type: string
+        required: false
+      build-runner-macos-labels:
+        default: ""
+        type: string
+        required: false
+      build-runner-windows:
+        default: windows-2022
+        type: string
+        required: false
+      build-runner-windows-labels:
+        default: ""
+        type: string
+        required: false
+      enable-linux:
+        default: true
+        type: boolean
+        required: false
+      enable-macos:
+        default: true
+        type: boolean
+        required: false
+      enable-windows:
+        default: true
+        type: boolean
+        required: false
+      code-signing-macos:
+        default: false
+        type: boolean
+        required: false
+      code-signing-windows:
+        default: false
+        type: boolean
+        required: false
+      use-pipenv:
+        default: false
+        type: boolean
+        required: false
+      use-poetry:
+        default: false
+        type: boolean
+        required: false
+      setup-env-timeout-minutes:
+        default: 10
+        type: number
+        required: false
+      build-timeout-minutes:
+        default: 60
+        type: number
+        required: false
+      max-build-attempts:
+        default: 1
+        type: number
+        required: false
+      publish-github-npm:
+        default: true
+        type: boolean
+        required: false
+      publish-aws-ci:
+        default: true
+        type: boolean
+        required: false
+      publish-aws-user:
+        default: true
+        type: boolean
+        required: false
+      publish-versioning:
+        default: true
+        type: boolean
+        required: false
+      aws-ci-region:
+        default: "us-east-1"
+        type: string
+        required: false
+      aws-user-region:
+        default: "cn-northwest-1"
+        type: string
+        required: false
+      bucket-staging-ci:
+        default: "kungfu-prebuilt-staging"
+        type: string
+        required: false
+      bucket-staging-user:
+        default: "kungfu-prebuilt-staging"
+        type: string
+        required: false
+      preview-files:
+        default: ".*"
+        type: string
+        required: false
+      max-preview-links:
+        default: "32"
+        type: string
+        required: false
+      find-dependencies:
+        default: false 
+        type: boolean
+        required: false
+      collaborator-automation-enabled:
+        default: false
+        type: boolean
+        required: false
+      auto-approve-enabled:
+        default: false
+        type: boolean
+        required: false
+      manager:
+        default: "kungfu-developers"
+        type: string
+        required: false
+      buildchain-repository:
+        default: "kungfu-systems/buildchain"
+        type: string
+        required: false
+      buildchain-ref:
+        description: "Official floating Buildchain channel, or a temporary train/SHA for trusted manual validation."
+        default: ""
+        type: string
+        required: false
+    secrets:
+      AWS_CI_ACCESS_KEY_ID:
+        required: false
+      AWS_CI_SECRET_ACCESS_KEY:
+        required: false
+      AWS_USER_ACCESS_KEY_ID:
+        required: false
+      AWS_USER_SECRET_ACCESS_KEY:
+        required: false
+      NODE_AUTH_TOKEN:
+        required: false
+      GITHUB_PUSH_TOKEN:
+        required: false
+      APPLE_ID:
+        required: false
+      APPLE_ID_PASSWORD:
+        required: false
+      APPLE_CSC_KEY:
+        required: false
+      APPLE_CSC_KEY_PASSWORD:
+        required: false
+      WINDOWS_CSC_KEY:
+        required: false
+
+jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
+  prepare:
+    if: ${{ inputs.universal-request-json == '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      HAS_NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Reject retired container build path
+        if: ${{ inputs.build-container-enabled || inputs.builder-container != '' }}
+        run: |
+          echo "::error::The workflows v2 Docker/container build path is retired."
+          echo "::error::Use build-container-enabled=false and self-hosted runner labels until the Docker mechanism is redesigned."
+          exit 1
+
+      - name: Reject retired prebuild path
+        if: ${{ inputs.prebuild }}
+        run: |
+          echo "::error::The legacy .release-verify.yml prebuild path is retired."
+          echo "::error::Use .github/workflows/.build.yml with lifecycle commands and publish-gate source locks."
+          exit 1
+
+      - name: Configure Git safe directory
+        run: git config --global --add safe.directory /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
+
+      - name: Resolve Buildchain runtime
+        id: runtime
+        uses: actions/github-script@v8
+        env:
+          BUILDCHAIN_REPOSITORY: ${{ inputs.buildchain-repository }}
+          BUILDCHAIN_REQUESTED_REF: ${{ inputs.buildchain-ref }}
+          BUILDCHAIN_DEFAULT_REF: v3
+          BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}
+        with:
+          script: |
+            const requested = (process.env.BUILDCHAIN_REQUESTED_REF || "").trim();
+            const repository = (process.env.BUILDCHAIN_REPOSITORY || "kungfu-systems/buildchain").trim();
+            const defaultRef = (process.env.BUILDCHAIN_DEFAULT_REF || "v3").trim();
+            const [runtimeOwner, runtimeRepo] = repository.split("/");
+            if (!runtimeOwner || !runtimeRepo) {
+              throw new Error(`invalid buildchain repository: ${repository}`);
+            }
+            const exactSha = /^[0-9a-f]{40}$/i;
+            const trainRef = /^train\/v\d+\/v\d+\.\d+\/[A-Za-z0-9._/-]+$/;
+            const officialChannelRef = /^v\d+(?:\.\d+)?(?:-alpha)?$/;
+            const pullRequestMergeRef = /^refs\/pull\/\d+\/merge$/;
+            const workflowRef = process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF || "";
+            const sameRepositoryWorkflow = workflowRef.startsWith(`${repository}/.github/workflows/`);
+            const shellRef = (sameRepositoryWorkflow
+              ? (workflowRef.split("@").pop() || defaultRef).trim() || defaultRef
+              : defaultRef).replace(/^refs\/(?:heads|tags)\//, "");
+            const normalizeClass = (ref) => {
+              const value = String(ref || "").replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              if (exactSha.test(value)) return "exact-sha";
+              if (trainRef.test(value)) return "train";
+              if (/^v\d+(?:\.\d+)?$/.test(value) || /^v\d+\.\d+\.\d+$/.test(value)) return "stable";
+              if (/^v\d+(?:\.\d+)?-alpha$/.test(value) || /^v\d+\.\d+\.\d+-alpha\.\d+$/.test(value)) return "alpha";
+              return "development";
+            };
+            let runtimeRef = requested || shellRef;
+            let runtimeFullRef = runtimeRef;
+            let runtimeClass = normalizeClass(runtimeRef);
+            const officialChannel = officialChannelRef.test(requested);
+            const runtimeOverride = requested !== "" && !officialChannel;
+            let trustDecision = officialChannel
+              ? "official-channel"
+              : runtimeOverride
+                ? "override-requested"
+                : "stable-default";
+            if (runtimeOverride) {
+              if (context.eventName !== "workflow_dispatch") {
+                throw new Error("buildchain-ref override is only allowed for trusted workflow_dispatch runs");
+              }
+              const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.actor,
+              });
+              const actorPermission = permission.data.permission || "";
+              if (!["admin", "maintain", "write"].includes(actorPermission)) {
+                throw new Error(`buildchain-ref override requires write, maintain, or admin permission; actor has ${actorPermission || "none"}`);
+              }
+              if (!exactSha.test(requested)) {
+                runtimeRef = requested.replace(/^refs\/heads\//, "");
+                if (!trainRef.test(runtimeRef)) {
+                  throw new Error("buildchain-ref override must be train/vN/vN.M/<capability>, refs/heads/train/vN/vN.M/<capability>, or an exact 40-character SHA");
+                }
+                runtimeFullRef = `refs/heads/${runtimeRef}`;
+                runtimeClass = "train";
+              }
+              trustDecision = "override-accepted";
+            }
+            async function resolveRef(ref) {
+              if (exactSha.test(ref)) return ref;
+              if (sameRepositoryWorkflow && pullRequestMergeRef.test(ref)) {
+                const workflowSha = String(context.sha || "");
+                if (!exactSha.test(workflowSha)) {
+                  throw new Error(`current workflow SHA is invalid for Buildchain pull request merge ref: ${ref}`);
+                }
+                return workflowSha;
+              }
+              const normalized = ref.replace(/^refs\/heads\//, "").replace(/^refs\/tags\//, "");
+              const candidates = ref.startsWith("refs/")
+                ? [ref.replace(/^refs\//, "")]
+                : [`tags/${normalized}`, `heads/${normalized}`];
+              for (const candidate of candidates) {
+                try {
+                  const response = await github.rest.git.getRef({ owner: runtimeOwner, repo: runtimeRepo, ref: candidate });
+                  return response.data.object.sha;
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              throw new Error(`unable to resolve Buildchain runtime ref: ${ref}`);
+            }
+            const runtimeSha = await resolveRef(runtimeFullRef);
+            core.setOutput("runtime-sha", runtimeSha);
+            await core.summary
+              .addHeading("Buildchain runtime")
+              .addRaw(`- workflow shell ref: \`${shellRef}\`\n`)
+              .addRaw(`- requested runtime ref: \`${requested || "(default)"}\`\n`)
+              .addRaw(`- resolved runtime ref: \`${runtimeRef}\`\n`)
+              .addRaw(`- resolved runtime sha: \`${runtimeSha}\`\n`)
+              .addRaw(`- stability: \`${runtimeClass}\`\n`)
+              .addRaw(`- trust decision: \`${trustDecision}\`\n`)
+              .addRaw(`- rollback ref: \`${shellRef}\`\n`)
+              .write();
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ steps.runtime.outputs.runtime-sha }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Verify release PR lineage
+        if: ${{ github.event_name == 'pull_request' }}
+        run: node .buildchain/runtime/scripts/verify-release-pr.mjs
+        env:
+          BUILDCHAIN_SOURCE_CWD: ${{ github.workspace }}
+          BUILDCHAIN_HEAD_REF: ${{ github.head_ref }}
+          BUILDCHAIN_BASE_REF: ${{ github.base_ref }}
+
+      - name: Reject retired collaborator automation
+        if: ${{ inputs.collaborator-automation-enabled }}
+        run: |
+          echo "::error::collaborator-automation-enabled is retired in workflows v2."
+          echo "::error::Do not route modern verification through action-set-collaborators."
+          exit 1
+
+  build:
+    if: >-
+      ${{
+        inputs.universal-request-json == '' &&
+        (
+          inputs.prebuild &&
+          false &&
+          inputs.build-container-enabled &&
+          (
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
+          )
+        )
+      }}
+    needs: prepare
+    permissions:
+      contents: read
+      pull-requests: read
+    concurrency:
+      group: heavy-build-${{ github.repository }}-${{ github.workflow }}-${{ matrix.name }}
+      cancel-in-progress: false
+    strategy:
+      matrix:
+        include:
+          - name: "Linux"
+            runner: ${{ inputs.build-runner-linux-labels || format('"{0}"', inputs.build-runner-linux) }}
+            container: ${{ inputs.builder-container }}
+            enabled: ${{ inputs.enable-linux }}
+            local-node: ${{ inputs.build-runner-linux-labels != '' && inputs.builder-container == '' }}
+          - name: "MacOS"
+            runner: ${{ inputs.build-runner-macos-labels || format('"{0}"', inputs.build-runner-macos) }}
+            enabled: ${{ inputs.enable-macos }}
+            code-signing: ${{ inputs.code-signing-macos }}
+            local-node: false
+          - name: "Windows"
+            runner: ${{ inputs.build-runner-windows-labels || format('"{0}"', inputs.build-runner-windows) }}
+            enabled: ${{ inputs.enable-windows }}
+            code-signing: ${{ inputs.code-signing-windows }}
+            local-node: false
+    runs-on: ${{ fromJSON(matrix.runner) }}
+    container: ${{ matrix.container }}
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN || github.token }}
+      USE_HARD_LINKS: false
+    steps:
+      - name: Checkout
+        if: ${{ matrix.enabled }}
+        uses: actions/checkout@v7.0.0
+        with:
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        if: ${{ matrix.enabled }}
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Configure Git safe directory
+        if: ${{ matrix.enabled }}
+        run: git config --global --add safe.directory /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
+
+      - name: Show Local Node
+        if: ${{ matrix.enabled && matrix.local-node }}
+        run: |
+          echo "runner.name=${RUNNER_NAME}"
+          echo "runner.os=${RUNNER_OS}"
+          echo "runner.arch=${RUNNER_ARCH}"
+          node --version
+          npm --version
+          yarn --version
+
+      # - name: Setup Java environment
+      #   if: ${{ matrix.enabled && !matrix.container }}
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     java-version: ${{ inputs.java-version }}
+      #     distribution: "temurin"
+
+      - name: Setup Node.js environment
+        if: ${{ matrix.enabled && !matrix.local-node }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@kungfu-systems"
+
+      - name: Setup Node.js registry scope
+        if: ${{ matrix.enabled && !matrix.local-node && inputs.publish-github-npm }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@${{github.repository_owner}}"
+
+      - name: Setup Python environment
+        if: ${{ matrix.enabled && !matrix.container && inputs.setup-python-enabled }}
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Setup MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.name == 'Windows'
+        with:
+          arch: x64
+
+      - name: Install pipenv
+        if: ${{ matrix.enabled && !matrix.container && inputs.use-pipenv }}
+        run: pipx install pipenv==${{ inputs.pipenv-version }}
+
+      - name: Install poetry
+        if: ${{ matrix.enabled && !matrix.container && inputs.use-poetry }}
+        run: pipx install poetry==${{ inputs.poetry-version }}
+
+      - name: Reject retired version mutation
+        if: ${{ matrix.enabled }}
+        run: |
+          echo "::error::The legacy prebuild version mutation path is retired."
+          echo "::error::Use Buildchain Ref Promotion for generated version-state commits."
+          exit 1
+
+      - name: Setup Build Environment
+        if: ${{ matrix.enabled }}
+        uses: nick-fields/retry@v4.0.0
+        with:
+          timeout_minutes: ${{ inputs.setup-env-timeout-minutes }}
+          max_attempts: 3
+          command: yarn --network-timeout=1000000 install --frozen-lockfile
+          new_command_on_retry: yarn --network-timeout=5000000 install --frozen-lockfile
+
+      - name: Build
+        if: ${{ matrix.enabled }}
+        uses: nick-fields/retry@v4.0.0
+        with:
+          timeout_minutes: ${{ inputs.build-timeout-minutes }}
+          max_attempts: ${{ inputs.max-build-attempts }}
+          command: yarn run build
+
+      - name: Upload Build Info
+        uses: actions/upload-artifact@v7.0.1
+        if: ${{ matrix.enabled && failure() }}
+        with:
+          name: "Build-Info-${{github.sha}}-${{matrix.name}}-${{github.actor}}-${{github.sha}}"
+          path: |
+            *.log
+            *.lock
+            **/*.lock
+            **/build/**/*.log
+            **/build/**/*.txt
+          if-no-files-found: ignore
+      
+      - name: Setup Code Signing Environment
+        if: ${{ matrix.enabled && matrix.code-signing }}
+        shell: bash
+        run: |
+          EOF=KUNGFU_CODE_SIGNING_NEWLINE
+          if [ "${{ matrix.name }}" == "MacOS" ]; then
+            {
+              echo "APPLE_ID=${{ secrets.APPLE_ID }}"
+              echo "APPLE_ID_PASSWORD=${{ secrets.APPLE_ID_PASSWORD }}"
+              echo "CSC_KEY_PASSWORD=${{ secrets.APPLE_CSC_KEY_PASSWORD }}"
+              echo "CSC_LINK<<$EOF"
+              echo "${{ secrets.APPLE_CSC_KEY }}"
+              echo "$EOF"
+            } >> "$GITHUB_ENV"
+          elif [ "${{ matrix.name }}" == "Windows" ]; then
+            {
+              echo "CSC_LINK<<$EOF"
+              echo "${{ secrets.WINDOWS_CSC_KEY }}"
+              echo "$EOF"
+            } >> "$GITHUB_ENV"
+          fi
+          echo "CSC_FOR_PULL_REQUEST=true" >> "$GITHUB_ENV"
+          echo "Environment Ready for Code Signing"
+
+      - name: Package Artifacts
+        if: ${{ matrix.enabled }}
+        run: yarn run package
+
+      - name: Upload Package Log
+        uses: actions/upload-artifact@v7.0.1
+        if: ${{ matrix.enabled && failure() }}
+        with:
+          name: "Package-Log-${{github.sha}}-${{matrix.name}}-${{github.actor}}-${{github.sha}}"
+          path: |
+            *.log
+          if-no-files-found: ignore
+
+      - name: Upload Prebuilt (with versions)
+        if: ${{ matrix.enabled && inputs.publish-versioning }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: "Prebuilt-${{github.sha}}-${{matrix.name}}-${{github.actor}}-${{github.sha}}"
+          path: |
+            **/build/stage/*/v*/v*/*.*
+            !**/build/stage/**/.*
+            !**/build/stage/**/*.yml
+            **/build/stage/**/kungfu-update-*.yml
+            !**/build/stage/**/*.yaml
+
+      - name: Upload Prebuilt (without versions)
+        if: ${{ matrix.enabled && !inputs.publish-versioning }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: "Prebuilt-${{github.sha}}-${{matrix.name}}-${{github.actor}}-${{github.sha}}"
+          path: |
+            **/build/stage/**/*.*
+
+  build_local:
+    if: >-
+      ${{
+        inputs.universal-request-json == '' &&
+        (
+          inputs.prebuild &&
+          !inputs.build-container-enabled &&
+          inputs.enable-linux &&
+          (
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
+          )
+        )
+      }}
+    needs: prepare
+    permissions:
+      contents: read
+      pull-requests: read
+    concurrency:
+      group: heavy-build-${{ github.repository }}-${{ github.workflow }}-Linux-local
+      cancel-in-progress: false
+    runs-on: ${{ fromJSON(inputs.build-runner-linux-labels || format('"{0}"', inputs.build-runner-linux)) }}
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN || github.token }}
+      USE_HARD_LINKS: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+        with:
+          clean: true
+          persist-credentials: false
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Configure Git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Show Local Node
+        if: ${{ inputs.build-runner-linux-labels != '' }}
+        run: |
+          echo "runner.name=${RUNNER_NAME}"
+          echo "runner.os=${RUNNER_OS}"
+          echo "runner.arch=${RUNNER_ARCH}"
+          node --version
+          npm --version
+          yarn --version
+
+      - name: Setup Node.js environment
+        if: ${{ inputs.build-runner-linux-labels == '' }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@kungfu-systems"
+
+      - name: Setup Node.js registry scope
+        if: ${{ inputs.build-runner-linux-labels == '' && inputs.publish-github-npm }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@${{github.repository_owner}}"
+
+      - name: Setup Python environment
+        if: ${{ inputs.setup-python-enabled }}
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install pipenv
+        if: ${{ inputs.use-pipenv }}
+        run: pipx install pipenv==${{ inputs.pipenv-version }}
+
+      - name: Install poetry
+        if: ${{ inputs.use-poetry }}
+        run: pipx install poetry==${{ inputs.poetry-version }}
+
+      - name: Reject retired version mutation
+        run: |
+          echo "::error::The legacy prebuild version mutation path is retired."
+          echo "::error::Use Buildchain Ref Promotion for generated version-state commits."
+          exit 1
+
+      - name: Setup Build Environment
+        uses: nick-fields/retry@v4.0.0
+        with:
+          timeout_minutes: ${{ inputs.setup-env-timeout-minutes }}
+          max_attempts: 3
+          command: yarn --network-timeout=1000000 install --frozen-lockfile
+          new_command_on_retry: yarn --network-timeout=5000000 install --frozen-lockfile
+
+      - name: Build
+        uses: nick-fields/retry@v4.0.0
+        with:
+          timeout_minutes: ${{ inputs.build-timeout-minutes }}
+          max_attempts: ${{ inputs.max-build-attempts }}
+          command: yarn run build
+
+      - name: Upload Build Info
+        uses: actions/upload-artifact@v7.0.1
+        if: ${{ failure() }}
+        with:
+          name: "Build-Info-${{github.sha}}-Linux-${{github.actor}}-${{github.sha}}"
+          path: |
+            *.log
+            *.lock
+            **/*.lock
+            **/build/**/*.log
+            **/build/**/*.txt
+          if-no-files-found: ignore
+
+      - name: Package Artifacts
+        run: yarn run package
+
+      - name: Upload Package Log
+        uses: actions/upload-artifact@v7.0.1
+        if: ${{ failure() }}
+        with:
+          name: "Package-Log-${{github.sha}}-Linux-${{github.actor}}-${{github.sha}}"
+          path: |
+            *.log
+          if-no-files-found: ignore
+
+      - name: Upload Prebuilt (with versions)
+        if: ${{ inputs.publish-versioning }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: "Prebuilt-${{github.sha}}-Linux-${{github.actor}}-${{github.sha}}"
+          path: |
+            **/build/stage/*/v*/v*/*.*
+            !**/build/stage/**/.*
+            !**/build/stage/**/*.yml
+            **/build/stage/**/kungfu-update-*.yml
+            !**/build/stage/**/*.yaml
+
+      - name: Upload Prebuilt (without versions)
+        if: ${{ !inputs.publish-versioning }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: "Prebuilt-${{github.sha}}-Linux-${{github.actor}}-${{github.sha}}"
+          path: |
+            **/build/stage/**/*.*
+
+  verify:
+    if: ${{ inputs.universal-request-json == '' && (always()) }}
+    needs: [prepare, build, build_local]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      HAS_NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN != '' }}
+    steps:
+      - name: Reject untrusted prebuild PR
+        if: >-
+          ${{
+            inputs.prebuild &&
+            github.event_name == 'pull_request' &&
+            github.event.pull_request.head.repo.full_name != github.repository
+          }}
+        run: |
+          echo "::error::Self-hosted prebuild is only allowed for trusted same-repository pull requests."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Checkout Buildchain runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ inputs.buildchain-repository }}
+          ref: ${{ inputs.buildchain-ref }}
+          path: .buildchain/runtime
+          persist-credentials: false
+
+      - name: Reject retired version mutation
+        if: ${{ inputs.prebuild }}
+        run: |
+          echo "::error::The legacy prebuild version mutation path is retired."
+          echo "::error::Use Buildchain Ref Promotion for generated version-state commits."
+          exit 1
+
+      - name: Download Artifacts
+        if: ${{ inputs.prebuild }}
+        uses: actions/download-artifact@v8.0.1
+        with:
+          path: "github-artifacts"
+
+      - name: Configure AWS Crendentials (CI)
+        if: ${{ inputs.prebuild && inputs.publish-aws-ci }}
+        uses: aws-actions/configure-aws-credentials@v6.2.1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_CI_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_CI_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-ci-region }}
+
+      - name: Publish Prebuilt to AWS (CI)
+        if: ${{ inputs.prebuild && inputs.publish-aws-ci }}
+        run: |
+          echo "::error::actions/publish-prebuilt is retired."
+          echo "::error::Use lifecycle.publish plus publish transaction evidence."
+          exit 1
+
+      - name: Configure AWS Crendentials (User)
+        if: ${{ inputs.prebuild && inputs.publish-aws-user }}
+        uses: aws-actions/configure-aws-credentials@v6.2.1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_USER_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_USER_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-user-region }}
+
+      - name: Publish Prebuilt to AWS (User)
+        if: ${{ inputs.prebuild && inputs.publish-aws-user }}
+        run: |
+          echo "::error::actions/publish-prebuilt is retired."
+          echo "::error::Use lifecycle.publish plus publish transaction evidence."
+          exit 1
+
+      - name: Verify release PR lineage
+        if: ${{ github.event_name == 'pull_request' }}
+        run: node .buildchain/runtime/scripts/verify-release-pr.mjs
+        env:
+          BUILDCHAIN_SOURCE_CWD: ${{ github.workspace }}
+          BUILDCHAIN_HEAD_REF: ${{ github.head_ref }}
+          BUILDCHAIN_BASE_REF: ${{ github.base_ref }}
+
+      - name: Reject retired dependency discovery
+        if: ${{ inputs.find-dependencies }}
+        run: |
+          echo "::error::find-dependencies is retired in workflows v2."
+          echo "::error::Do not route modern verification through action-find-dependencies or Airtable dependency discovery."
+          exit 1
+
+      - name: Approve Merge
+        if: ${{ github.event_name == 'pull_request' && inputs.auto-approve-enabled && env.HAS_NODE_AUTH_TOKEN == 'true' && (!inputs.prebuild || needs.build.result == 'success' || needs.build_local.result == 'success') && !contains(join(needs.*.result, ','), 'failure') && !contains(join(needs.*.result, ','), 'cancelled') }}
+        run: |
+          echo "::error::actions/approve is retired."
+          echo "::error::Use repository-native GitHub automation for PR approval."
+          exit 1

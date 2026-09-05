@@ -162,7 +162,7 @@ test("release candidate resolver seals downloaded npm bytes before deriving requ
           },
         ]);
       }
-      if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+      if (url.includes("actions/workflows/self-build-fixture.yml/runs")) {
         return jsonResponse({
           workflow_runs: [
             {

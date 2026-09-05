@@ -741,7 +741,7 @@ Owner: Buildchain adopter delivery maintainers
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-unknown-selector.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/offline-vectors.json`
 - `.github/workflows/v4-adopter-delivery.yml`
-- `.github/workflows/v4-adopter-delivery-dogfood.yml`
+- `.github/workflows/self-build-adopter-dogfood.yml`
 - `docs/v4-adopter-delivery.md`
 
 ### Tests
@@ -953,7 +953,7 @@ Owner: Buildchain protected delivery maintainers
 - `contracts/dev-delivery-authority-v2.schema.json`
 - `dist/site/schemas/dev-delivery-authority-v2.schema.json`
 - `.github/workflows/dev-pr-auto-merge.yml`
-- `.github/workflows/buildchain-dev-delivery.yml`
+- `.github/workflows/self-ops-dev-delivery.yml`
 - `templates/native-dev-delivery.yml`
 - `docs/dev-delivery-warrant.md`
 - `docs/dev-delivery-qualification-landing-adr.md`
@@ -995,7 +995,7 @@ Owner: Buildchain publication rehearsal maintainers
 
 - `architecture/v4-publication-rehearsal-parity.json`
 - `contracts/v4-publication-rehearsal-capsule-v1.schema.json`
-- `.github/workflows/v4-publication-rehearsal-dogfood.yml`
+- `.github/workflows/self-release-rehearsal-dogfood.yml`
 - `docs/v4-publication-rehearsal.md`
 
 ### Tests
@@ -1029,7 +1029,7 @@ Owner: Buildchain workflow maintainers
 - `architecture/v4-universal-workflow-fault-campaign.json`
 - `architecture/v4-universal-workflow-train-admission.json`
 - `.github/workflows/bootstrap.yml`
-- `.github/workflows/universal-bootstrap-dogfood.yml`
+- `.github/workflows/self-ops-bootstrap-dogfood.yml`
 - `templates/universal-buildchain-bootstrap-recovery.yml`
 
 ### Tests

@@ -58,7 +58,7 @@ const WORKFLOW_AND_ACTION_FILES = Object.freeze([
   ".github/workflows/.build.yml",
   ".github/workflows/.release-candidate-promote.yml",
   ".github/workflows/release-candidate-promote.yml",
-  ".github/workflows/buildchain-ref-promotion.yml",
+  ".github/workflows/self-release-promote.yml",
   ".github/workflows/github-artifact-attestation.yml",
   "actions/github-artifact-attestation/action.yml",
   "actions/github-artifact-attestation/index.js",
@@ -446,7 +446,7 @@ export function createBuildchainKfdSurfaceRegistry({ root = process.cwd() } = {}
     {
       name: "Buildchain standalone binary distribution",
       artifactPath: "dist/binary",
-      evidencePath: ".github/workflows/binary-distribution.yml",
+      evidencePath: ".github/workflows/self-build-binary-distribution.yml",
       distribution: normalizeKfd3DistributionDeclaration({
         registrar: "shifu",
         tasks: ["binary:build"],

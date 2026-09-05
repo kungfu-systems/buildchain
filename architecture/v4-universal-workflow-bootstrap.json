@@ -13,7 +13,7 @@
     "consumerRecoveryWorkflow": ".github/workflows/universal-bootstrap-recovery.yml",
     "consumerRecoveryMode": "separate-pre-positioned-consumer-owned-shell",
     "recoveryDependsOnPublishedBuildchain": false,
-    "selfDogfoodWorkflow": ".github/workflows/universal-bootstrap-dogfood.yml",
+    "selfDogfoodWorkflow": ".github/workflows/self-ops-bootstrap-dogfood.yml",
     "faultCampaign": "architecture/v4-universal-workflow-fault-campaign.json",
     "discoveryRefExecutionAuthority": false,
     "exactShaExecutionAuthority": true,

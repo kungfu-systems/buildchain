@@ -4,7 +4,7 @@ import test from "node:test";
 
 test("governance audit keeps fork pull requests on a bounded read-only token fallback", () => {
   const auditWorkflow = fs.readFileSync(
-    new URL("../.github/workflows/github-governance-audit.yml", import.meta.url),
+    new URL("../.github/workflows/self-ops-governance-audit.yml", import.meta.url),
     "utf8",
   );
   assert.match(auditWorkflow, /actions\/create-github-app-token@v3/);

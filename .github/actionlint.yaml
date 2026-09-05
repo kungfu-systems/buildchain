@@ -89,3 +89,87 @@ paths:
     ignore:
       - 'property "workflow_ref" is not defined in object type'
       - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-ops-bootstrap.yml:
+    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-build-candidate.yml:
+    # GitHub.com exposes these job properties for called-workflow identity. Keep
+    # these exact false-positives scoped until actionlint's context schema ships them.
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+      - 'property "workflow_repository" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-build-stage-capsule-canary.yml:
+    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-build-adopter-qualification.yml:
+    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-ops-tail-reseal.yml:
+    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/.build-engine.yml:
+    # GitHub.com exposes called-workflow identity on job. Keep these exact
+    # false-positives scoped until actionlint's context schema ships them.
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/.build-demo-adapter.yml:
+    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-build-demo.yml:
+    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/.build-gate-profile.yml:
+    # GitHub.com exposes job.workflow_ref for called-workflow identity. Keep
+    # this exact false-positive scoped until actionlint's context schema ships it.
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+
+  .github/workflows/public-release-promote.yml:
+    # GitHub.com exposes these job properties for called-workflow identity. Keep
+    # these exact false-positives scoped until actionlint's context schema ships them.
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+      - 'property "workflow_repository" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/.release-promote.yml:
+    # The advanced shell binds its called-workflow identity before candidate use.
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/.build-release-verify-compat.yml:
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+
+  .github/workflows/public-release-web.yml:
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+
+  .github/workflows/public-release-paper.yml:
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+
+  .github/workflows/public-build-publication.yml:
+    # GitHub.com exposes called-workflow identity on job. Keep these exact
+    # false-positives scoped until actionlint's context schema ships them.
+    ignore:
+      - 'property "workflow_ref" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'

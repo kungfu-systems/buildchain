@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import { writeWorkflowSource, rewriteRepositoryWorkflowPaths } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -199,10 +200,10 @@ function addRuntimeBootstrapDependencies(source, relative) {
 }
 
 export function migrateV4UniversalWorkflowFacade(source, relative) {
-  return guardCompatibilityJobs(
+  return rewriteRepositoryWorkflowPaths(root, guardCompatibilityJobs(
     addUniversalInput(addRuntimeBootstrapDependencies(source, relative), relative),
     relative,
-  );
+  ));
 }
 
 function verify(source, relative) {
@@ -402,8 +403,8 @@ function main() {
         "consumer recovery workflow differs from its pre-positioned template",
       );
   } else {
-    fs.writeFileSync(
-      recoveryWorkflowPath,
+    writeWorkflowSource(
+      root, path.relative(root, recoveryWorkflowPath),
       fs.readFileSync(recoveryTemplatePath, "utf8"),
     );
   }
@@ -414,8 +415,8 @@ function main() {
       : fs.readFileSync(target, "utf8");
     if (check) verify(source, relative);
     else
-      fs.writeFileSync(
-        target,
+      writeWorkflowSource(
+        root, relative,
         migrateV4UniversalWorkflowFacade(source, relative),
       );
   }

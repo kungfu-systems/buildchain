@@ -227,7 +227,7 @@
         "docs/dev-delivery-warrant.md",
         "docs/dev-delivery-qualification-landing-adr.md",
         "templates/native-dev-delivery.yml",
-        ".github/workflows/buildchain-dev-delivery.yml",
+        ".github/workflows/self-ops-dev-delivery.yml",
         ".buildchain/contract-lock.json",
         ".buildchain/alpha-contract-lock.json"
       ],
@@ -246,5 +246,5 @@
       "verificationEvidence": []
     }
   ],
-  "matrixRoot": "sha256:5be5abf70b982374f32a1400d4ec7c830017a0473d03165e831a506c94c8b881"
+  "matrixRoot": "sha256:85fc624f09abb2014601a9857dbcd07a59750b6dd6d77ab240ed037d3169ac69"
 }
