@@ -9,7 +9,6 @@ import { invokeV4DomainWasm } from "../packages/core/v4-domain-wasm.js";
 const execute = (command, args, options = {}) =>
   execFileSync(command, args, {
     maxBuffer: 64 * 1024 * 1024,
-    stdio: ["pipe", "pipe", "pipe"],
     ...options,
   });
 
@@ -30,18 +29,16 @@ export function verifyVersionStateDelta({
     .split("\n")
     .filter(Boolean);
   if (!changes.length) throw new Error("no version-state delta");
-  const snapshot = fs.mkdtempSync(
+  const temporary = fs.mkdtempSync(
     path.join(os.tmpdir(), "buildchain-version-state-"),
   );
+  const source = path.join(temporary, "source");
   try {
-    execute("tar", ["-xf", "-", "-C", snapshot], {
-      input: execute("git", ["archive", "--format=tar", baseSha], { cwd }),
-    });
-    fs.symlinkSync(
-      nodeModules,
-      path.join(snapshot, "node_modules"),
-      "junction",
-    );
+    fs.mkdirSync(source);
+    const archive = path.join(temporary, "base.tar");
+    git("archive", "--format=tar", `--output=${archive}`, baseSha);
+    execute("tar", ["-xf", archive, "-C", source]);
+    fs.symlinkSync(nodeModules, path.join(source, "node_modules"), "junction");
     const planSource = `
       import fs from 'node:fs';
       import { loadBuildchainConfig, discoverConfiguredVersionStateFiles,
@@ -59,7 +56,7 @@ export function verifyVersionStateDelta({
     const plan = (version = "") =>
       JSON.parse(
         execute(process.execPath, ["--input-type=module", "-e", planSource], {
-          cwd: snapshot,
+          cwd: source,
           env: { ...process.env, BUILDCHAIN_DELTA_VERSION: version },
         }),
       );
@@ -93,7 +90,7 @@ export function verifyVersionStateDelta({
       );
     plan(version);
     execute(process.execPath, ["scripts/generate-site-bundle.mjs"], {
-      cwd: snapshot,
+      cwd: source,
       env: {
         ...process.env,
         BUILDCHAIN_SOURCE_SHA: baseSha,
@@ -115,7 +112,7 @@ export function verifyVersionStateDelta({
         }),
     );
     for (const [file, digest] of expected) {
-      const generated = path.join(snapshot, file);
+      const generated = path.join(source, file);
       const bytes = fs.lstatSync(generated).isSymbolicLink()
         ? Buffer.from(fs.readlinkSync(generated))
         : fs.readFileSync(generated);
@@ -130,17 +127,17 @@ export function verifyVersionStateDelta({
     const walk = (directory) => {
       for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
         const absolute = path.join(directory, entry.name);
-        if (absolute === path.join(snapshot, "node_modules")) continue;
+        if (absolute === path.join(source, "node_modules")) continue;
         if (entry.isDirectory()) walk(absolute);
         else if (
           !expected.has(
-            path.relative(snapshot, absolute).split(path.sep).join("/"),
+            path.relative(source, absolute).split(path.sep).join("/"),
           )
         )
           throw new Error("version-state generator created undeclared output");
       }
     };
-    walk(snapshot);
+    walk(source);
     return {
       validationKind: "version-state-projection",
       baseSha,
@@ -152,7 +149,7 @@ export function verifyVersionStateDelta({
       generatedAt: metadata.generatedAt,
     };
   } finally {
-    fs.rmSync(snapshot, { recursive: true, force: true });
+    fs.rmSync(temporary, { recursive: true, force: true });
   }
 }
 
