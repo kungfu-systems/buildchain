@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "f5a454a15c8521739c82047d845c523075575b7fd4b1a1044447426435ad7cc3",
+    "sha256": "d513c451ffe286e9658ce51d914f062606fc6097ac689c1923a20a8c83beb73f",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 117,
+      "workflowCount": 114,
       "actionCount": 8,
-      "sitePageCount": 86,
+      "sitePageCount": 87,
       "docCommandRefCount": 1050,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "f5a454a15c8521739c82047d845c523075575b7fd4b1a1044447426435ad7cc3",
+      "sha256": "d513c451ffe286e9658ce51d914f062606fc6097ac689c1923a20a8c83beb73f",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 117,
+        "workflowCount": 114,
         "actionCount": 8,
-        "sitePageCount": 86,
+        "sitePageCount": 87,
         "docCommandRefCount": 1050,
         "failureCount": 0
       },
@@ -7523,72 +7523,6 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
-          "id": "workflow:v4-adopter-delivery",
-          "name": "workflow:v4-adopter-delivery",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/v4-adopter-delivery.yml",
-          "evidencePath": ".github/workflows/v4-adopter-delivery.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 9,
-          "inputs": [
-            "archive-path",
-            "bootstrap-path",
-            "consumer",
-            "consumer-ref",
-            "consumer-repository",
-            "input-path",
-            "invocation-source-path",
-            "node-version",
-            "universal-request-json"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:v4-stage-capsule-canary",
-          "name": "workflow:v4-stage-capsule-canary",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/v4-stage-capsule-canary.yml",
-          "evidencePath": ".github/workflows/v4-stage-capsule-canary.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 7,
-          "inputs": [
-            "build-artifact-path",
-            "consumer",
-            "go-version",
-            "install-artifact-path",
-            "node-version",
-            "universal-request-json",
-            "verify-artifact-path"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:v4-tail-reseal",
-          "name": "workflow:v4-tail-reseal",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/v4-tail-reseal.yml",
-          "evidencePath": ".github/workflows/v4-tail-reseal.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 5,
-          "inputs": [
-            "artifact-retention-days",
-            "consumer-policy-receipt-json",
-            "macos-finalization-command",
-            "request-json",
-            "universal-request-json"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
           "id": "action:github-artifact-attestation",
           "name": "action:github-artifact-attestation",
           "kind": "action",
@@ -8964,6 +8898,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:workflow-path-migration",
+          "name": "site-page:manual:workflow-path-migration",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:overview:home",
           "name": "site-page:overview:home",
           "kind": "site-page",
@@ -9146,6 +9092,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 523
+    "publicSurfaceCount": 521
   }
 }

@@ -12,6 +12,7 @@ const ROLES = ["public", "component", "self"];
 const CATEGORIES = ["build", "release", "ops"];
 const SLUG = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const WORKFLOW = /^\.github\/workflows\/[.a-z0-9-]+\.ya?ml$/u;
+const VERSION_TOKEN = /(?:^|[.-])v\d+(?:[.-]|$)/iu;
 const PROTECTED = [
   TAXONOMY_PATH,
   "scripts/workflow-taxonomy.mjs",
@@ -40,6 +41,10 @@ function validateEntryRole(entry, errors) {
     errors.push(`${entry.id}: invalid category`);
   if (!SLUG.test(entry.purpose || ""))
     errors.push(`${entry.id}: invalid purpose slug`);
+  if (VERSION_TOKEN.test(path.posix.basename(workflowPath(entry))))
+    errors.push(
+      `${entry.id}: workflow filenames cannot contain version tokens`,
+    );
   for (const field of ["summary", "owner", "rationale"]) {
     if (typeof entry[field] !== "string" || !entry[field].trim())
       errors.push(`${entry.id}: missing ${field}`);
@@ -57,6 +62,15 @@ function validateEntryRole(entry, errors) {
 }
 
 function validateMigration(policy, entry, declared, errors) {
+  if (entry.retiredAlias) {
+    if (
+      entry.compatibility ||
+      entry.retiredAlias.path !== entry.migration?.previousPath ||
+      !entry.retiredAlias.reason?.trim() ||
+      entry.retiredAlias.migrationGuide !== "docs/workflow-path-migration.md"
+    )
+      errors.push(`${entry.id}: invalid alias retirement record`);
+  }
   if (entry.migration) {
     if (
       !WORKFLOW.test(entry.migration.previousPath || "") ||
@@ -73,6 +87,10 @@ function validateMigration(policy, entry, declared, errors) {
   }
   if (entry.compatibility) {
     const alias = entry.compatibility;
+    if (VERSION_TOKEN.test(path.posix.basename(alias.path || "")))
+      errors.push(
+        `${entry.id}: version-prefixed compatibility aliases are retired`,
+      );
     if (entry.role === "self")
       errors.push(
         `${entry.id}: repository event wrappers cannot have duplicate aliases`,
@@ -167,6 +185,14 @@ function validateWorkflow(root, entry, declared, errors) {
   const absolute = path.join(root, file);
   if (!fs.existsSync(absolute) || !fs.lstatSync(absolute).isFile()) return;
   const text = fs.readFileSync(absolute, "utf8");
+  if (
+    entry.retiredAlias &&
+    text.includes("BUILDCHAIN_INVOKED_WORKFLOW:") &&
+    !text.includes(`BUILDCHAIN_INVOKED_WORKFLOW: ${file}\n`)
+  )
+    errors.push(
+      `${file}: consumer admission must bind the canonical invoked workflow`,
+    );
   const document = parseWorkflowDocument(text);
   if (entry.role === "self")
     validateRepositoryReferences(file, document, text, declared, errors);
@@ -195,6 +221,13 @@ function validateWorkflow(root, entry, declared, errors) {
       );
   }
   for (const call of parseYamlUses(text)) {
+    const remote = call.value.match(
+      /^kungfu-systems\/buildchain\/(\.github\/workflows\/[^@]+)@/u,
+    );
+    if (remote && VERSION_TOKEN.test(path.posix.basename(remote[1])))
+      errors.push(
+        `${file}:${call.line}: retired version-prefixed workflow call ${remote[1]}`,
+      );
     const local = call.value.match(/^\.\/(\.github\/workflows\/[^@]+)$/u);
     if (local && !declared.has(local[1]))
       errors.push(
@@ -276,6 +309,8 @@ export function checkWorkflowTaxonomy(
   );
   const observed = new Set(discoverWorkflowFiles(root));
   for (const file of observed) {
+    if (VERSION_TOKEN.test(path.posix.basename(file)))
+      errors.push(`workflow filenames cannot contain version tokens: ${file}`);
     if (!declared.has(file)) errors.push(`unregistered workflow: ${file}`);
     if (!fs.lstatSync(path.join(root, file)).isFile())
       errors.push(`workflow must be a regular file: ${file}`);
@@ -334,6 +369,8 @@ export function writeWorkflowSource(root, relative, text) {
     (item) =>
       workflowPath(item) === relative || item.compatibility?.path === relative,
   );
+  if (policy?.entries.some((item) => item.retiredAlias?.path === relative))
+    throw new Error(`${relative}: cannot regenerate a retired workflow alias`);
   const outputs = entry
     ? [
         workflowPath(entry),
@@ -345,19 +382,10 @@ export function writeWorkflowSource(root, relative, text) {
 
 export function rewriteRepositoryWorkflowPaths(root, text) {
   for (const entry of readWorkflowTaxonomy(root)?.entries || []) {
-    if (
-      ["v4-adopter-delivery", "v4-stage-capsule-canary"].includes(entry.id) &&
-      entry.compatibility
-    ) {
-      const canonical = workflowPath(entry);
-      const legacy = entry.compatibility.path;
-      text = text.replaceAll(
-        `BUILDCHAIN_INVOKED_WORKFLOW: ${legacy}\n`,
-        `BUILDCHAIN_INVOKED_WORKFLOW: \${{ startsWith(job.workflow_ref, 'kungfu-systems/buildchain/${canonical}@') && '${canonical}' || '${legacy}' }}\n`,
-      );
-    }
     if (entry.role === "self" && entry.migration)
       text = text.replaceAll(entry.migration.previousPath, workflowPath(entry));
+    if (entry.retiredAlias)
+      text = text.replaceAll(entry.retiredAlias.path, workflowPath(entry));
     if (entry.id === "build-surface-fixture")
       text = text.replaceAll(
         "build-surface-fixture.yml",
@@ -365,6 +393,15 @@ export function rewriteRepositoryWorkflowPaths(root, text) {
       );
   }
   return text;
+}
+
+// Historical inventories and debt ledgers retain their original identity. File
+// access resolves only explicitly retired aliases to the registered implementation.
+export function currentWorkflowPath(root, relative) {
+  const entry = readWorkflowTaxonomy(root)?.entries.find(
+    (item) => item.retiredAlias?.path === relative,
+  );
+  return entry ? workflowPath(entry) : relative;
 }
 
 export function workflowCompatibilityIdentity(root, relative, text) {
@@ -441,6 +478,8 @@ export function renderWorkflowCatalog(policy) {
     "must name an exact migration source with a reason and removal condition.",
     "The policy, generator, checker, tests, required CI chain and CODEOWNERS require",
     "independent `kungfu-origin` review. No wildcard compatibility admission is allowed.",
+    "Workflow filenames cannot contain version tokens such as `v4` or `v5`.",
+    "Retired aliases cannot be recreated or called; see [path migration](workflow-path-migration.md).",
     "",
     "A role, category or implementation edit must preserve or deliberately update",
     "all related declarations. Run `pnpm run generate:workflows` and",

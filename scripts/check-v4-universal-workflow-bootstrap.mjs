@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { projectWorkflowIdentities } from "./workflow-taxonomy.mjs";
+import { currentWorkflowPath, projectWorkflowIdentities } from "./workflow-taxonomy.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -48,7 +48,7 @@ assert.deepEqual(
 );
 for (const relative of contract.inventoryWorkflows)
   assert.ok(
-    fs.statSync(path.join(root, relative)).isFile(),
+    fs.statSync(path.join(root, currentWorkflowPath(root, relative))).isFile(),
     `inventoried workflow is unavailable: ${relative}`,
   );
 assert.deepEqual(
@@ -87,7 +87,7 @@ for (const relative of contract.bootstrapGovernedWorkflows) {
     contract.inventoryWorkflows.includes(relative),
     `Bootstrap-governed workflow is outside the inventory: ${relative}`,
   );
-  const source = fs.readFileSync(path.join(root, relative), "utf8");
+  const source = fs.readFileSync(path.join(root, currentWorkflowPath(root, relative)), "utf8");
   assert.ok(
     relative === contract.bootstrap.publicWorkflow ||
       /uses:\s+(?:\.\/)?\.github\/workflows\/bootstrap\.yml/u.test(source) ||

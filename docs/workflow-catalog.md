@@ -56,6 +56,8 @@ must explain its scope in review. New aliases cannot be invented: compatibility
 must name an exact migration source with a reason and removal condition.
 The policy, generator, checker, tests, required CI chain and CODEOWNERS require
 independent `kungfu-origin` review. No wildcard compatibility admission is allowed.
+Workflow filenames cannot contain version tokens such as `v4` or `v5`.
+Retired aliases cannot be recreated or called; see [path migration](workflow-path-migration.md).
 
 A role, category or implementation edit must preserve or deliberately update
 all related declarations. Run `pnpm run generate:workflows` and
@@ -65,12 +67,12 @@ all related declarations. Run `pnpm run generate:workflows` and
 
 | Canonical workflow | Category | Invocation | Status | Purpose | Compatibility path |
 | --- | --- | --- | --- | --- | --- |
-| [public-build-adopter-qualification.yml](../.github/workflows/public-build-adopter-qualification.yml) | build | reusable | active | V4 Adopter Delivery | `v4-adopter-delivery.yml` |
+| [public-build-adopter-qualification.yml](../.github/workflows/public-build-adopter-qualification.yml) | build | reusable | active | V4 Adopter Delivery | — |
 | [public-build-candidate.yml](../.github/workflows/public-build-candidate.yml) | build | reusable | active | Buildchain Channel Build | `build.yml` |
 | [public-build-check.yml](../.github/workflows/public-build-check.yml) | build | reusable | active | Buildchain Check | `check.yml` |
 | [public-build-demo.yml](../.github/workflows/public-build-demo.yml) | build | reusable | active | Buildchain Declarative Binary Auditable Demo | `.declarative-auditable-demo.yml` |
 | [public-build-publication.yml](../.github/workflows/public-build-publication.yml) | build | reusable | active | Buildchain Publication Artifact | `publication-artifact.yml` |
-| [public-build-stage-capsule-canary.yml](../.github/workflows/public-build-stage-capsule-canary.yml) | build | reusable | active | V4 Stage Capsule Canary | `v4-stage-capsule-canary.yml` |
+| [public-build-stage-capsule-canary.yml](../.github/workflows/public-build-stage-capsule-canary.yml) | build | reusable | active | V4 Stage Capsule Canary | — |
 | [public-ops-alpha-candidate-patrol.yml](../.github/workflows/public-ops-alpha-candidate-patrol.yml) | ops | reusable | active | Buildchain Dev to Alpha Candidate Patrol | `dev-alpha-candidate-patrol.yml` |
 | [public-ops-bootstrap-recovery.yml](../.github/workflows/public-ops-bootstrap-recovery.yml) | ops | reusable | active | Universal Buildchain Bootstrap Recovery | `universal-bootstrap-recovery.yml` |
 | [public-ops-bootstrap.yml](../.github/workflows/public-ops-bootstrap.yml) | ops | reusable | active | Buildchain Universal Bootstrap | `bootstrap.yml` |
@@ -84,7 +86,7 @@ all related declarations. Run `pnpm run generate:workflows` and
 | [public-ops-patrol.yml](../.github/workflows/public-ops-patrol.yml) | ops | reusable | active | Buildchain Patrol | `buildchain-patrol.yml` |
 | [public-ops-release-governance.yml](../.github/workflows/public-ops-release-governance.yml) | ops | reusable | active | Release Governance Reconcile | `release-governance-reconcile.yml` |
 | [public-ops-stable-candidate-patrol.yml](../.github/workflows/public-ops-stable-candidate-patrol.yml) | ops | reusable | active | Buildchain Stable Candidate Patrol | `stable-candidate-patrol.yml` |
-| [public-ops-tail-reseal.yml](../.github/workflows/public-ops-tail-reseal.yml) | ops | reusable | active | V4 Retained Candidate Tail Reseal | `v4-tail-reseal.yml` |
+| [public-ops-tail-reseal.yml](../.github/workflows/public-ops-tail-reseal.yml) | ops | reusable | active | V4 Retained Candidate Tail Reseal | — |
 | [public-ops-warrant-cancel.yml](../.github/workflows/public-ops-warrant-cancel.yml) | ops | reusable | active | Dev Delivery Warrant Queued Candidate Cancel | `dev-delivery-warrant-cancel.yml` |
 | [public-ops-warrant-close.yml](../.github/workflows/public-ops-warrant-close.yml) | ops | reusable | active | Dev Delivery Warrant Close | `dev-delivery-warrant-close.yml` |
 | [public-release-artifact-attestation.yml](../.github/workflows/public-release-artifact-attestation.yml) | release | reusable | active | Buildchain GitHub Artifact Attestation | `github-artifact-attestation.yml` |

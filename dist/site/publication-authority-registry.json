@@ -2019,22 +2019,7 @@
         "oidc"
       ],
       "classified": true
-    },
-    {
-      "path": ".github/workflows/v4-adopter-delivery.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/v4-stage-capsule-canary.yml",
-      "signals": [],
-      "classified": false
-    },
-    {
-      "path": ".github/workflows/v4-tail-reseal.yml",
-      "signals": [],
-      "classified": false
     }
   ],
-  "registryDigest": "e6b298f281da2f4bd79d44d4a106dabf8294194d4f68dd28eee13d35eaf05d11"
+  "registryDigest": "894cce314366698d41a3ab20172a0b7a05f03f2167667eae51793537b832c811"
 }

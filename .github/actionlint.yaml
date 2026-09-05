@@ -31,20 +31,6 @@ paths:
       - 'property "workflow_ref" is not defined in object type'
       - 'property "workflow_repository" is not defined in object type'
       - 'property "workflow_sha" is not defined in object type'
-  .github/workflows/v4-stage-capsule-canary.yml:
-    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
-    ignore:
-      - 'property "workflow_ref" is not defined in object type'
-      - 'property "workflow_sha" is not defined in object type'
-  .github/workflows/v4-adopter-delivery.yml:
-    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
-    ignore:
-      - 'property "workflow_ref" is not defined in object type'
-      - 'property "workflow_sha" is not defined in object type'
-  .github/workflows/v4-tail-reseal.yml:
-    # GitHub.com exposes job.workflow_sha for immutable called-workflow identity.
-    ignore:
-      - 'property "workflow_sha" is not defined in object type'
   .github/workflows/.build.yml:
     # GitHub.com exposes called-workflow identity on job. Keep these exact
     # false-positives scoped until actionlint's context schema ships them.

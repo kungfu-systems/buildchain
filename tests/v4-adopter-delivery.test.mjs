@@ -305,14 +305,14 @@ test("CLI and public self-dogfood workflow expose the same public boundary", () 
   );
   assert.match(
     caller,
-    /kungfu-systems\/buildchain\/\.github\/workflows\/v4-adopter-delivery\.yml@v4-alpha/,
+    /kungfu-systems\/buildchain\/\.github\/workflows\/public-build-adopter-qualification\.yml@v4-alpha/,
   );
   assert.doesNotMatch(caller, /(?:uses:\s*\.\/|runs-on:|steps:|BUILDCHAIN_)/);
 });
 
 test("candidate dispatch binds an external adopter to one exact source cut", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/v4-adopter-delivery.yml"),
+    path.join(root, ".github/workflows/public-build-adopter-qualification.yml"),
     "utf8",
   );
   assert.equal(

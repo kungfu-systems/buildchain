@@ -82,7 +82,7 @@ function consumerPolicyReceipt() {
   fs.mkdirSync(path.dirname(workflow), { recursive: true });
   fs.writeFileSync(
     workflow,
-    "jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@v4-alpha\n",
+    "jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha\n",
   );
   fs.mkdirSync(path.join(root, ".buildchain"), { recursive: true });
   fs.writeFileSync(
@@ -97,7 +97,7 @@ function consumerPolicyReceipt() {
     root,
     repository: fixture.repository,
     sourceSha: fixture.source.sha,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     expectedInvocationChannel: "alpha",
     resolvedRuntimeSha: fixture.runtime.sha,
     policy: floatingPolicy,

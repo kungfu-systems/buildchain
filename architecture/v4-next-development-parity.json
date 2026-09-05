@@ -12,7 +12,7 @@
     "branch": "dev/v4/v4.0",
     "implementationBaseline": "36ad1dc03a9d2785aca938a7a369e4b96707fa32",
     "publicConsumerCaller": ".github/workflows/self-build-public-consumer-dogfood.yml",
-    "publicConsumerReusable": "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@v4-alpha"
+    "publicConsumerReusable": "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha"
   },
   "earlierContinuityDelta": {
     "assignment": "2026-08-11-buildchain-next-development-version-continuity",
@@ -188,5 +188,5 @@
       "verificationEvidence": []
     }
   ],
-  "matrixRoot": "sha256:59bf32516748d4d2f823cdcbcfe0b75a7332fa122e2ebc66c6ea8553b34c5ccf"
+  "matrixRoot": "sha256:6affa0278532cfc96d3af04d113d7c509ec18df3a86d86945a2a5e7418d7c83e"
 }
