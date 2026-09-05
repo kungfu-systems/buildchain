@@ -9,8 +9,13 @@ const workflow = ".github/workflows/self-build-verify.yml";
 const proofPath = ".buildchain/source-verification/evidence.json";
 const hash = (bytes) =>
   `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
-const run = (command, args) =>
-  execFileSync(command, args, { encoding: "utf8" }).trim();
+const execute = (command, args, encoding) =>
+  execFileSync(command, args, {
+    encoding,
+    maxBuffer: 32 * 1024 * 1024,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+const run = (command, args) => execute(command, args, "utf8").trim();
 const git = (...args) => run("git", args);
 const write = (file, value) => {
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -24,7 +29,7 @@ export function verificationIdentity({
 } = {}) {
   const sourceSha = command("git", ["rev-parse", revision]);
   const sourceTree = command("git", ["rev-parse", `${revision}^{tree}`]);
-  const bytes = (file) => execFileSync("git", ["show", `${sourceSha}:${file}`]);
+  const bytes = (file) => execute("git", ["show", `${sourceSha}:${file}`]);
   const named = (files) =>
     hash(JSON.stringify(files.map((file) => [file, hash(bytes(file))])));
   for (const key of ["GITHUB_REPOSITORY", "ImageOS", "ImageVersion"])
@@ -101,13 +106,8 @@ export function sealVerification(input) {
   return invokeV4DomainWasm("source-verification-seal", input);
 }
 
-function api(endpoint, binary = false) {
-  return execFileSync("gh", ["api", endpoint], {
-    encoding: binary ? undefined : "utf8",
-    maxBuffer: 32 * 1024 * 1024,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-}
+const api = (endpoint, binary = false) =>
+  execute("gh", ["api", endpoint], binary ? undefined : "utf8");
 
 // Only the one bounded proof file is read; archive paths are never extracted.
 export function readProofArchive(archive, digest) {

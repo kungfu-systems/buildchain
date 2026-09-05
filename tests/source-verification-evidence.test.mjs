@@ -7,9 +7,40 @@ import {
   planVerification,
   readProofArchive,
   sealVerification,
+  verificationIdentity,
 } from "../scripts/source-verification-evidence.mjs";
 
 const r = `sha256:${"1".repeat(64)}`;
+
+test("verification identity hashes the complete tracked WASM above the default subprocess buffer", () => {
+  const wasm = "packages/core/buildchain-v4-domain.wasm";
+  const manifestPath = "packages/core/v4-domain-wasm-artifact.js";
+  const git = (args) => execFileSync("git", args, { encoding: "utf8" }).trim();
+  assert.ok(Number(git(["cat-file", "-s", `HEAD:${wasm}`])) > 1024 * 1024);
+  const manifest = execFileSync("git", ["show", `HEAD:${manifestPath}`]);
+  const wasmDigest = manifest
+    .toString()
+    .match(/V4_DOMAIN_WASM_SHA256\s*=\s*"([a-f0-9]{64})"/u)[1];
+  const digest = (bytes) =>
+    `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
+  const actual = verificationIdentity({
+    env: {
+      GITHUB_REPOSITORY: "owner/repo",
+      ImageOS: "fixture",
+      ImageVersion: "1",
+    },
+    command: (name, args) => (name === "git" ? git(args) : `${name}-fixture`),
+  });
+  assert.equal(
+    actual.runtimeRoot,
+    digest(
+      JSON.stringify([
+        [wasm, `sha256:${wasmDigest}`],
+        [manifestPath, digest(manifest)],
+      ]),
+    ),
+  );
+});
 const identity = {
   repository: "owner/repo",
   sourceSha: "a".repeat(40),
