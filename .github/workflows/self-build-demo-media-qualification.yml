@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/.auditable-demo.yml"
-      - ".github/workflows/auditable-demo-media-profile-qualification.yml"
+      - ".github/workflows/self-build-demo-media-qualification.yml"
       - "contracts/auditable-demo-media-profiles-v1.json"
       - "contracts/evidence/auditable-demo-web-delivery-v1.json"
       - "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json"
@@ -16,7 +16,7 @@ on:
       - "dev/v*/v*"
     paths:
       - ".github/workflows/.auditable-demo.yml"
-      - ".github/workflows/auditable-demo-media-profile-qualification.yml"
+      - ".github/workflows/self-build-demo-media-qualification.yml"
       - "contracts/auditable-demo-media-profiles-v1.json"
       - "contracts/evidence/auditable-demo-web-delivery-v1.json"
       - "contracts/evidence/auditable-demo-responsive-web-delivery-v1.json"

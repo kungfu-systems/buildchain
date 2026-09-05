@@ -162,12 +162,12 @@
     "check:v4-contracts": "pnpm run check:v4-contracts:rust && node --test tests/v4-canonical-contracts.test.mjs tests/v4-delivery-warrant-fixture-runner.test.mjs tests/v4-delivery-warrant-read-candidate.test.mjs tests/v4-domain-wasm.test.mjs tests/v4-floating-consumer-policy-contract.test.mjs tests/v4-floating-consumer-policy.test.mjs tests/v4-runtime-ref-resume-authority.test.mjs tests/v4-tail-reseal.test.mjs tests/v4-tail-reseal-parity.test.mjs tests/v4-compatibility-facts.test.mjs tests/v4-publication-rehearsal.test.mjs tests/v4-platform-stage-checkpoints.test.mjs tests/v4-provider-operation-journal.test.mjs tests/v4-provider-readback-idempotency.test.mjs tests/v4-public-dogfood-contract.test.mjs tests/v4-release-activation-shadow.test.mjs tests/v4-stable-publication-fence.test.mjs tests/v4-partial-mutation-recovery-qualification.test.mjs tests/v4-stage-capsule.test.mjs tests/v4-stage-capsule-store.test.mjs tests/v4-stage-capsule-resume-planner.test.mjs tests/v4-stage-capsule-qualification.test.mjs",
     "build:v4-wasm": "node scripts/build-v4-domain-wasm.mjs",
     "check:v4-wasm": "prettier --check packages/core/v4-domain-wasm.js packages/core/v4-domain-wasm-artifact.js scripts/build-v4-domain-wasm.mjs scripts/copy-v4-domain-wasm.mjs tests/v4-domain-wasm.test.mjs && node scripts/build-v4-domain-wasm.mjs --check",
-    "check:workflows": "bash scripts/check-workflows.sh",
+    "check:workflows": "node scripts/check-workflow-taxonomy.mjs && bash scripts/check-workflows.sh",
     "generate:reference": "node scripts/generate-public-reference.mjs",
     "check:reference": "node scripts/generate-public-reference.mjs --check",
     "generate:next-development": "node scripts/generate-next-development-guidance.mjs",
     "check:next-development": "node scripts/generate-next-development-guidance.mjs --check",
-    "generate:site": "pnpm run generate:next-development && pnpm run generate:reference && node scripts/generate-site-bundle.mjs",
+    "generate:site": "pnpm run generate:workflows && pnpm run generate:next-development && pnpm run generate:reference && node scripts/generate-site-bundle.mjs",
     "check:site": "pnpm run check:next-development && pnpm run check:reference && node scripts/generate-site-bundle.mjs --check",
     "check:golden-path": "node scripts/verify-golden-path.mjs",
     "test:unit": "node --test tests/*.test.mjs",
@@ -178,7 +178,8 @@
     "bridge:v4:build": "node scripts/v4-bridge-bootstrap.mjs build",
     "bridge:v4:run": "node scripts/v4-bridge-bootstrap.mjs run",
     "bridge:v4:evidence": "node scripts/v4-bridge-evidence.mjs",
-    "check:v4-contracts:rust": "cargo fmt --manifest-path crates/buildchain-v4-contracts/Cargo.toml -- --check && cargo clippy --locked --manifest-path crates/buildchain-v4-contracts/Cargo.toml -- -D warnings && cargo test --locked --manifest-path crates/buildchain-v4-contracts/Cargo.toml"
+    "check:v4-contracts:rust": "cargo fmt --manifest-path crates/buildchain-v4-contracts/Cargo.toml -- --check && cargo clippy --locked --manifest-path crates/buildchain-v4-contracts/Cargo.toml -- -D warnings && cargo test --locked --manifest-path crates/buildchain-v4-contracts/Cargo.toml",
+    "generate:workflows": "node scripts/generate-workflow-taxonomy.mjs"
   },
   "devDependencies": {
     "ajv": "8.17.1",

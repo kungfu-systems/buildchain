@@ -90,7 +90,7 @@ conflicting bytes are rejected. Each publication authorization is retained as
 `buildchain.binary.capability-<sha256>.json`, so a fresh recovery capability does
 not overwrite an earlier grant. Existing assets are never clobbered. Recovery uses
 the same exact successful Binary Distribution evidence run through
-`binary-release-assets.yml`; it does not rebuild already admitted archives or
+`self-release-binary-assets.yml`; it does not rebuild already admitted archives or
 create another npm version. Read back all three platform archives, checksums,
 both Passports and the settlement packet before declaring distribution complete.
 

@@ -397,7 +397,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh workflow run binary-release-assets.yml \
+          gh workflow run self-release-binary-assets.yml \
             --repo "${GITHUB_REPOSITORY}" \
             --ref "${RELEASE_TAG}" \
             -f buildchain-ref="${GITHUB_SHA}" \

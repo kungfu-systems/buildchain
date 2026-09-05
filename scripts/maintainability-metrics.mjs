@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { projectWorkflowIdentities } from "./workflow-taxonomy.mjs";
 
 import fs from "node:fs";
 import path from "node:path";
@@ -280,10 +281,17 @@ function collectMaintainabilityMetrics({
       analyzeJavaScript(file, readTrackedFile(root, file, revision)),
     ]),
   );
+  const physicalWorkflows = workflowFiles.map((file) => ({
+    path: file,
+    text: readTrackedFile(root, file, revision),
+  }));
+  const logicalWorkflows = revision
+    ? physicalWorkflows
+    : projectWorkflowIdentities(root, physicalWorkflows);
   const workflowMetrics = Object.fromEntries(
-    workflowFiles.map((file) => [
-      file,
-      analyzeWorkflow(file, readTrackedFile(root, file, revision)),
+    logicalWorkflows.map((entry) => [
+      entry.path,
+      analyzeWorkflow(entry.path, entry.text),
     ]),
   );
   const sumLines = (entries) =>
@@ -316,8 +324,11 @@ function collectMaintainabilityMetrics({
       ),
       testFiles: testFiles.length,
       testLines: sumLines(testFiles),
-      workflowFiles: workflowFiles.length,
-      workflowLines: sumLines(workflowFiles),
+      workflowFiles: logicalWorkflows.length,
+      workflowLines: logicalWorkflows.reduce(
+        (total, entry) => total + lineCount(entry.text),
+        0,
+      ),
       documentationFiles: documentationFiles.length,
       documentationLines: sumLines(documentationFiles),
       generatedFiles: generatedFiles.length,

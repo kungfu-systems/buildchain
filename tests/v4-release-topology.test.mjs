@@ -397,7 +397,7 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     "utf8",
   );
   const recovery = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-ref-promotion-recovery.yml"),
+    path.join(root, ".github/workflows/self-ops-promotion-recovery.yml"),
     "utf8",
   );
   assert.deepEqual(topologyLedger.authorityClosure.runtimeEngines, [

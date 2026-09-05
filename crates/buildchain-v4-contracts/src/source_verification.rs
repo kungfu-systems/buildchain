@@ -174,7 +174,7 @@ pub fn plan_source_verification(value: &Value) -> ContractResult<Value> {
         || provider.event != "merge_group"
         || provider.status != "completed"
         || provider.conclusion != "success"
-        || provider.workflow_path != ".github/workflows/verify.yml"
+        || provider.workflow_path != ".github/workflows/self-build-verify.yml"
     {
         return Ok(execute("provider-mismatch"));
     }
@@ -227,7 +227,7 @@ mod tests {
         json!({"expected":identity, "evaluatedAtMs":3000, "candidate":seal_source_verification(&evidence).unwrap(),
             "provider":{"repository":"owner/repo", "runId":"123", "runAttempt":1, "headSha":"a".repeat(40),
             "event":"merge_group", "status":"completed", "conclusion":"success",
-            "workflowPath":".github/workflows/verify.yml", "artifactDigest":r}})
+            "workflowPath":".github/workflows/self-build-verify.yml", "artifactDigest":r}})
     }
 
     #[test]

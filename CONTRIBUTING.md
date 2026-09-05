@@ -73,6 +73,30 @@ pnpm run build
 npm pack --dry-run --json --registry=https://registry.npmjs.org/
 ```
 
+## Workflow organization
+
+All workflows remain directly under `.github/workflows/`. The finite role and
+category vocabulary is enforced by `architecture/workflow-taxonomy.json`:
+
+| Role | Filename | Scope |
+| --- | --- | --- |
+| Public | `public-<category>-<purpose>.yml` | Consumer entry |
+| Component | `.<category>-<purpose>.yml` | Advanced reusable component |
+| Self | `self-<category>-<purpose>.yml` | Buildchain repository automation |
+
+Categories are only `build`, `release`, and `ops`. Register the identity, role,
+category, purpose, owner, lifecycle status, invocation, and rationale before
+adding its derived filename. The [Workflow Catalog](docs/workflow-catalog.md)
+lists every allowed path and compatibility exception. Existing public aliases
+are generated from their canonical implementations; self workflows have one
+event entry. A matching prefix alone does not admit an unregistered workflow.
+
+Run `pnpm run generate:workflows`, `pnpm run check:workflows`, then the full
+`pnpm run check`. The required Verify lifecycle runs this gate on PRs, merge
+queue candidates, and pushes. Policy, enforcement, and ownership changes require
+independent `@kungfu-origin` review. Keep published floating consumers on their
+registered legacy paths until the selected channel actually ships the new path.
+
 ## Generated files
 
 GitHub Actions consume committed bundles. When changing an action

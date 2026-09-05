@@ -1019,7 +1019,7 @@ test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
     /\$legacyBinding\.stateRoot == \.observation\.stateRoot/,
   );
 
-  const verify = readRepoText(".github/workflows/verify.yml");
+  const verify = readRepoText(".github/workflows/self-build-verify.yml");
   assert.match(verify, /pull_request:/);
   assert.match(verify, /merge_group:/);
   assert.match(verify, /types: \[checks_requested\]/);
@@ -1045,7 +1045,7 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
 
 test("Buildchain self-delivery exposes the complete two-phase Warrant caller", () => {
   const workflow = readRepoText(
-    ".github/workflows/buildchain-dev-delivery.yml",
+    ".github/workflows/self-ops-dev-delivery.yml",
   );
   const stableLock = JSON.parse(
     fs.readFileSync(path.join(root, ".buildchain/contract-lock.json"), "utf8"),
@@ -1123,8 +1123,8 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
     workflow,
     /delivery-priority: \$\{\{ github\.event\.client_payload\.candidate\.priority \|\| github\.event\.inputs\.delivery-priority \|\| 'ordinary' \}\}/,
   );
-  assert.match(workflow, /handoff-workflow-id: buildchain-dev-delivery\.yml/);
-  assert.match(workflow, /source-workflow-id: verify\.yml/);
+  assert.match(workflow, /handoff-workflow-id: self-ops-dev-delivery\.yml/);
+  assert.match(workflow, /source-workflow-id: self-build-verify\.yml/);
   assert.match(workflow, /legacy-active-owner-binding-json:/);
   assert.match(workflow, /required-status-checks: check/);
   assert.match(
@@ -1366,7 +1366,7 @@ test("PR-controlled native delivery and provider finalization use distinct hoste
 
 test("declared merge queue governance reconciles automatically on dev changes", () => {
   const workflow = readRepoText(
-    ".github/workflows/dev-merge-queue-governance.yml",
+    ".github/workflows/self-ops-merge-queue.yml",
   );
   assert.match(workflow, /push:\n\s+branches:\n\s+- dev\/v\*\/v\*/);
   assert.match(workflow, /\.buildchain\/buildchain\.toml/);
@@ -1384,13 +1384,13 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
   const weekly = readRepoText(".github/workflows/patrol-weekly.yml");
   const monthly = readRepoText(".github/workflows/patrol-monthly.yml");
   const dogfoodDaily = readRepoText(
-    ".github/workflows/buildchain-patrol-daily.yml",
+    ".github/workflows/self-ops-patrol-daily.yml",
   );
   const dogfoodWeekly = readRepoText(
-    ".github/workflows/buildchain-patrol-weekly.yml",
+    ".github/workflows/self-ops-patrol-weekly.yml",
   );
   const dogfoodMonthly = readRepoText(
-    ".github/workflows/buildchain-patrol-monthly.yml",
+    ".github/workflows/self-ops-patrol-monthly.yml",
   );
 
   assert.match(engine, /workflow_call:/);
@@ -1474,13 +1474,13 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
     "utf8",
   );
   const dogfood = fs.readFileSync(
-    path.join(root, ".github/workflows/buildchain-stable-candidate-patrol.yml"),
+    path.join(root, ".github/workflows/self-ops-stable-candidate-patrol.yml"),
     "utf8",
   );
   const qualification = fs.readFileSync(
     path.join(
       root,
-      ".github/workflows/buildchain-stable-candidate-qualification.yml",
+      ".github/workflows/self-build-stable-candidate-qualification.yml",
     ),
     "utf8",
   );
@@ -1560,7 +1560,7 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
 
 test("check workflow preserves verify mode and exposes source-check mode", () => {
   const reusable = readRepoText(".github/workflows/check.yml");
-  const verify = readRepoText(".github/workflows/verify.yml");
+  const verify = readRepoText(".github/workflows/self-build-verify.yml");
 
   assert.match(reusable, /workflow_call:/);
   assert.match(reusable, /mode:/);
@@ -2622,7 +2622,7 @@ test("web-surface release feedback passport records responsibility and renders s
 
 test("binary distribution blocks invalid release uploads before the build matrix", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/binary-distribution.yml"),
+    path.join(root, ".github/workflows/self-build-binary-distribution.yml"),
     "utf8",
   );
   assert.match(workflow, /Binary distribution preflight/);
@@ -2640,10 +2640,10 @@ test("binary distribution blocks invalid release uploads before the build matrix
 });
 
 test("binary evidence publication remains isolated from the canonical v4 publisher", () => {
-  const evidence = readRepoText(".github/workflows/binary-distribution.yml");
+  const evidence = readRepoText(".github/workflows/self-build-binary-distribution.yml");
   const publication = readRepoText(".github/workflows/.binary-release-assets.yml");
   const publicPublication = readRepoText(
-    ".github/workflows/binary-release-assets.yml",
+    ".github/workflows/self-release-binary-assets.yml",
   );
   const promotion = readRepoText(
     ".github/workflows/.release-candidate-promote.yml",
@@ -2667,10 +2667,10 @@ test("canonical v4 alpha publication does not retain a binary or stable publishe
     ".github/workflows/.release-candidate-promote.yml",
   );
   const selfPromotion = readRepoText(
-    ".github/workflows/buildchain-ref-promotion.yml",
+    ".github/workflows/self-release-promote.yml",
   );
   const recovery = readRepoText(
-    ".github/workflows/buildchain-ref-promotion-recovery.yml",
+    ".github/workflows/self-ops-promotion-recovery.yml",
   );
   assert.match(promotion, /^  apply:/m);
   assert.doesNotMatch(promotion, /gh workflow run binary-distribution\.yml/);

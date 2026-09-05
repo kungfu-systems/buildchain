@@ -102,7 +102,7 @@ export function createV4UniversalSelfDogfoodRequest({
     },
     consumer: {
       repository: "kungfu-systems/buildchain",
-      workflow: ".github/workflows/universal-bootstrap-dogfood.yml",
+      workflow: ".github/workflows/self-ops-bootstrap-dogfood.yml",
       sourceSha,
     },
     capability: {

@@ -53,7 +53,7 @@ run_id="$(jq -r '[.statusCheckRollup[] | select(.workflowName == "Verify" and .c
 run="$(gh api "repos/$repository/actions/runs/$run_id")"
 jq -e --arg head "$source_head" --argjson number "$number" '
   .conclusion == "success" and .event == "pull_request" and .head_sha == $head and
-  ((.path | sub("@.*$"; "")) == ".github/workflows/verify.yml") and
+  ((.path | sub("@.*$"; "")) == ".github/workflows/self-build-verify.yml") and
   any(.pull_requests[]; .number == $number)
 ' >/dev/null <<<"$run" || { echo "buildchain dev deliver: Verify run does not exactly cover the PR head" >&2; exit 1; }
 qualified_base="$(jq -r --argjson number "$number" '.pull_requests[] | select(.number == $number) | .base.sha' <<<"$run" | head -n 1)"
@@ -70,7 +70,7 @@ paths_at_head() {
   done | jq -Rsc 'split("\n") | map(select(length > 0)) | sort'
 }
 existing_paths="$(jq -r '.[]' <<<"$affected_paths" | paths_at_head)"
-policy_paths="$(printf '%s\n' .github/workflows/verify.yml .github/workflows/buildchain-dev-delivery.yml .github/workflows/native-dev-delivery.yml buildchain.toml .buildchain/buildchain.toml | paths_at_head)"
+policy_paths="$(printf '%s\n' .github/workflows/self-build-verify.yml .github/workflows/self-ops-dev-delivery.yml .github/workflows/native-dev-delivery.yml buildchain.toml .buildchain/buildchain.toml | paths_at_head)"
 [ "$(jq length <<<"$policy_paths")" -gt 0 ] || policy_paths="$(jq '.[0:1]' <<<"$existing_paths")"
 [ "$(jq length <<<"$existing_paths")" -gt 0 ] || existing_paths="$policy_paths"
 dependency_paths="$(printf '%s\n' package.json pnpm-lock.yaml package-lock.json yarn.lock Cargo.toml Cargo.lock go.mod go.sum | paths_at_head)"
@@ -124,8 +124,12 @@ if [ -n "$github_token" ]; then
       stateRoot:.observation.stateRoot,fencingToken:.observation.activeWarrant.fencingToken,generation:.observation.activeWarrant.generation}
   ' <<<"${observation:-}" 2>/dev/null || true)"
 fi
-workflow="buildchain-dev-delivery.yml"
-gh api "repos/$repository/contents/.github/workflows/$workflow?ref=$base" >/dev/null 2>&1 || workflow="native-dev-delivery.yml"
+workflow="self-ops-dev-delivery.yml"
+# A migration PR still dispatches the protected base's registered pre-migration entry.
+if ! gh api "repos/$repository/contents/.github/workflows/$workflow?ref=$base" >/dev/null 2>&1; then
+  workflow="buildchain-dev-delivery.yml"
+  gh api "repos/$repository/contents/.github/workflows/$workflow?ref=$base" >/dev/null 2>&1 || workflow="native-dev-delivery.yml"
+fi
 payload="$(jq -n --arg ref "$base" --arg runtime "$runtime_sha" --arg number "$number" \
   --arg head "$source_head" --arg roots "$(jq -cn --arg root "$source_root" '{sourceRoot:$root}')" \
   --arg run "$run_id" --arg legacyBinding "$legacy_active_owner_binding" --argjson proof "$predicates" '{ref:$ref,inputs:{

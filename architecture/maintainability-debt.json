@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64772,
-    "current": 56711
+    "measuredExcess": 64771,
+    "current": 56710
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1435,21 +1435,21 @@
       "scripts/generate-channel-promotion-workflow.mjs": {
         "baseline": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 282
             }
           }
         },
         "current": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 240
             }
           }
         },
         "target": {
           "functions": {
-            "generateChannelPromotionWorkflow@279": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 180
             }
           }
@@ -1459,7 +1459,7 @@
         "baseline": {
           "lines": 1410,
           "functions": {
-            "buildSiteBundle@719": {
+            "buildSiteBundle@720": {
               "lines": 637
             }
           }
@@ -1467,15 +1467,15 @@
         "current": {
           "lines": 1410,
           "functions": {
-            "buildSiteBundle@719": {
-              "lines": 637
+            "buildSiteBundle@720": {
+              "lines": 636
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "buildSiteBundle@719": {
+            "buildSiteBundle@720": {
               "lines": 180
             }
           }

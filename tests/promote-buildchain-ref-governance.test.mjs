@@ -884,7 +884,7 @@ throw new Error("validated durable evidence must prevent a second registry publi
 
 test("release recovery bootstrap scope stays exact outside the promotion action directory", () => {
   for (const file of [
-    ".github/workflows/buildchain-ref-promotion.yml",
+    ".github/workflows/self-release-promote.yml",
     "packages/core/self-dogfood-version.js",
     "scripts/check-inventory.mjs",
     "tests/build-surface.test.mjs",

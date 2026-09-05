@@ -286,11 +286,11 @@ jobs:
       target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
       package-manager: pnpm
       artifact-name: libnode-shaped
-      release-candidate-workflow-file: build-surface-fixture.yml
+      release-candidate-workflow-file: self-build-fixture.yml
       release-candidate-workflow-name: Build Surface Fixture
       resume-candidate-repository: ${{ inputs['resume-candidate-repository'] }}
       resume-candidate-run-id: ${{ inputs['resume-candidate-run-id'] }}
-      resume-expected-workflow-file: build-surface-fixture.yml
+      resume-expected-workflow-file: self-build-fixture.yml
       resume-expected-workflow-name: Build Surface Fixture
       resume-expected-source-tree: ${{ inputs['resume-expected-source-tree'] }}
       resume-expected-candidate-root: ${{ inputs['resume-expected-candidate-root'] }}
@@ -315,7 +315,7 @@ jobs:
       release-passport-impact-json: .buildchain/release-impact.json
       publication-auto-admission: true
       publication-auto-no-gate: true
-      publication-publisher-workflow-path: .github/workflows/buildchain-ref-promotion.yml
+      publication-publisher-workflow-path: .github/workflows/self-release-promote.yml
       publication-authority-workflow-path: .github/workflows/.release-candidate-promote.yml
       publication-product: Buildchain
       publication-target: npm:@kungfu-tech/buildchain

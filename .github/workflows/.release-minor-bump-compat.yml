@@ -1,0 +1,33 @@
+on:
+  workflow_call:
+
+    inputs:
+      universal-request-json:
+        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
+        default: ""
+        required: false
+        type: string
+    secrets:
+      GITHUB_PUSH_TOKEN:
+        required: true
+
+jobs:
+  universal-bootstrap:
+    name: Universal exact-candidate execution
+    if: ${{ inputs.universal-request-json != '' }}
+    uses: ./.github/workflows/bootstrap.yml
+    with:
+      request-json: ${{ inputs.universal-request-json }}
+
+  bump:
+    if: ${{ inputs.universal-request-json == '' && (github.event.pull_request.merged) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Bump Version
+        if: ${{ github.event.pull_request.merged }}
+        uses: kungfu-systems/buildchain/actions/bump-version@v2
+        with:
+          token: ${{ secrets.GITHUB_PUSH_TOKEN }}

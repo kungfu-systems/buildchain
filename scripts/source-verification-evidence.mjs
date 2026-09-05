@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { invokeV4DomainWasm } from "../packages/core/v4-domain-wasm.js";
 
-const workflow = ".github/workflows/verify.yml";
+const workflow = ".github/workflows/self-build-verify.yml";
 const proofPath = ".buildchain/source-verification/evidence.json";
 const hash = (bytes) =>
   `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
@@ -141,7 +141,7 @@ export async function discoverVerification({
 }) {
   const prefix = `repos/${expected.repository}/actions`;
   const response = await fetchJson(
-    `${prefix}/workflows/verify.yml/runs?event=merge_group&status=success&head_sha=${expected.sourceSha}&per_page=10`,
+    `${prefix}/workflows/self-build-verify.yml/runs?event=merge_group&status=success&head_sha=${expected.sourceSha}&per_page=10`,
   );
   const reasons = [];
   for (const listed of response.workflow_runs || []) {

@@ -506,7 +506,7 @@ shows the same exact PR head is already queued again, so an earlier queue event
 cannot close a newer active Warrant generation.
 
 Buildchain uses the same contract for its own protected dev line through
-`buildchain-dev-delivery.yml`. The manual caller requires the exact PR head and
+`self-ops-dev-delivery.yml`. The manual caller requires the exact PR head and
 semantic source roots, accepts an optional reusable native proof, keeps both
 the durable public selector and explicit runtime input on `v4-alpha`, selects
 `delivery-warrant-mode: required`, and targets GitHub Merge Queue. It does not

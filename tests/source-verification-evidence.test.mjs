@@ -42,7 +42,7 @@ const provider = {
   event: "merge_group",
   status: "completed",
   conclusion: "success",
-  workflowPath: ".github/workflows/verify.yml",
+  workflowPath: ".github/workflows/self-build-verify.yml",
   artifactDigest: r,
 };
 const request = () => ({

@@ -123,7 +123,7 @@ jobs:
           --artifact-name buildchain-check-install
           --manifest-path .buildchain/artifacts/check-install-manifest.json
           --summary-path .buildchain/artifacts/check-install-summary.json
-      - name: Execute full source tests and generated artifact checks
+      - name: Run declared verify lifecycle (full source tests and generated artifact checks)
         if: ${{ steps.source-verification.outputs.decision == 'execute' }}
         run: >-
           node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify

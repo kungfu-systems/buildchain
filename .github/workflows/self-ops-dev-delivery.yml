@@ -176,8 +176,8 @@ jobs:
       source-workflow-run-id: ${{ github.event.client_payload.candidate.sourceWorkflowRunId || fromJSON(github.event.inputs.source-workflow-run-id || github.run_id) }}
       legacy-active-owner-binding-json: ${{ github.event.inputs.legacy-active-owner-binding-json || '' }}
       delivery-warrant-mode: required
-      handoff-workflow-id: buildchain-dev-delivery.yml
-      source-workflow-id: verify.yml
+      handoff-workflow-id: self-ops-dev-delivery.yml
+      source-workflow-id: self-build-verify.yml
       assignment-root: ${{ github.event.client_payload.candidate.assignmentRoot || fromJSON(github.event.inputs.native-roots-json || '{}').assignmentRoot || '' }}
       initiative-root: ${{ github.event.client_payload.candidate.initiativeRoot || fromJSON(github.event.inputs.native-roots-json || '{}').initiativeRoot || '' }}
       source-identity-root: ${{ github.event.client_payload.candidate.sourceIdentityRoot || github.event.inputs.source-identity-root }}
