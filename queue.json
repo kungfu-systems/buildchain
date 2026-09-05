@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1432,
+  "generation": 1433,
   "fencingCounter": 210,
   "policy": {
     "agingSeconds": 900,
@@ -12,46 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:16cedabb0d48d5d693e74d0d998f6702ac3704b69ecc6c6606acc0bd6a39820a",
-    "pullRequestNumber": 3485,
-    "sourceHead": "7179809165ee03d00ebb2715225ea95c51c8dc25",
-    "sourceRoot": "sha256:c8a33697af487f7698e3b89d7bd50b1d5d660d1ad60c8ba2f40ff5e8e6b8e9ec",
-    "sourceIdentityRoot": "sha256:45f14de27ec4ba52e1bc6b95a9e0c8cb0286b051c34c46a72b7bab7f762f19c0",
-    "sourcePatchRoot": "sha256:8f096e65b5ba217f53ed9a48eed9ad7d5221e33802be6bd3ac4c8e37973f4808",
-    "sourceProofRoot": "sha256:16a64620c2c8712498cb4f3091fd98eadc9fd44cd702eb049e5f3a5d70ee4466",
-    "planRoot": "sha256:5717e2a455847aa19ef85f03051cf45ef419fd6ece5d4c3cc62fe47e89c699a2",
-    "closureRoot": "sha256:1e573e0bd21ef3df70e3abd5e1210abb20eb7f92cc5b84a297629988b82dbf1c",
-    "dependencyRoot": "sha256:b298c7309c034d7815dbbc83606a57ec4c9bd23a1d9a7ba2916ad20d36443699",
-    "toolchainRoot": "sha256:23a92fc18921c536927b96d3234751f7fc7e0b07bdd6e0b4adea37227e850f7d",
-    "affectedPaths": [
-      ".buildchain/release-impact.json",
-      "dist/site/buildchain-contract.json",
-      "dist/site/buildchain-site.json",
-      "dist/site/kfd-claims.json",
-      "dist/site/kfd-upstream-aggregate.json",
-      "dist/site/public-surface-audit.json",
-      "dist/site/publication-registry.json",
-      "dist/site/site-manifest.json",
-      "dist/site/workflow-registry.json",
-      "package.json",
-      "scripts/dev-delivery-warrant.mjs",
-      "tests/dev-delivery-warrant-resubmission.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 33893608672,
-    "deliveryClass": "non-native-fast",
-    "priority": "ordinary",
-    "generation": 210,
-    "expectedOldStateRoot": "sha256:3ff1a20434cd873973c5d7d6d1a78f6c8fd13e7f5ff3cdb134caf29972c25d22",
-    "issuedAt": "2026-09-04T16:21:40.797Z",
-    "expiresAt": "2026-09-04T17:21:40.797Z",
-    "fencingToken": "sha256:95f1bd9f391e90951a7e7a6b9c65d0923bf5bda0710f4a17bfa0caae7dce23e2",
-    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -10862,11 +10823,19 @@
       "sourceWorkflowRunId": 33893608672,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-04T16:21:37.351Z",
-      "updatedAt": "2026-09-04T16:21:40.797Z",
+      "updatedAt": "2026-09-05T09:44:12.686Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "Buildchain observed a terminal PR or changed PR head before a new minimal delivery request.",
+        "evidenceRoot": "sha256:0586388b4cbf92efcb58ff41c103cb1d3253f45088ab89ea66521e739c7095c3",
+        "closedAt": "2026-09-05T09:44:12.686Z",
+        "fencingToken": "sha256:95f1bd9f391e90951a7e7a6b9c65d0923bf5bda0710f4a17bfa0caae7dce23e2",
+        "leaseGeneration": 210,
+        "successorWake": null
+      },
       "affectedPaths": [
         ".buildchain/release-impact.json",
         "dist/site/buildchain-contract.json",
@@ -10884,6 +10853,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-04T16:21:40.797Z",
-  "stateRoot": "sha256:d55aba589231df3b834af4ed53c4a9a0a08a9556066469fcea10666d992a241b"
+  "updatedAt": "2026-09-05T09:44:12.686Z",
+  "stateRoot": "sha256:1baffcc0123ddfee717db87039a430de5dcf12816f0481356a9cc1ca54cfed3c"
 }
