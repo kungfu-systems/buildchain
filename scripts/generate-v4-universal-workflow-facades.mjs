@@ -182,8 +182,27 @@ function guardCompatibilityJobs(source, relative) {
     : `${withGuards.slice(0, bodyStart)}${bootstrapJob}${withGuards.slice(bodyStart)}`;
 }
 
+function addRuntimeBootstrapDependencies(source, relative) {
+  if (
+    relative !== ".github/workflows/.build.yml" ||
+    source.includes(
+      ".buildchain/workflow-shell/scripts/github-output.mjs\n",
+    )
+  )
+    return source;
+  const anchor =
+    "            .buildchain/workflow-shell/scripts/build-contract-core.mjs\n";
+  return source.replace(
+    anchor,
+    `${anchor}            .buildchain/workflow-shell/scripts/github-output.mjs\n`,
+  );
+}
+
 export function migrateV4UniversalWorkflowFacade(source, relative) {
-  return guardCompatibilityJobs(addUniversalInput(source, relative), relative);
+  return guardCompatibilityJobs(
+    addUniversalInput(addRuntimeBootstrapDependencies(source, relative), relative),
+    relative,
+  );
 }
 
 function verify(source, relative) {
