@@ -11,7 +11,7 @@
   "target": {
     "branch": "dev/v4/v4.0",
     "implementationBaseline": "36ad1dc03a9d2785aca938a7a369e4b96707fa32",
-    "publicConsumerCaller": ".github/workflows/v4-public-consumer-dogfood.yml",
+    "publicConsumerCaller": ".github/workflows/self-build-public-consumer-dogfood.yml",
     "publicConsumerReusable": "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@v4-alpha"
   },
   "earlierContinuityDelta": {
@@ -152,8 +152,8 @@
       "claim": "V4 recovery proof runs as pure tests through the standard lifecycle.verify reached by the exact thin public consumer caller, while existing hosted dual-channel evidence keeps public v4-alpha and v4 routes.",
       "disposition": "implemented",
       "implementationEvidence": [
-        ".github/workflows/v4-public-consumer-dogfood.yml",
-        ".github/workflows/buildchain-alpha-self-dogfood.yml",
+        ".github/workflows/self-build-public-consumer-dogfood.yml",
+        ".github/workflows/self-build-alpha-dogfood.yml",
         ".buildchain/buildchain.toml",
         "scripts/next-development-self-dogfood.mjs",
         "scripts/next-development-self-dogfood-harness.mjs"
@@ -188,5 +188,5 @@
       "verificationEvidence": []
     }
   ],
-  "matrixRoot": "sha256:0f0d69dd338cad33dc61870675cbedb8664e019e403f73a1ddcf8471d69df405"
+  "matrixRoot": "sha256:59bf32516748d4d2f823cdcbcfe0b75a7332fa122e2ebc66c6ea8553b34c5ccf"
 }

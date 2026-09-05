@@ -104,7 +104,7 @@ test("canonical APPLY activates the pnpm shim required by nested lifecycle scrip
 
 test("fork governance retains a credential-limited receipt without claiming authority", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/github-governance-audit.yml"),
+    path.join(root, ".github/workflows/self-ops-governance-audit.yml"),
     "utf8",
   );
   assert.match(
@@ -123,7 +123,7 @@ test("fork governance retains a credential-limited receipt without claiming auth
 
 test("fork pull requests cannot enter the release fixture authority path", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/build-surface-fixture.yml"),
+    path.join(root, ".github/workflows/self-build-fixture.yml"),
     "utf8",
   );
   assert.match(

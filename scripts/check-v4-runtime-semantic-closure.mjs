@@ -35,7 +35,10 @@ function publicSurfaceIds(root) {
   return new Set([
     ...Object.keys(packageJson.exports || {}).map((id) => `export:${id}`),
     ...(cli.commands || []).map((entry) => `cli:${entry.id}`),
-    ...(workflows.workflows || []).map((entry) => `workflow:${entry.id}`),
+    ...(workflows.workflows || []).flatMap((entry) => [
+      `workflow:${entry.id}`,
+      ...(entry.taxonomy ? [`workflow:${entry.taxonomy.id}`] : []),
+    ]),
     ...(workflows.actions || []).map((entry) => `action:${entry.id}`),
   ]);
 }

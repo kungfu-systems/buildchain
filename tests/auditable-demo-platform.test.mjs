@@ -704,7 +704,7 @@ test("reusable builds run the transport simulation before either artifact upload
 });
 
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {
-  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/auditable-demo.yml"), "utf8");
+  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/self-build-demo-dogfood.yml"), "utf8");
   assert.match(
     workflow,
     /actions\/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6\.4\.0/u,

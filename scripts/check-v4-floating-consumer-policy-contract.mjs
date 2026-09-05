@@ -80,7 +80,7 @@ function assertPersistedSelectors() {
       const selector = match[2];
       const protectedBootstrap =
         relative ===
-          ".github/workflows/buildchain-ref-promotion-recovery.yml" &&
+          ".github/workflows/self-ops-promotion-recovery.yml" &&
         match[1] === ".github/workflows/.release-candidate-promote.yml" &&
         selector === "alpha/v4/v4.0";
       const isV4 =

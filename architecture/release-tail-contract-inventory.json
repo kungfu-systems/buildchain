@@ -427,7 +427,7 @@
       "repository": "kungfu-systems/buildchain",
       "sourceCommit": "7c8956e8babb521d3e743d40108f115a59a40427",
       "sourceTree": "7e24ca6bafe98b571d94c3bcf07a9d38b31092c5",
-      "workflow": ".github/workflows/buildchain-ref-promotion.yml",
+      "workflow": ".github/workflows/self-release-promote.yml",
       "runtimeRef": "local exact checkout",
       "executableSurfaceIds": []
     },
@@ -454,7 +454,7 @@
       "repository": "kungfu-systems/kungfu",
       "sourceCommit": "445ec32d6bf53dd5ff502d685792406ad38dd4f5",
       "sourceTree": "4963b2f9deb0245f7277cea7224ab0d062a0cc54",
-      "workflow": ".github/workflows/release-new-version.yml",
+      "workflow": ".github/workflows/self-release-new-version-compat.yml",
       "runtimeRef": "train/v3/v3.0/resume-candidate-run",
       "executableSurfaceIds": [
         "publication-admission-commands",
@@ -470,7 +470,7 @@
       "repository": "kungfu-systems/libnode",
       "sourceCommit": "4bef69b88a441f22024fa9f3d7bfd76a89963e8a",
       "sourceTree": "6c4dec7fd70cbdcfbc9ada19e66271654eb393af",
-      "workflow": ".github/workflows/release-new-version.yml",
+      "workflow": ".github/workflows/self-release-new-version-compat.yml",
       "runtimeRef": "v3-alpha",
       "executableSurfaceIds": ["release-passport-producer-commands"]
     },
@@ -479,7 +479,7 @@
       "repository": "kungfu-systems/kfd",
       "sourceCommit": "e82fe11acecdbebfd0c42778c7a1bd6fdc54ab81",
       "sourceTree": "fe0ad4f4b98889c7c246fe16958e118ff79b193b",
-      "workflow": ".github/workflows/buildchain-ref-promotion.yml",
+      "workflow": ".github/workflows/self-release-promote.yml",
       "runtimeRef": "v3-alpha",
       "executableSurfaceIds": []
     },
@@ -488,7 +488,7 @@
       "repository": "kungfu-systems/paper-kungfu-product-white-paper",
       "sourceCommit": "82dd748d6b0edf18d0074262cc8d8ac803e45c7e",
       "sourceTree": "a918f8840608931fdf88d007e20bc4f70ab7eb54",
-      "workflow": ".github/workflows/buildchain-ref-promotion.yml",
+      "workflow": ".github/workflows/self-release-promote.yml",
       "runtimeRef": "v3",
       "executableSurfaceIds": []
     }
@@ -497,7 +497,7 @@
     {
       "repository": "kungfu-systems/agent-hub-demo",
       "sourceCommit": "633111450867919d5063298308cdbfcbd77a8d2e",
-      "workflow": ".github/workflows/buildchain-ref-promotion.yml",
+      "workflow": ".github/workflows/self-release-promote.yml",
       "runtimeRef": "v2",
       "reason": "outside the Buildchain v3 contract inventory"
     }

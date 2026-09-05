@@ -1044,7 +1044,7 @@ and package identity. See [`v4-adopter-delivery.md`](v4-adopter-delivery.md).
 ## npm Publish Gate
 
 Buildchain's own npm package is published from
-`.github/workflows/buildchain-ref-promotion.yml`, inside the same publish
+`.github/workflows/self-release-promote.yml`, inside the same publish
 transaction that promotes release refs:
 
 - `v4.0.3-alpha.0` publishes to npm with dist-tag `alpha`.
@@ -1070,9 +1070,9 @@ Before the first real release, configure npm Trusted Publishing for:
 
 - package: `@kungfu-tech/buildchain`
 - repository: `kungfu-systems/buildchain`
-- workflow: `.github/workflows/buildchain-ref-promotion.yml`
+- workflow: `.github/workflows/self-release-promote.yml`
 
 No npm package is published by manual dispatch or ordinary branch builds.
-Manual dispatch on `.github/workflows/npm-publish.yml` remains dry-run only, so
+Manual dispatch on `.github/workflows/self-release-npm-dry-run.yml` remains dry-run only, so
 maintainers can verify package contents and npm publish shape before opening or
 merging the release PR.

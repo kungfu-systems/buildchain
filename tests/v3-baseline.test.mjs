@@ -37,7 +37,7 @@ test("active runtime defaults use the v3 baseline", () => {
 
 test("manual binary evidence defaults to an existing v3 exact tag", () => {
   assert.match(
-    source(".github/workflows/binary-distribution.yml"),
+    source(".github/workflows/self-build-binary-distribution.yml"),
     /default: "v3\.0\.2-alpha\.4"/,
   );
 });

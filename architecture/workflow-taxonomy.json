@@ -1,0 +1,1437 @@
+{
+  "schema": "buildchain.workflow-taxonomy/v1",
+  "authorityClassification": "repository-policy-enforcement",
+  "roles": ["public", "component", "self"],
+  "categories": ["build", "release", "ops"],
+  "migrationBaseRevision": "a41c00a0c0b2dbd57c238cd9b326b167a1d27ca8",
+  "entries": [
+    {
+      "id": ".auditable-demo",
+      "role": "component",
+      "category": "build",
+      "purpose": "demo-adapter",
+      "summary": "Buildchain Auditable Demo",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.auditable-demo.yml",
+        "originalSha256": "33d86446d6cbcce9ba7f386a32db0afbf32e52ff995ddd4b3cf1989831d7f2db"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.auditable-demo.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.auditable-demo.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".binary-release-assets",
+      "role": "component",
+      "category": "release",
+      "purpose": "binary-assets",
+      "summary": "Buildchain Binary Release Assets",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.binary-release-assets.yml",
+        "originalSha256": "5dfaea0f9cf83500706f423eca08f43594fe3653fa139da359041e88fae49266"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.binary-release-assets.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.binary-release-assets.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".build",
+      "role": "component",
+      "category": "build",
+      "purpose": "engine",
+      "summary": "Buildchain Build",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.build.yml",
+        "originalSha256": "20549663f5459414dcfb00aa9a3a549003bbc09159eeab6cea211db96ed0eab2"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.build.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.build.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".bump-minor-version",
+      "role": "component",
+      "category": "release",
+      "purpose": "minor-bump-compat",
+      "summary": "bump minor version",
+      "owner": "kungfu-origin",
+      "status": "compatibility",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.bump-minor-version.yml",
+        "originalSha256": "6ca37f4d4a81b4433d1ae13833e4ca16bfbbf98f338357376863a2f0d3a2c884"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.bump-minor-version.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.bump-minor-version.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".declarative-auditable-demo",
+      "role": "public",
+      "category": "build",
+      "purpose": "demo",
+      "summary": "Buildchain Declarative Binary Auditable Demo",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.declarative-auditable-demo.yml",
+        "originalSha256": "b00e330b547e6e823f9cf83ac97406ca7c93c688a9e80e63af5bc39cbf840941"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.declarative-auditable-demo.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.declarative-auditable-demo.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".gate-profile",
+      "role": "component",
+      "category": "build",
+      "purpose": "gate-profile",
+      "summary": "Buildchain Shifu Gate Profile",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.gate-profile.yml",
+        "originalSha256": "f5ad2bc08c4092aa27dc257d669a25fe27713c5df90f130ae4e70af983860ace"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.gate-profile.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.gate-profile.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".publication-authority",
+      "role": "component",
+      "category": "release",
+      "purpose": "authority",
+      "summary": "Buildchain Sealed Publication Authority",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.publication-authority.yml",
+        "originalSha256": "548bcf020c85bb98f4d8200c7c0f6960067b557416456981bbd36387f0fc1aa9"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.publication-authority.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.publication-authority.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".release-candidate-promote",
+      "role": "component",
+      "category": "release",
+      "purpose": "promote",
+      "summary": "Release Candidate Promote Advanced",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.release-candidate-promote.yml",
+        "originalSha256": "177b3c50685405e5ed2bf1ac893469fdb3a27e7b03d55025611b2985028cd8cf"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.release-candidate-promote.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.release-candidate-promote.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".release-verify",
+      "role": "component",
+      "category": "build",
+      "purpose": "release-verify-compat",
+      "summary": "release verify",
+      "owner": "kungfu-origin",
+      "status": "compatibility",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.release-verify.yml",
+        "originalSha256": "1997c74278cbbd88f73e516016cb9d323fff3dad255a46496291c579ea679c71"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.release-verify.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.release-verify.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".sam-verify",
+      "role": "component",
+      "category": "build",
+      "purpose": "sam-verify-compat",
+      "summary": "sam verify",
+      "owner": "kungfu-origin",
+      "status": "compatibility",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.sam-verify.yml",
+        "originalSha256": "811c2a5c6e415ad1f688fa96a30116e42acc8faa41ceb3ef929936fc3214286f"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.sam-verify.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.sam-verify.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".sync-release-page",
+      "role": "component",
+      "category": "release",
+      "purpose": "page-sync-retired",
+      "summary": "sync release page",
+      "owner": "kungfu-origin",
+      "status": "retired",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.sync-release-page.yml",
+        "originalSha256": "607e1a4950a810671aa48f2e208c3ab4465e83bc08c0a1f768875a900e4ceec7"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.sync-release-page.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.sync-release-page.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".sync-remote-git",
+      "role": "component",
+      "category": "ops",
+      "purpose": "git-sync",
+      "summary": "sync remote git",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.sync-remote-git.yml",
+        "originalSha256": "e0cebedef7220a51646e797e56951a7490f5bc29fb530dee4439fc55ba13df2d"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.sync-remote-git.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.sync-remote-git.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".web-surface",
+      "role": "public",
+      "category": "release",
+      "purpose": "web",
+      "summary": "Buildchain Web Surface",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.web-surface.yml",
+        "originalSha256": "5c006ccc4e465649d971490a8cb40f4601a7a83b6496077e2a1d2a1baf90893b"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.web-surface.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.web-surface.yml capability without adding execution behavior."
+    },
+    {
+      "id": ".wheel-verify",
+      "role": "component",
+      "category": "build",
+      "purpose": "wheel-verify-compat",
+      "summary": "wheel verify",
+      "owner": "kungfu-origin",
+      "status": "compatibility",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/.wheel-verify.yml",
+        "originalSha256": "2490352d5edcc47e0c4794b71493d20a870e9791a6447b08aea30d238d5f0e47"
+      },
+      "compatibility": {
+        "path": ".github/workflows/.wheel-verify.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/.wheel-verify.yml capability without adding execution behavior."
+    },
+    {
+      "id": "artifact-signing-authority",
+      "role": "public",
+      "category": "release",
+      "purpose": "signing-authority",
+      "summary": "Buildchain Artifact Signing Authority",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "dispatch-service",
+      "migration": {
+        "previousPath": ".github/workflows/artifact-signing-authority.yml",
+        "originalSha256": "15c07469ed1f58a8b7b86cb1902bba35d643aeb70213eda87b61fc0ae60b85ec"
+      },
+      "compatibility": {
+        "path": ".github/workflows/artifact-signing-authority.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/artifact-signing-authority.yml capability without adding execution behavior."
+    },
+    {
+      "id": "auditable-demo",
+      "role": "self",
+      "category": "build",
+      "purpose": "demo-dogfood",
+      "summary": "Buildchain Declarative Demo Dogfood",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/auditable-demo.yml",
+        "originalSha256": "470b8fec709e9343d73b7c142890e303f80298e968a98ecb1f26b116b4962c32"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/auditable-demo.yml capability without adding execution behavior."
+    },
+    {
+      "id": "auditable-demo-media-profile-qualification",
+      "role": "self",
+      "category": "build",
+      "purpose": "demo-media-qualification",
+      "summary": "Auditable Demo Media Profile Qualification",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/auditable-demo-media-profile-qualification.yml",
+        "originalSha256": "4eaf69b0bdff263f93542a0a8722620b36003c74efe942de73dfe8d9da07df7a"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/auditable-demo-media-profile-qualification.yml capability without adding execution behavior."
+    },
+    {
+      "id": "binary-distribution",
+      "role": "self",
+      "category": "build",
+      "purpose": "binary-distribution",
+      "summary": "Binary Distribution",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/binary-distribution.yml",
+        "originalSha256": "d07482cd66413a2fb3781a3b76f960b8151b6231841799647fe237820de2fde6"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/binary-distribution.yml capability without adding execution behavior."
+    },
+    {
+      "id": "binary-release-assets",
+      "role": "self",
+      "category": "release",
+      "purpose": "binary-assets",
+      "summary": "Binary Release Assets",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/binary-release-assets.yml",
+        "originalSha256": "e5107c8b31c7c3a3851d05c1b16cb1901693f1eddc8695f9c457dfe938b0271a"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/binary-release-assets.yml capability without adding execution behavior."
+    },
+    {
+      "id": "bootstrap",
+      "role": "public",
+      "category": "ops",
+      "purpose": "bootstrap",
+      "summary": "Buildchain Universal Bootstrap",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/bootstrap.yml",
+        "originalSha256": "b94023c4abe4216765198adcaefb4825874a4d9053be096d35a53d6821128b52"
+      },
+      "compatibility": {
+        "path": ".github/workflows/bootstrap.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/bootstrap.yml capability without adding execution behavior."
+    },
+    {
+      "id": "build",
+      "role": "public",
+      "category": "build",
+      "purpose": "candidate",
+      "summary": "Buildchain Channel Build",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/build.yml",
+        "originalSha256": "ae39d775f50ed5d0a20084067e36ae7337c6e1cf730e5311c54bba0420f4c8bf"
+      },
+      "compatibility": {
+        "path": ".github/workflows/build.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/build.yml capability without adding execution behavior."
+    },
+    {
+      "id": "build-surface-fixture",
+      "role": "self",
+      "category": "build",
+      "purpose": "fixture",
+      "summary": "Build Surface Fixture",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/build-surface-fixture.yml",
+        "originalSha256": "635003e04b147dd9bbaae177321c1a1e8d39bbe6c983ab6e61aa1f1fd9e0325c"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/build-surface-fixture.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-alpha-self-dogfood",
+      "role": "self",
+      "category": "build",
+      "purpose": "alpha-dogfood",
+      "summary": "Buildchain Alpha Self-Dogfood",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-alpha-self-dogfood.yml",
+        "originalSha256": "4233bb5cfc7fb8564dac7c0c0614855efbed0570f46ebe6b70d9de8464fbd004"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-alpha-self-dogfood.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-candidate-recovery-dogfood-failure",
+      "role": "self",
+      "category": "ops",
+      "purpose": "recovery-failure-dogfood",
+      "summary": "Buildchain Candidate Recovery Dogfood Startup Failure",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml",
+        "originalSha256": "6764b53b69aa5a3a6bcf6084052c03c43b7097918df48c6f6dd8f8e4625ed7ca"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-candidate-recovery-dogfood-failure.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-dev-delivery",
+      "role": "self",
+      "category": "ops",
+      "purpose": "dev-delivery",
+      "summary": "Buildchain Dev Delivery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-dev-delivery.yml",
+        "originalSha256": "2fd02b0b3f7bb61e856cf792a9cbb59761cac4e2ab48cac9767c3c99f76b65e3"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-dev-delivery.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-patrol",
+      "role": "public",
+      "category": "ops",
+      "purpose": "patrol",
+      "summary": "Buildchain Patrol",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-patrol.yml",
+        "originalSha256": "648faac4e89aecacc5c77484384bd2d5085dafdd60ae31235c9d4c95fc3c6ea7"
+      },
+      "compatibility": {
+        "path": ".github/workflows/buildchain-patrol.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/buildchain-patrol.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-patrol-daily",
+      "role": "self",
+      "category": "ops",
+      "purpose": "patrol-daily",
+      "summary": "Buildchain Dogfood Patrol Daily",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-patrol-daily.yml",
+        "originalSha256": "9139932b23a10ed8ffbf01e057f2dec51fdccd2a526cf0f32b08201d507bda2f"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-patrol-daily.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-patrol-monthly",
+      "role": "self",
+      "category": "ops",
+      "purpose": "patrol-monthly",
+      "summary": "Buildchain Dogfood Patrol Monthly",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-patrol-monthly.yml",
+        "originalSha256": "aa33a3295c31148e593fe9c85b1df0f554b61b6f5c257e58ddfbc37c756e20d8"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-patrol-monthly.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-patrol-weekly",
+      "role": "self",
+      "category": "ops",
+      "purpose": "patrol-weekly",
+      "summary": "Buildchain Dogfood Patrol Weekly",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-patrol-weekly.yml",
+        "originalSha256": "a8de2eaff33a565a1f9529950fa17cfa3efb2f1ed12379f6c77f7de1764fb49a"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-patrol-weekly.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-ref-promotion",
+      "role": "self",
+      "category": "release",
+      "purpose": "promote",
+      "summary": "Buildchain Ref Promotion",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-ref-promotion.yml",
+        "originalSha256": "678ab1f13e518e5745b101bc52febd7790de87bf48bdbf2b0c2f976547ab4f75"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-ref-promotion.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-ref-promotion-recovery",
+      "role": "self",
+      "category": "ops",
+      "purpose": "promotion-recovery",
+      "summary": "Buildchain Ref Promotion Recovery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-ref-promotion-recovery.yml",
+        "originalSha256": "1a99bf8febf7192674c3147937e3ad3a08d03071f67d63133212eb519967f228"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-ref-promotion-recovery.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-stable-candidate-patrol",
+      "role": "self",
+      "category": "ops",
+      "purpose": "stable-candidate-patrol",
+      "summary": "Buildchain Dogfood Stable Candidate Patrol",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-stable-candidate-patrol.yml",
+        "originalSha256": "a7a65db870ce916d0e9749641543a23670cf25025b3e69cd084101946e359fb2"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-stable-candidate-patrol.yml capability without adding execution behavior."
+    },
+    {
+      "id": "buildchain-stable-candidate-qualification",
+      "role": "self",
+      "category": "build",
+      "purpose": "stable-candidate-qualification",
+      "summary": "Buildchain Stable Candidate Qualification",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/buildchain-stable-candidate-qualification.yml",
+        "originalSha256": "7280bc3e9c8b9033c74f136d5a6c6998eb0f0b1caf0184510d0f7567b24b1282"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/buildchain-stable-candidate-qualification.yml capability without adding execution behavior."
+    },
+    {
+      "id": "candidate-lab",
+      "role": "self",
+      "category": "build",
+      "purpose": "candidate-lab",
+      "summary": "Candidate Lab",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/candidate-lab.yml",
+        "originalSha256": "60dac62c624222d8b37c070e172bc4fa838e35b73a1cd0aefbfaf61db19c5394"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/candidate-lab.yml capability without adding execution behavior."
+    },
+    {
+      "id": "check",
+      "role": "public",
+      "category": "build",
+      "purpose": "check",
+      "summary": "Buildchain Check",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/check.yml",
+        "originalSha256": "44797c1b64e54806e19cf401300a27e587d6a2f0730ee7509eb84aefb9b60f74"
+      },
+      "compatibility": {
+        "path": ".github/workflows/check.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/check.yml capability without adding execution behavior."
+    },
+    {
+      "id": "dev-alpha-candidate-patrol",
+      "role": "public",
+      "category": "ops",
+      "purpose": "alpha-candidate-patrol",
+      "summary": "Buildchain Dev to Alpha Candidate Patrol",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/dev-alpha-candidate-patrol.yml",
+        "originalSha256": "c9461871bd9427dbcd12ba537843307f48dd09e5c8cef45ca3065dafbcc5589d"
+      },
+      "compatibility": {
+        "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/dev-alpha-candidate-patrol.yml capability without adding execution behavior."
+    },
+    {
+      "id": "dev-delivery-warrant-cancel",
+      "role": "public",
+      "category": "ops",
+      "purpose": "warrant-cancel",
+      "summary": "Dev Delivery Warrant Queued Candidate Cancel",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/dev-delivery-warrant-cancel.yml",
+        "originalSha256": "ad9014dc053d635463f70a0c94c24d43f9254e64bf438a62307458f0efe7f8c0"
+      },
+      "compatibility": {
+        "path": ".github/workflows/dev-delivery-warrant-cancel.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/dev-delivery-warrant-cancel.yml capability without adding execution behavior."
+    },
+    {
+      "id": "dev-delivery-warrant-close",
+      "role": "public",
+      "category": "ops",
+      "purpose": "warrant-close",
+      "summary": "Dev Delivery Warrant Close",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/dev-delivery-warrant-close.yml",
+        "originalSha256": "b5689d0c018988933f35034466f8b1574e6121e5a01700eb663ebf9851fafe60"
+      },
+      "compatibility": {
+        "path": ".github/workflows/dev-delivery-warrant-close.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/dev-delivery-warrant-close.yml capability without adding execution behavior."
+    },
+    {
+      "id": "dev-merge-queue-governance",
+      "role": "self",
+      "category": "ops",
+      "purpose": "merge-queue",
+      "summary": "Dev Merge Queue Governance",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/dev-merge-queue-governance.yml",
+        "originalSha256": "129cd72d4f5235372eaea937781d0dcc052196d7779166ac930071f86df33a79"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/dev-merge-queue-governance.yml capability without adding execution behavior."
+    },
+    {
+      "id": "dev-pr-auto-merge",
+      "role": "public",
+      "category": "ops",
+      "purpose": "dev-auto-merge",
+      "summary": "Dev PR Auto Merge",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/dev-pr-auto-merge.yml",
+        "originalSha256": "d86830e186b6ec56816e875adfebd33d705ae309983cc37106717ce05ec9ccca"
+      },
+      "compatibility": {
+        "path": ".github/workflows/dev-pr-auto-merge.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/dev-pr-auto-merge.yml capability without adding execution behavior."
+    },
+    {
+      "id": "dev-qualification-patrol",
+      "role": "public",
+      "category": "ops",
+      "purpose": "dev-qualification-patrol",
+      "summary": "Buildchain Dev Qualification Patrol",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/dev-qualification-patrol.yml",
+        "originalSha256": "5c33a63e5cf61c54205d5df525ac99fb0866416d3d787c38176d0f99c2b546da"
+      },
+      "compatibility": {
+        "path": ".github/workflows/dev-qualification-patrol.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/dev-qualification-patrol.yml capability without adding execution behavior."
+    },
+    {
+      "id": "engineering-housekeeper",
+      "role": "public",
+      "category": "ops",
+      "purpose": "housekeeping",
+      "summary": "Engineering Housekeeper",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/engineering-housekeeper.yml",
+        "originalSha256": "c4550d74527aa5f1e6238e0b28b23ca239039813aef45e379300ed2074ea1e65"
+      },
+      "compatibility": {
+        "path": ".github/workflows/engineering-housekeeper.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/engineering-housekeeper.yml capability without adding execution behavior."
+    },
+    {
+      "id": "engineering-housekeeper-daily",
+      "role": "self",
+      "category": "ops",
+      "purpose": "housekeeping-daily",
+      "summary": "Engineering Housekeeper Daily",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/engineering-housekeeper-daily.yml",
+        "originalSha256": "43afdee577caafb7e1d2952b01f963a7db876a672bda7d4c96bbc7513e679aa8"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/engineering-housekeeper-daily.yml capability without adding execution behavior."
+    },
+    {
+      "id": "engineering-housekeeper-monthly",
+      "role": "self",
+      "category": "ops",
+      "purpose": "housekeeping-monthly",
+      "summary": "Engineering Housekeeper Monthly",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/engineering-housekeeper-monthly.yml",
+        "originalSha256": "7c0f64e14c07324530477546c040606c0492962d41f397ea9abdab71b89518cc"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/engineering-housekeeper-monthly.yml capability without adding execution behavior."
+    },
+    {
+      "id": "engineering-housekeeper-weekly",
+      "role": "self",
+      "category": "ops",
+      "purpose": "housekeeping-weekly",
+      "summary": "Engineering Housekeeper Weekly",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/engineering-housekeeper-weekly.yml",
+        "originalSha256": "b671df332f5313e182647dc3aa00c08ee77aab4dbb8b692d833b7b38f3d27ad0"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/engineering-housekeeper-weekly.yml capability without adding execution behavior."
+    },
+    {
+      "id": "github-artifact-attestation",
+      "role": "public",
+      "category": "release",
+      "purpose": "artifact-attestation",
+      "summary": "Buildchain GitHub Artifact Attestation",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/github-artifact-attestation.yml",
+        "originalSha256": "fd43392b60c5a1cb7aa0a9075471856b543a123918716112d8ddd91ce597f709"
+      },
+      "compatibility": {
+        "path": ".github/workflows/github-artifact-attestation.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/github-artifact-attestation.yml capability without adding execution behavior."
+    },
+    {
+      "id": "github-governance-audit",
+      "role": "self",
+      "category": "ops",
+      "purpose": "governance-audit",
+      "summary": "GitHub Governance Authority Audit",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/github-governance-audit.yml",
+        "originalSha256": "bc762d431bc7948b67bb9a528563743008549bb52b1aff6c09b6c3cd008208a1"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/github-governance-audit.yml capability without adding execution behavior."
+    },
+    {
+      "id": "npm-publish",
+      "role": "self",
+      "category": "release",
+      "purpose": "npm-dry-run",
+      "summary": "Publish npm package",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/npm-publish.yml",
+        "originalSha256": "54e5ac92134eddb6910eea4886f899f34eb6528f985248d4187be78ce6ab74ce"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/npm-publish.yml capability without adding execution behavior."
+    },
+    {
+      "id": "paper-release",
+      "role": "public",
+      "category": "release",
+      "purpose": "paper",
+      "summary": "Buildchain Paper Release",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/paper-release.yml",
+        "originalSha256": "e16dea163b7862a7dc010b3ebf8a16a6126603d8966d79974e00902eca4e3437"
+      },
+      "compatibility": {
+        "path": ".github/workflows/paper-release.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/paper-release.yml capability without adding execution behavior."
+    },
+    {
+      "id": "paper-release-sealed",
+      "role": "public",
+      "category": "release",
+      "purpose": "paper-sealed",
+      "summary": "Buildchain Sealed Paper Release",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/paper-release-sealed.yml",
+        "originalSha256": "04a5a860f3162901da4577db69c282d5622c22b26caecccef620b29ca5a7518c"
+      },
+      "compatibility": {
+        "path": ".github/workflows/paper-release-sealed.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/paper-release-sealed.yml capability without adding execution behavior."
+    },
+    {
+      "id": "patrol-daily",
+      "role": "public",
+      "category": "ops",
+      "purpose": "patrol-daily",
+      "summary": "Buildchain Patrol Daily",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/patrol-daily.yml",
+        "originalSha256": "6a0159f946e52662ae878a21f606e8b9ac8f662652b253a682d5bace1453d255"
+      },
+      "compatibility": {
+        "path": ".github/workflows/patrol-daily.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/patrol-daily.yml capability without adding execution behavior."
+    },
+    {
+      "id": "patrol-monthly",
+      "role": "public",
+      "category": "ops",
+      "purpose": "patrol-monthly",
+      "summary": "Buildchain Patrol Monthly",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/patrol-monthly.yml",
+        "originalSha256": "f7a1f557c6ccabf7a7012d034cb6cdbb171352739984bbd462eb7f619ce8a7f5"
+      },
+      "compatibility": {
+        "path": ".github/workflows/patrol-monthly.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/patrol-monthly.yml capability without adding execution behavior."
+    },
+    {
+      "id": "patrol-observed-evidence",
+      "role": "public",
+      "category": "ops",
+      "purpose": "observed-evidence",
+      "summary": "Patrol Observed Evidence",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/patrol-observed-evidence.yml",
+        "originalSha256": "c65e1f3fcb3fb9bc7dcb9f56c8d60e03b1a070fd1994109cd00ba6e355d56b85"
+      },
+      "compatibility": {
+        "path": ".github/workflows/patrol-observed-evidence.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/patrol-observed-evidence.yml capability without adding execution behavior."
+    },
+    {
+      "id": "patrol-weekly",
+      "role": "public",
+      "category": "ops",
+      "purpose": "patrol-weekly",
+      "summary": "Buildchain Patrol Weekly",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/patrol-weekly.yml",
+        "originalSha256": "43ff67408f7a0e4ecb5cdde4c550b914751431664b69008496dd5ecdc1dd3129"
+      },
+      "compatibility": {
+        "path": ".github/workflows/patrol-weekly.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/patrol-weekly.yml capability without adding execution behavior."
+    },
+    {
+      "id": "publication-artifact",
+      "role": "public",
+      "category": "build",
+      "purpose": "publication",
+      "summary": "Buildchain Publication Artifact",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/publication-artifact.yml",
+        "originalSha256": "b224e107179552aa578d69e838a10f2da777ecabff92af4112f631aa9f506897"
+      },
+      "compatibility": {
+        "path": ".github/workflows/publication-artifact.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/publication-artifact.yml capability without adding execution behavior."
+    },
+    {
+      "id": "release-candidate-promote",
+      "role": "public",
+      "category": "release",
+      "purpose": "promote",
+      "summary": "Release Candidate Promote",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/release-candidate-promote.yml",
+        "originalSha256": "c4d5fed7a21a3dee45777aef0b3eff3cc6da9884cf64131ffc85217ef7c16503"
+      },
+      "compatibility": {
+        "path": ".github/workflows/release-candidate-promote.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/release-candidate-promote.yml capability without adding execution behavior."
+    },
+    {
+      "id": "release-governance-reconcile",
+      "role": "public",
+      "category": "ops",
+      "purpose": "release-governance",
+      "summary": "Release Governance Reconcile",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/release-governance-reconcile.yml",
+        "originalSha256": "db306b5787f8705f0143d35a44bfb9cea2194e061e90b6d1b852c8db4719a777"
+      },
+      "compatibility": {
+        "path": ".github/workflows/release-governance-reconcile.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/release-governance-reconcile.yml capability without adding execution behavior."
+    },
+    {
+      "id": "release-line-bootstrap",
+      "role": "self",
+      "category": "release",
+      "purpose": "line-open",
+      "summary": "Release Line Bootstrap",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/release-line-bootstrap.yml",
+        "originalSha256": "ebc5753300585736bb4e27e86f94bd94b5449c72fbe67934beb60987185feb36"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/release-line-bootstrap.yml capability without adding execution behavior."
+    },
+    {
+      "id": "release-new-version",
+      "role": "self",
+      "category": "release",
+      "purpose": "new-version-compat",
+      "summary": "Release - New Version",
+      "owner": "kungfu-origin",
+      "status": "compatibility",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/release-new-version.yml",
+        "originalSha256": "3c2e67af906879b639f8a19a4def8aa156a59a2e790db7358d91fa33cfe1fc70"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/release-new-version.yml capability without adding execution behavior."
+    },
+    {
+      "id": "release-propagation",
+      "role": "public",
+      "category": "release",
+      "purpose": "propagation",
+      "summary": "Release Propagation",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/release-propagation.yml",
+        "originalSha256": "5fc657f586de6f5a9ffa9e0be61c22b6f99318026d718bd518a04a40197faf97"
+      },
+      "compatibility": {
+        "path": ".github/workflows/release-propagation.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/release-propagation.yml capability without adding execution behavior."
+    },
+    {
+      "id": "release-tail",
+      "role": "public",
+      "category": "release",
+      "purpose": "tail",
+      "summary": "Declarative Release Tail",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/release-tail.yml",
+        "originalSha256": "6e3304db970750bdaca21a3f08ee1ec394c75661d6b1c44396e9ef56b5927772"
+      },
+      "compatibility": {
+        "path": ".github/workflows/release-tail.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/release-tail.yml capability without adding execution behavior."
+    },
+    {
+      "id": "release-verify",
+      "role": "self",
+      "category": "build",
+      "purpose": "release-verify-compat",
+      "summary": "Release - Verify",
+      "owner": "kungfu-origin",
+      "status": "compatibility",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/release-verify.yml",
+        "originalSha256": "68d1fbad0b8866fdffb99319be575b7b272c503ba3956ea1183961d3c7b84945"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/release-verify.yml capability without adding execution behavior."
+    },
+    {
+      "id": "self-hosted-runner-smoke",
+      "role": "self",
+      "category": "ops",
+      "purpose": "runner-smoke",
+      "summary": "Self-hosted Runner Smoke",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/self-hosted-runner-smoke.yml",
+        "originalSha256": "64544e59f2a0d3748689c43d234b0f481794b077c678a6cf5a07eec469a532d5"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/self-hosted-runner-smoke.yml capability without adding execution behavior."
+    },
+    {
+      "id": "stable-candidate-patrol",
+      "role": "public",
+      "category": "ops",
+      "purpose": "stable-candidate-patrol",
+      "summary": "Buildchain Stable Candidate Patrol",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/stable-candidate-patrol.yml",
+        "originalSha256": "5253175528e3eb8508707921e6e416cca1b2a33e9066c27e6ff69325535e1d40"
+      },
+      "compatibility": {
+        "path": ".github/workflows/stable-candidate-patrol.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/stable-candidate-patrol.yml capability without adding execution behavior."
+    },
+    {
+      "id": "universal-bootstrap-dogfood",
+      "role": "self",
+      "category": "ops",
+      "purpose": "bootstrap-dogfood",
+      "summary": "Universal Bootstrap Train-First Self-Dogfood",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/universal-bootstrap-dogfood.yml",
+        "originalSha256": "f41f75e5f6bf5d87d4f8e8b850e2fccac6fc18d461fe3aed41dd40aa2789cf75"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/universal-bootstrap-dogfood.yml capability without adding execution behavior."
+    },
+    {
+      "id": "universal-bootstrap-recovery",
+      "role": "public",
+      "category": "ops",
+      "purpose": "bootstrap-recovery",
+      "summary": "Universal Buildchain Bootstrap Recovery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/universal-bootstrap-recovery.yml",
+        "originalSha256": "1043515769ee8672d32dcedd10108c586ae93a86183a1c4f4d9928091323325f"
+      },
+      "compatibility": {
+        "path": ".github/workflows/universal-bootstrap-recovery.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/universal-bootstrap-recovery.yml capability without adding execution behavior."
+    },
+    {
+      "id": "v4-adopter-delivery",
+      "role": "public",
+      "category": "build",
+      "purpose": "adopter-qualification",
+      "summary": "V4 Adopter Delivery",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/v4-adopter-delivery.yml",
+        "originalSha256": "009dc9b72949888a93197577a01ab16c7feade4fae9f2656045358ce81a1c3cf"
+      },
+      "compatibility": {
+        "path": ".github/workflows/v4-adopter-delivery.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/v4-adopter-delivery.yml capability without adding execution behavior."
+    },
+    {
+      "id": "v4-adopter-delivery-dogfood",
+      "role": "self",
+      "category": "build",
+      "purpose": "adopter-dogfood",
+      "summary": "V4 Adopter Delivery Dogfood",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/v4-adopter-delivery-dogfood.yml",
+        "originalSha256": "c45062648e90b96b391e72051ac35b802b392831d9db14f620a9ebbc3b883f91"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/v4-adopter-delivery-dogfood.yml capability without adding execution behavior."
+    },
+    {
+      "id": "v4-declarative-release-tail-dogfood",
+      "role": "self",
+      "category": "release",
+      "purpose": "tail-dogfood",
+      "summary": "V4 Declarative Release Tail Dogfood",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/v4-declarative-release-tail-dogfood.yml",
+        "originalSha256": "d6fb4528fdfc8b9a018e2320d482accdaba010aec37f54cceb067f473eae8fda"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/v4-declarative-release-tail-dogfood.yml capability without adding execution behavior."
+    },
+    {
+      "id": "v4-public-consumer-dogfood",
+      "role": "self",
+      "category": "build",
+      "purpose": "public-consumer-dogfood",
+      "summary": "V4 Public Consumer Dogfood",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/v4-public-consumer-dogfood.yml",
+        "originalSha256": "2979de23ab02b098f1d37c9889c8b3a93ab072e77af3bfc0b82dbb94d07911a2"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/v4-public-consumer-dogfood.yml capability without adding execution behavior."
+    },
+    {
+      "id": "v4-publication-rehearsal-dogfood",
+      "role": "self",
+      "category": "release",
+      "purpose": "rehearsal-dogfood",
+      "summary": "V4 Publication Rehearsal Dogfood",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/v4-publication-rehearsal-dogfood.yml",
+        "originalSha256": "c77e106dd2e855260e0189d95db43f4fe94e9559c50a2b5f5b259997c9b54b81"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/v4-publication-rehearsal-dogfood.yml capability without adding execution behavior."
+    },
+    {
+      "id": "v4-stage-capsule-canary",
+      "role": "public",
+      "category": "build",
+      "purpose": "stage-capsule-canary",
+      "summary": "V4 Stage Capsule Canary",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/v4-stage-capsule-canary.yml",
+        "originalSha256": "331a1ce873b214a346314ae4004032749aa514160e6a07575a6ce98c1f94e5fd"
+      },
+      "compatibility": {
+        "path": ".github/workflows/v4-stage-capsule-canary.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/v4-stage-capsule-canary.yml capability without adding execution behavior."
+    },
+    {
+      "id": "v4-tail-reseal",
+      "role": "public",
+      "category": "ops",
+      "purpose": "tail-reseal",
+      "summary": "V4 Retained Candidate Tail Reseal",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "migration": {
+        "previousPath": ".github/workflows/v4-tail-reseal.yml",
+        "originalSha256": "20f556c2db79e2042b7ac89b843547ae0d3aea62b0ddb024cbeb97b777ddaf45"
+      },
+      "compatibility": {
+        "path": ".github/workflows/v4-tail-reseal.yml",
+        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
+        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
+      },
+      "rationale": "Classify the existing .github/workflows/v4-tail-reseal.yml capability without adding execution behavior."
+    },
+    {
+      "id": "verify",
+      "role": "self",
+      "category": "build",
+      "purpose": "verify",
+      "summary": "Verify",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": {
+        "previousPath": ".github/workflows/verify.yml",
+        "originalSha256": "8951e9153cdee1552797ea8b85a6e7282163412769f744a68770729689e3768b"
+      },
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/verify.yml capability without adding execution behavior."
+    }
+  ],
+  "migrationSources": {
+    ".github/workflows/.auditable-demo.yml": "33d86446d6cbcce9ba7f386a32db0afbf32e52ff995ddd4b3cf1989831d7f2db",
+    ".github/workflows/.binary-release-assets.yml": "5dfaea0f9cf83500706f423eca08f43594fe3653fa139da359041e88fae49266",
+    ".github/workflows/.build.yml": "20549663f5459414dcfb00aa9a3a549003bbc09159eeab6cea211db96ed0eab2",
+    ".github/workflows/.bump-minor-version.yml": "6ca37f4d4a81b4433d1ae13833e4ca16bfbbf98f338357376863a2f0d3a2c884",
+    ".github/workflows/.declarative-auditable-demo.yml": "b00e330b547e6e823f9cf83ac97406ca7c93c688a9e80e63af5bc39cbf840941",
+    ".github/workflows/.gate-profile.yml": "f5ad2bc08c4092aa27dc257d669a25fe27713c5df90f130ae4e70af983860ace",
+    ".github/workflows/.publication-authority.yml": "548bcf020c85bb98f4d8200c7c0f6960067b557416456981bbd36387f0fc1aa9",
+    ".github/workflows/.release-candidate-promote.yml": "177b3c50685405e5ed2bf1ac893469fdb3a27e7b03d55025611b2985028cd8cf",
+    ".github/workflows/.release-verify.yml": "1997c74278cbbd88f73e516016cb9d323fff3dad255a46496291c579ea679c71",
+    ".github/workflows/.sam-verify.yml": "811c2a5c6e415ad1f688fa96a30116e42acc8faa41ceb3ef929936fc3214286f",
+    ".github/workflows/.sync-release-page.yml": "607e1a4950a810671aa48f2e208c3ab4465e83bc08c0a1f768875a900e4ceec7",
+    ".github/workflows/.sync-remote-git.yml": "e0cebedef7220a51646e797e56951a7490f5bc29fb530dee4439fc55ba13df2d",
+    ".github/workflows/.web-surface.yml": "5c006ccc4e465649d971490a8cb40f4601a7a83b6496077e2a1d2a1baf90893b",
+    ".github/workflows/.wheel-verify.yml": "2490352d5edcc47e0c4794b71493d20a870e9791a6447b08aea30d238d5f0e47",
+    ".github/workflows/artifact-signing-authority.yml": "15c07469ed1f58a8b7b86cb1902bba35d643aeb70213eda87b61fc0ae60b85ec",
+    ".github/workflows/auditable-demo.yml": "470b8fec709e9343d73b7c142890e303f80298e968a98ecb1f26b116b4962c32",
+    ".github/workflows/auditable-demo-media-profile-qualification.yml": "4eaf69b0bdff263f93542a0a8722620b36003c74efe942de73dfe8d9da07df7a",
+    ".github/workflows/binary-distribution.yml": "d07482cd66413a2fb3781a3b76f960b8151b6231841799647fe237820de2fde6",
+    ".github/workflows/binary-release-assets.yml": "e5107c8b31c7c3a3851d05c1b16cb1901693f1eddc8695f9c457dfe938b0271a",
+    ".github/workflows/bootstrap.yml": "b94023c4abe4216765198adcaefb4825874a4d9053be096d35a53d6821128b52",
+    ".github/workflows/build.yml": "ae39d775f50ed5d0a20084067e36ae7337c6e1cf730e5311c54bba0420f4c8bf",
+    ".github/workflows/build-surface-fixture.yml": "635003e04b147dd9bbaae177321c1a1e8d39bbe6c983ab6e61aa1f1fd9e0325c",
+    ".github/workflows/buildchain-alpha-self-dogfood.yml": "4233bb5cfc7fb8564dac7c0c0614855efbed0570f46ebe6b70d9de8464fbd004",
+    ".github/workflows/buildchain-candidate-recovery-dogfood-failure.yml": "6764b53b69aa5a3a6bcf6084052c03c43b7097918df48c6f6dd8f8e4625ed7ca",
+    ".github/workflows/buildchain-dev-delivery.yml": "2fd02b0b3f7bb61e856cf792a9cbb59761cac4e2ab48cac9767c3c99f76b65e3",
+    ".github/workflows/buildchain-patrol.yml": "648faac4e89aecacc5c77484384bd2d5085dafdd60ae31235c9d4c95fc3c6ea7",
+    ".github/workflows/buildchain-patrol-daily.yml": "9139932b23a10ed8ffbf01e057f2dec51fdccd2a526cf0f32b08201d507bda2f",
+    ".github/workflows/buildchain-patrol-monthly.yml": "aa33a3295c31148e593fe9c85b1df0f554b61b6f5c257e58ddfbc37c756e20d8",
+    ".github/workflows/buildchain-patrol-weekly.yml": "a8de2eaff33a565a1f9529950fa17cfa3efb2f1ed12379f6c77f7de1764fb49a",
+    ".github/workflows/buildchain-ref-promotion.yml": "678ab1f13e518e5745b101bc52febd7790de87bf48bdbf2b0c2f976547ab4f75",
+    ".github/workflows/buildchain-ref-promotion-recovery.yml": "1a99bf8febf7192674c3147937e3ad3a08d03071f67d63133212eb519967f228",
+    ".github/workflows/buildchain-stable-candidate-patrol.yml": "a7a65db870ce916d0e9749641543a23670cf25025b3e69cd084101946e359fb2",
+    ".github/workflows/buildchain-stable-candidate-qualification.yml": "7280bc3e9c8b9033c74f136d5a6c6998eb0f0b1caf0184510d0f7567b24b1282",
+    ".github/workflows/candidate-lab.yml": "60dac62c624222d8b37c070e172bc4fa838e35b73a1cd0aefbfaf61db19c5394",
+    ".github/workflows/check.yml": "44797c1b64e54806e19cf401300a27e587d6a2f0730ee7509eb84aefb9b60f74",
+    ".github/workflows/dev-alpha-candidate-patrol.yml": "c9461871bd9427dbcd12ba537843307f48dd09e5c8cef45ca3065dafbcc5589d",
+    ".github/workflows/dev-delivery-warrant-cancel.yml": "ad9014dc053d635463f70a0c94c24d43f9254e64bf438a62307458f0efe7f8c0",
+    ".github/workflows/dev-delivery-warrant-close.yml": "b5689d0c018988933f35034466f8b1574e6121e5a01700eb663ebf9851fafe60",
+    ".github/workflows/dev-merge-queue-governance.yml": "129cd72d4f5235372eaea937781d0dcc052196d7779166ac930071f86df33a79",
+    ".github/workflows/dev-pr-auto-merge.yml": "d86830e186b6ec56816e875adfebd33d705ae309983cc37106717ce05ec9ccca",
+    ".github/workflows/dev-qualification-patrol.yml": "5c33a63e5cf61c54205d5df525ac99fb0866416d3d787c38176d0f99c2b546da",
+    ".github/workflows/engineering-housekeeper.yml": "c4550d74527aa5f1e6238e0b28b23ca239039813aef45e379300ed2074ea1e65",
+    ".github/workflows/engineering-housekeeper-daily.yml": "43afdee577caafb7e1d2952b01f963a7db876a672bda7d4c96bbc7513e679aa8",
+    ".github/workflows/engineering-housekeeper-monthly.yml": "7c0f64e14c07324530477546c040606c0492962d41f397ea9abdab71b89518cc",
+    ".github/workflows/engineering-housekeeper-weekly.yml": "b671df332f5313e182647dc3aa00c08ee77aab4dbb8b692d833b7b38f3d27ad0",
+    ".github/workflows/github-artifact-attestation.yml": "fd43392b60c5a1cb7aa0a9075471856b543a123918716112d8ddd91ce597f709",
+    ".github/workflows/github-governance-audit.yml": "bc762d431bc7948b67bb9a528563743008549bb52b1aff6c09b6c3cd008208a1",
+    ".github/workflows/npm-publish.yml": "54e5ac92134eddb6910eea4886f899f34eb6528f985248d4187be78ce6ab74ce",
+    ".github/workflows/paper-release.yml": "e16dea163b7862a7dc010b3ebf8a16a6126603d8966d79974e00902eca4e3437",
+    ".github/workflows/paper-release-sealed.yml": "04a5a860f3162901da4577db69c282d5622c22b26caecccef620b29ca5a7518c",
+    ".github/workflows/patrol-daily.yml": "6a0159f946e52662ae878a21f606e8b9ac8f662652b253a682d5bace1453d255",
+    ".github/workflows/patrol-monthly.yml": "f7a1f557c6ccabf7a7012d034cb6cdbb171352739984bbd462eb7f619ce8a7f5",
+    ".github/workflows/patrol-observed-evidence.yml": "c65e1f3fcb3fb9bc7dcb9f56c8d60e03b1a070fd1994109cd00ba6e355d56b85",
+    ".github/workflows/patrol-weekly.yml": "43ff67408f7a0e4ecb5cdde4c550b914751431664b69008496dd5ecdc1dd3129",
+    ".github/workflows/publication-artifact.yml": "b224e107179552aa578d69e838a10f2da777ecabff92af4112f631aa9f506897",
+    ".github/workflows/release-candidate-promote.yml": "c4d5fed7a21a3dee45777aef0b3eff3cc6da9884cf64131ffc85217ef7c16503",
+    ".github/workflows/release-governance-reconcile.yml": "db306b5787f8705f0143d35a44bfb9cea2194e061e90b6d1b852c8db4719a777",
+    ".github/workflows/release-line-bootstrap.yml": "ebc5753300585736bb4e27e86f94bd94b5449c72fbe67934beb60987185feb36",
+    ".github/workflows/release-new-version.yml": "3c2e67af906879b639f8a19a4def8aa156a59a2e790db7358d91fa33cfe1fc70",
+    ".github/workflows/release-propagation.yml": "5fc657f586de6f5a9ffa9e0be61c22b6f99318026d718bd518a04a40197faf97",
+    ".github/workflows/release-tail.yml": "6e3304db970750bdaca21a3f08ee1ec394c75661d6b1c44396e9ef56b5927772",
+    ".github/workflows/release-verify.yml": "68d1fbad0b8866fdffb99319be575b7b272c503ba3956ea1183961d3c7b84945",
+    ".github/workflows/self-hosted-runner-smoke.yml": "64544e59f2a0d3748689c43d234b0f481794b077c678a6cf5a07eec469a532d5",
+    ".github/workflows/stable-candidate-patrol.yml": "5253175528e3eb8508707921e6e416cca1b2a33e9066c27e6ff69325535e1d40",
+    ".github/workflows/universal-bootstrap-dogfood.yml": "f41f75e5f6bf5d87d4f8e8b850e2fccac6fc18d461fe3aed41dd40aa2789cf75",
+    ".github/workflows/universal-bootstrap-recovery.yml": "1043515769ee8672d32dcedd10108c586ae93a86183a1c4f4d9928091323325f",
+    ".github/workflows/v4-adopter-delivery.yml": "009dc9b72949888a93197577a01ab16c7feade4fae9f2656045358ce81a1c3cf",
+    ".github/workflows/v4-adopter-delivery-dogfood.yml": "c45062648e90b96b391e72051ac35b802b392831d9db14f620a9ebbc3b883f91",
+    ".github/workflows/v4-declarative-release-tail-dogfood.yml": "d6fb4528fdfc8b9a018e2320d482accdaba010aec37f54cceb067f473eae8fda",
+    ".github/workflows/v4-public-consumer-dogfood.yml": "2979de23ab02b098f1d37c9889c8b3a93ab072e77af3bfc0b82dbb94d07911a2",
+    ".github/workflows/v4-publication-rehearsal-dogfood.yml": "c77e106dd2e855260e0189d95db43f4fe94e9559c50a2b5f5b259997c9b54b81",
+    ".github/workflows/v4-stage-capsule-canary.yml": "331a1ce873b214a346314ae4004032749aa514160e6a07575a6ce98c1f94e5fd",
+    ".github/workflows/v4-tail-reseal.yml": "20f556c2db79e2042b7ac89b843547ae0d3aea62b0ddb024cbeb97b777ddaf45",
+    ".github/workflows/verify.yml": "8951e9153cdee1552797ea8b85a6e7282163412769f744a68770729689e3768b"
+  }
+}

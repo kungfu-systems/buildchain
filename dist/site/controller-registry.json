@@ -2537,8 +2537,9 @@
       "id": "binary-distribution",
       "version": 1,
       "workflow": {
-        "id": "binary-distribution",
-        "path": ".github/workflows/binary-distribution.yml"
+        "id": "self-build-binary-distribution",
+        "path": ".github/workflows/self-build-binary-distribution.yml",
+        "contractPath": ".github/workflows/binary-distribution.yml"
       },
       "inputs": {},
       "expected": {
@@ -2575,8 +2576,8 @@
           "controller-receipt"
         ]
       },
-      "digest": "sha256:b6f53563c0adc859bc586c05fce560a5094d7d9666438d63c5fd3e1fc4774555"
+      "digest": "sha256:79fcf0b55df11186a5096aca13eaa965768ce7ee84b1e979eb1463f0b3f4e05e"
     }
   ],
-  "digest": "sha256:8b299ccf80925444055224f027b94aaab73741bf14e9302976eb0354053d1d31"
+  "digest": "sha256:6e49d5c9b70da381067ef03e088cb635ef7f4dba7fc56c7fa82e4c00784cf013"
 }

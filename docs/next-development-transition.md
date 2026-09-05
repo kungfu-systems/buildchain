@@ -76,7 +76,7 @@ invalid.
 
 ## Public self-dogfood and adoption
 
-`.github/workflows/v4-public-consumer-dogfood.yml` remains the exact thin
+`.github/workflows/self-build-public-consumer-dogfood.yml` remains the exact thin
 consumer of the public `v4-stage-capsule-canary.yml@v4-alpha` contract. Its
 declared `lifecycle.verify` runs `pnpm run check`, so the same public path
 executes pure recovery tests that inject a transient durable-state write

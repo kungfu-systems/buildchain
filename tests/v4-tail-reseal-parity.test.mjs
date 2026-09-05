@@ -106,7 +106,7 @@ test("CLI, Node exports, schema, docs, and protected macOS rehearsal expose one 
     "kungfu-buildchain-v4-tail-reseal-request/v1",
   );
   assert.match(read("docs/MAP.md"), /v4-tail-reseal\.md/u);
-  const verify = read(".github/workflows/verify.yml");
+  const verify = read(".github/workflows/self-build-verify.yml");
   assert.match(verify, /if: matrix\.platform == 'macos-arm64'/u);
   assert.match(verify, /scripts\/v4-tail-reseal-macos-rehearsal\.mjs/u);
 });

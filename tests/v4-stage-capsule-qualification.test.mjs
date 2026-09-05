@@ -533,7 +533,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.equal(architecture.budgets.productionWriteAuthorityChanges, 0);
 
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/verify.yml"),
+    path.join(root, ".github/workflows/self-build-verify.yml"),
     "utf8",
   );
   assert.doesNotMatch(workflow, /stage-capsule-qualification:/u);

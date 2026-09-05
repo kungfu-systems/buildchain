@@ -44,7 +44,7 @@ function registry() {
       { id: "release-candidate-promote", path: ".github/workflows/release-candidate-promote.yml", inputs: ["channel"] },
       { id: ".release-candidate-promote", path: ".github/workflows/.release-candidate-promote.yml", inputs: ["channel"] },
       { id: "release-propagation", path: ".github/workflows/release-propagation.yml", inputs: ["graph-json"] },
-      { id: "binary-distribution", path: ".github/workflows/binary-distribution.yml", inputs: [] },
+      { id: "binary-distribution", path: ".github/workflows/self-build-binary-distribution.yml", inputs: [] },
     ],
   });
 }
@@ -389,4 +389,15 @@ test("release passports can carry compact controller receipt references", () => 
     expectedRuntimeSha: RUNTIME_SHA,
   }).ok, true);
   assert.deepEqual(normalizeControllerReceiptReferences({ receipts: [receipt] }), [reference]);
+});
+
+test("taxonomy migration preserves public entry identities and exposes repository relocation", () => {
+  const workflows = JSON.parse(fs.readFileSync(path.join(root, "dist/site/workflow-registry.json"), "utf8")).workflows;
+  const controllers = createControllerRegistry({ workflows }).controllers;
+  assert.equal(controllers.find((entry) => entry.id === "build-lifecycle").workflow.path, ".github/workflows/.build.yml");
+  const binary = controllers.find((entry) => entry.id === "binary-distribution");
+  assert.equal(binary.workflow.path, ".github/workflows/self-build-binary-distribution.yml");
+  assert.equal(binary.workflow.contractPath, ".github/workflows/binary-distribution.yml");
+  assert.ok(fs.existsSync(path.join(root, binary.workflow.path)));
+  assert.equal(fs.existsSync(path.join(root, binary.workflow.contractPath)), false);
 });
