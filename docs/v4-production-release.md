@@ -72,7 +72,7 @@ later generated Dev PR is still pending or its enqueue call fails. SETTLE verifi
 the immutable invocation, transaction, both provider states, receipt and Passport
 roots even when APPLY fails after publication. It has no provider write permission.
 
-APPLY retains that exact chain in the existing GitHub Release as
+APPLY retains that exact chain before waiting for next-development in the existing GitHub Release as
 `buildchain-publication-settlement.json`; it reads the exact tag and original
 `buildchain.release.json` before adding the packet. The APPLY artifact also retains
 `delivery-summary.json`, which reports publication and next-development separately.
@@ -98,3 +98,29 @@ The native publication receipt authorizes no stable promotion and makes no claim
 that a pending next-development PR has merged. Inspect the exact PR head, protected
 base and merge result independently. A retry of the publication phase must first
 read retained provider facts and resume only missing operations.
+
+## Automatic next-development review
+
+`self-release-next-development.yml` observes a successful exact `Verify` PR run
+for a same-repository `chore/next-development/*` branch. It executes only the
+protected default branch runtime. The PR must have one parent equal to the
+current protected Dev head. The protected generator reconstructs every tracked
+byte, permits only the declared immediate alpha version increment, and verifies
+the completed alpha settlement against the exact tag and original Passport.
+The published source tree must equal the protected development base tree.
+
+The verification step receives no approval credential and never executes PR
+code. A separate step uses `BUILDCHAIN_APPROVAL_TOKEN`, verifies that its identity
+is the independent `kungfu-origin` CODEOWNER, rereads the exact PR/run/base, and
+approves only that commit. Existing requests for changes stop automation.
+The exact approval is read back before queue admission with the separate
+`BUILDCHAIN_PROMOTION_TOKEN`. Required checks, CODEOWNER protection and native
+merge-group verification remain enforced. Missing credentials or evidence,
+forks, source changes and base/head drift fail closed.
+
+The producer waits for pending independent review and required checks with a
+bounded retry budget. Publication evidence is already durable during this wait,
+so binaries can proceed independently. The reviewer also enqueues the verified
+head idempotently, allowing a producer interruption to leave a recoverable PR.
+An interrupted producer run remains failed; a successful later release is needed
+to establish an uninterrupted end-to-end publication.

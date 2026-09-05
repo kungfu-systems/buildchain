@@ -41,7 +41,8 @@
       ".github/workflows/release-tail.yml",
       ".github/workflows/stable-candidate-patrol.yml",
       ".github/workflows/self-release-rehearsal-dogfood.yml",
-      ".github/workflows/self-release-tail-dogfood.yml"
+      ".github/workflows/self-release-tail-dogfood.yml",
+      ".github/workflows/self-release-next-development.yml"
     ],
     "unknownTopologyPolicy": "fail-closed"
   },
@@ -57,7 +58,8 @@
       "Paper product release",
       "npm dry-run",
       "v3 rollback workflows",
-      "retired compatibility workflows"
+      "retired compatibility workflows",
+      "Post-publication protected development review: no package, tag or Release mutation; independently inventoried in closedWorld and privilegedExecutableClosure."
     ]
   },
   "authorityClosure": {
@@ -122,6 +124,7 @@
       "entrypoints": [
         "actions/v4-release-candidate-promote/index.js",
         "scripts/binary-publication-evidence.mjs",
+        "scripts/next-development-review.mjs",
         "scripts/v4-publication-settlement.mjs"
       ],
       "modules": [
@@ -134,6 +137,7 @@
         "actions/v4-release-candidate-promote/product-provider-adapters.js",
         "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
         "actions/v4-release-candidate-promote/product-provider.js",
+        "actions/v4-release-candidate-promote/publication-completion.js",
         "packages/core/adopter-delivery-gate.js",
         "packages/core/adopter-delivery-json.js",
         "packages/core/adopter-delivery-passport.js",
@@ -187,10 +191,12 @@
         "packages/core/workflow-yaml-contract.js",
         "scripts/binary-publication-evidence.mjs",
         "scripts/ensure-github-release.mjs",
+        "scripts/next-development-review.mjs",
         "scripts/release-asset-client.mjs",
-        "scripts/v4-publication-settlement.mjs"
+        "scripts/v4-publication-settlement.mjs",
+        "scripts/verify-version-state-delta.mjs"
       ],
-      "root": "sha256:58d343a7ec944ebe2c12a04c389d362733de196b7d34e39e330d2b8053c5e3f6"
+      "root": "sha256:7a4de4f149edfdcced84267304aab1ccf9997badcaca899b7dc4fbe9288c34cb"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/v4-domain-wasm.js",
@@ -329,10 +335,10 @@
       }
     ],
     "metrics": {
-      "workflowCount": 33,
-      "jobCount": 89,
+      "workflowCount": 34,
+      "jobCount": 90,
       "reusableEdgeCount": 23,
-      "mutationRelevantNodeCount": 74,
+      "mutationRelevantNodeCount": 75,
       "contentsWriteJobCount": 14,
       "oidcWriteJobCount": 16
     },

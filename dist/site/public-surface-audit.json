@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 116,
+    "workflowCount": 117,
     "actionCount": 8,
     "sitePageCount": 86,
     "docCommandRefCount": 1050,
@@ -4906,6 +4906,17 @@
       {
         "id": "self-release-new-version-compat",
         "path": ".github/workflows/self-release-new-version-compat.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-release-next-development",
+        "path": ".github/workflows/self-release-next-development.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -10977,8 +10988,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "dd6a9caaa7e04097d6ae6c4a0c5a3548e7c6c0ace00efdd2909f9b7c0c9056b2",
-    "pageRegistryDigest": "220e121eb5755d5a75c2abcbc0cab623f5afa3be59251dbd5f5336142d4c8c98"
+    "workflowRegistryDigest": "c2211bd7f743a77687654b34c3e29c0031fd640f80556a602d50795b09d4c905",
+    "pageRegistryDigest": "b364becac376349506fff141bbaf1749d6ed14c68ca42435706bec57d5ea1ae0"
   },
   "comparison": {
     "missingCliRegistry": [],
