@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1438,
+  "generation": 1439,
   "fencingCounter": 212,
   "policy": {
     "agingSeconds": 900,
@@ -11288,8 +11288,43 @@
         "tests/version-state-delta.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3508,
+      "sourceRoot": "sha256:4aa1a0d588f6ce4430e7b68b9ea1798c6711a364b4fd25a610d441d57a89a931",
+      "sourceIdentityRoot": "sha256:6863902e0ee20c181dde3e8da4d6cc0e3f92c5dbaf7ce06b0fc6b0974a88decb",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:9604ca2449a7266c67458932e4df86315287ed067c4b70348f76c957ab78b02a",
+      "sourceHead": "853a1dfd93032fd341b6d85a8a3ca647a698f980",
+      "sourcePatchRoot": "sha256:18f67db2d04b106694f394460e5427e5320387c0124ed501925cee7c4268d1af",
+      "sourceProofRoot": "sha256:2d24737f5dee53607da24d0054e4d0897abde669602182c900b776c46931b6f2",
+      "planRoot": "sha256:7ea5137d569d4daf06abd20de9d58bbe4bc67308221112a159277e19c2e71272",
+      "closureRoot": "sha256:f1054f0006b18401190b1bb74c7e0ee25fa4d7ecf452dcbdd690b5cb4cd5638b",
+      "dependencyRoot": "sha256:adee0e88862e93cb5b0f90356fb75da98809e0e4a34940e0a0b5d026f4d9e336",
+      "toolchainRoot": "sha256:9b57c08d4b1924866f907e399f5b4d64c8e204ac52e24d80dbce8a0f0616a244",
+      "sourceWorkflowRunId": 33965197415,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-05T12:25:18.394Z",
+      "updatedAt": "2026-09-05T12:25:18.394Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/actionlint.yaml",
+        ".github/workflows/public-build-adopter-qualification.yml",
+        ".github/workflows/public-build-stage-capsule-canary.yml",
+        ".github/workflows/v4-adopter-delivery.yml",
+        ".github/workflows/v4-stage-capsule-canary.yml",
+        "architecture/maintainability-policy.json",
+        "scripts/workflow-taxonomy.mjs",
+        "tests/workflow-taxonomy.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-05T11:38:22.133Z",
-  "stateRoot": "sha256:ba6d8336ed40872e4e908335acfa0a7fe278e1c6016f6954fb36838999bdf16f"
+  "updatedAt": "2026-09-05T12:25:18.394Z",
+  "stateRoot": "sha256:ddcb6a0dfc751e67a449667154d499df317516fc20490f896e0ccb08aaa7f7a0"
 }
