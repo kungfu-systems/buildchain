@@ -831,6 +831,7 @@ jobs:
             .buildchain/workflow-shell/scripts/artifact-signing-controller-core.mjs
             .buildchain/workflow-shell/scripts/artifact-signing-controller.mjs
             .buildchain/workflow-shell/scripts/build-contract-core.mjs
+            .buildchain/workflow-shell/scripts/github-output.mjs
             .buildchain/workflow-shell/scripts/aws-runner-burst-core.mjs
             .buildchain/workflow-shell/scripts/aws-windows-jit-core.mjs
             .buildchain/workflow-shell/scripts/aws-macos-jit-core.mjs
