@@ -591,6 +591,23 @@
         "expectedContributionSeconds": 0,
         "rationale": "The opt-in universal path preserves the default compatibility lane and executes only an exact admitted runtime."
       }
+    },
+    {
+      "laneId": ".github/workflows/self-release-next-development.yml#review",
+      "authorityClass": "merge-critical-admission",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 3,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": true,
+        "metric": "generated next-development independent review latency",
+        "expectedContributionSeconds": 180,
+        "rationale": "Only successful same-repository version PRs regenerate from the protected base and read completed publication evidence; ordinary source PRs skip the lane. Native queue checks remain final merge authority."
+      }
     }
   ],
   "declarationFamilies": [

@@ -31,8 +31,9 @@ test("queue retries pending and transient errors while binding the original exac
     new Error("mergeability check has not yet completed"),
     Object.assign(new Error("unavailable"), { status: 503 }),
     new Error("Required status check Verify expected"),
+    new Error("Pull request Waiting on code owner review from kungfu-origin."),
   ]);
-  assert.deepEqual(result.waits, [2000, 4000, 6000]);
+  assert.deepEqual(result.waits, [2000, 4000, 6000, 8000]);
   for (const request of result.requests)
     assert.deepEqual(request.input, {
       pullRequestId: "PR_exact",

@@ -1972,6 +1972,11 @@
       "classified": false
     },
     {
+      "path": ".github/workflows/self-release-next-development.yml",
+      "signals": [],
+      "classified": false
+    },
+    {
       "path": ".github/workflows/self-release-npm-dry-run.yml",
       "signals": [
         "npm-publish"
@@ -2031,5 +2036,5 @@
       "classified": false
     }
   ],
-  "registryDigest": "508282f0bd7a505e47e35c390a08b66bc249e72a3f52c81ed72bf8f21cd9f459"
+  "registryDigest": "e6b298f281da2f4bd79d44d4a106dabf8294194d4f68dd28eee13d35eaf05d11"
 }

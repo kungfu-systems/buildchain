@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import ts from "typescript";
 import { workflowCompatibilityIdentity } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -23,14 +24,34 @@ const LOCAL_MODULE_EXTENSIONS = ["", ".js", ".mjs", ".cjs"];
 const PRIVILEGED_ENTRYPOINTS = [
   "actions/v4-release-candidate-promote/index.js",
   "scripts/binary-publication-evidence.mjs",
+  "scripts/next-development-review.mjs",
   "scripts/v4-publication-settlement.mjs",
 ];
 
-function localModuleSpecifiers(source) {
+export function localModuleSpecifiers(source) {
   const specifiers = [];
-  const expression =
-    /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)["'](\.[^"']+)["']/gu;
-  for (const match of source.matchAll(expression)) specifiers.push(match[1]);
+  const visit = (node) => {
+    let value;
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node))
+      value = node.moduleSpecifier;
+    else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword
+    )
+      value = node.arguments[0];
+    if (value && ts.isStringLiteral(value) && value.text.startsWith("."))
+      specifiers.push(value.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(
+    ts.createSourceFile(
+      "module.mjs",
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.JS,
+    ),
+  );
   return [...new Set(specifiers)].sort();
 }
 
@@ -344,7 +365,12 @@ export function findUnknownV4ReleaseTopology(
 ) {
   const declared = new Set(workflowPaths);
   return allWorkflowPaths
-    .filter((relative) => !declared.has(workflowCompatibilityIdentity(root, relative, readWorkflow(relative))))
+    .filter(
+      (relative) =>
+        !declared.has(
+          workflowCompatibilityIdentity(root, relative, readWorkflow(relative)),
+        ),
+    )
     .filter((relative) => {
       const source = readWorkflow(relative);
       const usesReleaseAuthority = parseYamlUses(source).some(({ value }) =>
