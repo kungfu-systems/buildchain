@@ -165,13 +165,19 @@ The safety and authority boundary is explicit:
 - `migrate` plans the Buildchain-owned authority, workflow, contract lock,
   version pin, package, agent-entry policy, managed `AGENTS.md` section, and
   required-check changes needed by an existing paper repository. It pins an
-  exact v3 dependency and adds pnpm-backed paper scripts.
+  exact runtime dependency and adds pnpm-backed paper scripts. With v4, build
+  and verify callers use `@v4-alpha`; release callers select `@v4-alpha` for
+  Alpha and `@v4` for stable releases. Both channel contract locks and their
+  distinct resolved source coordinates are bound into provisioning authority.
+  Migration reads the other channel from its fetched Git tag. Installed-package
+  operators can supply `--stable-buildchain-root` or `--alpha-buildchain-root`
+  pointing to the corresponding exact source checkout instead.
   Add `--write` only after reviewing exact old and new digests; paper content
   and publication configuration are never rewritten. Refresh
   `pnpm-lock.yaml` with `pnpm install --lockfile-only` after a write.
 - `agent verify` is the mandatory resume check on an existing work branch. It
   verifies the digest-bound `.buildchain/paper/agent-entry.json`, the single
-  managed `AGENTS.md` section, exact package scripts and v3 dependency, runtime
+  managed `AGENTS.md` section, exact package scripts and runtime dependency, runtime
   source SHA, development target, and current branch lineage. `--ci` derives
   the pull-request source and target from GitHub context and fails closed on a
   non-work source branch or a target other than the configured development

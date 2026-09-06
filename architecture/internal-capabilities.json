@@ -16,6 +16,7 @@
     "packages/core/paper-agent-entry.js",
     "packages/core/paper-npm-bootstrap.js",
     "packages/core/paper-repository.js",
+    "packages/core/paper-runtime-channels.js",
     "packages/core/paper-scaffold-content.js",
     "packages/core/paper-work.js",
     "packages/core/paper.js",
@@ -476,6 +477,7 @@
         "packages/core/paper-fleet.js",
         "packages/core/paper-npm-bootstrap.js",
         "packages/core/paper-repository.js",
+        "packages/core/paper-runtime-channels.js",
         "packages/core/paper-scaffold-content.js",
         "packages/core/paper-work.js",
         "packages/core/paper.js",
@@ -486,6 +488,7 @@
       "tests": [
         "tests/cli.test.mjs",
         "tests/paper.test.mjs",
+        "tests/paper-v4-migration.test.mjs",
         "tests/public-surface-audit.test.mjs"
       ],
       "contracts": [
@@ -497,7 +500,7 @@
         "dist/site/node-api-registry.json"
       ],
       "validationCommands": [
-        "node --test tests/cli.test.mjs tests/paper.test.mjs tests/public-surface-audit.test.mjs"
+        "node --test tests/cli.test.mjs tests/paper.test.mjs tests/paper-v4-migration.test.mjs tests/public-surface-audit.test.mjs"
       ]
     },
     {
