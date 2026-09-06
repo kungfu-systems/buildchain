@@ -331,7 +331,7 @@
       ],
       "maturity": "stable",
       "sourcePath": "actions/v4-release-candidate-promote/README.md",
-      "digest": "sha256:3b3c3f01ca12069ba2fd67afa8e23d1aec19bf5e1d048bc4975e7503f9eb43bc",
+      "digest": "sha256:b50fc4f13ea9c680142df79c5ab984522cd85893f1ce12f1427e094569329746",
       "headings": [
         {
           "level": 1,
@@ -339,7 +339,7 @@
           "anchor": "v4-release-candidate-promote-action"
         }
       ],
-      "markdown": "# v4 release-candidate promote action\n\nThis internal action validates a sealed v4 publication qualification receipt, aggregates the Buildchain Release Passport, and executes the fixed four-capability Release Tail Provider Plane. It has no command or shell extension input and is invoked by the v4 branch of the reusable `release-candidate-promote` workflow."
+      "markdown": "---\nstatus: active\nperiod: ongoing\ntheme: protected-publication-source\ndoc_type: reference\nsource_level: local-files\nconfidence: high\nsensitivity: public\nevidence_grade: B\nreview_state: unreviewed\nlast_reviewed: 2026-09-06\nai_provenance:\n  model_family: GPT-6\n  product: Codex\n  generated_at: 2026-09-06\n  visible_context: Publication adapter, regression tests, and public GitHub commit metadata.\n  invisible_context_boundary: No credentials or private runtime state inspected.\n---\n\n# v4 release-candidate promote action\n\nThis internal action validates a sealed v4 publication qualification receipt, aggregates the Buildchain Release Passport, and executes the fixed four-capability Release Tail Provider Plane. It has no command or shell extension input and is invoked by the v4 branch of the reusable `release-candidate-promote` workflow.\n\nThe protected publication source must match the qualified candidate's exact\nGit tree. An exact commit is accepted directly; a final PR merge may also bind\nthrough identical ordered parents. For repositories requiring linear history,\n`squash-equivalent` requires a protected commit with one parent, a qualified\nmerge candidate with two parents, and the same first parent. GitHub must report\nthe exact PR as merged into the protected commit, and its head must equal the\ncandidate's second parent. Candidate qualification, workflow and repository\nprovenance, and artifact verification remain required before publication."
     },
     {
       "id": "action:validate-config",
