@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1488,
+  "generation": 1489,
   "fencingCounter": 228,
   "policy": {
     "agingSeconds": 900,
@@ -12397,8 +12397,40 @@
         "tests/v4-stable-publication-recovery.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3584,
+      "sourceRoot": "sha256:62447551020d8b73135062ece5ebe7c75b1ab5dab05bb150963bd551760309bf",
+      "sourceIdentityRoot": "sha256:9b42081f1cbafaeb778f87b8ff6ce41186006fd9b9b42bb03237f9497f73c879",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:1c61ae1cc78f0915a97ee00bf446aac299034104b42071c85cc52e8be336862b",
+      "sourceHead": "697132d6be235338424e74e883ecccd609a1e6f3",
+      "sourcePatchRoot": "sha256:0e1aa7dffb81d6522fddad6358eacb5cc2e7a6e48b7fd0ceaa2eb66b063a9356",
+      "sourceProofRoot": "sha256:b61c0380cfc8296d309730ff4cdef0400018832da4b243182ce5981562b477bd",
+      "planRoot": "sha256:695aef5660510c68a0990f36d0f86c9d5739c313af50dbfafddf5f5d8c7208e6",
+      "closureRoot": "sha256:e0bcae0d5cc24337f64485875ab860b7348a1ba2475c10fc893c3a8d05733817",
+      "dependencyRoot": "sha256:d7e0c63f4cca5e6b7d81f2b7673f858fcaeb464279c028930b5d122f22029f26",
+      "toolchainRoot": "sha256:6ddcbe41a015520681629989a4327af81d5cd8bd084b5593e531f20effd4762c",
+      "sourceWorkflowRunId": 34061835748,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-06T21:48:01.381Z",
+      "updatedAt": "2026-09-06T21:48:01.381Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/public-release-promote.yml",
+        ".github/workflows/release-candidate-promote.yml",
+        "dist/site/buildchain-contract.json",
+        "scripts/generate-channel-promotion-workflow.mjs",
+        "tests/promotion-channel-router.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-06T21:47:30.652Z",
-  "stateRoot": "sha256:d2500a26187346ba969471f88928ca14069249d65a5afc7d3f0b3254d10ac2f8"
+  "updatedAt": "2026-09-06T21:48:01.381Z",
+  "stateRoot": "sha256:d97003997bd04f4133b628d1edca4a96b606b7fad9fab1860b89c9ad83612a63"
 }
