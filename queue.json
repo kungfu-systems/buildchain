@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1460,
+  "generation": 1461,
   "fencingCounter": 219,
   "policy": {
     "agingSeconds": 900,
@@ -12,54 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:be3fe2d1bbb1b1e9718b5d6a567433d3d086b3cfe6d3d863ec2a3e3bbedda100",
-    "pullRequestNumber": 3526,
-    "sourceHead": "55c509c5c388c9d231a4aba3d68be578bdc51e38",
-    "sourceRoot": "sha256:231f9d93147bd72a0cc70cbe7f51b9198312b2335b705ae6570fd50e9acfafa9",
-    "sourceIdentityRoot": "sha256:4f7fa741b366204c487bb6cc542ca0feb1b0d0ab47ac1f5d8fe9b37059827745",
-    "sourcePatchRoot": "sha256:f9080340ee9f19319876a175fd8db6899e63d0712b575e13d87ffe9d4294113f",
-    "sourceProofRoot": "sha256:97838ae734ad78611bf3edca476f5c7bd9513904c31336441a80427d75b14989",
-    "planRoot": "sha256:7e856eb7608f6a23988bb303cb8c062803043b5ff317821bb29a718b345e1401",
-    "closureRoot": "sha256:2a7662565bca41d2c3ea238f4d6003f538d5e3653164179fadf87c90276bb08c",
-    "dependencyRoot": "sha256:097be6e05485e35ec3f33c0bf5d72d852ebe729664108d9e950bbefb6f84218d",
-    "toolchainRoot": "sha256:a4068b7b30bb3249adbb407ae18690c297a4f3a5a747259e6f0a15277fb8b250",
-    "affectedPaths": [
-      "actions/promote-buildchain-ref/dist/index.js",
-      "architecture/maintainability-debt.json",
-      "dist/site/buildchain-contract.json",
-      "dist/site/buildchain-site.json",
-      "dist/site/kfd-claims.json",
-      "dist/site/manual-registry.json",
-      "dist/site/node-api-registry.json",
-      "dist/site/page-registry.json",
-      "dist/site/public-surface-audit.json",
-      "dist/site/site-manifest.json",
-      "docs/kfd-support.md",
-      "docs/node-api-reference.md",
-      "docs/release-passport.md",
-      "packages/core/artifact-verification-envelope.js",
-      "packages/core/kfd-adopter-manifest.js",
-      "packages/core/release-passport-contract.js",
-      "packages/core/release-passport.js",
-      "tests/helpers/kfd-product-gates.mjs",
-      "tests/kfd-generic-adopter.test.mjs",
-      "tests/kfd-product-gates.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 34016169413,
-    "deliveryClass": "non-native-fast",
-    "priority": "ordinary",
-    "generation": 219,
-    "expectedOldStateRoot": "sha256:82189638945d51bd487ddc67714ca35267654e7aa40183e07d74960622a15bb5",
-    "issuedAt": "2026-09-06T06:27:29.606Z",
-    "expiresAt": "2026-09-06T07:27:29.606Z",
-    "fencingToken": "sha256:776c4ba881013e22d18fea8a5094b18e31ef3d74fc600ccd53de2441da20a203",
-    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -11896,11 +11849,19 @@
       "sourceWorkflowRunId": 34016169413,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-06T06:27:25.350Z",
-      "updatedAt": "2026-09-06T06:27:29.606Z",
+      "updatedAt": "2026-09-06T09:52:19.597Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "Buildchain observed a terminal PR or changed PR head before a new minimal delivery request.",
+        "evidenceRoot": "sha256:90c4c6017c88f06928ab3f73e0fe5eda5779f76b715f6828dd2cf2d303f33f16",
+        "closedAt": "2026-09-06T09:52:19.597Z",
+        "fencingToken": "sha256:776c4ba881013e22d18fea8a5094b18e31ef3d74fc600ccd53de2441da20a203",
+        "leaseGeneration": 219,
+        "successorWake": null
+      },
       "affectedPaths": [
         "actions/promote-buildchain-ref/dist/index.js",
         "architecture/maintainability-debt.json",
@@ -11926,6 +11887,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-06T06:27:29.606Z",
-  "stateRoot": "sha256:1b5231c5576c3fb39c197fa0c5ade2dd94c9c00a12d4926c60573cc7aaa47682"
+  "updatedAt": "2026-09-06T09:52:19.597Z",
+  "stateRoot": "sha256:3b9e24c05201f87b650cfde5dbd60ea8d6d76bec044925563e685e2619181081"
 }
