@@ -58,6 +58,7 @@ const ROOT_DOMAINS = new Set([
   "partial-mutation-recovery-checkpoint",
   "partial-mutation-recovery-plan",
   "v4-product-required-artifacts",
+  "oci-publication-family",
   "v4-product-publication-intent",
   "v4-product-publication-operation",
   "v4-product-publication-plan",
