@@ -19567,7 +19567,7 @@
       ],
       "source": {
         "path": "packages/core/publication-sealed-bundle.js",
-        "line": 189
+        "line": 190
       },
       "example": "import { verifyPublicationSealedBundle } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -30409,7 +30409,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-sealed-bundle",
       "export": "./publication-sealed-bundle",
       "target": "./packages/core/publication-sealed-bundle.js",
-      "digest": "sha256:c12ef1e9eaf762059c88f2d69a87a4d1560356cbbb37fb66fda5639c604caa82",
+      "digest": "sha256:8e7ddd2c7686e78307b533fa24df79c4f004ba6cc2f009c57be502d7892679ae",
       "summary": "Build-once publication bundle manifests and exact-byte resume verification APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -31340,7 +31340,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:69f4e87e7cbf154f4b3241269e806e7998f9a517fb8ada64f120239c49abbd78"
+      "digest": "sha256:3c90865d8814e238135c365c3d8f54279ce44bf06c35d907ad3957b862a3a51e"
     },
     {
       "id": "build-facts",

@@ -548,5 +548,6 @@ export function createV4ProductPublicationAdapters({
     },
     updates: context.updates,
     resolveReleaseSha: github.resolveReleaseSha,
+    resolvePromotedSha: github.resolvePromotedSha,
   };
 }
