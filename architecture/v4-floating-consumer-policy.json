@@ -10,7 +10,7 @@
       ".github/workflows/.build.yml",
       ".github/workflows/publication-artifact.yml",
       ".github/workflows/release-candidate-promote.yml",
-      ".github/workflows/v4-stage-capsule-canary.yml"
+      ".github/workflows/public-build-stage-capsule-canary.yml"
     ]
   },
   "contractLocks": {

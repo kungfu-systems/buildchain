@@ -102,7 +102,7 @@ effects always require readback and never become Capsule reuse.
 Stage Capsule qualification and Wave 2 reconciliation are governed by
 `architecture/v4-stage-capsule-qualification.json`. Buildchain v4 dogfood is a
 repository invariant, not an implementation convenience: this repository must
-consume `kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml`
+consume `kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml`
 through the same public reusable-workflow contract as every other consumer.
 The caller must remain a thin workflow with no steps or local orchestration,
 and `.buildchain/buildchain.toml` must declare the same real `install`, `build`,

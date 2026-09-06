@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import crypto from "node:crypto";
-import { writeWorkflowSource, rewriteRepositoryWorkflowPaths } from "./workflow-taxonomy.mjs";
+import { currentWorkflowPath, writeWorkflowSource, rewriteRepositoryWorkflowPaths } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -426,14 +426,15 @@ function main() {
     );
   }
   for (const relative of activeFacadePaths()) {
-    const target = path.join(root, relative);
+    const current = currentWorkflowPath(root, relative);
+    const target = path.join(root, current);
     const source = fresh
       ? frozenFacadeSource(relative)
       : fs.readFileSync(target, "utf8");
     if (check) verify(source, relative);
     else
       writeWorkflowSource(
-        root, relative,
+        root, current,
         migrateV4UniversalWorkflowFacade(source, relative),
       );
   }

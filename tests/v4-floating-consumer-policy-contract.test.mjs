@@ -24,7 +24,7 @@ test("v4 floating policy contract check accepts the repository wiring", () => {
 
 test("public adopter delivery uploads the receipt resolved under the consumer root", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/v4-adopter-delivery.yml"),
+    path.join(root, ".github/workflows/public-build-adopter-qualification.yml"),
     "utf8",
   );
   assert.match(

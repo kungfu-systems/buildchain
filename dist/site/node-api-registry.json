@@ -30793,7 +30793,7 @@
       "specifier": "@kungfu-tech/buildchain/next-development-projection",
       "export": "./next-development-projection",
       "target": "./packages/core/next-development-projection.js",
-      "digest": "sha256:b0d84f5d2853892cd1564f5fb6d2b131c963ee57f1531a3ea480e489e9969eb7",
+      "digest": "sha256:c1a93e83e0ab80d50ecc147954ae73f647780ed2fb154ffd8132af79114abc00",
       "summary": "Canonical generated config, Agent, workflow-header, and manual projections for the next-development transition contract.",
       "capabilityGroup": "governance-versioning",
       "audience": [

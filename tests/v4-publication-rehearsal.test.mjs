@@ -707,7 +707,7 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   assert.ok(
     parseYamlUses(durableExternalCaller).some((entry) =>
       entry.value.endsWith(
-        "/.github/workflows/v4-stage-capsule-canary.yml@v4-alpha",
+        "/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha",
       ),
     ),
     "external public consumers retain the floating v4-alpha selector",

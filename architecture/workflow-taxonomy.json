@@ -1241,12 +1241,13 @@
         "previousPath": ".github/workflows/v4-adopter-delivery.yml",
         "originalSha256": "009dc9b72949888a93197577a01ab16c7feade4fae9f2656045358ce81a1c3cf"
       },
-      "compatibility": {
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/v4-adopter-delivery.yml capability without adding execution behavior.",
+      "retiredAlias": {
         "path": ".github/workflows/v4-adopter-delivery.yml",
-        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
-        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
-      },
-      "rationale": "Classify the existing .github/workflows/v4-adopter-delivery.yml capability without adding execution behavior."
+        "reason": "Human-authorized removal of version-prefixed workflow filenames; canonical public entry retains the capability.",
+        "migrationGuide": "docs/workflow-path-migration.md"
+      }
     },
     {
       "id": "v4-adopter-delivery-dogfood",
@@ -1325,12 +1326,13 @@
         "previousPath": ".github/workflows/v4-stage-capsule-canary.yml",
         "originalSha256": "331a1ce873b214a346314ae4004032749aa514160e6a07575a6ce98c1f94e5fd"
       },
-      "compatibility": {
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/v4-stage-capsule-canary.yml capability without adding execution behavior.",
+      "retiredAlias": {
         "path": ".github/workflows/v4-stage-capsule-canary.yml",
-        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
-        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
-      },
-      "rationale": "Classify the existing .github/workflows/v4-stage-capsule-canary.yml capability without adding execution behavior."
+        "reason": "Human-authorized removal of version-prefixed workflow filenames; canonical public entry retains the capability.",
+        "migrationGuide": "docs/workflow-path-migration.md"
+      }
     },
     {
       "id": "v4-tail-reseal",
@@ -1345,12 +1347,13 @@
         "previousPath": ".github/workflows/v4-tail-reseal.yml",
         "originalSha256": "20f556c2db79e2042b7ac89b843547ae0d3aea62b0ddb024cbeb97b777ddaf45"
       },
-      "compatibility": {
+      "compatibility": null,
+      "rationale": "Classify the existing .github/workflows/v4-tail-reseal.yml capability without adding execution behavior.",
+      "retiredAlias": {
         "path": ".github/workflows/v4-tail-reseal.yml",
-        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
-        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
-      },
-      "rationale": "Classify the existing .github/workflows/v4-tail-reseal.yml capability without adding execution behavior."
+        "reason": "Human-authorized removal of version-prefixed workflow filenames; canonical public entry retains the capability.",
+        "migrationGuide": "docs/workflow-path-migration.md"
+      }
     },
     {
       "id": "verify",

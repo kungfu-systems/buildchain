@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   dogfood:
-    uses: kungfu-systems/buildchain/.github/workflows/v4-adopter-delivery.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-adopter-qualification.yml@v4-alpha
     with:
       consumer: buildchain
       node-version: "24"

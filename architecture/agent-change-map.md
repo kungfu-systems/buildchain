@@ -743,7 +743,7 @@ Owner: Buildchain adopter delivery maintainers
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-unknown-selector.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/offline-vectors.json`
-- `.github/workflows/v4-adopter-delivery.yml`
+- `.github/workflows/public-build-adopter-qualification.yml`
 - `.github/workflows/self-build-adopter-dogfood.yml`
 - `docs/v4-adopter-delivery.md`
 
@@ -841,7 +841,7 @@ Owner: Buildchain architecture maintainers
 - `architecture/v4-tail-reseal-parity.json`
 - `contracts/v4-tail-reseal-v1.schema.json`
 - `contracts/fixtures/v4-tail-reseal-v1/valid.json`
-- `.github/workflows/v4-tail-reseal.yml`
+- `.github/workflows/public-ops-tail-reseal.yml`
 - `docs/v4-stage-capsule.md`
 - `docs/v4-runtime-ref-resume-authority.md`
 - `docs/v4-tail-reseal.md`
