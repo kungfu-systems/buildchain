@@ -140,6 +140,27 @@ function commit(cwd) {
   git(cwd, "add", ".");
   git(cwd, "commit", "-qm", "fixture: paper source");
 }
+function channelFixture(version) {
+  const channel = version.includes("-") ? "alpha" : "stable";
+  const runtimeRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), `paper-v4-${channel}-`),
+  );
+  init(runtimeRoot);
+  const world = createBuildchainContractWorld({ root });
+  world.product.version = version;
+  fs.mkdirSync(path.join(runtimeRoot, "dist/site"), { recursive: true });
+  fs.writeFileSync(
+    path.join(runtimeRoot, "package.json"),
+    JSON.stringify({ name: "@kungfu-tech/buildchain", version }),
+  );
+  fs.writeFileSync(
+    path.join(runtimeRoot, "dist/site/buildchain-contract.json"),
+    JSON.stringify(finalizeBuildchainContractWorld(world)),
+  );
+  commit(runtimeRoot);
+  return runtimeRoot;
+}
+
 function fixture() {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "paper-v4-consumer-"));
   writePaperScaffold(
@@ -160,28 +181,23 @@ function fixture() {
   );
   init(cwd);
   commit(cwd);
-  const stableRoot = fs.mkdtempSync(path.join(os.tmpdir(), "paper-v4-stable-"));
-  init(stableRoot);
-  const world = createBuildchainContractWorld({ root });
-  world.product.version = "4.0.1";
-  fs.mkdirSync(path.join(stableRoot, "dist/site"), { recursive: true });
-  fs.writeFileSync(
-    path.join(stableRoot, "package.json"),
-    JSON.stringify({ name: "@kungfu-tech/buildchain", version: "4.0.1" }),
-  );
-  fs.writeFileSync(
-    path.join(stableRoot, "dist/site/buildchain-contract.json"),
-    JSON.stringify(finalizeBuildchainContractWorld(world)),
-  );
-  commit(stableRoot);
+  const stableRoot = channelFixture("4.0.1");
+  const alphaRoot = channelFixture("4.0.2-alpha.40");
   return {
     cwd,
     stableRoot,
+    alphaRoot,
+    alphaRuntime: {
+      buildchainRoot: root,
+      buildchainVersion: "4.0.2-alpha.40",
+      buildchainSha: git(alphaRoot, "rev-parse", "HEAD"),
+    },
     options: {
       cwd,
       buildchainRoot: root,
       buildchainVersion: version,
       stableBuildchainRoot: stableRoot,
+      alphaBuildchainRoot: alphaRoot,
     },
   };
 }
@@ -242,7 +258,7 @@ test("Paper guidance resolves installed script and official ADR without rewritin
 });
 
 test("v4 paper migration preserves content and binds floating callers to distinct channel locks", () => {
-  const { cwd, stableRoot, options } = fixture();
+  const { cwd, stableRoot, alphaRoot, options } = fixture();
   const paper = fs.readFileSync(path.join(cwd, "paper/main.tex"), "utf8");
   const plan = planPaperMigration(options);
   assert.equal(plan.ok, true);
@@ -284,7 +300,10 @@ test("v4 paper migration preserves content and binds floating callers to distinc
     git(stableRoot, "rev-parse", "HEAD"),
   );
   assert.equal(alpha.buildchain.ref, "v4-alpha");
-  assert.equal(alpha.buildchain.resolvedSha, git(root, "rev-parse", "HEAD"));
+  assert.equal(
+    alpha.buildchain.resolvedSha,
+    git(alphaRoot, "rev-parse", "HEAD"),
+  );
   const preflight = collectPaperPreflight({
     cwd,
     buildchainRoot: root,
@@ -337,14 +356,14 @@ test("v4 paper migration rejects a dirty or wrong-channel explicit root", () => 
 });
 
 test("v4 paper CI accepts only the two bound runtime sources", () => {
-  const { cwd, stableRoot, options } = fixture();
+  const { cwd, stableRoot, alphaRoot, options } = fixture();
   writePaperMigration(planPaperMigration(options));
   const env = {
     GITHUB_EVENT_NAME: "pull_request",
     GITHUB_HEAD_REF: "feature/paper",
     GITHUB_BASE_REF: "dev/v0/v0.1",
   };
-  for (const runtimeRoot of [root, stableRoot]) {
+  for (const runtimeRoot of [alphaRoot, stableRoot]) {
     assert.equal(
       collectPaperAgentEntry({
         cwd,
@@ -367,12 +386,12 @@ test("v4 paper CI accepts only the two bound runtime sources", () => {
 });
 
 test("v4 paper preflight admits compatible floating SHA drift only in CI", () => {
-  const { cwd, options } = fixture();
+  const { cwd, alphaRuntime, options } = fixture();
   writePaperMigration(planPaperMigration(options));
   for (const agentEntryMode of ["ci", "local"]) {
     const result = collectPaperPreflight({
       cwd,
-      buildchainRoot: root,
+      ...alphaRuntime,
       buildchainSha: "b".repeat(40),
       offline: true,
       agentEntryMode,
@@ -390,7 +409,7 @@ test("v4 paper preflight admits compatible floating SHA drift only in CI", () =>
   fs.writeFileSync(lockPath, JSON.stringify(lock));
   const rejected = collectPaperPreflight({
     cwd,
-    buildchainRoot: root,
+    ...alphaRuntime,
     buildchainSha: "b".repeat(40),
     offline: true,
     agentEntryMode: "ci",
