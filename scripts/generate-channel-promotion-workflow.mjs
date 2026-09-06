@@ -351,7 +351,7 @@ jobs:
         run: |
           set -euo pipefail
           repository="\${BUILDCHAIN_ROUTER_REPOSITORY}"
-          ref="\${BUILDCHAIN_ROUTER_REF}"
+          ref="\${BUILDCHAIN_ROUTER_REF:-${alphaRoute.logicalRef}}"
           ref="\${ref#refs/heads/}"
           ref="\${ref#refs/tags/}"
           if [[ ! "\${repository}" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ || -z "\${ref}" || "\${ref}" = /* || "\${ref}" = *..* ]]; then
