@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import test from "node:test";
 import {
@@ -272,4 +274,38 @@ test("promotion router contains no native build or provider mutation implementat
   assert.match(router, /^  resolve-promotion:/m);
   assert.match(router, /^  consumer-admission:/m);
   assert.match(router, /^  invoke:/m);
+});
+
+
+test("generated router bootstraps empty inputs and preserves explicit refs", (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "promotion-router-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const sha = "a".repeat(40);
+  const source = fs.readFileSync(path.join(root, ".github/workflows/release-candidate-promote.yml"), "utf8");
+  const step = source.split("      - name: Resolve promotion router source\n")[1]
+    .split("\n      - name:")[0];
+  const script = step.split("        run: |\n")[1]
+    .split("\n").map((line) => line.replace(/^          /, "")).join("\n");
+  assert.ok(script.includes("git ls-remote"));
+  const stub = path.join(directory, "git");
+  fs.writeFileSync(stub, `#!/bin/sh\nprintf '%s\\t%s\\n' '${sha}' "$3"\n`, { mode: 0o755 });
+  for (const requestedRef of [undefined, "", "v4", "refs/tags/v4-alpha", "../bad"]) {
+    const output = path.join(directory, "output");
+    fs.writeFileSync(output, "");
+    const env = { ...process.env, PATH: `${directory}${path.delimiter}${process.env.PATH}`,
+      BUILDCHAIN_ROUTER_REPOSITORY: "kungfu-systems/buildchain",
+      BUILDCHAIN_RESUME_RUN_ID: "", BUILDCHAIN_RESUME_RUNTIME_SHA: "", GITHUB_OUTPUT: output };
+    delete env.BUILDCHAIN_ROUTER_REF;
+    if (requestedRef !== undefined) env.BUILDCHAIN_ROUTER_REF = requestedRef;
+    const result = spawnSync("bash", ["-c", script], { env, encoding: "utf8" });
+    if (requestedRef === "../bad") {
+      assert.notEqual(result.status, 0);
+      assert.equal(fs.readFileSync(output, "utf8"), "");
+    } else {
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      const expected = requestedRef?.replace(/^refs\/tags\//, "") || "v4-alpha";
+      assert.equal(fs.readFileSync(output, "utf8"),
+        `repository=kungfu-systems/buildchain\nref=${expected}\nsha=${sha}\n`);
+    }
+  }
 });
