@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64608,
-    "current": 56547
+    "measuredExcess": 64598,
+    "current": 56537
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -790,7 +790,7 @@
           "lines": 738
         },
         "current": {
-          "lines": 738
+          "lines": 737
         },
         "target": {
           "lines": 600
@@ -2005,21 +2005,21 @@
       "crates/buildchain-v4-contracts/src/product_publication.rs": {
         "baseline": {
           "functions": {
-            "select_product_publication_intent@156": {
+            "select_product_publication_intent@219": {
               "complexity": 38
             }
           }
         },
         "current": {
           "functions": {
-            "select_product_publication_intent@156": {
-              "complexity": 33
+            "select_product_publication_intent@219": {
+              "complexity": 35
             }
           }
         },
         "target": {
           "functions": {
-            "select_product_publication_intent@156": {
+            "select_product_publication_intent@219": {
               "complexity": 30
             }
           }
@@ -2033,19 +2033,19 @@
               "lines": 245,
               "complexity": 51
             },
-            "advance_release_tail_execution@1126": {
+            "advance_release_tail_execution@1115": {
               "lines": 193
             }
           }
         },
         "current": {
-          "lines": 1318,
+          "lines": 1307,
           "functions": {
             "normalize_capability@149": {
               "lines": 245,
               "complexity": 51
             },
-            "advance_release_tail_execution@1126": {
+            "advance_release_tail_execution@1115": {
               "lines": 193
             }
           }
@@ -2057,7 +2057,7 @@
               "lines": 140,
               "complexity": 30
             },
-            "advance_release_tail_execution@1126": {
+            "advance_release_tail_execution@1115": {
               "lines": 140
             }
           }
@@ -3166,11 +3166,11 @@
     "packages/core/v4-floating-consumer-release-passport.js",
     "packages/core/release-passport.js",
     "tests/promote-buildchain-ref-governance.test.mjs",
-    "scripts/buildchain-cli-help.mjs",
     "scripts/check-maintainability.mjs",
     "tests/maintainability.test.mjs",
     "scripts/generate-v4-universal-workflow-facades.mjs",
-    "scripts/check-v4-release-topology.mjs"
+    "scripts/check-v4-release-topology.mjs",
+    "actions/v4-release-candidate-promote/product-provider-adapters.js"
   ],
   "burnDownSlices": [
     {

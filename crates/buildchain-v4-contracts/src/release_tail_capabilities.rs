@@ -85,5 +85,14 @@ pub(super) const DESCRIPTORS: &[Descriptor] = &[
 ];
 
 pub(super) fn descriptor(id: &str) -> Option<Descriptor> {
+    let package = id.strip_prefix("product.package.publish.");
+    let indexed = package
+        .and_then(|v| v.parse::<u8>().ok())
+        .is_some_and(|v| v < 64 && Some(v.to_string()).as_deref() == package);
+    let id = if indexed {
+        "product.package.publish"
+    } else {
+        id
+    };
     DESCRIPTORS.iter().copied().find(|entry| entry.id == id)
 }
