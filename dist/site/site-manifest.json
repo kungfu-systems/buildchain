@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:df073c14c12f15c851eb4507cbeb2919add936ac3079b10f222478138720d092"
+      "digest": "sha256:f804f3dcaaa5a349ded82f341ace7f89393cbc0197d359abaca0ea114ecadde8"
     },
     {
       "id": "build-facts",
@@ -309,7 +309,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:635de0da30769e4e6f956748ec9758338a1ae7921bce73268c2d914ae240693d"
+      "digest": "sha256:713f4fd2b9e67cefdd394170eea49ddb92e803c2e6adac20d6f3b8b1e431b960"
     },
     {
       "id": "release-tail-contract",

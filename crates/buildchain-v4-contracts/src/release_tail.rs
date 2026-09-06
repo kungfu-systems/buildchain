@@ -140,6 +140,15 @@ const DESCRIPTORS: &[Descriptor] = &[
 ];
 
 fn descriptor(id: &str) -> Option<Descriptor> {
+    let package = id.strip_prefix("product.package.publish.");
+    let indexed = package
+        .and_then(|v| v.parse::<u8>().ok())
+        .is_some_and(|v| v < 64 && Some(v.to_string()).as_deref() == package);
+    let id = if indexed {
+        "product.package.publish"
+    } else {
+        id
+    };
     DESCRIPTORS.iter().copied().find(|entry| entry.id == id)
 }
 
@@ -593,7 +602,7 @@ pub fn compile_release_tail_declaration(value: &Value) -> ContractResult<Value> 
         let identity = capability
             .get("operationIdentity")
             .expect("normalized identity");
-        let envelope = json!({
+        let mut envelope = json!({
             "schema": EFFECT_SCHEMA, "kind": capability.pointer("/effect/kind"),
             "transactionRoot": identity.get("transactionRoot"), "operationId": release_tail_root(identity)?,
             "capabilityId": capability.get("id"), "executor": capability.get("executor"), "adapter": capability.get("adapter"),
@@ -603,27 +612,22 @@ pub fn compile_release_tail_declaration(value: &Value) -> ContractResult<Value> 
             "readbackPredicates": capability.get("readbackPredicates"), "idempotency": capability.get("idempotency"),
             "retry": capability.get("retry"), "evidenceRequirements": capability.get("evidenceRequirements"),
         });
-        let mut effect = envelope.as_object().cloned().unwrap_or_default();
-        effect.insert(
-            "effectRoot".to_owned(),
-            json!(release_tail_root(&envelope)?),
-        );
-        effects.push(Value::Object(effect));
+        envelope["effectRoot"] = json!(release_tail_root(&envelope)?);
+        effects.push(envelope);
     }
     let operation_order = effects
         .iter()
         .filter_map(|entry| entry.get("operationId"))
         .cloned()
         .collect::<Vec<_>>();
-    let plan = json!({
+    let mut plan = json!({
         "schema": PLAN_SCHEMA, "transactionPolicy": TRANSACTION_POLICY,
         "transactionRoot": capabilities[0].pointer("/operationIdentity/transactionRoot"),
         "declarationRoot": release_tail_root(&declaration)?, "subject": declaration.get("subject"),
         "operationOrder": operation_order, "effects": effects,
     });
-    let mut result = plan.as_object().cloned().unwrap_or_default();
-    result.insert("planRoot".to_owned(), json!(release_tail_root(&plan)?));
-    Ok(Value::Object(result))
+    plan["planRoot"] = json!(release_tail_root(&plan)?);
+    Ok(plan)
 }
 
 fn without(value: &Value, key: &str) -> Value {
@@ -766,10 +770,7 @@ pub fn validate_release_tail_effect_plan(plan: &Value) -> Value {
 
 fn refresh(transaction: &mut Value) -> ContractResult<()> {
     let root = release_tail_root(&without(transaction, "stateRoot"))?;
-    transaction
-        .as_object_mut()
-        .expect("transaction object")
-        .insert("stateRoot".to_owned(), json!(root));
+    transaction["stateRoot"] = json!(root);
     Ok(())
 }
 
@@ -910,10 +911,7 @@ fn pending_index(transaction: &Value) -> Option<usize> {
 }
 
 fn set_state(transaction: &mut Value, state: &str) -> ContractResult<()> {
-    transaction
-        .as_object_mut()
-        .expect("transaction object")
-        .insert("state".to_owned(), json!(state));
+    transaction["state"] = json!(state);
     refresh(transaction)
 }
 

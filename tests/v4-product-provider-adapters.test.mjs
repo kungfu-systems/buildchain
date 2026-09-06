@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -23,299 +24,7 @@ import {
 } from "../packages/core/v4-product-publication.js";
 import { compileReleaseTailDeclaration } from "../packages/core/release-tail-provider-plane.js";
 
-const SOURCE = "a".repeat(40);
-const VERSION_STATE = "b".repeat(40);
-const REBASED_VERSION_STATE = "f".repeat(40);
-
-function digest(bytes) {
-  return crypto.createHash("sha256").update(bytes).digest("hex");
-}
-
-function writeFile(root, relative, bytes) {
-  const target = path.join(root, relative);
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, bytes);
-  return {
-    path: relative,
-    size: fs.statSync(target).size,
-    sha256: digest(fs.readFileSync(target)),
-  };
-}
-
-function fixture() {
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "v4-product-provider-"));
-  fs.writeFileSync(
-    path.join(cwd, "package.json"),
-    `${JSON.stringify(
-      {
-        name: "@kungfu-tech/buildchain",
-        version: "4.0.2-alpha.6",
-        packageManager: "npm@11.0.0",
-      },
-      null,
-      2,
-    )}\n`,
-  );
-  fs.writeFileSync(path.join(cwd, "package-lock.json"), "{}\n");
-  const npm = writeFile(cwd, "sealed/buildchain.tgz", "candidate npm bytes");
-  const asset = writeFile(cwd, "sealed/release.txt", "release bytes");
-  const payload = {
-    schemaVersion: 1,
-    contract: PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
-    repository: "kungfu-systems/buildchain",
-    sourceSha: SOURCE,
-    sourceTreeSha: "c".repeat(40),
-    runtimeSha: "d".repeat(40),
-    manifestDigest: "e".repeat(64),
-    passportDigest: "f".repeat(64),
-    controllerReceiptDigest: "1".repeat(64),
-    files: [npm, asset].sort((left, right) =>
-      left.path.localeCompare(right.path),
-    ),
-  };
-  const candidate = {
-    ...payload,
-    candidateDigest: publicationArtifactCandidateDigest(payload),
-  };
-  const manifest = createPublicationSealedBundle({
-    candidate,
-    packageName: "@kungfu-tech/buildchain",
-    packageVersion: "4.0.2-alpha.6",
-    npmTarballPath: npm.path,
-    npmIntegrity: `sha512-${crypto
-      .createHash("sha512")
-      .update(fs.readFileSync(path.join(cwd, npm.path)))
-      .digest("base64")}`,
-    releaseAssetPaths: [asset.path],
-  });
-  const manifestPath = path.join(cwd, "sealed-bundle.json");
-  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  const requiredArtifacts = [
-    {
-      group: "node",
-      kind: "npm",
-      name: "@kungfu-tech/buildchain",
-      ref_template: "{version}",
-      role: "main",
-      required: true,
-    },
-  ];
-  const requiredArtifactsPath = path.join(cwd, "required-artifacts.json");
-  fs.writeFileSync(
-    requiredArtifactsPath,
-    `${JSON.stringify(requiredArtifacts, null, 2)}\n`,
-  );
-  return {
-    cwd,
-    manifest,
-    manifestPath,
-    requiredArtifacts,
-    requiredArtifactsPath,
-  };
-}
-
-function githubProvider() {
-  const refs = new Map([
-    ["heads/alpha/v4/v4.0", SOURCE],
-    ["heads/dev/v4/v4.0", SOURCE],
-  ]);
-  const blobs = new Map();
-  const trees = new Map([["source-tree", []]]);
-  const commits = new Map([
-    [SOURCE, { sha: SOURCE, tree: { sha: "source-tree" }, parents: [] }],
-  ]);
-  const pullRequests = [];
-  const checks = [];
-  const protectedRefs = new Set();
-  let commitCount = 0;
-  const rest = {
-    git: {
-      async getRef({ ref }) {
-        if (!refs.has(ref))
-          throw Object.assign(new Error("not found"), { status: 404 });
-        return { data: { ref: `refs/${ref}`, object: { sha: refs.get(ref) } } };
-      },
-      async createRef({ ref, sha }) {
-        const normalized = ref.replace(/^refs\//u, "");
-        if (refs.has(normalized))
-          throw Object.assign(new Error("exists"), { status: 422 });
-        refs.set(normalized, sha);
-        return { data: { ref, object: { sha } } };
-      },
-      async updateRef({ ref, sha }) {
-        if (protectedRefs.has(ref))
-          throw Object.assign(new Error("protected branch"), { status: 403 });
-        refs.set(ref, sha);
-        return { data: { ref: `refs/${ref}`, object: { sha } } };
-      },
-      async getCommit({ commit_sha: sha }) {
-        return { data: commits.get(sha) };
-      },
-      async createBlob({ content }) {
-        const sha = digest(content).slice(0, 40);
-        blobs.set(sha, Buffer.from(content).toString("base64"));
-        return { data: { sha } };
-      },
-      async createTree({ tree }) {
-        const sha = `tree-${trees.size}`;
-        trees.set(sha, tree);
-        return { data: { sha } };
-      },
-      async getTree({ tree_sha }) {
-        return { data: { tree: trees.get(tree_sha) || [] } };
-      },
-      async getBlob({ file_sha }) {
-        return { data: { content: blobs.get(file_sha), encoding: "base64" } };
-      },
-      async createCommit({ tree, parents, message }) {
-        commitCount += 1;
-        const commit = {
-          sha: commitCount === 1 ? VERSION_STATE : REBASED_VERSION_STATE,
-          tree: { sha: tree },
-          parents: parents.map((sha) => ({ sha })),
-          message,
-        };
-        commits.set(commit.sha, commit);
-        return { data: commit };
-      },
-    },
-    repos: {
-      async compareCommitsWithBasehead({ basehead }) {
-        const [ancestor, current] = basehead.split("...");
-        const contained =
-          ancestor === current ||
-          commits.get(current)?.parents?.some(({ sha }) => sha === ancestor);
-        return { data: { status: contained ? "ahead" : "diverged" } };
-      },
-    },
-    checks: {
-      async create(input) {
-        checks.push(input);
-      },
-    },
-    pulls: {
-      async list() {
-        return { data: pullRequests };
-      },
-      async create(input) {
-        pullRequests.push({ ...input, html_url: "https://example.test/pr/1" });
-        return { data: pullRequests.at(-1) };
-      },
-    },
-  };
-  return {
-    octokit: { rest },
-    refs,
-    protectedRefs,
-    pullRequests,
-    checks,
-    commits,
-    trees,
-  };
-}
-
-function npmProvider(
-  cwd,
-  { initialIntegrity = "", visibilityLagReads = 0 } = {},
-) {
-  let integrity = initialIntegrity;
-  let publishCount = 0;
-  let packCount = 0;
-  let remainingVisibilityLagReads = 0;
-  return {
-    get publishCount() {
-      return publishCount;
-    },
-    get packCount() {
-      return packCount;
-    },
-    spawn(command, args) {
-      assert.equal(command, "npm");
-      if (args[0] === "pack") {
-        packCount += 1;
-        const destination = args[args.indexOf("--pack-destination") + 1];
-        const filename = "kungfu-tech-buildchain-4.0.2-alpha.7.tgz";
-        fs.writeFileSync(
-          path.join(destination, filename),
-          "rematerialized bytes",
-        );
-        return {
-          status: 0,
-          stdout: JSON.stringify([
-            {
-              name: "@kungfu-tech/buildchain",
-              version: "4.0.2-alpha.7",
-              filename,
-            },
-          ]),
-          stderr: "",
-        };
-      }
-      if (args[0] === "view") {
-        if (remainingVisibilityLagReads > 0) {
-          remainingVisibilityLagReads -= 1;
-          return { status: 1, stdout: "", stderr: "npm error E404" };
-        }
-        return integrity
-          ? { status: 0, stdout: JSON.stringify(integrity), stderr: "" }
-          : { status: 1, stdout: "", stderr: "npm error E404" };
-      }
-      if (args[0] === "publish") {
-        publishCount += 1;
-        remainingVisibilityLagReads = visibilityLagReads;
-        integrity = `sha512-${crypto
-          .createHash("sha512")
-          .update(fs.readFileSync(args[1]))
-          .digest("base64")}`;
-        return { status: 0, stdout: "", stderr: "" };
-      }
-      throw new Error(`unexpected npm command in ${cwd}: ${args.join(" ")}`);
-    },
-  };
-}
-
-function productScenario(files, github, roots = ["6", "7"], overrides = {}) {
-  const intent = selectV4ProductPublicationIntent({
-    channel: "alpha",
-    targetRef: "alpha/v4/v4.0",
-    sourceSha: SOURCE,
-    sourceTimestamp: "2026-08-30T00:00:00.000Z",
-    repository: "kungfu-systems/buildchain",
-    packageName: "@kungfu-tech/buildchain",
-    distTag: "alpha",
-    sealedBundleRoot: files.manifest.root,
-    requiredArtifactsRoot: v4ContentRoot(
-      "v4-product-required-artifacts",
-      files.requiredArtifacts,
-    ),
-    candidateVersion: "4.0.2-alpha.6",
-    observedVersions: ["4.0.2-alpha.6"],
-    ...overrides,
-  });
-  const plan = createV4ProductPublicationPlan({
-    intent,
-    invocationRoot: `sha256:${roots[0].repeat(64)}`,
-    transactionRoot: `sha256:${roots[1].repeat(64)}`,
-  });
-  return {
-    intent,
-    plan,
-    effectPlan: compileReleaseTailDeclaration(
-      createV4ProductPublicationDeclaration({ intent, plan }),
-    ),
-    request: {
-      octokit: github.octokit,
-      mutationOctokit: github.octokit,
-      sealedBundleRoot: files.cwd,
-      sealedBundleManifest: files.manifestPath,
-      requiredArtifactsPath: files.requiredArtifactsPath,
-      requiredStatusCheck: "check",
-      publishAuth: "trusted-publishing",
-      publishPackageSetOrder: "as-provided",
-      publishPackageMain: "@kungfu-tech/buildchain",
-    },
-  };
-}
+import { SOURCE, VERSION_STATE, REBASED_VERSION_STATE, digest, fixture, githubProvider, npmProvider, productScenario } from "./helpers/v4-product-provider-fixtures.mjs";
 
 test("unsupported legacy publication inputs fail before provider mutation", () => {
   const files = fixture();
@@ -382,10 +91,7 @@ test("rooted product effects publish once and replay entirely from provider read
     packageName: "@kungfu-tech/buildchain",
     distTag: "alpha",
     sealedBundleRoot: files.manifest.root,
-    requiredArtifactsRoot: v4ContentRoot(
-      "v4-product-required-artifacts",
-      files.requiredArtifacts,
-    ),
+    requiredArtifactsRoot: v4ContentRoot("v4-product-required-artifacts", files.requiredArtifacts),
     candidateVersion: "4.0.2-alpha.6",
     observedVersions: ["4.0.2-alpha.6"],
   });
@@ -411,10 +117,9 @@ test("rooted product effects publish once and replay entirely from provider read
     cwd: files.cwd,
     spawn: npm.spawn,
   });
-  const first = await executeReleaseTailTransaction(
-    createReleaseTailTransaction(effectPlan),
-    { adapters: firstRuntime.adapters },
-  );
+  const first = await executeReleaseTailTransaction(createReleaseTailTransaction(effectPlan), {
+    adapters: firstRuntime.adapters,
+  });
   assert.equal(first.state, "complete");
   assert.equal(first.receipts.length, 3);
   assert.equal(npm.publishCount, 1);
@@ -431,10 +136,9 @@ test("rooted product effects publish once and replay entirely from provider read
     cwd: files.cwd,
     spawn: npm.spawn,
   });
-  const replay = await executeReleaseTailTransaction(
-    createReleaseTailTransaction(effectPlan),
-    { adapters: replayRuntime.adapters },
-  );
+  const replay = await executeReleaseTailTransaction(createReleaseTailTransaction(effectPlan), {
+    adapters: replayRuntime.adapters,
+  });
   assert.equal(replay.state, "complete");
   assert.equal(
     replay.receipts.every(({ action }) => action === "observed-existing"),
@@ -523,4 +227,147 @@ test("alpha refuses an unreviewed channel ref instead of creating another releas
   assert.equal(npm.publishCount, 1);
   assert.equal(github.pullRequests.length, 0);
   assert.equal(github.refs.has("tags/v4-alpha"), false);
+});
+
+function packageSetFixture() {
+  const files = fixture();
+  const packages = [
+    { name: "@kungfu-tech/buildchain", role: "main" },
+    { name: "@kungfu-tech/buildchain-linux-x64", role: "platform" },
+    { name: "@kungfu-tech/buildchain-darwin-arm64", role: "platform" },
+  ].map((entry, index) => {
+    const relative = `sealed/package-${index}.tgz`;
+    const staging = path.join(files.cwd, "pack", String(index));
+    fs.mkdirSync(path.join(staging, "package"), { recursive: true });
+    const version = "4.0.2-alpha.6";
+    fs.writeFileSync(
+      path.join(staging, "package/package.json"),
+      JSON.stringify({ name: entry.name, version }),
+    );
+    execFileSync("tar", ["-czf", path.join(files.cwd, relative), "-C", staging, "package"]);
+    const bytes = fs.readFileSync(path.join(files.cwd, relative));
+    return {
+      ...entry,
+      version,
+      path: relative,
+      size: bytes.length,
+      sha256: digest(bytes),
+      integrity: `sha512-${crypto.createHash("sha512").update(bytes).digest("base64")}`,
+    };
+  });
+  const { candidateDigest: _ignored, ...payload } = files.manifest.candidate;
+  payload.files = packages.map(({ path, size, sha256 }) => ({
+    path,
+    size,
+    sha256,
+  }));
+  payload.npmPackages = packages;
+  const candidate = {
+    ...payload,
+    candidateDigest: publicationArtifactCandidateDigest(payload),
+  };
+  files.manifest = createPublicationSealedBundle({
+    candidate,
+    packageName: packages[0].name,
+    packageVersion: packages[0].version,
+    npmTarballPath: packages[0].path,
+    npmIntegrity: packages[0].integrity,
+    releaseAssetPaths: packages.map(({ path }) => path),
+  });
+  files.requiredArtifacts = packages.map(({ name, version, role, integrity }) => ({
+    kind: "npm",
+    name,
+    ref: version,
+    role,
+    integrity,
+    required: true,
+  }));
+  fs.writeFileSync(files.manifestPath, JSON.stringify(files.manifest));
+  fs.writeFileSync(files.requiredArtifactsPath, JSON.stringify(files.requiredArtifacts));
+  return { ...files, packages };
+}
+
+test("sealed package sets recover after a platform publish without republishing or advancing main early", async () => {
+  const files = packageSetFixture();
+  const github = githubProvider();
+  const scenario = productScenario(files, github, ["4", "5"], {
+    npmPackages: files.packages.map((entry) => ({
+      ...entry,
+      sha256: `sha256:${entry.sha256}`,
+    })),
+  });
+  scenario.request.publishPackageSetOrder = "platforms-first-main-last";
+  const published = new Map();
+  const calls = [];
+  let interrupt = true;
+  const spawn = (command, args) => {
+    assert.equal(command, "npm");
+    if (args[0] === "view")
+      return published.has(args[1])
+        ? { status: 0, stdout: JSON.stringify(published.get(args[1])) }
+        : { status: 1, stderr: "E404" };
+    assert.equal(args[0], "publish");
+    const entry = files.packages.find((entry) => path.join(files.cwd, entry.path) === args[1]);
+    if (interrupt && calls.length === 1)
+      return { status: 1, stderr: "simulated provider interruption" };
+    calls.push(entry.name);
+    published.set(`${entry.name}@${entry.version}`, entry.integrity);
+    return { status: 0 };
+  };
+  const runtime = () =>
+    createV4ProductPublicationAdapters({
+      ...scenario,
+      cwd: files.cwd,
+      spawn,
+      wait: async () => {},
+    });
+  const first = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(scenario.effectPlan),
+    { adapters: runtime().adapters },
+  );
+  assert.notEqual(first.state, "complete");
+  assert.deepEqual(calls, ["@kungfu-tech/buildchain-darwin-arm64"]);
+  assert.equal(github.refs.has("tags/v4.0.2-alpha.6"), false);
+  interrupt = false;
+  const resumed = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(scenario.effectPlan),
+    { adapters: runtime().adapters },
+  );
+  assert.equal(resumed.state, "complete");
+  assert.equal(resumed.receipts.length, 5);
+  assert.deepEqual(calls, [
+    "@kungfu-tech/buildchain-darwin-arm64",
+    "@kungfu-tech/buildchain-linux-x64",
+    "@kungfu-tech/buildchain",
+  ]);
+  assert.equal(resumed.receipts[1].action, "observed-existing");
+  await executeReleaseTailTransaction(createReleaseTailTransaction(scenario.effectPlan), {
+    adapters: runtime().adapters,
+  });
+  assert.equal(calls.length, 3);
+});
+
+test("sealed package set inventory and byte drift fail before any provider call", () => {
+  const files = packageSetFixture();
+  const github = githubProvider();
+  const scenario = productScenario(files, github, ["4", "5"], {
+    npmPackages: files.packages.map((entry) => ({
+      ...entry,
+      sha256: `sha256:${entry.sha256}`,
+    })),
+  });
+  let calls = 0;
+  const runtime = () =>
+    createV4ProductPublicationAdapters({
+      ...scenario,
+      cwd: files.cwd,
+      spawn: () => {
+        calls++;
+        throw new Error("unexpected provider effect");
+      },
+    });
+  fs.appendFileSync(path.join(files.cwd, files.packages[1].path), "tampered");
+  assert.throws(runtime, /file mismatch/u);
+  assert.equal(calls, 0);
+  assert.equal(github.refs.size, 2);
 });

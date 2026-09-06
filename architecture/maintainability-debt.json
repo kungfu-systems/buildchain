@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64729,
-    "current": 56668
+    "measuredExcess": 64728,
+    "current": 56667
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -790,7 +790,7 @@
           "lines": 738
         },
         "current": {
-          "lines": 738
+          "lines": 737
         },
         "target": {
           "lines": 600
@@ -2005,21 +2005,21 @@
       "crates/buildchain-v4-contracts/src/product_publication.rs": {
         "baseline": {
           "functions": {
-            "select_product_publication_intent@156": {
+            "select_product_publication_intent@219": {
               "complexity": 38
             }
           }
         },
         "current": {
           "functions": {
-            "select_product_publication_intent@156": {
-              "complexity": 31
+            "select_product_publication_intent@219": {
+              "complexity": 33
             }
           }
         },
         "target": {
           "functions": {
-            "select_product_publication_intent@156": {
+            "select_product_publication_intent@219": {
               "complexity": 30
             }
           }
@@ -2029,23 +2029,23 @@
         "baseline": {
           "lines": 1399,
           "functions": {
-            "normalize_capability@228": {
+            "normalize_capability@237": {
               "lines": 245,
               "complexity": 51
             },
-            "advance_release_tail_execution@1205": {
+            "advance_release_tail_execution@1203": {
               "lines": 193
             }
           }
         },
         "current": {
-          "lines": 1397,
+          "lines": 1395,
           "functions": {
-            "normalize_capability@228": {
+            "normalize_capability@237": {
               "lines": 245,
               "complexity": 51
             },
-            "advance_release_tail_execution@1205": {
+            "advance_release_tail_execution@1203": {
               "lines": 193
             }
           }
@@ -2053,11 +2053,11 @@
         "target": {
           "lines": 600,
           "functions": {
-            "normalize_capability@228": {
+            "normalize_capability@237": {
               "lines": 140,
               "complexity": 30
             },
-            "advance_release_tail_execution@1205": {
+            "advance_release_tail_execution@1203": {
               "lines": 140
             }
           }

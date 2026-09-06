@@ -80,6 +80,14 @@ export function resolveV4ProductPublicationIntent() {
     repository: env("BUILDCHAIN_REPOSITORY", true),
     artifactKind,
     packageName: name,
+    ...(manifest?.npmPackages
+      ? {
+          npmPackages: manifest.npmPackages.map((entry) => ({
+            ...entry,
+            sha256: `sha256:${entry.sha256}`,
+          })),
+        }
+      : {}),
     distTag:
       env("BUILDCHAIN_PUBLISH_DIST_TAG") ||
       (channel === "alpha" ? "alpha" : "latest"),

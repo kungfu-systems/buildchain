@@ -15,8 +15,8 @@ struct Version {
     value: String,
     major: u64,
     minor: u64,
-    patch: u64,
     alpha: Option<u64>,
+    base: String,
 }
 
 fn fault(message: impl Into<String>) -> Box<ContractFault> {
@@ -69,14 +69,23 @@ fn parse_version(value: &str, label: &str) -> ContractResult<Version> {
         Some((stable, alpha)) => (stable, Some(alpha)),
         None => (value, None),
     };
-    let parts = stable.split('.').collect::<Vec<_>>();
+    let (core, anchor) = stable.split_once('-').unwrap_or((stable, ""));
+    let parts = core.split('.').collect::<Vec<_>>();
     let invalid = || fault(format!("{label} must be an exact stable or alpha version"));
     if parts.len() != 3 || alpha.is_some_and(|value| value.contains('-') || value.contains('.')) {
         return Err(invalid());
     }
+    if stable.contains('-')
+        && (anchor.is_empty()
+            || anchor.split('.').any(|part| {
+                part.is_empty() || !part.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
+            }))
+    {
+        return Err(invalid());
+    }
     let major = parse_numeric(parts[0]).ok_or_else(&invalid)?;
     let minor = parse_numeric(parts[1]).ok_or_else(&invalid)?;
-    let patch = parse_numeric(parts[2]).ok_or_else(&invalid)?;
+    parse_numeric(parts[2]).ok_or_else(&invalid)?;
     let alpha = alpha
         .map(|value| parse_numeric(value).ok_or_else(&invalid))
         .transpose()?;
@@ -84,8 +93,8 @@ fn parse_version(value: &str, label: &str) -> ContractResult<Version> {
         value: value.to_owned(),
         major,
         minor,
-        patch,
         alpha,
+        base: stable.to_owned(),
     })
 }
 
@@ -119,7 +128,7 @@ fn exact_git_sha(value: &str) -> bool {
     value.len() == 40
         && value
             .bytes()
-            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
 fn repository(value: &str) -> bool {
@@ -135,9 +144,7 @@ fn validate_recovered_version(
     candidate: &Version,
     recovered: &Version,
 ) -> ContractResult<()> {
-    if recovered.major != candidate.major
-        || recovered.minor != candidate.minor
-        || recovered.patch != candidate.patch
+    if recovered.base != candidate.base
         || (channel == "alpha" && recovered.alpha.is_none())
         || (channel == "stable" && recovered.alpha.is_some())
     {
@@ -151,6 +158,62 @@ fn validate_recovered_version(
         ));
     }
     Ok(())
+}
+
+fn normalize_npm_packages(
+    packages: &Value,
+    artifact_kind: &str,
+    channel: &str,
+    package_name: &str,
+    version: &str,
+) -> ContractResult<Value> {
+    if artifact_kind != "npm" || channel != "alpha" {
+        return Err(fault(
+            "sealed npm package sets require npm alpha publication",
+        ));
+    }
+    let packages = packages
+        .as_array()
+        .ok_or_else(|| fault("npmPackages must be an array"))?;
+    if packages.len() < 2 || packages.len() > 64 {
+        return Err(fault("npmPackages must contain 2 to 64 packages"));
+    }
+    let mut names = std::collections::BTreeSet::new();
+    let mut paths = std::collections::BTreeSet::new();
+    let mut normalized = Vec::new();
+    let mut mains = 0;
+    for package in packages {
+        let name = required_string(package, "name")?;
+        let path = required_string(package, "path")?;
+        let role = required_string(package, "role")?;
+        let integrity = required_string(package, "integrity")?;
+        let sha256 = required_root(package, "sha256")?;
+        if !names.insert(name.clone()) || !paths.insert(path.clone()) {
+            return Err(fault("npmPackages names and paths must be unique"));
+        }
+        if string(package, "version") != version || !integrity.starts_with("sha512-") {
+            return Err(fault(
+                "npmPackages must bind the exact candidate version and integrity",
+            ));
+        }
+        if role == "main" && name == package_name {
+            mains += 1;
+        } else if role != "platform" || name == package_name {
+            return Err(fault(
+                "npmPackages must declare one exact main and platform packages",
+            ));
+        }
+        normalized.push(json!({"name": name, "version": version, "path": path,
+        "role": role, "integrity": integrity, "sha256": sha256}));
+    }
+    if mains != 1 {
+        return Err(fault("npmPackages must declare one exact main"));
+    }
+    normalized.sort_by(|left, right| {
+        let key = |entry: &Value| (string(entry, "role") == "main", string(entry, "name"));
+        key(left).cmp(&key(right))
+    });
+    Ok(Value::Array(normalized))
 }
 
 pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value> {
@@ -220,15 +283,24 @@ pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value>
             .ok_or_else(|| fault("fresh alpha publication requires an alpha candidate version"))?;
         (candidate.value.clone(), "fresh")
     } else {
-        (
-            format!(
-                "{}.{}.{}",
-                candidate.major, candidate.minor, candidate.patch
-            ),
-            "fresh",
-        )
+        (candidate.base.clone(), "fresh")
     };
+    let npm_packages = value
+        .get("npmPackages")
+        .map(|packages| {
+            normalize_npm_packages(
+                packages,
+                artifact_kind,
+                normalized_channel,
+                package_name.as_deref().unwrap_or_default(),
+                &version,
+            )
+        })
+        .transpose()?;
     let mut intent = Map::new();
+    if let Some(packages) = npm_packages {
+        intent.insert("npmPackages".to_owned(), packages);
+    }
     intent.insert("schema".to_owned(), json!(INTENT_CONTRACT));
     intent.insert("mode".to_owned(), json!(mode));
     intent.insert("channel".to_owned(), json!(normalized_channel));
@@ -251,33 +323,13 @@ pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value>
     intent.insert("version".to_owned(), json!(version));
     intent.insert("exactTag".to_owned(), json!(format!("v{version}")));
     intent.insert("observedVersions".to_owned(), json!(observed));
-    let intent_value = Value::Object(intent);
-    let root = content_root("v4-product-publication-intent", &intent_value)?;
-    let mut output = intent_value.as_object().cloned().unwrap_or_default();
-    output.insert("intentRoot".to_owned(), json!(root));
-    Ok(Value::Object(output))
+    let mut intent = Value::Object(intent);
+    intent["intentRoot"] = json!(content_root("v4-product-publication-intent", &intent)?);
+    Ok(intent)
 }
 
 fn selected_from_intent(intent: &Value) -> ContractResult<Value> {
-    let mut input = Map::new();
-    for name in [
-        "channel",
-        "targetRef",
-        "sourceSha",
-        "sourceTimestamp",
-        "repository",
-        "artifactKind",
-        "packageName",
-        "distTag",
-        "sealedBundleRoot",
-        "requiredArtifactsRoot",
-        "candidateVersion",
-        "observedVersions",
-    ] {
-        if let Some(value) = intent.get(name) {
-            input.insert(name.to_owned(), value.clone());
-        }
-    }
+    let mut input = object(intent)?.clone();
     input.insert(
         "recoveredVersion".to_owned(),
         if intent.get("mode").and_then(Value::as_str) == Some("resume") {
@@ -290,29 +342,17 @@ fn selected_from_intent(intent: &Value) -> ContractResult<Value> {
 }
 
 fn references(intent: &Value, version: &Version) -> Value {
-    let tag = intent
-        .get("exactTag")
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-    let target_ref = intent
-        .get("targetRef")
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-    let mut values = vec![json!({"ref": format!("refs/tags/{tag}"), "target": "source"})];
-    if intent.get("channel").and_then(Value::as_str) == Some("alpha") {
-        values.extend([
-            json!({"ref": format!("refs/heads/{target_ref}"), "target": "source"}),
-            json!({"ref": format!("refs/tags/v{}.{}-alpha", version.major, version.minor), "target": "source"}),
-            json!({"ref": format!("refs/tags/v{}-alpha", version.major), "target": "source"}),
-        ]);
-    } else {
-        values.extend([
-            json!({"ref": format!("refs/heads/{target_ref}"), "target": "version-state"}),
-            json!({"ref": format!("refs/tags/v{}.{}", version.major, version.minor), "target": "version-state"}),
-            json!({"ref": format!("refs/tags/v{}", version.major), "target": "version-state"}),
-        ]);
-    }
-    Value::Array(values)
+    let tag = string(intent, "exactTag");
+    let target_ref = string(intent, "targetRef");
+    let alpha = string(intent, "channel") == "alpha";
+    let suffix = if alpha { "-alpha" } else { "" };
+    let target = if alpha { "source" } else { "version-state" };
+    json!([
+        {"ref": format!("refs/tags/{tag}"), "target": "source"},
+        {"ref": format!("refs/heads/{target_ref}"), "target": target},
+        {"ref": format!("refs/tags/v{}.{}{suffix}", version.major, version.minor), "target": target},
+        {"ref": format!("refs/tags/v{}{suffix}", version.major), "target": target},
+    ])
 }
 
 pub fn create_product_publication_plan(value: &Value) -> ContractResult<Value> {
@@ -346,19 +386,27 @@ pub fn create_product_publication_plan(value: &Value) -> ContractResult<Value> {
             "stateRef": state_ref,
         },
     })];
-    if intent.get("artifactKind").and_then(Value::as_str) != Some("custom") {
-        operations.push(json!({
-            "id": "product.package.publish",
-            "adapter": "npm-trusted-publishing",
-            "authority": "oidc-provider-mutation",
-            "target": {
-                "packageName": intent.get("packageName"),
+    if string(intent, "artifactKind") != "custom" {
+        let packages = intent.get("npmPackages").and_then(Value::as_array);
+        for index in 0..packages.map_or(1, Vec::len) {
+            let package = packages.map(|entries| &entries[index]);
+            let mut target = json!({
+                "packageName": package.map_or_else(|| intent.get("packageName").cloned().unwrap_or(Value::Null), |entry| entry["name"].clone()),
                 "version": version.value,
                 "distTag": intent.get("distTag"),
                 "sealedBundleRoot": intent.get("sealedBundleRoot"),
                 "requiredArtifactsRoot": intent.get("requiredArtifactsRoot"),
-            },
-        }));
+            });
+            if let Some(package) = package {
+                target["package"] = package.clone();
+            }
+            operations.push(json!({
+                "id": if packages.is_some() { format!("product.package.publish.{index}") } else { "product.package.publish".to_owned() },
+                "adapter": "npm-trusted-publishing",
+                "authority": "oidc-provider-mutation",
+                "target": target,
+            }));
+        }
     }
     operations.push(json!({
         "id": "product.release-refs.converge",
@@ -383,7 +431,7 @@ pub fn create_product_publication_plan(value: &Value) -> ContractResult<Value> {
         .filter_map(|operation| operation.get("id"))
         .cloned()
         .collect::<Vec<_>>();
-    let plan = json!({
+    let mut plan = json!({
         "schema": PLAN_CONTRACT,
         "intentRoot": intent.get("intentRoot"),
         "invocationRoot": invocation_root,
@@ -391,10 +439,8 @@ pub fn create_product_publication_plan(value: &Value) -> ContractResult<Value> {
         "operationOrder": operation_order,
         "operations": operations,
     });
-    let plan_root = content_root("v4-product-publication-plan", &plan)?;
-    let mut output = plan.as_object().cloned().unwrap_or_default();
-    output.insert("planRoot".to_owned(), json!(plan_root));
-    Ok(Value::Object(output))
+    plan["planRoot"] = json!(content_root("v4-product-publication-plan", &plan)?);
+    Ok(plan)
 }
 
 fn descriptor(id: &str) -> Option<(&'static str, &'static str, &'static str, &'static str)> {
@@ -405,12 +451,14 @@ fn descriptor(id: &str) -> Option<(&'static str, &'static str, &'static str, &'s
             "product-version-state-readback",
             "product-version-state",
         )),
-        "product.package.publish" => Some((
-            "npm-package",
-            "product-package-publication",
-            "product-package-readback",
-            "product-package-publication",
-        )),
+        id if id == "product.package.publish" || id.starts_with("product.package.publish.") => {
+            Some((
+                "npm-package",
+                "product-package-publication",
+                "product-package-readback",
+                "product-package-publication",
+            ))
+        }
         "product.release-refs.converge" => Some((
             "github-release-refs",
             "product-release-ref-convergence",
@@ -473,7 +521,7 @@ pub fn create_product_publication_declaration(value: &Value) -> ContractResult<V
             .ok_or_else(|| fault(format!("unsupported product publication operation '{id}'")))?;
         let mut artifact_roles =
             vec![json!({"role": "publication-intent", "root": intent.get("intentRoot")})];
-        if id == "product.package.publish" {
+        if id.starts_with("product.package.publish") {
             artifact_roles.extend([
                 json!({"role": "sealed-bundle", "root": intent.get("sealedBundleRoot")}),
                 json!({"role": "required-artifacts", "root": intent.get("requiredArtifactsRoot")}),
@@ -491,7 +539,7 @@ pub fn create_product_publication_declaration(value: &Value) -> ContractResult<V
             "channelPolicy": {
                 "channel": intent.get("channel"),
                 "tagPattern": exact_tag_pattern(intent.get("exactTag").and_then(Value::as_str).unwrap_or_default()),
-                "authorityMove": if id == "product.package.publish" { "none" } else { "verified-ref" },
+                "authorityMove": if id.starts_with("product.package.publish") { "none" } else { "verified-ref" },
             },
             "activationPolicy": {"mode": "none", "environment": "none"},
             "readbackPredicates": [{"id": format!("{id}.target-root"), "kind": "exact-root", "expected": operation.get("operationRoot")}],

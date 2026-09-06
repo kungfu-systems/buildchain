@@ -339,3 +339,20 @@ test("next-development rejects Dev content drift after Alpha publication", async
     /protected Dev tree drifted/u,
   );
 });
+
+test("anchored alpha publication preserves success and awaits the next manual anchor without GitHub calls", async () => {
+  const cwd = fixture();
+  const config = path.join(cwd, ".buildchain/buildchain.toml");
+  fs.writeFileSync(config, fs.readFileSync(config, "utf8").replace("required = true", 'required = true\nstrategy = "anchored"\nnext = "manual"\nmanifest = "libnode.release.json"') + '\n[[version.files]]\ntype = "json"\npath = "libnode.release.json"\nkey = "npmVersion"\n');
+  const version = "22.22.3-kf.5-alpha.4";
+  fs.writeFileSync(path.join(cwd, "libnode.release.json"), JSON.stringify({npmVersion: version}));
+  const result = await advanceAlphaNextDevelopment({
+    cwd, repository: "kungfu-systems/libnode",
+    completedAlpha: {outcome: "succeeded", version, exactTag: `v${version}`, releaseSha: SOURCE,
+      treeSha: SOURCE_TREE, publicationRoot: `sha256:${"1".repeat(64)}`, completedAt: "2026-09-06T00:00:00.000Z"},
+    octokit: {}, mutationOctokit: {},
+  });
+  assert.equal(result.status, "waiting-anchor");
+  assert.equal(result.transition.target.version, null);
+  assert.deepEqual(result.transition.adapter.sourcePaths, ["libnode.release.json", "package.json"]);
+});

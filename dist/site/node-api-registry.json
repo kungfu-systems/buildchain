@@ -15331,7 +15331,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 344
+        "line": 343
       },
       "example": "import { advanceNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -15364,7 +15364,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 305
+        "line": 304
       },
       "example": "import { bindNextDevelopmentAnchor } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -15393,7 +15393,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 253
+        "line": 252
       },
       "example": "import { createNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -15422,7 +15422,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 472
+        "line": 471
       },
       "example": "import { materializeNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -15628,7 +15628,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 416
+        "line": 415
       },
       "example": "import { recordNextDevelopmentMaterialization } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -15657,7 +15657,7 @@
       ],
       "source": {
         "path": "packages/core/next-development-transition.js",
-        "line": 729
+        "line": 728
       },
       "example": "import { validateNextDevelopmentTransition } from \"@kungfu-tech/buildchain/next-development-transition\";",
       "maturity": "stable",
@@ -19395,11 +19395,11 @@
         "May throw an Error on rejected input or failed operations; follow the linked source contract."
       ],
       "sideEffects": [
-        "none-detected-by-static-source-scan"
+        "subprocess"
       ],
       "source": {
         "path": "packages/core/publication-sealed-bundle.js",
-        "line": 84
+        "line": 97
       },
       "example": "import { createPublicationSealedBundle } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19423,7 +19423,7 @@
       ],
       "source": {
         "path": "packages/core/publication-sealed-bundle.js",
-        "line": 10
+        "line": 11
       },
       "example": "import { PUBLICATION_SEALED_BUNDLE_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -19452,7 +19452,7 @@
       ],
       "source": {
         "path": "packages/core/publication-sealed-bundle.js",
-        "line": 133
+        "line": 189
       },
       "example": "import { verifyPublicationSealedBundle } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -30294,7 +30294,7 @@
       "specifier": "@kungfu-tech/buildchain/publication-sealed-bundle",
       "export": "./publication-sealed-bundle",
       "target": "./packages/core/publication-sealed-bundle.js",
-      "digest": "sha256:0b912deace895b3f99e7a77b77678d35a7c22a68b3d18eb31aff2995fb66a51e",
+      "digest": "sha256:c12ef1e9eaf762059c88f2d69a87a4d1560356cbbb37fb66fda5639c604caa82",
       "summary": "Build-once publication bundle manifests and exact-byte resume verification APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -30728,7 +30728,7 @@
       "specifier": "@kungfu-tech/buildchain/next-development-transition",
       "export": "./next-development-transition",
       "target": "./packages/core/next-development-transition.js",
-      "digest": "sha256:01b47222bb17fc4a36a66bce74ff11bf2d2ac17c935085aeec93684933849fee",
+      "digest": "sha256:c611357000496829a40605ba68755bb62b92d451ab452abcfce8fcd70373dd03",
       "summary": "Provider-neutral completed-Alpha preservation and rooted next-development state, version-model, idempotency, and local materialization APIs.",
       "capabilityGroup": "governance-versioning",
       "audience": [
@@ -31199,7 +31199,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:df073c14c12f15c851eb4507cbeb2919add936ac3079b10f222478138720d092"
+      "digest": "sha256:f804f3dcaaa5a349ded82f341ace7f89393cbc0197d359abaca0ea114ecadde8"
     },
     {
       "id": "build-facts",

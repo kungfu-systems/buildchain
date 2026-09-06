@@ -21,7 +21,7 @@ import {
   localVersionFiles,
   resolvePublicationTarget as resolvePublicationTargetAdapter,
 } from "./product-provider-adapters.js";
-import { discoverConfiguredDerivedVersionMaterial } from "../../packages/core/buildchain-config.js";
+import { discoverConfiguredDerivedVersionMaterial, getVersionStrategy } from "../../packages/core/buildchain-config.js";
 import { createNextDevelopmentTransition } from "../../packages/core/next-development-transition.js";
 import { discoverVersionStateFiles } from "../promote-buildchain-ref/internal/version-state.js";
 import { assertNextDevelopmentPull } from "./next-development-queue.js";
@@ -29,8 +29,7 @@ import { commitContainsReleaseState } from "./product-provider-github-adapters.j
 
 const NEXT_DEVELOPMENT_POLL_MS = 15_000;
 const NEXT_DEVELOPMENT_MAX_POLLS = 480;
-const NEXT_DEVELOPMENT_SIGN_OFF =
-  "Signed-off-by: Keren Dong <keren.dong@kungfu.link>";
+const NEXT_DEVELOPMENT_SIGN_OFF = "Signed-off-by: Keren Dong <keren.dong@kungfu.link>";
 
 function repositoryParts(repository) {
   const [owner, repo] = String(repository || "").split("/");
@@ -62,8 +61,7 @@ async function remotePackageVersion(octokit, repository, ref) {
     path: "package.json",
     ref,
   });
-  return JSON.parse(Buffer.from(data.content, data.encoding).toString())
-    .version;
+  return JSON.parse(Buffer.from(data.content, data.encoding).toString()).version;
 }
 
 export async function advanceAlphaNextDevelopment({
@@ -77,26 +75,23 @@ export async function advanceAlphaNextDevelopment({
   maxPolls = NEXT_DEVELOPMENT_MAX_POLLS,
 }) {
   const discovered = discoverVersionStateFiles(cwd);
-  const sourcePaths = discovered.files.map(({ path: filePath }) => filePath);
-  const derivedPaths = discoverConfiguredDerivedVersionMaterial(
-    cwd,
-    discovered.config,
-  ).map(({ path: filePath }) => filePath);
+  const sourcePaths = discovered.files.map(({ path: filePath }) => filePath).sort();
+  const derivedPaths = discoverConfiguredDerivedVersionMaterial(cwd, discovered.config).map(
+    ({ path: filePath }) => filePath,
+  );
   const transition = createNextDevelopmentTransition({
     repository,
     completedAlpha,
-    model: { strategy: "semver", next: "auto" },
+    model: getVersionStrategy(discovered.config),
     sourcePaths,
     derivedPaths,
   });
+  if (transition.state.status === "waiting-anchor") return { status: "waiting-anchor", transition };
   const match = completedAlpha.version.match(/^(\d+)\.(\d+)\./u);
   const devBranch = `dev/v${match[1]}/v${match[1]}.${match[2]}`;
   const devSha = await readRef(octokit, repository, `refs/heads/${devBranch}`);
   if (!devSha) throw new Error(`protected Dev branch ${devBranch} is absent`);
-  if (
-    (await remotePackageVersion(octokit, repository, devSha)) ===
-    transition.target.version
-  )
+  if ((await remotePackageVersion(octokit, repository, devSha)) === transition.target.version)
     return { status: "already-current", transition, devSha };
   const { owner, repo } = repositoryParts(repository);
   const devCommit = await octokit.rest.git.getCommit({
@@ -105,9 +100,7 @@ export async function advanceAlphaNextDevelopment({
     commit_sha: devSha,
   });
   if (devCommit.data.tree.sha !== completedAlpha.treeSha)
-    throw new Error(
-      "protected Dev tree drifted before next-version materialization",
-    );
+    throw new Error("protected Dev tree drifted before next-version materialization");
 
   const versionFiles = localVersionFiles(cwd, {
     channel: "alpha",
@@ -115,9 +108,7 @@ export async function advanceAlphaNextDevelopment({
     sourceSha: devSha,
     sourceTimestamp: completedAlpha.completedAt,
   });
-  const suffix = transition.idempotencyKey
-    .replace(/^sha256:/u, "")
-    .slice(0, 16);
+  const suffix = transition.idempotencyKey.replace(/^sha256:/u, "").slice(0, 16);
   const head = `chore/next-development/${transition.target.version}-${suffix}`;
   let headSha = await readRef(octokit, repository, `refs/heads/${head}`);
   if (!headSha) {
@@ -146,8 +137,7 @@ export async function advanceAlphaNextDevelopment({
       owner,
       repo,
       message:
-        `chore(release): prepare ${transition.target.version}\n\n` +
-        NEXT_DEVELOPMENT_SIGN_OFF,
+        `chore(release): prepare ${transition.target.version}\n\n` + NEXT_DEVELOPMENT_SIGN_OFF,
       tree: preparedTree.data.sha,
       parents: [devSha],
     });
@@ -190,26 +180,14 @@ export async function advanceAlphaNextDevelopment({
     });
   for (let poll = 0; !pull.merged_at && poll <= maxPolls; poll += 1) {
     if (poll > 0) await wait(pollIntervalMs);
-    pull = (
-      await octokit.rest.pulls.get({ owner, repo, pull_number: pull.number })
-    ).data;
+    pull = (await octokit.rest.pulls.get({ owner, repo, pull_number: pull.number })).data;
   }
   assertNextDevelopmentPull(pull, headSha, devBranch);
   if (!pull.merged_at) throw new Error("next-development merge queue timed out");
-  const mergedDevSha = await readRef(
-    octokit,
-    repository,
-    `refs/heads/${devBranch}`,
-  );
+  const mergedDevSha = await readRef(octokit, repository, `refs/heads/${devBranch}`);
   if (
-    !(await commitContainsReleaseState(
-      octokit,
-      repository,
-      headSha,
-      mergedDevSha,
-    )) ||
-    (await remotePackageVersion(octokit, repository, mergedDevSha)) !==
-      transition.target.version
+    !(await commitContainsReleaseState(octokit, repository, headSha, mergedDevSha)) ||
+    (await remotePackageVersion(octokit, repository, mergedDevSha)) !== transition.target.version
   )
     throw new Error("next-development protected Dev readback failed");
   return {
@@ -226,7 +204,9 @@ function standardCandidatePath(candidatePassportPath, declaredPath, relativePath
   if (String(declaredPath || "").trim()) return declaredPath;
   const fallback = path.join(path.dirname(candidatePassportPath), "..", relativePath);
   if (!fs.existsSync(path.resolve(fallback)))
-    throw new Error(`${label} is required when the sealed candidate has no standard ${relativePath}`);
+    throw new Error(
+      `${label} is required when the sealed candidate has no standard ${relativePath}`,
+    );
   return fallback;
 }
 
@@ -260,28 +240,31 @@ export function resolveCandidateProviderInputs({
   };
   if (resolved.sealedBundleManifest) {
     const receipt = path.join(path.dirname(resolved.sealedBundleManifest), "recovery-receipt.json");
-    if (fs.existsSync(path.resolve(receipt))) resolved.releaseCandidateRecoveryReceiptPath = receipt;
+    if (fs.existsSync(path.resolve(receipt)))
+      resolved.releaseCandidateRecoveryReceiptPath = receipt;
   }
   if (kind === "npm" && !resolved.publishPackageMain) {
     const artifacts = read(resolved.requiredArtifactsPath);
     const main = artifacts.filter(({ role }) => role === "main");
-    const required = artifacts.filter(({ kind: type, required }) => type === "npm" && required !== false);
-    const inferred = main.length === 1 && String(main[0]?.name || "").trim()
-      ? main[0]
-      : required.length === 1 && String(required[0]?.name || "").trim()
-        ? required[0]
-        : null;
+    const required = artifacts.filter(
+      ({ kind: type, required }) => type === "npm" && required !== false,
+    );
+    const inferred =
+      main.length === 1 && String(main[0]?.name || "").trim()
+        ? main[0]
+        : required.length === 1 && String(required[0]?.name || "").trim()
+          ? required[0]
+          : null;
     if (!inferred)
-      throw new Error("publish-package-main is required when the sealed artifact set has no unique main package");
+      throw new Error(
+        "publish-package-main is required when the sealed artifact set has no unique main package",
+      );
     resolved.publishPackageMain = String(inferred.name).trim();
   }
   return resolved;
 }
 
-export function resolveCandidateBuildSummaryPath({
-  candidatePassportPath,
-  declaredPath = "",
-}) {
+export function resolveCandidateBuildSummaryPath({ candidatePassportPath, declaredPath = "" }) {
   const selected = String(declaredPath || "").trim();
   if (selected) return selected;
   const artifactsRoot = path.resolve(path.dirname(candidatePassportPath), "..");
@@ -309,35 +292,21 @@ export function resolvePromotionTarget({
   declaredTargetSha = "",
   expectedTransactionId = "",
 }) {
-  const sealedBundleRoot = path.resolve(
-    path.dirname(candidatePassportPath),
-    "../..",
-  );
-  const recoveryReceiptPath = path.join(
-    path.dirname(sealedBundleRoot),
-    "recovery-receipt.json",
-  );
+  const sealedBundleRoot = path.resolve(path.dirname(candidatePassportPath), "../..");
+  const recoveryReceiptPath = path.join(path.dirname(sealedBundleRoot), "recovery-receipt.json");
   const hasRecoveryReceipt = fs.existsSync(recoveryReceiptPath);
   const recoveryReceipt = hasRecoveryReceipt ? read(recoveryReceiptPath) : null;
-  const targetRef = String(
-    declaredTargetRef || recoveryReceipt?.target?.ref || "",
-  ).trim();
-  const targetSha = String(
-    declaredTargetSha || recoveryReceipt?.target?.sha || "",
-  ).trim();
+  const targetRef = String(declaredTargetRef || recoveryReceipt?.target?.ref || "").trim();
+  const targetSha = String(declaredTargetSha || recoveryReceipt?.target?.sha || "").trim();
   if (!targetRef || !targetSha)
     throw new Error(
       "target-ref and target-sha are required when no standard recovery receipt supplies them",
     );
   if (!hasRecoveryReceipt) {
     if (expectedTransactionId)
-      throw new Error(
-        "resume-transaction-id requires a standard recovery receipt",
-      );
+      throw new Error("resume-transaction-id requires a standard recovery receipt");
     if (sourceSha !== targetSha)
-      throw new Error(
-        "protected source SHA must equal target-sha without recovery evidence",
-      );
+      throw new Error("protected source SHA must equal target-sha without recovery evidence");
     return { targetRef, targetSha };
   }
   const validation = validateReleaseCandidateRecoveryReceipt({
@@ -350,13 +319,8 @@ export function resolvePromotionTarget({
     targetTree: candidate.source?.treeHash,
   });
   if (!validation.ok)
-    throw new Error(
-      `standard recovery receipt is invalid: ${validation.errors.join("; ")}`,
-    );
-  if (
-    expectedTransactionId &&
-    recoveryReceipt.transaction?.identity !== expectedTransactionId
-  )
+    throw new Error(`standard recovery receipt is invalid: ${validation.errors.join("; ")}`);
+  if (expectedTransactionId && recoveryReceipt.transaction?.identity !== expectedTransactionId)
     throw new Error("standard recovery receipt transaction identity mismatch");
   if (![targetSha, candidate.source?.headSha].includes(sourceSha))
     throw new Error(
@@ -370,9 +334,7 @@ export async function resolvePublicationTarget(args) {
 }
 
 export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
-  const shimDirectory = fs.mkdtempSync(
-    path.join(temporaryRoot, "buildchain-pnpm-"),
-  );
+  const shimDirectory = fs.mkdtempSync(path.join(temporaryRoot, "buildchain-pnpm-"));
   const shimPath = path.join(shimDirectory, "pnpm");
   fs.writeFileSync(shimPath, '#!/bin/sh\nexec corepack pnpm@11.7.0 "$@"\n', {
     mode: 0o755,
@@ -387,39 +349,19 @@ export function activateExactPnpm({ temporaryRoot = os.tmpdir() } = {}) {
 
 export function selectProductPublicationPlan(
   result,
-  {
-    fallbackVersion = "",
-    fallbackTag = "",
-    fallbackCandidateVersion = "",
-  } = {},
+  { fallbackVersion = "", fallbackTag = "", fallbackCandidateVersion = "" } = {},
 ) {
-  const planned = result?.updates?.find(
-    ({ action }) => action === "dry-run-publish-transaction",
-  );
+  const planned = result?.updates?.find(({ action }) => action === "dry-run-publish-transaction");
   const version = String(planned?.version || fallbackVersion || "").trim();
-  const tag = String(
-    planned?.publicTag || planned?.tag || fallbackTag || "",
-  ).trim();
+  const tag = String(planned?.publicTag || planned?.tag || fallbackTag || "").trim();
   if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version))
-    throw new Error(
-      "product publication planning did not produce an exact version",
-    );
+    throw new Error("product publication planning did not produce an exact version");
   if (tag !== `v${version}`)
-    throw new Error(
-      "product publication planning produced a mismatched exact tag",
-    );
-  const plannedCandidateVersion = String(
-    planned?.releaseCandidateVersion || "",
-  ).trim();
+    throw new Error("product publication planning produced a mismatched exact tag");
+  const plannedCandidateVersion = String(planned?.releaseCandidateVersion || "").trim();
   const sealedVersion = String(fallbackCandidateVersion || "").trim();
-  if (
-    plannedCandidateVersion &&
-    sealedVersion &&
-    plannedCandidateVersion !== sealedVersion
-  )
-    throw new Error(
-      "product publication planning drifted from the sealed candidate version",
-    );
+  if (plannedCandidateVersion && sealedVersion && plannedCandidateVersion !== sealedVersion)
+    throw new Error("product publication planning drifted from the sealed candidate version");
   return {
     version,
     tag,
@@ -430,28 +372,18 @@ export function selectProductPublicationPlan(
 export function sealedCandidateVersion(request) {
   if (request.publicationIntent?.artifactKind === "custom") {
     const version = String(request.candidate?.target?.version || "").trim();
-    if (!version)
-      throw new Error("sealed candidate passport omitted the exact version");
+    if (!version) throw new Error("sealed candidate passport omitted the exact version");
     return version;
   }
   const manifest = read(request.sealedBundleManifest);
   const name = String(manifest?.npm?.name || "").trim();
   const version = String(manifest?.npm?.version || "").trim();
   if (name !== request.publishPackageMain || !version)
-    throw new Error(
-      "sealed candidate manifest omitted the exact main package version",
-    );
+    throw new Error("sealed candidate manifest omitted the exact main package version");
   return version;
 }
 
-function providerProjection({
-  transaction,
-  targetRef,
-  targetSha,
-  intent,
-  releaseSha,
-  updates,
-}) {
+function providerProjection({ transaction, targetRef, targetSha, intent, releaseSha, updates }) {
   const projection = {
     schema: "kungfu.buildchain.v4-product-provider-result/v1",
     target: { ref: targetRef, sha: targetSha },
@@ -467,18 +399,12 @@ function providerProjection({
       transactionRoot: transaction.transactionRoot,
       stateRoot: transaction.stateRoot,
       planRoot: transaction.planRoot,
-      receiptRoots: transaction.receipts
-        .map(({ receiptRoot }) => receiptRoot)
-        .sort(),
+      receiptRoots: transaction.receipts.map(({ receiptRoot }) => receiptRoot).sort(),
       failure: transaction.failure,
     },
-    updates: (updates || []).map(({ action, ref, tag, sha, version }) => ({
-      action: String(action || ""),
-      ref: String(ref || ""),
-      tag: String(tag || ""),
-      sha: String(sha || ""),
-      version: String(version || ""),
-    })),
+    updates: (updates || []).map((entry) => Object.fromEntries(
+      ["action", "ref", "tag", "sha", "version"].map((key) => [key, String(entry[key] || "")]),
+    )),
   };
   return { ...projection, root: releaseTailRoot(projection) };
 }
@@ -488,27 +414,13 @@ export async function planProductPublication(
   { fallbackVersion = "", fallbackTag = "" } = {},
 ) {
   const supplied = request.publicationIntent;
-  if (!supplied)
-    throw new Error("rooted product publication intent is required");
+  if (!supplied) throw new Error("rooted product publication intent is required");
   const candidateVersion = sealedCandidateVersion(request);
   if (candidateVersion !== supplied.candidateVersion)
-    throw new Error(
-      "rooted product publication intent drifted from the sealed candidate version",
-    );
+    throw new Error("rooted product publication intent drifted from the sealed candidate version");
   const intent = selectV4ProductPublicationIntent({
-    channel: supplied.channel,
-    targetRef: supplied.targetRef,
-    sourceSha: supplied.sourceSha,
-    sourceTimestamp: supplied.sourceTimestamp,
-    repository: supplied.repository,
-    artifactKind: supplied.artifactKind,
-    packageName: supplied.packageName,
-    distTag: supplied.distTag,
-    sealedBundleRoot: supplied.sealedBundleRoot,
-    requiredArtifactsRoot: supplied.requiredArtifactsRoot,
-    candidateVersion: supplied.candidateVersion,
+    ...supplied,
     recoveredVersion: supplied.mode === "resume" ? supplied.version : "",
-    observedVersions: supplied.observedVersions,
   });
   if (intent.intentRoot !== supplied.intentRoot)
     throw new Error("product publication intent root mismatch");
@@ -528,9 +440,7 @@ export async function applyProductPublication(request, plan) {
     plan,
   });
   const effectPlan = compileReleaseTailDeclaration(declaration);
-  const statePath = path.resolve(
-    ".buildchain/release-tail/product-provider-transaction.json",
-  );
+  const statePath = path.resolve(".buildchain/release-tail/product-provider-transaction.json");
   let transaction = fs.existsSync(statePath)
     ? readReleaseTailTransaction(statePath)
     : createReleaseTailTransaction(effectPlan);
@@ -538,17 +448,11 @@ export async function applyProductPublication(request, plan) {
     transaction.transactionRoot !== plan.transactionRoot ||
     transaction.planRoot !== effectPlan.planRoot
   )
-    throw new Error(
-      "retained product transaction drifted from the rooted plan",
-    );
+    throw new Error("retained product transaction drifted from the rooted plan");
   if (
-    ![
-      "preparing",
-      "prepared",
-      "publishing",
-      "committing",
-      "reading-back",
-    ].includes(transaction.state) &&
+    !["preparing", "prepared", "publishing", "committing", "reading-back"].includes(
+      transaction.state,
+    ) &&
     transaction.state !== "complete"
   )
     transaction = createReleaseTailTransaction(effectPlan);
@@ -571,24 +475,17 @@ export async function applyProductPublication(request, plan) {
     releaseSha,
     updates: runtime.updates,
   });
-  if (
-    projection.publication.state !== "complete" ||
-    projection.publication.finalizationNeeded
-  )
+  if (projection.publication.state !== "complete" || projection.publication.finalizationNeeded)
     throw Object.assign(
       new Error(
         `product provider stopped in ${projection.publication.state || "unknown"}: finalization-needed=${projection.publication.finalizationNeeded}`,
       ),
       {
-        code:
-          projection.transaction.failure?.code ||
-          "product-publication-finalization-needed",
+        code: projection.transaction.failure?.code || "product-publication-finalization-needed",
         providerProjection: projection,
       },
     );
   if (!/^[0-9a-f]{40}$/u.test(projection.publication.releaseSha))
-    throw new Error(
-      "product provider result omitted the exact public release SHA",
-    );
+    throw new Error("product provider result omitted the exact public release SHA");
   return projection;
 }

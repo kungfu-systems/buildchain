@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -19,7 +20,10 @@ function requiredString(value, label) {
 
 function safeRelativePath(value, label) {
   const normalized = requiredString(value, label).replaceAll("\\", "/");
-  if (normalized.startsWith("/") || normalized.split("/").some((part) => part === ".." || part === "")) {
+  if (
+    normalized.startsWith("/") ||
+    normalized.split("/").some((part) => part === ".." || part === "")
+  ) {
     throw new Error(`${label} must be a safe relative path`);
   }
   return normalized;
@@ -41,7 +45,8 @@ function sha256File(filePath) {
   const chunk = Buffer.allocUnsafe(8 * 1024 * 1024);
   try {
     let bytesRead = 0;
-    while ((bytesRead = fs.readSync(descriptor, chunk, 0, chunk.length, null)) > 0) hash.update(chunk.subarray(0, bytesRead));
+    while ((bytesRead = fs.readSync(descriptor, chunk, 0, chunk.length, null)) > 0)
+      hash.update(chunk.subarray(0, bytesRead));
   } finally {
     fs.closeSync(descriptor);
   }
@@ -60,8 +65,16 @@ function normalizeFile(entry, label) {
   };
 }
 
+function fileInventory(files, label) {
+  return (files || []).map((entry, index) => normalizeFile(entry, `${label}[${index}]`))
+    .sort((left, right) => left.path.localeCompare(right.path));
+}
+
 function candidatePayload(candidate) {
-  if (candidate?.contract !== PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT || Number(candidate?.schemaVersion) !== 1) {
+  if (
+    candidate?.contract !== PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT ||
+    Number(candidate?.schemaVersion) !== 1
+  ) {
     throw new Error("publication artifact candidate contract mismatch");
   }
   const { candidateDigest: _candidateDigest, ...payload } = candidate;
@@ -91,9 +104,7 @@ export function createPublicationSealedBundle({
   githubReleaseRequired = true,
 } = {}) {
   const { digest } = candidatePayload(candidate);
-  const files = (candidate.files || [])
-    .map((entry, index) => normalizeFile(entry, `candidate.files[${index}]`))
-    .sort((left, right) => left.path.localeCompare(right.path));
+  const files = fileInventory(candidate.files, "candidate.files");
   if (new Set(files.map((entry) => entry.path)).size !== files.length) {
     throw new Error("publication sealed bundle candidate paths must be unique");
   }
@@ -119,6 +130,7 @@ export function createPublicationSealedBundle({
       sha256: npmTarball.sha256,
       integrity: requiredString(npmIntegrity, "npmIntegrity"),
     },
+    ...(candidate.npmPackages ? { npmPackages: candidate.npmPackages } : {}),
     releaseAssets,
     completion: {
       githubReleaseRequired: Boolean(githubReleaseRequired),
@@ -130,8 +142,55 @@ export function createPublicationSealedBundle({
   };
 }
 
+function verifyNpmPackageSet(manifest, files, resolvedRoot) {
+  const npmPackages = manifest.npmPackages;
+  if (JSON.stringify(npmPackages) !== JSON.stringify(manifest.candidate.npmPackages)) {
+    throw new Error("publication sealed bundle npm package inventory differs from candidate");
+  }
+  if (npmPackages) {
+    if (
+      !Array.isArray(npmPackages) ||
+      npmPackages.length < 2 ||
+      new Set(npmPackages.map((entry) => entry.name)).size !== npmPackages.length ||
+      new Set(npmPackages.map((entry) => entry.path)).size !== npmPackages.length
+    ) {
+      throw new Error("publication sealed bundle npm package inventory must be unique");
+    }
+    for (const entry of npmPackages) {
+      const file = selectFile(files, entry.path, "npmPackages.path");
+      const absolutePath = path.resolve(resolvedRoot, file.path);
+      const metadata = JSON.parse(
+        execFileSync("tar", ["-xOf", absolutePath, "package/package.json"], {
+          encoding: "utf8",
+        }),
+      );
+      const integrity = `sha512-${crypto.createHash("sha512").update(fs.readFileSync(absolutePath)).digest("base64")}`;
+      if (
+        entry.name !== metadata.name ||
+        entry.version !== metadata.version ||
+        entry.size !== file.size ||
+        entry.sha256 !== file.sha256 ||
+        entry.integrity !== integrity
+      ) {
+        throw new Error("publication sealed bundle npm package identity or integrity mismatch");
+      }
+    }
+    const main = npmPackages.filter((entry) => entry.role === "main");
+    if (
+      main.length !== 1 ||
+      Object.keys(manifest.npm).some((key) => main[0][key] !== manifest.npm[key])
+    ) {
+      throw new Error("publication sealed bundle npm main package mismatch");
+    }
+  }
+  return npmPackages;
+}
+
 export function verifyPublicationSealedBundle({ bundleRoot, manifest } = {}) {
-  if (manifest?.contract !== PUBLICATION_SEALED_BUNDLE_CONTRACT || Number(manifest?.schemaVersion) !== 1) {
+  if (
+    manifest?.contract !== PUBLICATION_SEALED_BUNDLE_CONTRACT ||
+    Number(manifest?.schemaVersion) !== 1
+  ) {
     throw new Error("publication sealed bundle contract mismatch");
   }
   const resolvedRoot = path.resolve(requiredString(bundleRoot, "bundleRoot"));
@@ -139,12 +198,8 @@ export function verifyPublicationSealedBundle({ bundleRoot, manifest } = {}) {
   if (normalizeSha256(manifest.root, "manifest.root") !== digest) {
     throw new Error("publication sealed bundle root mismatch");
   }
-  const files = (manifest.files || [])
-    .map((entry, index) => normalizeFile(entry, `manifest.files[${index}]`))
-    .sort((left, right) => left.path.localeCompare(right.path));
-  const candidateFiles = (manifest.candidate.files || [])
-    .map((entry, index) => normalizeFile(entry, `candidate.files[${index}]`))
-    .sort((left, right) => left.path.localeCompare(right.path));
+  const files = fileInventory(manifest.files, "manifest.files");
+  const candidateFiles = fileInventory(manifest.candidate.files, "candidate.files");
   if (JSON.stringify(files) !== JSON.stringify(candidateFiles)) {
     throw new Error("publication sealed bundle file inventory differs from candidate");
   }
@@ -169,6 +224,7 @@ export function verifyPublicationSealedBundle({ bundleRoot, manifest } = {}) {
   ) {
     throw new Error("publication sealed bundle npm tarball inventory mismatch");
   }
+  const npmPackages = verifyNpmPackageSet(manifest, files, resolvedRoot);
   const releaseAssets = (manifest.releaseAssets || []).map((entry, index) => {
     const selected = selectFile(files, entry.path, `manifest.releaseAssets[${index}].path`);
     const normalized = normalizeFile(entry, `manifest.releaseAssets[${index}]`);
@@ -194,6 +250,14 @@ export function verifyPublicationSealedBundle({ bundleRoot, manifest } = {}) {
       ...entry,
       absolutePath: path.resolve(resolvedRoot, entry.path),
     })),
+    ...(npmPackages
+      ? {
+          npmPackages: npmPackages.map((entry) => ({
+            ...entry,
+            absolutePath: path.resolve(resolvedRoot, entry.path),
+          })),
+        }
+      : {}),
     manifest,
   };
 }
