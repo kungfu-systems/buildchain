@@ -244,7 +244,7 @@ function packageSetFixture() {
       path.join(staging, "package/package.json"),
       JSON.stringify({ name: entry.name, version }),
     );
-    execFileSync("tar", ["-czf", path.join(files.cwd, relative), "-C", staging, "package"]);
+    execFileSync("tar", ["-czf", relative, "-C", path.relative(files.cwd, staging), "package"], { cwd: files.cwd });
     const bytes = fs.readFileSync(path.join(files.cwd, relative));
     return {
       ...entry,

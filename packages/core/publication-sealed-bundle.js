@@ -160,7 +160,8 @@ function verifyNpmPackageSet(manifest, files, resolvedRoot) {
       const file = selectFile(files, entry.path, "npmPackages.path");
       const absolutePath = path.resolve(resolvedRoot, file.path);
       const metadata = JSON.parse(
-        execFileSync("tar", ["-xOf", absolutePath, "package/package.json"], {
+        execFileSync("tar", ["-xOf", path.basename(absolutePath), "package/package.json"], {
+          cwd: path.dirname(absolutePath),
           encoding: "utf8",
         }),
       );
