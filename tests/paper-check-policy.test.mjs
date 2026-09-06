@@ -1,0 +1,73 @@
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+
+const workflow = fs.readFileSync(".github/workflows/public-build-check.yml", "utf8");
+const policyStep = workflow.split("      - name: Enforce Paper agent-entry and acceptance policy")[1]
+  .split("      - name: Resolve check lifecycle mode")[0];
+const script = policyStep.split("node --input-type=module <<'NODE'\n")[1]
+  .split("          NODE")[0].replace(/^          /gm, "")
+  .replaceAll(".buildchain/runtime/", "");
+function fixture(t, kind = "report", extra = "") {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "paper-policy-"));
+  t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(cwd, ".buildchain"));
+  fs.writeFileSync(path.join(cwd, ".buildchain/buildchain.toml"), `schema = 1
+[project]
+type = 'publication-artifact'
+name = "publication-report"
+[publication]
+${kind ? `kind = "${kind}"` : ""}
+title = "Report"
+version = "2026.8.0"
+primary_artifact = "report.pdf"
+${extra}
+`);
+  return cwd;
+}
+function run(cwd) {
+  return spawnSync(process.execPath, ["--input-type=module", "--eval", script], {
+    encoding: "utf8", env: { ...process.env, BUILDCHAIN_WORKING_DIRECTORY: cwd },
+  });
+}
+for (const kind of ["report", "specification", "article", "dataset-note"]) {
+  test(`${kind} lifecycle does not require Paper provisioning`, (t) => {
+    const result = run(fixture(t, kind));
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /not applicable/);
+  });
+}
+for (const kind of ["paper", ""]) {
+  test(`Paper policy remains required for ${kind || "default kind"}`, (t) => {
+    const result = run(fixture(t, kind));
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stdout + result.stderr, /provisioning-authority/);
+    assert.doesNotMatch(result.stdout, /not applicable/);
+  });
+}
+test("npm Paper package cannot skip governance by changing publication kind", (t) => {
+  const result = run(fixture(t, "report", '[publish]\nkind = "npm-paper-package"\npackage = "@example/report"'));
+  assert.equal(result.status, 1);
+  assert.match(result.stdout + result.stderr, /provisioning-authority/);
+});
+test("existing Paper directory keeps policy active after config removal", (t) => {
+  const cwd = fixture(t);
+  fs.mkdirSync(path.join(cwd, ".buildchain/paper"));
+  fs.unlinkSync(path.join(cwd, ".buildchain/buildchain.toml"));
+  const result = run(cwd);
+  assert.equal(result.status, 1);
+  assert.doesNotMatch(result.stdout, /not applicable/);
+});
+test("malformed configuration fails closed", (t) => {
+  const cwd = fixture(t);
+  fs.writeFileSync(path.join(cwd, ".buildchain/buildchain.toml"), "[project");
+  const result = run(cwd);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /parse failed/);
+});
+test("public and compatibility checks use the same policy entry", () => {
+  assert.equal(fs.readFileSync(".github/workflows/check.yml", "utf8"), workflow);
+});
