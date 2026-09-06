@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1475,
+  "generation": 1476,
   "fencingCounter": 224,
   "policy": {
     "agingSeconds": 900,
@@ -12,48 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:298be27713aa3489a797505bb89b161d33e3959b70bde8d81cf7f06b725d4f1b",
-    "pullRequestNumber": 3548,
-    "sourceHead": "71ec436d770859d0b24709b42b2d1dd21e64c947",
-    "sourceRoot": "sha256:f346f7b63ce4efaaf8259e7d7dd5505fb1488958bf62498732ff3f7314b8b957",
-    "sourceIdentityRoot": "sha256:afb87e51b99d63dc477491d318a13e608061bfeee7199464362ffb0c6b1d8480",
-    "sourcePatchRoot": "sha256:03cca23c09f531d9de898e8cf1be6d3efc91c4654a339fb449f6e9a74fbce8c8",
-    "sourceProofRoot": "sha256:8123acc0eb36786a57d03f171e03343e2b146507cfd46557181dc1bd1aa02eac",
-    "planRoot": "sha256:699d51b8e7d35155f24294d3b962d0281f1db077bb9ea6818050e225dcb34798",
-    "closureRoot": "sha256:b77e943e7881b64766986fd21c49746bc5c91433a74a688944ceba5cb2964f21",
-    "dependencyRoot": "sha256:d4572d3dc7460443778e482f6ca9bf8f128ab95b113988fcfabcdfe1390ba1b9",
-    "toolchainRoot": "sha256:a0b5656999342741e60021a2ac3750b02cb9f4f9810fbd978579d1d3fbab0874",
-    "affectedPaths": [
-      "architecture/maintainability-policy.json",
-      "dist/site/buildchain-contract.json",
-      "dist/site/buildchain-site.json",
-      "dist/site/kfd-claims.json",
-      "dist/site/manual-registry.json",
-      "dist/site/node-api-registry.json",
-      "dist/site/page-registry.json",
-      "dist/site/public-surface-audit.json",
-      "dist/site/site-manifest.json",
-      "docs/cli.md",
-      "docs/node-api-reference.md",
-      "packages/core/paper-agent-entry.js",
-      "packages/core/paper.js",
-      "tests/paper-v4-migration.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 34037594988,
-    "deliveryClass": "non-native-fast",
-    "priority": "ordinary",
-    "generation": 224,
-    "expectedOldStateRoot": "sha256:f4b7fc6a8441080f4a6ea2a062fe6f93a5be0f254b8a8dbc58456bbdba4d7984",
-    "issuedAt": "2026-09-06T14:05:38.127Z",
-    "expiresAt": "2026-09-06T15:05:38.127Z",
-    "fencingToken": "sha256:465d55301f13d9844ba99a699f9b1da46bebdebc7c8ded80128f3529985a501e",
-    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -12136,11 +12095,19 @@
       "sourceWorkflowRunId": 34037594988,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-06T14:05:34.024Z",
-      "updatedAt": "2026-09-06T14:05:38.127Z",
+      "updatedAt": "2026-09-06T14:24:11.264Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
-      "terminal": null,
+      "status": "dequeued",
+      "terminal": {
+        "outcome": "dequeued",
+        "reason": "Buildchain observed a terminal PR or changed PR head before a new minimal delivery request.",
+        "evidenceRoot": "sha256:058bffea4fb6910e24bb4fa85f0e62927baa78b054ecf6d0be52c7089fa23d7c",
+        "closedAt": "2026-09-06T14:24:11.264Z",
+        "fencingToken": "sha256:465d55301f13d9844ba99a699f9b1da46bebdebc7c8ded80128f3529985a501e",
+        "leaseGeneration": 224,
+        "successorWake": null
+      },
       "affectedPaths": [
         "architecture/maintainability-policy.json",
         "dist/site/buildchain-contract.json",
@@ -12160,6 +12127,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-06T14:05:38.127Z",
-  "stateRoot": "sha256:3d958ded5326d3b93641d5decd1c98c38d23ff4dbfd95c3613e780efcbd6ea82"
+  "updatedAt": "2026-09-06T14:24:11.264Z",
+  "stateRoot": "sha256:fd56291ec22438c5b30876f3a86772357565ffb1734e27139008d4998f600a9b"
 }
