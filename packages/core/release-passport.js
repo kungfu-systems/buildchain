@@ -1431,7 +1431,7 @@ export function createReleasePassport(options = {}) {
   };
 }
 
-function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, productGateJsons, sourceSha, checkedAt }) {
+function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, productGateJsons, repository, sourceSha, checkedAt }) {
   const manifestMeta = parseJsonInputWithMeta(manifestJson, undefined, { cwd, label: "kfdAdopterManifestJson" });
   const supportMatrixMeta = parseJsonInputWithMeta(supportMatrixJson, undefined, { cwd, label: "kfdSupportMatrixJson" });
   const productGateMetas = (productGateJsons || [])
@@ -1442,7 +1442,7 @@ function collectKfdAdopterReleaseInputs({ cwd, manifestJson, supportMatrixJson, 
     manifest: manifestMeta.value,
     gateResults: productGateMetas.map((meta) => meta.value),
     comparisonMatrix: supportMatrixMeta.value,
-    sourceSha,
+    expectedAdopterId: repository || "kungfu-systems/buildchain", expectedSourceRepository: repository, sourceSha,
     checkedAt,
   });
 }
@@ -1620,7 +1620,7 @@ export function collectGitHubReleasePassport({
   const productMechanism = defaultProductMechanism({ repository, productName });
   const kfdAdopterEvidence = collectKfdAdopterReleaseInputs({
     cwd, manifestJson: kfdAdopterManifestJson, supportMatrixJson: kfdSupportMatrixJson,
-    productGateJsons: kfdProductGateJsons, sourceSha, checkedAt: resolvedCheckedAt,
+    productGateJsons: kfdProductGateJsons, repository, sourceSha, checkedAt: resolvedCheckedAt,
   });
   const {
     manifest: kfdAdopterManifest,
@@ -2060,7 +2060,8 @@ function validateReleaseEvidenceContracts({
     manifestGate: kfdAdopterManifestGate,
     legacyProjection: kfdSupportEvidence,
     passportLegacyProjection: passport?.kfdSupport,
-    expectedSourceSha: optionalString(passport?.release?.sourceSha),
+    expectedAdopterId: optionalString(passport?.product?.repository) || "kungfu-systems/buildchain",
+    expectedSourceRepository: optionalString(passport?.product?.repository), expectedSourceSha: optionalString(passport?.release?.sourceSha),
   })) {
     issues.push(issue("error", entry.code, entry.message, entry.details));
   }
