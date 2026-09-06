@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64772,
-    "current": 56711
+    "measuredExcess": 64773,
+    "current": 56712
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1034,13 +1034,13 @@
             "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 65
             },
-            "validateReleaseEvidenceAttachments@2105": {
+            "validateReleaseEvidenceAttachments@2106": {
               "complexity": 26
             }
           }
         },
         "current": {
-          "lines": 2883,
+          "lines": 2884,
           "functions": {
             "mergeAuthoritativePassportBase@407": {
               "complexity": 29
@@ -1059,7 +1059,7 @@
             "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 65
             },
-            "validateReleaseEvidenceAttachments@2105": {
+            "validateReleaseEvidenceAttachments@2106": {
               "complexity": 26
             }
           }
@@ -1084,7 +1084,7 @@
             "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 25
             },
-            "validateReleaseEvidenceAttachments@2105": {
+            "validateReleaseEvidenceAttachments@2106": {
               "complexity": 25
             }
           }
@@ -3200,7 +3200,7 @@
       "path": "packages/core/release-passport.js",
       "metric": "lines",
       "baseline": 2987,
-      "current": 2883
+      "current": 2884
     },
     {
       "domain": "sources",
