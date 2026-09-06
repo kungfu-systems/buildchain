@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1464,
+  "generation": 1465,
   "fencingCounter": 220,
   "policy": {
     "agingSeconds": 900,
@@ -11928,8 +11928,40 @@
         "tests/v4-protected-publication-source.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3535,
+      "sourceRoot": "sha256:6181b86bbdd9b9a65354a9ac60ce6f44744e28d516ed5085348c1d616271a47c",
+      "sourceIdentityRoot": "sha256:226c6a32eb23ef79344141c638c64aff3506f52407fb7b4bd8535733cc7065b9",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:7e795308909fcbd722c09a7079e95d5340e08b9e3c1d812ddd38a1b67c7dd82a",
+      "sourceHead": "334ed2545b3a812a639b3ecf58c6e6cb024fb5fc",
+      "sourcePatchRoot": "sha256:a6dbc529661fbd7fd08d92e72ed4b1923a185dd63f02ccc7ed585cd0889f8b2c",
+      "sourceProofRoot": "sha256:38be4f9518ca65bd0cd1d339e887c568c991fbbd10d88e1e728a99fbcb733308",
+      "planRoot": "sha256:74806ad72ad4a745e6893013bb69f09da8807feec334578a6faaef10d5013fb0",
+      "closureRoot": "sha256:17a9ff4984f3e8a57ec0b5f092c1da55366c74c80e5d60e50ee7dde6a767d1f1",
+      "dependencyRoot": "sha256:f0d27920cc9cae06f588012b1e15d7ee21204361302cc33c65aa94c8538f536f",
+      "toolchainRoot": "sha256:48f84723e35be40e846900a9aac0a188d78d1d695560841850bc9a434c5bee6a",
+      "sourceWorkflowRunId": 34028846174,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-06T11:20:08.122Z",
+      "updatedAt": "2026-09-06T11:20:08.122Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/check.yml",
+        ".github/workflows/public-build-check.yml",
+        "architecture/v4-publication-facade-patches.json",
+        "dist/site/buildchain-contract.json",
+        "tests/paper-check-policy.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-06T10:43:24.974Z",
-  "stateRoot": "sha256:9f4398f0de426a75bb25b47016a652fd91351b2d34b4d2e8350161e19e9273d0"
+  "updatedAt": "2026-09-06T11:20:08.122Z",
+  "stateRoot": "sha256:a669e61cbb5dac426c97f26f6dffbca6bbf2b6e1f7988d0475d2bda393625089"
 }
