@@ -265,11 +265,11 @@ async function observedSourceTimestamp(repository, sourceSha) {
     fail("protected publication source timestamp is unavailable");
   return new Date(observed).toISOString();
 }
-async function observeProductPublicationRecovery(repository, sourceSha, candidateVersion) {
+async function observeProductPublicationRecovery(repository, sourceSha, candidateVersion, channel) {
   const apiUrl = process.env.GITHUB_API_URL || "https://api.github.com", token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "", prefix = `heads/buildchain/v4-product-state/${sourceSha}-`;
   const stateRefs = (await githubJson({ apiUrl, token, path: `/repos/${repository}/git/matching-refs/${prefix}`, allowNotFound: true })) || [];
   const recoveryStates = await Promise.all(stateRefs.map(async (stateRef) => { const version = v4ProductStateVersion(stateRef, sourceSha); const [stateCommit, exactTagRef] = await Promise.all([githubJson({ apiUrl, token, path: `/repos/${repository}/git/commits/${stateRef.object.sha}` }), githubJson({ apiUrl, token, path: `/repos/${repository}/git/ref/tags/v${version}`, allowNotFound: true })]); return { stateRef, stateCommit, exactTagRef }; }));
-  const exactTagRef = recoveryStates.length ? undefined : await githubJson({ apiUrl, token, path: `/repos/${repository}/git/ref/tags/v${encodeURIComponent(candidateVersion)}`, allowNotFound: true }); return { recoveryStates, exactTagRef };
+  const exactTagRef = recoveryStates.length ? undefined : await githubJson({ apiUrl, token, path: `/repos/${repository}/git/ref/tags/v${encodeURIComponent(channel === "stable" ? candidateVersion.replace(/-alpha\.\d+$/u, "") : candidateVersion)}`, allowNotFound: true }); return { recoveryStates, exactTagRef };
 }
 async function materializeProductPublicationIntent({
   candidate,
@@ -282,8 +282,8 @@ async function materializeProductPublicationIntent({
   );
   const sourceTimestamp = await observedSourceTimestamp(repository, route.requestedSha);
   const version = String(candidate.publicationVersion || candidate.version || "").trim(), explicitResume = String(inputs["resume-transaction-id"] || "") !== "";
-  const recovery = route.decision !== "Resume" || explicitResume ? {} : await observeProductPublicationRecovery(repository, route.requestedSha, version);
-  const recoveredVersion = selectV4RecoveredProductPublicationVersion({ routeDecision: route.decision, candidateVersion: version, requestedSha: route.requestedSha, explicitResume, ...recovery });
+  const recovery = route.decision !== "Resume" || explicitResume ? {} : await observeProductPublicationRecovery(repository, route.requestedSha, version, route.channel);
+  const recoveredVersion = selectV4RecoveredProductPublicationVersion({ routeDecision: route.decision, candidateVersion: version, channel: route.channel, requestedSha: route.requestedSha, explicitResume, ...recovery });
   execFileSync(
     process.execPath,
     [
