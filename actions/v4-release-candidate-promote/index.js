@@ -207,6 +207,7 @@ function productProviderRequest({
     buildSummaryPath,
     qualification,
     requiredStatusCheck: input("required-status-check") || "check",
+    registryToken: input("token", true),
     publishCommand: input("publish-command"),
     sealedBundleRoot: providerInputs.sealedBundleRoot,
     sealedBundleManifest: providerInputs.sealedBundleManifest,
@@ -408,9 +409,12 @@ async function applyAndSettle({
     publishEvidencePath: documents.evidencePath,
     releasePassportPath: documents.passportPath,
     releasePassportOutputDir: path.dirname(documents.passportPath),
-    additionalAssetPaths: core
-      .getMultilineInput("artifact-paths")
-      .filter(Boolean),
+    additionalAssetPaths: [
+      ...core.getMultilineInput("artifact-paths").filter(Boolean),
+      ...(providerRequest.publicationIntent.artifactKind === "oci"
+        ? [".buildchain/release-tail/oci-publication-readback.json"]
+        : []),
+    ],
     statePath: input("state-path") || ".buildchain/release-tail/state.json",
     qualificationRoot: qualification.receiptRoot,
     failureAfterCapability: input("failure-after-capability"),

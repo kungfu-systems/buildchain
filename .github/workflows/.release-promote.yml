@@ -736,8 +736,7 @@ concurrency:
   group: buildchain-release-promotion-${{ github.repository }}
   cancel-in-progress: false
 
-permissions:
-  contents: read
+# Provider authority is inherited from the explicit caller envelope.
 
 jobs:
   universal-bootstrap:
@@ -1018,12 +1017,7 @@ jobs:
     needs: qualify
     if: ${{ inputs.universal-request-json == '' && (needs.qualify.outputs.action == 'promote' && !inputs.dry-run) }}
     runs-on: ubuntu-24.04
-    permissions:
-      actions: read
-      checks: write
-      contents: write
-      id-token: write
-      pull-requests: write
+    # Provider authority is inherited from the explicit caller envelope.
     outputs:
       promoted-sha: ${{ needs.qualify.outputs.requested-sha }}
       built-source-sha: ${{ needs.qualify.outputs.candidate-source-sha }}

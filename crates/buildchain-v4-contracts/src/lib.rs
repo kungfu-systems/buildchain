@@ -14,6 +14,7 @@ mod release_activation_shadow;
 mod release_invocation;
 mod release_runtime;
 mod release_tail;
+mod release_tail_capabilities;
 mod source_verification;
 mod stable_publication_fence;
 mod stage_capsule;
@@ -182,6 +183,7 @@ const ROOT_DOMAINS: &[&str] = &[
     "partial-mutation-recovery-checkpoint",
     "partial-mutation-recovery-plan",
     "v4-product-required-artifacts",
+    "oci-publication-family",
     "v4-product-publication-intent",
     "v4-product-publication-operation",
     "v4-product-publication-plan",
