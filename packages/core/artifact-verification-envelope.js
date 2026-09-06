@@ -417,7 +417,7 @@ function kfdBindingBody({ manifest, manifestGate, legacyProjection, paths }) {
       gatePath: paths.gate,
       gateRoot: manifestGate.gateRoot,
     },
-    source: jsonClone(manifestGate.source),
+    adopter: jsonClone(manifestGate.adopter), source: jsonClone(manifestGate.source),
     standardPackage: jsonClone(manifestGate.standardPackage),
     witness: {
       decisionRoot: manifestGate.decisionWitness.root,
@@ -445,10 +445,10 @@ export function createKfdAdopterReleaseBinding({
   manifestPath = "kfd-adopter-manifest.json",
   gatePath = "kfd-adopter-manifest-gate.json",
   legacyProjectionPath = "kfd-support.json",
-  expectedSourceSha = "",
+  expectedAdopterId = "kungfu-systems/buildchain", expectedSourceRepository = "", expectedSourceSha = "",
 } = {}) {
   const gate = validateKfdAdopterManifestGate(manifestGate, {
-    expectedSourceSha,
+    expectedAdopterId, expectedSourceRepository, expectedSourceSha,
     checkedAt: manifestGate?.checkedAt,
   });
   const legacy = validateKfdLegacySupportMatrixProjection(legacyProjection, { manifest, manifestGate });
@@ -468,7 +468,7 @@ export function validateKfdAdopterReleaseBinding(binding, {
   manifest,
   manifestGate,
   legacyProjection,
-  expectedSourceSha = "",
+  expectedAdopterId = "kungfu-systems/buildchain", expectedSourceRepository = "", expectedSourceSha = "",
 } = {}) {
   const issues = [];
   if (!binding || binding.schemaVersion !== 1 || binding.contract !== KFD_ADOPTER_RELEASE_BINDING_CONTRACT) {
@@ -488,7 +488,7 @@ export function validateKfdAdopterReleaseBinding(binding, {
       manifestPath: binding.authority?.manifestPath,
       gatePath: binding.authority?.gatePath,
       legacyProjectionPath: binding.legacyProjection?.path,
-      expectedSourceSha,
+      expectedAdopterId, expectedSourceRepository, expectedSourceSha,
     });
     if (stableJson(binding) !== stableJson(expected)) {
       issues.push({ code: "adopter-release-binding-drift", path: "", message: "release binding differs from the exact manifest, gate, or legacy projection closure" });
