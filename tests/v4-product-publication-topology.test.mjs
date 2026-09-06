@@ -280,3 +280,97 @@ test("canonical APPLY roots the product provider's planned exact version", () =>
     /mismatched exact tag/u,
   );
 });
+
+test("anchored alpha package sets bind every package and publish platforms before main", () => {
+  const version = "22.22.3-kf.5-alpha.4";
+  const packages = [
+    ["@kungfu-tech/libnode", "main"],
+    ["@kungfu-tech/libnode-linux-x64", "platform"],
+    ["@kungfu-tech/libnode-darwin-arm64", "platform"],
+  ].map(([name, role], index) => ({
+    name,
+    role,
+    version,
+    path: `${index}.tgz`,
+    integrity: `sha512-${index}`,
+    sha256: `sha256:${String(index).repeat(64)}`,
+  }));
+  const input = {
+    channel: "alpha",
+    targetRef: "alpha/v22/v22.22",
+    sourceSha: "a".repeat(40),
+    sourceTimestamp: "2026-09-06T00:00:00.000Z",
+    repository: "kungfu-systems/libnode",
+    packageName: "@kungfu-tech/libnode",
+    distTag: "alpha",
+    candidateVersion: version,
+    sealedBundleRoot: `sha256:${"1".repeat(64)}`,
+    requiredArtifactsRoot: `sha256:${"2".repeat(64)}`,
+    observedVersions: [],
+    npmPackages: packages,
+  };
+  const intent = selectV4ProductPublicationIntent(input);
+  assert.equal(intent.version, version);
+  assert.deepEqual(
+    intent.npmPackages.map(({ name }) => name),
+    [packages[2].name, packages[1].name, packages[0].name],
+  );
+  assert.equal(
+    selectV4ProductPublicationIntent({
+      ...input,
+      npmPackages: [...packages].reverse(),
+    }).intentRoot,
+    intent.intentRoot,
+  );
+  const plan = createV4ProductPublicationPlan({
+    intent,
+    invocationRoot: `sha256:${"3".repeat(64)}`,
+    transactionRoot: `sha256:${"4".repeat(64)}`,
+  });
+  assert.deepEqual(
+    plan.operations.slice(1, -1).map(({ target }) => target.package),
+    intent.npmPackages,
+  );
+  assert.equal(
+    new Set(plan.operations.map(({ operationRoot }) => operationRoot)).size,
+    5,
+  );
+  const effects = compileReleaseTailDeclaration(
+    createV4ProductPublicationDeclaration({ intent, plan }),
+  );
+  assert.deepEqual(
+    effects.effects.map(({ capabilityId }) => capabilityId),
+    plan.operationOrder,
+  );
+  for (const invalid of [
+    [...packages, packages[0]],
+    packages.map((entry, index) =>
+      index === 1 ? { ...entry, version: "22.22.3-kf.5-alpha.5" } : entry,
+    ),
+    packages.filter(({ role }) => role !== "main"),
+    packages.map((entry) => ({ ...entry, role: "main" })),
+  ])
+    assert.throws(
+      () =>
+        selectV4ProductPublicationIntent({ ...input, npmPackages: invalid }),
+      /npmPackages/u,
+    );
+  assert.throws(
+    () =>
+      selectV4ProductPublicationIntent({
+        ...input,
+        channel: "stable",
+        targetRef: "release/v22/v22.22",
+      }),
+    /alpha publication/u,
+  );
+  assert.notEqual(
+    selectV4ProductPublicationIntent({
+      ...input,
+      npmPackages: packages.map((entry, index) =>
+        index === 1 ? { ...entry, sha256: `sha256:${"f".repeat(64)}` } : entry,
+      ),
+    }).intentRoot,
+    intent.intentRoot,
+  );
+});

@@ -2,6 +2,6 @@
 export const V4_DOMAIN_WASM_ABI_VERSION = 1;
 export const V4_DOMAIN_WASM_RUSTC = "rustc 1.96.0 (ac68faa20 2026-05-25)";
 export const V4_DOMAIN_WASM_SOURCE_SHA256 =
-  "7297279bce5344b8fc58688be5c1933a823306c82dac7dccfabdf07de41d652f";
+  "bec17d9c47ab0ab8bdc379827f4bfb98fc95d41ee538c0558be538b86e06c775";
 export const V4_DOMAIN_WASM_SHA256 =
-  "3a4909bb4b2bbd2676eac83f259c22faf1ce43479036992c5e53d5e2dcc512ce";
+  "76600d4a9cfba5ac318c9b3be69e2a4e304faee714d2e72b1fba288f945c09f0";

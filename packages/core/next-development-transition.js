@@ -159,15 +159,14 @@ function normalizeModel(value = {}) {
   return model;
 }
 
-function normalizeCompletedAlpha(value = {}) {
+function normalizeCompletedAlpha(value = {}, model) {
   const version = String(value.version || "").trim();
-  if (!ALPHA.test(version))
+  const expression = model?.strategy === "anchored" ? /-alpha\.(0|[1-9]\d*)$/u : ALPHA;
+  if (!SEMVER.test(version) || !expression.test(version))
     throw new Error("completedAlpha.version must be an alpha semantic version");
   const exactTag = String(value.exactTag || "").trim();
   if (exactTag !== `v${version}`)
-    throw new Error(
-      "completedAlpha.exactTag must match completedAlpha.version",
-    );
+    throw new Error("completedAlpha.exactTag must match completedAlpha.version");
   const normalized = {
     outcome: String(value.outcome || "").trim(),
     version,
@@ -251,8 +250,8 @@ function initialStateRoot(status, idempotencyKey) {
 }
 
 export function createNextDevelopmentTransition(input = {}) {
-  const completedAlpha = normalizeCompletedAlpha(input.completedAlpha);
   const model = normalizeModel(input.model);
+  const completedAlpha = normalizeCompletedAlpha(input.completedAlpha, model);
   const adapter = normalizeAdapter(input);
   const declaredPaths = [
     ...adapter.sourcePaths,
