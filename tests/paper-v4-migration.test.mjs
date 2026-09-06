@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { nextDevelopmentAgentInstructions } from "../packages/core/next-development-projection.js";
 import {
   createBuildchainContractWorld,
   finalizeBuildchainContractWorld,
@@ -45,6 +46,11 @@ function installedRuntimeSha({
           : `const args = process.argv.slice(2); if (JSON.stringify(args) !== JSON.stringify(["ls-remote", "--exit-code", "https://github.com/kungfu-systems/buildchain.git", "refs/tags/v4.0.2-alpha.41", "refs/tags/v4.0.2-alpha.41^{}"])) process.exit(99); process.stdout.write(${JSON.stringify(tags)}); process.exit(${gitStatus});`
       }`,
       { mode: 0o755 },
+    );
+    // Windows resolves .cmd shims; a POSIX shebang alone falls through to real Git/npm.
+    fs.writeFileSync(
+      path.join(shim, `${command}.cmd`),
+      `@echo off\r\n"${process.execPath}" "%~dp0${command}" %*\r\n`,
     );
   }
   return JSON.parse(
@@ -179,6 +185,61 @@ function fixture() {
     },
   };
 }
+
+test("generated v4 Verify grants the public callee read permissions without write authority", () => {
+  const { cwd, options } = fixture();
+  const permissions = (text) =>
+    Object.fromEntries(
+      [
+        ...text
+          .match(/\npermissions:\n([\s\S]*?)\n\n/)[1]
+          .matchAll(/^  ([a-z-]+): (read|write)\s*$/gm),
+      ].map((match) => [match[1], match[2]]),
+    );
+  assert.deepEqual(
+    permissions(
+      fs.readFileSync(path.join(cwd, ".github/workflows/verify.yml"), "utf8"),
+    ),
+    { contents: "read" },
+  );
+  assert.equal(writePaperMigration(planPaperMigration(options)).ok, true);
+  const caller = permissions(
+    fs.readFileSync(path.join(cwd, ".github/workflows/verify.yml"), "utf8"),
+  );
+  const callee = permissions(
+    fs.readFileSync(path.join(root, ".github/workflows/check.yml"), "utf8"),
+  );
+  assert.deepEqual(caller, callee);
+  assert(Object.values(caller).every((permission) => permission === "read"));
+});
+
+test("Paper guidance resolves installed script and official ADR without rewriting surrounding instructions", () => {
+  const { cwd, options } = fixture();
+  const file = path.join(cwd, "AGENTS.md");
+  const note =
+    "Local note: `architecture/decisions/0002-next-development-transition.md` and node scripts/next-development-transition.mjs remain literal examples.\n";
+  fs.writeFileSync(file, note + fs.readFileSync(file, "utf8"));
+  commit(cwd);
+  assert.equal(writePaperMigration(planPaperMigration(options)).ok, true);
+  const text = fs.readFileSync(file, "utf8");
+  assert(text.startsWith(note));
+  const section = text.split(
+    "<!-- buildchain:next-development:v1:start -->",
+  )[1];
+  const script = section.match(
+    /node node_modules\/@kungfu-tech\/buildchain\/(scripts\/[^ ]+) materialize/,
+  )[1];
+  assert(fs.existsSync(path.join(root, script)));
+  const adr = section.match(
+    /https:\/\/github.com\/kungfu-systems\/buildchain\/blob\/v4\/(architecture\/[^)]+)\)/,
+  )[1];
+  assert(fs.existsSync(path.join(root, adr)));
+  assert.match(
+    nextDevelopmentAgentInstructions(),
+    /node scripts\/next-development-transition.mjs materialize/,
+  );
+  assert.doesNotMatch(section, /\nnode scripts\//);
+});
 
 test("v4 paper migration preserves content and binds floating callers to distinct channel locks", () => {
   const { cwd, stableRoot, options } = fixture();

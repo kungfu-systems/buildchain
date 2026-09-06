@@ -15963,7 +15963,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 255
+        "line": 279
       },
       "example": "import { collectPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -15992,7 +15992,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 95
+        "line": 101
       },
       "example": "import { createPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16025,7 +16025,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 63
+        "line": 69
       },
       "example": "import { mergePaperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16049,7 +16049,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 18
+        "line": 24
       },
       "example": "import { PAPER_AGENT_ENTRY_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16073,7 +16073,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 19
+        "line": 25
       },
       "example": "import { PAPER_AGENT_ENTRY_SCHEMA_VERSION } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16097,7 +16097,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 22
+        "line": 28
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_END } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16121,7 +16121,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 20
+        "line": 26
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_START } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16150,7 +16150,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 152
+        "line": 176
       },
       "example": "import { paperAgentEntryFiles } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16179,7 +16179,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 38
+        "line": 44
       },
       "example": "import { paperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16212,7 +16212,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 181
+        "line": 205
       },
       "example": "import { resolvePaperBuildchainSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -30319,7 +30319,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:3fc1d02f229ba0f824bd679fd8af771f9010217ce308fbaef0b017581edb2e9c",
+      "digest": "sha256:0af7b6a2b66d7b471bf6d22064558269375f6c01c4147be4d77bc00c9865d988",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -31194,12 +31194,12 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:cd4e6144d45f4f01b733a728695a9f22acdd7124bd4aba18c6b0146d27f57c44"
+      "digest": "sha256:fc2e0cd3f5718e05101d85f6363cefcd2336609c05dd6626b6a062b44c3a1a0d"
     },
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:df79569e33023c30fe010a88acecb45caf769970cda1e83c5fc2657986fa9e33"
+      "digest": "sha256:df073c14c12f15c851eb4507cbeb2919add936ac3079b10f222478138720d092"
     },
     {
       "id": "build-facts",

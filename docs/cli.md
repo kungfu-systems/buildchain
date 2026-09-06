@@ -169,6 +169,9 @@ The safety and authority boundary is explicit:
   and verify callers use `@v4-alpha`; release callers select `@v4-alpha` for
   Alpha and `@v4` for stable releases. Both channel contract locks and their
   distinct resolved source coordinates are bound into provisioning authority.
+  Verify callers grant the reusable Check workflow its required read permissions.
+  Paper agent guidance resolves next-development scripts from the installed
+  Buildchain package and links to the upstream transition ADR.
   Migration reads the other channel from its fetched Git tag. Installed-package
   operators can supply `--stable-buildchain-root` or `--alpha-buildchain-root`
   pointing to the corresponding exact source checkout instead.

@@ -410,7 +410,7 @@ jobs:
 `;
 }
 
-function scaffoldVerifyWorkflow(buildchainSha) {
+function scaffoldVerifyWorkflow(buildchainSha, buildchainVersion = "") {
   return `${nextDevelopmentWorkflowHeader()}name: Verify
 
 on:
@@ -423,7 +423,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+${buildchainVersion.startsWith("4.") ? "  actions: read\n  contents: read\n  pull-requests: read" : "  contents: read"}
 
 jobs:
   check:
@@ -621,7 +621,7 @@ function scaffoldFiles({
     artifactPaths: "_build/main.pdf",
     releasePassportProductName: title,
   });
-  const verifyWorkflow = scaffoldVerifyWorkflow(buildchainSha);
+  const verifyWorkflow = scaffoldVerifyWorkflow(buildchainSha, buildchainVersion);
   const agentEntry = paperAgentEntryFiles({
     cwd,
     buildchainVersion,
@@ -756,7 +756,7 @@ function migrationFiles({
     artifactPaths: config.publication.artifactPaths.join(","),
     releasePassportProductName: config.publication.title,
   });
-  const verifyWorkflow = scaffoldVerifyWorkflow(runtimeSha);
+  const verifyWorkflow = scaffoldVerifyWorkflow(runtimeSha, runtimeIdentity.version);
   const agentEntry = paperAgentEntryFiles({
     cwd,
     buildchainVersion: runtimeIdentity.version,
