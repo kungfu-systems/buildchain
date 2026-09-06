@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-06
+last_reviewed: 2026-09-06
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-09-06
   invisible_context: not asserted
 ---
 
@@ -112,6 +112,39 @@ the restored durable/local transaction must already exist with that exact id;
 a missing or different id fails before provider mutation. An absent transaction
 is created only when no expected existing identity was requested. See
 [Release Candidate: Resume from an existing candidate run](release-candidate.md#resume-from-an-existing-candidate-run).
+
+## V4 sealed npm package sets
+
+The v4 alpha provider accepts a sealed set of 2–64 npm tarballs with one main
+package and same-version platform packages. The candidate resolver records each
+package's name, version, role, relative path, size, SHA-256, and npm integrity in
+the candidate root. QUALIFY passes the set into the Rust/WASM publication
+planner, which binds every package to its own operation and orders platform
+packages by name before the main package. A single package retains the existing
+operation identity.
+
+Use `publish-package-main` to name the main package. The optional
+`publish-package-set-order: platforms-first-main-last` input states the same
+ordering. Omit legacy `publish-mode` and `publish-command` inputs: the v4 provider
+publishes the sealed tarballs through npm trusted publishing. It does not run a
+consumer publish command.
+
+Before any provider effect, APPLY checks the complete package inventory,
+tarball package identities, bytes, and integrity against the rooted intent.
+Each package receives independent registry readback and a Release Tail receipt.
+After an interrupted attempt, existing matching versions are observed without
+republishing; conflicting integrity stops the transaction. Release refs follow
+only after every package is confirmed.
+
+Anchored alpha versions such as `22.22.3-kf.5-alpha.4` remain unchanged. For
+`anchored/manual` repositories, successful publication leaves next development
+in `waiting-anchor`; it does not invent the next upstream anchor. Multi-package
+stable rematerialization is not supported by this provider and fails before
+publication. The existing singleton stable flow remains available.
+
+The contract is exercised by `v4-product-publication-topology.test.mjs`,
+`v4-product-provider-adapters.test.mjs`, and
+`v4-alpha-next-development-provider.test.mjs` under `tests/`.
 
 ## Lifecycle
 
