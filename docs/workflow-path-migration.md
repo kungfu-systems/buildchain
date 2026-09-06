@@ -35,7 +35,15 @@ explicit retirement record keeps the original migration identity for historical
 metrics and frozen facade source; generators resolve that identity to the
 canonical implementation and cannot recreate the removed file.
 
-## Required rollout order
+## Development merge and channel rollout
+
+The development change retires these filenames on `dev/v4/v4.0`, updates the
+Buildchain-owned callers, and enforces the canonical paths through generators
+and required checks. Its delivery boundary is the protected development merge.
+External-repository migration and stable publication are separate follow-up
+work and do not block this development merge.
+
+The published channel boundary still requires the following rollout order:
 
 1. Publish and verify the canonical entries on every affected channel while the
    old entries remain available. The admission identity must match the actual
@@ -43,9 +51,9 @@ canonical implementation and cannot recreate the removed file.
 2. Migrate consumers on their existing floating channels, refresh locks through
    the supported contract acceptance path if required, and verify real consumer
    runs. Stable callers remain on stable; alpha callers remain on alpha.
-3. Merge the retirement only after consumer and channel readback establishes that
-   the new calls resolve. Do not publish a source-only retirement into a channel
-   that still serves old-path callers.
+3. Before publishing the retirement into a channel, recheck its live consumers
+   and resolve any remaining old-path calls. A protected development merge does
+   not by itself establish this channel readiness.
 
 ## Initial consumer readback
 
@@ -87,8 +95,8 @@ The protected dev landing is `7e15123733110ad8ce484241934bbf0ef99fbb45`.
 
 The stable `v4` readback remains
 `da5e2db8384313e899eace87aea0a1a8e28c0aa8`, which does not contain the canonical
-paths. Stable publication, the agent-hub-demo migration, and the provider's
-final retirement merge are **pending**. The alpha.35
+paths. Stable publication and the agent-hub-demo migration remain **pending**
+outside this development change's completion boundary. The alpha.35
 [Build Surface Fixture](https://github.com/kungfu-systems/buildchain/actions/runs/34005360217)
 passed, but this individual result does not establish complete stable
 qualification or authorize moving the stable channel.
