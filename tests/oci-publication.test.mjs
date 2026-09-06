@@ -163,10 +163,11 @@ function provider(f, options = {}) {
         headers: {
           location:
             options.uploadLocation ||
-            `https://ghcr.io/v2/${repo}/blobs/uploads/fixture`,
+            `${options.relativeLocation ? "" : "https://ghcr.io"}/v2/${repo}/blobs/${options.uploadPath || "uploads"}/fixture?state=opaque`,
         },
       });
     assert.equal(method, "PUT");
+    assert.equal(location.searchParams.get("state"), "opaque");
     const chunks = [];
     for await (const chunk of request.body) chunks.push(chunk);
     assert.equal(
@@ -252,20 +253,22 @@ test("sealed OCI candidate verifies exact complete family and rejects tampering"
 });
 
 test("complete OCI publication is idempotent and retains anonymous digest evidence", async (t) => {
-  const f = fixture(t),
-    p = provider(f);
-  assert.equal((await p.adapter.readback(p.effect)).outcome, "absent");
-  assert.equal((await p.adapter.apply(p.effect)).outcome, "observed");
-  assert.equal(p.writes.length, 2);
-  assert.equal((await p.adapter.apply(p.effect)).outcome, "observed");
-  assert.equal(p.writes.length, 2);
-  const evidence = JSON.parse(
-    fs.readFileSync(
-      path.join(f.directory, "evidence/oci-publication-readback.json"),
-    ),
-  );
-  assert.ok(evidence.images.every((i) => i.anonymous));
-  assert.ok(!JSON.stringify(evidence).includes("fixture-write-token"));
+  for (const relativeLocation of [false, true]) {
+    const f = fixture(t),
+      p = provider(f, { uploadPath: "upload", relativeLocation });
+    assert.equal((await p.adapter.readback(p.effect)).outcome, "absent");
+    assert.equal((await p.adapter.apply(p.effect)).outcome, "observed");
+    assert.equal(p.writes.length, 2);
+    assert.equal((await p.adapter.apply(p.effect)).outcome, "observed");
+    assert.equal(p.writes.length, 2);
+    const evidence = JSON.parse(
+      fs.readFileSync(
+        path.join(f.directory, "evidence/oci-publication-readback.json"),
+      ),
+    );
+    assert.ok(evidence.images.every((i) => i.anonymous));
+    assert.ok(!JSON.stringify(evidence).includes("fixture-write-token"));
+  }
 });
 
 test("partial mutation with lost response resumes only the missing image", async (t) => {
@@ -277,6 +280,21 @@ test("partial mutation with lost response resumes only the missing image", async
   assert.equal(p.writes.length, 1);
   assert.equal((await p.adapter.apply(p.effect)).outcome, "observed");
   assert.equal(p.writes.length, 2);
+});
+
+test("upload continuations remain bound to the HTTPS registry and exact repository", async (t) => {
+  for (const uploadLocation of [
+    "https://ghcr.io/v2/example/foreign/base/blobs/upload/fixture",
+    "https://ghcr.io/v2/example/images/base/manifests/fixture",
+    "https://ghcr.io/v2/example/images/base/blobs/upload/",
+    "https://attacker.invalid/v2/example/images/base/blobs/upload/fixture",
+    "http://ghcr.io/v2/example/images/base/blobs/upload/fixture",
+    "https://user:password@ghcr.io/v2/example/images/base/blobs/upload/fixture",
+  ]) {
+    const p = provider(fixture(t), { uploadLocation });
+    await assert.rejects(p.adapter.apply(p.effect), /unsafe-registry-(upload-location|endpoint)/u);
+    assert.equal(p.writes.length, 0);
+  }
 });
 
 test("a conflicting later family tag prevents every write", async (t) => {
