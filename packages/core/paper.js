@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { bindPaperV4Authority, paperV4Channels, selectPaperRuntime, paperRuntimeLockPath, paperProvisioningWorkflowErrors } from "./paper-runtime-channels.js";
+import { bindPaperV4Authority, paperV4Channels, selectPaperRuntime, paperRuntimeLockPath, paperProvisioningWorkflowErrors, resolvePaperNpmRuntimeSha } from "./paper-runtime-channels.js";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -257,23 +257,7 @@ export function resolvePaperRuntimeGitSha(
   const value = resolvePaperBuildchainSha(buildchainRoot);
   if (GIT_SHA_PATTERN.test(value)) return value;
   const identity = buildchainPackageIdentity(buildchainRoot, buildchainVersion);
-  if (!identity.version) return "";
-  const observed = commandResult(
-    "npm",
-    [
-      "view",
-      `${identity.name}@${identity.version}`,
-      "gitHead",
-      "--json",
-      `--registry=${NPM_REGISTRY}`,
-    ],
-    { cwd: buildchainRoot },
-  );
-  if (!observed.ok) return "";
-  const parsed = safeParseJson(observed.stdout);
-  const gitHead =
-    typeof parsed === "string" ? parsed : String(parsed?.gitHead || "");
-  return GIT_SHA_PATTERN.test(gitHead) ? gitHead : "";
+  return resolvePaperNpmRuntimeSha(buildchainRoot, identity);
 }
 
 function runtimeAcceptedAt(buildchainRoot, sha, buildchainVersion = "") {

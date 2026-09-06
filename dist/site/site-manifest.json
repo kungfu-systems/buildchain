@@ -237,7 +237,7 @@
       "path": "docs/cli.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:b90266a341f7c7f904e5a5a8df7dd669ba30e6934633889ef221288ce698f784"
+      "digest": "sha256:cd4e6144d45f4f01b733a728695a9f22acdd7124bd4aba18c6b0146d27f57c44"
     },
     {
       "id": "cli-reference",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:3b4b475408bb16915854aa2d7969cc9db4faecdfdc0f2f6af5174e7d91188cf2"
+      "digest": "sha256:df79569e33023c30fe010a88acecb45caf769970cda1e83c5fc2657986fa9e33"
     },
     {
       "id": "build-facts",

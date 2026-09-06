@@ -8,6 +8,7 @@ import {
   sha256Json,
 } from "./buildchain-contract.js";
 import {
+  commandResult,
   gitValue,
   readJson,
   sha256Text,
@@ -15,6 +16,70 @@ import {
 } from "./paper-repository.js";
 
 export const PAPER_ALPHA_LOCK = ".buildchain/alpha-contract-lock.json";
+
+export function resolvePaperNpmRuntimeSha(cwd, identity) {
+  if (!identity.version) return "";
+  const observed = commandResult(
+    "npm",
+    [
+      "view",
+      `${identity.name}@${identity.version}`,
+      "gitHead",
+      "--json",
+      "--registry=https://registry.npmjs.org",
+    ],
+    { cwd },
+  );
+  if (!observed.ok) return "";
+  let parsed;
+  try {
+    parsed = JSON.parse(observed.stdout || "null");
+  } catch {
+    return "";
+  }
+  const gitHead =
+    typeof parsed === "string" ? parsed : String(parsed?.gitHead || "");
+  return /^[0-9a-f]{40}$/i.test(gitHead)
+    ? gitHead
+    : resolvePaperPublishedTagSha(cwd, identity);
+}
+
+function resolvePaperPublishedTagSha(cwd, identity) {
+  if (
+    identity.name !== "@kungfu-tech/buildchain" ||
+    !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(
+      identity.version,
+    )
+  )
+    return "";
+  const ref = `refs/tags/v${identity.version}`;
+  const observed = commandResult(
+    "git",
+    [
+      "ls-remote",
+      "--exit-code",
+      "https://github.com/kungfu-systems/buildchain.git",
+      ref,
+      `${ref}^{}`,
+    ],
+    { cwd },
+  );
+  if (!observed.ok || !observed.stdout) return "";
+  const refs = new Map();
+  for (const line of observed.stdout.split(/\r?\n/)) {
+    const [sha, name, extra] = line.split(/\s+/);
+    if (
+      !/^[0-9a-f]{40}$/.test(sha) ||
+      ![ref, `${ref}^{}`].includes(name) ||
+      extra ||
+      refs.has(name)
+    )
+      return "";
+    refs.set(name, sha);
+  }
+  if (!refs.has(ref)) return "";
+  return refs.get(`${ref}^{}`) || refs.get(ref);
+}
 
 function fileDigestMatches(cwd, relative, digest) {
   if (!relative || !/^sha256:[0-9a-f]{64}$/.test(digest || "")) return false;

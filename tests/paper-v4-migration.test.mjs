@@ -18,6 +18,103 @@ import {
 } from "../packages/core/paper.js";
 
 const root = path.resolve(import.meta.dirname, "..");
+const tagCommit = "a".repeat(40);
+const tagObject = "b".repeat(40);
+
+function installedRuntimeSha({
+  name = "@kungfu-tech/buildchain",
+  version = "4.0.2-alpha.41",
+  npm = "",
+  tags = "",
+  gitStatus = 0,
+  npmStatus = 0,
+} = {}) {
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "paper-npm-runtime-"));
+  fs.writeFileSync(
+    path.join(cwd, "package.json"),
+    JSON.stringify({ name, version }),
+  );
+  const shim = path.join(cwd, "shims");
+  fs.mkdirSync(shim);
+  for (const command of ["npm", "git"]) {
+    fs.writeFileSync(
+      path.join(shim, command),
+      `#!${process.execPath}\n${
+        command === "npm"
+          ? `process.stdout.write(${JSON.stringify(npm)}); process.exit(${npmStatus});`
+          : `const args = process.argv.slice(2); if (JSON.stringify(args) !== JSON.stringify(["ls-remote", "--exit-code", "https://github.com/kungfu-systems/buildchain.git", "refs/tags/v4.0.2-alpha.41", "refs/tags/v4.0.2-alpha.41^{}"])) process.exit(99); process.stdout.write(${JSON.stringify(tags)}); process.exit(${gitStatus});`
+      }`,
+      { mode: 0o755 },
+    );
+  }
+  return JSON.parse(
+    execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `import { resolvePaperRuntimeGitSha } from ${JSON.stringify(new URL("../packages/core/paper.js", import.meta.url).href)}; console.log(JSON.stringify(resolvePaperRuntimeGitSha(${JSON.stringify(cwd)})));`,
+      ],
+      {
+        env: {
+          ...process.env,
+          PATH: `${shim}${path.delimiter}${process.env.PATH}`,
+        },
+        encoding: "utf8",
+      },
+    ),
+  );
+}
+
+test("npm Paper runtime resolves exact official lightweight and annotated version tags when gitHead is absent", () => {
+  const ref = "refs/tags/v4.0.2-alpha.41";
+  assert.equal(
+    installedRuntimeSha({ tags: `${tagCommit}\t${ref}\n` }),
+    tagCommit,
+  );
+  assert.equal(
+    installedRuntimeSha({
+      tags: `${tagObject}\t${ref}\n${tagCommit}\t${ref}^{}\n`,
+    }),
+    tagCommit,
+  );
+  assert.equal(
+    installedRuntimeSha({
+      npm: JSON.stringify(tagObject),
+      tags: `${tagCommit}\t${ref}\n`,
+    }),
+    tagObject,
+  );
+  for (const tags of [
+    "",
+    `${tagCommit}\t${ref}^{}\n`,
+    `invalid\t${ref}\n`,
+    `${tagCommit}\trefs/tags/v4-alpha\n`,
+    `${tagCommit}\t${ref}\n${tagObject}\t${ref}\n`,
+  ]) {
+    assert.equal(installedRuntimeSha({ tags }), "", tags);
+  }
+  assert.equal(
+    installedRuntimeSha({ tags: `${tagCommit}\t${ref}\n`, gitStatus: 1 }),
+    "",
+  );
+  assert.equal(
+    installedRuntimeSha({ tags: `${tagCommit}\t${ref}\n`, npmStatus: 1 }),
+    "",
+  );
+  assert.equal(
+    installedRuntimeSha({
+      name: "@example/buildchain",
+      tags: `${tagCommit}\t${ref}\n`,
+    }),
+    "",
+  );
+  assert.equal(
+    installedRuntimeSha({ version: "^4.0.2", tags: `${tagCommit}\t${ref}\n` }),
+    "",
+  );
+});
+
 const version = JSON.parse(
   fs.readFileSync(path.join(root, "package.json")),
 ).version;

@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-06
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-09-06
   invisible_context: not asserted
 ---
 
@@ -182,6 +182,10 @@ The safety and authority boundary is explicit:
   the pull-request source and target from GitHub context and fails closed on a
   non-work source branch or a target other than the configured development
   line.
+- Installed npm runtimes resolve their source from registry `gitHead`, or from
+  the official exact version tag when that field is absent. Missing, malformed,
+  duplicate, or unexpected tag results fail closed; floating tags are never
+  used as the installed package's source identity.
 - `work start` derives the protected development branch from the configured
   publication semver line and creates a safe local work branch only when the
   worktree is clean, the sole `origin` is the canonical `kungfu-systems`
