@@ -367,6 +367,7 @@ Owner: Buildchain Paper maintainers
 - `packages/core/paper-fleet.js`
 - `packages/core/paper-npm-bootstrap.js`
 - `packages/core/paper-repository.js`
+- `packages/core/paper-runtime-channels.js`
 - `packages/core/paper-scaffold-content.js`
 - `packages/core/paper-work.js`
 - `packages/core/paper.js`
@@ -383,6 +384,7 @@ Owner: Buildchain Paper maintainers
 
 - `tests/cli.test.mjs`
 - `tests/paper.test.mjs`
+- `tests/paper-v4-migration.test.mjs`
 - `tests/public-surface-audit.test.mjs`
 
 ### Generated outputs
@@ -392,7 +394,7 @@ Owner: Buildchain Paper maintainers
 
 ### Minimal validation
 
-- `node --test tests/cli.test.mjs tests/paper.test.mjs tests/public-surface-audit.test.mjs`
+- `node --test tests/cli.test.mjs tests/paper.test.mjs tests/paper-v4-migration.test.mjs tests/public-surface-audit.test.mjs`
 
 ## promotion-channel-orchestration
 

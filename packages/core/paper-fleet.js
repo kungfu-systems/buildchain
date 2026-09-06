@@ -128,7 +128,7 @@ function paperFleetEntry({
     workCheck(
       "managed-surfaces.current",
       !expected.error && managed.every((entry) => entry.status === "current"),
-      "Every Buildchain-owned paper control surface matches v3.",
+      "Every Buildchain-owned paper control surface matches the selected runtime.",
       "buildchain paper migrate --write --json",
     ),
     workCheck(
