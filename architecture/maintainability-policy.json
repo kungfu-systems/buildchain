@@ -483,9 +483,7 @@
           "source-branch",
           "target-branch"
         ],
-        "secrets": [
-          "promotion-token"
-        ],
+        "secrets": ["promotion-token"],
         "outputs": [
           "active-candidate-pr",
           "candidate-generation",
@@ -560,9 +558,7 @@
           "verify-command",
           "working-directory"
         ],
-        "secrets": [
-          "production-release-app-private-key"
-        ],
+        "secrets": ["production-release-app-private-key"],
         "outputs": [
           "buildchain-runtime-class",
           "buildchain-runtime-override",
@@ -644,9 +640,7 @@
           "toolchain-root",
           "warrant-lease-seconds"
         ],
-        "secrets": [
-          "github-token"
-        ],
+        "secrets": ["github-token"],
         "outputs": [
           "action-count",
           "admission-receipt-root",
@@ -696,10 +690,7 @@
           "revoked-versions",
           "target-branch"
         ],
-        "secrets": [
-          "approval-token",
-          "promotion-token"
-        ],
+        "secrets": ["approval-token", "promotion-token"],
         "outputs": [
           "promotion-pr",
           "result-path",
@@ -1188,9 +1179,7 @@
           "source-node",
           "upstream-release-json"
         ],
-        "secrets": [
-          "propagation-token"
-        ],
+        "secrets": ["propagation-token"],
         "outputs": [
           "controller-plan-artifact",
           "controller-plan-digest",
