@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1458,
+  "generation": 1459,
   "fencingCounter": 218,
   "policy": {
     "agingSeconds": 900,
@@ -11830,8 +11830,55 @@
         ".github/retrospectives/2026-09-06-alpha-release-friction.md"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3526,
+      "sourceRoot": "sha256:231f9d93147bd72a0cc70cbe7f51b9198312b2335b705ae6570fd50e9acfafa9",
+      "sourceIdentityRoot": "sha256:4f7fa741b366204c487bb6cc542ca0feb1b0d0ab47ac1f5d8fe9b37059827745",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:be3fe2d1bbb1b1e9718b5d6a567433d3d086b3cfe6d3d863ec2a3e3bbedda100",
+      "sourceHead": "55c509c5c388c9d231a4aba3d68be578bdc51e38",
+      "sourcePatchRoot": "sha256:f9080340ee9f19319876a175fd8db6899e63d0712b575e13d87ffe9d4294113f",
+      "sourceProofRoot": "sha256:97838ae734ad78611bf3edca476f5c7bd9513904c31336441a80427d75b14989",
+      "planRoot": "sha256:7e856eb7608f6a23988bb303cb8c062803043b5ff317821bb29a718b345e1401",
+      "closureRoot": "sha256:2a7662565bca41d2c3ea238f4d6003f538d5e3653164179fadf87c90276bb08c",
+      "dependencyRoot": "sha256:097be6e05485e35ec3f33c0bf5d72d852ebe729664108d9e950bbefb6f84218d",
+      "toolchainRoot": "sha256:a4068b7b30bb3249adbb407ae18690c297a4f3a5a747259e6f0a15277fb8b250",
+      "sourceWorkflowRunId": 34016169413,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-06T06:27:25.350Z",
+      "updatedAt": "2026-09-06T06:27:25.350Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/promote-buildchain-ref/dist/index.js",
+        "architecture/maintainability-debt.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/site-manifest.json",
+        "docs/kfd-support.md",
+        "docs/node-api-reference.md",
+        "docs/release-passport.md",
+        "packages/core/artifact-verification-envelope.js",
+        "packages/core/kfd-adopter-manifest.js",
+        "packages/core/release-passport-contract.js",
+        "packages/core/release-passport.js",
+        "tests/helpers/kfd-product-gates.mjs",
+        "tests/kfd-generic-adopter.test.mjs",
+        "tests/kfd-product-gates.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-06T06:24:46.073Z",
-  "stateRoot": "sha256:03564b0539b664c4d2a3e09fb3c7b1db82a116b4873f0278ea6c00607cff5231"
+  "updatedAt": "2026-09-06T06:27:25.350Z",
+  "stateRoot": "sha256:82189638945d51bd487ddc67714ca35267654e7aa40183e07d74960622a15bb5"
 }
