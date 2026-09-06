@@ -20,9 +20,7 @@ import { createV4GithubProductAdapters } from "./product-provider-github-adapter
 
 const GITHUB_MUTATION_RETRY_DELAYS_MS = Object.freeze([1_000, 2_000, 4_000]);
 function retryableGithubMutation(error) {
-  const status = Number(
-    error?.status || error?.statusCode || error?.response?.status || 0,
-  );
+  const status = Number(error?.status || error?.statusCode || error?.response?.status || 0);
   if ([408, 429, 500, 502, 503, 504].includes(status)) return true;
   if (status === 403 && /rate limit/iu.test(error?.message || "")) return true;
   if (status) return false;
@@ -32,14 +30,10 @@ function retryableGithubMutation(error) {
 }
 function githubMutationFailure(error) {
   if (error?.releaseTailClass) return error;
-  const status = Number(
-    error?.status || error?.statusCode || error?.response?.status || 0,
-  );
+  const status = Number(error?.status || error?.statusCode || error?.response?.status || 0);
   const failure = {
     releaseTailClass: "transient",
-    releaseTailCode: status
-      ? `github-mutation-${status}`
-      : "github-mutation-error",
+    releaseTailCode: status ? `github-mutation-${status}` : "github-mutation-error",
   };
   if (status) failure.status = status;
   return Object.assign(new Error("GitHub provider mutation failed"), failure);
@@ -53,43 +47,34 @@ export async function retryGithubMutation(wait, operation, readback) {
       if (!retryableGithubMutation(error)) throw githubMutationFailure(error);
       const observed = await readback?.();
       if (observed) return observed;
-      if (attempt === GITHUB_MUTATION_RETRY_DELAYS_MS.length)
-        throw githubMutationFailure(error);
+      if (attempt === GITHUB_MUTATION_RETRY_DELAYS_MS.length) throw githubMutationFailure(error);
       await wait(GITHUB_MUTATION_RETRY_DELAYS_MS[attempt]);
     }
   }
 }
 const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
-function standardPublicationTarget({
-  resolveStandardTarget,
-  candidatePassportPath,
-  candidate,
-  repository,
-  channel,
-  sourceSha,
-  declaredRef,
-  declaredSha,
-  expectedTransactionId,
-}) {
+function standardPublicationTarget(request) {
+  const {
+    resolveStandardTarget,
+    candidatePassportPath,
+    channel,
+    declaredRef,
+    declaredSha,
+    expectedTransactionId,
+  } = request;
   if (!candidatePassportPath || !channel) return null;
   try {
     const target = resolveStandardTarget({
-      candidatePassportPath,
-      candidate,
-      repository,
-      channel,
-      sourceSha,
+      ...request,
       declaredTargetRef: declaredRef,
       declaredTargetSha: declaredSha,
-      expectedTransactionId,
     });
     return { sourceSha: target.targetSha, ...target };
   } catch (error) {
     const missingTarget = String(error?.message || "").includes(
       "target-ref and target-sha are required",
     );
-    if (!declaredRef && !declaredSha && !expectedTransactionId && missingTarget)
-      return null;
+    if (!declaredRef && !declaredSha && !expectedTransactionId && missingTarget) return null;
     throw error;
   }
 }
@@ -103,22 +88,13 @@ function declaredPublicationTarget({ sourceSha, declaredRef, declaredSha }) {
   return { sourceSha, targetRef: declaredRef, targetSha: declaredSha };
 }
 
-async function legacyPublicationTarget({
-  octokit,
-  repository,
-  candidate,
-  sourceSha,
-}) {
+async function legacyPublicationTarget({ octokit, repository, candidate, sourceSha }) {
   if (sourceSha !== candidate.source?.headSha)
-    throw new Error(
-      "legacy promotion target recovery requires the exact candidate source SHA",
-    );
+    throw new Error("legacy promotion target recovery requires the exact candidate source SHA");
   const number = Number(candidate.pullRequest?.number || 0);
   const baseRef = String(candidate.pullRequest?.baseRef || "").trim();
   if (!Number.isSafeInteger(number) || number <= 0 || !baseRef)
-    throw new Error(
-      "legacy promotion target recovery requires an exact pull request and base ref",
-    );
+    throw new Error("legacy promotion target recovery requires an exact pull request and base ref");
   const [owner, repo] = repository.split("/");
   const { data } = await octokit.rest.pulls.get({
     owner,
@@ -126,14 +102,8 @@ async function legacyPublicationTarget({
     pull_number: number,
   });
   const mergeSha = String(data.merge_commit_sha || "").trim();
-  if (
-    data.merged !== true ||
-    data.base?.ref !== baseRef ||
-    !/^[0-9a-f]{40}$/u.test(mergeSha)
-  )
-    throw new Error(
-      "legacy promotion target recovery requires the exact merged pull request",
-    );
+  if (data.merged !== true || data.base?.ref !== baseRef || !/^[0-9a-f]{40}$/u.test(mergeSha))
+    throw new Error("legacy promotion target recovery requires the exact merged pull request");
   return { sourceSha: mergeSha, targetRef: baseRef, targetSha: mergeSha };
 }
 
@@ -182,9 +152,7 @@ function providerError(message, releaseTailClass, releaseTailCode) {
 }
 
 function operationFor(plan, effect) {
-  const operation = plan.operations.find(
-    ({ id }) => id === effect.capabilityId,
-  );
+  const operation = plan.operations.find(({ id }) => id === effect.capabilityId);
   if (
     !operation ||
     operation.adapter !== effect.adapter ||
@@ -228,31 +196,24 @@ function validateProviderRequest(request, intent) {
   const artifactKind = String(intent.artifactKind || "npm").trim();
   const publishCommand = String(request.publishCommand || "").trim();
   const publishMode = String(request.publishMode || "").trim();
-  const publishAuth = String(
-    request.publishAuth || "trusted-publishing",
-  ).trim();
+  const publishAuth = String(request.publishAuth || "trusted-publishing").trim();
   const publishDistTag = String(request.publishDistTag || "").trim();
-  const packageSetOrder = String(
-    request.publishPackageSetOrder || "as-provided",
-  ).trim();
-  const packageMain = String(
-    request.publishPackageMain || intent.packageName,
-  ).trim();
+  const packageSetOrder = String(request.publishPackageSetOrder || "as-provided").trim();
+  const packageMain = String(request.publishPackageMain || intent.packageName).trim();
   if (publishCommand) unsupported("publish command", publishCommand);
   if (publishMode) unsupported("publish mode", publishMode);
   if (artifactKind === "npm" && publishAuth !== "trusted-publishing")
     unsupported("publish auth", publishAuth);
-  if (
-    artifactKind === "npm" &&
-    publishDistTag &&
-    publishDistTag !== intent.distTag
-  )
+  if (artifactKind === "npm" && publishDistTag && publishDistTag !== intent.distTag)
     throw providerError(
       `publish dist-tag ${publishDistTag} conflicts with rooted ${intent.distTag}`,
       "conflict",
       "publish-dist-tag-conflict",
     );
-  if (packageSetOrder !== "as-provided")
+  if (
+    packageSetOrder !== "as-provided" &&
+    !(intent.npmPackages && packageSetOrder === "platforms-first-main-last")
+  )
     unsupported("package set order", packageSetOrder);
   if (artifactKind === "npm" && packageMain !== intent.packageName)
     throw providerError(
@@ -262,27 +223,31 @@ function validateProviderRequest(request, intent) {
     );
 }
 
+function snapshotVersionFiles(cwd, paths) {
+  return new Map(
+    paths.map((file) => {
+      const resolved = path.resolve(cwd, file);
+      return [resolved, fs.existsSync(resolved) ? fs.readFileSync(resolved) : null];
+    }),
+  );
+}
+function restoreVersionFiles(snapshots) {
+  for (const [resolved, bytes] of snapshots) {
+    if (bytes === null) fs.rmSync(resolved, { force: true });
+    else fs.writeFileSync(resolved, bytes);
+  }
+}
+
 export function localVersionFiles(cwd, intent) {
   const discovered = discoverVersionStateFiles(cwd);
   if (discovered.files.length === 0)
     throw new Error("v4 product publication requires package version state");
-  const changedFiles = updateVersionStateContents(
-    discovered.files,
-    intent.version,
-  );
+  const changedFiles = updateVersionStateContents(discovered.files, intent.version);
   const allowedPaths = versionVerificationAllowedPathsForPromotion(
     intent.channel === "alpha" ? "alpha" : "release",
     discovered.files.map(({ path: filePath }) => filePath),
   );
-  const snapshots = new Map(
-    allowedPaths.map((filePath) => {
-      const resolved = path.resolve(cwd, filePath);
-      return [
-        resolved,
-        fs.existsSync(resolved) ? fs.readFileSync(resolved) : null,
-      ];
-    }),
-  );
+  const snapshots = snapshotVersionFiles(cwd, allowedPaths);
   try {
     return runVersionVerification({
       cwd,
@@ -301,35 +266,24 @@ export function localVersionFiles(cwd, intent) {
       runLifecycleVerify: false,
     });
   } finally {
-    for (const [resolved, bytes] of snapshots) {
-      if (bytes === null) fs.rmSync(resolved, { force: true });
-      else fs.writeFileSync(resolved, bytes);
-    }
+    restoreVersionFiles(snapshots);
   }
 }
 
 function withVersionFiles(cwd, files, callback) {
-  const snapshots = files.map((file) => {
-    const resolved = path.resolve(cwd, file.path);
-    return {
-      resolved,
-      bytes: fs.existsSync(resolved) ? fs.readFileSync(resolved) : null,
-    };
-  });
+  const snapshots = snapshotVersionFiles(
+    cwd,
+    files.map(({ path }) => path),
+  );
   try {
-    for (const [index, file] of files.entries()) {
-      fs.mkdirSync(path.dirname(snapshots[index].resolved), {
-        recursive: true,
-      });
-      fs.writeFileSync(snapshots[index].resolved, file.content);
+    for (const file of files) {
+      const resolved = path.resolve(cwd, file.path);
+      fs.mkdirSync(path.dirname(resolved), { recursive: true });
+      fs.writeFileSync(resolved, file.content);
     }
     return callback();
   } finally {
-    for (const snapshot of snapshots) {
-      if (snapshot.bytes === null)
-        fs.rmSync(snapshot.resolved, { force: true });
-      else fs.writeFileSync(snapshot.resolved, snapshot.bytes);
-    }
+    restoreVersionFiles(snapshots);
   }
 }
 
@@ -360,16 +314,23 @@ function requiredProductArtifacts(request, intent) {
   );
   if (
     artifactKind === "npm" &&
-    (matchingArtifacts.length !== 1 ||
-      matchingArtifacts[0].name !== intent.packageName)
+    (intent.npmPackages
+      ? matchingArtifacts.length !== intent.npmPackages.length ||
+        intent.npmPackages.some(
+          (entry) =>
+            !matchingArtifacts.some(
+              (artifact) =>
+                artifact.name === entry.name &&
+                artifact.ref === entry.version &&
+                artifact.integrity === entry.integrity &&
+                artifact.role === entry.role,
+            ),
+        )
+      : matchingArtifacts.length !== 1 || matchingArtifacts[0].name !== intent.packageName)
   )
-    throw new Error(
-      "v4 product publication currently requires one exact main npm artifact",
-    );
+    throw new Error("v4 product publication currently requires one exact main npm artifact");
   if (artifactKind === "custom" && matchingArtifacts.length === 0)
-    throw new Error(
-      "v4 custom product publication requires at least one exact required artifact",
-    );
+    throw new Error("v4 custom product publication requires at least one exact required artifact");
   return requiredArtifacts;
 }
 
@@ -387,24 +348,41 @@ function verifyRootedBundle(request, intent) {
     (intent.channel === "alpha" && sealedBundle.npm.version !== intent.version)
   )
     throw new Error("sealed product bundle drifted from QUALIFY intent");
+  if (intent.npmPackages || sealedBundle.npmPackages) {
+    if (
+      !intent.npmPackages ||
+      sealedBundle.npmPackages?.length !== intent.npmPackages.length ||
+      intent.npmPackages.some(
+        (entry) =>
+          !sealedBundle.npmPackages.some(
+            (sealed) =>
+              entry.name === sealed.name &&
+              entry.version === sealed.version &&
+              entry.path === sealed.path &&
+              entry.role === sealed.role &&
+              entry.integrity === sealed.integrity &&
+              entry.sha256 === `sha256:${sealed.sha256}`,
+          ),
+      )
+    ) {
+      throw new Error("sealed npm package set drifted from QUALIFY intent");
+    }
+  }
   return sealedBundle;
 }
 
 function createPackedPackage(context) {
   let packed;
-  return () => {
-    if (packed) return packed;
+  return (operation) => {
     if (context.intent.channel === "alpha") {
-      packed = {
-        tarballPath: context.sealedBundle.npm.absolutePath,
-        integrity: context.sealedBundle.npm.integrity,
-        sha256: context.sealedBundle.npm.sha256,
-      };
-      return packed;
+      const entry = context.intent.npmPackages
+        ? context.sealedBundle.npmPackages.find(({ name }) => name === operation.target.packageName)
+        : context.sealedBundle.npm;
+      if (!entry) throw new Error("rooted npm package operation is absent");
+      return { tarballPath: entry.absolutePath, integrity: entry.integrity, sha256: entry.sha256 };
     }
-    const temporaryRoot = fs.mkdtempSync(
-      path.join(os.tmpdir(), "buildchain-v4-product-"),
-    );
+    if (packed) return packed;
+    const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-v4-product-"));
     packed = withVersionFiles(context.cwd, context.versionFiles, () => {
       const result = commandResult(
         context.spawn,
@@ -444,9 +422,9 @@ const NPM_POST_PUBLISH_READBACK_DELAYS_MS = Object.freeze([
 ]);
 
 async function npmReadback(context, packedPackage, effect) {
-  operationFor(context.plan, effect);
-  const expected = packedPackage();
-  const delays = context.packageEffectAttempted
+  const operation = operationFor(context.plan, effect);
+  const expected = packedPackage(operation);
+  const delays = context.packageEffectAttempted.has(operation.id)
     ? NPM_POST_PUBLISH_READBACK_DELAYS_MS
     : [0];
   for (const [index, delayMs] of delays.entries()) {
@@ -455,7 +433,7 @@ async function npmReadback(context, packedPackage, effect) {
       "npm",
       [
         "view",
-        `${context.intent.packageName}@${context.intent.version}`,
+        `${operation.target.packageName}@${operation.target.version}`,
         "dist.integrity",
         "--json",
         "--prefer-online",
@@ -477,11 +455,10 @@ async function npmReadback(context, packedPackage, effect) {
       );
     }
     const integrity = JSON.parse(String(result.stdout || '""'));
-    if (integrity !== expected.integrity)
-      return conflict("npm-integrity-conflict");
+    if (integrity !== expected.integrity) return conflict("npm-integrity-conflict");
     return observed(effect, {
       kind: "npm-package",
-      packageName: context.intent.packageName,
+      packageName: operation.target.packageName,
       version: context.intent.version,
       integrity,
       sha256: expected.sha256,
@@ -491,9 +468,9 @@ async function npmReadback(context, packedPackage, effect) {
 }
 
 function npmApply(context, packedPackage, effect) {
-  operationFor(context.plan, effect);
-  const pack = packedPackage();
-  context.packageEffectAttempted = true;
+  const operation = operationFor(context.plan, effect);
+  const pack = packedPackage(operation);
+  context.packageEffectAttempted.add(operation.id);
   commandResult(
     context.spawn,
     "npm",
@@ -512,6 +489,7 @@ function npmApply(context, packedPackage, effect) {
   );
   context.updates.push({
     action: "published-package",
+    ...(context.intent.npmPackages ? { packageName: operation.target.packageName } : {}),
     version: context.intent.version,
     tag: context.intent.distTag,
   });
@@ -528,9 +506,7 @@ export function createV4ProductPublicationAdapters({
   validateProviderRequest(request, intent);
   requiredProductArtifacts(request, intent);
   const sealedBundle =
-    (intent.artifactKind || "npm") === "npm"
-      ? verifyRootedBundle(request, intent)
-      : undefined;
+    (intent.artifactKind || "npm") === "npm" ? verifyRootedBundle(request, intent) : undefined;
   const context = {
     request,
     intent,
@@ -538,12 +514,10 @@ export function createV4ProductPublicationAdapters({
     cwd,
     spawn,
     sealedBundle,
-    versionFiles:
-      intent.channel === "alpha" ? [] : localVersionFiles(cwd, intent),
-    packageEffectAttempted: false,
+    versionFiles: intent.channel === "alpha" ? [] : localVersionFiles(cwd, intent),
+    packageEffectAttempted: new Set(),
     wait,
-    githubMutation: (operation, readback) =>
-      retryGithubMutation(wait, operation, readback),
+    githubMutation: (operation, readback) => retryGithubMutation(wait, operation, readback),
     updates: [],
   };
   const packedPackage = createPackedPackage(context);

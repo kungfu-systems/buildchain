@@ -534,3 +534,24 @@ test("generated guidance check fails when the projection diverges", () => {
     /drifted from its contract source/u,
   );
 });
+
+test("anchored alpha completion waits for an explicit next anchor", () => {
+  const version = "22.22.3-kf.5-alpha.4";
+  const input = {
+    repository: "kungfu-systems/libnode",
+    completedAlpha: completedAlpha({ version, exactTag: `v${version}` }),
+    model: { strategy: "anchored", next: "manual" },
+    sourcePaths: ["libnode.release.json", "package.json"],
+  };
+  const transition = createNextDevelopmentTransition(input);
+  assert.equal(transition.state.status, "waiting-anchor");
+  assert.equal(transition.target.version, null);
+  assert.throws(
+    () =>
+      createNextDevelopmentTransition({
+        ...input,
+        model: { strategy: "semver", next: "auto" },
+      }),
+    /alpha semantic version/u,
+  );
+});
