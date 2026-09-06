@@ -47,6 +47,11 @@ function installedRuntimeSha({
       }`,
       { mode: 0o755 },
     );
+    // Windows resolves .cmd shims; a POSIX shebang alone falls through to real Git/npm.
+    fs.writeFileSync(
+      path.join(shim, `${command}.cmd`),
+      `@echo off\r\n"${process.execPath}" "%~dp0${command}" %*\r\n`,
+    );
   }
   return JSON.parse(
     execFileSync(
