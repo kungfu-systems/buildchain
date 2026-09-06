@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { paperRuntimeSourceMatches } from "./paper-runtime-channels.js";
 
 import {
   PAPER_PATHS,
@@ -256,6 +257,7 @@ export function collectPaperAgentEntry({
   buildchainSha = "",
   mode = "contract",
   env = process.env,
+  runtimeAdmission,
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const developmentRef = paperDevelopmentRef(resolvedCwd);
@@ -311,8 +313,8 @@ export function collectPaperAgentEntry({
     workCheck(
       "agent-entry.runtime-source",
       GIT_SHA_PATTERN.test(effectiveBuildchainSha) &&
-        entry.runtime?.sourceSha === effectiveBuildchainSha,
-      "The agent-entry contract is bound to the exact executing Buildchain source SHA.",
+        paperRuntimeSourceMatches(entry.runtime, effectiveBuildchainSha, mode, runtimeAdmission),
+      "The executing Buildchain source is pinned locally or admitted by its v4 channel contract in CI.",
       "buildchain paper migrate --write --json",
     ),
     workCheck(

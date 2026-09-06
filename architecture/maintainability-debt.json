@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64773,
-    "current": 56712
+    "measuredExcess": 64745,
+    "current": 56684
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -826,35 +826,35 @@
         "baseline": {
           "lines": 2878,
           "functions": {
-            "collectPaperStatus@1117": {
+            "collectPaperStatus@1140": {
               "lines": 190,
               "complexity": 47
             },
-            "validatePaperProvisioningAuthority@1308": {
+            "validatePaperProvisioningAuthority@1331": {
               "complexity": 45
             }
           }
         },
         "current": {
-          "lines": 2512,
+          "lines": 2494,
           "functions": {
-            "collectPaperStatus@1117": {
+            "collectPaperStatus@1140": {
               "lines": 190,
               "complexity": 47
             },
-            "validatePaperProvisioningAuthority@1308": {
-              "complexity": 45
+            "validatePaperProvisioningAuthority@1331": {
+              "complexity": 36
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "collectPaperStatus@1117": {
+            "collectPaperStatus@1140": {
               "lines": 180,
               "complexity": 25
             },
-            "validatePaperProvisioningAuthority@1308": {
+            "validatePaperProvisioningAuthority@1331": {
               "complexity": 25
             }
           }
@@ -2522,7 +2522,7 @@
           "lines": 1202
         },
         "current": {
-          "lines": 1202
+          "lines": 1201
         },
         "target": {
           "lines": 600
@@ -3207,7 +3207,7 @@
       "path": "packages/core/paper.js",
       "metric": "lines",
       "baseline": 2878,
-      "current": 2512
+      "current": 2494
     }
   ]
 }

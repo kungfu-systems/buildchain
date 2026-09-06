@@ -15947,11 +15947,11 @@
       "id": "packages/core/paper-agent-entry.js#collectPaperAgentEntry",
       "name": "collectPaperAgentEntry",
       "kind": "function",
-      "signature": "function collectPaperAgentEntry({ cwd = process.cwd(), buildchainSha = \"\", mode = \"contract\", env = process.env, } = {})",
+      "signature": "function collectPaperAgentEntry({ cwd = process.cwd(), buildchainSha = \"\", mode = \"contract\", env = process.env, runtimeAdmission, } = {})",
       "parameters": [
         {
           "name": "parameter1",
-          "signature": "{ cwd = process.cwd(), buildchainSha = \"\", mode = \"contract\", env = process.env, } = {}"
+          "signature": "{ cwd = process.cwd(), buildchainSha = \"\", mode = \"contract\", env = process.env, runtimeAdmission, } = {}"
         }
       ],
       "returns": "unknown",
@@ -15963,7 +15963,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 254
+        "line": 255
       },
       "example": "import { collectPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -15992,7 +15992,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 94
+        "line": 95
       },
       "example": "import { createPaperAgentEntry } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16025,7 +16025,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 62
+        "line": 63
       },
       "example": "import { mergePaperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16049,7 +16049,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 17
+        "line": 18
       },
       "example": "import { PAPER_AGENT_ENTRY_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16073,7 +16073,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 18
+        "line": 19
       },
       "example": "import { PAPER_AGENT_ENTRY_SCHEMA_VERSION } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16097,7 +16097,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 21
+        "line": 22
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_END } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16121,7 +16121,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 19
+        "line": 20
       },
       "example": "import { PAPER_AGENT_ENTRY_SECTION_START } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16150,7 +16150,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 151
+        "line": 152
       },
       "example": "import { paperAgentEntryFiles } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16179,7 +16179,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 37
+        "line": 38
       },
       "example": "import { paperAgentEntryInstructions } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16212,7 +16212,7 @@
       ],
       "source": {
         "path": "packages/core/paper-agent-entry.js",
-        "line": 180
+        "line": 181
       },
       "example": "import { resolvePaperBuildchainSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16655,7 +16655,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2059
+        "line": 2041
       },
       "example": "import { collectPaperPreflight } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16684,7 +16684,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 1117
+        "line": 1140
       },
       "example": "import { collectPaperStatus } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16713,7 +16713,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2301
+        "line": 2283
       },
       "example": "import { createPaperAlphaPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16742,7 +16742,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2238
+        "line": 2220
       },
       "example": "import { createPaperBuildPlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16771,7 +16771,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 525
+        "line": 527
       },
       "example": "import { createPaperProvisioningAuthority } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16800,7 +16800,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2359
+        "line": 2341
       },
       "example": "import { createPaperResumePlan } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16829,7 +16829,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 2486
+        "line": 2468
       },
       "example": "import { executePaperNpmBootstrap } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16853,7 +16853,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 96
+        "line": 98
       },
       "example": "import { PAPER_ALPHA_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16877,7 +16877,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 95
+        "line": 97
       },
       "example": "import { PAPER_BUILD_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16901,7 +16901,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 88
+        "line": 90
       },
       "example": "import { PAPER_MIGRATION_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16925,7 +16925,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 91
+        "line": 93
       },
       "example": "import { PAPER_NPM_BOOTSTRAP_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16949,7 +16949,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 89
+        "line": 91
       },
       "example": "import { PAPER_PREFLIGHT_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -16973,7 +16973,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 93
+        "line": 95
       },
       "example": "import { PAPER_PROVISIONING_CONTRACT } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -16997,7 +16997,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 97
+        "line": 99
       },
       "example": "import { PAPER_RESUME_PLAN_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17021,7 +17021,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 87
+        "line": 89
       },
       "example": "import { PAPER_SCAFFOLD_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17045,7 +17045,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 100
+        "line": 102
       },
       "example": "import { PAPER_STATE_ORDER } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17069,7 +17069,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 90
+        "line": 92
       },
       "example": "import { PAPER_STATUS_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17093,7 +17093,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 98
+        "line": 100
       },
       "example": "import { PAPER_VISIBILITY_CONTRACT } from \"@kungfu-tech/buildchain\";",
       "maturity": "stable",
@@ -17174,7 +17174,7 @@
       ],
       "source": {
         "path": "packages/core/paper.js",
-        "line": 251
+        "line": 253
       },
       "example": "import { resolvePaperRuntimeGitSha } from \"@kungfu-tech/buildchain/paper\";",
       "maturity": "stable",
@@ -30319,7 +30319,7 @@
       "specifier": "@kungfu-tech/buildchain/paper",
       "export": "./paper",
       "target": "./packages/core/paper.js",
-      "digest": "sha256:762f10b7e0f99422ecdc73e717f721a22c940989edaa7b1011b3ba551db2b37e",
+      "digest": "sha256:4006a77eec0632a7b1a7e341978e8c3612fa284624de80f37f390709214b23db",
       "summary": "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs.",
       "capabilityGroup": "reusable-build",
       "audience": [
@@ -31194,12 +31194,12 @@
     {
       "id": "cli-and-node-package",
       "path": "docs/cli.md",
-      "digest": "sha256:78d1e3f0e476823b339b9e4515808e14f56ff2a1e7456f8a62f2c63b8ffa79c4"
+      "digest": "sha256:b90266a341f7c7f904e5a5a8df7dd669ba30e6934633889ef221288ce698f784"
     },
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:1ff8052860e97ca5c34ba2afcfcfa839d3eb45907fa5da0f67148063962fe7a4"
+      "digest": "sha256:3b4b475408bb16915854aa2d7969cc9db4faecdfdc0f2f6af5174e7d91188cf2"
     },
     {
       "id": "build-facts",
