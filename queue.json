@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1476,
+  "generation": 1477,
   "fencingCounter": 224,
   "policy": {
     "agingSeconds": 900,
@@ -12125,8 +12125,51 @@
         "tests/paper-v4-migration.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3548,
+      "sourceRoot": "sha256:f346f7b63ce4efaaf8259e7d7dd5505fb1488958bf62498732ff3f7314b8b957",
+      "sourceIdentityRoot": "sha256:3901c2db02baeb8056d696cf298f299e0876c37997096d9e028880e5627a0730",
+      "deliveryClass": "non-native-fast",
+      "identitySemantics": "chained-attempt-v2",
+      "predecessorCandidateId": "sha256:298be27713aa3489a797505bb89b161d33e3959b70bde8d81cf7f06b725d4f1b",
+      "candidateId": "sha256:652affea498285dc1693c9912a650b7413121d839072752ce8d63adf8bf6478f",
+      "sourceHead": "4a3cff3765cfed1c1fa5c655ae64f256ee3474fc",
+      "sourcePatchRoot": "sha256:6c028fc5b0a5c0e9cca49f41d6b4276088f17bf9b358b2ae29436c7a36af2d33",
+      "sourceProofRoot": "sha256:ae5bef1f088778bd0f4bf537da47aa6387bcee6d9edac60bf2b35f1140853c06",
+      "planRoot": "sha256:0ee90f7f47464e7eb29d674c65d05ea527caaee42bfcf0ea72223fe040b2f2e2",
+      "closureRoot": "sha256:a45d93de29b51e2c96b6b0f07def9c14a141a46ebf72467d79f3dd2ad146c00d",
+      "dependencyRoot": "sha256:d4572d3dc7460443778e482f6ca9bf8f128ab95b113988fcfabcdfe1390ba1b9",
+      "toolchainRoot": "sha256:a9632c68998bfd6fec6daab1a6b6ca2c837cf3a278158e18541efd7f6e9dee4e",
+      "sourceWorkflowRunId": 34038428229,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-06T14:24:45.817Z",
+      "updatedAt": "2026-09-06T14:24:45.817Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-contract.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/manual-registry.json",
+        "dist/site/node-api-registry.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "dist/site/site-manifest.json",
+        "docs/cli.md",
+        "docs/node-api-reference.md",
+        "packages/core/paper-agent-entry.js",
+        "packages/core/paper.js",
+        "tests/paper-v4-migration.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-06T14:24:11.264Z",
-  "stateRoot": "sha256:fd56291ec22438c5b30876f3a86772357565ffb1734e27139008d4998f600a9b"
+  "updatedAt": "2026-09-06T14:24:45.817Z",
+  "stateRoot": "sha256:2cc5c0626960d64a4eff8e38ff58087f3565999b69e349d58de53bfa441b85f5"
 }
