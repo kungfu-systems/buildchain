@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "sourceRevision": "a41c00a0c0b2dbd57c238cd9b326b167a1d27ca8",
-  "purpose": "Retain completed v4 publication receipt independently of next-development and preserve immutable binary publication assets.",
+  "purpose": "Retain completed v4 publication receipt independently of next-development and preserve immutable binary publication assets. Scope publication checks to governed Paper repositories without changing generic report lifecycle contracts.",
   "facades": [
     {
       "workflow": ".github/workflows/.binary-release-assets.yml",
@@ -46,6 +46,17 @@
         {
           "before": "            .buildchain/evidence/release-tail/release-invocation.json\n            .buildchain/evidence/release-tail/release-transaction.json\n            .buildchain/evidence/release-tail/release-receipt.json\n          if-no-files-found: error\n",
           "after": "            .buildchain/evidence/release-tail/release-invocation.json\n            .buildchain/evidence/release-tail/release-transaction.json\n            .buildchain/evidence/release-tail/release-receipt.json\n            .buildchain/evidence/release-tail/delivery-summary.json\n            .buildchain/evidence/release-tail/buildchain-publication-settlement.json\n          if-no-files-found: error\n"
+        }
+      ]
+    },
+    {
+      "workflow": ".github/workflows/check.yml",
+      "beforeSha256": "44797c1b64e54806e19cf401300a27e587d6a2f0730ee7509eb84aefb9b60f74",
+      "afterSha256": "fbf3549e4f4987733f53ff362bf49d2001d56ae5842bbd1ed343c0fba40d9429",
+      "replacements": [
+        {
+          "before": "          config=\"${BUILDCHAIN_WORKING_DIRECTORY}/.buildchain/buildchain.toml\"\n          if [ -f \"$config\" ] && grep -Eq '^[[:space:]]*type[[:space:]]*=[[:space:]]*\"publication-artifact\"[[:space:]]*$' \"$config\"; then\n            node .buildchain/runtime/bin/buildchain.mjs paper preflight \\\n              --cwd \"$BUILDCHAIN_WORKING_DIRECTORY\" \\\n              --offline \\\n              --ci \\\n              --json\n          else\n            echo \"Buildchain Paper policy: not applicable\"\n          fi\n",
+          "after": "          node --input-type=module <<'NODE'\n          import fs from \"node:fs\";\n          import path from \"node:path\";\n          import { loadBuildchainConfig } from \"./.buildchain/runtime/packages/core/buildchain-config.js\";\n          import { spawnSyncCommand } from \"./.buildchain/runtime/packages/core/spawn-command.js\";\n          const cwd = path.resolve(process.env.BUILDCHAIN_WORKING_DIRECTORY || \".\");\n          // Validate before deciding applicability; malformed config never skips policy.\n          const config = loadBuildchainConfig(cwd)?.config;\n          const governedPaper = fs.existsSync(path.join(cwd, \".buildchain/paper\"))\n            || config?.publish?.kind === \"npm-paper-package\"\n            || (config?.project?.type === \"publication-artifact\"\n              && (!config.publication || config.publication.kind === \"paper\"));\n          if (governedPaper) {\n            const result = spawnSyncCommand(process.execPath, [\n              \".buildchain/runtime/bin/buildchain.mjs\", \"paper\", \"preflight\",\n              \"--cwd\", cwd, \"--offline\", \"--ci\", \"--json\",\n            ], { stdio: \"inherit\" });\n            if (result.error) throw result.error;\n            process.exitCode = result.status ?? 1;\n          } else {\n            console.log(\"Buildchain Paper policy: not applicable\");\n          }\n          NODE\n"
         }
       ]
     }
