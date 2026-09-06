@@ -13,7 +13,13 @@ import {
   stableJson,
   workCheck,
 } from "./paper-repository.js";
-import { mergeNextDevelopmentAgentInstructions } from "./next-development-projection.js";
+import {
+  mergeNextDevelopmentAgentInstructions,
+  NEXT_DEVELOPMENT_AGENT_SECTION_START,
+  NEXT_DEVELOPMENT_AGENT_SECTION_END,
+  NEXT_DEVELOPMENT_LOCAL_COMMAND,
+} from "./next-development-projection.js";
+import { NEXT_DEVELOPMENT_ADR } from "./next-development-transition.js";
 
 export const PAPER_AGENT_ENTRY_CONTRACT = "kungfu-buildchain-paper-agent-entry";
 export const PAPER_AGENT_ENTRY_SCHEMA_VERSION = 1;
@@ -149,6 +155,24 @@ export function createPaperAgentEntry({
   };
 }
 
+function mergePaperNextDevelopmentInstructions(current) {
+  const merged = mergeNextDevelopmentAgentInstructions(current);
+  const start = merged.indexOf(NEXT_DEVELOPMENT_AGENT_SECTION_START);
+  const end = merged.indexOf(NEXT_DEVELOPMENT_AGENT_SECTION_END);
+  const section = merged.slice(start, end)
+    .replace(
+      `\`${NEXT_DEVELOPMENT_ADR}\``,
+      `[Buildchain next-development ADR](https://github.com/kungfu-systems/buildchain/blob/v4/${NEXT_DEVELOPMENT_ADR})`,
+    )
+    .replace(
+      NEXT_DEVELOPMENT_LOCAL_COMMAND,
+      NEXT_DEVELOPMENT_LOCAL_COMMAND.replace(
+        "node scripts/", "node node_modules/@kungfu-tech/buildchain/scripts/",
+      ),
+    );
+  return `${merged.slice(0, start)}${section}${merged.slice(end)}`;
+}
+
 export function paperAgentEntryFiles({
   cwd,
   buildchainVersion,
@@ -169,7 +193,7 @@ export function paperAgentEntryFiles({
     [PAPER_PATHS.agentEntry, jsonText(entry)],
     [
       PAPER_PATHS.agentInstructions,
-      mergeNextDevelopmentAgentInstructions(
+      mergePaperNextDevelopmentInstructions(
         mergePaperAgentEntryInstructions(currentAgents, {
           developmentRef: resolvedDevelopmentRef,
         }),
