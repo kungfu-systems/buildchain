@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "4.0.2-alpha.40",
+    "version": "4.0.2-alpha.42",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v4",
@@ -2399,7 +2399,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:d4bd0f2a1921bfed71a4d9104d45934555bde74a5c189f93ad79f37074c02b87",
-      "auditDigest": "sha256:44797c1b64e54806e19cf401300a27e587d6a2f0730ee7509eb84aefb9b60f74"
+      "auditDigest": "sha256:fbf3549e4f4987733f53ff362bf49d2001d56ae5842bbd1ed343c0fba40d9429"
     },
     {
       "contractVersion": 1,
@@ -5444,5 +5444,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:22e5073832fb10e5fb94102424b3651122a0dd5d8a40f792c0c9e8d3fc85427f"
+  "contractDigest": "sha256:a76b21a59e4dcb9ce2c4b5fcaa5d8002ac531eb48ee7b85a99436e642e173d0d"
 }

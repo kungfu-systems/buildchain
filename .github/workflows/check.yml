@@ -337,16 +337,29 @@ jobs:
         env:
           BUILDCHAIN_WORKING_DIRECTORY: ${{ inputs.working-directory }}
         run: |
-          config="${BUILDCHAIN_WORKING_DIRECTORY}/.buildchain/buildchain.toml"
-          if [ -f "$config" ] && grep -Eq '^[[:space:]]*type[[:space:]]*=[[:space:]]*"publication-artifact"[[:space:]]*$' "$config"; then
-            node .buildchain/runtime/bin/buildchain.mjs paper preflight \
-              --cwd "$BUILDCHAIN_WORKING_DIRECTORY" \
-              --offline \
-              --ci \
-              --json
-          else
-            echo "Buildchain Paper policy: not applicable"
-          fi
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import path from "node:path";
+          import { loadBuildchainConfig } from "./.buildchain/runtime/packages/core/buildchain-config.js";
+          import { spawnSyncCommand } from "./.buildchain/runtime/packages/core/spawn-command.js";
+          const cwd = path.resolve(process.env.BUILDCHAIN_WORKING_DIRECTORY || ".");
+          // Validate before deciding applicability; malformed config never skips policy.
+          const config = loadBuildchainConfig(cwd)?.config;
+          const governedPaper = fs.existsSync(path.join(cwd, ".buildchain/paper"))
+            || config?.publish?.kind === "npm-paper-package"
+            || (config?.project?.type === "publication-artifact"
+              && (!config.publication || config.publication.kind === "paper"));
+          if (governedPaper) {
+            const result = spawnSyncCommand(process.execPath, [
+              ".buildchain/runtime/bin/buildchain.mjs", "paper", "preflight",
+              "--cwd", cwd, "--offline", "--ci", "--json",
+            ], { stdio: "inherit" });
+            if (result.error) throw result.error;
+            process.exitCode = result.status ?? 1;
+          } else {
+            console.log("Buildchain Paper policy: not applicable");
+          }
+          NODE
 
       - name: Resolve check lifecycle mode
         id: lifecycle
