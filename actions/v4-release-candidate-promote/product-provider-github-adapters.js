@@ -595,5 +595,6 @@ export function createV4GithubProductAdapters(context) {
       );
       return ref?.object?.sha || "";
     },
+    resolvePromotedSha: async () => (await getRef(context.request.octokit, context.intent.repository, `refs/heads/${context.intent.targetRef}`))?.object?.sha || "",
   };
 }

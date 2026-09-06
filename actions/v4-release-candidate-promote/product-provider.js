@@ -389,7 +389,7 @@ export function sealedCandidateVersion(request) {
   return version;
 }
 
-function providerProjection({ transaction, targetRef, targetSha, intent, releaseSha, updates }) {
+function providerProjection({ transaction, targetRef, targetSha, intent, releaseSha, promotedSha, updates }) {
   const projection = {
     schema: "kungfu.buildchain.v4-product-provider-result/v1",
     target: { ref: targetRef, sha: targetSha },
@@ -400,7 +400,7 @@ function providerProjection({ transaction, targetRef, targetSha, intent, release
       state: transaction.state,
       finalizationNeeded: transaction.state !== "complete",
     },
-    promotedSha: String(releaseSha || ""),
+    promotedSha: String(promotedSha || ""),
     transaction: {
       transactionRoot: transaction.transactionRoot,
       stateRoot: transaction.stateRoot,
@@ -479,6 +479,7 @@ export async function applyProductPublication(request, plan) {
     targetSha: request.targetSha,
     intent: request.publicationIntent,
     releaseSha,
+    promotedSha: await runtime.resolvePromotedSha(),
     updates: runtime.updates,
   });
   if (projection.publication.state !== "complete" || projection.publication.finalizationNeeded)
@@ -491,7 +492,7 @@ export async function applyProductPublication(request, plan) {
         providerProjection: projection,
       },
     );
-  if (!/^[0-9a-f]{40}$/u.test(projection.publication.releaseSha))
-    throw new Error("product provider result omitted the exact public release SHA");
+  if (![projection.publication.releaseSha, projection.promotedSha].every((sha) => /^[0-9a-f]{40}$/u.test(sha)))
+    throw new Error("product provider result omitted the exact release or promotion SHA");
   return projection;
 }

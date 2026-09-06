@@ -27,14 +27,15 @@ const recovery = {
 test("publication coordinates retain the exact tag after the channel advances", async () => {
   for (const channel of ["stable", "alpha"]) {
     const version = channel === "stable" ? "4.0.2" : "4.0.2-alpha.44";
+    const targetRef = `${channel === "stable" ? "release" : channel}/v4/v4.0`;
     const refs = new Map([
-      [`heads/${channel}/v4/v4.0`, stateSha],
+      [`heads/${targetRef}`, stateSha],
       [`tags/v${version}`, sourceSha],
     ]);
     const runtime = createV4GithubProductAdapters({
       intent: {
         repository: "kungfu-systems/buildchain",
-        targetRef: `${channel}/v4/v4.0`,
+        targetRef,
         exactTag: `v${version}`,
       },
       request: {
@@ -52,8 +53,12 @@ test("publication coordinates retain the exact tag after the channel advances", 
       },
     });
     assert.equal(await runtime.resolveReleaseSha(), sourceSha);
+    assert.equal(await runtime.resolvePromotedSha(), stateSha);
     refs.delete(`tags/v${version}`);
     assert.equal(await runtime.resolveReleaseSha(), "");
+    assert.equal(await runtime.resolvePromotedSha(), stateSha);
+    refs.delete(`heads/${targetRef}`);
+    assert.equal(await runtime.resolvePromotedSha(), "");
   }
 });
 
