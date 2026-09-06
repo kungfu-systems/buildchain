@@ -97,7 +97,7 @@ function workspace(fixture) {
   } else {
     fs.writeFileSync(
       workflowPath,
-      `jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@${fixture.selector}\n`,
+      `jobs:\n  build:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@${fixture.selector}\n`,
     );
   }
   writeJson(
@@ -131,7 +131,7 @@ function evaluate(fixture, { scannerRoot = ROOT } = {}) {
     root: callerRoot,
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     resolvedRuntimeSha: selectedSha,
     policy,
     scannerRoot,
@@ -158,7 +158,7 @@ function certifyFromExactCaller(result, receipt = result.receipt, receiptRoot) {
     callerRoot: result.callerRoot,
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     resolvedRuntimeSha: result.receipt.invocation.resolvedRuntimeSha,
     stableLock: ".buildchain/contract-lock.json",
     alphaLock: ".buildchain/alpha-contract-lock.json",
@@ -185,7 +185,7 @@ test("source scan treats materialized Buildchain runtime actions as transient", 
     root: callerRoot,
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     resolvedRuntimeSha: STABLE_SHA,
     policy,
     scannerRoot: ROOT,
@@ -203,13 +203,13 @@ test("caller source and channel disambiguate repeated public targets", () => {
   const callerRoot = workspace(fixtures.cases[0]);
   fs.appendFileSync(
     path.join(callerRoot, ".github/workflows/build.yml"),
-    "  alpha:\n    uses: kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@v4-alpha\n",
+    "  alpha:\n    uses: kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha\n",
   );
   const result = scanV4FloatingConsumerPolicy({
     root: callerRoot,
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     invocationSourcePath:
       "kungfu-systems/consumer/.github/workflows/build.yml@refs/heads/main",
     expectedInvocationChannel: "stable",
@@ -255,7 +255,7 @@ test("receipt verification and external certification fail closed on stale roots
     receiptRoot: result.receiptRoot,
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     resolvedRuntimeSha: STABLE_SHA,
   });
   assert.equal(verified.ok, true);
@@ -325,7 +325,7 @@ test("external certification rejects a self-authored certification document", ()
     callerRoot: result.callerRoot,
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     resolvedRuntimeSha: STABLE_SHA,
     stableLock: ".buildchain/contract-lock.json",
     alphaLock: ".buildchain/alpha-contract-lock.json",
@@ -394,7 +394,7 @@ test("an old Buildchain runtime cannot self-authorize without a rooted receipt",
     receiptRoot: "",
     repository: "kungfu-systems/consumer",
     sourceSha: SOURCE_SHA,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     resolvedRuntimeSha: STABLE_SHA,
   });
   assert.equal(certification.ok, false);
@@ -417,7 +417,7 @@ test("v4 release candidate passports require and hash the source/runtime-bound r
     runtimeSha,
     workflowShellRef: "v4-alpha",
     runtimeOverride: true,
-    invokedWorkflow: "v4-stage-capsule-canary.yml",
+    invokedWorkflow: "public-build-stage-capsule-canary.yml",
     invocationSourcePath: ".github/workflows/build.yml",
     sourceTreeHash: ROOT,
     runtimeTreeHash: () => ROOT,

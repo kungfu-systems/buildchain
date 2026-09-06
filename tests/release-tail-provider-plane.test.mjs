@@ -108,6 +108,20 @@ test("declaration parser rejects executable data and identity drift", () => {
     () => parseReleaseTailDeclaration(drifted),
     /capabilityId must match/u,
   );
+
+  const invalidPattern = declaration();
+  invalidPattern.capabilities[0].channelPolicy.tagPattern = "[";
+  assert.throws(
+    () => parseReleaseTailDeclaration(invalidPattern),
+    /tagPattern is not a valid expression/u,
+  );
+
+  const nonMatchingPattern = declaration();
+  nonMatchingPattern.capabilities[0].channelPolicy.tagPattern = "^v5";
+  assert.throws(
+    () => parseReleaseTailDeclaration(nonMatchingPattern),
+    /tagPattern does not match subject\.tag/u,
+  );
 });
 
 test("effect plans are rooted and reject post-compilation tampering", () => {
@@ -119,6 +133,10 @@ test("effect plans are rooted and reject post-compilation tampering", () => {
     () => createReleaseTailTransaction(tampered),
     /operationId mismatch|effectRoot mismatch|planRoot mismatch/u,
   );
+
+  const extraField = structuredClone(plan);
+  extraField.effects[0].unexpected = true;
+  assert.equal(validateReleaseTailEffectPlan(extraField).valid, false);
 });
 
 test("all capabilities settle through one transaction and standardized envelopes", async () => {
@@ -166,6 +184,57 @@ test("effect success with a lost response completes from post-effect readback", 
   assert.equal(result.state, "complete");
   assert.equal(memory.calls.get("artifact.publish:apply"), 1);
   assert.equal(result.operations[0].receipt.action, "applied-and-observed");
+});
+
+test("exhausted reconciliation preserves the transient apply failure code", async () => {
+  const input = declaration();
+  const memory = memoryAdapters(input, {
+    "artifact.publish": {
+      apply() {
+        throw new ReleaseTailProviderError("provider mutation rejected", {
+          code: "protected-ref-pr-create-failed",
+          classification: "transient",
+        });
+      },
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(input),
+    { adapters: memory.adapters },
+  );
+  assert.equal(result.state, "repair-required");
+  assert.equal(result.failure.code, "protected-ref-pr-create-failed");
+  assert.equal(memory.calls.get("artifact.publish:apply"), 1);
+});
+
+test("an attempted effect is reconciled by readback without repeating the mutation", async () => {
+  const input = declaration();
+  let readbacksAfterEffect = 0;
+  const memory = memoryAdapters(input, {
+    "artifact.publish": {
+      readback(effect, state) {
+        if (!state.has(effect.operationId))
+          return { outcome: "absent", providerCode: "memory-absent" };
+        readbacksAfterEffect += 1;
+        if (readbacksAfterEffect < 3)
+          return { outcome: "absent", providerCode: "eventual-consistency" };
+        return {
+          outcome: "observed",
+          subjectRoot: effect.subjectRoot,
+          targetRoot: state.get(effect.operationId),
+          evidenceRoots: [effect.targetRoot],
+          providerCode: "memory-observed",
+        };
+      },
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(input),
+    { adapters: memory.adapters },
+  );
+  assert.equal(result.state, "complete");
+  assert.equal(memory.calls.get("artifact.publish:apply"), 1);
+  assert.equal(memory.calls.get("artifact.publish:readback"), 4);
 });
 
 test("duplicate invocation returns the settled transaction without provider effects", async () => {

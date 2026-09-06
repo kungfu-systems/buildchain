@@ -51,7 +51,7 @@ function config() {
         package: "@kungfu-tech/buildchain",
         lockPath: "buildchain.upstreams/buildchain.release.json",
         distTags: { alpha: "alpha", release: "latest" },
-        workflowPaths: [".github/workflows/buildchain-ref-promotion.yml"],
+        workflowPaths: [".github/workflows/self-release-promote.yml"],
         workflowRefs: ["refs/heads/dev/v3/v3.0"],
       },
     ],
@@ -89,7 +89,7 @@ function attestations() {
           workflow: {
             ref: "refs/heads/dev/v3/v3.0",
             repository: "https://github.com/kungfu-systems/buildchain",
-            path: ".github/workflows/buildchain-ref-promotion.yml",
+            path: ".github/workflows/self-release-promote.yml",
           },
         },
         resolvedDependencies: [

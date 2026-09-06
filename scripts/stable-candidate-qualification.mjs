@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const DEFAULTS = {
-  buildWorkflowFile: "build-surface-fixture.yml",
+  buildWorkflowFile: "self-build-fixture.yml",
   buildWorkflowName: "Build Surface Fixture",
   canaryRepository: "kungfu-systems/site-libkungfu-dev",
   canaryWorkflowFile: "buildchain-stable-canary.yml",

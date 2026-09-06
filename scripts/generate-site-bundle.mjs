@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readWorkflowTaxonomy, workflowPath } from "./workflow-taxonomy.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -755,9 +756,7 @@ function buildSiteBundle() {
     timestampFieldsParticipateInArtifactDigest: true,
     artifactDigestScope: "npm package dist/site JSON files",
   });
-
   const cliRegistry = createCliRegistry(packageJson);
-
   const manualRegistry = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-agent-manual-registry",
@@ -805,7 +804,6 @@ function buildSiteBundle() {
     ],
     guidance: "Agent consumers should use this registry to find packaged Buildchain manuals before inferring behavior from workflow snippets or release notes.",
   };
-
   const pageRegistry = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-site-page-registry",
@@ -821,14 +819,15 @@ function buildSiteBundle() {
     capabilityGroups: CAPABILITY_GROUPS.map((group) => group.id),
     pages,
   };
-
   const nodeApiRegistry = createSiteNodeApiRegistry({ root, packageJson, nodeApiMeta, sha256File, publicSurfaceLifecycle });
-
+  const taxonomy = readWorkflowTaxonomy(root);
   const workflowRegistry = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-workflow-registry",
     workflowSource: ".github/workflows reverse input enumeration",
     workflows: enumerateWorkflowInputs({ root }).map((entry) => {
+      const classification = taxonomy?.entries.find((item) => workflowPath(item) === entry.path || item.compatibility?.path === entry.path);
+      const semanticId = classification?.id || entry.id;
       const surfaceById = new Map([
         ["build", "channel-build-router"],
         [".build", "reusable-build"],
@@ -878,18 +877,19 @@ function buildSiteBundle() {
         ["engineering-housekeeper-monthly", "preview"],
         ["self-hosted-runner-smoke", "compatibility-fixture"],
       ]);
-      const engineeringHousekeeper = entry.id.startsWith("engineering-housekeeper");
+      const engineeringHousekeeper = semanticId.startsWith("engineering-housekeeper");
       return {
         ...entry,
-        surface: surfaceById.get(entry.id) || (entry.path.includes("/.") ? "reusable-workflow" : "repository-workflow"),
+        ...(classification ? { taxonomy: { id: classification.id, role: classification.role, category: classification.category, purpose: classification.purpose, status: classification.status, canonicalPath: workflowPath(classification), ...(classification.role === "self" && classification.migration ? { contractPath: classification.migration.previousPath } : {}), compatibilityAlias: entry.path !== workflowPath(classification) } } : {}),
+        surface: surfaceById.get(semanticId) || (entry.path.includes("/.") ? "reusable-workflow" : "repository-workflow"),
         capabilityGroup: workflowCapabilityGroup({
-          ...entry,
-          status: statusById.get(entry.id) || "active",
+          ...entry, id: semanticId,
+          status: statusById.get(semanticId) || "active",
         }),
-        status: statusById.get(entry.id) || "active",
+        status: statusById.get(semanticId) || "active",
         ...publicSurfaceLifecycle({
           owner: "buildchain-workflows",
-          maturity: statusById.get(entry.id) || "active",
+          maturity: statusById.get(semanticId) || "active",
           introducedVersion: engineeringHousekeeper ? packageJson.version : undefined,
           nonDuplicationRationale: engineeringHousekeeper
             ? "One reusable policy and evidence boundary owns Engineering Housekeeper execution; scheduled callers contain cadence values only."

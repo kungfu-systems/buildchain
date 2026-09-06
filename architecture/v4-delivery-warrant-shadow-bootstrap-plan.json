@@ -9,7 +9,7 @@
     "legacyCore": "packages/core/dev-delivery-warrant.js",
     "legacyStore": "scripts/dev-delivery-warrant.mjs",
     "legacyWorkflows": [
-      ".github/workflows/buildchain-dev-delivery.yml",
+      ".github/workflows/self-ops-dev-delivery.yml",
       ".github/workflows/dev-delivery-warrant-close.yml",
       ".github/workflows/dev-delivery-warrant-cancel.yml"
     ]

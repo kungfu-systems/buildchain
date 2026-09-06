@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { macosJitRunnerLabel } from "./aws-macos-jit-core.mjs";
 import { windowsJitRunnerLabel } from "./aws-windows-jit-core.mjs";
+export { writeGitHubOutputs } from "./github-output.mjs";
 export const RUNNER_PRESETS = Object.freeze({
   "github-hosted": [
     { id: "linux-x64", name: "Linux x64", platform: "linux", runner: '["ubuntu-24.04"]', capabilities: ["node"] },
@@ -1199,20 +1200,6 @@ export function validateExpectedArtifacts({ expected, files, summary }) {
     addCheck("requiredPath", paths.has(requiredPath), requiredPath);
   }
   return { ok: true, source: "expected-artifacts-json", checks };
-}
-
-export function writeGitHubOutputs(outputs) {
-  const outputPath = process.env.GITHUB_OUTPUT;
-  if (!outputPath) {
-    for (const [key, value] of Object.entries(outputs)) {
-      console.log(`${key}=${value}`);
-    }
-    return;
-  }
-  const lines = Object.entries(outputs).map(
-    ([key, value]) => `${key}=${value}`,
-  );
-  fs.appendFileSync(outputPath, `${lines.join("\n")}\n`);
 }
 
 export function findJsonFiles(root) {

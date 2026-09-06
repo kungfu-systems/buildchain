@@ -1,0 +1,61 @@
+name: Next Development Review
+
+on:
+  workflow_run:
+    workflows: ["Verify"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: next-development-review-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'pull_request' &&
+          github.event.workflow_run.head_repository.full_name == github.repository &&
+          startsWith(github.event.workflow_run.head_branch, 'chore/next-development/') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    env:
+      VERIFY_RUN_ID: ${{ github.event.workflow_run.id }}
+    steps:
+      - name: Checkout protected default branch runtime
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+      - name: Install protected verification dependencies without lifecycle scripts
+        run: corepack pnpm@11.7.0 install --prod --frozen-lockfile --ignore-scripts
+      - name: Regenerate exact version delta and verify completed publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/next-development-review.mjs verify
+      - name: Approve only the independently verified exact head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILDCHAIN_APPROVAL_TOKEN: ${{ secrets.BUILDCHAIN_APPROVAL_TOKEN }}
+        run: node scripts/next-development-review.mjs approve
+      - name: Retain exact-head review readback
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: next-development-review-${{ github.event.workflow_run.id }}
+          path: .buildchain/next-development-review.json
+          include-hidden-files: true
+          if-no-files-found: error
+      - name: Enqueue the reviewed exact head through protected merge queue
+        env:
+          GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+        run: node scripts/next-development-review.mjs enqueue

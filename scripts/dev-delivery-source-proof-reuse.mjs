@@ -479,6 +479,7 @@ function cliInput(args) {
 export function sourceProofReuseCli(args = process.argv.slice(2)) {
   const [command = "", ...rest] = args;
   const input = cliInput(rest);
+  if (command === "predicates") return sourceQualificationPredicates(input);
   if (command === "seal") {
     const proof = sealSourceQualificationProof(input);
     writeJson(input.outputPath, proof);
@@ -527,7 +528,7 @@ export function sourceProofReuseCli(args = process.argv.slice(2)) {
     return decision;
   }
   throw new Error(
-    "usage: dev-delivery-source-proof-reuse.mjs <seal|verify> [options]",
+    "usage: dev-delivery-source-proof-reuse.mjs <predicates|seal|verify> [options]",
   );
 }
 

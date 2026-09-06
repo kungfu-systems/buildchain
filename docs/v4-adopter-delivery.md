@@ -110,12 +110,12 @@ artifact_profile_selector = "package"
 ```
 
 The public reusable workflow is
-`kungfu-systems/buildchain/.github/workflows/v4-adopter-delivery.yml@v4` for
+`kungfu-systems/buildchain/.github/workflows/public-build-adopter-qualification.yml@v4` for
 stable use and `@v4-alpha` during prerelease evaluation. It resolves the exact
 called-workflow SHA, enforces floating selector plus dual-lock consumer
 admission, and runs the same CLI on Linux, macOS, and Windows. Buildchain
 dogfoods it through the thin
-[`v4-adopter-delivery-dogfood.yml`](../.github/workflows/v4-adopter-delivery-dogfood.yml)
+[`self-build-adopter-dogfood.yml`](../.github/workflows/self-build-adopter-dogfood.yml)
 caller, which contains no steps or local orchestration and persists only the
 floating `@v4-alpha` selector.
 

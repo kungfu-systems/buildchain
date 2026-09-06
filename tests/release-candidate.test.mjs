@@ -476,7 +476,7 @@ test("release candidate resolver selects same-repo merged PR run and paired arti
   const titledRun = selectReleaseCandidateRun({
     pullRequest,
     runs: [
-      { id: 3, name: ".github/workflows/build-surface-fixture.yml", display_title: "Prepare v2.4.7-alpha.1", event: "pull_request", status: "completed", conclusion: "success", updated_at: "2026-07-04T03:00:00.000Z", pull_requests: [{ number: 11 }] },
+      { id: 3, name: ".github/workflows/self-build-fixture.yml", display_title: "Prepare v2.4.7-alpha.1", event: "pull_request", status: "completed", conclusion: "success", updated_at: "2026-07-04T03:00:00.000Z", pull_requests: [{ number: 11 }] },
     ],
   });
   assert.equal(titledRun.id, 3);
@@ -669,7 +669,7 @@ test("release candidate resolver skips newer successful run without passport art
         },
       ]);
     }
-    if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+    if (url.includes("actions/workflows/self-build-fixture.yml/runs")) {
       return jsonResponse({
         workflow_runs: [
           {
@@ -715,7 +715,7 @@ test("release candidate resolver skips newer successful run without passport art
     repository: "kungfu-systems/buildchain",
     targetRef: "release/v2/v2.5",
     targetSha,
-    workflowFile: "build-surface-fixture.yml",
+    workflowFile: "self-build-fixture.yml",
     workflowName: "Build Surface Fixture",
     artifactName: "libnode-shaped",
     fetchImpl,
@@ -752,7 +752,7 @@ test("release candidate resolver waits for the exact channel PR run", async () =
         },
       ]);
     }
-    if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+    if (url.includes("actions/workflows/self-build-fixture.yml/runs")) {
       workflowQueries += 1;
       if (workflowQueries === 1) {
         return jsonResponse({
@@ -797,7 +797,7 @@ test("release candidate resolver waits for the exact channel PR run", async () =
     repository: "kungfu-systems/buildchain",
     targetRef: "alpha/v2/v2.13",
     targetSha,
-    workflowFile: "build-surface-fixture.yml",
+    workflowFile: "self-build-fixture.yml",
     workflowName: "Build Surface Fixture",
     artifactName: "libnode-shaped",
     fetchImpl,
@@ -856,7 +856,7 @@ test("release candidate resolver traces a major gate through its exact release-l
         },
       ]);
     }
-    if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+    if (url.includes("actions/workflows/self-build-fixture.yml/runs")) {
       return jsonResponse({
         workflow_runs: [
           {
@@ -886,7 +886,7 @@ test("release candidate resolver traces a major gate through its exact release-l
     repository: "kungfu-systems/buildchain",
     targetRef: "publish-gate/major",
     targetSha: majorSha,
-    workflowFile: "build-surface-fixture.yml",
+    workflowFile: "self-build-fixture.yml",
     workflowName: "Build Surface Fixture",
     artifactName: "libnode-shaped",
     fetchImpl,
@@ -1012,22 +1012,21 @@ test("release candidate resolver selects payload artifacts and generates publish
   ]);
 });
 
-test("release candidate resolver selects unique explicit GitHub Release assets", () => {
-  const workspace = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-rc-release-assets-"),
-  );
+test("release candidate resolver deduplicates byte-identical explicit GitHub Release assets", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-rc-release-assets-"));
   try {
     fs.mkdirSync(path.join(workspace, "linux"), { recursive: true });
-    fs.mkdirSync(path.join(workspace, "macos"), { recursive: true });
+    fs.mkdirSync(path.join(workspace, "macos", "signed"), { recursive: true });
     fs.writeFileSync(path.join(workspace, "linux", "kungfu-linux.tar.gz"), "a");
     fs.writeFileSync(path.join(workspace, "macos", "kungfu-macos.tar.gz"), "b");
+    fs.writeFileSync(path.join(workspace, "macos", "signed", "kungfu-macos.tar.gz"), "b");
     fs.writeFileSync(path.join(workspace, "linux", "manifest.json"), "{}");
     assert.deepEqual(
       selectReleaseAssetPaths({
         payloadRoot: workspace,
         patterns: ["kungfu-*.tar.gz"],
-      }).map((filePath) => path.basename(filePath)),
-      ["kungfu-linux.tar.gz", "kungfu-macos.tar.gz"],
+      }),
+      [path.join(workspace, "linux", "kungfu-linux.tar.gz"), path.join(workspace, "macos", "kungfu-macos.tar.gz")],
     );
     assert.throws(
       () =>
@@ -1037,6 +1036,7 @@ test("release candidate resolver selects unique explicit GitHub Release assets",
         }),
       /matched no files/,
     );
+
     fs.writeFileSync(path.join(workspace, "macos", "kungfu-linux.tar.gz"), "c");
     assert.throws(
       () =>
@@ -1218,7 +1218,7 @@ test("workflow friction classifier falls back when configured workflow file is m
         },
       ]);
     }
-    if (url.includes("actions/workflows/build-surface-fixture.yml/runs")) {
+    if (url.includes("actions/workflows/self-build-fixture.yml/runs")) {
       return jsonResponse({ message: "Not Found" }, false, 404);
     }
     if (url.includes("actions/runs?event=pull_request")) {
@@ -1254,7 +1254,7 @@ test("workflow friction classifier falls back when configured workflow file is m
       repository: "kungfu-systems/libnode",
       targetSha,
       targetRef: "alpha/v22/v22.22",
-      buildWorkflowFile: "build-surface-fixture.yml",
+      buildWorkflowFile: "self-build-fixture.yml",
       buildWorkflowName: "Build",
       releaseCandidateOutcome: "failure",
       outputDir: workspace,
@@ -1266,7 +1266,7 @@ test("workflow friction classifier falls back when configured workflow file is m
     assert.equal(result.relatedRuns.length, 1);
     assert.equal(result.heavyBuilds.length, 1);
     assert.match(result.relatedRuns[0], /Build/);
-    assert.match(result.diagnosis, /workflow file build-surface-fixture\.yml was not found/);
+    assert.match(result.diagnosis, /workflow file self-build-fixture\.yml was not found/);
     assert.match(result.diagnosis, /fell back to repository pull_request workflow runs/);
     assert.doesNotMatch(result.summary, /auto-classification did not complete/);
 
@@ -1274,7 +1274,7 @@ test("workflow friction classifier falls back when configured workflow file is m
       repository: "kungfu-systems/libnode",
       targetSha,
       targetRef: "alpha/v22/v22.22",
-      buildWorkflowFile: "build-surface-fixture.yml",
+      buildWorkflowFile: "self-build-fixture.yml",
       buildWorkflowName: "Build",
       releaseCandidateOutcome: "success",
       releaseCandidateDiagnosis: "Resolved the exact PR-stage release candidate.",

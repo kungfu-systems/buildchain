@@ -1,28 +1,29 @@
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
-
-const COMMIT_IDENTITY = {
-  name: "Keren Dong",
-  email: "keren.dong@kungfu.link",
-};
+const COMMIT_IDENTITY = { name: "Keren Dong", email: "keren.dong@kungfu.link" };
 const SIGN_OFF = `Signed-off-by: ${COMMIT_IDENTITY.name} <${COMMIT_IDENTITY.email}>`;
-
 function providerError(message, releaseTailClass, releaseTailCode) {
   return Object.assign(new Error(message), {
     releaseTailClass,
     releaseTailCode,
   });
 }
-
+function transientMutationError(error, code) {
+  const status = Number(error?.status || error?.response?.status || 0);
+  return providerError(
+    `${code} failed: ${error?.message || "provider mutation failed"}`,
+    "transient",
+    status ? `${code}-${status}` : code,
+  );
+}
 function notFound(error) {
   return error?.status === 404 || error?.response?.status === 404;
 }
-
+const githubMutation = (context, operation, readback) => context.githubMutation?.(operation, readback) || operation();
 function splitRepository(repository) {
   const match = String(repository || "").match(/^([^/\s]+)\/([^/\s]+)$/u);
   if (!match) throw new Error(`invalid publication repository: ${repository}`);
   return { owner: match[1], repo: match[2] };
 }
-
 function operationFor(plan, effect) {
   const operation = plan.operations.find(
     ({ id }) => id === effect.capabilityId,
@@ -39,7 +40,6 @@ function operationFor(plan, effect) {
     );
   return operation;
 }
-
 function observed(effect, evidence) {
   return {
     outcome: "observed",
@@ -49,19 +49,13 @@ function observed(effect, evidence) {
     evidenceRoots: [releaseTailRoot(evidence)],
   };
 }
-
 function absent(code) {
   return { outcome: "absent", providerCode: code, evidenceRoots: [] };
 }
-
 function conflict(code) {
   return { outcome: "conflict", providerCode: code, evidenceRoots: [] };
 }
-
-function refName(value) {
-  return String(value || "").replace(/^refs\//u, "");
-}
-
+const refName = (value) => String(value || "").replace(/^refs\//u, "");
 async function getRef(octokit, repository, ref) {
   const { owner, repo } = splitRepository(repository);
   try {
@@ -76,14 +70,20 @@ async function getRef(octokit, repository, ref) {
     throw error;
   }
 }
-
-async function createRef(octokit, repository, ref, sha) {
+async function createRef(context, repository, ref, sha) {
   const { owner, repo } = splitRepository(repository);
   try {
-    await octokit.rest.git.createRef({ owner, repo, ref, sha });
+    await githubMutation(context, () =>
+      context.request.mutationOctokit.rest.git.createRef({
+        owner,
+        repo,
+        ref,
+        sha,
+      }),
+    );
   } catch (error) {
     if (!notFound(error) && error?.status !== 422) throw error;
-    const existing = await getRef(octokit, repository, ref);
+    const existing = await getRef(context.request.octokit, repository, ref);
     if (existing?.object?.sha !== sha)
       throw providerError(
         `${ref} exists at ${existing?.object?.sha || "<unknown>"}, not ${sha}`,
@@ -92,23 +92,45 @@ async function createRef(octokit, repository, ref, sha) {
       );
   }
 }
-
-async function commitContains(octokit, repository, ancestor, current) {
+export async function commitContainsReleaseState(
+  octokit,
+  repository,
+  ancestor,
+  current,
+) {
   if (ancestor === current) return true;
   const { owner, repo } = splitRepository(repository);
-  if (typeof octokit.rest.repos?.compareCommitsWithBasehead !== "function")
-    return false;
-  const { data } = await octokit.rest.repos.compareCommitsWithBasehead({
-    owner,
-    repo,
-    basehead: `${ancestor}...${current}`,
-  });
-  return data.status === "ahead" || data.status === "identical";
+  if (typeof octokit.rest.repos?.compareCommitsWithBasehead === "function") {
+    const { data } = await octokit.rest.repos.compareCommitsWithBasehead({
+      owner,
+      repo,
+      basehead: `${ancestor}...${current}`,
+    });
+    if (data.status === "ahead" || data.status === "identical") return true;
+  }
+  if (typeof octokit.rest.git?.getCommit !== "function") return false;
+  const [{ data: ancestorCommit }, { data: currentCommit }] = await Promise.all(
+    [
+      octokit.rest.git.getCommit({ owner, repo, commit_sha: ancestor }),
+      octokit.rest.git.getCommit({ owner, repo, commit_sha: current }),
+    ],
+  );
+  return Boolean(
+    ancestorCommit.tree?.sha &&
+    ancestorCommit.tree.sha === currentCommit.tree?.sha,
+  );
 }
-
 async function versionStateReadback(context, effect) {
-  const { request, plan, versionFiles } = context;
+  const { request, plan, versionFiles, intent } = context;
   const operation = operationFor(plan, effect);
+  if (intent.channel === "alpha")
+    return observed(effect, {
+      kind: "github-version-state",
+      stateRef: "",
+      releaseSha: operation.target.sourceSha,
+      files: [],
+      materialization: "sealed-candidate",
+    });
   const state = await getRef(
     request.octokit,
     operation.target.repository,
@@ -154,7 +176,36 @@ async function versionStateReadback(context, effect) {
     files: versionFiles.map(({ path }) => path).sort(),
   });
 }
-
+async function createVersionStateTree(
+  context,
+  repository,
+  baseTree,
+  versionFiles,
+) {
+  if (versionFiles.length === 0) return baseTree;
+  const { owner, repo } = splitRepository(repository);
+  const tree = [];
+  for (const file of versionFiles) {
+    const { data: blob } = await githubMutation(context, () =>
+      context.request.mutationOctokit.rest.git.createBlob({
+        owner,
+        repo,
+        content: file.content,
+        encoding: "utf-8",
+      }),
+    );
+    tree.push({ path: file.path, mode: "100644", type: "blob", sha: blob.sha });
+  }
+  const { data } = await githubMutation(context, () =>
+    context.request.mutationOctokit.rest.git.createTree({
+      owner,
+      repo,
+      base_tree: baseTree,
+      tree,
+    }),
+  );
+  return data.sha;
+}
 async function versionStateApply(context, effect) {
   const { request, plan, versionFiles, intent, updates } = context;
   const operation = operationFor(plan, effect);
@@ -172,37 +223,29 @@ async function versionStateApply(context, effect) {
     repo,
     commit_sha: operation.target.sourceSha,
   });
-  const tree = [];
-  for (const file of versionFiles) {
-    const { data: blob } = await request.mutationOctokit.rest.git.createBlob({
-      owner,
-      repo,
-      content: file.content,
-      encoding: "utf-8",
-    });
-    tree.push({ path: file.path, mode: "100644", type: "blob", sha: blob.sha });
-  }
-  const { data: nextTree } = await request.mutationOctokit.rest.git.createTree({
-    owner,
-    repo,
-    base_tree: baseCommit.tree.sha,
-    tree,
-  });
+  const nextTree = await createVersionStateTree(
+    context,
+    operation.target.repository,
+    baseCommit.tree.sha,
+    versionFiles,
+  );
   const identity = {
     ...COMMIT_IDENTITY,
     date: operation.target.sourceTimestamp,
   };
-  const { data: commit } = await request.mutationOctokit.rest.git.createCommit({
-    owner,
-    repo,
-    message: `chore(release): prepare ${intent.exactTag}\n\n${SIGN_OFF}`,
-    tree: nextTree.sha,
-    parents: [operation.target.sourceSha],
-    author: identity,
-    committer: identity,
-  });
+  const { data: commit } = await githubMutation(context, () =>
+    request.mutationOctokit.rest.git.createCommit({
+      owner,
+      repo,
+      message: `chore(release): prepare ${intent.exactTag}\n\n${SIGN_OFF}`,
+      tree: nextTree,
+      parents: [operation.target.sourceSha],
+      author: identity,
+      committer: identity,
+    }),
+  );
   await createRef(
-    request.mutationOctokit,
+    context,
     operation.target.repository,
     operation.target.stateRef,
     commit.sha,
@@ -214,7 +257,6 @@ async function versionStateApply(context, effect) {
     version: intent.version,
   });
 }
-
 async function resolvedVersionStateSha(context, operation) {
   const ref = await getRef(
     context.request.octokit,
@@ -229,11 +271,13 @@ async function resolvedVersionStateSha(context, operation) {
     );
   return ref.object.sha;
 }
-
 async function refsReadback(context, effect) {
   const { request, plan, intent } = context;
   const operation = operationFor(plan, effect);
-  const stateSha = await resolvedVersionStateSha(context, operation);
+  const stateSha =
+    intent.channel === "alpha"
+      ? operation.target.sourceSha
+      : await resolvedVersionStateSha(context, operation);
   let channelSha = "";
   for (const reference of operation.target.references) {
     const ref = await getRef(
@@ -248,7 +292,7 @@ async function refsReadback(context, effect) {
         return conflict("exact-release-tag-conflict");
     } else if (reference.ref === `refs/heads/${intent.targetRef}`) {
       if (
-        !(await commitContains(
+        !(await commitContainsReleaseState(
           request.octokit,
           operation.target.repository,
           stateSha,
@@ -259,7 +303,7 @@ async function refsReadback(context, effect) {
       channelSha = actual;
     } else if (reference.ref.startsWith("refs/heads/")) {
       if (
-        !(await commitContains(
+        !(await commitContainsReleaseState(
           request.octokit,
           operation.target.repository,
           stateSha,
@@ -278,25 +322,25 @@ async function refsReadback(context, effect) {
     references: operation.target.references,
   });
 }
-
 async function ensureGeneratedCheck(context, repository, branch, sha) {
   const { request, intent } = context;
   if (typeof request.octokit.rest.checks?.create !== "function") return;
   const { owner, repo } = splitRepository(repository);
-  await request.octokit.rest.checks.create({
-    owner,
-    repo,
-    name: request.requiredStatusCheck || "check",
-    head_sha: sha,
-    status: "completed",
-    conclusion: "success",
-    output: {
-      title: "Buildchain rooted product version state",
-      summary: `Verified ${intent.exactTag} before converging ${branch}.`,
-    },
-  });
+  await githubMutation(context, () =>
+    request.octokit.rest.checks.create({
+      owner,
+      repo,
+      name: `Version-state projection / ${request.requiredStatusCheck || "check"}`,
+      head_sha: sha,
+      status: "completed",
+      conclusion: "success",
+      output: {
+        title: "Buildchain rooted product version state",
+        summary: `Verified ${intent.exactTag} before converging ${branch}.`,
+      },
+    }),
+  );
 }
-
 async function openProtectedRefPullRequest(
   context,
   repository,
@@ -304,92 +348,179 @@ async function openProtectedRefPullRequest(
   sha,
   error,
 ) {
-  const { request, intent, updates } = context;
+  const { request, intent, updates, versionFiles } = context;
   const { owner, repo } = splitRepository(repository);
-  const head = `buildchain/v4-product-pr/${branch.replaceAll("/", "-")}/${sha.slice(0, 12)}`;
-  await createRef(
-    request.mutationOctokit,
+  const current = await getRef(
+    request.octokit,
     repository,
-    `refs/heads/${head}`,
-    sha,
+    `refs/heads/${branch}`,
   );
-  const existing = await request.mutationOctokit.rest.pulls.list({
-    owner,
-    repo,
-    state: "open",
-    base: branch,
-    head: `${owner}:${head}`,
-  });
-  if (!existing.data?.[0])
-    await request.mutationOctokit.rest.pulls.create({
+  if (!current?.object?.sha)
+    throw providerError(
+      `protected branch ${branch} disappeared before pull request creation`,
+      "transient",
+      "protected-ref-absent",
+    );
+  const [{ data: stateCommit }, { data: currentCommit }] = await Promise.all([
+    request.octokit.rest.git.getCommit({ owner, repo, commit_sha: sha }),
+    request.octokit.rest.git.getCommit({
       owner,
       repo,
-      head,
-      base: branch,
-      title: `Prepare ${intent.exactTag}`,
-      body:
-        `Converge the rooted v4 product publication state for ${intent.exactTag}.\n\n` +
-        `Direct protected ref update was rejected: ${error?.message || "provider policy"}`,
-    });
-  updates.push({ action: "pending-protected-ref-pr", ref: branch, sha });
+      commit_sha: current.object.sha,
+    }),
+  ]);
+  if (!stateCommit.tree?.sha || !currentCommit.tree?.sha)
+    throw providerError(
+      "protected ref finalization omitted a required tree",
+      "conflict",
+      "protected-ref-tree-absent",
+    );
+  const pullRequestTree = await createVersionStateTree(
+    context,
+    repository,
+    currentCommit.tree.sha,
+    versionFiles,
+  );
+  const identity = {
+    ...COMMIT_IDENTITY,
+    date: intent.sourceTimestamp,
+  };
+  const { data: pullRequestCommit } = await githubMutation(context, () =>
+    request.mutationOctokit.rest.git.createCommit({
+      owner,
+      repo,
+      message:
+        `chore(release): prepare ${intent.exactTag} for ${branch}\n\n` +
+        SIGN_OFF,
+      tree: pullRequestTree,
+      parents: [current.object.sha, sha],
+      author: identity,
+      committer: identity,
+    }),
+  );
+  const head =
+    `chore/v4-product-pr/${branch.replaceAll("/", "-")}/` +
+    `${sha.slice(0, 12)}-${current.object.sha.slice(0, 12)}-` +
+    pullRequestCommit.sha.slice(0, 12);
+  await createRef(
+    context,
+    repository,
+    `refs/heads/${head}`,
+    pullRequestCommit.sha,
+  );
+  await ensureGeneratedCheck(
+    context,
+    repository,
+    branch,
+    pullRequestCommit.sha,
+  );
+  const pullRequest = {
+    owner,
+    repo,
+    head,
+    base: branch,
+    title: `Prepare ${intent.exactTag}`,
+    body:
+      `Converge the rooted v4 product publication state for ${intent.exactTag}.\n\n` +
+      `Direct protected ref update was rejected: ${error?.message || "provider policy"}`,
+  };
+  await githubMutation(
+    context,
+    () => request.mutationOctokit.rest.pulls.create(pullRequest),
+    async () => {
+      const existing = await request.mutationOctokit.rest.pulls.list({
+        owner,
+        repo,
+        state: "open",
+        base: branch,
+        head: `${owner}:${head}`,
+      });
+      return existing.data?.[0] ? { data: existing.data[0] } : null;
+    },
+  );
+  updates.push({
+    action: "pending-protected-ref-pr",
+    ref: branch,
+    sha: pullRequestCommit.sha,
+  });
 }
-
 async function convergeBranch(context, repository, ref, sha) {
   const { request, updates } = context;
   const branch = ref.replace(/^refs\/heads\//u, "");
   const current = await getRef(request.octokit, repository, ref);
   if (
     current?.object?.sha &&
-    (await commitContains(request.octokit, repository, sha, current.object.sha))
+    (await commitContainsReleaseState(
+      request.octokit,
+      repository,
+      sha,
+      current.object.sha,
+    ))
   )
     return true;
   await ensureGeneratedCheck(context, repository, branch, sha);
   const { owner, repo } = splitRepository(repository);
   try {
     if (current)
-      await request.mutationOctokit.rest.git.updateRef({
-        owner,
-        repo,
-        ref: refName(ref),
-        sha,
-        force: false,
-      });
-    else await createRef(request.mutationOctokit, repository, ref, sha);
+      await githubMutation(context, () =>
+        request.mutationOctokit.rest.git.updateRef({
+          owner,
+          repo,
+          ref: refName(ref),
+          sha,
+          force: false,
+        }),
+      );
+    else await createRef(context, repository, ref, sha);
     updates.push({ action: "converged-protected-ref", ref: branch, sha });
     return true;
   } catch (error) {
     if (![403, 409, 422].includes(error?.status || error?.response?.status))
       throw error;
-    await openProtectedRefPullRequest(context, repository, branch, sha, error);
+    try {
+      await openProtectedRefPullRequest(
+        context,
+        repository,
+        branch,
+        sha,
+        error,
+      );
+    } catch (cause) {
+      if (cause?.releaseTailClass) throw cause;
+      throw transientMutationError(cause, "github-protected-ref-finalization");
+    }
     return false;
   }
 }
-
 async function updateTag(context, repository, ref, sha) {
   const { request, updates } = context;
   const current = await getRef(request.octokit, repository, ref);
   const { owner, repo } = splitRepository(repository);
-  if (!current) await createRef(request.mutationOctokit, repository, ref, sha);
+  if (!current) await createRef(context, repository, ref, sha);
   else if (current.object?.sha !== sha)
-    await request.mutationOctokit.rest.git.updateRef({
-      owner,
-      repo,
-      ref: refName(ref),
-      sha,
-      force: true,
-    });
+    await githubMutation(context, () =>
+      request.mutationOctokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: refName(ref),
+        sha,
+        force: true,
+      }),
+    );
   updates.push({ action: "converged-release-tag", ref, sha });
 }
-
 async function refsApply(context, effect) {
   const { request, plan, intent } = context;
   const operation = operationFor(plan, effect);
-  const stateSha = await resolvedVersionStateSha(context, operation);
+  const stateSha =
+    intent.channel === "alpha"
+      ? operation.target.sourceSha
+      : await resolvedVersionStateSha(context, operation);
   const exact = operation.target.references.find(
-    ({ target }) => target === "source",
+    ({ ref }) => ref === `refs/tags/${intent.exactTag}`,
   );
   await createRef(
-    request.mutationOctokit,
+    context,
     operation.target.repository,
     exact.ref,
     operation.target.sourceSha,
@@ -397,7 +528,21 @@ async function refsApply(context, effect) {
   const branches = operation.target.references.filter(({ ref }) =>
     ref.startsWith("refs/heads/"),
   );
-  for (const reference of branches)
+  for (const reference of branches) {
+    if (reference.target === "source") {
+      const current = await getRef(
+        request.octokit,
+        operation.target.repository,
+        reference.ref,
+      );
+      if (current?.object?.sha !== operation.target.sourceSha)
+        throw providerError(
+          "alpha branch must already contain the exact reviewed candidate",
+          "conflict",
+          "alpha-candidate-ref-not-converged",
+        );
+      continue;
+    }
     if (
       !(await convergeBranch(
         context,
@@ -407,6 +552,7 @@ async function refsApply(context, effect) {
       ))
     )
       return;
+  }
   const channel = await getRef(
     request.octokit,
     operation.target.repository,
@@ -420,16 +566,15 @@ async function refsApply(context, effect) {
       "channel-ref-absent",
     );
   for (const reference of operation.target.references.filter(
-    ({ ref, target }) => ref.startsWith("refs/tags/") && target !== "source",
+    ({ ref }) => ref.startsWith("refs/tags/") && ref !== exact.ref,
   ))
     await updateTag(
       context,
       operation.target.repository,
       reference.ref,
-      channelSha,
+      reference.target === "source" ? operation.target.sourceSha : channelSha,
     );
 }
-
 export function createV4GithubProductAdapters(context) {
   return {
     adapters: {

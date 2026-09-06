@@ -37,6 +37,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | First-time repository adopter | [Golden Path](getting-started.md) | [Lifecycle Protocol](lifecycle-protocol.md) only when the generated defaults need changes |
 | CLI operator or agent | [Generated CLI Reference](cli-reference.md) | [CLI guide](cli.md) for concepts and worked examples |
 | Node toolkit developer | [Generated Node API Reference](node-api-reference.md) | [Core package guide](../packages/core/README.md) for recipes |
+| Workflow contributor | [Workflow Catalog](workflow-catalog.md) | [Contribution rules](../CONTRIBUTING.md#workflow-organization) and the [exact registry](../architecture/workflow-taxonomy.json) |
 | Build/release operator | [Reusable Build Surface](reusable-build-surface.md) | [Release Flow](release-flow.md) and [Release Passport](release-passport.md) |
 | Product/trust reviewer | [Product Mechanism](product-mechanism.md) | [Release Passport](release-passport.md) and [KFD Support](kfd-support.md) |
 

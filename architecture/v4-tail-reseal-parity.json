@@ -10,7 +10,7 @@
   },
   "target": {
     "branch": "dev/v4/v4.0",
-    "publicReusableWorkflow": "kungfu-systems/buildchain/.github/workflows/v4-tail-reseal.yml@v4-alpha",
+    "publicReusableWorkflow": "kungfu-systems/buildchain/.github/workflows/public-ops-tail-reseal.yml@v4-alpha",
     "requestSchema": "contracts/v4-tail-reseal-v1.schema.json",
     "planner": "packages/core/v4-tail-reseal.js",
     "admission": "packages/core/v4-tail-reseal-github.js",
@@ -57,7 +57,7 @@
       "disposition": "implemented",
       "implementationEvidence": [
         "scripts/v4-tail-reseal.mjs",
-        ".github/workflows/v4-tail-reseal.yml"
+        ".github/workflows/public-ops-tail-reseal.yml"
       ],
       "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
     },
@@ -84,7 +84,7 @@
       "disposition": "implemented",
       "implementationEvidence": [
         "packages/core/v4-tail-reseal.js",
-        ".github/workflows/v4-tail-reseal.yml"
+        ".github/workflows/public-ops-tail-reseal.yml"
       ],
       "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
     },
@@ -111,7 +111,7 @@
       "disposition": "implemented",
       "implementationEvidence": [
         "packages/core/v4-tail-reseal-receipt.js",
-        ".github/workflows/v4-tail-reseal.yml"
+        ".github/workflows/public-ops-tail-reseal.yml"
       ],
       "verificationEvidence": ["tests/v4-tail-reseal.test.mjs"]
     },
@@ -119,7 +119,9 @@
       "id": "TR-10",
       "claim": "The reusable workflow resolves job.workflow_sha as runtime evidence and exposes no persisted SHA, variable indirection or private self-dogfood path.",
       "disposition": "implemented",
-      "implementationEvidence": [".github/workflows/v4-tail-reseal.yml"],
+      "implementationEvidence": [
+        ".github/workflows/public-ops-tail-reseal.yml"
+      ],
       "verificationEvidence": ["tests/v4-tail-reseal-parity.test.mjs"]
     },
     {
@@ -146,5 +148,5 @@
       "verificationEvidence": []
     }
   ],
-  "matrixRoot": "sha256:126ec51c12a9dedeb9b9e187202781e3895856af1927b399ba3902f3940750ad"
+  "matrixRoot": "sha256:dc8d99f2e90473abde7a04c02300e7bfd0b48a2ff187e99fae0bc090ff2a855d"
 }

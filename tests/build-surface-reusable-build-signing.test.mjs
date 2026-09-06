@@ -266,3 +266,10 @@ test("reusable build workflow exposes signing and cache contracts", () => {
     2,
   );
 });
+
+test("runtime bootstrap includes transitive GitHub output support", () => {
+  assert.match(
+    readRepoText(".github/workflows/.build.yml"),
+    /\.buildchain\/workflow-shell\/scripts\/github-output\.mjs/,
+  );
+});

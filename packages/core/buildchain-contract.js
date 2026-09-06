@@ -833,7 +833,7 @@ export function createBuildchainContractWorld({
       breakingDefaults: {
         evidenceContract: "buildchain.controller-evidence/v1",
         descriptorVersion: descriptor.version,
-        workflowPath: descriptor.workflow.path,
+        workflowPath: descriptor.workflow.contractPath || descriptor.workflow.path,
         requiredStages: descriptor.expected.stages.filter((stage) => stage.required).map((stage) => stage.id),
         capabilities: descriptor.expected.capabilities,
         evidenceRequirements: descriptor.expected.evidence,

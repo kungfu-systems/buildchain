@@ -114,10 +114,10 @@ test("generated channel workflow mirrors the advanced build surface", () => {
     "every lane must reuse the exact caller workflow shell so channel binding can validate that shell",
   );
   assert.doesNotMatch(current, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.build\.yml@/);
-  assert.match(current, /if: \$\{\{ needs\.resolve-channel\.outputs\.runtime-override == 'true' \}\}/);
+  assert.match(current, /if: \$\{\{ inputs\.universal-request-json == '' && \(needs\.resolve-channel\.outputs\.runtime-override == 'true'\) \}\}/);
   assert.match(
     current,
-    /if: \$\{\{ needs\.resolve-channel\.outputs\.runtime-override != 'true' && needs\.resolve-channel\.outputs\.channel == 'alpha' \}\}/,
+    /if: \$\{\{ inputs\.universal-request-json == '' && \(needs\.resolve-channel\.outputs\.runtime-override != 'true' && needs\.resolve-channel\.outputs\.channel == 'alpha'\) \}\}/,
   );
   assert.match(current, /buildchain-ref: \$\{\{ needs\.resolve-channel\.outputs\.buildchain-ref \}\}/);
   assert.match(current, /buildchain-expected-channel: \$\{\{ needs\.resolve-channel\.outputs\.channel \}\}/);

@@ -20,3 +20,15 @@
 /packages/core/github-governance-authority.js @kungfu-origin
 /scripts/audit-github-governance.mjs @kungfu-origin
 /scripts/reconcile-github-governance.mjs @kungfu-origin
+
+# Workflow taxonomy, generated compatibility projections, and required gate.
+/.github/workflows/* @kungfu-origin
+/architecture/workflow-taxonomy.json @kungfu-origin
+/scripts/workflow-taxonomy.mjs @kungfu-origin
+/scripts/check-workflow-taxonomy.mjs @kungfu-origin
+/scripts/generate-workflow-taxonomy.mjs @kungfu-origin
+/scripts/check-workflows.sh @kungfu-origin
+/tests/workflow-taxonomy.test.mjs @kungfu-origin
+/.github/workflows/self-build-verify.yml @kungfu-origin
+/package.json @kungfu-origin
+/.buildchain/buildchain.toml @kungfu-origin

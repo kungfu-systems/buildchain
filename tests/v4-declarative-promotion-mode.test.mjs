@@ -8,8 +8,8 @@ const readWorkflow = (name) =>
 
 const advanced = readWorkflow(".release-candidate-promote.yml");
 const publicWorkflow = readWorkflow("release-candidate-promote.yml");
-const recovery = readWorkflow("buildchain-ref-promotion-recovery.yml");
-const selfPromotion = readWorkflow("buildchain-ref-promotion.yml");
+const recovery = readWorkflow("self-ops-promotion-recovery.yml");
+const selfPromotion = readWorkflow("self-release-promote.yml");
 
 test("canonical publisher has one QUALIFY APPLY SETTLE execution topology", () => {
   assert.match(advanced, /^  qualify:/m);

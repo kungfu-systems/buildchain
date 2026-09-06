@@ -1,0 +1,28 @@
+name: Universal Buildchain Bootstrap
+
+on:
+  workflow_call:
+    inputs:
+      request-json:
+        description: "Versioned exact-candidate request envelope"
+        required: true
+        type: string
+    outputs:
+      runtime-sha:
+        value: ${{ jobs.bootstrap.outputs.runtime-sha }}
+      terminal-receipt-json:
+        value: ${{ jobs.bootstrap.outputs.terminal-receipt-json }}
+      terminal-receipt-root:
+        value: ${{ jobs.bootstrap.outputs.terminal-receipt-root }}
+      backflow-root:
+        value: ${{ jobs.bootstrap.outputs.backflow-root }}
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    uses: kungfu-systems/buildchain/.github/workflows/bootstrap.yml@v4
+    with:
+      request-json: ${{ inputs.request-json }}
+    secrets: inherit

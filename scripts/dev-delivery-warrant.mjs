@@ -10,16 +10,17 @@ import {
   heartbeatDevDeliveryWarrant,
   observeDevDeliveryQueue,
   qualifyDevDeliveryWarrant,
-  recoverExpiredDevDeliveryWarrant,
   reconcileDevDeliveryTerminalEvidence,
   selectDevDeliveryWarrant,
   settleDevDeliveryTerminalEvent,
   submitDevDeliveryCandidate,
 } from "../packages/core/dev-delivery-warrant.js";
 import { recoverLegacyTerminalDevDeliveryQueue } from "../packages/core/dev-delivery-warrant-legacy-recovery.js";
+import { reuseExactActiveDevDeliverySourceProof } from "../packages/core/dev-delivery-candidate-identity.js";
 import { runV4DeliveryWarrantReadCandidate } from "../packages/core/v4-delivery-warrant-read-candidate.js";
 
 import { GitHubDevDeliveryStore } from "./dev-delivery-warrant-store.mjs";
+import { persistDevDeliveryTransition } from "./dev-delivery-warrant-transition.mjs";
 import { devDeliveryCliOptions } from "./dev-delivery-warrant-options.mjs";
 export { GitHubDevDeliveryStore, devDeliveryCliOptions };
 
@@ -199,54 +200,60 @@ function transitionFor(command, queue, options) {
         "native command contract root does not match native-command",
       );
     }
+    const input = {
+      pullRequestNumber: positiveInteger(
+        options.pullRequestNumber,
+        "pullRequestNumber",
+      ),
+      sourceHead: exactSha(options.sourceHead, "sourceHead"),
+      ...(options.sourceRoot ? { sourceRoot: options.sourceRoot } : {}),
+      ...(options.assignmentRoot
+        ? { assignmentRoot: options.assignmentRoot }
+        : {}),
+      ...(options.initiativeRoot
+        ? { initiativeRoot: options.initiativeRoot }
+        : {}),
+      sourceIdentityRoot: exactRoot(
+        options.sourceIdentityRoot,
+        "sourceIdentityRoot",
+      ),
+      sourcePatchRoot: exactRoot(options.sourcePatchRoot, "sourcePatchRoot"),
+      sourceProofRoot: exactRoot(options.sourceProofRoot, "sourceProofRoot"),
+      planRoot: exactRoot(options.planRoot, "planRoot"),
+      closureRoot: exactRoot(options.closureRoot, "closureRoot"),
+      dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
+      toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
+      ...(options.environmentRoot
+        ? {
+            environmentRoot: exactRoot(
+              options.environmentRoot,
+              "environmentRoot",
+            ),
+          }
+        : {}),
+      ...(nativeCommandContract ? { nativeCommandContract } : {}),
+      affectedPaths: jsonList(options.affectedPaths, "affected paths"),
+      shardEvidenceRoots: jsonList(
+        options.shardEvidenceRoots,
+        "shard evidence roots",
+      ),
+      sourceWorkflowRunId: options.sourceWorkflowRunId
+        ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId")
+        : 0,
+      deliveryClass: options.deliveryClass,
+      priority: options.priority || "ordinary",
+      ...(options.releaseBlockerPriority
+        ? {
+            releaseBlockerPriority: jsonObject(
+              options.releaseBlockerPriority,
+              "release blocker priority",
+            ),
+          }
+        : {}),
+    };
     return submitDevDeliveryCandidate(
       queue,
-      {
-        pullRequestNumber: positiveInteger(
-          options.pullRequestNumber,
-          "pullRequestNumber",
-        ),
-        sourceHead: exactSha(options.sourceHead, "sourceHead"),
-        assignmentRoot: exactRoot(options.assignmentRoot, "assignmentRoot"),
-        initiativeRoot: exactRoot(options.initiativeRoot, "initiativeRoot"),
-        sourceIdentityRoot: exactRoot(
-          options.sourceIdentityRoot,
-          "sourceIdentityRoot",
-        ),
-        sourcePatchRoot: exactRoot(options.sourcePatchRoot, "sourcePatchRoot"),
-        sourceProofRoot: exactRoot(options.sourceProofRoot, "sourceProofRoot"),
-        planRoot: exactRoot(options.planRoot, "planRoot"),
-        closureRoot: exactRoot(options.closureRoot, "closureRoot"),
-        dependencyRoot: exactRoot(options.dependencyRoot, "dependencyRoot"),
-        toolchainRoot: exactRoot(options.toolchainRoot, "toolchainRoot"),
-        ...(options.environmentRoot
-          ? {
-              environmentRoot: exactRoot(
-                options.environmentRoot,
-                "environmentRoot",
-              ),
-            }
-          : {}),
-        ...(nativeCommandContract ? { nativeCommandContract } : {}),
-        affectedPaths: jsonList(options.affectedPaths, "affected paths"),
-        shardEvidenceRoots: jsonList(
-          options.shardEvidenceRoots,
-          "shard evidence roots",
-        ),
-        sourceWorkflowRunId: options.sourceWorkflowRunId
-          ? positiveInteger(options.sourceWorkflowRunId, "sourceWorkflowRunId")
-          : 0,
-        deliveryClass: options.deliveryClass,
-        priority: options.priority || "ordinary",
-        ...(options.releaseBlockerPriority
-          ? {
-              releaseBlockerPriority: jsonObject(
-                options.releaseBlockerPriority,
-                "release blocker priority",
-              ),
-            }
-          : {}),
-      },
+      reuseExactActiveDevDeliverySourceProof(queue.activeWarrant, input),
       { now: options.now },
     );
   }
@@ -461,51 +468,16 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
   }
   if (options.command === "observe") return observeQueue(loaded, options);
   const initialLoaded = loaded;
-  let changed = transitionFor(options.command, loaded.queue, options);
-  let mutates = changed.queue.stateRoot !== loaded.queue.stateRoot;
-  let write = null;
-  if (options.execute && mutates) {
-    if (changed.receipt.expectedOldStateRoot !== loaded.queue.stateRoot) {
-      throw new Error(
-        "transition receipt expected-old root does not match the loaded authority",
-      );
-    }
-    try {
-      write = await store.write({
-        stateRef: options.stateRef,
-        queue: changed.queue,
-        expectedCommitSha: loaded.commitSha,
-        expectedStateRoot: loaded.queue.stateRoot,
-        receiptRoot: changed.receiptRoot,
-      });
-    } catch (error) {
-      if (options.command !== "settle" || options.expectedOldStateRoot)
-        throw error;
-      const latest = await store.read({
-        stateRef: options.stateRef,
-        protectedBase: options.branch,
-        now: options.now,
-      });
-      const reconciled = transitionFor(options.command, latest.queue, options);
-      const reconciledMutates =
-        reconciled.queue.stateRoot !== latest.queue.stateRoot;
-      if (
-        reconciledMutates ||
-        reconciled.receipt.action !== "duplicate-terminal-event-noop"
-      )
-        throw error;
-      loaded = latest;
-      changed = reconciled;
-      mutates = false;
-      concurrencyRecovery = {
-        schema: "kungfu.buildchain.dev-delivery-concurrency-recovery/v1",
-        action: "terminal-settlement-race-noop",
-        initialCommitSha: initialLoaded.commitSha,
-        observedCommitSha: latest.commitSha,
-        observedStateRoot: latest.queue.stateRoot,
-      };
-    }
-  }
+  const persisted = await persistDevDeliveryTransition({
+    store,
+    options,
+    loaded,
+    initialLoaded,
+    changed: transitionFor(options.command, loaded.queue, options),
+    transitionFor,
+  });
+  loaded = persisted.loaded;
+  concurrencyRecovery = persisted.concurrencyRecovery || concurrencyRecovery;
   return {
     schema: "kungfu.buildchain.dev-delivery-command-result/v1",
     ok: true,
@@ -514,16 +486,21 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     stateRef: options.stateRef,
     before: { commitSha: loaded.commitSha, stateRoot: loaded.queue.stateRoot },
     after: {
-      commitSha: write?.commitSha || loaded.commitSha,
-      stateRoot: changed.queue.stateRoot,
+      commitSha: persisted.write?.commitSha || loaded.commitSha,
+      stateRoot: persisted.changed.queue.stateRoot,
     },
     mutationAuthorized: options.execute,
-    mutationApplied: Boolean(write),
+    mutationApplied: Boolean(persisted.write),
     concurrencyRecovery,
-    receipt: changed.receipt,
-    receiptRoot: changed.receiptRoot,
-    warrant: changed.warrant || changed.queue.activeWarrant || null,
-    observation: observeDevDeliveryQueue(changed.queue, { now: options.now }),
+    receipt: persisted.changed.receipt,
+    receiptRoot: persisted.changed.receiptRoot,
+    warrant:
+      persisted.changed.warrant ||
+      persisted.changed.queue.activeWarrant ||
+      null,
+    observation: observeDevDeliveryQueue(persisted.changed.queue, {
+      now: options.now,
+    }),
   };
 }
 

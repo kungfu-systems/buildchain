@@ -502,7 +502,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.equal(architecture.publicConsumerDogfood.validationRef, "v4-alpha");
   assert.equal(
     architecture.publicConsumerDogfood.reusableWorkflow,
-    "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml",
+    "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml",
   );
   assert.equal(
     architecture.publicConsumerDogfood.recursionRecovery,
@@ -533,19 +533,23 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.equal(architecture.budgets.productionWriteAuthorityChanges, 0);
 
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/verify.yml"),
+    path.join(root, ".github/workflows/self-build-verify.yml"),
     "utf8",
   );
   assert.doesNotMatch(workflow, /stage-capsule-qualification:/u);
   assert.doesNotMatch(workflow, /v4-stage-capsule-qualification\.mjs/u);
   assert.match(workflow, /needs: stage-capsule-checkpoints/u);
+  assert.match(workflow, /lifecycle run verify/u);
+  const packageScripts = JSON.parse(
+    fs.readFileSync(path.join(root, "package.json")),
+  ).scripts;
   assert.match(
-    workflow,
-    /run: node scripts\/check-v4-public-dogfood-contract\.mjs/u,
+    packageScripts.check,
+    /node scripts\/check-v4-public-dogfood-contract\.mjs/u,
   );
 
   const canaryWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/v4-stage-capsule-canary.yml"),
+    path.join(root, ".github/workflows/public-build-stage-capsule-canary.yml"),
     "utf8",
   );
   assert.match(canaryWorkflow, /workflow_call:/u);

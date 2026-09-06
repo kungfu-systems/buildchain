@@ -34,10 +34,10 @@ const CODEOWNERS = `* @kungfu-origin
 /.github/CODEOWNERS @kungfu-origin
 /.github/workflows/.publication-authority.yml @kungfu-origin
 /.github/workflows/.release-candidate-promote.yml @kungfu-origin
-/.github/workflows/buildchain-ref-promotion.yml @kungfu-origin
+/.github/workflows/self-release-promote.yml @kungfu-origin
 /.github/workflows/paper-release-sealed.yml @kungfu-origin
 /.github/workflows/paper-release.yml @kungfu-origin
-/.github/workflows/release-line-bootstrap.yml @kungfu-origin
+/.github/workflows/self-release-line-open.yml @kungfu-origin
 /.github/workflows/release-candidate-promote.yml @kungfu-origin
 /actions/promote-buildchain-ref/action.yml @kungfu-origin
 /actions/promote-buildchain-ref/dist/index.js @kungfu-origin
@@ -47,7 +47,7 @@ const CODEOWNERS = `* @kungfu-origin
 /packages/core/github-governance-authority.js @kungfu-origin
 /scripts/audit-github-governance.mjs @kungfu-origin
 /scripts/reconcile-github-governance.mjs @kungfu-origin
-/.github/workflows/github-governance-audit.yml @kungfu-origin
+/.github/workflows/self-ops-governance-audit.yml @kungfu-origin
 `;
 
 function classicProtection() {

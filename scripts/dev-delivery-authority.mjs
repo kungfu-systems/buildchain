@@ -276,16 +276,16 @@ export function devDeliveryAuthorityCliOptions(
       "source-head",
       environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_HEAD,
     ),
-    assignmentRoot: flag(
+    sourceRoot: flag(
       rest,
-      "assignment-root",
-      environment.BUILDCHAIN_DEV_DELIVERY_ASSIGNMENT_ROOT,
+      "source-root",
+      environment.BUILDCHAIN_WORK_SOURCE_ROOT ||
+        environment.BUILDCHAIN_DEV_DELIVERY_SOURCE_ROOT,
     ),
-    initiativeRoot: flag(
-      rest,
-      "initiative-root",
-      environment.BUILDCHAIN_DEV_DELIVERY_INITIATIVE_ROOT,
-    ),
+    // Retired roots remain readable in persisted historical candidates.
+    // New authority submissions accept only the Work sourceRoot above.
+    // Retired CLI flags are intentionally ignored by this parser.
+    // This prevents producers from reconstructing obsolete identities.
     sourceIdentityRoot: flag(
       rest,
       "source-identity-root",

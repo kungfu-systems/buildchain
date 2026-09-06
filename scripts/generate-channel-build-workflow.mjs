@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { writeWorkflowSource } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { migrateV4UniversalWorkflowFacade } from "./generate-v4-universal-workflow-facades.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(root, ".github/workflows/.build.yml");
@@ -403,7 +405,10 @@ export function generateChannelBuildWorkflow(source) {
       ].join("\n"),
     )
     .replace("\n  alpha:\n", `\n${routerControllerPlanJob()}\n\n  alpha:\n`);
-  return `${generated.trimEnd()}\n\n${routerControllerReceiptJob()}\n\n${routerAggregateJob()}\n`;
+  return migrateV4UniversalWorkflowFacade(
+    `${generated.trimEnd()}\n\n${routerControllerReceiptJob()}\n\n${routerAggregateJob()}\n`,
+    ".github/workflows/build.yml",
+  );
 }
 
 function main() {
@@ -417,7 +422,7 @@ function main() {
     }
     return;
   }
-  fs.writeFileSync(targetPath, generated);
+  writeWorkflowSource(root, path.relative(root, targetPath), generated);
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

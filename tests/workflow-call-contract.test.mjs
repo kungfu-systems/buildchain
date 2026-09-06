@@ -72,7 +72,7 @@ function evaluate(overrides = {}) {
     callerText: caller(),
     calleeText: callee(),
     callerRepository: "kungfu-systems/kungfu",
-    callerWorkflowPath: ".github/workflows/release-new-version.yml",
+    callerWorkflowPath: ".github/workflows/self-release-new-version-compat.yml",
     callerSha: "b".repeat(40),
     callerTree: "c".repeat(40),
     calleeRepository: "kungfu-systems/buildchain",
@@ -211,7 +211,7 @@ test("consumer command verifies clean exact checkouts and marks dirty runs diagn
   const calleeRoot = path.join(workspace, "buildchain");
   const callerRoot = path.join(workspace, "kungfu");
   const calleePath = ".github/workflows/release-candidate-promote.yml";
-  const callerPath = ".github/workflows/release-new-version.yml";
+  const callerPath = ".github/workflows/self-release-new-version-compat.yml";
   initRepository(calleeRoot);
   fs.mkdirSync(path.join(calleeRoot, ".github/workflows"), { recursive: true });
   fs.writeFileSync(path.join(calleeRoot, calleePath), callee());

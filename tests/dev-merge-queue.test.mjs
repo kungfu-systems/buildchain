@@ -22,7 +22,7 @@ function withPolicyFixture(policy, fn) {
   fs.mkdirSync(path.join(cwd, ".github", "workflows"), { recursive: true });
   fs.writeFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), `schema = 1\n\n${policy}\n`);
   fs.writeFileSync(
-    path.join(cwd, ".github", "workflows", "verify.yml"),
+    path.join(cwd, ".github", "workflows", "self-build-verify.yml"),
     "on:\n  pull_request:\n  merge_group:\n    types: [checks_requested]\n",
   );
   return Promise.resolve(fn(cwd)).finally(() => fs.rmSync(cwd, { recursive: true, force: true }));
@@ -176,7 +176,7 @@ test("merge queue apply is idempotent and preserves operation order", async () =
 test("configured merge queue enabled mode reconciles the declared exact branch", async () => {
   await withPolicyFixture(`[governance.dev.merge_queue]
 mode = "enabled"
-required_workflows = [".github/workflows/verify.yml"]
+required_workflows = [".github/workflows/self-build-verify.yml"]
 check_response_timeout_minutes = 90
 max_entries_to_build = 1
 bypass_users = ["release-owner"]`, async (cwd) => {
@@ -226,7 +226,7 @@ test("repository dev merge queue controller declares no bypass actors", async ()
 test("configured merge queue inherit mode copies the active dev ruleset policy", async () => {
   await withPolicyFixture(`[governance.dev.merge_queue]
 mode = "inherit"
-required_workflows = [".github/workflows/verify.yml"]`, async (cwd) => {
+required_workflows = [".github/workflows/self-build-verify.yml"]`, async (cwd) => {
     const inheritedRuleset = {
       id: 41,
       target: "branch",

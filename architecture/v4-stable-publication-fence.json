@@ -10,7 +10,7 @@
     "productionWriterCount": 1,
     "fenceAuthority": "rust-v4-core",
     "fenceWriterCount": 1,
-    "typescript": "byte-equivalent-provider-adapter",
+    "typescript": "wasm-calling-provider-adapter",
     "candidateSelfQualification": false,
     "productionWriteChange": true
   },
@@ -29,7 +29,10 @@
   "publicationTargets": ["stable-ref", "npm-tag", "oci-tag", "github-release"],
   "implementations": {
     "rustDomain": "crates/buildchain-v4-contracts/src/stable_publication_fence.rs",
-    "typescript": "packages/core/v4-stable-publication-fence.js"
+    "typescript": "packages/core/v4-stable-publication-fence.js",
+    "wasmRuntime": "packages/core/v4-domain-wasm.js",
+    "wasmArtifact": "packages/core/buildchain-v4-domain.wasm",
+    "artifactMetadata": "packages/core/v4-domain-wasm-artifact.js"
   },
   "roots": [
     "stable-publication-candidate",

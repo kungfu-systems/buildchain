@@ -4,7 +4,7 @@
   "inventoryAuthority": "architecture/v3-v4-live-capability-inventory.json",
   "implementation": "packages/core/v4-cross-platform-adopter-qualification.js",
   "runner": "scripts/v4-cross-platform-adopter-qualification.mjs",
-  "publicWorkflow": ".github/workflows/v4-adopter-delivery.yml",
+  "publicWorkflow": ".github/workflows/public-build-adopter-qualification.yml",
   "sourceBinding": {
     "runtime": "job.workflow_sha",
     "consumer": "exact checked-out consumer commit",

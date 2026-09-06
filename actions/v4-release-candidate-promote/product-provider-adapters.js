@@ -3,6 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+export { enqueueNextDevelopmentPullRequest } from "./next-development-queue.js";
+
 import { spawnSyncCommand } from "../../packages/core/spawn-command.js";
 import { verifyPublicationSealedBundle } from "../../packages/core/publication-sealed-bundle.js";
 import { v4ContentRoot } from "../../packages/core/v4-canonical-contracts.js";
@@ -15,74 +17,48 @@ import {
 } from "../promote-buildchain-ref/internal/version-state.js";
 import { createV4GithubProductAdapters } from "./product-provider-github-adapters.js";
 
-const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
-
-function standardCandidatePath(
-  candidatePassportPath,
-  declaredPath,
-  relativePath,
-  label,
-) {
-  if (String(declaredPath || "").trim()) return declaredPath;
-  const fallback = path.join(
-    path.dirname(candidatePassportPath),
-    "..",
-    relativePath,
+const GITHUB_MUTATION_RETRY_DELAYS_MS = Object.freeze([1_000, 2_000, 4_000]);
+function retryableGithubMutation(error) {
+  const status = Number(
+    error?.status || error?.statusCode || error?.response?.status || 0,
   );
-  if (!fs.existsSync(path.resolve(fallback)))
-    throw new Error(
-      `${label} is required when the sealed candidate has no standard ${relativePath}`,
-    );
-  return fallback;
+  if ([408, 429, 500, 502, 503, 504].includes(status)) return true;
+  if (status === 403 && /rate limit/iu.test(error?.message || "")) return true;
+  if (status) return false;
+  return /^(?:ECONNABORTED|ECONNRESET|EAI_AGAIN|ENETRESET|ETIMEDOUT|UND_ERR_(?:BODY_TIMEOUT|CONNECT_TIMEOUT|HEADERS_TIMEOUT|REQ_RETRY|SOCKET))$/u.test(
+    String(error?.code || ""),
+  );
 }
-
-export function resolveCandidateProviderInputs({
-  candidatePassportPath,
-  sealedBundleRoot = "",
-  sealedBundleManifest = "",
-  requiredArtifactsPath = "",
-  publishPackageMain = "",
-}) {
-  const resolved = {
-    sealedBundleRoot: standardCandidatePath(
-      candidatePassportPath,
-      sealedBundleRoot,
-      "payloads",
-      "sealed-bundle-root",
-    ),
-    sealedBundleManifest: standardCandidatePath(
-      candidatePassportPath,
-      sealedBundleManifest,
-      "sealed-bundle.json",
-      "sealed-bundle-manifest",
-    ),
-    requiredArtifactsPath: standardCandidatePath(
-      candidatePassportPath,
-      requiredArtifactsPath,
-      "publish-required-artifacts.json",
-      "required-artifacts-path",
-    ),
-    publishPackageMain: String(publishPackageMain || "").trim(),
+function githubMutationFailure(error) {
+  if (error?.releaseTailClass) return error;
+  const status = Number(
+    error?.status || error?.statusCode || error?.response?.status || 0,
+  );
+  const failure = {
+    releaseTailClass: "transient",
+    releaseTailCode: status
+      ? `github-mutation-${status}`
+      : "github-mutation-error",
   };
-  const recoveryReceiptPath = path.join(
-    path.dirname(resolved.sealedBundleManifest),
-    "recovery-receipt.json",
-  );
-  if (fs.existsSync(path.resolve(recoveryReceiptPath)))
-    resolved.releaseCandidateRecoveryReceiptPath = recoveryReceiptPath;
-  if (!resolved.publishPackageMain) {
-    const main = read(resolved.requiredArtifactsPath).filter(
-      ({ role }) => role === "main",
-    );
-    if (main.length !== 1 || !String(main[0]?.name || "").trim())
-      throw new Error(
-        "publish-package-main is required when the sealed artifact set has no unique main package",
-      );
-    resolved.publishPackageMain = String(main[0].name).trim();
-  }
-  return resolved;
+  if (status) failure.status = status;
+  return Object.assign(new Error("GitHub provider mutation failed"), failure);
 }
 
+export async function retryGithubMutation(wait, operation, readback) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!retryableGithubMutation(error)) throw githubMutationFailure(error);
+      const observed = await readback?.();
+      if (observed) return observed;
+      if (attempt === GITHUB_MUTATION_RETRY_DELAYS_MS.length)
+        throw githubMutationFailure(error);
+      await wait(GITHUB_MUTATION_RETRY_DELAYS_MS[attempt]);
+    }
+  }
+}
+const read = (file) => JSON.parse(fs.readFileSync(path.resolve(file), "utf8"));
 function standardPublicationTarget({
   resolveStandardTarget,
   candidatePassportPath,
@@ -248,6 +224,7 @@ function unsupported(label, value) {
 }
 
 function validateProviderRequest(request, intent) {
+  const artifactKind = String(intent.artifactKind || "npm").trim();
   const publishCommand = String(request.publishCommand || "").trim();
   const publishMode = String(request.publishMode || "").trim();
   const publishAuth = String(
@@ -262,9 +239,13 @@ function validateProviderRequest(request, intent) {
   ).trim();
   if (publishCommand) unsupported("publish command", publishCommand);
   if (publishMode) unsupported("publish mode", publishMode);
-  if (publishAuth !== "trusted-publishing")
+  if (artifactKind === "npm" && publishAuth !== "trusted-publishing")
     unsupported("publish auth", publishAuth);
-  if (publishDistTag && publishDistTag !== intent.distTag)
+  if (
+    artifactKind === "npm" &&
+    publishDistTag &&
+    publishDistTag !== intent.distTag
+  )
     throw providerError(
       `publish dist-tag ${publishDistTag} conflicts with rooted ${intent.distTag}`,
       "conflict",
@@ -272,7 +253,7 @@ function validateProviderRequest(request, intent) {
     );
   if (packageSetOrder !== "as-provided")
     unsupported("package set order", packageSetOrder);
-  if (packageMain !== intent.packageName)
+  if (artifactKind === "npm" && packageMain !== intent.packageName)
     throw providerError(
       `main package ${packageMain} conflicts with rooted ${intent.packageName}`,
       "conflict",
@@ -280,7 +261,7 @@ function validateProviderRequest(request, intent) {
     );
 }
 
-function localVersionFiles(cwd, intent) {
+export function localVersionFiles(cwd, intent) {
   const discovered = discoverVersionStateFiles(cwd);
   if (discovered.files.length === 0)
     throw new Error("v4 product publication requires package version state");
@@ -372,12 +353,21 @@ function requiredProductArtifacts(request, intent) {
     intent.requiredArtifactsRoot
   )
     throw new Error("required product artifacts drifted from QUALIFY intent");
-  const npmArtifacts = requiredArtifacts.filter(
-    ({ kind, required }) => kind === "npm" && required !== false,
+  const artifactKind = String(intent.artifactKind || "npm").trim();
+  const matchingArtifacts = requiredArtifacts.filter(
+    ({ kind, required }) => kind === artifactKind && required !== false,
   );
-  if (npmArtifacts.length !== 1 || npmArtifacts[0].name !== intent.packageName)
+  if (
+    artifactKind === "npm" &&
+    (matchingArtifacts.length !== 1 ||
+      matchingArtifacts[0].name !== intent.packageName)
+  )
     throw new Error(
       "v4 product publication currently requires one exact main npm artifact",
+    );
+  if (artifactKind === "custom" && matchingArtifacts.length === 0)
+    throw new Error(
+      "v4 custom product publication requires at least one exact required artifact",
     );
   return requiredArtifacts;
 }
@@ -392,7 +382,8 @@ function verifyRootedBundle(request, intent) {
   });
   if (
     sealedBundle.root !== intent.sealedBundleRoot ||
-    sealedBundle.npm.name !== intent.packageName
+    sealedBundle.npm.name !== intent.packageName ||
+    (intent.channel === "alpha" && sealedBundle.npm.version !== intent.version)
   )
     throw new Error("sealed product bundle drifted from QUALIFY intent");
   return sealedBundle;
@@ -402,6 +393,14 @@ function createPackedPackage(context) {
   let packed;
   return () => {
     if (packed) return packed;
+    if (context.intent.channel === "alpha") {
+      packed = {
+        tarballPath: context.sealedBundle.npm.absolutePath,
+        integrity: context.sealedBundle.npm.integrity,
+        sha256: context.sealedBundle.npm.sha256,
+      };
+      return packed;
+    }
     const temporaryRoot = fs.mkdtempSync(
       path.join(os.tmpdir(), "buildchain-v4-product-"),
     );
@@ -439,46 +438,61 @@ function createPackedPackage(context) {
   };
 }
 
-function npmReadback(context, packedPackage, effect) {
+const NPM_POST_PUBLISH_READBACK_DELAYS_MS = Object.freeze([
+  0, 1_000, 2_000, 4_000, 8_000, 15_000, 30_000,
+]);
+
+async function npmReadback(context, packedPackage, effect) {
   operationFor(context.plan, effect);
   const expected = packedPackage();
-  const result = context.spawn(
-    "npm",
-    [
-      "view",
-      `${context.intent.packageName}@${context.intent.version}`,
-      "dist.integrity",
-      "--json",
-      "--registry=https://registry.npmjs.org/",
-    ],
-    { cwd: context.cwd, encoding: "utf8" },
-  );
-  if (result.error) throw result.error;
-  if (result.status !== 0) {
-    const output = `${result.stdout || ""}\n${result.stderr || ""}`;
-    if (/\bE404\b|404 Not Found|is not in this registry/iu.test(output))
-      return absent("npm-version-absent");
-    throw providerError(
-      `npm readback failed: ${output.trim()}`,
-      "transient",
-      "npm-readback-failed",
+  const delays = context.packageEffectAttempted
+    ? NPM_POST_PUBLISH_READBACK_DELAYS_MS
+    : [0];
+  for (const [index, delayMs] of delays.entries()) {
+    if (delayMs > 0) await context.wait(delayMs);
+    const result = context.spawn(
+      "npm",
+      [
+        "view",
+        `${context.intent.packageName}@${context.intent.version}`,
+        "dist.integrity",
+        "--json",
+        "--prefer-online",
+        "--registry=https://registry.npmjs.org/",
+      ],
+      { cwd: context.cwd, encoding: "utf8" },
     );
+    if (result.error) throw result.error;
+    if (result.status !== 0) {
+      const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+      if (/\bE404\b|404 Not Found|is not in this registry/iu.test(output)) {
+        if (index + 1 < delays.length) continue;
+        return absent("npm-version-absent");
+      }
+      throw providerError(
+        `npm readback failed: ${output.trim()}`,
+        "transient",
+        "npm-readback-failed",
+      );
+    }
+    const integrity = JSON.parse(String(result.stdout || '""'));
+    if (integrity !== expected.integrity)
+      return conflict("npm-integrity-conflict");
+    return observed(effect, {
+      kind: "npm-package",
+      packageName: context.intent.packageName,
+      version: context.intent.version,
+      integrity,
+      sha256: expected.sha256,
+    });
   }
-  const integrity = JSON.parse(String(result.stdout || '""'));
-  if (integrity !== expected.integrity)
-    return conflict("npm-integrity-conflict");
-  return observed(effect, {
-    kind: "npm-package",
-    packageName: context.intent.packageName,
-    version: context.intent.version,
-    integrity,
-    sha256: expected.sha256,
-  });
+  return absent("npm-version-absent");
 }
 
 function npmApply(context, packedPackage, effect) {
   operationFor(context.plan, effect);
   const pack = packedPackage();
+  context.packageEffectAttempted = true;
   commandResult(
     context.spawn,
     "npm",
@@ -508,28 +522,44 @@ export function createV4ProductPublicationAdapters({
   plan,
   cwd = process.cwd(),
   spawn = spawnSyncCommand,
+  wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs)),
 }) {
   validateProviderRequest(request, intent);
   requiredProductArtifacts(request, intent);
-  verifyRootedBundle(request, intent);
+  const sealedBundle =
+    (intent.artifactKind || "npm") === "npm"
+      ? verifyRootedBundle(request, intent)
+      : undefined;
   const context = {
     request,
     intent,
     plan,
     cwd,
     spawn,
-    versionFiles: localVersionFiles(cwd, intent),
+    sealedBundle,
+    versionFiles:
+      intent.channel === "alpha" ? [] : localVersionFiles(cwd, intent),
+    packageEffectAttempted: false,
+    wait,
+    githubMutation: (operation, readback) =>
+      retryGithubMutation(wait, operation, readback),
     updates: [],
   };
   const packedPackage = createPackedPackage(context);
   const github = createV4GithubProductAdapters(context);
+  const npmAdapters =
+    (intent.artifactKind || "npm") === "npm"
+      ? {
+          "npm-trusted-publishing": {
+            readback: (effect) => npmReadback(context, packedPackage, effect),
+            apply: (effect) => npmApply(context, packedPackage, effect),
+          },
+        }
+      : {};
   return {
     adapters: {
       ...github.adapters,
-      "npm-trusted-publishing": {
-        readback: (effect) => npmReadback(context, packedPackage, effect),
-        apply: (effect) => npmApply(context, packedPackage, effect),
-      },
+      ...npmAdapters,
     },
     updates: context.updates,
     resolveReleaseSha: github.resolveReleaseSha,

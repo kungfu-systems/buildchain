@@ -1,0 +1,282 @@
+name: Universal Buildchain Bootstrap Recovery
+
+on:
+  workflow_call:
+    inputs:
+      request-json:
+        description: "Versioned exact-candidate request envelope"
+        required: true
+        type: string
+    outputs:
+      runtime-sha:
+        value: ${{ jobs.recovery-admit.outputs.runtime-sha }}
+      result-json:
+        value: ${{ jobs.recovery-execute.outputs.result-json }}
+      terminal-receipt-json:
+        value: ${{ jobs.recovery-settle.outputs.terminal-receipt-json }}
+      terminal-receipt-root:
+        value: ${{ jobs.recovery-settle.outputs.terminal-receipt-root }}
+      backflow-root:
+        value: ${{ jobs.recovery-settle.outputs.backflow-root }}
+
+permissions:
+  contents: read
+
+jobs:
+  recovery-admit:
+    runs-on: ubuntu-24.04
+    permissions:
+      checks: read
+      contents: read
+      pull-requests: read
+    outputs:
+      runtime-sha: ${{ steps.admit.outputs.runtime-sha }}
+      admission-json: ${{ steps.admit.outputs.admission-json }}
+    steps:
+      - name: Parse exact recovery coordinates without Buildchain code
+        id: request
+        shell: bash
+        env:
+          REQUEST_JSON: ${{ inputs.request-json }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "${REQUEST_JSON}" > .buildchain-request.json
+          jq -e '
+            .schema == "kungfu-buildchain-v4-universal-workflow-request/v1" and
+            .mode == "train" and
+            .candidate.repository == "kungfu-systems/buildchain" and
+            (.candidate.discoveryRef | test("^train/v4/v4\\.[0-9]+/[A-Za-z0-9][A-Za-z0-9._/-]*$")) and
+            (.candidate.expectedSha | test("^[0-9a-f]{40}$")) and
+            (.candidate.reviewPullRequest | type == "number" and . > 0)
+          ' .buildchain-request.json > /dev/null
+          {
+            echo "repository=$(jq -r '.candidate.repository' .buildchain-request.json)"
+            echo "ref=$(jq -r '.candidate.discoveryRef' .buildchain-request.json)"
+            echo "sha=$(jq -r '.candidate.expectedSha' .buildchain-request.json)"
+            echo "pr=$(jq -r '.candidate.reviewPullRequest' .buildchain-request.json)"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout exact Train candidate without persisted credentials
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ steps.request.outputs.repository }}
+          ref: ${{ steps.request.outputs.ref }}
+          path: .buildchain/candidate
+          persist-credentials: false
+
+      - name: Prove exact independent review before candidate code runs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ steps.request.outputs.sha }}
+          REVIEW_PR: ${{ steps.request.outputs.pr }}
+        run: |
+          set -euo pipefail
+          test "$(git -C .buildchain/candidate rev-parse HEAD)" = "${EXPECTED_SHA}"
+          gh api "repos/kungfu-systems/buildchain/pulls/${REVIEW_PR}" > .buildchain-pr.json
+          gh api --paginate "repos/kungfu-systems/buildchain/pulls/${REVIEW_PR}/reviews" \
+            | jq -s 'add' > .buildchain-reviews.json
+          gh api --paginate -H 'Accept: application/vnd.github+json' \
+            "repos/kungfu-systems/buildchain/commits/${EXPECTED_SHA}/check-runs?per_page=100" \
+            | jq -s '[.[].check_runs[]]' > .buildchain-checks.json
+          jq -e --arg sha "${EXPECTED_SHA}" '
+            .head.repo.full_name == "kungfu-systems/buildchain" and
+            .head.sha == $sha and
+            .base.ref == "dev/v4/v4.0"
+          ' .buildchain-pr.json > /dev/null
+          jq -e --arg sha "${EXPECTED_SHA}" '
+            any(.[]; .state == "APPROVED" and .commit_id == $sha and (.user.login | ascii_downcase) == "kungfu-origin")
+          ' .buildchain-reviews.json > /dev/null
+          jq -e '
+            any(.[]; .name == "check" and .status == "completed" and .conclusion == "success")
+          ' .buildchain-checks.json > /dev/null
+
+      - name: Admit candidate policy and exact-head checks
+        id: admit
+        shell: bash
+        env:
+          BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ inputs.request-json }}
+          BUILDCHAIN_UNIVERSAL_CONSUMER_REPOSITORY: ${{ github.repository }}
+          BUILDCHAIN_UNIVERSAL_CONSUMER_SHA: ${{ github.sha }}
+          BUILDCHAIN_UNIVERSAL_CONSUMER_WORKFLOW_REF: ${{ github.workflow_ref }}
+          EXPECTED_SHA: ${{ steps.request.outputs.sha }}
+          REVIEW_PR: ${{ steps.request.outputs.pr }}
+        run: |
+          set -euo pipefail
+          observed_at="$(date -u '+%Y-%m-%dT%H:%M:%S.000Z')"
+          jq -n --arg expected "${EXPECTED_SHA}" \
+            --arg observed_at "${observed_at}" \
+            --argjson pull_request "${REVIEW_PR}" \
+            --slurpfile reviews .buildchain-reviews.json \
+            --slurpfile checks .buildchain-checks.json '
+              {
+                repository: "kungfu-systems/buildchain",
+                pullRequest: $pull_request,
+                headSha: $expected,
+                baseRef: "dev/v4/v4.0",
+                approvals: ($reviews[0]
+                  | map(select(.state == "APPROVED" and .commit_id == $expected))
+                  | map({
+                      reviewer: (.user.login | ascii_downcase),
+                      commitSha: .commit_id,
+                      submittedAt: (.submitted_at | fromdateiso8601 | strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+                    })),
+                checks: ($checks[0] | map(select(.status == "completed" and (.conclusion // "") != "")) | map({name, status, conclusion})),
+                observedAt: $observed_at
+              }
+            ' > .buildchain-review-evidence.json
+          BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON="$(jq -c '.' .buildchain/candidate/architecture/v4-universal-workflow-train-admission.json)"
+          BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON="$(jq -c '.' .buildchain-review-evidence.json)"
+          BUILDCHAIN_UNIVERSAL_OBSERVED_SHA="${EXPECTED_SHA}"
+          BUILDCHAIN_UNIVERSAL_OBSERVED_AT="${observed_at}"
+          export BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON
+          export BUILDCHAIN_UNIVERSAL_OBSERVED_SHA BUILDCHAIN_UNIVERSAL_OBSERVED_AT
+          node .buildchain/candidate/scripts/v4-universal-workflow-engine.mjs admit > .buildchain-admission.json
+          {
+            echo "runtime-sha=${EXPECTED_SHA}"
+            echo "admission-json=$(jq -c '.' .buildchain-admission.json)"
+          } >> "${GITHUB_OUTPUT}"
+
+  recovery-execute:
+    needs: recovery-admit
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      artifact-metadata: write
+      attestations: write
+      checks: write
+      contents: write
+      deployments: write
+      id-token: write
+      issues: write
+      packages: write
+      pages: write
+      pull-requests: write
+      security-events: write
+      statuses: write
+    outputs:
+      result-json: ${{ steps.execute.outputs.result-json }}
+    steps:
+      - name: Checkout unchanged consumer source
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Checkout exact admitted candidate
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ needs.recovery-admit.outputs.runtime-sha }}
+          path: .buildchain/candidate
+          persist-credentials: false
+
+      - name: Execute only the exact admitted engine
+        id: execute
+        shell: bash
+        env:
+          BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ inputs.request-json }}
+          BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: ${{ needs.recovery-admit.outputs.admission-json }}
+          BUILDCHAIN_UNIVERSAL_ENGINE_SHA: ${{ needs.recovery-admit.outputs.runtime-sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node .buildchain/candidate/scripts/v4-universal-workflow-engine.mjs execute > .buildchain-result.json
+          echo "result-json=$(jq -c '.' .buildchain-result.json)" >> "${GITHUB_OUTPUT}"
+
+  recovery-settle:
+    needs: [recovery-admit, recovery-execute]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    outputs:
+      terminal-receipt-json: ${{ steps.settle.outputs.terminal-receipt-json }}
+      terminal-receipt-root: ${{ steps.settle.outputs.terminal-receipt-root }}
+      backflow-root: ${{ steps.backflow.outputs.backflow-root }}
+    steps:
+      - name: Seal receipt outside candidate authority
+        id: settle
+        shell: bash
+        env:
+          BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: ${{ needs.recovery-admit.outputs.admission-json }}
+          BUILDCHAIN_UNIVERSAL_RESULT_JSON: ${{ needs.recovery-execute.outputs.result-json }}
+        run: |
+          set -euo pipefail
+          node <<'NODE' > .buildchain-terminal.json
+          const crypto = require("node:crypto");
+          const admission = JSON.parse(process.env.BUILDCHAIN_UNIVERSAL_ADMISSION_JSON);
+          const result = JSON.parse(process.env.BUILDCHAIN_UNIVERSAL_RESULT_JSON);
+          const rootPattern = /^sha256:[0-9a-f]{64}$/;
+          const shaPattern = /^[0-9a-f]{40}$/;
+          const canonical = (value) => Array.isArray(value)
+            ? value.map(canonical)
+            : value && typeof value === "object"
+              ? Object.fromEntries(Object.keys(value).sort((left, right) => Buffer.from(left).compare(Buffer.from(right))).map((key) => [key, canonical(value[key])]))
+              : value;
+          const documentRoot = (domain, value) => {
+            const hash = crypto.createHash("sha256");
+            hash.update(domain, "utf8");
+            hash.update(Buffer.from([0]));
+            hash.update(`${JSON.stringify(canonical(value))}\n`, "utf8");
+            return `sha256:${hash.digest("hex")}`;
+          };
+          if (
+            admission.schema !== "kungfu-buildchain-v4-universal-workflow-admission/v1" ||
+            admission.status !== "admitted" ||
+            result.schema !== "kungfu-buildchain-v4-universal-workflow-result/v1" ||
+            !["succeeded", "failed"].includes(result.status) ||
+            result.requestRoot !== admission.requestRoot ||
+            result.capabilityRoot !== admission.capabilityRoot ||
+            result.runtime?.repository !== admission.runtime?.repository ||
+            result.runtime?.sha !== admission.runtime?.sha ||
+            !shaPattern.test(admission.runtime?.sha || "") ||
+            ![
+              admission.requestRoot,
+              admission.admissionRoot,
+              admission.discoveryRoot,
+              admission.reviewRoot,
+              admission.consumerRoot,
+              admission.capabilityRoot,
+              result.resultRoot,
+            ].every((value) => rootPattern.test(value || ""))
+          ) throw new Error("candidate result does not match the consumer-owned admission lineage");
+          const receipt = {
+            schema: "kungfu-buildchain-v4-universal-workflow-terminal-receipt/v1",
+            status: result.status,
+            requestRoot: admission.requestRoot,
+            admissionRoot: admission.admissionRoot,
+            discoveryRoot: admission.discoveryRoot,
+            reviewRoot: admission.reviewRoot,
+            consumerRoot: admission.consumerRoot,
+            capabilityRoot: admission.capabilityRoot,
+            runtime: admission.runtime,
+            resultRoot: result.resultRoot,
+          };
+          process.stdout.write(`${JSON.stringify({ ...receipt, receiptRoot: documentRoot("universal-workflow-receipt", receipt) })}\n`);
+          NODE
+          {
+            echo "terminal-receipt-json=$(jq -c '.' .buildchain-terminal.json)"
+            echo "terminal-receipt-root=$(jq -r '.receiptRoot' .buildchain-terminal.json)"
+          } >> "${GITHUB_OUTPUT}"
+          test "$(jq -r '.status' <<< "${BUILDCHAIN_UNIVERSAL_RESULT_JSON}")" = "succeeded"
+
+      - name: Checkout exact reviewed backflow coordinator
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: kungfu-systems/buildchain
+          ref: ${{ needs.recovery-admit.outputs.runtime-sha }}
+          path: .buildchain/candidate
+          persist-credentials: false
+
+      - name: Bind successful delivery to protected backflow
+        id: backflow
+        shell: bash
+        env:
+          BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ inputs.request-json }}
+          BUILDCHAIN_UNIVERSAL_TERMINAL_RECEIPT_JSON: ${{ steps.settle.outputs.terminal-receipt-json }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node .buildchain/candidate/scripts/v4-universal-workflow-backflow.mjs > .buildchain-backflow.json
+          echo "backflow-root=$(jq -r '.backflowRoot // empty' .buildchain-backflow.json)" >> "${GITHUB_OUTPUT}"

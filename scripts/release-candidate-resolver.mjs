@@ -12,7 +12,7 @@ import { writeGitHubOutputs } from "./build-contract-core.mjs";
 import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
 import { v4PublicationQualificationRoot, validateV4PublicationQualificationReceipt } from "../packages/core/v4-publication-qualification.js";
 
-const DEFAULT_WORKFLOW_FILE = "build-surface-fixture.yml";
+const DEFAULT_WORKFLOW_FILE = "self-build-fixture.yml";
 function env(name, fallback = "") {
   return process.env[name] || fallback;
 }
@@ -263,17 +263,17 @@ export function selectReleaseAssetPaths({
       `release candidate payload patterns matched no files: ${splitPatterns(patterns).join(", ")}`,
     );
   }
-  const basenames = new Set();
+  const selectedByBasename = new Map();
+  const digest = (filePath) => digestFileSync(filePath, "sha256", "hex");
   for (const filePath of files) {
     const basename = path.basename(filePath);
-    if (basenames.has(basename)) {
-      throw new Error(
-        `release candidate public asset basename is not unique: ${basename}`,
-      );
-    }
-    basenames.add(basename);
+    const existing = selectedByBasename.get(basename);
+    if (!existing) selectedByBasename.set(basename, filePath);
+    else if (digest(existing) !== digest(filePath))
+      throw new Error(`release candidate public asset basename is not unique: ${basename}`);
   }
-  return files;
+  // Repeated paths are safe only when they name the same immutable bytes.
+  return [...selectedByBasename.values()];
 }
 
 function packageNameFromArtifactPath(filePath) {

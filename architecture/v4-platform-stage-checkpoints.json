@@ -81,7 +81,7 @@
     }
   ],
   "projections": {
-    "protectedWorkflow": ".github/workflows/verify.yml",
+    "protectedWorkflow": ".github/workflows/self-build-verify.yml",
     "generatedTemplate": "scripts/init-repo.mjs",
     "agentGuidance": "AGENTS.md",
     "manual": "docs/v4-stage-capsule.md"

@@ -198,8 +198,8 @@ export function selectDevDeliveryWarrant(
     candidateId: transaction.result.candidate.candidateId,
     pullRequestNumber: transaction.result.candidate.pullRequestNumber,
     sourceHead: transaction.result.candidate.sourceHead,
-    assignmentRoot: transaction.result.candidate.assignmentRoot,
-    initiativeRoot: transaction.result.candidate.initiativeRoot,
+    ...candidateSourceBinding(transaction.result.candidate),
+
     sourceIdentityRoot: transaction.result.candidate.sourceIdentityRoot,
     sourcePatchRoot: transaction.result.candidate.sourcePatchRoot,
     sourceProofRoot: transaction.result.candidate.sourceProofRoot,
@@ -488,6 +488,7 @@ function createDevDeliverySuccessorWake(queue, now) {
         "candidateId",
         "pullRequestNumber",
         "sourceHead",
+        "sourceRoot",
         "assignmentRoot",
         "initiativeRoot",
         "sourceIdentityRoot",
@@ -585,4 +586,13 @@ export function observeDevDeliveryQueue(
     })),
     observedAt: currentTime,
   };
+}
+
+function candidateSourceBinding(candidate) {
+  return candidate.sourceRoot
+    ? { sourceRoot: candidate.sourceRoot }
+    : {
+        assignmentRoot: candidate.assignmentRoot,
+        initiativeRoot: candidate.initiativeRoot,
+      };
 }

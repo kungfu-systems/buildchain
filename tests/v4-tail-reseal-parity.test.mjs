@@ -44,7 +44,7 @@ test("tail-reseal parity matrix roots the captured v3 authority and complete v4 
 });
 
 test("public v4 tail workflow keeps floating selectors durable and effects outside Capsule reuse", () => {
-  const workflow = read(".github/workflows/v4-tail-reseal.yml");
+  const workflow = read(".github/workflows/public-ops-tail-reseal.yml");
   for (const required of [
     "workflow_call:",
     "BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}",
@@ -67,12 +67,15 @@ test("public v4 tail workflow keeps floating selectors durable and effects outsi
     "lifecycle run install",
     "lifecycle run build",
     "lifecycle run verify",
-    "uses: ./",
   ])
     assert.doesNotMatch(
       workflow,
       new RegExp(forbidden.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")),
     );
+  assert.doesNotMatch(
+    workflow,
+    /uses: \.\/(?!\.github\/workflows\/bootstrap\.yml(?:\s|$))/u,
+  );
   const signingTokenUses = workflow
     .split("\n")
     .filter((line) => line.includes("BUILDCHAIN_SIGNING_TOKEN"));
@@ -103,7 +106,7 @@ test("CLI, Node exports, schema, docs, and protected macOS rehearsal expose one 
     "kungfu-buildchain-v4-tail-reseal-request/v1",
   );
   assert.match(read("docs/MAP.md"), /v4-tail-reseal\.md/u);
-  const verify = read(".github/workflows/verify.yml");
+  const verify = read(".github/workflows/self-build-verify.yml");
   assert.match(verify, /if: matrix\.platform == 'macos-arm64'/u);
   assert.match(verify, /scripts\/v4-tail-reseal-macos-rehearsal\.mjs/u);
 });

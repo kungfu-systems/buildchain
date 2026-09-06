@@ -558,8 +558,6 @@
         "repository",
         "protectedBase",
         "pullRequestNumber",
-        "assignmentRoot",
-        "initiativeRoot",
         "sourceIdentityRoot",
         "deliveryClass",
         "candidateId",
@@ -576,10 +574,26 @@
         "qualification",
         "terminal"
       ],
+      "oneOf": [
+        {
+          "required": ["sourceRoot"],
+          "not": {
+            "anyOf": [
+              { "required": ["assignmentRoot"] },
+              { "required": ["initiativeRoot"] }
+            ]
+          }
+        },
+        {
+          "required": ["assignmentRoot", "initiativeRoot"],
+          "not": { "required": ["sourceRoot"] }
+        }
+      ],
       "properties": {
         "repository": { "type": "string" },
         "protectedBase": { "type": "string" },
         "pullRequestNumber": { "type": "integer", "minimum": 1 },
+        "sourceRoot": { "$ref": "#/$defs/root" },
         "assignmentRoot": { "$ref": "#/$defs/root" },
         "initiativeRoot": { "$ref": "#/$defs/root" },
         "sourceIdentityRoot": { "$ref": "#/$defs/root" },

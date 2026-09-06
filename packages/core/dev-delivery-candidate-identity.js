@@ -20,7 +20,21 @@ export const EXACT_DEV_DELIVERY_PROOF_FIELDS = Object.freeze([
   "environmentRoot",
   "sourceWorkflowRunId",
 ]);
-
+export function devDeliverySourceBinding(input = {}) {
+  const [sourceRoot, assignmentRoot, initiativeRoot] = [
+    "sourceRoot",
+    "assignmentRoot",
+    "initiativeRoot",
+  ].map((field) => String(input[field] || "").trim());
+  if (sourceRoot && !assignmentRoot && !initiativeRoot)
+    return { sourceRoot: exactRoot(sourceRoot, "sourceRoot") };
+  if (!sourceRoot && assignmentRoot && initiativeRoot)
+    return {
+      assignmentRoot: exactRoot(assignmentRoot, "assignmentRoot"),
+      initiativeRoot: exactRoot(initiativeRoot, "initiativeRoot"),
+    };
+  throw new Error("provide sourceRoot alone or both historical roots");
+}
 export function matchesExactDevDeliveryCandidate(existing, attempted) {
   return (
     existing.sourceHead === attempted.sourceHead &&
@@ -37,6 +51,29 @@ export function matchesExactDevDeliveryCandidate(existing, attempted) {
       attempted.releaseBlockerPriority?.claimRoot
   );
 }
+export function reuseExactActiveDevDeliverySourceProof(active, input) {
+  const phaseCompatible =
+    ["provisional", "qualified"].includes(active?.phase) ||
+    (!Object.hasOwn(active || {}, "phase") &&
+      active?.deliveryClass === "non-native-fast" &&
+      !Object.hasOwn(active || {}, "environmentRoot"));
+  const exact =
+    phaseCompatible &&
+    ["sourceRoot", "assignmentRoot", "initiativeRoot"].every(
+      (field) => active[field] === input[field],
+    ) &&
+    [
+      "pullRequestNumber",
+      "sourceIdentityRoot",
+      "deliveryClass",
+      "priority",
+    ].every((field) => active[field] === input[field]) &&
+    matchesExactDevDeliveryCandidate(active, {
+      ...input,
+      sourceProofRoot: active.sourceProofRoot,
+    });
+  return exact ? { ...input, sourceProofRoot: active.sourceProofRoot } : input;
+}
 
 export function createDevDeliveryCandidateIdentity(
   input,
@@ -50,8 +87,7 @@ export function createDevDeliveryCandidateIdentity(
       input.pullRequestNumber,
       "pullRequestNumber",
     ),
-    assignmentRoot: exactRoot(input.assignmentRoot, "assignmentRoot"),
-    initiativeRoot: exactRoot(input.initiativeRoot, "initiativeRoot"),
+    ...devDeliverySourceBinding(input),
     sourceIdentityRoot: exactRoot(
       input.sourceIdentityRoot,
       "sourceIdentityRoot",
@@ -59,11 +95,10 @@ export function createDevDeliveryCandidateIdentity(
     deliveryClass: deliveryClass(input.deliveryClass),
   };
   if (input.identitySemantics) {
-    if (text(input.identitySemantics) !== CHAINED_ATTEMPT_IDENTITY) {
+    if (text(input.identitySemantics) !== CHAINED_ATTEMPT_IDENTITY)
       throw new Error(
         `unsupported candidate identity semantics ${input.identitySemantics}`,
       );
-    }
     identity.identitySemantics = CHAINED_ATTEMPT_IDENTITY;
     identity.predecessorCandidateId = exactRoot(
       input.predecessorCandidateId,
@@ -72,7 +107,6 @@ export function createDevDeliveryCandidateIdentity(
   }
   return { ...identity, candidateId: devDeliveryContentRoot(identity) };
 }
-
 export function validateDevDeliveryCandidateChain(candidates, terminalStates) {
   const precedingCandidates = new Map();
   const latestByPullRequest = new Map();

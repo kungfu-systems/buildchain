@@ -1,15 +1,10 @@
 import {
   V4ContractFault,
   v4ContentRoot,
-  validateV4Clock,
   validateV4Root,
 } from "./v4-canonical-contracts.js";
-import {
-  V4_PROVIDER_OPERATION_OBSERVATION_CONTRACT,
-  v4ProviderOperationJournalStateRoot,
-  v4ProviderOperationEntryRoot,
-  validateV4ProviderOperationEntry,
-} from "./v4-provider-operation-journal.js";
+import { v4ProviderOperationJournalStateRoot } from "./v4-provider-operation-journal.js";
+import { V4DomainWasmFault, invokeV4DomainWasm } from "./v4-domain-wasm.js";
 
 export const V4_PROVIDER_READBACK_SAMPLE_CONTRACT =
   "buildchain-v4-provider-readback-sample/v1";
@@ -252,97 +247,17 @@ export function adaptV4OciManifestReadback(response, context) {
 }
 
 export function foldV4ProviderReadbackSamples(samples, coordinates) {
-  exactKeys(
-    coordinates,
-    [
-      "sequence",
-      "priorEntryRoot",
-      "operationRoot",
-      "attemptRoot",
-      "observedAt",
-    ],
-    "$/coordinates",
-  );
-  if (!Number.isSafeInteger(coordinates.sequence) || coordinates.sequence < 0)
-    fault(
-      "malformed-provider-readback",
-      "$/coordinates/sequence",
-      "readback sequence must be a non-negative safe integer",
-    );
-  for (const key of ["priorEntryRoot", "operationRoot", "attemptRoot"])
-    validateV4Root(coordinates[key], `$/coordinates/${key}`);
-  validateV4Clock(coordinates.observedAt, "$/coordinates/observedAt");
-  if (!Array.isArray(samples) || samples.length === 0)
-    fault(
-      "malformed-provider-readback",
-      "$/samples",
-      "at least one rooted provider readback sample is required",
-    );
-  const unique = new Map();
-  for (const [index, sample] of samples.entries()) {
-    validateSample(sample, `$/samples/${index}`);
-    if (
-      sample.operationRoot !== coordinates.operationRoot ||
-      sample.attemptRoot !== coordinates.attemptRoot
-    )
-      fault(
-        "provider-readback-coordinate-mismatch",
-        `$/samples/${index}`,
-        "provider readback sample does not bind the journal coordinates",
-      );
-    unique.set(sample.sampleRoot, sample);
+  try {
+    return invokeV4DomainWasm("provider-readback-fold", {
+      samples,
+      coordinates,
+    });
+  } catch (error) {
+    if (error instanceof V4DomainWasmFault) {
+      throw new V4ContractFault(error.code, error.path, error.message);
+    }
+    throw error;
   }
-  const folded = [...unique.values()].sort((left, right) =>
-    left.sampleRoot.localeCompare(right.sampleRoot),
-  );
-  const states = new Set(folded.map((sample) => sample.state));
-  if (states.has("already-applied") && states.size !== 1)
-    fault(
-      "conflicting-provider-readback",
-      "$/samples",
-      "successful and unresolved readbacks cannot describe one attempt",
-    );
-  const targets = new Set(
-    folded.map((sample) => sample.observedTargetRoot).filter(Boolean),
-  );
-  if (targets.size > 1)
-    fault(
-      "conflicting-provider-readback",
-      "$/samples",
-      "provider readbacks disagree about the observed target",
-    );
-  const classification = states.has("already-applied")
-    ? "already-applied"
-    : states.has("eventually-visible")
-      ? "eventually-visible"
-      : "not-found";
-  const readbackRoots = folded.map((sample) => sample.sampleRoot);
-  const observation = {
-    kind: "observation",
-    schema: V4_PROVIDER_OPERATION_OBSERVATION_CONTRACT,
-    sequence: coordinates.sequence,
-    priorEntryRoot: coordinates.priorEntryRoot,
-    operationRoot: coordinates.operationRoot,
-    attemptRoot: coordinates.attemptRoot,
-    observedAt: coordinates.observedAt,
-    status: classification === "already-applied" ? "succeeded" : "unknown",
-    evidenceRoots: readbackRoots,
-    entryRoot:
-      "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  };
-  observation.entryRoot = v4ProviderOperationEntryRoot(observation);
-  validateV4ProviderOperationEntry(observation);
-  const projection = {
-    schema: V4_PROVIDER_READBACK_FOLD_CONTRACT,
-    classification,
-    readbackRoots,
-    observation,
-    projectionRoot:
-      "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  };
-  const { projectionRoot: _projectionRoot, ...payload } = projection;
-  projection.projectionRoot = v4ContentRoot("provider-readback-fold", payload);
-  return projection;
 }
 
 const ADAPTERS = Object.freeze({

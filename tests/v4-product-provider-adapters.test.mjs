@@ -25,6 +25,7 @@ import { compileReleaseTailDeclaration } from "../packages/core/release-tail-pro
 
 const SOURCE = "a".repeat(40);
 const VERSION_STATE = "b".repeat(40);
+const REBASED_VERSION_STATE = "f".repeat(40);
 
 function digest(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -124,7 +125,9 @@ function githubProvider() {
     [SOURCE, { sha: SOURCE, tree: { sha: "source-tree" }, parents: [] }],
   ]);
   const pullRequests = [];
+  const checks = [];
   const protectedRefs = new Set();
+  let commitCount = 0;
   const rest = {
     git: {
       async getRef({ ref }) {
@@ -164,13 +167,15 @@ function githubProvider() {
       async getBlob({ file_sha }) {
         return { data: { content: blobs.get(file_sha), encoding: "base64" } };
       },
-      async createCommit({ tree, parents }) {
+      async createCommit({ tree, parents, message }) {
+        commitCount += 1;
         const commit = {
-          sha: VERSION_STATE,
+          sha: commitCount === 1 ? VERSION_STATE : REBASED_VERSION_STATE,
           tree: { sha: tree },
           parents: parents.map((sha) => ({ sha })),
+          message,
         };
-        commits.set(VERSION_STATE, commit);
+        commits.set(commit.sha, commit);
         return { data: commit };
       },
     },
@@ -183,7 +188,11 @@ function githubProvider() {
         return { data: { status: contained ? "ahead" : "diverged" } };
       },
     },
-    checks: { async create() {} },
+    checks: {
+      async create(input) {
+        checks.push(input);
+      },
+    },
     pulls: {
       async list() {
         return { data: pullRequests };
@@ -194,19 +203,36 @@ function githubProvider() {
       },
     },
   };
-  return { octokit: { rest }, refs, protectedRefs, pullRequests };
+  return {
+    octokit: { rest },
+    refs,
+    protectedRefs,
+    pullRequests,
+    checks,
+    commits,
+    trees,
+  };
 }
 
-function npmProvider(cwd, { initialIntegrity = "" } = {}) {
+function npmProvider(
+  cwd,
+  { initialIntegrity = "", visibilityLagReads = 0 } = {},
+) {
   let integrity = initialIntegrity;
   let publishCount = 0;
+  let packCount = 0;
+  let remainingVisibilityLagReads = 0;
   return {
     get publishCount() {
       return publishCount;
     },
+    get packCount() {
+      return packCount;
+    },
     spawn(command, args) {
       assert.equal(command, "npm");
       if (args[0] === "pack") {
+        packCount += 1;
         const destination = args[args.indexOf("--pack-destination") + 1];
         const filename = "kungfu-tech-buildchain-4.0.2-alpha.7.tgz";
         fs.writeFileSync(
@@ -226,12 +252,17 @@ function npmProvider(cwd, { initialIntegrity = "" } = {}) {
         };
       }
       if (args[0] === "view") {
+        if (remainingVisibilityLagReads > 0) {
+          remainingVisibilityLagReads -= 1;
+          return { status: 1, stdout: "", stderr: "npm error E404" };
+        }
         return integrity
           ? { status: 0, stdout: JSON.stringify(integrity), stderr: "" }
           : { status: 1, stdout: "", stderr: "npm error E404" };
       }
       if (args[0] === "publish") {
         publishCount += 1;
+        remainingVisibilityLagReads = visibilityLagReads;
         integrity = `sha512-${crypto
           .createHash("sha512")
           .update(fs.readFileSync(args[1]))
@@ -243,7 +274,7 @@ function npmProvider(cwd, { initialIntegrity = "" } = {}) {
   };
 }
 
-function productScenario(files, github, roots = ["6", "7"]) {
+function productScenario(files, github, roots = ["6", "7"], overrides = {}) {
   const intent = selectV4ProductPublicationIntent({
     channel: "alpha",
     targetRef: "alpha/v4/v4.0",
@@ -259,6 +290,7 @@ function productScenario(files, github, roots = ["6", "7"]) {
     ),
     candidateVersion: "4.0.2-alpha.6",
     observedVersions: ["4.0.2-alpha.6"],
+    ...overrides,
   });
   const plan = createV4ProductPublicationPlan({
     intent,
@@ -334,7 +366,7 @@ test("an existing npm version with different integrity blocks without republishi
   assert.equal(result.state, "terminal-failure");
   assert.equal(result.failure.code, "provider-conflict");
   assert.equal(npm.publishCount, 0);
-  assert.equal(github.refs.has("tags/v4.0.2-alpha.7"), false);
+  assert.equal(github.refs.has("tags/v4.0.2-alpha.6"), false);
 });
 
 test("rooted product effects publish once and replay entirely from provider readback", async () => {
@@ -386,9 +418,11 @@ test("rooted product effects publish once and replay entirely from provider read
   assert.equal(first.state, "complete");
   assert.equal(first.receipts.length, 3);
   assert.equal(npm.publishCount, 1);
-  assert.equal(github.refs.get("tags/v4.0.2-alpha.7"), SOURCE);
-  assert.equal(github.refs.get("tags/v4-alpha"), VERSION_STATE);
-  assert.equal(await firstRuntime.resolveReleaseSha(), VERSION_STATE);
+  assert.equal(npm.packCount, 0);
+  assert.equal(github.refs.get("tags/v4.0.2-alpha.6"), SOURCE);
+  assert.equal(github.refs.get("tags/v4-alpha"), SOURCE);
+  assert.equal(await firstRuntime.resolveReleaseSha(), SOURCE);
+  assert.equal(github.commits.size, 1);
 
   const replayRuntime = createV4ProductPublicationAdapters({
     request,
@@ -409,73 +443,84 @@ test("rooted product effects publish once and replay entirely from provider read
   assert.equal(npm.publishCount, 1);
 });
 
-test("protected-ref rejection blocks safely and resumes after PR merge without republishing npm", async () => {
+test("alpha publishes the sealed tarball without rematerializing package or Git state", async () => {
   const files = fixture();
   const github = githubProvider();
-  github.protectedRefs.add("heads/alpha/v4/v4.0");
   const npm = npmProvider(files.cwd);
-  const intent = selectV4ProductPublicationIntent({
-    channel: "alpha",
-    targetRef: "alpha/v4/v4.0",
-    sourceSha: SOURCE,
-    sourceTimestamp: "2026-08-30T00:00:00.000Z",
-    repository: "kungfu-systems/buildchain",
-    packageName: "@kungfu-tech/buildchain",
-    distTag: "alpha",
-    sealedBundleRoot: files.manifest.root,
-    requiredArtifactsRoot: v4ContentRoot(
-      "v4-product-required-artifacts",
-      files.requiredArtifacts,
-    ),
-    candidateVersion: "4.0.2-alpha.6",
-    observedVersions: ["4.0.2-alpha.6"],
-  });
-  const plan = createV4ProductPublicationPlan({
-    intent,
-    invocationRoot: `sha256:${"4".repeat(64)}`,
-    transactionRoot: `sha256:${"5".repeat(64)}`,
-  });
-  const effectPlan = compileReleaseTailDeclaration(
-    createV4ProductPublicationDeclaration({ intent, plan }),
-  );
-  const request = {
-    octokit: github.octokit,
-    mutationOctokit: github.octokit,
-    sealedBundleRoot: files.cwd,
-    sealedBundleManifest: files.manifestPath,
-    requiredArtifactsPath: files.requiredArtifactsPath,
-    requiredStatusCheck: "check",
+  const scenario = productScenario(files, github, ["c", "d"]);
+  let blobAttempts = 0;
+  github.octokit.rest.git.createBlob = async () => {
+    blobAttempts += 1;
+    throw new Error("alpha must not create version-state blobs");
   };
-  const interruptedRuntime = createV4ProductPublicationAdapters({
-    request,
-    intent,
-    plan,
+  const waits = [];
+  const runtime = createV4ProductPublicationAdapters({
+    request: scenario.request,
+    intent: scenario.intent,
+    plan: scenario.plan,
     cwd: files.cwd,
     spawn: npm.spawn,
+    wait(delayMs) {
+      waits.push(delayMs);
+    },
   });
-  const interrupted = await executeReleaseTailTransaction(
-    createReleaseTailTransaction(effectPlan),
-    { adapters: interruptedRuntime.adapters },
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(scenario.effectPlan),
+    { adapters: runtime.adapters },
   );
-  assert.equal(interrupted.state, "blocked");
-  assert.equal(interrupted.failure.code, "local-retry-exhausted");
+  assert.equal(result.state, "complete");
   assert.equal(npm.publishCount, 1);
-  assert.equal(github.pullRequests.length, 1);
-  assert.equal(github.refs.has("tags/v4-alpha"), false);
+  assert.equal(npm.packCount, 0);
+  assert.equal(blobAttempts, 0);
+  assert.deepEqual(waits, []);
+  assert.equal(github.refs.get("tags/v4-alpha"), SOURCE);
+});
 
-  github.refs.set("heads/alpha/v4/v4.0", VERSION_STATE);
-  const resumedRuntime = createV4ProductPublicationAdapters({
-    request,
-    intent,
-    plan,
+test("npm publication waits for registry visibility without republishing an immutable version", async () => {
+  const files = fixture();
+  const github = githubProvider();
+  const npm = npmProvider(files.cwd, { visibilityLagReads: 3 });
+  const scenario = productScenario(files, github, ["a", "b"]);
+  const waits = [];
+  const runtime = createV4ProductPublicationAdapters({
+    request: scenario.request,
+    intent: scenario.intent,
+    plan: scenario.plan,
+    cwd: files.cwd,
+    spawn: npm.spawn,
+    wait(delayMs) {
+      waits.push(delayMs);
+    },
+  });
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(scenario.effectPlan),
+    { adapters: runtime.adapters },
+  );
+  assert.equal(result.state, "complete");
+  assert.equal(npm.publishCount, 1);
+  assert.deepEqual(waits, [1_000, 2_000, 4_000]);
+});
+
+test("alpha refuses an unreviewed channel ref instead of creating another release PR", async () => {
+  const files = fixture();
+  const github = githubProvider();
+  github.refs.set("heads/alpha/v4/v4.0", "9".repeat(40));
+  const npm = npmProvider(files.cwd);
+  const scenario = productScenario(files, github, ["4", "5"]);
+  const runtime = createV4ProductPublicationAdapters({
+    request: scenario.request,
+    intent: scenario.intent,
+    plan: scenario.plan,
     cwd: files.cwd,
     spawn: npm.spawn,
   });
-  const resumed = await executeReleaseTailTransaction(
-    createReleaseTailTransaction(effectPlan),
-    { adapters: resumedRuntime.adapters },
+  const result = await executeReleaseTailTransaction(
+    createReleaseTailTransaction(scenario.effectPlan),
+    { adapters: runtime.adapters },
   );
-  assert.equal(resumed.state, "complete");
+  assert.equal(result.state, "terminal-failure");
+  assert.equal(result.failure.code, "alpha-candidate-ref-not-converged");
   assert.equal(npm.publishCount, 1);
-  assert.equal(github.refs.get("tags/v4-alpha"), VERSION_STATE);
+  assert.equal(github.pullRequests.length, 0);
+  assert.equal(github.refs.has("tags/v4-alpha"), false);
 });

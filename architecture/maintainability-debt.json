@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64348,
-    "current": 56287
+    "measuredExcess": 64729,
+    "current": 56668
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -826,35 +826,35 @@
         "baseline": {
           "lines": 2878,
           "functions": {
-            "collectPaperStatus@1117": {
+            "collectPaperStatus@1124": {
               "lines": 190,
               "complexity": 47
             },
-            "validatePaperProvisioningAuthority@1308": {
+            "validatePaperProvisioningAuthority@1315": {
               "complexity": 45
             }
           }
         },
         "current": {
-          "lines": 2512,
+          "lines": 2478,
           "functions": {
-            "collectPaperStatus@1117": {
+            "collectPaperStatus@1124": {
               "lines": 190,
               "complexity": 47
             },
-            "validatePaperProvisioningAuthority@1308": {
-              "complexity": 45
+            "validatePaperProvisioningAuthority@1315": {
+              "complexity": 36
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "collectPaperStatus@1117": {
+            "collectPaperStatus@1124": {
               "lines": 180,
               "complexity": 25
             },
-            "validatePaperProvisioningAuthority@1308": {
+            "validatePaperProvisioningAuthority@1315": {
               "complexity": 25
             }
           }
@@ -1034,13 +1034,13 @@
             "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 65
             },
-            "validateReleaseEvidenceAttachments@2105": {
+            "validateReleaseEvidenceAttachments@2106": {
               "complexity": 26
             }
           }
         },
         "current": {
-          "lines": 2883,
+          "lines": 2884,
           "functions": {
             "mergeAuthoritativePassportBase@407": {
               "complexity": 29
@@ -1059,7 +1059,7 @@
             "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 65
             },
-            "validateReleaseEvidenceAttachments@2105": {
+            "validateReleaseEvidenceAttachments@2106": {
               "complexity": 26
             }
           }
@@ -1084,63 +1084,7 @@
             "validateKfd2ReleaseTrustPassportAudit@1786": {
               "complexity": 25
             },
-            "validateReleaseEvidenceAttachments@2105": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/release-tail-provider-plane.js": {
-        "baseline": {
-          "lines": 1228,
-          "functions": {
-            "normalizeCapability@235": {
-              "lines": 255
-            },
-            "validateReleaseTailEffectPlan@602": {
-              "complexity": 30
-            },
-            "validateReleaseTailTransaction@744": {
-              "complexity": 33
-            },
-            "executeReleaseTailTransaction@1016": {
-              "lines": 190,
-              "complexity": 27
-            }
-          }
-        },
-        "current": {
-          "lines": 1228,
-          "functions": {
-            "normalizeCapability@235": {
-              "lines": 255
-            },
-            "validateReleaseTailEffectPlan@602": {
-              "complexity": 30
-            },
-            "validateReleaseTailTransaction@744": {
-              "complexity": 33
-            },
-            "executeReleaseTailTransaction@1016": {
-              "lines": 190,
-              "complexity": 27
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "normalizeCapability@235": {
-              "lines": 180
-            },
-            "validateReleaseTailEffectPlan@602": {
-              "complexity": 25
-            },
-            "validateReleaseTailTransaction@744": {
-              "complexity": 25
-            },
-            "executeReleaseTailTransaction@1016": {
-              "lines": 180,
+            "validateReleaseEvidenceAttachments@2106": {
               "complexity": 25
             }
           }
@@ -1259,7 +1203,7 @@
           "lines": 1229
         },
         "current": {
-          "lines": 1229
+          "lines": 1216
         },
         "target": {
           "lines": 600
@@ -1270,7 +1214,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1483
+          "lines": 1474
         },
         "target": {
           "lines": 600
@@ -1279,21 +1223,21 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@361": {
+            "evaluateMaintainability@253": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@361": {
+            "evaluateMaintainability@253": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@361": {
+            "evaluateMaintainability@253": {
               "complexity": 25
             }
           }
@@ -1425,7 +1369,7 @@
             "evaluatePullRequest@204": {
               "complexity": 31
             },
-            "runDevPrAdmission@764": {
+            "runDevPrAdmission@767": {
               "complexity": 32
             },
             "runDevPrAutoMerge@909": {
@@ -1440,7 +1384,7 @@
             "evaluatePullRequest@204": {
               "complexity": 31
             },
-            "runDevPrAdmission@764": {
+            "runDevPrAdmission@767": {
               "complexity": 32
             },
             "runDevPrAutoMerge@909": {
@@ -1455,7 +1399,7 @@
             "evaluatePullRequest@204": {
               "complexity": 25
             },
-            "runDevPrAdmission@764": {
+            "runDevPrAdmission@767": {
               "complexity": 25
             },
             "runDevPrAutoMerge@909": {
@@ -1491,21 +1435,21 @@
       "scripts/generate-channel-promotion-workflow.mjs": {
         "baseline": {
           "functions": {
-            "generateChannelPromotionWorkflow@278": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 282
             }
           }
         },
         "current": {
           "functions": {
-            "generateChannelPromotionWorkflow@278": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 240
             }
           }
         },
         "target": {
           "functions": {
-            "generateChannelPromotionWorkflow@278": {
+            "generateChannelPromotionWorkflow@280": {
               "lines": 180
             }
           }
@@ -1515,7 +1459,7 @@
         "baseline": {
           "lines": 1410,
           "functions": {
-            "buildSiteBundle@719": {
+            "buildSiteBundle@720": {
               "lines": 637
             }
           }
@@ -1523,15 +1467,15 @@
         "current": {
           "lines": 1410,
           "functions": {
-            "buildSiteBundle@719": {
-              "lines": 637
+            "buildSiteBundle@720": {
+              "lines": 636
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "buildSiteBundle@719": {
+            "buildSiteBundle@720": {
               "lines": 180
             }
           }
@@ -1804,6 +1748,17 @@
           }
         }
       },
+      "scripts/v4-universal-workflow-engine.mjs": {
+        "baseline": {
+          "lines": 620
+        },
+        "current": {
+          "lines": 618
+        },
+        "target": {
+          "lines": 600
+        }
+      },
       "scripts/v4-architecture.mjs": {
         "baseline": {
           "lines": 610
@@ -2047,6 +2002,93 @@
           }
         }
       },
+      "crates/buildchain-v4-contracts/src/product_publication.rs": {
+        "baseline": {
+          "functions": {
+            "select_product_publication_intent@156": {
+              "complexity": 38
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "select_product_publication_intent@156": {
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "select_product_publication_intent@156": {
+              "complexity": 30
+            }
+          }
+        }
+      },
+      "crates/buildchain-v4-contracts/src/release_tail.rs": {
+        "baseline": {
+          "lines": 1399,
+          "functions": {
+            "normalize_capability@228": {
+              "lines": 245,
+              "complexity": 51
+            },
+            "advance_release_tail_execution@1205": {
+              "lines": 193
+            }
+          }
+        },
+        "current": {
+          "lines": 1397,
+          "functions": {
+            "normalize_capability@228": {
+              "lines": 245,
+              "complexity": 51
+            },
+            "advance_release_tail_execution@1205": {
+              "lines": 193
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "normalize_capability@228": {
+              "lines": 140,
+              "complexity": 30
+            },
+            "advance_release_tail_execution@1205": {
+              "lines": 140
+            }
+          }
+        }
+      },
+      "crates/buildchain-v4-contracts/src/wasm.rs": {
+        "baseline": {
+          "functions": {
+            "dispatch@61": {
+              "lines": 214,
+              "complexity": 64
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "dispatch@61": {
+              "lines": 207,
+              "complexity": 64
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "dispatch@61": {
+              "lines": 140,
+              "complexity": 30
+            }
+          }
+        }
+      },
       "crates/buildchain-v4-contracts/src/provider_operation_journal.rs": {
         "baseline": {
           "functions": {
@@ -2205,7 +2247,7 @@
           }
         },
         "current": {
-          "lines": 2727,
+          "lines": 2738,
           "functions": {
             "<anonymous@1559>@1559": {
               "lines": 206
@@ -2373,7 +2415,7 @@
           "lines": 626
         },
         "current": {
-          "lines": 626
+          "lines": 624
         },
         "target": {
           "lines": 600
@@ -2480,7 +2522,7 @@
           "lines": 1202
         },
         "current": {
-          "lines": 1202
+          "lines": 1201
         },
         "target": {
           "lines": 600
@@ -2937,7 +2979,7 @@
           "lines": 2736
         },
         "current": {
-          "lines": 1147
+          "lines": 1217
         },
         "target": {
           "lines": 600
@@ -3083,12 +3125,20 @@
     }
   },
   "hotspots": [
+    ".github/workflows/.build.yml",
+    ".github/workflows/.publication-authority.yml",
+    ".github/workflows/bootstrap.yml",
+    "scripts/check-v4-universal-workflow-bootstrap.mjs",
+    "scripts/v4-universal-workflow-engine.mjs",
+    "tests/v4-universal-workflow-bootstrap.test.mjs",
     "tests/v3-v4-capability-inventory.test.mjs",
     "tests/v4-floating-consumer-policy-contract.test.mjs",
     "tests/v4-publication-qualification.test.mjs",
     ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/buildchain-ref-promotion.yml",
+    ".github/workflows/dev-pr-auto-merge.yml",
     "tests/release-candidate-recovery.test.mjs",
+    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
     ".github/workflows/.release-candidate-promote.yml",
     "tests/build-surface-promotion.test.mjs",
     ".github/workflows/buildchain-ref-promotion-recovery.yml",
@@ -3100,6 +3150,8 @@
     "actions/promote-buildchain-ref/lib.js",
     "actions/v4-release-candidate-promote/index.js",
     "actions/v4-release-candidate-promote/product-provider.js",
+    "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
+    "tests/v4-release-candidate-promote.test.mjs",
     "scripts/check-inventory.mjs",
     "tests/promote-buildchain-ref.test.mjs",
     "tests/promotion-channel-router.test.mjs",
@@ -3117,7 +3169,9 @@
     "tests/promote-buildchain-ref-governance.test.mjs",
     "scripts/buildchain-cli-help.mjs",
     "scripts/check-maintainability.mjs",
-    "tests/maintainability.test.mjs"
+    "tests/maintainability.test.mjs",
+    "scripts/generate-v4-universal-workflow-facades.mjs",
+    "scripts/check-v4-release-topology.mjs"
   ],
   "burnDownSlices": [
     {
@@ -3139,21 +3193,21 @@
       "path": ".github/workflows/.release-candidate-promote.yml",
       "metric": "lines",
       "baseline": 2736,
-      "current": 1147
+      "current": 1217
     },
     {
       "domain": "sources",
       "path": "packages/core/release-passport.js",
       "metric": "lines",
       "baseline": 2987,
-      "current": 2883
+      "current": 2884
     },
     {
       "domain": "sources",
       "path": "packages/core/paper.js",
       "metric": "lines",
       "baseline": 2878,
-      "current": 2512
+      "current": 2478
     }
   ]
 }

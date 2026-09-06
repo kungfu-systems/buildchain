@@ -80,7 +80,7 @@ function assertPersistedSelectors() {
       const selector = match[2];
       const protectedBootstrap =
         relative ===
-          ".github/workflows/buildchain-ref-promotion-recovery.yml" &&
+          ".github/workflows/self-ops-promotion-recovery.yml" &&
         match[1] === ".github/workflows/.release-candidate-promote.yml" &&
         selector === "alpha/v4/v4.0";
       const isV4 =
@@ -148,7 +148,7 @@ export function checkV4FloatingConsumerPolicyContract() {
     "Resolve controller identities",
     "Install Buildchain runtime dependencies",
   ]);
-  const stageCanary = read(".github/workflows/v4-stage-capsule-canary.yml");
+  const stageCanary = read(".github/workflows/public-build-stage-capsule-canary.yml");
   if (
     !stageCanary.includes("consumer-admission:") ||
     !stageCanary.includes("needs: consumer-admission")

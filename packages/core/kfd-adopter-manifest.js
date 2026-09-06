@@ -21,7 +21,7 @@ export const KFD_LEGACY_SUPPORT_MATRIX_CONTRACT = "kungfu-kfd-support-matrix";
 
 const BUILDCHAIN_ADOPTER_ID = "kungfu-systems/buildchain";
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
-const SHA_PATTERN = /^[0-9a-f]{40}$/;
+const SHA_PATTERN = /^[0-9a-f]{40}$/, SOURCE_REPOSITORY_PATTERN = /^[^@\s]+$/;
 const REQUIRED_DECISIONS = Object.freeze(["KFD-1", "KFD-2", "KFD-3", "KFD-4", "KFD-5", "KFD-7"]);
 const PRODUCT_GATE_STANDARDS = Object.freeze(["kfd-4", "kfd-5", "kfd-7"]);
 const PRODUCT_GATE_SET = new Set(PRODUCT_GATE_STANDARDS);
@@ -77,29 +77,27 @@ function verifyPublishedManifest(manifest, packageOptions, issues) {
   }
 }
 
-function manifestSourceSha(manifest) {
-  const match = /^kungfu-systems\/buildchain@([0-9a-f]{40})$/.exec(text(manifest?.adopter?.artifact?.coordinate));
-  return match?.[1] || "";
-}
+function adopterExpectation({ expectedAdopterId = BUILDCHAIN_ADOPTER_ID, expectedSourceRepository = "" } = {}) { const adopterId = text(expectedAdopterId) || BUILDCHAIN_ADOPTER_ID; return { adopterId, sourceRepository: text(expectedSourceRepository) || adopterId }; }
 
-function validateManifestIdentity(manifest, packageArtifactRoot, expectedSourceSha, issues) {
-  if (manifest?.adopter?.id !== BUILDCHAIN_ADOPTER_ID) {
-    issues.push(issue("adopter-identity", "manifest.adopter.id", `manifest adopter must be ${BUILDCHAIN_ADOPTER_ID}`));
-  }
+function manifestSource(manifest) { const coordinate = text(manifest?.adopter?.artifact?.coordinate), match = /^([^@\s]+)@([0-9a-f]{40})$/.exec(coordinate); return { coordinate, repository: match?.[1] || "", sha: match?.[2] || "" }; }
+
+function validateManifestIdentity(manifest, packageArtifactRoot, expectation, expectedSourceSha, issues) {
+  if (manifest?.adopter?.id !== expectation.adopterId) issues.push(issue("adopter-identity", "manifest.adopter.id", `manifest adopter must be ${expectation.adopterId}`));
   const pinned = manifest?.kfdCut?.package;
   if (pinned?.name !== kfdPackageJson.name
     || pinned?.version !== kfdPackageJson.version
     || pinned?.artifactRoot !== packageArtifactRoot) {
     issues.push(issue("adopter-package-cut", "manifest.kfdCut.package", "manifest must bind the exact installed KFD package cut"));
   }
-  const sourceSha = manifestSourceSha(manifest);
-  if (manifest?.adopter?.artifact?.kind !== "git-commit" || !sourceSha
-    || !ROOT_PATTERN.test(text(manifest?.adopter?.artifact?.root))) {
-    issues.push(issue("adopter-source", "manifest.adopter.artifact", "Buildchain adopter authority must bind one exact git commit and artifact root"));
-  } else if (expectedSourceSha && sourceSha !== expectedSourceSha) {
+  const source = manifestSource(manifest);
+  if (!SOURCE_REPOSITORY_PATTERN.test(expectation.sourceRepository) || manifest?.adopter?.artifact?.kind !== "git-commit" || !source.sha || !ROOT_PATTERN.test(text(manifest?.adopter?.artifact?.root))) {
+    issues.push(issue("adopter-source", "manifest.adopter.artifact", "adopter authority must bind one exact repository, git commit, and artifact root"));
+  } else if (source.repository !== expectation.sourceRepository) {
+    issues.push(issue("adopter-source", "manifest.adopter.artifact.coordinate", `manifest source repository must be ${expectation.sourceRepository}`));
+  } else if (expectedSourceSha && source.sha !== expectedSourceSha) {
     issues.push(issue("adopter-source", "manifest.adopter.artifact.coordinate", "manifest source does not match the requested release source"));
   }
-  return sourceSha;
+  return source;
 }
 
 function validateRequiredDecisions(decisions, issues) {
@@ -131,7 +129,7 @@ function collectProductGates(gateResults, decisions, verificationCut, issues) {
   for (const [index, gate] of gateResults.entries()) {
     const validation = validateKfdProductGateResult(gate, verificationCut);
     if (!validation.valid) {
-      issues.push(issue("adopter-gate-invalid", `gateResults[${index}]`, "Buildchain product gate is invalid", {
+      issues.push(issue("adopter-gate-invalid", `gateResults[${index}]`, "adopter product gate is invalid", {
         gateIssues: validation.issues,
       }));
     }
@@ -141,15 +139,16 @@ function collectProductGates(gateResults, decisions, verificationCut, issues) {
     if (gates.has(gate?.standard)) {
       issues.push(issue("adopter-gate-duplicate", `gateResults[${index}].standard`, `${gate.standard} gate is duplicated`));
     }
+    if (gate?.source?.repository !== verificationCut.expectedSourceRepository) issues.push(issue("adopter-gate-source", `gateResults[${index}].source.repository`, "product gate repository must match the adopter source repository"));
     gates.set(gate?.standard, gate);
   }
   for (const standard of PRODUCT_GATE_STANDARDS) {
     const gate = gates.get(standard);
     const id = standard.toUpperCase();
     if (!gate) {
-      issues.push(issue("adopter-gate-missing", `gateResults.${standard}`, `${id} requires its existing Buildchain product gate`));
+      issues.push(issue("adopter-gate-missing", `gateResults.${standard}`, `${id} requires its exact adopter product gate`));
     } else if (!(decisions.get(id)?.verificationEvidence || []).some((entry) => entry?.root === gate.gateRoot)) {
-      issues.push(issue("adopter-gate-unbound", `manifest.decisions.${id}.verificationEvidence`, `${id} must bind the exact Buildchain gate root`));
+      issues.push(issue("adopter-gate-unbound", `manifest.decisions.${id}.verificationEvidence`, `${id} must bind the exact adopter gate root`));
     }
   }
   return gates;
@@ -159,12 +158,12 @@ function projectedProductGates(gates) {
   return PRODUCT_GATE_STANDARDS.map((standard) => {
     const gate = gates.get(standard);
     return gate
-      ? { standard, sourceSha: gate.source.sha, gateRoot: gate.gateRoot, status: gate.status }
-      : { standard, sourceSha: "", gateRoot: "", status: "missing" };
+      ? { standard, sourceRepository: gate.source.repository, sourceSha: gate.source.sha, gateRoot: gate.gateRoot, status: gate.status }
+      : { standard, sourceRepository: "", sourceSha: "", gateRoot: "", status: "missing" };
   });
 }
 
-function createGateDocument({ manifest, bundle, gates, authorityPath, packageArtifactRoot, sourceSha, checkedAt, maxAgeSeconds, issues }) {
+function createGateDocument({ manifest, bundle, gates, authorityPath, packageArtifactRoot, source, checkedAt, maxAgeSeconds, issues }) {
   const gate = {
     schemaVersion: 1,
     contract: KFD_ADOPTER_MANIFEST_GATE_CONTRACT,
@@ -174,10 +173,8 @@ function createGateDocument({ manifest, bundle, gates, authorityPath, packageArt
       contract: text(manifest?.contract),
       manifestRoot: bundle?.roots?.manifestRoot || "",
     },
-    source: {
-      sha: sourceSha,
-      artifactRoot: text(manifest?.adopter?.artifact?.root),
-    },
+    adopter: { id: text(manifest?.adopter?.id) },
+    source: { repository: source.repository, coordinate: source.coordinate, sha: source.sha, artifactRoot: text(manifest?.adopter?.artifact?.root) },
     verificationCut: { checkedAt, maxAgeSeconds },
     standardPackage: {
       name: kfdPackageJson.name,
@@ -211,28 +208,28 @@ export function createKfdAdopterManifestGate({
   packageArtifactRoot = "",
   gateResults = [],
   authorityPath = ".buildchain/kfd/adopter-manifest.json",
-  expectedSourceSha = "",
+  expectedAdopterId = BUILDCHAIN_ADOPTER_ID, expectedSourceRepository = "", expectedSourceSha = "",
   checkedAt = new Date().toISOString(),
   maxAgeSeconds = 86400,
 } = {}) {
-  const issues = [];
+  const issues = [], expectation = adopterExpectation({ expectedAdopterId, expectedSourceRepository });
   const bundle = verifyPublishedManifest(manifest, {
     packageArtifactRoot,
     verifiedAt: checkedAt,
     maxAgeSeconds,
   }, issues);
   const decisions = new Map((manifest?.decisions || []).map((row) => [row.id, row]));
-  let sourceSha = manifestSourceSha(manifest);
+  let source = manifestSource(manifest);
   if (bundle) {
-    sourceSha = validateManifestIdentity(manifest, packageArtifactRoot, expectedSourceSha, issues);
+    source = validateManifestIdentity(manifest, packageArtifactRoot, expectation, expectedSourceSha, issues);
     validateRequiredDecisions(decisions, issues);
     validateWarrantWitness(decisions, issues);
   }
-  const gates = collectProductGates(gateResults, decisions, { expectedSourceSha: sourceSha || expectedSourceSha, checkedAt }, issues);
-  return createGateDocument({ manifest, bundle, gates, authorityPath, packageArtifactRoot, sourceSha, checkedAt, maxAgeSeconds, issues });
+  const gates = collectProductGates(gateResults, decisions, { expectedSourceRepository: expectation.sourceRepository, expectedSourceSha: source.sha || expectedSourceSha, checkedAt }, issues);
+  return createGateDocument({ manifest, bundle, gates, authorityPath, packageArtifactRoot, source, checkedAt, maxAgeSeconds, issues });
 }
 
-function validateGateDocument(gate, issues) {
+function validateGateDocument(gate, expectation, issues) {
   const copy = structuredClone(gate);
   const root = copy.gateRoot;
   delete copy.gateRoot;
@@ -244,12 +241,13 @@ function validateGateDocument(gate, issues) {
     || !ROOT_PATTERN.test(text(gate?.authority?.manifestRoot))) {
     issues.push(issue("adopter-gate-authority", "authority", "adopter gate must bind the standard manifest contract and root"));
   }
+  if (gate?.adopter?.id !== expectation.adopterId) issues.push(issue("adopter-gate-identity", "adopter.id", `adopter gate must bind ${expectation.adopterId}`));
   if (gate?.standardPackage?.name !== kfdPackageJson.name || gate?.standardPackage?.version !== kfdPackageJson.version
     || ![gate?.standardPackage?.artifactRoot, gate?.standardPackage?.registryRoot, gate?.standardPackage?.verifierSetRoot].every((value) => ROOT_PATTERN.test(text(value)))) {
     issues.push(issue("adopter-gate-package", "standardPackage", "adopter gate uses stale KFD package metadata"));
   }
-  if (!SHA_PATTERN.test(text(gate?.source?.sha)) || !ROOT_PATTERN.test(text(gate?.source?.artifactRoot))) {
-    issues.push(issue("adopter-gate-source", "source", "adopter gate must bind one exact Buildchain source commit and artifact root"));
+  if (gate?.source?.repository !== expectation.sourceRepository || gate?.source?.coordinate !== `${expectation.sourceRepository}@${gate?.source?.sha || ""}` || !SHA_PATTERN.test(text(gate?.source?.sha)) || !ROOT_PATTERN.test(text(gate?.source?.artifactRoot))) {
+    issues.push(issue("adopter-gate-source", "source", "adopter gate must bind the expected repository, exact source commit, coordinate, and artifact root"));
   }
   if (gate?.decisionWitness?.rootAlgorithm !== "sha256-buildchain-stable-json-v1"
     || !ROOT_PATTERN.test(text(gate?.decisionWitness?.root))
@@ -259,7 +257,7 @@ function validateGateDocument(gate, issues) {
   }
 }
 
-function validateProjectedGates(gate, expectedSourceSha, issues) {
+function validateProjectedGates(gate, expectation, expectedSourceSha, issues) {
   const seenStandards = new Set();
   for (const [index, productGate] of (gate.gateResults || []).entries()) {
     if (!PRODUCT_GATE_SET.has(productGate?.standard) || productGate?.status !== "passed" || !ROOT_PATTERN.test(text(productGate?.gateRoot))) {
@@ -267,7 +265,7 @@ function validateProjectedGates(gate, expectedSourceSha, issues) {
     }
     if (seenStandards.has(productGate?.standard)) issues.push(issue("adopter-gate-result-set", `gateResults[${index}]`, "product gate standards must be unique"));
     seenStandards.add(productGate?.standard);
-    if (productGate?.sourceSha !== gate?.source?.sha || (expectedSourceSha && productGate?.sourceSha !== expectedSourceSha)) {
+    if (productGate?.sourceRepository !== gate?.source?.repository || productGate?.sourceRepository !== expectation.sourceRepository || productGate?.sourceSha !== gate?.source?.sha || (expectedSourceSha && productGate?.sourceSha !== expectedSourceSha)) {
       issues.push(issue("adopter-gate-source", `gateResults[${index}].sourceSha`, "product gate source must match the release source"));
     }
   }
@@ -277,15 +275,15 @@ function validateProjectedGates(gate, expectedSourceSha, issues) {
 }
 
 export function validateKfdAdopterManifestGate(gate, {
-  expectedSourceSha = "",
+  expectedAdopterId = BUILDCHAIN_ADOPTER_ID, expectedSourceRepository = "", expectedSourceSha = "",
   checkedAt = gate?.checkedAt || new Date().toISOString(),
 } = {}) {
-  const issues = [];
+  const issues = [], expectation = adopterExpectation({ expectedAdopterId, expectedSourceRepository });
   if (!gate || gate.schemaVersion !== 1 || gate.contract !== KFD_ADOPTER_MANIFEST_GATE_CONTRACT) {
     return { valid: false, issues: [issue("adopter-gate-contract", "", `gate must use ${KFD_ADOPTER_MANIFEST_GATE_CONTRACT} v1`)] };
   }
-  validateGateDocument(gate, issues);
-  validateProjectedGates(gate, expectedSourceSha, issues);
+  validateGateDocument(gate, expectation, issues);
+  validateProjectedGates(gate, expectation, expectedSourceSha, issues);
   if (gate.checkedAt !== checkedAt || gate?.verificationCut?.checkedAt !== checkedAt || !Number.isFinite(Date.parse(checkedAt))
     || !Number.isSafeInteger(gate?.verificationCut?.maxAgeSeconds) || gate.verificationCut.maxAgeSeconds < 0) {
     issues.push(issue("adopter-gate-time", "verificationCut", "adopter gate verification cut does not match the requested cut"));
@@ -300,7 +298,7 @@ function legacyStatus(row) {
   return row.state;
 }
 
-function legacyRow(row, gates) {
+function legacyRow(row, gates, adopterId) {
   const key = row.id.toLowerCase();
   const productGate = gates.get(key);
   return {
@@ -318,7 +316,7 @@ function legacyRow(row, gates) {
     releaseQualification: { shippedSupport: false },
     claimClass: "standard-adopter-manifest-projection",
     knownLimitations: [...row.gaps],
-    owner: BUILDCHAIN_ADOPTER_ID,
+    owner: adopterId,
     nextGate: "Release Passport artifact binding and independent release decision",
     declaration: { state: row.state, usage: row.usage, root: kfdProductGateDigest(decisionWitnessRow(row)) },
   };
@@ -326,7 +324,7 @@ function legacyRow(row, gates) {
 
 export function createKfdLegacySupportMatrixProjection({ manifest, manifestGate } = {}) {
   const validation = validateKfdAdopterManifestGate(manifestGate, {
-    expectedSourceSha: manifestGate?.source?.sha,
+    expectedAdopterId: manifestGate?.adopter?.id, expectedSourceRepository: manifestGate?.source?.repository, expectedSourceSha: manifestGate?.source?.sha,
     checkedAt: manifestGate?.checkedAt,
   });
   if (!validation.valid || manifest?.contract !== "kfd.adopter-conformance-manifest/v1") {
@@ -338,9 +336,9 @@ export function createKfdLegacySupportMatrixProjection({ manifest, manifestGate 
     verifiedAt: manifestGate.verificationCut.checkedAt,
     maxAgeSeconds: manifestGate.verificationCut.maxAgeSeconds,
   }, authorityIssues);
-  const sourceSha = validateManifestIdentity(manifest, manifestGate.standardPackage.artifactRoot, manifestGate.source.sha, authorityIssues);
+  const source = validateManifestIdentity(manifest, manifestGate.standardPackage.artifactRoot, { adopterId: manifestGate.adopter.id, sourceRepository: manifestGate.source.repository }, manifestGate.source.sha, authorityIssues);
   const decisionRoot = kfdProductGateDigest(manifest.decisions.map(decisionWitnessRow));
-  if (!bundle || sourceSha !== manifestGate.source.sha || manifest.adopter.artifact.root !== manifestGate.source.artifactRoot
+  if (!bundle || source.sha !== manifestGate.source.sha || source.repository !== manifestGate.source.repository || source.coordinate !== manifestGate.source.coordinate || manifest.adopter.artifact.root !== manifestGate.source.artifactRoot
     || bundle.roots.manifestRoot !== manifestGate.authority.manifestRoot
     || bundle.roots.verificationReportRoot !== manifestGate.manifestVerificationReportRoot
     || bundle.bundleRoot !== manifestGate.manifestBundleRoot
@@ -364,7 +362,8 @@ export function createKfdLegacySupportMatrixProjection({ manifest, manifestGate 
       path: manifestGate.authority.path,
       contract: manifest.contract,
       root: manifestGate.authority.manifestRoot,
-      gateRoot: manifestGate.gateRoot,
+      gateRoot: manifestGate.gateRoot, adopterId: manifestGate.adopter.id,
+      sourceRepository: manifestGate.source.repository, sourceSha: manifestGate.source.sha,
     },
     upstream: {
       package: manifestGate.standardPackage.name,
@@ -374,7 +373,7 @@ export function createKfdLegacySupportMatrixProjection({ manifest, manifestGate 
       verifierSetRoot: manifestGate.standardPackage.verifierSetRoot,
       standardsSha256: standardsFileDigest(),
     },
-    rows: manifest.decisions.map((row) => legacyRow(row, gates)),
+    rows: manifest.decisions.map((row) => legacyRow(row, gates, manifestGate.adopter.id)),
   };
 }
 

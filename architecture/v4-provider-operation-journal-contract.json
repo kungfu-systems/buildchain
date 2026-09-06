@@ -9,7 +9,7 @@
     "productionWriterCount": 1,
     "stateFoldAuthority": "rust-v4-core",
     "stateFoldWriterCount": 1,
-    "typescript": "provider-adapter-and-conformance-plane",
+    "typescript": "wasm-calling-provider-adapter-and-conformance-plane",
     "productionWriteChange": true
   },
   "implementations": {
@@ -17,7 +17,10 @@
     "rustFold": "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs",
     "rustReadback": "crates/buildchain-v4-contracts/src/provider_readback_idempotency.rs",
     "typescript": "packages/core/v4-provider-operation-journal.js",
-    "typescriptReadback": "packages/core/v4-provider-readback-idempotency.js"
+    "typescriptReadback": "packages/core/v4-provider-readback-idempotency.js",
+    "wasmRuntime": "packages/core/v4-domain-wasm.js",
+    "wasmArtifact": "packages/core/buildchain-v4-domain.wasm",
+    "artifactMetadata": "packages/core/v4-domain-wasm-artifact.js"
   },
   "activationDomain": {
     "architecture": "architecture/v4-release-activation-shadow-domain.json",

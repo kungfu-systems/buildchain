@@ -5,7 +5,7 @@ import { spawnSyncCommand } from "../packages/core/spawn-command.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const actionsRoot = path.join(root, "actions");
-const bundlePaths = readdirSync(actionsRoot, { withFileTypes: true })
+const javascriptBundlePaths = readdirSync(actionsRoot, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => path.join(actionsRoot, entry.name, "dist", "index.js"))
   .filter((bundlePath) => {
@@ -17,6 +17,14 @@ const bundlePaths = readdirSync(actionsRoot, { withFileTypes: true })
     }
   })
   .sort();
+const wasmBundlePaths = [
+  "promote-buildchain-ref",
+  "release-tail",
+  "v4-release-candidate-promote",
+].map((name) =>
+  path.join(actionsRoot, name, "dist", "buildchain-v4-domain.wasm"),
+);
+const bundlePaths = [...javascriptBundlePaths, ...wasmBundlePaths];
 
 const before = new Map(
   bundlePaths.map((bundlePath) => [bundlePath, readFileSync(bundlePath)]),
@@ -46,4 +54,6 @@ if (changed.length > 0) {
   process.exit(1);
 }
 
-console.log(`action bundle integrity check passed (${bundlePaths.length} bundles)`);
+console.log(
+  `action bundle integrity check passed (${bundlePaths.length} bundles)`,
+);

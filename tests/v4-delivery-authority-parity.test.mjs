@@ -852,7 +852,7 @@ test("every implemented parity disposition has an executable behavioral proof", 
     fs.readFileSync(
       path.join(
         repositoryRoot,
-        ".github/workflows/buildchain-dev-delivery.yml",
+        ".github/workflows/self-ops-dev-delivery.yml",
       ),
       "utf8",
     ),

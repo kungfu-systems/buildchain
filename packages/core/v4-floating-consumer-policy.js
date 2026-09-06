@@ -28,7 +28,7 @@ const BUILDCHAIN_REPOSITORY = "kungfu-systems/buildchain";
 const CHANNELS = Object.freeze({ v4: "stable", "v4-alpha": "alpha" });
 const ALPHA_RECOVERY_BOOTSTRAP = Object.freeze({
   selector: "alpha/v4/v4.0",
-  sourcePath: ".github/workflows/buildchain-ref-promotion-recovery.yml",
+  sourcePath: ".github/workflows/self-ops-promotion-recovery.yml",
   workflow: ".github/workflows/.release-candidate-promote.yml",
 });
 const DEFAULT_STABLE_LOCK_PATH = ".buildchain/contract-lock.json";

@@ -80,6 +80,11 @@ inputs:
     { default: "as-provided", description: "Package publication ordering" }
   publish-package-main:
     { required: false, description: "Main package publication identity" }
+  publish-artifact-kind:
+    {
+      default: "npm",
+      description: "Rooted product artifact kind: npm or custom",
+    }
   publish-auth:
     {
       default: "trusted-publishing",

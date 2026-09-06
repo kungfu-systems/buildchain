@@ -77,8 +77,8 @@ line.
 
 Buildchain implements the same governance loop with:
 
-- `.github/workflows/release-verify.yml` for PR verification;
-- `.github/workflows/buildchain-ref-promotion.yml` for post-verify ref
+- `.github/workflows/self-build-release-verify-compat.yml` for PR verification;
+- `.github/workflows/self-release-promote.yml` for post-verify ref
   promotion; this workflow dogfoods the declarative
   `release-candidate-promote.yml` wrapper and does not hand-wire resolver,
   artifact download, publish-gate, or promote action steps;
@@ -246,7 +246,7 @@ while exact tags and SHAs remain the reproducible audit choice.
 ### Buildchain Alpha Self-Dogfood
 
 Buildchain continuously consumes its own current major alpha through
-`.github/workflows/buildchain-alpha-self-dogfood.yml`. Both lanes call the
+`.github/workflows/self-build-alpha-dogfood.yml`. Both lanes call the
 released channel router at `build.yml@v3-alpha`. The auto lane must resolve
 `v3-alpha`; the explicit stable lane must resolve `v3`. Both execute the same
 declared install, build, and verify fixture, proving that a single consumer
@@ -295,7 +295,7 @@ resolution and evidence comparison.
 
 This is a post-publication consumer canary, not a release bootstrap. Source
 verification still runs the current commit, and
-`buildchain-ref-promotion.yml` still passes the verified exact SHA into the
+`self-release-promote.yml` still passes the verified exact SHA into the
 promotion workflow. Patrol, dev-merge, repair, and promotion defaults remain on
 stable or exact refs so a broken alpha cannot prevent Buildchain from publishing
 its fix. When Buildchain opens a new major, inventory validation requires this
@@ -526,7 +526,7 @@ The repository policy can be declared once instead of repeated as CLI flags:
 ```toml
 [governance.dev.merge_queue]
 mode = "inherit"
-required_workflows = [".github/workflows/verify.yml"]
+required_workflows = [".github/workflows/self-build-verify.yml"]
 ```
 
 `enabled` explicitly requires Buildchain to create or update an exact-branch
@@ -632,7 +632,7 @@ binds the caller commit/tree and both workflow digests.
 ```sh
 node .buildchain/workflow-contract-runtime/scripts/workflow-call-contract.mjs check \
   --caller-root . \
-  --caller-workflow .github/workflows/release-new-version.yml \
+  --caller-workflow .github/workflows/self-release-new-version-compat.yml \
   --caller-repository kungfu-systems/example \
   --job promote \
   --callee-root .buildchain/workflow-contract-runtime \
@@ -1009,8 +1009,8 @@ v3.0.1-alpha.0
 When debugging or extending release behavior, read in this order:
 
 1. `docs/release-flow.md`
-2. `.github/workflows/release-verify.yml`
-3. `.github/workflows/buildchain-ref-promotion.yml`
+2. `.github/workflows/self-build-release-verify-compat.yml`
+3. `.github/workflows/self-release-promote.yml`
 4. `.github/workflows/release-candidate-promote.yml`
 5. `.github/workflows/.release-candidate-promote.yml`
 6. `actions/promote-buildchain-ref/README.md`

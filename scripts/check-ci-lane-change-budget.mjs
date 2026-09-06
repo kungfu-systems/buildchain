@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import crypto from "node:crypto";
+import { projectWorkflowIdentities } from "./workflow-taxonomy.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -14,7 +15,7 @@ const policyPath = path.join(
   "ci-lane-change-budget.json",
 );
 
-const workflows = fs
+const physicalWorkflows = fs
   .readdirSync(workflowRoot, { withFileTypes: true })
   .filter((entry) => entry.isFile() && /\.(?:yaml|yml)$/u.test(entry.name))
   .map((entry) => {
@@ -25,6 +26,8 @@ const workflows = fs
     };
   })
   .sort((left, right) => left.path.localeCompare(right.path));
+
+const workflows = projectWorkflowIdentities(root, physicalWorkflows);
 
 const policy = JSON.parse(fs.readFileSync(policyPath, "utf8"));
 const baselineRevision = String(policy.baseline?.gitRevision || "").trim();

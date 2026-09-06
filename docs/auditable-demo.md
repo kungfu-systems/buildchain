@@ -139,7 +139,7 @@ jobs:
 ```
 
 Buildchain recursively consumes this surface in
-`.github/workflows/auditable-demo.yml` using its own exact standalone binary
+`.github/workflows/self-build-demo-dogfood.yml` using its own exact standalone binary
 and the beginner bootstrap scenario in `.buildchain/auditable-demo.json`.
 
 ## Authority Boundary

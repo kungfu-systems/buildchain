@@ -2,6 +2,11 @@ schema = 1
 
 [version]
 required = true
+derived_files = [
+  "dist/site/kfd-claims.json",
+  "dist/site/public-surface-audit.json",
+  "dist/site/workflow-registry.json",
+]
 
 [[version.files]]
 type = "json"
@@ -46,6 +51,7 @@ command = "corepack pnpm@11.7.0 run build && corepack pnpm@11.7.0 run generate:s
 
 [lifecycle.verify]
 commands = [
+  "rustup target add --toolchain 1.96.0 wasm32-unknown-unknown",
   "corepack pnpm@11.7.0 run check",
 ]
 
@@ -78,7 +84,7 @@ artifact_profile_selector = "git-commit"
 
 [governance.dev.merge_queue]
 mode = "enabled"
-required_workflows = [".github/workflows/verify.yml"]
+required_workflows = [".github/workflows/self-build-verify.yml"]
 check_response_timeout_minutes = 120
 max_entries_to_build = 1
 
@@ -128,7 +134,7 @@ kfd_2 = "declared"
 kfd_3 = "declared"
 kfd_4 = "declared"
 platforms = ["macOS", "Linux", "Windows"]
-workflows = ["verify.yml", "buildchain-ref-promotion.yml", "binary-distribution.yml"]
+workflows = ["self-build-verify.yml", "self-release-promote.yml", "self-build-binary-distribution.yml"]
 
 [kfd.upstream]
 auto_discover = false

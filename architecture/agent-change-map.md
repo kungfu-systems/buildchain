@@ -54,7 +54,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `packages/core/readme-badges.js`
 - sources: `packages/core/release-candidate.js`
 - sources: `packages/core/release-passport.js`
-- sources: `packages/core/release-tail-provider-plane.js`
 - sources: `packages/core/release-train.js`
 - sources: `packages/core/stable-release-gate.js`
 - sources: `packages/core/v4-runtime-ref-resume-authority.js`
@@ -84,6 +83,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `scripts/run-lifecycle-core.mjs`
 - sources: `scripts/stable-candidate-patrol.mjs`
 - sources: `scripts/stable-release-gate.mjs`
+- sources: `scripts/v4-universal-workflow-engine.mjs`
 - sources: `scripts/v4-architecture.mjs`
 - sources: `scripts/v4-warrant-shadow-plan.mjs`
 - sources: `scripts/web-surface-core.mjs`
@@ -92,6 +92,9 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `actions/promote-buildchain-ref/internal/promotion-operations.js`
 - rust: `crates/buildchain-v4-bridge/src/main.rs`
 - rust: `crates/buildchain-v4-contracts/src/main.rs`
+- rust: `crates/buildchain-v4-contracts/src/product_publication.rs`
+- rust: `crates/buildchain-v4-contracts/src/release_tail.rs`
+- rust: `crates/buildchain-v4-contracts/src/wasm.rs`
 - rust: `crates/buildchain-v4-contracts/src/provider_operation_journal.rs`
 - rust: `crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs`
 - rust: `crates/buildchain-v4-contracts/src/warrant.rs`
@@ -150,12 +153,20 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 ### Current top twenty maintenance hotspots
 
+- `.github/workflows/.build.yml`
+- `.github/workflows/.publication-authority.yml`
+- `.github/workflows/bootstrap.yml`
+- `scripts/check-v4-universal-workflow-bootstrap.mjs`
+- `scripts/v4-universal-workflow-engine.mjs`
+- `tests/v4-universal-workflow-bootstrap.test.mjs`
 - `tests/v3-v4-capability-inventory.test.mjs`
 - `tests/v4-floating-consumer-policy-contract.test.mjs`
 - `tests/v4-publication-qualification.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
+- `.github/workflows/dev-pr-auto-merge.yml`
 - `tests/release-candidate-recovery.test.mjs`
+- `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
 - `.github/workflows/.release-candidate-promote.yml`
 - `tests/build-surface-promotion.test.mjs`
 - `.github/workflows/buildchain-ref-promotion-recovery.yml`
@@ -167,6 +178,8 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `actions/promote-buildchain-ref/lib.js`
 - `actions/v4-release-candidate-promote/index.js`
 - `actions/v4-release-candidate-promote/product-provider.js`
+- `actions/v4-release-candidate-promote/product-provider-github-adapters.js`
+- `tests/v4-release-candidate-promote.test.mjs`
 - `scripts/check-inventory.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
 - `tests/promotion-channel-router.test.mjs`
@@ -185,6 +198,8 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/buildchain-cli-help.mjs`
 - `scripts/check-maintainability.mjs`
 - `tests/maintainability.test.mjs`
+- `scripts/generate-v4-universal-workflow-facades.mjs`
+- `scripts/check-v4-release-topology.mjs`
 
 ## cli-command-registry
 
@@ -352,6 +367,7 @@ Owner: Buildchain Paper maintainers
 - `packages/core/paper-fleet.js`
 - `packages/core/paper-npm-bootstrap.js`
 - `packages/core/paper-repository.js`
+- `packages/core/paper-runtime-channels.js`
 - `packages/core/paper-scaffold-content.js`
 - `packages/core/paper-work.js`
 - `packages/core/paper.js`
@@ -368,6 +384,7 @@ Owner: Buildchain Paper maintainers
 
 - `tests/cli.test.mjs`
 - `tests/paper.test.mjs`
+- `tests/paper-v4-migration.test.mjs`
 - `tests/public-surface-audit.test.mjs`
 
 ### Generated outputs
@@ -377,7 +394,7 @@ Owner: Buildchain Paper maintainers
 
 ### Minimal validation
 
-- `node --test tests/cli.test.mjs tests/paper.test.mjs tests/public-surface-audit.test.mjs`
+- `node --test tests/cli.test.mjs tests/paper.test.mjs tests/paper-v4-migration.test.mjs tests/public-surface-audit.test.mjs`
 
 ## promotion-channel-orchestration
 
@@ -642,6 +659,7 @@ Owner: Buildchain contract maintainers
 
 - `packages/core/buildchain-contract.js`
 - `scripts/build-contract-core.mjs`
+- `scripts/github-output.mjs`
 
 ### Contracts
 
@@ -653,6 +671,7 @@ Owner: Buildchain contract maintainers
 - `tests/buildchain-contract.test.mjs`
 - `tests/build-surface.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
+- `tests/github-output.test.mjs`
 
 ### Generated outputs
 
@@ -726,8 +745,8 @@ Owner: Buildchain adopter delivery maintainers
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/gate-unknown-selector.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/offline-vectors.json`
-- `.github/workflows/v4-adopter-delivery.yml`
-- `.github/workflows/v4-adopter-delivery-dogfood.yml`
+- `.github/workflows/public-build-adopter-qualification.yml`
+- `.github/workflows/self-build-adopter-dogfood.yml`
 - `docs/v4-adopter-delivery.md`
 
 ### Tests
@@ -824,7 +843,7 @@ Owner: Buildchain architecture maintainers
 - `architecture/v4-tail-reseal-parity.json`
 - `contracts/v4-tail-reseal-v1.schema.json`
 - `contracts/fixtures/v4-tail-reseal-v1/valid.json`
-- `.github/workflows/v4-tail-reseal.yml`
+- `.github/workflows/public-ops-tail-reseal.yml`
 - `docs/v4-stage-capsule.md`
 - `docs/v4-runtime-ref-resume-authority.md`
 - `docs/v4-tail-reseal.md`
@@ -939,7 +958,7 @@ Owner: Buildchain protected delivery maintainers
 - `contracts/dev-delivery-authority-v2.schema.json`
 - `dist/site/schemas/dev-delivery-authority-v2.schema.json`
 - `.github/workflows/dev-pr-auto-merge.yml`
-- `.github/workflows/buildchain-dev-delivery.yml`
+- `.github/workflows/self-ops-dev-delivery.yml`
 - `templates/native-dev-delivery.yml`
 - `docs/dev-delivery-warrant.md`
 - `docs/dev-delivery-qualification-landing-adr.md`
@@ -981,7 +1000,7 @@ Owner: Buildchain publication rehearsal maintainers
 
 - `architecture/v4-publication-rehearsal-parity.json`
 - `contracts/v4-publication-rehearsal-capsule-v1.schema.json`
-- `.github/workflows/v4-publication-rehearsal-dogfood.yml`
+- `.github/workflows/self-release-rehearsal-dogfood.yml`
 - `docs/v4-publication-rehearsal.md`
 
 ### Tests
@@ -995,6 +1014,44 @@ Owner: Buildchain publication rehearsal maintainers
 ### Minimal validation
 
 - `node --test tests/v4-publication-rehearsal.test.mjs`
+
+## v4-universal-workflow-bootstrap
+
+Owner: Buildchain workflow maintainers
+
+### Implementation
+
+- `packages/core/v4-universal-workflow-bootstrap.js`
+- `scripts/check-v4-universal-workflow-bootstrap.mjs`
+- `scripts/generate-v4-universal-workflow-facades.mjs`
+- `scripts/v4-universal-workflow-backflow.mjs`
+- `scripts/v4-universal-workflow-engine.mjs`
+- `scripts/v4-universal-workflow-self-dogfood.mjs`
+
+### Contracts
+
+- `architecture/v4-universal-workflow-bootstrap.json`
+- `architecture/v4-universal-workflow-fault-campaign.json`
+- `architecture/v4-universal-workflow-train-admission.json`
+- `.github/workflows/bootstrap.yml`
+- `.github/workflows/self-ops-bootstrap-dogfood.yml`
+- `templates/universal-buildchain-bootstrap-recovery.yml`
+
+### Tests
+
+- `tests/v4-universal-workflow-backflow.test.mjs`
+- `tests/v4-universal-workflow-bootstrap.test.mjs`
+- `tests/v4-universal-workflow-fault-campaign.test.mjs`
+- `tests/v4-universal-workflow-self-dogfood.test.mjs`
+
+### Generated outputs
+
+- `.github/workflows/universal-bootstrap-recovery.yml`
+
+### Minimal validation
+
+- `node scripts/check-v4-universal-workflow-bootstrap.mjs`
+- `node --test tests/v4-universal-workflow-bootstrap.test.mjs tests/v4-universal-workflow-backflow.test.mjs tests/v4-universal-workflow-fault-campaign.test.mjs tests/v4-universal-workflow-self-dogfood.test.mjs`
 
 ## web-surface-delivery
 

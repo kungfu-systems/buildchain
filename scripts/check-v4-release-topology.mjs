@@ -3,6 +3,8 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import ts from "typescript";
+import { workflowCompatibilityIdentity } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -21,13 +23,35 @@ function read(relative) {
 const LOCAL_MODULE_EXTENSIONS = ["", ".js", ".mjs", ".cjs"];
 const PRIVILEGED_ENTRYPOINTS = [
   "actions/v4-release-candidate-promote/index.js",
+  "scripts/binary-publication-evidence.mjs",
+  "scripts/next-development-review.mjs",
+  "scripts/v4-publication-settlement.mjs",
 ];
 
-function localModuleSpecifiers(source) {
+export function localModuleSpecifiers(source) {
   const specifiers = [];
-  const expression =
-    /(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)["'](\.[^"']+)["']/gu;
-  for (const match of source.matchAll(expression)) specifiers.push(match[1]);
+  const visit = (node) => {
+    let value;
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node))
+      value = node.moduleSpecifier;
+    else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword
+    )
+      value = node.arguments[0];
+    if (value && ts.isStringLiteral(value) && value.text.startsWith("."))
+      specifiers.push(value.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(
+    ts.createSourceFile(
+      "module.mjs",
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.JS,
+    ),
+  );
   return [...new Set(specifiers)].sort();
 }
 
@@ -83,6 +107,13 @@ function rootedPathSet(paths) {
     .digest("hex")}`;
 }
 
+function fileSha256(relative) {
+  return `sha256:${crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(path.join(root, relative)))
+    .digest("hex")}`;
+}
+
 function productionFiles(relative, extensions) {
   const absolute = path.join(root, relative);
   if (!fs.existsSync(absolute)) return [];
@@ -128,6 +159,12 @@ export function discoverV4ReleaseAuthorityClosure() {
     /(?:createV4ReleaseReceipt|release-receipt\.json|V4_RELEASE_RECEIPT_CONTRACT)/u,
   );
   const privilegedModules = discoverStaticModuleClosure(PRIVILEGED_ENTRYPOINTS);
+  const rustWasmArtifact = "packages/core/buildchain-v4-domain.wasm";
+  const rustWasmDistributions = [
+    "actions/promote-buildchain-ref/dist/buildchain-v4-domain.wasm",
+    "actions/release-tail/dist/buildchain-v4-domain.wasm",
+    "actions/v4-release-candidate-promote/dist/buildchain-v4-domain.wasm",
+  ];
   const legacyEngineModules = productionFiles(
     "actions/promote-buildchain-ref",
     [".js", ".mjs", ".cjs"],
@@ -152,6 +189,17 @@ export function discoverV4ReleaseAuthorityClosure() {
       entrypoints: PRIVILEGED_ENTRYPOINTS,
       modules: privilegedModules,
       root: rootedPathSet(privilegedModules),
+    },
+    rustWasmAuthority: {
+      loader: "packages/core/v4-domain-wasm.js",
+      metadata: "packages/core/v4-domain-wasm-artifact.js",
+      artifact: rustWasmArtifact,
+      artifactRoot: fileSha256(rustWasmArtifact),
+      distributedArtifacts: rustWasmDistributions,
+      byteIdenticalDistributions: rustWasmDistributions.every(
+        (relative) => fileSha256(relative) === fileSha256(rustWasmArtifact),
+      ),
+      fallbackWriterCount: 0,
     },
     legacyEngineModules,
   };
@@ -180,33 +228,36 @@ function permission(block, name) {
 function workflowSnapshot(relative) {
   const source = read(relative);
   const document = parseWorkflowDocument(source);
-  const jobs = document.jobs.map((job) => {
-    const block = jobBlock(source, job.id);
-    const uses = job.uses || null;
-    return {
-      id: job.id,
-      kind: uses ? "reusable-call" : "runner",
-      uses,
-      permissions: {
-        contents: permission(block, "contents"),
-        idToken: permission(block, "id-token"),
-      },
-      carriers: {
-        artifactDownload: /uses:\s+actions\/download-artifact@/u.test(block),
-        artifactUpload: /uses:\s+actions\/upload-artifact@/u.test(block),
-        jobOutput: /GITHUB_OUTPUT/u.test(block),
-      },
-      mutationSignals: [
-        /contents:\s*write/u.test(block) && "contents-write",
-        /id-token:\s*write/u.test(block) && "oidc-write",
-        /(?:promote-buildchain-ref|v4-release-candidate-promote)/u.test(
-          block,
-        ) && "promotion-runtime",
-        /(?:git push|npm publish|gh release (?:create|upload))/u.test(block) &&
-          "direct-publication-command",
-      ].filter(Boolean),
-    };
-  });
+  const jobs = document.jobs
+    .filter((job) => job.id !== "universal-bootstrap")
+    .map((job) => {
+      const block = jobBlock(source, job.id);
+      const uses = job.uses || null;
+      return {
+        id: job.id,
+        kind: uses ? "reusable-call" : "runner",
+        uses,
+        permissions: {
+          contents: permission(block, "contents"),
+          idToken: permission(block, "id-token"),
+        },
+        carriers: {
+          artifactDownload: /uses:\s+actions\/download-artifact@/u.test(block),
+          artifactUpload: /uses:\s+actions\/upload-artifact@/u.test(block),
+          jobOutput: /GITHUB_OUTPUT/u.test(block),
+        },
+        mutationSignals: [
+          /contents:\s*write/u.test(block) && "contents-write",
+          /id-token:\s*write/u.test(block) && "oidc-write",
+          /(?:promote-buildchain-ref|v4-release-candidate-promote)/u.test(
+            block,
+          ) && "promotion-runtime",
+          /(?:git push|npm publish|gh release (?:create|upload))/u.test(
+            block,
+          ) && "direct-publication-command",
+        ].filter(Boolean),
+      };
+    });
   return {
     path: relative,
     triggers: document.triggers,
@@ -214,6 +265,7 @@ function workflowSnapshot(relative) {
     reusableEdges: parseYamlUses(source)
       .map(({ value }) => value)
       .filter((value) => /\.github\/workflows\//u.test(value))
+      .filter((value) => !/\/bootstrap\.yml(?:@v4)?$/u.test(value))
       .sort(),
   };
 }
@@ -313,7 +365,12 @@ export function findUnknownV4ReleaseTopology(
 ) {
   const declared = new Set(workflowPaths);
   return allWorkflowPaths
-    .filter((relative) => !declared.has(relative))
+    .filter(
+      (relative) =>
+        !declared.has(
+          workflowCompatibilityIdentity(root, relative, readWorkflow(relative)),
+        ),
+    )
     .filter((relative) => {
       const source = readWorkflow(relative);
       const usesReleaseAuthority = parseYamlUses(source).some(({ value }) =>
@@ -403,7 +460,7 @@ function assertAuthorityClosure(ledger) {
   );
   assert.equal(
     closure.recoveryEntry,
-    ".github/workflows/buildchain-ref-promotion-recovery.yml",
+    ".github/workflows/self-ops-promotion-recovery.yml",
   );
   const engineSurface = [
     ".github/workflows/.release-candidate-promote.yml",

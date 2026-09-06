@@ -81,6 +81,33 @@ test("a complete exact-lane declaration admits the new lane", () => {
   assert.deepEqual(result.newLanes, [".github/workflows/check.yml#required"]);
 });
 
+test("an exact lane family shares one budget without wildcard admission", () => {
+  const { laneId, ...shared } = declaration({
+    authorityClass: "governed-delegation",
+  });
+  const result = evaluateCiLaneChangeBudget({
+    policy: policy({
+      declarationFamilies: [{ laneIds: [laneId], ...shared }],
+    }),
+    workflows: [{ path: ".github/workflows/check.yml", text: workflow }],
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.declaredLaneCount, 1);
+
+  assert.throws(
+    () =>
+      evaluateCiLaneChangeBudget({
+        policy: policy({
+          declarationFamilies: [
+            { laneIds: [laneId, laneId], ...shared },
+          ],
+        }),
+        workflows: [{ path: ".github/workflows/check.yml", text: workflow }],
+      }),
+    /laneIds must be unique/u,
+  );
+});
+
 test("declarations reject trigger drift and incomplete SLO budgets", () => {
   const result = evaluateCiLaneChangeBudget({
     policy: policy({

@@ -3,10 +3,10 @@ import * as github from "@actions/github";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-
 import { publishDeclarativeGitHubReleaseEvidence } from "../promote-buildchain-ref/github-release.js";
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
 import { v4ContentRoot } from "../../packages/core/v4-canonical-contracts.js";
+import { completePublicationDevelopment } from "./publication-completion.js";
 import {
   V4_RELEASE_INVOCATION_CONTRACT,
   V4_RELEASE_PROVIDER_CONTRACT,
@@ -28,7 +28,6 @@ import {
   resolveCandidateBuildSummaryPath,
   resolveCandidateProviderInputs,
   resolvePublicationTarget,
-  resolvePromotionTarget,
 } from "./product-provider.js";
 
 export {
@@ -523,6 +522,7 @@ async function main() {
   });
   const providerInputs = resolveCandidateProviderInputs({
     candidatePassportPath,
+    artifactKind: input("publish-artifact-kind") || "npm",
     sealedBundleRoot: input("sealed-bundle-root"),
     sealedBundleManifest: input("sealed-bundle-manifest"),
     requiredArtifactsPath: input("required-artifacts-path"),
@@ -567,6 +567,18 @@ async function main() {
     providerRequest,
     publicationPlan,
     documents,
+  });
+  await completePublicationDevelopment({
+    repository,
+    sourceSha,
+    token,
+    channel: canonicalChannel(channel),
+    settlement,
+    documents,
+    sourceBinding,
+    providerRequest,
+    octokit,
+    mutationOctokit,
   });
   setOutputs(documents, settlement);
 }

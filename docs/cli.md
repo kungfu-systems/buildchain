@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-06
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-09-06
   invisible_context: not asserted
 ---
 
@@ -165,17 +165,30 @@ The safety and authority boundary is explicit:
 - `migrate` plans the Buildchain-owned authority, workflow, contract lock,
   version pin, package, agent-entry policy, managed `AGENTS.md` section, and
   required-check changes needed by an existing paper repository. It pins an
-  exact v3 dependency and adds pnpm-backed paper scripts.
+  exact runtime dependency and adds pnpm-backed paper scripts. With v4, build
+  and verify callers use `@v4-alpha`; release callers select `@v4-alpha` for
+  Alpha and `@v4` for stable releases. Both channel contract locks and their
+  distinct resolved source coordinates are bound into provisioning authority.
+  Verify callers grant the reusable Check workflow its required read permissions.
+  Paper agent guidance resolves next-development scripts from the installed
+  Buildchain package and links to the upstream transition ADR.
+  Migration reads the other channel from its fetched Git tag. Installed-package
+  operators can supply `--stable-buildchain-root` or `--alpha-buildchain-root`
+  pointing to the corresponding exact source checkout instead.
   Add `--write` only after reviewing exact old and new digests; paper content
   and publication configuration are never rewritten. Refresh
   `pnpm-lock.yaml` with `pnpm install --lockfile-only` after a write.
 - `agent verify` is the mandatory resume check on an existing work branch. It
   verifies the digest-bound `.buildchain/paper/agent-entry.json`, the single
-  managed `AGENTS.md` section, exact package scripts and v3 dependency, runtime
+  managed `AGENTS.md` section, exact package scripts and runtime dependency, runtime
   source SHA, development target, and current branch lineage. `--ci` derives
   the pull-request source and target from GitHub context and fails closed on a
   non-work source branch or a target other than the configured development
   line.
+- Installed npm runtimes resolve their source from registry `gitHead`, or from
+  the official exact version tag when that field is absent. Missing, malformed,
+  duplicate, or unexpected tag results fail closed; floating tags are never
+  used as the installed package's source identity.
 - `work start` derives the protected development branch from the configured
   publication semver line and creates a safe local work branch only when the
   worktree is clean, the sole `origin` is the canonical `kungfu-systems`
@@ -1044,7 +1057,7 @@ and package identity. See [`v4-adopter-delivery.md`](v4-adopter-delivery.md).
 ## npm Publish Gate
 
 Buildchain's own npm package is published from
-`.github/workflows/buildchain-ref-promotion.yml`, inside the same publish
+`.github/workflows/self-release-promote.yml`, inside the same publish
 transaction that promotes release refs:
 
 - `v4.0.3-alpha.0` publishes to npm with dist-tag `alpha`.
@@ -1070,9 +1083,9 @@ Before the first real release, configure npm Trusted Publishing for:
 
 - package: `@kungfu-tech/buildchain`
 - repository: `kungfu-systems/buildchain`
-- workflow: `.github/workflows/buildchain-ref-promotion.yml`
+- workflow: `.github/workflows/self-release-promote.yml`
 
 No npm package is published by manual dispatch or ordinary branch builds.
-Manual dispatch on `.github/workflows/npm-publish.yml` remains dry-run only, so
+Manual dispatch on `.github/workflows/self-release-npm-dry-run.yml` remains dry-run only, so
 maintainers can verify package contents and npm publish shape before opening or
 merging the release PR.

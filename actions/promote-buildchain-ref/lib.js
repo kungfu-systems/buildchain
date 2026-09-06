@@ -3077,7 +3077,7 @@ async function createGeneratedVersionStateChecks({
   const statusChecks = [...new Set(
     [...requiredStatusChecks, requiredStatusCheck]
       .map((check) => String(check || "").trim())
-      .filter(Boolean),
+      .filter(Boolean).map(name => /^(?:dev|alpha|release)\/v4\//u.test(branch) ? `Version-state projection / ${name}` : name),
   ),
   ];
   if (statusChecks.length === 0) {
@@ -3463,6 +3463,6 @@ export {
   createTreeEquivalentReleaseImpact, createDurableTransactionOperations,
   finalizationRequirements, createRefMutationOperations,
   releaseCommitMatchesTransactionMaterial as testReleaseCommitMatchesTransactionMaterial,
-  releasePassportArtifactFiles,
+  releasePassportArtifactFiles, createGeneratedVersionStateChecks,
   validatePromotionReleaseCandidate,
 };

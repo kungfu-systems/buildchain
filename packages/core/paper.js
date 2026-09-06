@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { bindPaperV4Authority, paperV4Channels, selectPaperRuntime, paperRuntimeLockPath, paperProvisioningWorkflowErrors, resolvePaperNpmRuntimeSha } from "./paper-runtime-channels.js";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -40,6 +41,7 @@ import {
 import {
   createPaperScaffoldOperations,
   managedPaperPackageJson,
+  paperDependencyIgnore,
   scaffoldMainTex,
   scaffoldMakefile,
   scaffoldMap,
@@ -255,23 +257,7 @@ export function resolvePaperRuntimeGitSha(
   const value = resolvePaperBuildchainSha(buildchainRoot);
   if (GIT_SHA_PATTERN.test(value)) return value;
   const identity = buildchainPackageIdentity(buildchainRoot, buildchainVersion);
-  if (!identity.version) return "";
-  const observed = commandResult(
-    "npm",
-    [
-      "view",
-      `${identity.name}@${identity.version}`,
-      "gitHead",
-      "--json",
-      `--registry=${NPM_REGISTRY}`,
-    ],
-    { cwd: buildchainRoot },
-  );
-  if (!observed.ok) return "";
-  const parsed = safeParseJson(observed.stdout);
-  const gitHead =
-    typeof parsed === "string" ? parsed : String(parsed?.gitHead || "");
-  return GIT_SHA_PATTERN.test(gitHead) ? gitHead : "";
+  return resolvePaperNpmRuntimeSha(buildchainRoot, identity);
 }
 
 function runtimeAcceptedAt(buildchainRoot, sha, buildchainVersion = "") {
@@ -424,7 +410,7 @@ jobs:
 `;
 }
 
-function scaffoldVerifyWorkflow(buildchainSha) {
+function scaffoldVerifyWorkflow(buildchainSha, buildchainVersion = "") {
   return `${nextDevelopmentWorkflowHeader()}name: Verify
 
 on:
@@ -437,7 +423,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+${buildchainVersion.startsWith("4.") ? "  actions: read\n  contents: read\n  pull-requests: read" : "  contents: read"}
 
 jobs:
   check:
@@ -635,7 +621,7 @@ function scaffoldFiles({
     artifactPaths: "_build/main.pdf",
     releasePassportProductName: title,
   });
-  const verifyWorkflow = scaffoldVerifyWorkflow(buildchainSha);
+  const verifyWorkflow = scaffoldVerifyWorkflow(buildchainSha, buildchainVersion);
   const agentEntry = paperAgentEntryFiles({
     cwd,
     buildchainVersion,
@@ -700,7 +686,7 @@ function scaffoldFiles({
     ["LICENSE", licenseText],
     [
       ".gitignore",
-      "_build/\n.buildchain/publication/\n.buildchain/release-state/\n.buildchain/release-evidence/\n.buildchain/paper/npm-bootstrap.json\n.buildchain/paper/npm-trust.json\n",
+      "node_modules/\n_build/\n.buildchain/publication/\n.buildchain/release-state/\n.buildchain/release-evidence/\n.buildchain/paper/npm-bootstrap.json\n.buildchain/paper/npm-trust.json\n",
     ],
   ]);
 }
@@ -710,6 +696,8 @@ function migrationFiles({
   buildchainRoot,
   buildchainVersion,
   buildchainSha,
+  stableBuildchainRoot,
+  alphaBuildchainRoot,
 }) {
   const configResult = paperConfig(cwd);
   if (configResult.error) {
@@ -768,7 +756,7 @@ function migrationFiles({
     artifactPaths: config.publication.artifactPaths.join(","),
     releasePassportProductName: config.publication.title,
   });
-  const verifyWorkflow = scaffoldVerifyWorkflow(runtimeSha);
+  const verifyWorkflow = scaffoldVerifyWorkflow(runtimeSha, runtimeIdentity.version);
   const agentEntry = paperAgentEntryFiles({
     cwd,
     buildchainVersion: runtimeIdentity.version,
@@ -817,7 +805,26 @@ function migrationFiles({
     [PAPER_PATHS.provisioningAuthority, jsonText(provisioningAuthority)],
     ...agentEntry,
     ["package.json", jsonText(packageJson)],
+    [".gitignore", paperDependencyIgnore(fs.existsSync(path.join(cwd, ".gitignore")) ? fs.readFileSync(path.join(cwd, ".gitignore"), "utf8") : "")],
   ]);
+  if (runtimeIdentity.version.startsWith("4.")) {
+    const channelPlan = paperV4Channels({
+      cwd, buildchainRoot, buildchainVersion: runtimeIdentity.version,
+      buildchainSha: runtimeSha, contractWorld: runtimeContractWorld(buildchainRoot),
+      acceptedAt: contractLock.buildchain.acceptedAt,
+      stableBuildchainRoot, alphaBuildchainRoot,
+    });
+    for (const channel of Object.values(channelPlan.channels)) files.set(channel.lockPath, channel.content);
+    for (const workflowPath of [PAPER_PATHS.buildWorkflow, PAPER_PATHS.verifyWorkflow]) {
+      files.set(workflowPath, files.get(workflowPath).replaceAll(runtimeSha, "v4-alpha").replaceAll(".buildchain/contract-lock.json", ".buildchain/alpha-contract-lock.json"));
+    }
+    const releaseStart = releaseWorkflow.indexOf("  paper-release:\n");
+    const releaseJob = releaseWorkflow.slice(releaseStart);
+    const alphaJob = releaseJob.replace("  paper-release:\n", "  paper-release-alpha:\n    if: ${{ startsWith(github.ref_name, 'alpha/') }}\n").replaceAll(runtimeSha, "v4-alpha").replaceAll(".buildchain/contract-lock.json", ".buildchain/alpha-contract-lock.json");
+    const stableJob = releaseJob.replace("  paper-release:\n", "  paper-release:\n    if: ${{ startsWith(github.ref_name, 'release/') }}\n").replaceAll(runtimeSha, "v4");
+    files.set(PAPER_PATHS.releaseWorkflow, `${releaseWorkflow.slice(0, releaseStart)}${alphaJob}\n${stableJob}`);
+    files.set(PAPER_PATHS.provisioningAuthority, jsonText(bindPaperV4Authority(provisioningAuthority, channelPlan, files)));
+  }
   return files;
 }
 
@@ -1326,6 +1333,7 @@ function validatePaperProvisioningAuthority(cwd) {
   }
   const value = source.value;
   const errors = [];
+  const floating = /^v4(?:-alpha)?$/.test(value.runtime?.ref || "");
   if (value.contract !== PAPER_PROVISIONING_CONTRACT) {
     errors.push("paper provisioning authority contract mismatch");
   }
@@ -1338,8 +1346,8 @@ function validatePaperProvisioningAuthority(cwd) {
   }
   if (
     !GIT_SHA_PATTERN.test(String(value.runtime?.resolvedSha || "")) ||
-    value.runtime?.ref !== value.runtime?.resolvedSha ||
-    value.admission?.acceptedRef !== value.runtime?.resolvedSha ||
+    (!floating && value.runtime?.ref !== value.runtime?.resolvedSha) ||
+    value.admission?.acceptedRef !== value.runtime?.ref ||
     value.admission?.acceptedSha !== value.runtime?.resolvedSha
   ) {
     errors.push("paper runtime and admission are not bound to one exact SHA");
@@ -1397,49 +1405,7 @@ function validatePaperProvisioningAuthority(cwd) {
       errors.push(`paper agent-entry source digest mismatch: ${entryPath}`);
     }
   }
-  for (const workflow of [
-    value.workflows?.build,
-    value.workflows?.verify,
-    value.workflows?.release,
-  ]) {
-    if (!workflow?.path || !workflow?.sourceDigest) {
-      errors.push("paper workflow authority is incomplete");
-      continue;
-    }
-    const absolute = path.resolve(cwd, workflow.path);
-    if (
-      !fs.existsSync(absolute) ||
-      sha256File(absolute) !== workflow.sourceDigest
-    ) {
-      errors.push(`paper workflow source digest mismatch: ${workflow.path}`);
-      continue;
-    }
-    const text = fs.readFileSync(absolute, "utf8");
-    const expectedUse = `${value.runtime.repository}/${workflow.reusablePath}@${value.runtime.resolvedSha}`;
-    if (!text.includes(`uses: ${expectedUse}`)) {
-      errors.push(
-        `paper workflow reusable source is not exact: ${workflow.path}`,
-      );
-    }
-    if (
-      workflow.reusablePath !== ".github/workflows/check.yml" &&
-      !text.includes(`buildchain-ref: ${value.runtime.resolvedSha}`)
-    ) {
-      errors.push(
-        `paper workflow runtime input is not exact: ${workflow.path}`,
-      );
-    }
-  }
-  const lockPath = path.resolve(
-    cwd,
-    value.admission?.contractLockPath || PAPER_PATHS.contractLock,
-  );
-  if (
-    !fs.existsSync(lockPath) ||
-    sha256File(lockPath) !== value.admission?.contractLockDigest
-  ) {
-    errors.push("paper contract lock bytes differ from provisioning authority");
-  }
+  errors.push(...paperProvisioningWorkflowErrors(cwd, value));
   return {
     exists: true,
     valid: errors.length === 0,
@@ -2077,12 +2043,11 @@ export function collectPaperPreflight({
   } catch (error) {
     validationError = error.message;
   }
-  const runtime = runtimeFacts({
+  const runtime = selectPaperRuntime(runtimeFacts({
     buildchainRoot, buildchainVersion,
     buildchainRef: provisioning.value?.runtime?.ref || buildchainRef, buildchainSha,
-  });
-  const agentEntry = collectPaperAgentEntry({ cwd: resolvedCwd, buildchainSha: runtime.resolvedSha, mode: agentEntryMode });
-  const lockPath = path.resolve(resolvedCwd, PAPER_PATHS.contractLock);
+  }), provisioning.value);
+  const lockPath = paperRuntimeLockPath(resolvedCwd, runtime, provisioning.value);
   let lockEvaluation = {
     status: "missing-lock",
     compatible: false,
@@ -2109,6 +2074,7 @@ export function collectPaperPreflight({
       reasons: [error.message],
     };
   }
+  const agentEntry = collectPaperAgentEntry({ cwd: resolvedCwd, buildchainSha: runtime.resolvedSha, mode: agentEntryMode, runtimeAdmission: { compatible: lockEvaluation.compatible, sha: runtime.resolvedSha, ref: runtime.ref } });
   const source = {
     repositoryRoot: gitValue(resolvedCwd, ["rev-parse", "--show-toplevel"]),
     head: gitValue(resolvedCwd, ["rev-parse", "HEAD"]),

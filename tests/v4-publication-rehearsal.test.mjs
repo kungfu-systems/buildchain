@@ -654,7 +654,7 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   const dogfood = fs.readFileSync(
     path.join(
       repositoryRoot,
-      ".github/workflows/v4-publication-rehearsal-dogfood.yml",
+      ".github/workflows/self-release-rehearsal-dogfood.yml",
     ),
     "utf8",
   );
@@ -700,14 +700,14 @@ test("repo-local prepublication dogfood resolves the current reusable and exact 
   const durableExternalCaller = fs.readFileSync(
     path.join(
       repositoryRoot,
-      ".github/workflows/v4-public-consumer-dogfood.yml",
+      ".github/workflows/self-build-public-consumer-dogfood.yml",
     ),
     "utf8",
   );
   assert.ok(
     parseYamlUses(durableExternalCaller).some((entry) =>
       entry.value.endsWith(
-        "/.github/workflows/v4-stage-capsule-canary.yml@v4-alpha",
+        "/.github/workflows/public-build-stage-capsule-canary.yml@v4-alpha",
       ),
     ),
     "external public consumers retain the floating v4-alpha selector",

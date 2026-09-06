@@ -19,6 +19,8 @@ import {
   evaluateTestBudgets,
   evaluateWorkflowBudgets,
 } from "./maintainability-governance.mjs";
+import { governUniversalFacadeWorkflowMetrics } from "./universal-facade-maintainability.mjs";
+import { evaluatePublicSurface } from "./maintainability-public-surface.mjs";
 
 function collectHotspots(
   root,
@@ -160,116 +162,6 @@ function maximumFunction(metrics, field) {
 
 function selectedFunction(metrics, file, name) {
   return metrics.files[file]?.functions.find((entry) => entry.name === name);
-}
-
-function readJsonAtRevision(root, revision, file) {
-  return JSON.parse(gitOutput(root, ["show", `${revision}:${file}`]));
-}
-
-function publicSurfaceContract(entry, kind) {
-  if (kind === "cli") return { id: entry.id, usage: entry.usage };
-  if (kind === "node")
-    return {
-      export: entry.export,
-      specifier: entry.specifier,
-      target: entry.target,
-    };
-  return {
-    id: entry.id,
-    path: entry.path,
-    reusable: entry.reusable,
-    inputs: entry.inputs || [],
-    secrets: entry.secrets || [],
-    outputs: entry.outputs || [],
-  };
-}
-
-function evaluatePublicSurface({ root, revision, policy }) {
-  const issues = [];
-  const lifecycleFields = policy.publicSurfacePolicy.requiredLifecycleFields;
-  const capabilityGroups = new Set(
-    readJson(root, "dist/site/capability-registry.json").groups.map(
-      (entry) => entry.id,
-    ),
-  );
-  const definitions = [
-    {
-      file: "dist/site/cli-registry.json",
-      collection: "commands",
-      kind: "cli",
-      key: "id",
-    },
-    {
-      file: "dist/site/node-api-registry.json",
-      collection: "exports",
-      kind: "node",
-      key: "export",
-    },
-    {
-      file: "dist/site/workflow-registry.json",
-      collection: "workflows",
-      kind: "workflow",
-      key: "id",
-    },
-    {
-      file: "dist/site/workflow-registry.json",
-      collection: "actions",
-      kind: "action",
-      key: "id",
-    },
-  ];
-  for (const definition of definitions) {
-    const current =
-      readJson(root, definition.file)[definition.collection] || [];
-    const baseline =
-      readJsonAtRevision(root, revision, definition.file)[
-        definition.collection
-      ] || [];
-    const baselineByKey = new Map(
-      baseline.map((entry) => [entry[definition.key], entry]),
-    );
-    for (const entry of current) {
-      const label = `${definition.kind}:${entry[definition.key]}`;
-      for (const field of lifecycleFields) {
-        if (
-          !Object.prototype.hasOwnProperty.call(entry, field) ||
-          typeof entry[field] !== "string"
-        ) {
-          issues.push(`${label}: lifecycle field ${field} is missing`);
-        }
-      }
-      if (!capabilityGroups.has(entry.capabilityGroup)) {
-        issues.push(
-          `${label}: capability group ${entry.capabilityGroup || "<empty>"} is not registered`,
-        );
-      }
-      const previous = baselineByKey.get(entry[definition.key]);
-      const currentContract = publicSurfaceContract(entry, definition.kind);
-      if (
-        previous &&
-        JSON.stringify(currentContract) !==
-          JSON.stringify(publicSurfaceContract(previous, definition.kind))
-      ) {
-        const approval = policy.approvedPublicSurfaceTransitions?.[label];
-        const approved =
-          approval?.fromRevision === revision &&
-          String(approval?.rationale || "").trim() &&
-          JSON.stringify(approval?.contract) ===
-            JSON.stringify(currentContract);
-        if (!approved) {
-          issues.push(
-            `${label}: existing public contract drifted from ${revision}`,
-          );
-        }
-      }
-      if (!previous && !entry.nonDuplicationRationale) {
-        issues.push(
-          `${label}: new public surface requires a non-duplication rationale`,
-        );
-      }
-    }
-  }
-  return issues;
 }
 
 function evaluateAddedFunctionBudgets({
@@ -497,12 +389,18 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     root,
     extendedCoverageRevision,
   );
+  const { governed: governedCurrent, migration: facadeMigration } =
+    governUniversalFacadeWorkflowMetrics({
+      root,
+      current,
+      workflowMetricsAtRevision,
+    });
   const issues = evaluateExceptionGovernance({ policy });
   issues.push(...evaluateExceptionBudget({ policy }));
   const hotspots = collectHotspots(root, current, 20, debt.hotspots || []);
   issues.push(
     ...evaluateDebtAuthority({
-      current,
+      current: governedCurrent,
       policy,
       debt,
       capabilityIds: new Set(
@@ -518,14 +416,19 @@ function checkMaintainability({ root = process.cwd() } = {}) {
   );
   issues.push(
     ...evaluateWorkflowBudgets({
-      current,
+      current: governedCurrent,
       baselineFiles: baselineWorkflows,
       policy,
     }),
   );
   issues.push(...evaluateRepositoryBudgets({ current, policy }));
   issues.push(
-    ...evaluatePublicSurface({ root, revision: enforcementRevision, policy }),
+    ...evaluatePublicSurface({
+      root,
+      revision: enforcementRevision,
+      policy,
+      migration: facadeMigration,
+    }),
   );
   if (issues.length > 0) {
     throw new Error(`maintainability check failed:\n- ${issues.join("\n- ")}`);

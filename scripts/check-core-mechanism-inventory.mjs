@@ -34,9 +34,10 @@ function registrySurfaceIds(root) {
     (entry) => `cli:${entry.id}`,
   );
   const workflows = loadJson(root, "dist/site/workflow-registry.json");
-  const workflowIds = workflows.workflows.map(
-    (entry) => `workflow:${entry.id}`,
-  );
+  const workflowIds = workflows.workflows.flatMap((entry) => [
+    `workflow:${entry.id}`,
+    ...(entry.taxonomy ? [`workflow:${entry.taxonomy.id}`] : []),
+  ]);
   const actionIds = workflows.actions.map((entry) => `action:${entry.id}`);
   const exports = Object.keys(loadJson(root, "package.json").exports).map(
     (entry) => `export:${entry}`,
