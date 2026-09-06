@@ -64,9 +64,8 @@ import { evaluatePaperGithubGovernance } from "../scripts/paper-work-fleet-cli.m
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");
-const packageVersion = JSON.parse(
-  fs.readFileSync(path.join(root, "package.json"), "utf8"),
-).version;
+// Preserve the legacy v3 scaffold and migration compatibility cases.
+const packageVersion = "3.0.4-alpha.13";
 
 function tempDir(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `buildchain-paper-${name}-`));

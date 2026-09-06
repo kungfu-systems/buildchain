@@ -418,6 +418,8 @@ function runMigration(options) {
       options.buildchainVersion,
     ),
     buildchainSha: options.buildchainSha,
+    stableBuildchainRoot: readFlag(options.args, "stable-buildchain-root", ""),
+    alphaBuildchainRoot: readFlag(options.args, "alpha-buildchain-root", ""),
   });
   return options.args.some((entry) => ["--write", "--execute"].includes(entry))
     ? writePaperMigration(plan)

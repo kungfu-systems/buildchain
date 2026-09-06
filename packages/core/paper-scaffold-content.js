@@ -10,6 +10,12 @@ function jsonText(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+export function paperDependencyIgnore(current = "") {
+  return /^(?:\/)?node_modules\/?\s*$/m.test(current)
+    ? current
+    : `${current}${current.endsWith("\n") || !current ? "" : "\n"}node_modules/\n`;
+}
+
 function texEscape(value) {
   return String(value || "")
     .replaceAll("\\", "\\textbackslash{}")
@@ -380,6 +386,8 @@ function planPaperMigration(
     buildchainRoot = process.cwd(),
     buildchainVersion = "",
     buildchainSha = "",
+    stableBuildchainRoot = "",
+    alphaBuildchainRoot = "",
   } = {},
 ) {
   const resolvedCwd = path.resolve(cwd);
@@ -407,6 +415,8 @@ function planPaperMigration(
       buildchainRoot,
       buildchainVersion,
       buildchainSha,
+      stableBuildchainRoot,
+      alphaBuildchainRoot,
     }),
   ].map(([relativePath, content]) => {
     const target = path.resolve(resolvedCwd, relativePath);
