@@ -38,6 +38,7 @@ running artifact), *use* (consume / extend) - and a **status**:
 | CLI operator or agent | [Generated CLI Reference](cli-reference.md) | [CLI guide](cli.md) for concepts and worked examples |
 | Node toolkit developer | [Generated Node API Reference](node-api-reference.md) | [Core package guide](../packages/core/README.md) for recipes |
 | Workflow contributor | [Workflow Catalog](workflow-catalog.md) | [Contribution rules](../CONTRIBUTING.md#workflow-organization) and the [exact registry](../architecture/workflow-taxonomy.json) |
+| Container image publisher | [OCI image family publication](oci-publication.md) | [Release Flow](release-flow.md) and [Runtime Train Validation](runtime-train-validation.md) |
 | Build/release operator | [Reusable Build Surface](reusable-build-surface.md) | [Release Flow](release-flow.md) and [Release Passport](release-passport.md) |
 | Product/trust reviewer | [Product Mechanism](product-mechanism.md) | [Release Passport](release-passport.md) and [KFD Support](kfd-support.md) |
 

@@ -74,8 +74,10 @@ test("only APPLY carries provider mutation permissions", () => {
   );
   const settle = advanced.slice(advanced.indexOf("\n  settle:"));
 
+  assert.match(qualify, /permissions:\n(?:      [a-z-]+: read\n)*      contents: read/u);
   assert.doesNotMatch(qualify, /contents: write|id-token: write/);
-  assert.match(apply, /contents: write/);
-  assert.match(apply, /id-token: write/);
+  assert.doesNotMatch(apply, /^    permissions:/mu);
+  assert.match(apply, /uses:.*actions\/v4-release-candidate-promote/u);
+  assert.match(settle, /permissions:\n(?:      [a-z-]+: read\n)*      contents: read/u);
   assert.doesNotMatch(settle, /contents: write|id-token: write/);
 });

@@ -145,8 +145,8 @@ test("canonical publisher contains legacy bypass inputs outside APPLY authority"
   );
   assert.match(workflow, /branch-protection-bypass-apps:/);
   const apply = workflow.slice(workflow.indexOf("  apply:"), workflow.indexOf("  settle:"));
-  assert.match(apply, /contents: write/);
-  assert.match(apply, /id-token: write/);
+  assert.doesNotMatch(apply, /^    permissions:/mu);
+  assert.match(apply, /uses:.*actions\/v4-release-candidate-promote/u);
   assert.doesNotMatch(apply, /branch-protection-bypass-(apps|users|teams)/);
 });
 test("qualification installs the exact runtime before legacy input admission", () => {

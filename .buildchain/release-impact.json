@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "4.0.2-alpha.44",
+    "version": "4.0.2-alpha.46",
     "line": "v4.0"
   },
   "versionImpact": {
@@ -11,6 +11,13 @@
     "rationale": "Buildchain v4.0 retires v3 publication authority and establishes the protected v4 line, v4 provider journal, activation planner, recovery planner, and stable publication fence as the sole production release authority."
   },
   "surfaceImpacts": [
+    {
+      "id": "v4-oci-image-family-publication",
+      "impact": "minor",
+      "class": "publication-authority",
+      "rationale": "Add a sealed OCI image-family provider to the canonical v4 Rust product plan, with exact content and smoke verification, complete anonymous registry readback, candidate recovery and caller-scoped packages authority. Existing npm and custom publication plans remain unchanged.",
+      "source": "docs/oci-publication.md"
+    },
     {
       "id": "next-development-transition-v4-parity",
       "impact": "minor",

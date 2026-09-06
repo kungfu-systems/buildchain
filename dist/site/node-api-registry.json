@@ -15667,6 +15667,121 @@
       ]
     },
     {
+      "id": "packages/core/oci-publication-bundle.js#OCI_FAMILY_SCHEMA",
+      "name": "OCI_FAMILY_SCHEMA",
+      "kind": "constant",
+      "signature": "const OCI_FAMILY_SCHEMA",
+      "parameters": [],
+      "returns": "value",
+      "errors": [
+        "Import does not declare a throw contract."
+      ],
+      "sideEffects": [
+        "none-on-import"
+      ],
+      "source": {
+        "path": "packages/core/oci-publication-bundle.js",
+        "line": 6
+      },
+      "example": "import { OCI_FAMILY_SCHEMA } from \"@kungfu-tech/buildchain/oci-publication\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/oci-publication-bundle.js#ociBundleFile",
+      "name": "ociBundleFile",
+      "kind": "function",
+      "signature": "function ociBundleFile(root, relative)",
+      "parameters": [
+        {
+          "name": "root",
+          "signature": "root"
+        },
+        {
+          "name": "relative",
+          "signature": "relative"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/oci-publication-bundle.js",
+        "line": 29
+      },
+      "example": "import { ociBundleFile } from \"@kungfu-tech/buildchain/oci-publication\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/oci-publication-bundle.js#sealOciPublicationBundle",
+      "name": "sealOciPublicationBundle",
+      "kind": "function",
+      "signature": "function sealOciPublicationBundle({ bundleRoot, body })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ bundleRoot, body }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "May throw an Error on rejected input or failed operations; follow the linked source contract."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/oci-publication-bundle.js",
+        "line": 10
+      },
+      "example": "import { sealOciPublicationBundle } from \"@kungfu-tech/buildchain/oci-publication\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
+      "id": "packages/core/oci-publication-bundle.js#verifyOciPublicationBundle",
+      "name": "verifyOciPublicationBundle",
+      "kind": "function",
+      "signature": "function verifyOciPublicationBundle({ bundleRoot, manifest, repository, sourceSha, version, })",
+      "parameters": [
+        {
+          "name": "parameter1",
+          "signature": "{ bundleRoot, manifest, repository, sourceSha, version, }"
+        }
+      ],
+      "returns": "unknown",
+      "errors": [
+        "Errors from called operations may propagate; no narrower throw contract is declared in source."
+      ],
+      "sideEffects": [
+        "none-detected-by-static-source-scan"
+      ],
+      "source": {
+        "path": "packages/core/oci-publication-bundle.js",
+        "line": 114
+      },
+      "example": "import { verifyOciPublicationBundle } from \"@kungfu-tech/buildchain/oci-publication\";",
+      "maturity": "stable",
+      "audience": [
+        "developer",
+        "agent"
+      ]
+    },
+    {
       "id": "packages/core/package-manager.js#assertPackageManager",
       "name": "assertPackageManager",
       "kind": "function",
@@ -31188,6 +31303,32 @@
       "deprecationReplacement": "",
       "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
       "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
+    },
+    {
+      "specifier": "@kungfu-tech/buildchain/oci-publication",
+      "export": "./oci-publication",
+      "target": "./packages/core/oci-publication-bundle.js",
+      "digest": "sha256:6783cbeb8ee699b8c4b04ac9f692cdccb4b226872f06f025e1a5e4b49d05e3f5",
+      "summary": "Sealed OCI image family verification, provenance, and smoke evidence APIs.",
+      "capabilityGroup": "reusable-build",
+      "audience": [
+        "developer",
+        "agent"
+      ],
+      "symbolCount": 4,
+      "symbolIds": [
+        "packages/core/oci-publication-bundle.js#OCI_FAMILY_SCHEMA",
+        "packages/core/oci-publication-bundle.js#ociBundleFile",
+        "packages/core/oci-publication-bundle.js#sealOciPublicationBundle",
+        "packages/core/oci-publication-bundle.js#verifyOciPublicationBundle"
+      ],
+      "owner": "buildchain-core",
+      "maturity": "stable",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing package subpath retained as the canonical API boundary for this capability."
     }
   ],
   "docs": [
@@ -31199,7 +31340,7 @@
     {
       "id": "node-api-reference",
       "path": "docs/node-api-reference.md",
-      "digest": "sha256:df073c14c12f15c851eb4507cbeb2919add936ac3079b10f222478138720d092"
+      "digest": "sha256:48232d47023b85063e7f779f053850e38149359ea3b2a5acd5126ff81f423ff4"
     },
     {
       "id": "build-facts",

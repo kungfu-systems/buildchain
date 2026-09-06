@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-tech/buildchain",
-  "version": "4.0.2-alpha.44",
+  "version": "4.0.2-alpha.46",
   "private": false,
   "description": "Buildchain Release Passport, release governance, CLI toolkit, and site facts.",
   "repository": "https://github.com/kungfu-systems/buildchain",
@@ -123,7 +123,8 @@
     "./site/product-mechanism.json": "./dist/site/product-mechanism.json",
     "./site/release-provenance.json": "./dist/site/release-provenance.json",
     "./site/agent-index.json": "./dist/site/agent-index.json",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./oci-publication": "./packages/core/oci-publication-bundle.js"
   },
   "files": [
     "AGENTS.md",

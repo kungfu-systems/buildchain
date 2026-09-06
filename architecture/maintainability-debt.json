@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64729,
-    "current": 56668
+    "measuredExcess": 64608,
+    "current": 56547
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1443,7 +1443,7 @@
         "current": {
           "functions": {
             "generateChannelPromotionWorkflow@280": {
-              "lines": 240
+              "lines": 223
             }
           }
         },
@@ -1627,19 +1627,19 @@
               "lines": 309,
               "complexity": 62
             },
-            "resolveReleaseCandidateArtifactsCli@784": {
+            "resolveReleaseCandidateArtifactsCli@773": {
               "complexity": 29
             }
           }
         },
         "current": {
-          "lines": 853,
+          "lines": 842,
           "functions": {
             "resolveReleaseCandidateArtifacts@475": {
-              "lines": 308,
+              "lines": 297,
               "complexity": 61
             },
-            "resolveReleaseCandidateArtifactsCli@784": {
+            "resolveReleaseCandidateArtifactsCli@773": {
               "complexity": 29
             }
           }
@@ -1651,7 +1651,7 @@
               "lines": 180,
               "complexity": 25
             },
-            "resolveReleaseCandidateArtifactsCli@784": {
+            "resolveReleaseCandidateArtifactsCli@773": {
               "complexity": 25
             }
           }
@@ -1685,7 +1685,7 @@
           "lines": 1125
         },
         "current": {
-          "lines": 1124
+          "lines": 1117
         },
         "target": {
           "lines": 600
@@ -1753,7 +1753,7 @@
           "lines": 620
         },
         "current": {
-          "lines": 618
+          "lines": 620
         },
         "target": {
           "lines": 600
@@ -2013,7 +2013,7 @@
         "current": {
           "functions": {
             "select_product_publication_intent@156": {
-              "complexity": 31
+              "complexity": 33
             }
           }
         },
@@ -2029,23 +2029,23 @@
         "baseline": {
           "lines": 1399,
           "functions": {
-            "normalize_capability@228": {
+            "normalize_capability@149": {
               "lines": 245,
               "complexity": 51
             },
-            "advance_release_tail_execution@1205": {
+            "advance_release_tail_execution@1126": {
               "lines": 193
             }
           }
         },
         "current": {
-          "lines": 1397,
+          "lines": 1318,
           "functions": {
-            "normalize_capability@228": {
+            "normalize_capability@149": {
               "lines": 245,
               "complexity": 51
             },
-            "advance_release_tail_execution@1205": {
+            "advance_release_tail_execution@1126": {
               "lines": 193
             }
           }
@@ -2053,11 +2053,11 @@
         "target": {
           "lines": 600,
           "functions": {
-            "normalize_capability@228": {
+            "normalize_capability@149": {
               "lines": 140,
               "complexity": 30
             },
-            "advance_release_tail_execution@1205": {
+            "advance_release_tail_execution@1126": {
               "lines": 140
             }
           }
@@ -2592,7 +2592,6 @@
       },
       "tests/promote-buildchain-ref.test.mjs": {
         "baseline": {
-          "lines": 4211,
           "functions": {
             "<anonymous@62>@62": {
               "lines": 203

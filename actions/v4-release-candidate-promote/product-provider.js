@@ -239,13 +239,13 @@ export function resolveCandidateProviderInputs({
   publishPackageMain = "",
 }) {
   const kind = String(artifactKind || "npm").trim();
-  const npmPath = (declared, relativePath, label) =>
-    kind === "npm"
+  const bundlePath = (declared, relativePath, label) =>
+    (kind === "npm" || kind === "oci")
       ? standardCandidatePath(candidatePassportPath, declared, relativePath, label)
       : "";
   const resolved = {
-    sealedBundleRoot: npmPath(sealedBundleRoot, "payloads", "sealed-bundle-root"),
-    sealedBundleManifest: npmPath(
+    sealedBundleRoot: bundlePath(sealedBundleRoot, "payloads", "sealed-bundle-root"),
+    sealedBundleManifest: bundlePath(
       sealedBundleManifest,
       "sealed-bundle.json",
       "sealed-bundle-manifest",
@@ -435,6 +435,12 @@ export function sealedCandidateVersion(request) {
     return version;
   }
   const manifest = read(request.sealedBundleManifest);
+  if (request.publicationIntent?.artifactKind === "oci") {
+    const version = String(manifest.version || "").trim();
+    if (!version || version !== request.candidate?.target?.version)
+      throw new Error("sealed OCI family version differs from candidate passport");
+    return version;
+  }
   const name = String(manifest?.npm?.name || "").trim();
   const version = String(manifest?.npm?.version || "").trim();
   if (name !== request.publishPackageMain || !version)

@@ -306,6 +306,7 @@ async function materializeProductPublicationIntent({
         BUILDCHAIN_SEALED_BUNDLE_MANIFEST: candidate.paths.sealedBundleManifest,
         BUILDCHAIN_REQUIRED_ARTIFACTS_PATH:
           candidate.paths.publishRequiredArtifacts,
+        BUILDCHAIN_PUBLISH_ARTIFACT_KIND: inputs["publish-artifact-kind"] || "npm",
         BUILDCHAIN_PUBLISH_PACKAGE_MAIN: inputs["publish-package-main"] || "",
         BUILDCHAIN_PUBLISH_DIST_TAG: inputs["publish-dist-tag"] || "",
         BUILDCHAIN_PRODUCT_PUBLICATION_INTENT_PATH: intentPath,
@@ -449,6 +450,7 @@ async function executeReleasePromotion(request, admission) {
     "candidate-build-summary-path": candidate.paths.buildSummary,
     "stage-capsules-path": candidate.paths.stageCapsules,
     "publication-qualification-path": candidate.paths.publicationQualification,
+    "publish-artifact-kind": payload.inputs["publish-artifact-kind"] || "npm",
     "sealed-bundle-root": candidate.paths.sealedBundleRoot,
     "sealed-bundle-manifest": candidate.paths.sealedBundleManifest,
     "required-artifacts-path": candidate.paths.publishRequiredArtifacts,

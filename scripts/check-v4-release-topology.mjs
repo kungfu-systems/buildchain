@@ -233,13 +233,21 @@ function workflowSnapshot(relative) {
     .map((job) => {
       const block = jobBlock(source, job.id);
       const uses = job.uses || null;
+      // A built-in publisher still requires mutation authority when the caller supplies its envelope.
+      const inheritedPublisher =
+        !/^    permissions:/mu.test(block) &&
+        /uses:.*actions\/v4-release-candidate-promote/u.test(block);
       return {
         id: job.id,
         kind: uses ? "reusable-call" : "runner",
         uses,
         permissions: {
-          contents: permission(block, "contents"),
-          idToken: permission(block, "id-token"),
+          contents:
+            permission(block, "contents") ||
+            (inheritedPublisher ? "inherited" : null),
+          idToken:
+            permission(block, "id-token") ||
+            (inheritedPublisher ? "inherited" : null),
         },
         carriers: {
           artifactDownload: /uses:\s+actions\/download-artifact@/u.test(block),
@@ -247,8 +255,10 @@ function workflowSnapshot(relative) {
           jobOutput: /GITHUB_OUTPUT/u.test(block),
         },
         mutationSignals: [
-          /contents:\s*write/u.test(block) && "contents-write",
-          /id-token:\s*write/u.test(block) && "oidc-write",
+          (/contents:\s*write/u.test(block) || inheritedPublisher) &&
+            "contents-write",
+          (/id-token:\s*write/u.test(block) || inheritedPublisher) &&
+            "oidc-write",
           /(?:promote-buildchain-ref|v4-release-candidate-promote)/u.test(
             block,
           ) && "promotion-runtime",
