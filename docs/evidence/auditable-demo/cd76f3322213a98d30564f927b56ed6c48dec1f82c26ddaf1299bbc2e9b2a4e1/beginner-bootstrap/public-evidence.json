@@ -1,0 +1,86 @@
+{
+  "captureRoot": "sha256:375b8122fd9d8708bae44b6e48c32702d79e8be45bed766e35f2abd9791aca74",
+  "demoId": "beginner-bootstrap",
+  "evidenceRoot": "sha256:cd76f3322213a98d30564f927b56ed6c48dec1f82c26ddaf1299bbc2e9b2a4e1",
+  "files": [
+    {
+      "bytes": 81402,
+      "path": "demo-720p.mp4",
+      "root": "sha256:f5c72d6b2fd439e68c0c7b67c22856b58d669d235d2ef658cd488493ff79031a"
+    },
+    {
+      "bytes": 74925,
+      "path": "demo-720p.webm",
+      "root": "sha256:1d2681ac9874fd1f539bcc749eea44ef4f5c26b71b203edbd576a545ee88cd07"
+    },
+    {
+      "bytes": 120993,
+      "path": "demo.gif",
+      "root": "sha256:ed3436c62a2f6d377a4acd6b678e3887031316613bc63d09cbbc96bb2c7fefde"
+    },
+    {
+      "bytes": 153482,
+      "path": "demo.mp4",
+      "root": "sha256:6b4c9806eae5167d234fb944c1b356ffc377e4fffd599a3ada9254784f327b88"
+    },
+    {
+      "bytes": 136878,
+      "path": "demo.webm",
+      "root": "sha256:f5ad59d1cfbbd2b63ece0743416ea1e1c54651a875336f244191e810cb6620c7"
+    },
+    {
+      "bytes": 3013,
+      "path": "gate-receipt.json",
+      "root": "sha256:e92ae2b4c9e18aa30e1283e00dd74daad3404cf26aac6598a75e0ff1e458fabf"
+    },
+    {
+      "bytes": 102157,
+      "path": "manifest.json",
+      "root": "sha256:e93e1ca08f4e45b027ba6ff01752044f09fa1f7370772ac92e8c16efb07d697f"
+    },
+    {
+      "bytes": 2985,
+      "path": "media-inspection.json",
+      "root": "sha256:5e83ef37dd262c0c36ce9ecd6bd038af2e5ea72a98715e8f3b81686d4dfc7394"
+    },
+    {
+      "bytes": 1134,
+      "path": "media-probe.json",
+      "root": "sha256:a1e309237502b3c8a2b6c3f898a00ab2ec10e5fdb044dc1b35890f61be90cb2b"
+    },
+    {
+      "bytes": 4835,
+      "path": "media-receipt.json",
+      "root": "sha256:04efb81dbc5c874639e399f335272feb89d997ed440e6c65c69efd9c7c8d9b6f"
+    },
+    {
+      "bytes": 142518,
+      "path": "poster.png",
+      "root": "sha256:6271f31ad11994c12f0097daa4da815fd1d76e75a2acc90d5d66e2b81f033c30"
+    },
+    {
+      "bytes": 883,
+      "path": "renderer-checksums.sha256",
+      "root": "sha256:e0f1ed816f3c6566f96a1ad73797b1accf498c29719db933f51d8877d19c4c9d"
+    }
+  ],
+  "gateRoot": "sha256:024ae227a4f5c6028e3841e6a9ad91443bac3ae5293f072d9c2d734887c86aea",
+  "mediaRoot": "sha256:25688558a673627305f27615d8b2e9468a590431fb6467d90af61721eac2ee7c",
+  "passportRoot": "sha256:d8a35608b04e5182fe7d30b43d3e018f16094186e9149cf69450710ad33eea6e",
+  "scenarioRoot": "sha256:0ebd716d5dd98ba90dd777c025a7717530be62b13951696556cac61607885648",
+  "schema": "buildchain.declarative-demo-evidence-root/v1",
+  "source": {
+    "createdAt": "2026-09-06T03:44:41Z",
+    "digest": "sha256:ee4affa851e2273a04433176820c3008f4d0dbb2020e946a444fec1e9904b2aa",
+    "expiresAt": "2026-09-20T03:44:40Z",
+    "id": "9982087289",
+    "name": "buildchain-auditable-demo-binary-5cbaa22bfec2-34009744915-1",
+    "nodeId": "MDg6QXJ0aWZhY3Q5OTgyMDg3Mjg5",
+    "repository": "kungfu-systems/buildchain",
+    "runAttempt": "1",
+    "runId": "34009744915",
+    "schema": "buildchain.github-artifact-coordinate/v1",
+    "sizeInBytes": 128913724,
+    "sourceSha": "5cbaa22bfec20ab1970bc4a7914040d78c52ff76"
+  }
+}
