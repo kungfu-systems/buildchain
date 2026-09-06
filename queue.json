@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1456,
-  "fencingCounter": 217,
+  "generation": 1457,
+  "fencingCounter": 218,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,35 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:b8fca35efe4b2193ba8b53ad157d058dc3d34017183cf5e3c113ec7c720fdad7",
+    "pullRequestNumber": 3525,
+    "sourceHead": "0f877920b9013fcb6679e44226c8fca5f4176c5e",
+    "sourceRoot": "sha256:99c5ce9a6c741125635daaf67b96d7b478915e706eb71854a58bae2c0f3eba4e",
+    "sourceIdentityRoot": "sha256:2430eb2bb9eeb5b9beccd10c0030e36a32d57d7a5692e7ec3edf02fa1dd6ab1e",
+    "sourcePatchRoot": "sha256:eafba00a35c10f9a34a434047ba7159cd246f3d7b91ab6c92d8a1e274547ab22",
+    "sourceProofRoot": "sha256:bb2a8bd6ef0470f615dc4a223d0a6ba8dd0b9d7c73312e6f9344ce670699c0f7",
+    "planRoot": "sha256:a1e016039aa5eb3f91bb85f29f8a48f7a7c5c6074c0ec8611c1276c2c6e0252f",
+    "closureRoot": "sha256:3cfa3d62ddb6d4f938b4f3ae42f7fcc7721c72cb3aac8ed4d471cf470bb85afe",
+    "dependencyRoot": "sha256:097be6e05485e35ec3f33c0bf5d72d852ebe729664108d9e950bbefb6f84218d",
+    "toolchainRoot": "sha256:e0ec416952c53d0913cce4d9c05784972fa8eb11f18c47f45fadf9dae7903c0a",
+    "affectedPaths": [
+      ".github/retrospectives/2026-09-06-alpha-release-friction.md"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 34010377601,
+    "deliveryClass": "non-native-fast",
+    "priority": "ordinary",
+    "generation": 218,
+    "expectedOldStateRoot": "sha256:1b6eb5d7b1490a9e60a1ecf1cb2b7326ae1f8eeea75b35e7324e9ef97f4bbe03",
+    "issuedAt": "2026-09-06T04:06:33.291Z",
+    "expiresAt": "2026-09-06T05:06:33.291Z",
+    "fencingToken": "sha256:df1bfee5d12ef972a6b942e5a0d59241cb1411b02bafddda13e559c0f91b72f9",
+    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -11813,10 +11841,10 @@
       "sourceWorkflowRunId": 34010377601,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-06T04:06:30.577Z",
-      "updatedAt": "2026-09-06T04:06:30.577Z",
+      "updatedAt": "2026-09-06T04:06:33.291Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         ".github/retrospectives/2026-09-06-alpha-release-friction.md"
@@ -11824,6 +11852,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-06T04:06:30.577Z",
-  "stateRoot": "sha256:1b6eb5d7b1490a9e60a1ecf1cb2b7326ae1f8eeea75b35e7324e9ef97f4bbe03"
+  "updatedAt": "2026-09-06T04:06:33.291Z",
+  "stateRoot": "sha256:b62b350fe8ed7c16cd54b4455c998dc2566300c02c0d76d4f3d468d6a4056b09"
 }
