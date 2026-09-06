@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
+import { createV4GithubProductAdapters } from "../actions/v4-release-candidate-promote/product-provider-github-adapters.js";
 import { selectV4RecoveredProductPublicationVersion } from "../packages/core/v4-universal-workflow-bootstrap.js";
 
 const sourceSha = "4".repeat(40);
@@ -22,6 +23,39 @@ const recovery = {
   channel: "stable",
   requestedSha: sourceSha,
 };
+
+test("publication coordinates retain the exact tag after the channel advances", async () => {
+  for (const channel of ["stable", "alpha"]) {
+    const version = channel === "stable" ? "4.0.2" : "4.0.2-alpha.44";
+    const refs = new Map([
+      [`heads/${channel}/v4/v4.0`, stateSha],
+      [`tags/v${version}`, sourceSha],
+    ]);
+    const runtime = createV4GithubProductAdapters({
+      intent: {
+        repository: "kungfu-systems/buildchain",
+        targetRef: `${channel}/v4/v4.0`,
+        exactTag: `v${version}`,
+      },
+      request: {
+        octokit: {
+          rest: {
+            git: {
+              async getRef({ ref }) {
+                if (!refs.has(ref))
+                  throw Object.assign(new Error("not found"), { status: 404 });
+                return { data: { object: { sha: refs.get(ref) } } };
+              },
+            },
+          },
+        },
+      },
+    });
+    assert.equal(await runtime.resolveReleaseSha(), sourceSha);
+    refs.delete(`tags/v${version}`);
+    assert.equal(await runtime.resolveReleaseSha(), "");
+  }
+});
 
 test("stable recovery uses the published stable version of an exact alpha candidate", () => {
   assert.equal(
