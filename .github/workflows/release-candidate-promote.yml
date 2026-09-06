@@ -694,16 +694,7 @@ on:
         description: "Controller receipt status"
         value: ${{ jobs.invoke.outputs.controller-receipt-status }}
 
-permissions:
-  actions: write
-  artifact-metadata: write
-  attestations: write
-  checks: write
-  contents: write
-  id-token: write
-  issues: write
-  pull-requests: write
-
+# Provider authority is inherited from the explicit caller envelope.
 jobs:
   universal-bootstrap:
     name: Universal exact-candidate execution
@@ -976,15 +967,7 @@ jobs:
     name: Invoke the single v4 publisher adapter
     needs: [resolve-promotion, consumer-admission]
     uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
-    permissions:
-      actions: write
-      artifact-metadata: write
-      attestations: write
-      checks: write
-      contents: write
-      id-token: write
-      issues: write
-      pull-requests: write
+    # Provider authority is inherited from the explicit caller envelope.
     with:
       universal-request-json: ${{ inputs.universal-request-json }}
       buildchain-repository: ${{ inputs.buildchain-repository }}

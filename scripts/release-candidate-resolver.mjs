@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { pathToFileURL } from "node:url";
-import { createResolvedPublicationSealedBundle } from "./publication-candidate-sealer.mjs";
+import { resolveCandidatePublicationBundle } from "./publication-candidate-sealer.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
 import { v4PublicationQualificationRoot, validateV4PublicationQualificationReceipt } from "../packages/core/v4-publication-qualification.js";
@@ -725,23 +725,12 @@ export async function resolveReleaseCandidateArtifacts({
     const noun = publishArtifactKind === "npm" ? "npm package tarballs" : "platform manifests";
     throw new Error(`expected at least ${minimumPayloadCount} downloaded ${noun}, found ${downloadedRequiredArtifactCount}`);
   }
-  const sealedBundle = publishArtifactKind === "npm"
-    ? createResolvedPublicationSealedBundle({
-        bundleRoot: payloadDir,
-        repository: repoInfo.fullName,
-        sourceSha: passport.source?.headSha,
-        sourceTreeSha: passport.source?.treeHash,
-        runtimeSha: releaseCandidateRuntimeSha(passport),
-        releaseCandidateRoot: passport.candidateHash,
-        npmArtifacts: npmTarballPaths.map((tarballPath) => ({
-          path: tarballPath,
-          ...readNpmPackageArtifact({ tarballPath, mainPackage: publishPackageMain }),
-        })),
-        releaseAssetPaths,
-      })
-    : undefined;
+  const sealedBundle = resolveCandidatePublicationBundle({ kind: publishArtifactKind, payloadDir, passport,
+    runtimeSha: releaseCandidateRuntimeSha(passport), releaseAssetPaths,
+    npmArtifacts: npmTarballPaths.map((tarballPath) => ({ path: tarballPath,
+      ...readNpmPackageArtifact({ tarballPath, mainPackage: publishPackageMain }) })) });
   const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8"))), publicationVersion = resolveFreshPublicationVersion({ sealedBundle, candidateVersion: passport.target?.version });
-  const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
+  const generatedRequiredArtifacts = sealedBundle?.requiredArtifacts || generatePublishRequiredArtifacts({
     manifests,
     version: publicationVersion,
     kind: publishArtifactKind,

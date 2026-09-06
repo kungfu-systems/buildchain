@@ -18,6 +18,15 @@ export const RELEASE_TAIL_PRODUCT_CAPABILITIES = Object.freeze([
     transactionState: "publishing",
   }),
   Object.freeze({
+    id: "product.oci.publish",
+    executor: "provider-adapter",
+    adapter: "oci-image-family",
+    effectKind: "oci-family-publication",
+    observationKind: "oci-family-readback",
+    receiptKind: "oci-family-publication",
+    transactionState: "publishing",
+  }),
+  Object.freeze({
     id: "product.release-refs.converge",
     executor: "provider-adapter",
     adapter: "github-release-refs",

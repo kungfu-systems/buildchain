@@ -1591,7 +1591,7 @@
         "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes"
       ],
       "breakingDigest": "sha256:5f10c81d3f80cb417960be682921884639c40b6d875f1a3b1ffae7e652c3f468",
-      "auditDigest": "sha256:66409a757d8b009e7704c4dfc779ae009fa27d2db47cf307818eb3230b6721b7"
+      "auditDigest": "sha256:5b93770f26ca894e2dacd3dc7454d63b4bb4fc5543a0fbedb217ef746a07cb41"
     },
     {
       "contractVersion": 1,
@@ -1646,7 +1646,7 @@
         "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph"
       ],
       "breakingDigest": "sha256:9db8dd07152855d03ff30f9c571438593c689d3e8139fa45431d000f548242f5",
-      "auditDigest": "sha256:9c7f3586a3444cdad34d2a61be3cb9b0ae271fb56f9e371d9c37940e6b317780",
+      "auditDigest": "sha256:4f2e4e9434825318f3906e546fbc9946e789e930403f9be1447d003cc5aaf706",
       "compatibleBreakingDigests": [
         "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0"
       ],
@@ -2257,7 +2257,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:d04b7f3a39c92ac3f6a733805b686d87890591836c8c5fe000823d755a011d18"
+      "auditDigest": "sha256:e013c394f3305d65c370778313278c51f643202fe7e04bc602cdfda15c4c10ad"
     },
     {
       "contractVersion": 1,
@@ -2279,7 +2279,7 @@
         "agents can discover supported Node APIs without importing internal file paths"
       ],
       "breakingDigest": "sha256:48f925608d3e2131d90936b07dc2a30341204cae3e6e785c0f77d61ad755c945",
-      "auditDigest": "sha256:bcec6fe3d26c597ee77a2ddfa26941d586dc34bc60c4a80663c92180b38d35bc"
+      "auditDigest": "sha256:4a2381432120417e1fb09854c80792fc7caabf814714078549b02c113faf135a"
     },
     {
       "contractVersion": 1,
@@ -5213,7 +5213,7 @@
         "missing receipts are non-qualifying and must not be represented as a successful controller run"
       ],
       "breakingDigest": "sha256:015d8de793adbd4c539416be7d7512e18cc92097e629b0203fa06d2c183e98bd",
-      "auditDigest": "sha256:9c7f3586a3444cdad34d2a61be3cb9b0ae271fb56f9e371d9c37940e6b317780"
+      "auditDigest": "sha256:4f2e4e9434825318f3906e546fbc9946e789e930403f9be1447d003cc5aaf706"
     },
     {
       "contractVersion": 1,
@@ -5444,5 +5444,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:20411029d83211dff426fb6535a608902129844a5ccb4788db77d3f81becb839",
-  "contractDigest": "sha256:b47ec18d8163b41dbdfc988a37b10e201606abc89e7a6aead9987224a603c4c8"
+  "contractDigest": "sha256:70f8351149acd14eaa4a3d49d64f2da41588a3bfef22a5f898ff828e1cf53f6a"
 }

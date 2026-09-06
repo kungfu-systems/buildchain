@@ -1356,10 +1356,7 @@
     },
     {
       "path": ".github/workflows/.release-candidate-promote.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1374,10 +1371,7 @@
     },
     {
       "path": ".github/workflows/.release-promote.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1723,10 +1717,7 @@
     },
     {
       "path": ".github/workflows/public-release-promote.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1768,10 +1759,7 @@
     },
     {
       "path": ".github/workflows/release-candidate-promote.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -2021,5 +2009,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "894cce314366698d41a3ab20172a0b7a05f03f2167667eae51793537b832c811"
+  "registryDigest": "9c343ae9f9e778b608317d973b02cada327bd31e5149482d7f385b173c20ec14"
 }

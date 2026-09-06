@@ -6,6 +6,8 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { resolveOciCandidate, resolveRecoveredPublicationVersion, resolveRecoveredCandidateVersion } from "./publication-candidate-kind.mjs";
+export { resolveRecoveredPublicationVersion, resolveRecoveredCandidateVersion } from "./publication-candidate-kind.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 import { compareSemver } from "./publication-registry-hydrate.mjs";
 import { normalizeAnchorProvenance, normalizeCandidateRun, recoverCandidateProvenance } from "./release-candidate-anchor-provenance.mjs";
@@ -695,22 +697,6 @@ export function createRecoveredPublicationCandidate({
   };
   return { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
 }
-export function resolveRecoveredPublicationVersion({ artifactVersion, channel, rematerializeOnResume = false } = {}) {
-  const version = String(artifactVersion || "").trim(), match = version.match(/^(\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u);
-  if (!match) throw new Error(`recovered npm artifact has invalid publication version: ${version || "<empty>"}`);
-  return channel === "release" && rematerializeOnResume ? match[1] : version;
-}
-export function resolveRecoveredCandidateVersion({ artifactVersion, publicationVersion, channel, rematerializeOnResume = false, targetRef = "", candidateRef = "" } = {}) {
-  const version = String(artifactVersion || "").trim(), target = String(targetRef || "").replace(/^refs\/heads\//u, ""), candidate = String(candidateRef || "").replace(/^refs\/heads\//u, "");
-  if (channel !== "release" || !rematerializeOnResume) return version;
-  const prefix = `publish-gate/${target}/`;
-  if (!target || !candidate.startsWith(prefix)) throw new Error(`stable recovery candidate ref must descend from ${prefix || "publish-gate/<target>/"}`);
-  const candidateVersion = candidate.slice(prefix.length);
-  if (!/^\d+\.\d+\.\d+-alpha\.\d+$/u.test(candidateVersion)) throw new Error(`stable recovery candidate ref must bind an exact alpha version, got ${candidateVersion || "<empty>"}`);
-  if (candidateVersion.replace(/-alpha\.\d+$/u, "") !== publicationVersion) throw new Error(`stable recovery candidate ${candidateVersion} does not match publication ${publicationVersion || "<empty>"}`);
-  if ((version.match(/^(\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u)?.[1] || "") !== publicationVersion) throw new Error(`recovered npm artifact version ${version || "<empty>"} does not match publication ${publicationVersion}`);
-  return candidateVersion;
-}
 export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests, channel, targetRef = "", candidateRef = "", rematerializeOnResume = false }) {
   const allFiles = downloads.flatMap((download) => download.files.map((file) => ({ path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
     size: file.size, sha256: file.sha256.replace(/^sha256:/, ""), absolutePath: file.absolutePath })))
@@ -718,6 +704,13 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
   const kind = String(publishArtifactKind || "npm");
   const releaseMatchers = splitPatterns(releasePatterns).map(patternMatcher);
   const releaseAssets = allFiles.filter((file) => releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
+  if (kind === "oci") {
+    createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
+    const sealed = resolveOciCandidate({ payloadRoot: bundleRoot, passport });
+    return { manifest: sealed.manifest, bundleRoot: sealed.root, npmArtifacts: [], allFiles, releaseAssets,
+      version: sealed.manifest.version, candidateVersion: sealed.manifest.version,
+      publishRequiredArtifacts: sealed.requiredArtifacts };
+  }
   if (kind !== "npm") {
     createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
     const version = String(passport.target?.version || "").trim();
@@ -1019,7 +1012,7 @@ export async function resumeFromCandidateRun({
         npmTarballs: tarballs,
         releaseAssets: publication.releaseAssets.map((asset) => outputPath(asset.absolutePath)),
         publishRequiredArtifacts: outputPath(requiredArtifactsPath),
-        sealedBundleRoot: publication.manifest ? outputPath(bundleRoot) : "",
+        sealedBundleRoot: publication.manifest ? outputPath(publication.bundleRoot || bundleRoot) : "",
         sealedBundleManifest: publication.manifest ? outputPath(sealedManifestPath) : "",
         recoveryReceipt: outputPath(recoveryReceiptPath),
         stageCapsules: stageCapsuleFile ? outputPath(stageCapsuleFile.absolutePath) : "",

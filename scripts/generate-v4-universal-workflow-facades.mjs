@@ -216,11 +216,17 @@ function applyPublicationFacadePatches(source, relative) {
   return source;
 }
 
+function inheritPublicationProviderAuthority(source, relative) {
+  if (relative !== ".github/workflows/.release-candidate-promote.yml") return source;
+  return source.replace("permissions:\n  contents: read\n", "# Provider authority is inherited from the explicit caller envelope.\n")
+    .replace("    permissions:\n      actions: read\n      checks: write\n      contents: write\n      id-token: write\n      pull-requests: write\n", "    # Provider authority is inherited from the explicit caller envelope.\n");
+}
+
 export function migrateV4UniversalWorkflowFacade(source, relative) {
-  return rewriteRepositoryWorkflowPaths(root, applyPublicationFacadePatches(guardCompatibilityJobs(
+  return rewriteRepositoryWorkflowPaths(root, inheritPublicationProviderAuthority(applyPublicationFacadePatches(guardCompatibilityJobs(
     addUniversalInput(addRuntimeBootstrapDependencies(source, relative), relative),
     relative,
-  ), relative));
+  ), relative), relative));
 }
 
 function verify(source, relative) {
