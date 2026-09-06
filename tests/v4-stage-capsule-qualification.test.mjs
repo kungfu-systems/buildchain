@@ -502,7 +502,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.equal(architecture.publicConsumerDogfood.validationRef, "v4-alpha");
   assert.equal(
     architecture.publicConsumerDogfood.reusableWorkflow,
-    "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml",
+    "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml",
   );
   assert.equal(
     architecture.publicConsumerDogfood.recursionRecovery,
@@ -549,7 +549,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   );
 
   const canaryWorkflow = fs.readFileSync(
-    path.join(root, ".github/workflows/v4-stage-capsule-canary.yml"),
+    path.join(root, ".github/workflows/public-build-stage-capsule-canary.yml"),
     "utf8",
   );
   assert.match(canaryWorkflow, /workflow_call:/u);

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import crypto from "node:crypto";
 import fs from "node:fs";
+import { currentWorkflowPath } from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import {
@@ -192,7 +193,7 @@ function executeBootstrapConformance(request, admission) {
     fail("candidate Bootstrap conformance does not close execution semantics");
   for (const relative of architecture.bootstrapGovernedWorkflows) {
     const source = fs.readFileSync(
-      new URL(`../${relative}`, import.meta.url),
+      path.join(path.resolve(import.meta.dirname, ".."), currentWorkflowPath(path.resolve(import.meta.dirname, ".."), relative)),
       "utf8",
     );
     if (

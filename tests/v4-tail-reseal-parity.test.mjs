@@ -44,7 +44,7 @@ test("tail-reseal parity matrix roots the captured v3 authority and complete v4 
 });
 
 test("public v4 tail workflow keeps floating selectors durable and effects outside Capsule reuse", () => {
-  const workflow = read(".github/workflows/v4-tail-reseal.yml");
+  const workflow = read(".github/workflows/public-ops-tail-reseal.yml");
   for (const required of [
     "workflow_call:",
     "BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}",

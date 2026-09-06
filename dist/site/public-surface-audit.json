@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 117,
+    "workflowCount": 114,
     "actionCount": 8,
-    "sitePageCount": 86,
+    "sitePageCount": 87,
     "docCommandRefCount": 1050,
     "failureCount": 0
   },
@@ -5026,69 +5026,6 @@
           "terminal-receipt-root"
         ],
         "outputCount": 5
-      },
-      {
-        "id": "v4-adopter-delivery",
-        "path": ".github/workflows/v4-adopter-delivery.yml",
-        "reusable": true,
-        "inputs": [
-          "archive-path",
-          "bootstrap-path",
-          "consumer",
-          "consumer-ref",
-          "consumer-repository",
-          "input-path",
-          "invocation-source-path",
-          "node-version",
-          "universal-request-json"
-        ],
-        "inputCount": 9,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "v4-stage-capsule-canary",
-        "path": ".github/workflows/v4-stage-capsule-canary.yml",
-        "reusable": true,
-        "inputs": [
-          "build-artifact-path",
-          "consumer",
-          "go-version",
-          "install-artifact-path",
-          "node-version",
-          "universal-request-json",
-          "verify-artifact-path"
-        ],
-        "inputCount": 7,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "v4-tail-reseal",
-        "path": ".github/workflows/v4-tail-reseal.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-retention-days",
-          "consumer-policy-receipt-json",
-          "macos-finalization-command",
-          "request-json",
-          "universal-request-json"
-        ],
-        "inputCount": 5,
-        "secrets": [
-          "BUILDCHAIN_EVIDENCE_READ_TOKEN",
-          "BUILDCHAIN_SIGNING_TOKEN"
-        ],
-        "secretCount": 2,
-        "outputs": [
-          "release-candidate-passport-json",
-          "tail-reseal-receipt-root"
-        ],
-        "outputCount": 2
       }
     ],
     "actionInputs": [
@@ -5723,6 +5660,10 @@
       },
       {
         "id": "manual:workflow-catalog",
+        "category": "manual"
+      },
+      {
+        "id": "manual:workflow-path-migration",
         "category": "manual"
       },
       {
@@ -10988,8 +10929,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "4c8e019c23f231694ed6e63ce7518bbdee369e00af69cbc2b4cfcf16b3fda83f",
-    "pageRegistryDigest": "b364becac376349506fff141bbaf1749d6ed14c68ca42435706bec57d5ea1ae0"
+    "workflowRegistryDigest": "7bc1cf4fdb316e7a3960d9c31497fc8cc94f259757f254252d8d57fae1bb2123",
+    "pageRegistryDigest": "47b76aeb046a43e89646696afd9a5438df6c2484f1afba14d363ca85eec2196f"
   },
   "comparison": {
     "missingCliRegistry": [],

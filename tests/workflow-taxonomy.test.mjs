@@ -5,9 +5,9 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { runInNewContext } from "node:vm";
 import {
   checkWorkflowTaxonomy,
+  currentWorkflowPath,
   projectWorkflowIdentities,
   readWorkflowTaxonomy,
   renderWorkflowCatalog,
@@ -22,29 +22,6 @@ const repository = path.resolve(
   "..",
 );
 
-test("canonical and compatibility workflow calls bind their actual admission identity", () => {
-  const policy = readWorkflowTaxonomy(repository);
-  for (const id of ["v4-adopter-delivery", "v4-stage-capsule-canary"]) {
-    const entry = policy.entries.find((item) => item.id === id);
-    for (const invoked of [workflowPath(entry), entry.compatibility.path]) {
-      const source = fs.readFileSync(path.join(repository, invoked), "utf8");
-      const expression = source.match(
-        /BUILDCHAIN_INVOKED_WORKFLOW: \$\{\{ (.+) \}\}/u,
-      )?.[1];
-      assert.ok(
-        expression,
-        `${invoked} must bind its called-workflow identity`,
-      );
-      for (const ref of ["refs/tags/v4", "refs/tags/v4-alpha"]) {
-        const value = runInNewContext(expression, {
-          job: { workflow_ref: `kungfu-systems/buildchain/${invoked}@${ref}` },
-          startsWith: (text, prefix) => text.startsWith(prefix),
-        });
-        assert.equal(value, invoked);
-      }
-    }
-  }
-});
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-taxonomy-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -85,6 +62,74 @@ test("the migrated repository has an exhaustive classified inventory and equal a
     result.fileCount,
     result.canonicalCount + result.compatibilityCount,
   );
+});
+
+for (const token of ["v4", "v5", "v12"]) {
+  test(`registered version token cannot bypass naming gate: ${token}`, (t) => {
+    const root = fixture(t);
+    editPolicy(root, (policy) => {
+      const entry = policy.entries.find((item) => item.role === "public");
+      const old = workflowPath(entry);
+      entry.purpose = `candidate-${token}`;
+      fs.renameSync(path.join(root, old), path.join(root, workflowPath(entry)));
+    });
+    rejected(root, /filenames cannot contain version tokens/);
+  });
+}
+
+test("a reviewed historical alias cannot be re-admitted as compatibility", (t) => {
+  const root = fixture(t);
+  editPolicy(root, (policy) => {
+    const entry = policy.entries.find((item) => item.retiredAlias);
+    entry.compatibility = {
+      path: entry.retiredAlias.path,
+      reason: "restore",
+      removalCondition: "later",
+    };
+    delete entry.retiredAlias;
+  });
+  rejected(root, /version-prefixed compatibility aliases are retired/);
+});
+
+test("retired alias cannot be regenerated or reused by a consumer", (t) => {
+  const root = fixture(t);
+  const entry = readWorkflowTaxonomy(root).entries.find(
+    (item) => item.retiredAlias,
+  );
+  const canonical = workflowPath(entry);
+  assert.equal(currentWorkflowPath(root, entry.retiredAlias.path), canonical);
+  assert.throws(
+    () => writeWorkflowSource(root, entry.retiredAlias.path, "stale"),
+    /cannot regenerate/,
+  );
+  assert.equal(fs.existsSync(path.join(root, entry.retiredAlias.path)), false);
+  const caller = path.join(
+    root,
+    ".github/workflows/self-build-adopter-dogfood.yml",
+  );
+  fs.appendFileSync(
+    caller,
+    `  stale:\n    uses: kungfu-systems/buildchain/${entry.retiredAlias.path}@v4-alpha\n`,
+  );
+  rejected(root, /retired version-prefixed workflow call/);
+});
+
+test("canonical public entry cannot bind consumer admission to its retired alias", (t) => {
+  const root = fixture(t);
+  const entry = readWorkflowTaxonomy(root).entries.find(
+    (item) => item.id === "v4-adopter-delivery",
+  );
+  const file = path.join(root, workflowPath(entry));
+  fs.writeFileSync(
+    file,
+    fs
+      .readFileSync(file, "utf8")
+      .replace(
+        `BUILDCHAIN_INVOKED_WORKFLOW: ${workflowPath(entry)}`,
+        `BUILDCHAIN_INVOKED_WORKFLOW: ${entry.retiredAlias.path}`,
+      ),
+  );
+  rejected(root, /consumer admission must bind the canonical invoked workflow/);
 });
 
 for (const filename of [

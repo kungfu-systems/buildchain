@@ -56,7 +56,7 @@ receipt creation and verification.
 ## Reusable workflow
 
 Consumers invoke
-`kungfu-systems/buildchain/.github/workflows/v4-tail-reseal.yml@v4-alpha` from a
+`kungfu-systems/buildchain/.github/workflows/public-ops-tail-reseal.yml@v4-alpha` from a
 trusted, same-repository workflow. The caller supplies the rooted request, the
 original candidate consumer-policy receipt, a reviewed macOS finalization
 command, and the explicitly named signing secret. The command must write:

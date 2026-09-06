@@ -148,7 +148,7 @@ export function checkV4FloatingConsumerPolicyContract() {
     "Resolve controller identities",
     "Install Buildchain runtime dependencies",
   ]);
-  const stageCanary = read(".github/workflows/v4-stage-capsule-canary.yml");
+  const stageCanary = read(".github/workflows/public-build-stage-capsule-canary.yml");
   if (
     !stageCanary.includes("consumer-admission:") ||
     !stageCanary.includes("needs: consumer-admission")

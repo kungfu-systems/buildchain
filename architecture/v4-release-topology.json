@@ -95,7 +95,6 @@
       ".github/workflows/release-candidate-promote.yml",
       ".github/workflows/self-ops-promotion-recovery.yml",
       ".github/workflows/self-release-promote.yml",
-      ".github/workflows/v4-tail-reseal.yml",
       "packages/core/buildchain-contract.js",
       "packages/core/v4-runtime-ref-resume-authority.js",
       "packages/core/v4-runtime-selector-persistence.js",

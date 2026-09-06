@@ -51,7 +51,7 @@ test("the tracked v4 dogfood path is one thin public consumer caller", () => {
     schema: "buildchain-v4-public-dogfood-contract-check/v1",
     ok: true,
     caller: ".github/workflows/self-build-public-consumer-dogfood.yml",
-    reusable: ".github/workflows/v4-stage-capsule-canary.yml",
+    reusable: ".github/workflows/public-build-stage-capsule-canary.yml",
     validationRef: protectedDogfoodRef,
     productionAuthority: "v3",
   });
@@ -71,8 +71,8 @@ test("the gate rejects copied orchestration and relative reusable calls", () => 
     ".github/workflows/self-build-public-consumer-dogfood.yml",
     (text) =>
       text.replace(
-        "kungfu-systems/buildchain/.github/workflows/v4-stage-capsule-canary.yml@",
-        "./.github/workflows/v4-stage-capsule-canary.yml#",
+        "kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml@",
+        "./.github/workflows/public-build-stage-capsule-canary.yml#",
       ),
   );
   assert.throws(
