@@ -206,6 +206,7 @@ export function nodeApiMeta(exportName) {
     "./publication-artifact": { group: "reusable-build", summary: "Publication artifact manifest, source bundle, and publication passport APIs." },
     "./publication-package": { group: "reusable-build", summary: "Publication npm package synthesis APIs for Buildchain-managed paper release presets." },
     "./publication-reproducibility": { group: "reusable-build", summary: "Two-clean-build publication byte reproducibility receipt APIs." },
+    "./oci-publication": { group: "reusable-build", summary: "Sealed OCI image family verification, provenance, and smoke evidence APIs." },
     "./publication-sealed-bundle": { group: "reusable-build", summary: "Build-once publication bundle manifests and exact-byte resume verification APIs." },
     "./paper": { group: "reusable-build", summary: "Unified Paper work, fleet, scaffold, preflight, npm bootstrap, build, Alpha, status, and resume planning APIs." },
     "./publication-authority": { group: "release-passport-trust", summary: "Sealed publication authority registry, runner provenance, control-plane audit, admission, and independent verification APIs." },

@@ -6,7 +6,7 @@
     "cliCommandCount": 117,
     "workflowCount": 114,
     "actionCount": 8,
-    "sitePageCount": 87,
+    "sitePageCount": 88,
     "docCommandRefCount": 1050,
     "failureCount": 0
   },
@@ -5519,6 +5519,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:oci-publication",
+        "category": "manual"
+      },
+      {
         "id": "manual:ownership",
         "category": "manual"
       },
@@ -10930,7 +10934,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
     "workflowRegistryDigest": "e1bacd3ffb652ab8ef5c62986c4048d618e28ff43d4d03b61827adcce0e027be",
-    "pageRegistryDigest": "6481d064e431a520f4627e4cf86c9d9e9e4f37d73033f3b961c63fe6d5569f26"
+    "pageRegistryDigest": "6c4a4be1b2bc15c7842aa958b128f76ec405b9585f403e5cc604c16781a40afc"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -123,7 +123,8 @@
     "./site/product-mechanism.json": "./dist/site/product-mechanism.json",
     "./site/release-provenance.json": "./dist/site/release-provenance.json",
     "./site/agent-index.json": "./dist/site/agent-index.json",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./oci-publication": "./packages/core/oci-publication-bundle.js"
   },
   "files": [
     "AGENTS.md",

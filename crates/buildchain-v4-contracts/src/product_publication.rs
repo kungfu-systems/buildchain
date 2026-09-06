@@ -235,6 +235,7 @@ pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value>
     let artifact_kind = match string(value, "artifactKind").as_str() {
         "" | "npm" => "npm",
         "custom" => "custom",
+        "oci" => "oci",
         kind => return Err(fault(format!("unsupported artifactKind '{kind}'"))),
     };
     let package_name = (artifact_kind == "npm")
@@ -253,7 +254,7 @@ pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value>
     } else {
         None
     };
-    let sealed_bundle_root = (artifact_kind == "npm")
+    let sealed_bundle_root = (artifact_kind != "custom")
         .then(|| required_root(value, "sealedBundleRoot"))
         .transpose()?;
     let required_artifacts_root = required_root(value, "requiredArtifactsRoot")?;
@@ -310,6 +311,9 @@ pub fn select_product_publication_intent(value: &Value) -> ContractResult<Value>
     intent.insert("repository".to_owned(), json!(repository_name));
     if artifact_kind == "custom" {
         intent.insert("artifactKind".to_owned(), json!("custom"));
+    } else if artifact_kind == "oci" {
+        intent.insert("artifactKind".to_owned(), json!("oci"));
+        intent.insert("sealedBundleRoot".to_owned(), json!(sealed_bundle_root));
     } else {
         intent.insert("packageName".to_owned(), json!(package_name));
         intent.insert("distTag".to_owned(), json!(dist_tag));
@@ -386,7 +390,16 @@ pub fn create_product_publication_plan(value: &Value) -> ContractResult<Value> {
             "stateRef": state_ref,
         },
     })];
-    if string(intent, "artifactKind") != "custom" {
+    if intent.get("artifactKind").and_then(Value::as_str) == Some("oci") {
+        operations.push(json!({
+            "id": "product.oci.publish",
+            "adapter": "oci-image-family",
+            "authority": "packages-write",
+            "target": {"repository": intent.get("repository"), "version": version.value,
+                "sealedBundleRoot": intent.get("sealedBundleRoot"),
+                "requiredArtifactsRoot": intent.get("requiredArtifactsRoot")},
+        }));
+    } else if string(intent, "artifactKind") != "custom" {
         let packages = intent.get("npmPackages").and_then(Value::as_array);
         for index in 0..packages.map_or(1, Vec::len) {
             let package = packages.map(|entries| &entries[index]);
@@ -450,6 +463,12 @@ fn descriptor(id: &str) -> Option<(&'static str, &'static str, &'static str, &'s
             "product-version-state-materialization",
             "product-version-state-readback",
             "product-version-state",
+        )),
+        "product.oci.publish" => Some((
+            "oci-image-family",
+            "oci-family-publication",
+            "oci-family-readback",
+            "oci-family-publication",
         )),
         id if id == "product.package.publish" || id.starts_with("product.package.publish.") => {
             Some((
@@ -521,7 +540,7 @@ pub fn create_product_publication_declaration(value: &Value) -> ContractResult<V
             .ok_or_else(|| fault(format!("unsupported product publication operation '{id}'")))?;
         let mut artifact_roles =
             vec![json!({"role": "publication-intent", "root": intent.get("intentRoot")})];
-        if id.starts_with("product.package.publish") {
+        if id.starts_with("product.package.publish") || id == "product.oci.publish" {
             artifact_roles.extend([
                 json!({"role": "sealed-bundle", "root": intent.get("sealedBundleRoot")}),
                 json!({"role": "required-artifacts", "root": intent.get("requiredArtifactsRoot")}),
@@ -539,7 +558,7 @@ pub fn create_product_publication_declaration(value: &Value) -> ContractResult<V
             "channelPolicy": {
                 "channel": intent.get("channel"),
                 "tagPattern": exact_tag_pattern(intent.get("exactTag").and_then(Value::as_str).unwrap_or_default()),
-                "authorityMove": if id.starts_with("product.package.publish") { "none" } else { "verified-ref" },
+                "authorityMove": if id.starts_with("product.package.publish") || id == "product.oci.publish" { "none" } else { "verified-ref" },
             },
             "activationPolicy": {"mode": "none", "environment": "none"},
             "readbackPredicates": [{"id": format!("{id}.target-root"), "kind": "exact-root", "expected": operation.get("operationRoot")}],

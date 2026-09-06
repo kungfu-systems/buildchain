@@ -1,3 +1,4 @@
+import { resolveOciCandidate } from "./publication-candidate-kind.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -107,4 +108,12 @@ export function createResolvedPublicationSealedBundle({
     releaseAssetPaths: selectedReleaseAssets.map((file) => file.path),
   });
   return { root: resolvedRoot, manifest, npmArtifacts: resolvedNpmArtifacts, files };
+}
+
+export function resolveCandidatePublicationBundle({ kind, payloadDir, passport, runtimeSha, npmArtifacts, releaseAssetPaths }) {
+  if (kind === "oci") return resolveOciCandidate({ payloadRoot: payloadDir, passport });
+  if (kind !== "npm") return undefined;
+  return createResolvedPublicationSealedBundle({ bundleRoot: payloadDir, repository: passport.repository,
+    sourceSha: passport.source?.headSha, sourceTreeSha: passport.source?.treeHash,
+    runtimeSha, releaseCandidateRoot: passport.candidateHash, npmArtifacts, releaseAssetPaths });
 }

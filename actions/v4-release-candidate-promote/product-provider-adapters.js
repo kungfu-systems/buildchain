@@ -1,3 +1,4 @@
+import { createOciPublicationAdapter } from "./oci-provider.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -534,6 +535,16 @@ export function createV4ProductPublicationAdapters({
     adapters: {
       ...github.adapters,
       ...npmAdapters,
+      ...(intent.artifactKind === "oci"
+        ? {
+            "oci-image-family": createOciPublicationAdapter({
+              request,
+              intent,
+              plan,
+              token: request.registryToken,
+            }),
+          }
+        : {}),
     },
     updates: context.updates,
     resolveReleaseSha: github.resolveReleaseSha,

@@ -316,16 +316,7 @@ ${secrets.trimEnd()}
     outputs:
 ${publicOutputs(outputs)}
 
-permissions:
-  actions: write
-  artifact-metadata: write
-  attestations: write
-  checks: write
-  contents: write
-  id-token: write
-  issues: write
-  pull-requests: write
-
+# Provider authority is inherited from the explicit caller envelope.
 jobs:
   resolve-promotion:
     name: Resolve promotion workflow shell and runtime
@@ -503,15 +494,7 @@ ${consumerAdmissionJob()}
     name: Invoke the single v4 publisher adapter
     needs: [resolve-promotion, consumer-admission]
     uses: kungfu-systems/buildchain/${alphaRoute.workflowPath}@${alphaRoute.callRef}
-    permissions:
-      actions: write
-      artifact-metadata: write
-      attestations: write
-      checks: write
-      contents: write
-      id-token: write
-      issues: write
-      pull-requests: write
+    # Provider authority is inherited from the explicit caller envelope.
     with:
 ${invokeForwarded}
     secrets: inherit

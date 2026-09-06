@@ -65,7 +65,7 @@ export function resolveV4ProductPublicationIntent() {
   const sourceSha = env("BUILDCHAIN_SOURCE_SHA", true);
   const manifestPath = env(
     "BUILDCHAIN_SEALED_BUNDLE_MANIFEST",
-    artifactKind === "npm",
+    artifactKind !== "custom",
   );
   const manifest = manifestPath ? readJson(manifestPath) : null;
   const requiredArtifacts = readJson(
