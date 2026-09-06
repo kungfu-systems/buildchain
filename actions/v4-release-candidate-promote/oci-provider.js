@@ -168,7 +168,7 @@ export function createOciPublicationAdapter({
         "https://ghcr.io",
       );
       const repository = image.repository.slice("ghcr.io/".length);
-      if (!location.pathname.startsWith(`/v2/${repository}/blobs/uploads/`))
+      if (location.pathname.match(/^\/v2\/(.+)\/blobs\/uploads?\/[^/]+$/u)?.[1] !== repository)
         throw fault("unsafe-registry-upload-location");
       if (
         location.protocol !== "https:" ||

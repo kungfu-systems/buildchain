@@ -402,7 +402,7 @@ async function applyAndSettle({
   const result = await publishDeclarativeGitHubReleaseEvidence({
     octokit,
     repository,
-    sourceSha: productProviderResult.publication.releaseSha,
+    sourceSha: productProviderResult.promotedSha,
     version: documents.version,
     tag: documents.tag,
     channel,
