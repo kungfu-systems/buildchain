@@ -3,8 +3,8 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1468,
-  "fencingCounter": 221,
+  "generation": 1469,
+  "fencingCounter": 222,
   "policy": {
     "agingSeconds": 900,
     "maxPriority": 2,
@@ -12,7 +12,57 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": null,
+  "activeWarrant": {
+    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.0",
+    "candidateId": "sha256:8b0ca8eba20b7512610b1a2f513f55d8b4193c8ca30ef4cdea3c6eaab9651b5a",
+    "pullRequestNumber": 3540,
+    "sourceHead": "b838a941b9a5c01c9f1953d4c3817fc6c6064d9f",
+    "sourceRoot": "sha256:76d42e365e76f9b71abd14c6db69bf825050dd0b87b6d310a76ba4eb308d9052",
+    "sourceIdentityRoot": "sha256:c3db1849ac351718e1adb89ba12c5c110b701c208df393d6eb2557f8ca6efdbb",
+    "sourcePatchRoot": "sha256:0d58754aa15f821f130a8ba865b705dee48ed38aa3cc3fa61863aebbb1cbe5f0",
+    "sourceProofRoot": "sha256:b6c5d62dc3fa91df8544aa787c0e4b91a725d260b5393b0e16bd5de72f38ac4c",
+    "planRoot": "sha256:0502eeedaf7fef4e7f44550857945590553687c82f9a89be64f301ceb339180c",
+    "closureRoot": "sha256:3b9c4318fe1a6145e608f17116913071ed64245b6f45660c50b6644d4564fce5",
+    "dependencyRoot": "sha256:5ef52459242e824aa31520a36302161519ac963e4123b2323f282c3be267c1a4",
+    "toolchainRoot": "sha256:49e7c1d28613b25968a8eddaf349381371b14916ed044dad3635a6a7450fd8e0",
+    "affectedPaths": [
+      "architecture/agent-change-map.md",
+      "architecture/internal-capabilities.json",
+      "architecture/maintainability-debt.json",
+      "architecture/maintainability-policy.json",
+      "dist/site/buildchain-contract.json",
+      "dist/site/buildchain-site.json",
+      "dist/site/kfd-claims.json",
+      "dist/site/manual-registry.json",
+      "dist/site/node-api-registry.json",
+      "dist/site/page-registry.json",
+      "dist/site/public-surface-audit.json",
+      "dist/site/site-manifest.json",
+      "docs/cli.md",
+      "docs/node-api-reference.md",
+      "packages/core/paper-agent-entry.js",
+      "packages/core/paper-fleet.js",
+      "packages/core/paper-runtime-channels.js",
+      "packages/core/paper-scaffold-content.js",
+      "packages/core/paper.js",
+      "scripts/paper-work-fleet-cli.mjs",
+      "tests/internal-architecture.test.mjs",
+      "tests/paper-v4-migration.test.mjs",
+      "tests/paper.test.mjs"
+    ],
+    "shardEvidenceRoots": [],
+    "sourceWorkflowRunId": 34032279148,
+    "deliveryClass": "non-native-fast",
+    "priority": "ordinary",
+    "generation": 222,
+    "expectedOldStateRoot": "sha256:c93faca89f175f027080e50a20f898eb8db8773bbc45f1274657ee945ec9fe64",
+    "issuedAt": "2026-09-06T12:16:52.740Z",
+    "expiresAt": "2026-09-06T13:16:52.740Z",
+    "fencingToken": "sha256:3cd1f45ee575e2ac2d527eeda2bbf052b4067cfc02bc81680b05cec415a0a251",
+    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
+  },
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -11987,10 +12037,10 @@
       "sourceWorkflowRunId": 34032279148,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-06T12:16:48.554Z",
-      "updatedAt": "2026-09-06T12:16:48.554Z",
+      "updatedAt": "2026-09-06T12:16:52.740Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "queued",
+      "status": "selected",
       "terminal": null,
       "affectedPaths": [
         "architecture/agent-change-map.md",
@@ -12020,6 +12070,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-06T12:16:48.554Z",
-  "stateRoot": "sha256:c93faca89f175f027080e50a20f898eb8db8773bbc45f1274657ee945ec9fe64"
+  "updatedAt": "2026-09-06T12:16:52.740Z",
+  "stateRoot": "sha256:c1c71c59ca2f918e02bd77fe18e9bf0ae1c49858c72929e2b94e76d365f0ff6e"
 }
