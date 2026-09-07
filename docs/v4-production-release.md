@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-05
+last_reviewed: 2026-09-07
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-05
+  generated_at: 2026-09-07
   invisible_context: Provider credentials and private provider state were not read.
 ---
 
@@ -29,6 +29,12 @@ Public consumers use `v4-alpha` for the current prerelease channel and `v4`
 for stable, with matching stable and alpha contract locks. Exact commits and
 immutable release tags identify retained evidence and explicitly admitted runtime
 inputs; tracked v4 reusable-workflow selectors remain `@v4` or `@v4-alpha`.
+
+Before qualifying a new release, run `node scripts/check-universal-workflow-bootstrap.mjs`.
+The required repository check rejects an expired or not-yet-valid candidate admission
+policy before publication. Renew the bounded validity window through protected review;
+keep its capability, permission, reviewer and exact-source requirements unchanged.
+Historical publication receipts remain immutable when a later admission window expires.
 
 The release transaction is fail-closed. The v4 provider-operation journal,
 activation plan, stable publication fence, and partial-mutation recovery plan

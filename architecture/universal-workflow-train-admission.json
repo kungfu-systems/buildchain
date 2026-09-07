@@ -36,5 +36,5 @@
   "minimumApprovals": 1,
   "requiredChecks": ["check"],
   "validFrom": "2026-08-30T00:00:00.000Z",
-  "expiresAt": "2026-09-07T00:00:00.000Z"
+  "expiresAt": "2026-09-15T00:00:00.000Z"
 }
