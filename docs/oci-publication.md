@@ -158,3 +158,10 @@ The immutable release retains the appended
 `buildchain-compose-preview-<run-id>-<run-attempt>.json` receipt. A failed
 qualification leaves the existing preview intact, while the immutable alpha
 and its original publication evidence remain available for diagnosis.
+
+The verified publication Passport distinguishes the built candidate from the
+protected publication commit. Compose family source identity follows
+`source.builtSourceSha`; `source.builtSourceTreeSha` must equal the admitted
+invocation tree. Registry readback and qualification runs remain bound to the
+protected publication SHA. A tree-equivalent protected merge therefore retains
+the original image identity without accepting a different source tree.
