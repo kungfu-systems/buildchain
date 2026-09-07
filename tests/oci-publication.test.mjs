@@ -292,7 +292,10 @@ test("upload continuations remain bound to the HTTPS registry and exact reposito
     "https://user:password@ghcr.io/v2/example/images/base/blobs/upload/fixture",
   ]) {
     const p = provider(fixture(t), { uploadLocation });
-    await assert.rejects(p.adapter.apply(p.effect), /unsafe-registry-(upload-location|endpoint)/u);
+    await assert.rejects(
+      p.adapter.apply(p.effect),
+      /unsafe-registry-(upload-location|endpoint)/u,
+    );
     assert.equal(p.writes.length, 0);
   }
 });
@@ -392,4 +395,206 @@ test("OCI discovery and recovery preserve the sealed family into the rooted APPL
     compiled.effects.map((e) => e.capabilityId),
     plan.operationOrder,
   );
+});
+
+function compoundFixture(t) {
+  const f = fixture(t);
+  const [image, compose] = f.images;
+  function blob(entry, value, mediaType = value.mediaType) {
+    const bytes = Buffer.from(JSON.stringify(value)),
+      digest = hash(bytes);
+    fs.writeFileSync(
+      path.join(f.directory, entry.layout, "blobs/sha256", digest.slice(7)),
+      bytes,
+    );
+    return { mediaType, digest, size: bytes.length };
+  }
+  const old = JSON.parse(
+    fs.readFileSync(path.join(f.directory, image.layout, "index.json")),
+  ).manifests[0];
+  old.platform = { os: "linux", architecture: "amd64" };
+  const armConfig = blob(
+    image,
+    {
+      os: "linux",
+      architecture: "arm64",
+      config: {
+        Labels: {
+          "org.opencontainers.image.revision": f.sourceSha,
+          "org.opencontainers.image.version": f.version,
+        },
+      },
+    },
+    "application/vnd.oci.image.config.v1+json",
+  );
+  const arm = {
+    ...blob(image, {
+      schemaVersion: 2,
+      mediaType: old.mediaType,
+      config: armConfig,
+      layers: [],
+    }),
+    platform: { os: "linux", architecture: "arm64" },
+  };
+  const index = blob(image, {
+    schemaVersion: 2,
+    mediaType: "application/vnd.oci.image.index.v1+json",
+    manifests: [old, arm],
+  });
+  image.digest = index.digest;
+  image.platform = "multi-platform";
+  image.platforms = ["linux/amd64", "linux/arm64"];
+  fs.writeFileSync(
+    path.join(f.directory, image.layout, "index.json"),
+    JSON.stringify({ schemaVersion: 2, manifests: [index] }),
+  );
+  const config = blob(compose, {}, "application/vnd.oci.empty.v1+json");
+  const layer = blob(
+    compose,
+    { services: { app: { image: `${image.repository}@${image.digest}` } } },
+    "application/vnd.docker.compose.file+yaml",
+  );
+  const application = blob(compose, {
+    schemaVersion: 2,
+    mediaType: old.mediaType,
+    artifactType: "application/vnd.docker.compose.project",
+    config,
+    layers: [layer],
+  });
+  Object.assign(compose, {
+    kind: "compose",
+    targetImage: image.name,
+    platform: "compose",
+    repository: image.repository,
+    digest: application.digest,
+  });
+  fs.writeFileSync(
+    path.join(f.directory, compose.layout, "index.json"),
+    JSON.stringify({ schemaVersion: 2, manifests: [application] }),
+  );
+  f.manifest.schema = "kungfu-buildchain-oci-family/v2";
+  f.reseal = () => {
+    const { root, ...body } = f.manifest;
+    f.manifest.root = v4ContentRoot("oci-publication-family", body);
+    fs.writeFileSync(f.manifestPath, JSON.stringify(f.manifest));
+    fs.writeFileSync(
+      f.requiredArtifactsPath,
+      JSON.stringify(
+        f.images.map((i) => ({
+          kind: "oci",
+          name: i.repository,
+          digest: i.digest,
+          required: true,
+        })),
+      ),
+    );
+  };
+  f.reseal();
+  f.verify = () =>
+    verifyOciPublicationBundle({
+      bundleRoot: f.directory,
+      manifest: f.manifest,
+      repository: f.repository,
+      sourceSha: f.sourceSha,
+      version: f.version,
+    });
+  return { ...f, blob, armConfig, index, application, layer };
+}
+
+test("compound OCI publication uploads both platforms before the index and preserves Compose bytes", async (t) => {
+  const f = compoundFixture(t),
+    verified = f.verify();
+  assert.deepEqual(
+    verified.graphs.get("base").platforms.map((v) => v.platform),
+    ["linux/amd64", "linux/arm64"],
+  );
+  const p = provider(f);
+  await p.adapter.apply(p.effect);
+  assert.equal(p.writes.length, 4);
+  assert.match(p.writes[0], /:sha256:/u);
+  assert.match(p.writes[1], /:sha256:/u);
+  assert.equal(p.writes[2], `example/images/base:v${f.version}`);
+  assert.equal(p.writes[3], `example/images/base:compose-v${f.version}`);
+  assert.equal(hash(p.tags.get(p.writes[3])), f.images[1].digest);
+  await p.adapter.apply(p.effect);
+  assert.equal(p.writes.length, 4);
+  const recovered = resolveOciCandidate({
+    payloadRoot: f.directory,
+    passport: {
+      repository: f.repository,
+      source: { headSha: f.sourceSha },
+      target: { version: f.version },
+    },
+  });
+  assert.deepEqual(
+    recovered.requiredArtifacts.map((v) => v.ref),
+    [`v${f.version}`, `compose-v${f.version}`],
+  );
+});
+
+test("compound OCI qualification rejects omitted architectures and altered nested bytes", (t) => {
+  const f = compoundFixture(t);
+  f.images[0].platforms.push("linux/s390x");
+  f.reseal();
+  assert.throws(f.verify, /incomplete image platform/u);
+  f.images[0].platforms.pop();
+  f.reseal();
+  fs.writeFileSync(
+    path.join(
+      f.directory,
+      f.images[0].layout,
+      "blobs/sha256",
+      f.armConfig.digest.slice(7),
+    ),
+    "{}",
+  );
+  assert.throws(f.verify, /blob size mismatch/u);
+});
+
+test("Compose cannot publish to a foreign repository, alias or floating image", (t) => {
+  const f = compoundFixture(t),
+    compose = f.images[1];
+  compose.repository = "ghcr.io/example/foreign/base";
+  f.reseal();
+  assert.throws(f.verify, /destination must belong/u);
+  compose.repository = f.images[0].repository;
+  const document = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        f.directory,
+        compose.layout,
+        "blobs/sha256",
+        compose.digest.slice(7),
+      ),
+    ),
+  );
+  document.layers = [
+    f.blob(
+      compose,
+      { services: { app: { image: `${compose.repository}:latest` } } },
+      f.layer.mediaType,
+    ),
+  ];
+  const changed = f.blob(compose, document);
+  compose.digest = changed.digest;
+  fs.writeFileSync(
+    path.join(f.directory, compose.layout, "index.json"),
+    JSON.stringify({ schemaVersion: 2, manifests: [changed] }),
+  );
+  f.reseal();
+  assert.throws(f.verify, /exact digests/u);
+});
+
+test("an existing conflicting Compose tag prevents image or child-manifest publication", async (t) => {
+  const f = compoundFixture(t),
+    p = provider(f, {
+      tags: [
+        [`example/images/base:compose-v${f.version}`, Buffer.from("conflict")],
+      ],
+    });
+  await assert.rejects(
+    p.adapter.apply(p.effect),
+    /immutable-image-tag-conflict/u,
+  );
+  assert.deepEqual(p.writes, []);
 });

@@ -2,6 +2,10 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { v4ContentRoot } from "./v4-canonical-contracts.js";
+import {
+  verifyOciGraph,
+  verifyOciDestination,
+} from "./oci-publication-graph.js";
 
 export const OCI_FAMILY_SCHEMA = "kungfu-buildchain-oci-family/v1";
 const digestPattern = /^sha256:[0-9a-f]{64}$/u;
@@ -119,7 +123,9 @@ export function verifyOciPublicationBundle({
   version,
 }) {
   requireValue(
-    manifest?.schema === OCI_FAMILY_SCHEMA,
+    [OCI_FAMILY_SCHEMA, "kungfu-buildchain-oci-family/v2"].includes(
+      manifest?.schema,
+    ),
     "unsupported manifest schema",
   );
   const { root, ...body } = manifest;
@@ -152,18 +158,18 @@ export function verifyOciPublicationBundle({
     "incomplete or duplicate image family",
   );
   const files = new Map();
+  const graphs = new Map();
   for (const image of manifest.images) {
-    requireValue(
-      image.repository === `ghcr.io/${repository}/${image.name}`,
-      "destination must belong to the consumer repository",
-    );
+    verifyOciDestination(image, manifest, requireValue);
     requireValue(
       digestPattern.test(image.digest) &&
         ["built", "reused"].includes(image.action),
       "invalid image identity",
     );
     requireValue(
-      /^linux\/(amd64|arm64)$/u.test(image.platform),
+      /^linux\/(amd64|arm64)$/u.test(image.platform) ||
+        (manifest.schema.endsWith("/v2") &&
+          ["multi-platform", "compose"].includes(image.platform)),
       "unsupported image platform",
     );
     const prefix = image.layout;
@@ -171,7 +177,9 @@ export function verifyOciPublicationBundle({
       requireValue(
         digestPattern.test(descriptor.digest) &&
           Number.isSafeInteger(descriptor.size) &&
-          descriptor.size >= 0,
+          descriptor.size >= 0 &&
+          !descriptor.urls &&
+          !descriptor.data,
         "invalid OCI descriptor",
       );
       const relative = `${prefix}/blobs/sha256/${descriptor.digest.slice(7)}`;
@@ -209,23 +217,44 @@ export function verifyOciPublicationBundle({
       index.schemaVersion === 2 && selected.length === 1,
       "OCI index must select one exact image manifest",
     );
-    const document = JSON.parse(fs.readFileSync(descriptorFile(selected[0])));
-    requireValue(
-      document.schemaVersion === 2 &&
-        [
-          "application/vnd.oci.image.manifest.v1+json",
-          "application/vnd.docker.distribution.manifest.v2+json",
-        ].includes(document.mediaType) &&
-        Array.isArray(document.layers),
-      "unsupported OCI image manifest",
-    );
-    const config = JSON.parse(fs.readFileSync(descriptorFile(document.config)));
-    requireValue(
-      `${config.os}/${config.architecture}` === image.platform,
-      "OCI platform mismatch",
-    );
-    verifyImageProvenance(image, config, sourceSha, version);
-    for (const layer of document.layers) descriptorFile(layer);
+    if (manifest.schema.endsWith("/v2")) {
+      graphs.set(
+        image.name,
+        verifyOciGraph({
+          image,
+          manifest,
+          descriptor: selected[0],
+          descriptorFile,
+          requireValue,
+          verifyProvenance: (config) =>
+            verifyImageProvenance(image, config, sourceSha, version),
+        }),
+      );
+    } else {
+      const document = JSON.parse(fs.readFileSync(descriptorFile(selected[0])));
+      requireValue(
+        document.schemaVersion === 2 &&
+          [
+            "application/vnd.oci.image.manifest.v1+json",
+            "application/vnd.docker.distribution.manifest.v2+json",
+          ].includes(document.mediaType) &&
+          Array.isArray(document.layers),
+        "unsupported OCI image manifest",
+      );
+      const config = JSON.parse(
+        fs.readFileSync(descriptorFile(document.config)),
+      );
+      requireValue(
+        `${config.os}/${config.architecture}` === image.platform,
+        "OCI platform mismatch",
+      );
+      verifyImageProvenance(image, config, sourceSha, version);
+      for (const layer of document.layers) descriptorFile(layer);
+      graphs.set(image.name, {
+        manifests: [selected[0]],
+        blobs: [document.config, ...document.layers],
+      });
+    }
     const smokeFile = ociBundleFile(bundleRoot, image.smoke.path);
     requireValue(
       fileDigest(smokeFile) === image.smoke.sha256,
@@ -237,5 +266,10 @@ export function verifyOciPublicationBundle({
       "smoke qualification failed",
     );
   }
-  return { root: computed, manifest, bundleRoot: fs.realpathSync(bundleRoot) };
+  return {
+    root: computed,
+    manifest,
+    graphs,
+    bundleRoot: fs.realpathSync(bundleRoot),
+  };
 }

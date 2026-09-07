@@ -100,6 +100,7 @@
     ".github/workflows/patrol-monthly.yml",
     ".github/workflows/patrol-observed-evidence.yml",
     ".github/workflows/patrol-weekly.yml",
+    ".github/workflows/public-release-oci-compose-preview.yml",
     ".github/workflows/publication-artifact.yml",
     ".github/workflows/release-candidate-promote.yml",
     ".github/workflows/release-governance-reconcile.yml",
@@ -144,6 +145,7 @@
     ".github/workflows/patrol-monthly.yml",
     ".github/workflows/patrol-observed-evidence.yml",
     ".github/workflows/patrol-weekly.yml",
+    ".github/workflows/public-release-oci-compose-preview.yml",
     ".github/workflows/publication-artifact.yml",
     ".github/workflows/release-candidate-promote.yml",
     ".github/workflows/release-governance-reconcile.yml",
@@ -166,6 +168,9 @@
     "compatibilityFacades": "generated-dual-path",
     "externalConsumerDogfood": "public-consumer-three-platform-runtime-and-non-circular-recovery-hosted-proof-passed",
     "buildchainSelfDogfood": "train-primary-and-consumer-recovery-three-pair-hosted-proof-passed",
-    "oldPathRetirement": "pending-protected-dev-integration"
+    "oldPathRetirement": "pending-protected-dev-integration",
+    "postMigrationWorkflows": [
+      ".github/workflows/public-release-oci-compose-preview.yml"
+    ]
   }
 }

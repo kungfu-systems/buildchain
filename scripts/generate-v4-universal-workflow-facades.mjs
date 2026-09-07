@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import crypto from "node:crypto";
-import { currentWorkflowPath, writeWorkflowSource, rewriteRepositoryWorkflowPaths } from "./workflow-taxonomy.mjs";
+import {
+  currentWorkflowPath,
+  writeWorkflowSource,
+  rewriteRepositoryWorkflowPaths,
+} from "./workflow-taxonomy.mjs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -96,6 +100,7 @@ function frozenFacadeSource(relative) {
 const mutableFacades = new Set([
   ...(contract.migration.channelGeneratedFacades || []),
   ".github/workflows/dev-pr-auto-merge.yml",
+  ...(contract.migration.postMigrationWorkflows || []),
 ]);
 
 function isMutableFacade(relative) {
@@ -187,9 +192,7 @@ function guardCompatibilityJobs(source, relative) {
 function addRuntimeBootstrapDependencies(source, relative) {
   if (
     relative !== ".github/workflows/.build.yml" ||
-    source.includes(
-      ".buildchain/workflow-shell/scripts/github-output.mjs\n",
-    )
+    source.includes(".buildchain/workflow-shell/scripts/github-output.mjs\n")
   )
     return source;
   const anchor =
@@ -201,32 +204,60 @@ function addRuntimeBootstrapDependencies(source, relative) {
 }
 
 function applyPublicationFacadePatches(source, relative) {
-  const document = JSON.parse(fs.readFileSync(path.join(root,
-    "architecture/v4-publication-facade-patches.json"), "utf8"));
-  const patch = document.facades.find(entry => entry.workflow === relative);
+  const document = JSON.parse(
+    fs.readFileSync(
+      path.join(root, "architecture/v4-publication-facade-patches.json"),
+      "utf8",
+    ),
+  );
+  const patch = document.facades.find((entry) => entry.workflow === relative);
   if (!patch) return source;
-  const digest = value => crypto.createHash("sha256").update(value).digest("hex");
+  const digest = (value) =>
+    crypto.createHash("sha256").update(value).digest("hex");
   if (digest(source) === patch.afterSha256) return source;
-  if (digest(source) !== patch.beforeSha256) fail(`${relative}: publication facade source drift`);
+  if (digest(source) !== patch.beforeSha256)
+    fail(`${relative}: publication facade source drift`);
   for (const { before, after } of patch.replacements) {
-    if (source.split(before).length !== 2) fail(`${relative}: ambiguous publication patch`);
+    if (source.split(before).length !== 2)
+      fail(`${relative}: ambiguous publication patch`);
     source = source.replace(before, () => after);
   }
-  if (digest(source) !== patch.afterSha256) fail(`${relative}: publication facade result drift`);
+  if (digest(source) !== patch.afterSha256)
+    fail(`${relative}: publication facade result drift`);
   return source;
 }
 
 function inheritPublicationProviderAuthority(source, relative) {
-  if (relative !== ".github/workflows/.release-candidate-promote.yml") return source;
-  return source.replace("permissions:\n  contents: read\n", "# Provider authority is inherited from the explicit caller envelope.\n")
-    .replace("    permissions:\n      actions: read\n      checks: write\n      contents: write\n      id-token: write\n      pull-requests: write\n", "    # Provider authority is inherited from the explicit caller envelope.\n");
+  if (relative !== ".github/workflows/.release-candidate-promote.yml")
+    return source;
+  return source
+    .replace(
+      "permissions:\n  contents: read\n",
+      "# Provider authority is inherited from the explicit caller envelope.\n",
+    )
+    .replace(
+      "    permissions:\n      actions: read\n      checks: write\n      contents: write\n      id-token: write\n      pull-requests: write\n",
+      "    # Provider authority is inherited from the explicit caller envelope.\n",
+    );
 }
 
 export function migrateV4UniversalWorkflowFacade(source, relative) {
-  return rewriteRepositoryWorkflowPaths(root, inheritPublicationProviderAuthority(applyPublicationFacadePatches(guardCompatibilityJobs(
-    addUniversalInput(addRuntimeBootstrapDependencies(source, relative), relative),
-    relative,
-  ), relative), relative));
+  return rewriteRepositoryWorkflowPaths(
+    root,
+    inheritPublicationProviderAuthority(
+      applyPublicationFacadePatches(
+        guardCompatibilityJobs(
+          addUniversalInput(
+            addRuntimeBootstrapDependencies(source, relative),
+            relative,
+          ),
+          relative,
+        ),
+        relative,
+      ),
+      relative,
+    ),
+  );
 }
 
 function verify(source, relative) {
@@ -427,7 +458,8 @@ function main() {
       );
   } else {
     writeWorkflowSource(
-      root, path.relative(root, recoveryWorkflowPath),
+      root,
+      path.relative(root, recoveryWorkflowPath),
       fs.readFileSync(recoveryTemplatePath, "utf8"),
     );
   }
@@ -440,7 +472,8 @@ function main() {
     if (check) verify(source, relative);
     else
       writeWorkflowSource(
-        root, current,
+        root,
+        current,
         migrateV4UniversalWorkflowFacade(source, relative),
       );
   }

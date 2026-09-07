@@ -4485,6 +4485,40 @@
       "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
     },
     {
+      "id": "public-release-oci-compose-preview",
+      "path": ".github/workflows/public-release-oci-compose-preview.yml",
+      "reusable": true,
+      "inputs": [
+        "universal-request-json"
+      ],
+      "inputCount": 1,
+      "secrets": [
+        "BUILDCHAIN_PROMOTION_TOKEN"
+      ],
+      "secretCount": 1,
+      "outputs": [],
+      "outputCount": 0,
+      "taxonomy": {
+        "id": "oci-compose-preview",
+        "role": "public",
+        "category": "release",
+        "purpose": "oci-compose-preview",
+        "status": "active",
+        "canonicalPath": ".github/workflows/public-release-oci-compose-preview.yml",
+        "compatibilityAlias": false
+      },
+      "surface": "repository-workflow",
+      "capabilityGroup": "api-cli-reference",
+      "status": "active",
+      "owner": "buildchain-workflows",
+      "maturity": "active",
+      "introducedVersion": "pre-3.0.2-alpha.4",
+      "compatibilityPromise": "preserved-through-the-v3-major-line",
+      "deprecationReplacement": "",
+      "sunsetCondition": "explicit-breaking-change-review-in-a-future-major-line",
+      "nonDuplicationRationale": "Existing workflow identity retained for caller compatibility and repository orchestration."
+    },
+    {
       "id": "public-release-paper-sealed",
       "path": ".github/workflows/public-release-paper-sealed.yml",
       "reusable": true,
