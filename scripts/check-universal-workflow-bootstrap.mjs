@@ -8,16 +8,16 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const contract = JSON.parse(
-  fs.readFileSync(
-    path.join(root, "architecture/universal-workflow-bootstrap.json"),
-    "utf8",
-  ),
+  fs.readFileSync(path.join(root, "architecture/universal-workflow-bootstrap.json"), "utf8"),
 );
 const admissionPolicy = JSON.parse(
-  fs.readFileSync(
-    path.join(root, "architecture/universal-workflow-train-admission.json"),
-    "utf8",
-  ),
+  fs.readFileSync(path.join(root, "architecture/universal-workflow-train-admission.json"), "utf8"),
+);
+const admissionObservedAt = Date.now();
+assert.ok(
+  admissionObservedAt >= Date.parse(admissionPolicy.validFrom) &&
+    admissionObservedAt < Date.parse(admissionPolicy.expiresAt),
+  `release admission policy is outside its validity window (${admissionPolicy.validFrom} to ${admissionPolicy.expiresAt}); renew it through protected review before publishing`,
 );
 const fileRoot = (relative) =>
   `sha256:${crypto
