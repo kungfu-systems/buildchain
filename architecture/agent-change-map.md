@@ -201,6 +201,11 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/generate-universal-workflow-facades.mjs`
 - `scripts/check-release-topology.mjs`
 - `actions/release-candidate-promote/product-provider-adapters.js`
+- `scripts/release-candidate-resolver.mjs`
+- `scripts/dev-delivery-warrant.mjs`
+- `scripts/generate-channel-promotion-workflow.mjs`
+- `.github/workflows/v4-stage-capsule-canary.yml`
+- `packages/core/release-tail-provider-plane.js`
 
 ## cli-command-registry
 
