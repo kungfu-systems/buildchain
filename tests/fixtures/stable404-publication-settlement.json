@@ -1,0 +1,1204 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain-v4-publication-settlement/v1",
+  "id": "v4-publication",
+  "release": {
+    "sourceSha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+    "tag": "v4.0.4",
+    "channel": "stable"
+  },
+  "documents": {
+    "invocation": {
+      "schema": "kungfu-buildchain-v4-release-invocation/v1",
+      "publisher": {
+        "repository": "kungfu-systems/buildchain",
+        "workflow": ".github/workflows/.release-candidate-promote.yml",
+        "workflowSha": "60ec40e04e016f53187c2101c9ba25defed7f19b",
+        "job": "apply"
+      },
+      "runtime": {
+        "repository": "kungfu-systems/buildchain",
+        "commit": "60ec40e04e016f53187c2101c9ba25defed7f19b",
+        "tree": "ef54754c420293c4d4013fc89f0f58e256d5ad8f"
+      },
+      "candidate": {
+        "repository": "kungfu-systems/buildchain",
+        "commit": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+        "tree": "6ac9a69c54bb9530e8bcf812493c486db4460c3a",
+        "version": "4.0.4"
+      },
+      "target": {
+        "channel": "stable",
+        "tag": "v4.0.4",
+        "expectedOldSha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33"
+      },
+      "authority": {
+        "policyRoot": "sha256:4b6b03d460bbff29eafe13d69a3944f02b2c35dc65b55411c8d7d86a3f831b77",
+        "qualificationRoot": "sha256:c31315e663e5196c270f96c764149866681125244615cd48e46e3189f5b0149d",
+        "warrantRoot": "sha256:c31315e663e5196c270f96c764149866681125244615cd48e46e3189f5b0149d"
+      },
+      "provider": {
+        "adapter": "built-in-provider-plane",
+        "contract": "kungfu-buildchain-release-tail-provider/v1",
+        "repository": "kungfu-systems/buildchain"
+      },
+      "parent": {
+        "invocationRoot": null,
+        "transactionRoot": null,
+        "receiptRoot": null
+      }
+    },
+    "transaction": {
+      "schema": "kungfu-buildchain-v4-release-transaction/v1",
+      "invocationRoot": "sha256:fcf072eaea1cb8c83e71bed92d605e174373f2cebc4dd4946621cf31c1c1ba0c",
+      "publisherRoot": "sha256:70011434fe61843294836456a34621260e41148b08f758a88faa95c3baccf973",
+      "runtimeRoot": "sha256:d25630b426e6bbba9189e91fa5f1fdb1fbfc91bbc04e84ca60b7185de382b1a2",
+      "providerRoot": "sha256:2409b3a928a97b943c5bbdbcac1f3416bd82d4515403819abb7837f4babc3026",
+      "parentRoot": "sha256:175e9c8ac46364af573f47a7b6bb5a2b94811ee47655a10ce7436a50bc5fbd9a",
+      "phases": [
+        "QUALIFY",
+        "APPLY",
+        "SETTLE"
+      ],
+      "writer": "canonical-v4-apply",
+      "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424"
+    },
+    "receipt": {
+      "schema": "kungfu-buildchain-v4-release-receipt/v1",
+      "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+      "outcome": "complete",
+      "releasePassportRoot": "sha256:0c91f8ea533974b352f9c74509cf32533e16a9c59377cb1b1883064a69a5fac2",
+      "providerTransactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+      "providerStateRoot": "sha256:0deab8e98f8194edcebb40724820208642fad91fac242df8e4190d846a8c2d49",
+      "providerReceiptRoots": [
+        "sha256:2c816dbe6dac22849b35cdae1fd764ee80e56f6a0a7d92baf9ecac753c0bdc68",
+        "sha256:54cbbaf3e6c4fc000285835b5105bba53c9894095d466312a4ed4d52ab39bc7e",
+        "sha256:6b07116474f17276effc2948e46b258e16bb1171be8976c448f6c0dff40a63bf",
+        "sha256:8985593a04eb0b1950674b669d0ceabb9ad520a32f8671992a7659e0c0fe0971",
+        "sha256:9faada22b604cc8e0ebb3891c96e5e139f2d3351ad3d60ae2e9bc1b6316944a7"
+      ],
+      "receiptRoot": "sha256:466cf40bfc699310ce8267125eada60a789eeac8269e66afb16748c32ac06a61"
+    },
+    "product": {
+      "schema": "kungfu.buildchain.v4-product-provider-result/v1",
+      "target": {
+        "ref": "release/v4/v4.0",
+        "sha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33"
+      },
+      "publication": {
+        "version": "4.0.4",
+        "exactTag": "v4.0.4",
+        "releaseSha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+        "state": "complete",
+        "finalizationNeeded": false
+      },
+      "promotedSha": "9c5fcb533bf20f3c5ee86b0dfe8c7bd22f115e56",
+      "transaction": {
+        "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+        "stateRoot": "sha256:6bc8b00ff3ac9eb8319373b8edc66bc5d1190750e0381bf137a5fee6ff25ed81",
+        "planRoot": "sha256:a5fa0c660539ca009ba7ef3d2f70a9549ad091dc0df53afbc3d1bc0e0c607587",
+        "receiptRoots": [
+          "sha256:20a7fd9860c3e100fb24e46af05f27b53c56aa17946cb60a5be112cf2effcc63",
+          "sha256:516e31123baa39b42046283ad5b60b7deb8006d8a81ffd7a5ea6f982d13bbe6a",
+          "sha256:5fdfdef5f9f9b2fd6def0974f9d9d85bee375159b142724eb144def760519f21"
+        ],
+        "failure": null
+      },
+      "updates": [
+        {
+          "action": "converged-release-tag",
+          "ref": "refs/tags/v4.0",
+          "tag": "",
+          "sha": "9c5fcb533bf20f3c5ee86b0dfe8c7bd22f115e56",
+          "version": ""
+        },
+        {
+          "action": "converged-release-tag",
+          "ref": "refs/tags/v4",
+          "tag": "",
+          "sha": "9c5fcb533bf20f3c5ee86b0dfe8c7bd22f115e56",
+          "version": ""
+        }
+      ],
+      "root": "sha256:8985593a04eb0b1950674b669d0ceabb9ad520a32f8671992a7659e0c0fe0971"
+    },
+    "providerState": {
+      "schema": "kungfu.buildchain.release-tail.transaction/v1",
+      "transactionPolicy": "buildchain.release-tail/v1",
+      "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+      "declarationRoot": "sha256:a4218fe8a6068181e1cf87c4b667f76dd0182f2a895a5d92fd536016288993aa",
+      "planRoot": "sha256:f62b823d150a661778bf9bc3369e5ed338b4e20d8b6f01b717eae15458897161",
+      "subject": {
+        "repository": "kungfu-systems/buildchain",
+        "sourceSha": "9c5fcb533bf20f3c5ee86b0dfe8c7bd22f115e56",
+        "version": "4.0.4",
+        "tag": "v4.0.4",
+        "channel": "stable"
+      },
+      "state": "complete",
+      "operationOrder": [
+        "sha256:614ecfd473ba3d61eba5ce4e25ec1de3b163dc0570ee88175b531c25cf0fb05d",
+        "sha256:540792fa1cabdb84d54a613e6a84b78bdac72e8124906241c5c685426ee13042",
+        "sha256:fd04ace29a661fb5785d2f41c5d6679efa0a6864ea4b9b36eb9fe06629219109",
+        "sha256:c70ce6ddcd8bf32ddc9e81d6df0d3c38e028449e6ea4fd17f6657bf61f09019c"
+      ],
+      "operations": [
+        {
+          "operationId": "sha256:614ecfd473ba3d61eba5ce4e25ec1de3b163dc0570ee88175b531c25cf0fb05d",
+          "capabilityId": "artifact.publish",
+          "effect": {
+            "schema": "kungfu.buildchain.release-tail.effect/v1",
+            "kind": "artifact-publication",
+            "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+            "operationId": "sha256:614ecfd473ba3d61eba5ce4e25ec1de3b163dc0570ee88175b531c25cf0fb05d",
+            "capabilityId": "artifact.publish",
+            "executor": "provider-adapter",
+            "adapter": "github-release-assets",
+            "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+            "targetRoot": "sha256:0b05aab5d2c0e8d2f13b399939ef942e348da8a537a8a198739edc87772eb5ae",
+            "attemptKey": "artifact.publish/1",
+            "subject": {
+              "repository": "kungfu-systems/buildchain",
+              "sourceSha": "9c5fcb533bf20f3c5ee86b0dfe8c7bd22f115e56",
+              "version": "4.0.4",
+              "tag": "v4.0.4",
+              "channel": "stable"
+            },
+            "artifactRoles": [
+              {
+                "role": "github-release-asset.01.buildchain.release.json",
+                "root": "sha256:ecacb999a54ac60386539e1f40bd8a84e3a3cdf180c17f66cdc09df1fb1eed8e"
+              },
+              {
+                "role": "github-release-asset.02.publication-evidence.json",
+                "root": "sha256:4713f8733cfaf34bed9429e26839cc858523e003e131beb6a82bd98890b4fe1c"
+              }
+            ],
+            "destination": {
+              "kind": "github-release",
+              "locator": "github-release:kungfu-systems/buildchain@v4.0.4"
+            },
+            "channelPolicy": {
+              "channel": "stable",
+              "tagPattern": "^v4\\.0\\.4$",
+              "authorityMove": "verified-ref"
+            },
+            "activationPolicy": {
+              "mode": "none",
+              "environment": "none"
+            },
+            "readbackPredicates": [
+              {
+                "id": "github-release-assets-match-roots",
+                "kind": "provider-assets",
+                "expected": "all declared release assets are publicly readable at their sealed roots"
+              }
+            ],
+            "idempotency": {
+              "scope": "subject-target",
+              "duplicate": "readback-before-retry"
+            },
+            "retry": {
+              "class": "provider-transient",
+              "localAttempts": 2,
+              "exhausted": "repair-required"
+            },
+            "evidenceRequirements": [
+              "kungfu-buildchain-publish-evidence",
+              "kungfu-buildchain-release-passport"
+            ],
+            "effectRoot": "sha256:02e8983b54f383ee14cb49588cb6f901122b559216a67c0d3dd0d1eb75324911"
+          },
+          "status": "complete",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:f1cdc996b288617bad92ded8c9d2f550a3e18edd257024d28d032ff75834bc16",
+            "sha256:c0314854c5ebc4509c04259c2e77a2a5e12c65c1a7e7dcd47d1b2e21e6c27def"
+          ],
+          "receipt": {
+            "schema": "kungfu.buildchain.release-tail.receipt/v1",
+            "kind": "artifact-publication",
+            "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+            "operationId": "sha256:614ecfd473ba3d61eba5ce4e25ec1de3b163dc0570ee88175b531c25cf0fb05d",
+            "capabilityId": "artifact.publish",
+            "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+            "targetRoot": "sha256:0b05aab5d2c0e8d2f13b399939ef942e348da8a537a8a198739edc87772eb5ae",
+            "effectRoot": "sha256:02e8983b54f383ee14cb49588cb6f901122b559216a67c0d3dd0d1eb75324911",
+            "action": "applied-and-observed",
+            "effectAttempts": 1,
+            "readbackAttempts": 2,
+            "observationRoots": [
+              "sha256:f1cdc996b288617bad92ded8c9d2f550a3e18edd257024d28d032ff75834bc16",
+              "sha256:c0314854c5ebc4509c04259c2e77a2a5e12c65c1a7e7dcd47d1b2e21e6c27def"
+            ],
+            "evidenceRoots": [
+              "sha256:4713f8733cfaf34bed9429e26839cc858523e003e131beb6a82bd98890b4fe1c",
+              "sha256:ecacb999a54ac60386539e1f40bd8a84e3a3cdf180c17f66cdc09df1fb1eed8e"
+            ],
+            "receiptRoot": "sha256:2c816dbe6dac22849b35cdae1fd764ee80e56f6a0a7d92baf9ecac753c0bdc68"
+          }
+        },
+        {
+          "operationId": "sha256:540792fa1cabdb84d54a613e6a84b78bdac72e8124906241c5c685426ee13042",
+          "capabilityId": "signed-channel.commit",
+          "effect": {
+            "schema": "kungfu.buildchain.release-tail.effect/v1",
+            "kind": "signed-channel-commit",
+            "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+            "operationId": "sha256:540792fa1cabdb84d54a613e6a84b78bdac72e8124906241c5c685426ee13042",
+            "capabilityId": "signed-channel.commit",
+            "executor": "provider-adapter",
+            "adapter": "signed-static-channel",
+            "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+            "targetRoot": "sha256:2d3e65efada8ca982c90f9985b447d865c130cfaf3da54e703fa46085aa1cbf9",
+            "attemptKey": "signed-channel.commit/1",
+            "subject": {
+              "repository": "kungfu-systems/buildchain",
+              "sourceSha": "9c5fcb533bf20f3c5ee86b0dfe8c7bd22f115e56",
+              "version": "4.0.4",
+              "tag": "v4.0.4",
+              "channel": "stable"
+            },
+            "artifactRoles": [
+              {
+                "role": "signed-channel-index",
+                "root": "sha256:2d3e65efada8ca982c90f9985b447d865c130cfaf3da54e703fa46085aa1cbf9"
+              }
+            ],
+            "destination": {
+              "kind": "well-known-signed-channel",
+              "locator": "github-document:kungfu-systems/buildchain@buildchain/signed-channel/v4.0.4:.buildchain/channels/stable.json"
+            },
+            "channelPolicy": {
+              "channel": "stable",
+              "tagPattern": "^v4\\.0\\.4$",
+              "authorityMove": "signed-cas"
+            },
+            "activationPolicy": {
+              "mode": "none",
+              "environment": "none"
+            },
+            "readbackPredicates": [
+              {
+                "id": "signed-channel-root",
+                "kind": "provider-document",
+                "expected": "the signed channel document matches its sealed root"
+              }
+            ],
+            "idempotency": {
+              "scope": "subject-target",
+              "duplicate": "readback-before-retry"
+            },
+            "retry": {
+              "class": "readback",
+              "localAttempts": 2,
+              "exhausted": "repair-required"
+            },
+            "evidenceRequirements": [
+              "kungfu-buildchain-publication-qualification/v1"
+            ],
+            "effectRoot": "sha256:7e9fcca45f079d0094fffb63ce0222f4e3a729207122742fc0073e06248d2351"
+          },
+          "status": "complete",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:d127c343f08f2b9df73a1f43549f4a02713247032cc3e2ceb68f9902a81f1c64",
+            "sha256:5b5eab444d228cba979c1e3a6597c1fc5ef06ae880522819cbb9bc732271377e"
+          ],
+          "receipt": {
+            "schema": "kungfu.buildchain.release-tail.receipt/v1",
+            "kind": "publication-commit",
+            "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+            "operationId": "sha256:540792fa1cabdb84d54a613e6a84b78bdac72e8124906241c5c685426ee13042",
+            "capabilityId": "signed-channel.commit",
+            "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+            "targetRoot": "sha256:2d3e65efada8ca982c90f9985b447d865c130cfaf3da54e703fa46085aa1cbf9",
+            "effectRoot": "sha256:7e9fcca45f079d0094fffb63ce0222f4e3a729207122742fc0073e06248d2351",
+            "action": "applied-and-observed",
+            "effectAttempts": 1,
+            "readbackAttempts": 2,
+            "observationRoots": [
+              "sha256:d127c343f08f2b9df73a1f43549f4a02713247032cc3e2ceb68f9902a81f1c64",
+              "sha256:5b5eab444d228cba979c1e3a6597c1fc5ef06ae880522819cbb9bc732271377e"
+            ],
+            "evidenceRoots": [
+              "sha256:2d3e65efada8ca982c90f9985b447d865c130cfaf3da54e703fa46085aa1cbf9"
+            ],
+            "receiptRoot": "sha256:54cbbaf3e6c4fc000285835b5105bba53c9894095d466312a4ed4d52ab39bc7e"
+          }
+        },
+        {
+          "operationId": "sha256:fd04ace29a661fb5785d2f41c5d6679efa0a6864ea4b9b36eb9fe06629219109",
+          "capabilityId": "release.activate",
+          "effect": {
+            "schema": "kungfu.buildchain.release-tail.effect/v1",
+            "kind": "release-activation",
+            "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+            "operationId": "sha256:fd04ace29a661fb5785d2f41c5d6679efa0a6864ea4b9b36eb9fe06629219109",
+            "capabilityId": "release.activate",
+            "executor": "provider-adapter",
+            "adapter": "site-release-activation",
+            "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+            "targetRoot": "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447",
+            "attemptKey": "release.activate/1",
+            "subject": {
+              "repository": "kungfu-systems/buildchain",
+              "sourceSha": "9c5fcb533bf20f3c5ee86b0dfe8c7bd22f115e56",
+              "version": "4.0.4",
+              "tag": "v4.0.4",
+              "channel": "stable"
+            },
+            "artifactRoles": [
+              {
+                "role": "activation-receipt-set",
+                "root": "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447"
+              }
+            ],
+            "destination": {
+              "kind": "production-site",
+              "locator": "github-document:kungfu-systems/buildchain@buildchain/release-activation/v4.0.4:.buildchain/activation/stable.json"
+            },
+            "channelPolicy": {
+              "channel": "stable",
+              "tagPattern": "^v4\\.0\\.4$",
+              "authorityMove": "verified-ref"
+            },
+            "activationPolicy": {
+              "mode": "receipt-set",
+              "environment": "production"
+            },
+            "readbackPredicates": [
+              {
+                "id": "release-activation-root",
+                "kind": "provider-document",
+                "expected": "the activation document matches its sealed root"
+              }
+            ],
+            "idempotency": {
+              "scope": "subject-target",
+              "duplicate": "readback-before-retry"
+            },
+            "retry": {
+              "class": "provider-transient",
+              "localAttempts": 2,
+              "exhausted": "blocked"
+            },
+            "evidenceRequirements": [
+              "kungfu-buildchain-publication-commit-evidence/v1"
+            ],
+            "effectRoot": "sha256:107de4ff6f11609de02bba3339017c90f90c5ee9a17aa04963649a7dbef8ac7e"
+          },
+          "status": "complete",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:48324ae5c6305f0e2c5691b170e98bada7ac693b60b5504b5270f0b28258dc24",
+            "sha256:fe14daf363669fff6c593e05d8ceb0d5f9210f45c83c236289ac0e63c6ea0868"
+          ],
+          "receipt": {
+            "schema": "kungfu.buildchain.release-tail.receipt/v1",
+            "kind": "activation-receipt-set",
+            "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+            "operationId": "sha256:fd04ace29a661fb5785d2f41c5d6679efa0a6864ea4b9b36eb9fe06629219109",
+            "capabilityId": "release.activate",
+            "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+            "targetRoot": "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447",
+            "effectRoot": "sha256:107de4ff6f11609de02bba3339017c90f90c5ee9a17aa04963649a7dbef8ac7e",
+            "action": "applied-and-observed",
+            "effectAttempts": 1,
+            "readbackAttempts": 2,
+            "observationRoots": [
+              "sha256:48324ae5c6305f0e2c5691b170e98bada7ac693b60b5504b5270f0b28258dc24",
+              "sha256:fe14daf363669fff6c593e05d8ceb0d5f9210f45c83c236289ac0e63c6ea0868"
+            ],
+            "evidenceRoots": [
+              "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447"
+            ],
+            "receiptRoot": "sha256:6b07116474f17276effc2948e46b258e16bb1171be8976c448f6c0dff40a63bf"
+          }
+        },
+        {
+          "operationId": "sha256:c70ce6ddcd8bf32ddc9e81d6df0d3c38e028449e6ea4fd17f6657bf61f09019c",
+          "capabilityId": "released-evidence.synthesize",
+          "effect": {
+            "schema": "kungfu.buildchain.release-tail.effect/v1",
+            "kind": "released-evidence-projection",
+            "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+            "operationId": "sha256:c70ce6ddcd8bf32ddc9e81d6df0d3c38e028449e6ea4fd17f6657bf61f09019c",
+            "capabilityId": "released-evidence.synthesize",
+            "executor": "buildchain-core",
+            "adapter": "activation-receipt-projector",
+            "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+            "targetRoot": "sha256:9c85c1ca0eb09da868c95ac7baa9f4487235f9746c9b1c2f8765fd1f1d3bdea4",
+            "attemptKey": "released-evidence.synthesize/1",
+            "subject": {
+              "repository": "kungfu-systems/buildchain",
+              "sourceSha": "9c5fcb533bf20f3c5ee86b0dfe8c7bd22f115e56",
+              "version": "4.0.4",
+              "tag": "v4.0.4",
+              "channel": "stable"
+            },
+            "artifactRoles": [
+              {
+                "role": "activation-receipt-set",
+                "root": "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447"
+              }
+            ],
+            "destination": {
+              "kind": "release-passport-attachment",
+              "locator": ".buildchain/release-evidence/released-evidence.json"
+            },
+            "channelPolicy": {
+              "channel": "stable",
+              "tagPattern": "^v4\\.0\\.4$",
+              "authorityMove": "none"
+            },
+            "activationPolicy": {
+              "mode": "receipt-only",
+              "environment": "production"
+            },
+            "readbackPredicates": [
+              {
+                "id": "released-evidence-root",
+                "kind": "rooted-receipt-set",
+                "expected": "released evidence matches the sealed synthesis root"
+              }
+            ],
+            "idempotency": {
+              "scope": "subject-target",
+              "duplicate": "readback-before-retry"
+            },
+            "retry": {
+              "class": "never",
+              "localAttempts": 0,
+              "exhausted": "terminal-failure"
+            },
+            "evidenceRequirements": [
+              "kungfu-buildchain-release-activation-receipt-set/v1"
+            ],
+            "effectRoot": "sha256:1892b9fbfe2235525a677638a6cc68a18b8775328783e73ddb57b1669655d8d5"
+          },
+          "status": "complete",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:f1334727530e04c4192d50a08b3ec3560f9e0a2694ce3b8e08647d10fdf67840",
+            "sha256:3e6890e465b786a2c03e5d5da20854a7283c77b43b84137deb62e2b542b345f2"
+          ],
+          "receipt": {
+            "schema": "kungfu.buildchain.release-tail.receipt/v1",
+            "kind": "released-evidence",
+            "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+            "operationId": "sha256:c70ce6ddcd8bf32ddc9e81d6df0d3c38e028449e6ea4fd17f6657bf61f09019c",
+            "capabilityId": "released-evidence.synthesize",
+            "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+            "targetRoot": "sha256:9c85c1ca0eb09da868c95ac7baa9f4487235f9746c9b1c2f8765fd1f1d3bdea4",
+            "effectRoot": "sha256:1892b9fbfe2235525a677638a6cc68a18b8775328783e73ddb57b1669655d8d5",
+            "action": "applied-and-observed",
+            "effectAttempts": 1,
+            "readbackAttempts": 2,
+            "observationRoots": [
+              "sha256:f1334727530e04c4192d50a08b3ec3560f9e0a2694ce3b8e08647d10fdf67840",
+              "sha256:3e6890e465b786a2c03e5d5da20854a7283c77b43b84137deb62e2b542b345f2"
+            ],
+            "evidenceRoots": [
+              "sha256:9c85c1ca0eb09da868c95ac7baa9f4487235f9746c9b1c2f8765fd1f1d3bdea4"
+            ],
+            "receiptRoot": "sha256:9faada22b604cc8e0ebb3891c96e5e139f2d3351ad3d60ae2e9bc1b6316944a7"
+          }
+        }
+      ],
+      "observations": [
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "artifact-publication-readback",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:614ecfd473ba3d61eba5ce4e25ec1de3b163dc0570ee88175b531c25cf0fb05d",
+          "capabilityId": "artifact.publish",
+          "phase": "pre-effect-readback",
+          "status": "absent",
+          "subjectRoot": "",
+          "targetRoot": "",
+          "providerCode": "github-release-absent",
+          "evidenceRoots": [],
+          "observationRoot": "sha256:f1cdc996b288617bad92ded8c9d2f550a3e18edd257024d28d032ff75834bc16"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "artifact-publication-readback",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:614ecfd473ba3d61eba5ce4e25ec1de3b163dc0570ee88175b531c25cf0fb05d",
+          "capabilityId": "artifact.publish",
+          "phase": "post-effect-readback",
+          "status": "matched",
+          "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+          "targetRoot": "sha256:0b05aab5d2c0e8d2f13b399939ef942e348da8a537a8a198739edc87772eb5ae",
+          "providerCode": "github-release-assets-observed",
+          "evidenceRoots": [
+            "sha256:4713f8733cfaf34bed9429e26839cc858523e003e131beb6a82bd98890b4fe1c",
+            "sha256:ecacb999a54ac60386539e1f40bd8a84e3a3cdf180c17f66cdc09df1fb1eed8e"
+          ],
+          "observationRoot": "sha256:c0314854c5ebc4509c04259c2e77a2a5e12c65c1a7e7dcd47d1b2e21e6c27def"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "signed-channel-readback",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:540792fa1cabdb84d54a613e6a84b78bdac72e8124906241c5c685426ee13042",
+          "capabilityId": "signed-channel.commit",
+          "phase": "pre-effect-readback",
+          "status": "absent",
+          "subjectRoot": "",
+          "targetRoot": "",
+          "providerCode": "provider-object-absent",
+          "evidenceRoots": [],
+          "observationRoot": "sha256:d127c343f08f2b9df73a1f43549f4a02713247032cc3e2ceb68f9902a81f1c64"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "signed-channel-readback",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:540792fa1cabdb84d54a613e6a84b78bdac72e8124906241c5c685426ee13042",
+          "capabilityId": "signed-channel.commit",
+          "phase": "post-effect-readback",
+          "status": "matched",
+          "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+          "targetRoot": "sha256:2d3e65efada8ca982c90f9985b447d865c130cfaf3da54e703fa46085aa1cbf9",
+          "providerCode": "provider-object-observed",
+          "evidenceRoots": [
+            "sha256:2d3e65efada8ca982c90f9985b447d865c130cfaf3da54e703fa46085aa1cbf9"
+          ],
+          "observationRoot": "sha256:5b5eab444d228cba979c1e3a6597c1fc5ef06ae880522819cbb9bc732271377e"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "production-readback",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:fd04ace29a661fb5785d2f41c5d6679efa0a6864ea4b9b36eb9fe06629219109",
+          "capabilityId": "release.activate",
+          "phase": "pre-effect-readback",
+          "status": "absent",
+          "subjectRoot": "",
+          "targetRoot": "",
+          "providerCode": "provider-object-absent",
+          "evidenceRoots": [],
+          "observationRoot": "sha256:48324ae5c6305f0e2c5691b170e98bada7ac693b60b5504b5270f0b28258dc24"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "production-readback",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:fd04ace29a661fb5785d2f41c5d6679efa0a6864ea4b9b36eb9fe06629219109",
+          "capabilityId": "release.activate",
+          "phase": "post-effect-readback",
+          "status": "matched",
+          "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+          "targetRoot": "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447",
+          "providerCode": "provider-object-observed",
+          "evidenceRoots": [
+            "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447"
+          ],
+          "observationRoot": "sha256:fe14daf363669fff6c593e05d8ceb0d5f9210f45c83c236289ac0e63c6ea0868"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "released-evidence-validation",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:c70ce6ddcd8bf32ddc9e81d6df0d3c38e028449e6ea4fd17f6657bf61f09019c",
+          "capabilityId": "released-evidence.synthesize",
+          "phase": "pre-effect-readback",
+          "status": "absent",
+          "subjectRoot": "",
+          "targetRoot": "",
+          "providerCode": "provider-object-absent",
+          "evidenceRoots": [],
+          "observationRoot": "sha256:f1334727530e04c4192d50a08b3ec3560f9e0a2694ce3b8e08647d10fdf67840"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "released-evidence-validation",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:c70ce6ddcd8bf32ddc9e81d6df0d3c38e028449e6ea4fd17f6657bf61f09019c",
+          "capabilityId": "released-evidence.synthesize",
+          "phase": "post-effect-readback",
+          "status": "matched",
+          "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+          "targetRoot": "sha256:9c85c1ca0eb09da868c95ac7baa9f4487235f9746c9b1c2f8765fd1f1d3bdea4",
+          "providerCode": "provider-object-observed",
+          "evidenceRoots": [
+            "sha256:9c85c1ca0eb09da868c95ac7baa9f4487235f9746c9b1c2f8765fd1f1d3bdea4"
+          ],
+          "observationRoot": "sha256:3e6890e465b786a2c03e5d5da20854a7283c77b43b84137deb62e2b542b345f2"
+        }
+      ],
+      "receipts": [
+        {
+          "schema": "kungfu.buildchain.release-tail.receipt/v1",
+          "kind": "artifact-publication",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:614ecfd473ba3d61eba5ce4e25ec1de3b163dc0570ee88175b531c25cf0fb05d",
+          "capabilityId": "artifact.publish",
+          "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+          "targetRoot": "sha256:0b05aab5d2c0e8d2f13b399939ef942e348da8a537a8a198739edc87772eb5ae",
+          "effectRoot": "sha256:02e8983b54f383ee14cb49588cb6f901122b559216a67c0d3dd0d1eb75324911",
+          "action": "applied-and-observed",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:f1cdc996b288617bad92ded8c9d2f550a3e18edd257024d28d032ff75834bc16",
+            "sha256:c0314854c5ebc4509c04259c2e77a2a5e12c65c1a7e7dcd47d1b2e21e6c27def"
+          ],
+          "evidenceRoots": [
+            "sha256:4713f8733cfaf34bed9429e26839cc858523e003e131beb6a82bd98890b4fe1c",
+            "sha256:ecacb999a54ac60386539e1f40bd8a84e3a3cdf180c17f66cdc09df1fb1eed8e"
+          ],
+          "receiptRoot": "sha256:2c816dbe6dac22849b35cdae1fd764ee80e56f6a0a7d92baf9ecac753c0bdc68"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.receipt/v1",
+          "kind": "publication-commit",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:540792fa1cabdb84d54a613e6a84b78bdac72e8124906241c5c685426ee13042",
+          "capabilityId": "signed-channel.commit",
+          "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+          "targetRoot": "sha256:2d3e65efada8ca982c90f9985b447d865c130cfaf3da54e703fa46085aa1cbf9",
+          "effectRoot": "sha256:7e9fcca45f079d0094fffb63ce0222f4e3a729207122742fc0073e06248d2351",
+          "action": "applied-and-observed",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:d127c343f08f2b9df73a1f43549f4a02713247032cc3e2ceb68f9902a81f1c64",
+            "sha256:5b5eab444d228cba979c1e3a6597c1fc5ef06ae880522819cbb9bc732271377e"
+          ],
+          "evidenceRoots": [
+            "sha256:2d3e65efada8ca982c90f9985b447d865c130cfaf3da54e703fa46085aa1cbf9"
+          ],
+          "receiptRoot": "sha256:54cbbaf3e6c4fc000285835b5105bba53c9894095d466312a4ed4d52ab39bc7e"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.receipt/v1",
+          "kind": "activation-receipt-set",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:fd04ace29a661fb5785d2f41c5d6679efa0a6864ea4b9b36eb9fe06629219109",
+          "capabilityId": "release.activate",
+          "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+          "targetRoot": "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447",
+          "effectRoot": "sha256:107de4ff6f11609de02bba3339017c90f90c5ee9a17aa04963649a7dbef8ac7e",
+          "action": "applied-and-observed",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:48324ae5c6305f0e2c5691b170e98bada7ac693b60b5504b5270f0b28258dc24",
+            "sha256:fe14daf363669fff6c593e05d8ceb0d5f9210f45c83c236289ac0e63c6ea0868"
+          ],
+          "evidenceRoots": [
+            "sha256:0ada00758a30d556fe222367261ce31274ce7af2c5a8f56410a537a7feab6447"
+          ],
+          "receiptRoot": "sha256:6b07116474f17276effc2948e46b258e16bb1171be8976c448f6c0dff40a63bf"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.receipt/v1",
+          "kind": "released-evidence",
+          "transactionRoot": "sha256:d1b2de304862dd8f1bda70c6b7272ba839325d2d2456510cee7976a370709200",
+          "operationId": "sha256:c70ce6ddcd8bf32ddc9e81d6df0d3c38e028449e6ea4fd17f6657bf61f09019c",
+          "capabilityId": "released-evidence.synthesize",
+          "subjectRoot": "sha256:094001ef80fc5d0660c6e3ea9c5d884d77ca8c17593ffb3565c9d202dce28ab4",
+          "targetRoot": "sha256:9c85c1ca0eb09da868c95ac7baa9f4487235f9746c9b1c2f8765fd1f1d3bdea4",
+          "effectRoot": "sha256:1892b9fbfe2235525a677638a6cc68a18b8775328783e73ddb57b1669655d8d5",
+          "action": "applied-and-observed",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:f1334727530e04c4192d50a08b3ec3560f9e0a2694ce3b8e08647d10fdf67840",
+            "sha256:3e6890e465b786a2c03e5d5da20854a7283c77b43b84137deb62e2b542b345f2"
+          ],
+          "evidenceRoots": [
+            "sha256:9c85c1ca0eb09da868c95ac7baa9f4487235f9746c9b1c2f8765fd1f1d3bdea4"
+          ],
+          "receiptRoot": "sha256:9faada22b604cc8e0ebb3891c96e5e139f2d3351ad3d60ae2e9bc1b6316944a7"
+        }
+      ],
+      "failure": null,
+      "stateRoot": "sha256:0deab8e98f8194edcebb40724820208642fad91fac242df8e4190d846a8c2d49"
+    },
+    "productState": {
+      "schema": "kungfu.buildchain.release-tail.transaction/v1",
+      "transactionPolicy": "buildchain.release-tail/v1",
+      "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+      "declarationRoot": "sha256:3f2c16a040356a2f5c8f94a6cb2c7eef092e898a3c3591b4010f17f549f68c9f",
+      "planRoot": "sha256:a5fa0c660539ca009ba7ef3d2f70a9549ad091dc0df53afbc3d1bc0e0c607587",
+      "subject": {
+        "repository": "kungfu-systems/buildchain",
+        "sourceSha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+        "version": "4.0.4",
+        "tag": "v4.0.4",
+        "channel": "stable"
+      },
+      "state": "complete",
+      "operationOrder": [
+        "sha256:633592e5066c0510c0d93c4e0eb84f2ca8c1c2e317283469c603e5442adae804",
+        "sha256:cf0decdd3e528a51163446a4092682b7e0f2fc1a8e46c0673e89a0c4cab6fc74",
+        "sha256:3ef93106c88b78285ae5ee3cbde881e3d76dc1ce5f60509b5ba2ab83f1a897aa"
+      ],
+      "operations": [
+        {
+          "operationId": "sha256:633592e5066c0510c0d93c4e0eb84f2ca8c1c2e317283469c603e5442adae804",
+          "capabilityId": "product.version-state.materialize",
+          "effect": {
+            "schema": "kungfu.buildchain.release-tail.effect/v1",
+            "kind": "product-version-state-materialization",
+            "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+            "operationId": "sha256:633592e5066c0510c0d93c4e0eb84f2ca8c1c2e317283469c603e5442adae804",
+            "capabilityId": "product.version-state.materialize",
+            "executor": "provider-adapter",
+            "adapter": "github-version-state",
+            "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+            "targetRoot": "sha256:59b4870dd070093e0188d4796128f1456f09baf9f135b21aaf165f6fbe8c903f",
+            "attemptKey": "sha256:4039eeed65c78724916cba5acf88c37f59b7c626e7f74f0e9335d2d016b42199:product.version-state.materialize",
+            "subject": {
+              "repository": "kungfu-systems/buildchain",
+              "sourceSha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+              "version": "4.0.4",
+              "tag": "v4.0.4",
+              "channel": "stable"
+            },
+            "artifactRoles": [
+              {
+                "role": "publication-intent",
+                "root": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997"
+              }
+            ],
+            "destination": {
+              "kind": "github-version-state",
+              "locator": "github-version-state:sha256:59b4870dd070093e0188d4796128f1456f09baf9f135b21aaf165f6fbe8c903f"
+            },
+            "channelPolicy": {
+              "channel": "stable",
+              "tagPattern": "^v4\\.0\\.4$",
+              "authorityMove": "verified-ref"
+            },
+            "activationPolicy": {
+              "mode": "none",
+              "environment": "none"
+            },
+            "readbackPredicates": [
+              {
+                "id": "product.version-state.materialize.target-root",
+                "kind": "exact-root",
+                "expected": "sha256:59b4870dd070093e0188d4796128f1456f09baf9f135b21aaf165f6fbe8c903f"
+              }
+            ],
+            "idempotency": {
+              "scope": "subject-target",
+              "duplicate": "readback-before-retry"
+            },
+            "retry": {
+              "class": "provider-transient",
+              "localAttempts": 1,
+              "exhausted": "blocked"
+            },
+            "evidenceRequirements": [
+              "provider readback must match the rooted publication operation"
+            ],
+            "effectRoot": "sha256:07c0af68cba0b9d64a833befc300518a28de6ee9545979932465234a83268b2b"
+          },
+          "status": "complete",
+          "effectAttempts": 0,
+          "readbackAttempts": 1,
+          "observationRoots": [
+            "sha256:0de4ab6e06cdeff45c83a6d6e704d8495da92b7fdcadb52274b7dcd71c1a1f36"
+          ],
+          "receipt": {
+            "schema": "kungfu.buildchain.release-tail.receipt/v1",
+            "kind": "product-version-state",
+            "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+            "operationId": "sha256:633592e5066c0510c0d93c4e0eb84f2ca8c1c2e317283469c603e5442adae804",
+            "capabilityId": "product.version-state.materialize",
+            "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+            "targetRoot": "sha256:59b4870dd070093e0188d4796128f1456f09baf9f135b21aaf165f6fbe8c903f",
+            "effectRoot": "sha256:07c0af68cba0b9d64a833befc300518a28de6ee9545979932465234a83268b2b",
+            "action": "observed-existing",
+            "effectAttempts": 0,
+            "readbackAttempts": 1,
+            "observationRoots": [
+              "sha256:0de4ab6e06cdeff45c83a6d6e704d8495da92b7fdcadb52274b7dcd71c1a1f36"
+            ],
+            "evidenceRoots": [
+              "sha256:c6e0b1614479e0dc62c5f69482f176b1598ec13a678e9f568714ecbcba3f95c6"
+            ],
+            "receiptRoot": "sha256:5fdfdef5f9f9b2fd6def0974f9d9d85bee375159b142724eb144def760519f21"
+          }
+        },
+        {
+          "operationId": "sha256:cf0decdd3e528a51163446a4092682b7e0f2fc1a8e46c0673e89a0c4cab6fc74",
+          "capabilityId": "product.package.publish",
+          "effect": {
+            "schema": "kungfu.buildchain.release-tail.effect/v1",
+            "kind": "product-package-publication",
+            "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+            "operationId": "sha256:cf0decdd3e528a51163446a4092682b7e0f2fc1a8e46c0673e89a0c4cab6fc74",
+            "capabilityId": "product.package.publish",
+            "executor": "provider-adapter",
+            "adapter": "npm-trusted-publishing",
+            "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+            "targetRoot": "sha256:3b426a945eea30cd03edf9d9bbc89cf43176c817b2964f0eeeed84c09697073e",
+            "attemptKey": "sha256:4039eeed65c78724916cba5acf88c37f59b7c626e7f74f0e9335d2d016b42199:product.package.publish",
+            "subject": {
+              "repository": "kungfu-systems/buildchain",
+              "sourceSha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+              "version": "4.0.4",
+              "tag": "v4.0.4",
+              "channel": "stable"
+            },
+            "artifactRoles": [
+              {
+                "role": "publication-intent",
+                "root": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997"
+              },
+              {
+                "role": "sealed-bundle",
+                "root": "sha256:2ce71230b4743da5a4b590df67333d8c2bf1459fb82c236b22bea1d4342d85be"
+              },
+              {
+                "role": "required-artifacts",
+                "root": "sha256:df98ca81c904158b4998bac34d04594f3041aff59931eeda27bfc50e4990e943"
+              }
+            ],
+            "destination": {
+              "kind": "npm-package",
+              "locator": "npm-trusted-publishing:sha256:3b426a945eea30cd03edf9d9bbc89cf43176c817b2964f0eeeed84c09697073e"
+            },
+            "channelPolicy": {
+              "channel": "stable",
+              "tagPattern": "^v4\\.0\\.4$",
+              "authorityMove": "none"
+            },
+            "activationPolicy": {
+              "mode": "none",
+              "environment": "none"
+            },
+            "readbackPredicates": [
+              {
+                "id": "product.package.publish.target-root",
+                "kind": "exact-root",
+                "expected": "sha256:3b426a945eea30cd03edf9d9bbc89cf43176c817b2964f0eeeed84c09697073e"
+              }
+            ],
+            "idempotency": {
+              "scope": "subject-target",
+              "duplicate": "readback-before-retry"
+            },
+            "retry": {
+              "class": "provider-transient",
+              "localAttempts": 1,
+              "exhausted": "blocked"
+            },
+            "evidenceRequirements": [
+              "provider readback must match the rooted publication operation"
+            ],
+            "effectRoot": "sha256:a1d3911c33221027aaf477fda7de605616c8a9433f4fe081bed641c9c0c923b1"
+          },
+          "status": "complete",
+          "effectAttempts": 0,
+          "readbackAttempts": 1,
+          "observationRoots": [
+            "sha256:9b751f8ba3cb2b2fa2f032367ca1830be6f1bf5b10f1a38746f21663fc760a4b"
+          ],
+          "receipt": {
+            "schema": "kungfu.buildchain.release-tail.receipt/v1",
+            "kind": "product-package-publication",
+            "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+            "operationId": "sha256:cf0decdd3e528a51163446a4092682b7e0f2fc1a8e46c0673e89a0c4cab6fc74",
+            "capabilityId": "product.package.publish",
+            "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+            "targetRoot": "sha256:3b426a945eea30cd03edf9d9bbc89cf43176c817b2964f0eeeed84c09697073e",
+            "effectRoot": "sha256:a1d3911c33221027aaf477fda7de605616c8a9433f4fe081bed641c9c0c923b1",
+            "action": "observed-existing",
+            "effectAttempts": 0,
+            "readbackAttempts": 1,
+            "observationRoots": [
+              "sha256:9b751f8ba3cb2b2fa2f032367ca1830be6f1bf5b10f1a38746f21663fc760a4b"
+            ],
+            "evidenceRoots": [
+              "sha256:466dd9d7e3612b21c3a1c46dd6ad68202b96d0e537539b401fde121c9a84455b"
+            ],
+            "receiptRoot": "sha256:20a7fd9860c3e100fb24e46af05f27b53c56aa17946cb60a5be112cf2effcc63"
+          }
+        },
+        {
+          "operationId": "sha256:3ef93106c88b78285ae5ee3cbde881e3d76dc1ce5f60509b5ba2ab83f1a897aa",
+          "capabilityId": "product.release-refs.converge",
+          "effect": {
+            "schema": "kungfu.buildchain.release-tail.effect/v1",
+            "kind": "product-release-ref-convergence",
+            "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+            "operationId": "sha256:3ef93106c88b78285ae5ee3cbde881e3d76dc1ce5f60509b5ba2ab83f1a897aa",
+            "capabilityId": "product.release-refs.converge",
+            "executor": "provider-adapter",
+            "adapter": "github-release-refs",
+            "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+            "targetRoot": "sha256:7c965742690858f2ab4589ea5feca65ed8453e66bdeff1dbc7f7d9d6f59053e2",
+            "attemptKey": "sha256:4039eeed65c78724916cba5acf88c37f59b7c626e7f74f0e9335d2d016b42199:product.release-refs.converge",
+            "subject": {
+              "repository": "kungfu-systems/buildchain",
+              "sourceSha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+              "version": "4.0.4",
+              "tag": "v4.0.4",
+              "channel": "stable"
+            },
+            "artifactRoles": [
+              {
+                "role": "publication-intent",
+                "root": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997"
+              }
+            ],
+            "destination": {
+              "kind": "github-release-refs",
+              "locator": "github-release-refs:sha256:7c965742690858f2ab4589ea5feca65ed8453e66bdeff1dbc7f7d9d6f59053e2"
+            },
+            "channelPolicy": {
+              "channel": "stable",
+              "tagPattern": "^v4\\.0\\.4$",
+              "authorityMove": "verified-ref"
+            },
+            "activationPolicy": {
+              "mode": "none",
+              "environment": "none"
+            },
+            "readbackPredicates": [
+              {
+                "id": "product.release-refs.converge.target-root",
+                "kind": "exact-root",
+                "expected": "sha256:7c965742690858f2ab4589ea5feca65ed8453e66bdeff1dbc7f7d9d6f59053e2"
+              }
+            ],
+            "idempotency": {
+              "scope": "subject-target",
+              "duplicate": "readback-before-retry"
+            },
+            "retry": {
+              "class": "provider-transient",
+              "localAttempts": 1,
+              "exhausted": "blocked"
+            },
+            "evidenceRequirements": [
+              "provider readback must match the rooted publication operation"
+            ],
+            "effectRoot": "sha256:bd03bd09b6e9271f110219cb045b3bb83cd159a910f0bd154577846f7e7a1952"
+          },
+          "status": "complete",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:191d8667386911c4296d641b690d3d66b4b953145bb0cb74ee49c9905921a5b9",
+            "sha256:aa42367a7b685bda89f20f3c5eef9e2d3cb5a898028c98462b54e41e9e35c8fc"
+          ],
+          "receipt": {
+            "schema": "kungfu.buildchain.release-tail.receipt/v1",
+            "kind": "product-release-ref-convergence",
+            "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+            "operationId": "sha256:3ef93106c88b78285ae5ee3cbde881e3d76dc1ce5f60509b5ba2ab83f1a897aa",
+            "capabilityId": "product.release-refs.converge",
+            "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+            "targetRoot": "sha256:7c965742690858f2ab4589ea5feca65ed8453e66bdeff1dbc7f7d9d6f59053e2",
+            "effectRoot": "sha256:bd03bd09b6e9271f110219cb045b3bb83cd159a910f0bd154577846f7e7a1952",
+            "action": "applied-and-observed",
+            "effectAttempts": 1,
+            "readbackAttempts": 2,
+            "observationRoots": [
+              "sha256:191d8667386911c4296d641b690d3d66b4b953145bb0cb74ee49c9905921a5b9",
+              "sha256:aa42367a7b685bda89f20f3c5eef9e2d3cb5a898028c98462b54e41e9e35c8fc"
+            ],
+            "evidenceRoots": [
+              "sha256:cbe5245d9c7aa7891c647e8ef1eea357eb7b2426d997d3df1bd912f1099308e4"
+            ],
+            "receiptRoot": "sha256:516e31123baa39b42046283ad5b60b7deb8006d8a81ffd7a5ea6f982d13bbe6a"
+          }
+        }
+      ],
+      "observations": [
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "product-version-state-readback",
+          "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+          "operationId": "sha256:633592e5066c0510c0d93c4e0eb84f2ca8c1c2e317283469c603e5442adae804",
+          "capabilityId": "product.version-state.materialize",
+          "phase": "pre-effect-readback",
+          "status": "matched",
+          "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+          "targetRoot": "sha256:59b4870dd070093e0188d4796128f1456f09baf9f135b21aaf165f6fbe8c903f",
+          "providerCode": "rooted-product-effect-observed",
+          "evidenceRoots": [
+            "sha256:c6e0b1614479e0dc62c5f69482f176b1598ec13a678e9f568714ecbcba3f95c6"
+          ],
+          "observationRoot": "sha256:0de4ab6e06cdeff45c83a6d6e704d8495da92b7fdcadb52274b7dcd71c1a1f36"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "product-package-readback",
+          "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+          "operationId": "sha256:cf0decdd3e528a51163446a4092682b7e0f2fc1a8e46c0673e89a0c4cab6fc74",
+          "capabilityId": "product.package.publish",
+          "phase": "pre-effect-readback",
+          "status": "matched",
+          "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+          "targetRoot": "sha256:3b426a945eea30cd03edf9d9bbc89cf43176c817b2964f0eeeed84c09697073e",
+          "providerCode": "rooted-product-effect-observed",
+          "evidenceRoots": [
+            "sha256:466dd9d7e3612b21c3a1c46dd6ad68202b96d0e537539b401fde121c9a84455b"
+          ],
+          "observationRoot": "sha256:9b751f8ba3cb2b2fa2f032367ca1830be6f1bf5b10f1a38746f21663fc760a4b"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "product-release-ref-readback",
+          "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+          "operationId": "sha256:3ef93106c88b78285ae5ee3cbde881e3d76dc1ce5f60509b5ba2ab83f1a897aa",
+          "capabilityId": "product.release-refs.converge",
+          "phase": "pre-effect-readback",
+          "status": "absent",
+          "subjectRoot": "",
+          "targetRoot": "",
+          "providerCode": "floating-release-tag-not-converged",
+          "evidenceRoots": [],
+          "observationRoot": "sha256:191d8667386911c4296d641b690d3d66b4b953145bb0cb74ee49c9905921a5b9"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.observation/v1",
+          "kind": "product-release-ref-readback",
+          "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+          "operationId": "sha256:3ef93106c88b78285ae5ee3cbde881e3d76dc1ce5f60509b5ba2ab83f1a897aa",
+          "capabilityId": "product.release-refs.converge",
+          "phase": "post-effect-readback",
+          "status": "matched",
+          "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+          "targetRoot": "sha256:7c965742690858f2ab4589ea5feca65ed8453e66bdeff1dbc7f7d9d6f59053e2",
+          "providerCode": "rooted-product-effect-observed",
+          "evidenceRoots": [
+            "sha256:cbe5245d9c7aa7891c647e8ef1eea357eb7b2426d997d3df1bd912f1099308e4"
+          ],
+          "observationRoot": "sha256:aa42367a7b685bda89f20f3c5eef9e2d3cb5a898028c98462b54e41e9e35c8fc"
+        }
+      ],
+      "receipts": [
+        {
+          "schema": "kungfu.buildchain.release-tail.receipt/v1",
+          "kind": "product-version-state",
+          "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+          "operationId": "sha256:633592e5066c0510c0d93c4e0eb84f2ca8c1c2e317283469c603e5442adae804",
+          "capabilityId": "product.version-state.materialize",
+          "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+          "targetRoot": "sha256:59b4870dd070093e0188d4796128f1456f09baf9f135b21aaf165f6fbe8c903f",
+          "effectRoot": "sha256:07c0af68cba0b9d64a833befc300518a28de6ee9545979932465234a83268b2b",
+          "action": "observed-existing",
+          "effectAttempts": 0,
+          "readbackAttempts": 1,
+          "observationRoots": [
+            "sha256:0de4ab6e06cdeff45c83a6d6e704d8495da92b7fdcadb52274b7dcd71c1a1f36"
+          ],
+          "evidenceRoots": [
+            "sha256:c6e0b1614479e0dc62c5f69482f176b1598ec13a678e9f568714ecbcba3f95c6"
+          ],
+          "receiptRoot": "sha256:5fdfdef5f9f9b2fd6def0974f9d9d85bee375159b142724eb144def760519f21"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.receipt/v1",
+          "kind": "product-package-publication",
+          "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+          "operationId": "sha256:cf0decdd3e528a51163446a4092682b7e0f2fc1a8e46c0673e89a0c4cab6fc74",
+          "capabilityId": "product.package.publish",
+          "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+          "targetRoot": "sha256:3b426a945eea30cd03edf9d9bbc89cf43176c817b2964f0eeeed84c09697073e",
+          "effectRoot": "sha256:a1d3911c33221027aaf477fda7de605616c8a9433f4fe081bed641c9c0c923b1",
+          "action": "observed-existing",
+          "effectAttempts": 0,
+          "readbackAttempts": 1,
+          "observationRoots": [
+            "sha256:9b751f8ba3cb2b2fa2f032367ca1830be6f1bf5b10f1a38746f21663fc760a4b"
+          ],
+          "evidenceRoots": [
+            "sha256:466dd9d7e3612b21c3a1c46dd6ad68202b96d0e537539b401fde121c9a84455b"
+          ],
+          "receiptRoot": "sha256:20a7fd9860c3e100fb24e46af05f27b53c56aa17946cb60a5be112cf2effcc63"
+        },
+        {
+          "schema": "kungfu.buildchain.release-tail.receipt/v1",
+          "kind": "product-release-ref-convergence",
+          "transactionRoot": "sha256:ec377d015de95fb2045a5cac5f956887699e2351b1b678d7b24ee25165273424",
+          "operationId": "sha256:3ef93106c88b78285ae5ee3cbde881e3d76dc1ce5f60509b5ba2ab83f1a897aa",
+          "capabilityId": "product.release-refs.converge",
+          "subjectRoot": "sha256:1c43de2e77b79123b4351dcfe452048c20408fd480ab4177b3749b1254c5e997",
+          "targetRoot": "sha256:7c965742690858f2ab4589ea5feca65ed8453e66bdeff1dbc7f7d9d6f59053e2",
+          "effectRoot": "sha256:bd03bd09b6e9271f110219cb045b3bb83cd159a910f0bd154577846f7e7a1952",
+          "action": "applied-and-observed",
+          "effectAttempts": 1,
+          "readbackAttempts": 2,
+          "observationRoots": [
+            "sha256:191d8667386911c4296d641b690d3d66b4b953145bb0cb74ee49c9905921a5b9",
+            "sha256:aa42367a7b685bda89f20f3c5eef9e2d3cb5a898028c98462b54e41e9e35c8fc"
+          ],
+          "evidenceRoots": [
+            "sha256:cbe5245d9c7aa7891c647e8ef1eea357eb7b2426d997d3df1bd912f1099308e4"
+          ],
+          "receiptRoot": "sha256:516e31123baa39b42046283ad5b60b7deb8006d8a81ffd7a5ea6f982d13bbe6a"
+        }
+      ],
+      "failure": null,
+      "stateRoot": "sha256:6bc8b00ff3ac9eb8319373b8edc66bc5d1190750e0381bf137a5fee6ff25ed81"
+    },
+    "passport": {
+      "schema": "kungfu.buildchain.release-passport/v4",
+      "repository": "kungfu-systems/buildchain",
+      "source": {
+        "headSha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+        "baseSha": "",
+        "mergeRefSha": "524e3f5be8e373ff7c48c31b21f69d67527ba259",
+        "treeHash": "6ac9a69c54bb9530e8bcf812493c486db4460c3a",
+        "builtSourceSha": "524e3f5be8e373ff7c48c31b21f69d67527ba259",
+        "builtSourceTreeSha": "6ac9a69c54bb9530e8bcf812493c486db4460c3a",
+        "candidateHeadSha": "524e3f5be8e373ff7c48c31b21f69d67527ba259"
+      },
+      "protectedPublicationSource": {
+        "schema": "kungfu.buildchain.v4-protected-publication-source/v1",
+        "repository": "kungfu-systems/buildchain",
+        "mode": "merge-equivalent",
+        "protectedSource": {
+          "sha": "29a053e8547b7b1d12c3244f18f69b7ee1eb8a33",
+          "tree": "6ac9a69c54bb9530e8bcf812493c486db4460c3a",
+          "parents": [
+            "03b2428b5383ca2fcc8ff6694582f13aa1362c9a",
+            "acb062e7829962254517ec20cda4781f737268f6"
+          ]
+        },
+        "candidateSource": {
+          "sha": "524e3f5be8e373ff7c48c31b21f69d67527ba259",
+          "tree": "6ac9a69c54bb9530e8bcf812493c486db4460c3a",
+          "parents": [
+            "03b2428b5383ca2fcc8ff6694582f13aa1362c9a",
+            "acb062e7829962254517ec20cda4781f737268f6"
+          ]
+        },
+        "pullRequestNumber": 3619,
+        "bindingRoot": "sha256:3fd39bd6a26e6f9982ea5d340f92f63f435625975b3f372fb2a405e60d7e90fe"
+      },
+      "release": {
+        "version": "4.0.4",
+        "tag": "v4.0.4",
+        "channel": "stable"
+      },
+      "candidateRoot": "sha256:03aa2b43fe90772322f61fb12511b30d9ecfa0edb01a338affaa1ee4f160667a",
+      "policyDigest": "sha256:4b6b03d460bbff29eafe13d69a3944f02b2c35dc65b55411c8d7d86a3f831b77",
+      "artifactRoot": "sha256:267a5d00edeff6477fa3fea0f4e6fb6a74bfcaad73b331b99abfee5b573e05c6",
+      "publicationQualificationRoot": "sha256:c31315e663e5196c270f96c764149866681125244615cd48e46e3189f5b0149d",
+      "stageCapsuleAggregateRoot": "sha256:d928b0723f2d771a16068a5517c3cf58c92970c16a21d7988a0d7f27cad066f0",
+      "stageCapsuleRoots": [
+        "sha256:175dfe13d2d7c556d30a52e5525e4ac2c5d31f054704c19d97726871eb832005",
+        "sha256:420c74f00949d0fcb0cb30baa34a0f14080823b32561f9651997f16dd90d0523",
+        "sha256:64f229e06433e8adf558eef718bea2dcf29ba60b403508fd622f913d5d5c7c0d"
+      ],
+      "passportRoot": "sha256:0c91f8ea533974b352f9c74509cf32533e16a9c59377cb1b1883064a69a5fac2"
+    }
+  }
+}
