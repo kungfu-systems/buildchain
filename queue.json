@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1506,
+  "generation": 1507,
   "fencingCounter": 234,
   "policy": {
     "agingSeconds": 900,
@@ -13299,8 +13299,42 @@
         "tests/warrant-shadow-plan.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3606,
+      "sourceRoot": "sha256:f1818f13bc1ec6e960f55f40073c2a0ff75e8ab368db632e6c3cae5ee0211e42",
+      "sourceIdentityRoot": "sha256:f37fc2272cb72e5a76353b2656e44bfe92de4f63edf3e03c3378faafe3f3aef0",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:f2fac49826ebb6bdd08d8d640e4a77ada01f63f7e0fdc35459ef3c5bd1ace66b",
+      "sourceHead": "1bcb4aad11f394c29c77415a1d1e53704881ccf4",
+      "sourcePatchRoot": "sha256:8107d9d175a968e0a30a1acb2d60909cda52458a8c983610cfafcbb14a7f44a1",
+      "sourceProofRoot": "sha256:e446f6db06611a6c2703ec040f17f3228cdc6fdfdbf59a2b8960ad88d2bf3fcb",
+      "planRoot": "sha256:7e26dd83dabd03acbcc81a06ccd488b34b330e7c3aa73a8031f82a6921f0e83b",
+      "closureRoot": "sha256:b854520bdb3e8d57e2fe782291ac6b680c4dca40cb3ee35391ea04d4451154ee",
+      "dependencyRoot": "sha256:b3b0943dce02456fc491a6bf00a7c64d576c04e4c0506887ae56e1d82f3df268",
+      "toolchainRoot": "sha256:023ec4722ccdb098e0b74e3da5459cf029836ad7f68107aa596ebd4f9580e819",
+      "sourceWorkflowRunId": 34129059527,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-07T13:51:24.890Z",
+      "updatedAt": "2026-09-07T13:51:24.890Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/universal-workflow-train-admission.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/v4-production-release.md",
+        "scripts/check-universal-workflow-bootstrap.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-07T09:38:32.289Z",
-  "stateRoot": "sha256:af7a6f0fbf80ded2b4a27a3952a1ec53030aa919752c2ed2b38887e15a030a6b"
+  "updatedAt": "2026-09-07T13:51:24.890Z",
+  "stateRoot": "sha256:42a99990abe1f4afeaaccb6253adf680d2222b11c2bc6cb9ec1e261f8c6fe48d"
 }
