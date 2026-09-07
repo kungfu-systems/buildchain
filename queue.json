@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1499,
+  "generation": 1500,
   "fencingCounter": 232,
   "policy": {
     "agingSeconds": 900,
@@ -12,42 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:760d3f69ffcf9176a409d04c321c789681542fa056c18a18da12bc216eaa1b84",
-    "pullRequestNumber": 3596,
-    "sourceHead": "6ebae48ccf1e3df3c85ed605495091721d1f7b11",
-    "sourceRoot": "sha256:38a84ebcead765d13c48caa1b08182a9b04bd34988717610b92b03bed01bdbe2",
-    "sourceIdentityRoot": "sha256:107450611398ca404020ce4fd987c8c73f98b7bfb20ab47c5131af70b9cd34b3",
-    "sourcePatchRoot": "sha256:b171e0bfdedd4f615fd54be878923d61e179861cdc88a0e790df27c74c8c1887",
-    "sourceProofRoot": "sha256:8bed123e8f96658c13695d45578939bb49d54e1306504e9bf88aebb0f1c517a7",
-    "planRoot": "sha256:6a8551a798f6f04fd092afae1f5abf342da5bbb1b6b8a551b18702b7f6a4d9f2",
-    "closureRoot": "sha256:51b2238b9f2c99f41150d468bc804ebd386252ce41be59aac45dd05da7dcb2e1",
-    "dependencyRoot": "sha256:aab415ac9351a72402e0860c66e4f292c7400fbf622f36970ef9ecfdc9d88c78",
-    "toolchainRoot": "sha256:5a3b75edc053ca4c01185c2103e42a8b88005b8017118ab1e406c584be4a6550",
-    "affectedPaths": [
-      "architecture/maintainability-policy.json",
-      "dist/site/buildchain-site.json",
-      "dist/site/kfd-claims.json",
-      "dist/site/page-registry.json",
-      "dist/site/public-surface-audit.json",
-      "docs/oci-publication.md",
-      "packages/core/oci-compose-qualification.js",
-      "tests/oci-compose-publication-source.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 34083530950,
-    "deliveryClass": "non-native-fast",
-    "priority": "ordinary",
-    "generation": 232,
-    "expectedOldStateRoot": "sha256:57201bb804513b2c86e3a8df246ab55d9d01cbc956434ac8cdf4bef1cb2f33c7",
-    "issuedAt": "2026-09-07T04:44:41.015Z",
-    "expiresAt": "2026-09-07T05:44:41.015Z",
-    "fencingToken": "sha256:a12f6e6b29c7710e3ee83ca94481b49b272ae0e518db2aacae4a01038c121c5c",
-    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -12614,11 +12579,19 @@
       "sourceWorkflowRunId": 34083530950,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-07T04:44:37.148Z",
-      "updatedAt": "2026-09-07T04:44:41.015Z",
+      "updatedAt": "2026-09-07T06:38:30.865Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "Buildchain observed a terminal PR or changed PR head before a new minimal delivery request.",
+        "evidenceRoot": "sha256:2e434e20a334376a1cb0033d188694a5607ff76eb735d282a596f78873075ba5",
+        "closedAt": "2026-09-07T06:38:30.865Z",
+        "fencingToken": "sha256:a12f6e6b29c7710e3ee83ca94481b49b272ae0e518db2aacae4a01038c121c5c",
+        "leaseGeneration": 232,
+        "successorWake": null
+      },
       "affectedPaths": [
         "architecture/maintainability-policy.json",
         "dist/site/buildchain-site.json",
@@ -12632,6 +12605,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-07T04:44:41.015Z",
-  "stateRoot": "sha256:3aa5e913e49b7e07110460bc3607f20df5e524042e55f23a203573fbbeb5d630"
+  "updatedAt": "2026-09-07T06:38:30.865Z",
+  "stateRoot": "sha256:52169873fdeefd32acba72466cda8e36b8b534549f3072c5bbfddf218b477f38"
 }
