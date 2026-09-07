@@ -82,6 +82,7 @@ jobs:
       - name: Reverify evidence and promote the declared preview
         env:
           GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+          BUILDCHAIN_REGISTRY_TOKEN: ${{ github.token }}
         run: node .buildchain/runtime/scripts/oci-compose-preview.mjs apply
       - uses: actions/upload-artifact@v7.0.1
         if: always()
