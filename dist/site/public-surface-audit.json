@@ -4,9 +4,9 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 114,
+    "workflowCount": 115,
     "actionCount": 8,
-    "sitePageCount": 87,
+    "sitePageCount": 88,
     "docCommandRefCount": 1050,
     "failureCount": 0
   },
@@ -3808,6 +3808,21 @@
         "outputCount": 5
       },
       {
+        "id": "public-release-oci-compose-preview",
+        "path": ".github/workflows/public-release-oci-compose-preview.yml",
+        "reusable": true,
+        "inputs": [
+          "universal-request-json"
+        ],
+        "inputCount": 1,
+        "secrets": [
+          "BUILDCHAIN_PROMOTION_TOKEN"
+        ],
+        "secretCount": 1,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
         "id": "public-release-paper-sealed",
         "path": ".github/workflows/public-release-paper-sealed.yml",
         "reusable": true,
@@ -5172,6 +5187,44 @@
         "inputCount": 87
       },
       {
+        "id": "release-candidate-promote",
+        "path": "actions/release-candidate-promote/action.yml",
+        "inputs": [
+          "artifact-paths",
+          "candidate-build-summary-path",
+          "candidate-passport-path",
+          "failure-after-capability",
+          "mutation-token",
+          "product-publication-intent-path",
+          "publication-qualification-path",
+          "publish-artifact-kind",
+          "publish-auth",
+          "publish-command",
+          "publish-dist-tag",
+          "publish-mode",
+          "publish-package-main",
+          "publish-package-set-order",
+          "publish-rematerialize-on-resume",
+          "publish-transaction-override",
+          "publisher-workflow-sha",
+          "repository",
+          "required-artifacts-path",
+          "required-status-check",
+          "resume-transaction-id",
+          "runtime-commit",
+          "runtime-tree",
+          "sealed-bundle-manifest",
+          "sealed-bundle-root",
+          "source-sha",
+          "stage-capsules-path",
+          "state-path",
+          "target-ref",
+          "target-sha",
+          "token"
+        ],
+        "inputCount": 31
+      },
+      {
         "id": "release-tail",
         "path": "actions/release-tail/action.yml",
         "inputs": [
@@ -5273,44 +5326,6 @@
         "inputCount": 22
       },
       {
-        "id": "v4-release-candidate-promote",
-        "path": "actions/v4-release-candidate-promote/action.yml",
-        "inputs": [
-          "artifact-paths",
-          "candidate-build-summary-path",
-          "candidate-passport-path",
-          "failure-after-capability",
-          "mutation-token",
-          "product-publication-intent-path",
-          "publication-qualification-path",
-          "publish-artifact-kind",
-          "publish-auth",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-transaction-override",
-          "publisher-workflow-sha",
-          "repository",
-          "required-artifacts-path",
-          "required-status-check",
-          "resume-transaction-id",
-          "runtime-commit",
-          "runtime-tree",
-          "sealed-bundle-manifest",
-          "sealed-bundle-root",
-          "source-sha",
-          "stage-capsules-path",
-          "state-path",
-          "target-ref",
-          "target-sha",
-          "token"
-        ],
-        "inputCount": 31
-      },
-      {
         "id": "validate-config",
         "path": "actions/validate-config/action.yml",
         "inputs": [
@@ -5335,6 +5350,10 @@
         "category": "action"
       },
       {
+        "id": "action:release-candidate-promote",
+        "category": "action"
+      },
+      {
         "id": "action:release-tail",
         "category": "action"
       },
@@ -5344,10 +5363,6 @@
       },
       {
         "id": "action:run-lifecycle",
-        "category": "action"
-      },
-      {
-        "id": "action:v4-release-candidate-promote",
         "category": "action"
       },
       {
@@ -5516,6 +5531,10 @@
       },
       {
         "id": "manual:observed-evidence-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:oci-publication",
         "category": "manual"
       },
       {
@@ -10929,8 +10948,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "d0faebaed7233ca9a122e2f914d8a07cd7a44806b3983d57c2e42db4547a9041",
-    "pageRegistryDigest": "de1ba89591aeb5f0e24f1c5e455c21e8477e1094ec616ffddc2c1163f02c53b9"
+    "workflowRegistryDigest": "782933c16792d4d4f6365c4923600203999e11b6d2b9092faee147efb21c89f2",
+    "pageRegistryDigest": "764a82aa21026c0fae31c8056366d016cb8548692a68c9f5c8063bfdcd2ed6aa"
   },
   "comparison": {
     "missingCliRegistry": [],

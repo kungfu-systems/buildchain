@@ -22,9 +22,9 @@ import {
   uniqueReleaseAssets,
 } from "./reuse-complete-release.js";
 import {
-  createV4GitHubProviderAdapters,
-  extendV4GitHubReleaseDeclaration,
-} from "./v4-provider-plane.js";
+  createGitHubProviderAdapters,
+  extendGitHubReleaseDeclaration,
+} from "./provider-plane.js";
 
 function assertFile(pathname, label) {
   if (
@@ -207,7 +207,7 @@ export function createDeclarativeGitHubReleasePlan({
       },
     ],
   };
-  const extended = extendV4GitHubReleaseDeclaration({
+  const extended = extendGitHubReleaseDeclaration({
     declaration,
     transactionRoot,
     targetRoot,
@@ -372,7 +372,7 @@ export async function publishDeclarativeGitHubReleaseEvidence({
           return artifactByRole.get(role);
         },
       }),
-      ...createV4GitHubProviderAdapters(octokit, materialized.documents),
+      ...createGitHubProviderAdapters(octokit, materialized.documents),
     }),
     checkpoint: (checkpoint) => {
       writeReleaseTailTransaction(resolvedStatePath, checkpoint);

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-release-activation-production-architecture",
+  "schemaAuthority": "contracts/v4-release-activation-shadow-v1.schema.json",
+  "fixtureAuthority": "contracts/fixtures/v4-release-activation-shadow-v1/shared.json",
+  "journalAuthority": "architecture/provider-operation-journal-contract.json",
+  "mode": "production",
+  "authority": {
+    "productionWriter": "v4-domain",
+    "productionWriterCount": 1,
+    "planAndFoldAuthority": "rust-v4-core",
+    "planAndFoldWriterCount": 1,
+    "typescript": "wasm-calling-provider-adapter",
+    "productionWriteChange": true
+  },
+  "implementations": {
+    "rustDomain": "crates/buildchain-domain-contracts/src/release_activation_shadow.rs",
+    "rustModel": "crates/buildchain-domain-contracts/src/release_activation_shadow/model.rs",
+    "rustJournalMaterializer": "crates/buildchain-domain-contracts/src/release_activation_shadow/journal.rs",
+    "typescript": "packages/core/release-activation-shadow.js",
+    "wasmRuntime": "packages/core/domain-wasm.js",
+    "wasmArtifact": "packages/core/buildchain-domain.wasm",
+    "artifactMetadata": "packages/core/domain-wasm-artifact.js"
+  },
+  "roots": [
+    "release-activation-step",
+    "release-activation-plan",
+    "release-activation-state"
+  ],
+  "resumePolicy": {
+    "confirmed": "never-replay",
+    "attempting": "readback-before-any-retry",
+    "observed": "readback-before-any-retry",
+    "confirmable": "readback-before-any-retry",
+    "planned": "eligible-only-after-confirmed-dependencies",
+    "retryable": "eligible-only-after-confirmed-dependencies",
+    "rejected": "block-plan",
+    "terminal": "block-plan"
+  },
+  "foldRejects": [
+    "missing-qualification",
+    "dependency-cycle",
+    "unknown-or-self-dependency",
+    "logical-operation-conflict",
+    "coordinate-or-authority-mismatch",
+    "conflicting-event-ordinal",
+    "event-ordinal-gap",
+    "provider-journal-impossible-transition"
+  ],
+  "budgets": {
+    "schemaAuthorities": 1,
+    "planAndFoldWriters": 1,
+    "secondStateFoldWriters": 0,
+    "providerSdkImportsInContracts": 0,
+    "providerSdkImportsInRustDomain": 0,
+    "liveProviderMutations": 0,
+    "productionWriteAuthorityChanges": 1,
+    "v3ConsumerBehaviorChanges": 0
+  },
+  "successors": [
+    "stable-candidate-publication-fencing-shadow",
+    "partial-mutation-recovery-qualification"
+  ]
+}

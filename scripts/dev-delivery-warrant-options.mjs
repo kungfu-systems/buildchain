@@ -278,7 +278,7 @@ export function devDeliveryCliOptions(args = [], environment = process.env) {
       rest,
       "read-evidence-output",
       environment.BUILDCHAIN_V4_WARRANT_READ_EVIDENCE ||
-        ".buildchain/dev-delivery/v4-read-evidence.json",
+        ".buildchain/dev-delivery/read-evidence.json",
     ),
     now: flag(rest, "now", environment.BUILDCHAIN_DEV_DELIVERY_NOW),
     outputPath: flag(

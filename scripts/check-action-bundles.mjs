@@ -20,9 +20,9 @@ const javascriptBundlePaths = readdirSync(actionsRoot, { withFileTypes: true })
 const wasmBundlePaths = [
   "promote-buildchain-ref",
   "release-tail",
-  "v4-release-candidate-promote",
+  "release-candidate-promote",
 ].map((name) =>
-  path.join(actionsRoot, name, "dist", "buildchain-v4-domain.wasm"),
+  path.join(actionsRoot, name, "dist", "buildchain-domain.wasm"),
 );
 const bundlePaths = [...javascriptBundlePaths, ...wasmBundlePaths];
 

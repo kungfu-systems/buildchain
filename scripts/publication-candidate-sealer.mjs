@@ -1,3 +1,4 @@
+import { resolveOciCandidate } from "./publication-candidate-kind.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -69,7 +70,7 @@ export function createResolvedPublicationSealedBundle({
   });
   const main = resolvedNpmArtifacts.find((entry) => entry.metadata.role === "main")
     || (resolvedNpmArtifacts.length === 1 ? resolvedNpmArtifacts[0] : undefined);
-  if (!main) throw new Error("candidate npm payload set has no unique main package tarball");
+  if (!main || resolvedNpmArtifacts.filter((entry) => entry.metadata.role === "main").length > 1) throw new Error("candidate npm payload set has no unique main package tarball");
   const selectedReleaseAssets = (releaseAssetPaths.length > 0
     ? releaseAssetPaths
     : resolvedNpmArtifacts.map((entry) => entry.file.absolutePath))
@@ -88,6 +89,12 @@ export function createResolvedPublicationSealedBundle({
     releaseCandidateRoot: `sha256:${normalizeSha256(releaseCandidateRoot, "releaseCandidateRoot")}`,
     files: files.map(({ path: filePath, size, sha256 }) => ({ path: filePath, size, sha256 })),
   };
+  if (resolvedNpmArtifacts.length > 1) {
+    candidatePayload.npmPackages = resolvedNpmArtifacts.map(({file, metadata}) => ({
+      name: metadata.name, version: metadata.ref, role: metadata.role,
+      path: file.path, size: file.size, sha256: file.sha256, integrity: metadata.integrity,
+    }));
+  }
   const candidate = {
     ...candidatePayload,
     candidateDigest: publicationArtifactCandidateDigest(candidatePayload),
@@ -101,4 +108,12 @@ export function createResolvedPublicationSealedBundle({
     releaseAssetPaths: selectedReleaseAssets.map((file) => file.path),
   });
   return { root: resolvedRoot, manifest, npmArtifacts: resolvedNpmArtifacts, files };
+}
+
+export function resolveCandidatePublicationBundle({ kind, payloadDir, passport, runtimeSha, npmArtifacts, releaseAssetPaths }) {
+  if (kind === "oci") return resolveOciCandidate({ payloadRoot: payloadDir, passport });
+  if (kind !== "npm") return undefined;
+  return createResolvedPublicationSealedBundle({ bundleRoot: payloadDir, repository: passport.repository,
+    sourceSha: passport.source?.headSha, sourceTreeSha: passport.source?.treeHash,
+    runtimeSha, releaseCandidateRoot: passport.candidateHash, npmArtifacts, releaseAssetPaths });
 }

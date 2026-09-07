@@ -917,14 +917,14 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
           BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
-          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
-        run: node .buildchain/runtime/scripts/v4-consumer-policy.mjs scan
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/consumer-policy-receipt.json
+        run: node .buildchain/runtime/scripts/consumer-policy.mjs scan
 
       - name: Upload rooted v4 consumer policy receipt
         uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ inputs.artifact-name }}-v4-consumer-policy-${{ github.sha }}
-          path: .buildchain/consumer/.buildchain/evidence/v4-consumer-policy-receipt.json
+          path: .buildchain/consumer/.buildchain/evidence/consumer-policy-receipt.json
           if-no-files-found: error
           retention-days: ${{ inputs.artifact-retention-days }}
 

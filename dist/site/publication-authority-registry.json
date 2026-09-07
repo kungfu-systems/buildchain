@@ -753,6 +753,21 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/public-release-oci-compose-preview.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "oci-compose-preview"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/public-release-oci-compose-preview.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/public-release-paper-sealed.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -1356,10 +1371,7 @@
     },
     {
       "path": ".github/workflows/.release-candidate-promote.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1374,10 +1386,7 @@
     },
     {
       "path": ".github/workflows/.release-promote.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1706,6 +1715,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/public-release-oci-compose-preview.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/public-release-paper-sealed.yml",
       "signals": [
         "write-permission",
@@ -1723,10 +1739,7 @@
     },
     {
       "path": ".github/workflows/public-release-promote.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -1768,10 +1781,7 @@
     },
     {
       "path": ".github/workflows/release-candidate-promote.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
+      "signals": [],
       "classified": true
     },
     {
@@ -2021,5 +2031,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "894cce314366698d41a3ab20172a0b7a05f03f2167667eae51793537b832c811"
+  "registryDigest": "e5eb0d7ee3cce4a25674909154f6bd0bf736d5b93df41c1d435c468aad50c32a"
 }

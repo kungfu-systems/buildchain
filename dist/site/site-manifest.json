@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-09-06T14:59:38.000Z",
-  "publishedAt": "2026-09-06T14:59:38.000Z",
+  "generatedAt": "2026-09-07T06:51:56.000Z",
+  "publishedAt": "2026-09-07T06:51:56.000Z",
   "reproducible": true,
   "timestampPolicy": "ci-injected",
   "deterministicInputs": [
@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "fc8d499997b4da35dce74ee916afbd25515db845",
+  "sourceRevision": "f51fbded602b01787e9a5c94322636ac5ad70d2a",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -37,7 +37,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "4.0.2",
+    "version": "4.0.3-alpha.0",
     "versionSource": "package.json#version"
   },
   "entrypoint": "buildchain-site.json",
@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:aef677bb3e37882f73daf65b7052989fc549e3b40d70bc4036beb2738b608345"
+      "digest": "sha256:93128b060fe11f0c14451966aa2ac467c47248946c577a16daed124344824282"
     },
     {
       "id": "getting-started",
@@ -141,7 +141,7 @@
       "path": "docs/next-development-transition.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:36f514efc9a7c1c6da59e93126e1512529c5c2349ea987516ef13f1e592be454"
+      "digest": "sha256:2a3556d2b7dd1e3a27878c2741aa5ae42d628afa5bb94ab62e468d789ddf0806"
     },
     {
       "id": "release-propagation",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:df073c14c12f15c851eb4507cbeb2919add936ac3079b10f222478138720d092"
+      "digest": "sha256:7ead263fccd68f471a4e3fee4b9ffe39b2ef0cbbea3c961605f8a13f66f09328"
     },
     {
       "id": "build-facts",
@@ -293,7 +293,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0ea67ecc0eb6e4d49f71e11ccd670d442b811c9132736dd8c600d038dc6ebbe9"
+      "digest": "sha256:71a327274f18445d3e26392d24a707b887650603c574354009243164dbc59cdc"
     },
     {
       "id": "v4-adopter-delivery",
@@ -301,7 +301,7 @@
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1afe656ccb66bb63c73956413bb2d3551d3ba39c3f6e50389e7695877dac87a2"
+      "digest": "sha256:6679e6761bcc17d47efebee22f00db207645f134d8d61955f7b89264192ee409"
     },
     {
       "id": "publish-transaction",
@@ -309,7 +309,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:635de0da30769e4e6f956748ec9758338a1ae7921bce73268c2d914ae240693d"
+      "digest": "sha256:b1ee27a958bfe2327ec4702f6f288d916b8c7362bcc01c2c59388ffbe61037bf"
     },
     {
       "id": "release-tail-contract",
@@ -349,7 +349,7 @@
       "path": "docs/release-flow.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1b97defb4f635937ea96f92e1180625cf1a5bc3454191062ec3c76b168d4c451"
+      "digest": "sha256:c981dadaa48e5adf5dcd8712eb1d37b60285bf66b0ba3a6c13a5252fcbdeedba"
     },
     {
       "id": "runtime-train-validation",

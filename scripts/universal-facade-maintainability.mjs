@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 function loadUniversalFacadeMigration(root) {
   const contract = JSON.parse(
     fs.readFileSync(
-      path.join(root, "architecture/v4-universal-workflow-bootstrap.json"),
+      path.join(root, "architecture/universal-workflow-bootstrap.json"),
       "utf8",
     ),
   );
@@ -20,13 +20,17 @@ function loadUniversalFacadeMigration(root) {
       "universal facade migration requires an exact facadeSourceRevision",
     );
   }
-  return { paths: new Set(paths), sourceRevision };
+  return {
+    paths: new Set(paths),
+    sourceRevision,
+    postMigration: new Set(contract.migration?.postMigrationWorkflows || []),
+  };
 }
 
 function verifyUniversalFacadeMigration(root) {
   execFileSync(
     process.execPath,
-    ["scripts/generate-v4-universal-workflow-facades.mjs", "--check"],
+    ["scripts/generate-universal-workflow-facades.mjs", "--check"],
     { cwd: root, stdio: "pipe" },
   );
 }
@@ -40,6 +44,11 @@ function governUniversalFacadeWorkflowMetrics({
   verifyUniversalFacadeMigration(root);
   const frozen = workflowMetricsAtRevision(root, migration.sourceRevision);
   const governed = { ...current, workflows: { ...current.workflows } };
+  for (const file of migration.postMigration) {
+    if (frozen[file] || !migration.paths.has(file))
+      throw new Error(`invalid post-migration workflow declaration ${file}`);
+    migration.paths.delete(file);
+  }
   for (const file of migration.paths) {
     if (!frozen[file])
       throw new Error(`frozen universal facade source is missing ${file}`);

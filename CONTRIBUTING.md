@@ -1,3 +1,22 @@
+---
+status: active
+period: ongoing
+theme: buildchain-contributing
+doc_type: process-rule
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-07
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-07
+  visible_context: Repository contribution rules and implementation naming and release transition changes.
+  invisible_context_boundary: No private credentials or unpublished external release state.
+---
+
 # Contributing to Buildchain
 
 Thanks for your interest in Buildchain. This guide covers how to build the
@@ -167,3 +186,18 @@ By contributing you agree that your contributions are licensed under the
 project's [Apache License 2.0](LICENSE). Buildchain uses the Developer
 Certificate of Origin (DCO) and does not require a Contributor License Agreement
 (CLA).
+
+## Implementation names
+
+Name implementation directories, scripts, functions, and runtime work directories
+for their responsibility. Product generation prefixes such as `v4-` are rejected
+by `pnpm run check:implementation-naming`, including nested JavaScript bindings
+and Rust declarations. `architecture/implementation-naming.json` records the
+explicit relocation and public export aliases. Published schema identities, hash
+domains, selectors, runner labels, API compatibility keys, and exact historical
+evidence keep their established identities; they do not name new implementations.
+
+Stable completion under `semver/auto` prepares the next patch at `alpha.0` from
+the exact current protected development commit. See the generated
+[next-development contract](docs/next-development-transition.md) for retry,
+independent review, and publication-preservation behavior.

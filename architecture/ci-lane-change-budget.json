@@ -608,6 +608,23 @@
         "expectedContributionSeconds": 180,
         "rationale": "Only successful same-repository version PRs regenerate from the protected base and read completed publication evidence; ordinary source PRs skip the lane. Native queue checks remain final merge authority."
       }
+    },
+    {
+      "laneId": ".github/workflows/public-release-oci-compose-preview.yml#promote",
+      "authorityClass": "release",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "serialized",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 8,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "qualified Compose preview promotion",
+        "expectedContributionSeconds": 0,
+        "rationale": "Runs only after completed exact-source public installation qualification; no merge-critical runner lane is added."
+      }
     }
   ],
   "declarationFamilies": [
@@ -657,6 +674,7 @@
         ".github/workflows/patrol-monthly.yml#universal-bootstrap",
         ".github/workflows/patrol-observed-evidence.yml#universal-bootstrap",
         ".github/workflows/patrol-weekly.yml#universal-bootstrap",
+        ".github/workflows/public-release-oci-compose-preview.yml#universal-bootstrap",
         ".github/workflows/publication-artifact.yml#universal-bootstrap",
         ".github/workflows/release-candidate-promote.yml#universal-bootstrap",
         ".github/workflows/release-propagation.yml#universal-bootstrap",

@@ -6,6 +6,8 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { resolveOciCandidate, resolveRecoveredPublicationVersion, resolveRecoveredCandidateVersion } from "./publication-candidate-kind.mjs";
+export { resolveRecoveredPublicationVersion, resolveRecoveredCandidateVersion } from "./publication-candidate-kind.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 import { compareSemver } from "./publication-registry-hydrate.mjs";
 import { normalizeAnchorProvenance, normalizeCandidateRun, recoverCandidateProvenance } from "./release-candidate-anchor-provenance.mjs";
@@ -31,15 +33,15 @@ import {
 } from "../packages/core/publication-artifact-candidate.js";
 import { createPublicationSealedBundle } from "../packages/core/publication-sealed-bundle.js";
 import { releaseTransactionStateRef } from "../packages/core/publish-transaction.js";
-import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
-import { validateV4StageCapsule } from "../packages/core/v4-stage-capsule.js";
+import { domainContentRoot } from "../packages/core/canonical-contracts.js";
+import { validateStageCapsule } from "../packages/core/stage-capsule.js";
 import {
-  authorizeV4RuntimeSelection,
-  createV4RuntimeResumeLineage,
-  scanV4RuntimeSelectorPersistence,
-  v4RuntimeResumeDocumentRoot,
-  verifyV4RuntimeAuthorizationReceipt,
-} from "../packages/core/v4-runtime-ref-resume-authority.js";
+  authorizeRuntimeSelection,
+  createRuntimeResumeLineage,
+  scanRuntimeSelectorPersistence,
+  runtimeResumeDocumentRoot,
+  verifyRuntimeAuthorizationReceipt,
+} from "../packages/core/runtime-ref-resume-authority.js";
 
 function env(name, fallback = "") { return process.env[name] || fallback; }
 function requiredEnv(name) {
@@ -117,7 +119,7 @@ export function trackedRuntimePersistenceScan({
   )
     .split(/\r?\n/)
     .filter((entry) => /\.(?:json|toml|ya?ml)$/u.test(entry));
-  return scanV4RuntimeSelectorPersistence({ root: runtimeRoot, paths });
+  return scanRuntimeSelectorPersistence({ root: runtimeRoot, paths });
 }
 
 export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads }) {
@@ -136,7 +138,7 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
   const expectedAttempt =
     `github-run:${passport.workflow.runId}:attempt:${passport.workflow.runAttempt}`;
   if (
-    sidecar.root !== v4RuntimeResumeDocumentRoot(payload) ||
+    sidecar.root !== runtimeResumeDocumentRoot(payload) ||
     sidecar.repository !== passport.repository ||
     sidecar.source?.sha !== passport.source.headSha ||
     sidecar.source?.treeSha !== passport.source.treeHash ||
@@ -158,7 +160,7 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
     throw new Error("release-candidate Stage Capsule platform set is incomplete");
   }
   return entries.map((entry) => {
-    validateV4StageCapsule(entry.capsule);
+    validateStageCapsule(entry.capsule);
     const download = artifactByName.get(entry.artifactName);
     const artifact = entry.artifact;
     if (
@@ -174,9 +176,9 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
         new Date(download.artifact.expires_at).toISOString() ||
       entry.capsule.identity.policyRoot !== sidecar.consumerPolicyReceiptRoot ||
       entry.capsule.identity.sourceRoot !==
-        v4ContentRoot("candidate-identity", passport.source) ||
+        domainContentRoot("candidate-identity", passport.source) ||
       entry.capsule.identity.runtimeRoot !==
-        v4ContentRoot("candidate-identity", { sha: passport.buildchain.sha })
+        domainContentRoot("candidate-identity", { sha: passport.buildchain.sha })
     ) {
       throw new Error(
         `Stage Capsule ${entry.platform} does not bind the verified provider artifact`,
@@ -196,7 +198,7 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
   });
 }
 
-export function validateV4RuntimeResumePublicReadback({
+export function validateRuntimeResumePublicReadback({
   targetRef,
   targetSha,
   targetVersion,
@@ -273,7 +275,7 @@ export async function readPublicResumeState({
   if (targetPackageFile?.type !== "file" || targetPackageFile.encoding !== "base64" || !targetPackageFile.content)
     throw new Error("cross-runtime recovery requires protected target version state");
   const targetVersion = JSON.parse(Buffer.from(String(targetPackageFile.content).replace(/\s/g, ""), "base64").toString("utf8")).version;
-  validateV4RuntimeResumePublicReadback({ targetRef, targetSha, targetVersion, alphaSha,
+  validateRuntimeResumePublicReadback({ targetRef, targetSha, targetVersion, alphaSha,
     exactTagSha, tagLineage, runtimeLineage, floatingTargetLineage, runtimeSha,
     version, transaction, main, npm });
   const body = {
@@ -296,10 +298,10 @@ export async function readPublicResumeState({
       distTagIntegrity: npm.versions[npm["dist-tags"].alpha].dist.integrity,
     },
   };
-  return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
+  return { ...body, root: runtimeResumeDocumentRoot(body) };
 }
 
-export const resolveV4RuntimeResumePublicRuntimeSha = (material) =>
+export const resolveRuntimeResumePublicRuntimeSha = (material) =>
   material?.buildAttempt?.runtimeSha || "";
 
 function prepareRuntimeResumeEvidence({
@@ -313,14 +315,14 @@ function prepareRuntimeResumeEvidence({
   recovery,
   outputDir,
 }) {
-  const authorizationPath = path.resolve(".buildchain/release-candidate/v4-runtime-authorization.json");
+  const authorizationPath = path.resolve(".buildchain/release-candidate/runtime-authorization.json");
   const delegatedRaw = env("BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON").trim();
   const delegatedRoot = env("BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT").trim();
   const authorizationFileExists = fs.existsSync(authorizationPath);
   if (!authorizationFileExists && (!delegatedRaw || !delegatedRoot)) throw new Error("cross-runtime recovery requires a fresh runtime authorization receipt");
   const delegated = authorizationFileExists ? readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization") : JSON.parse(delegatedRaw);
   if (!authorizationFileExists && delegated.receiptRoot !== delegatedRoot) throw new Error("fresh recovery runtime authorization handoff root mismatch");
-  const delegatedVerification = verifyV4RuntimeAuthorizationReceipt({
+  const delegatedVerification = verifyRuntimeAuthorizationReceipt({
     receipt: delegated.receipt,
     receiptRoot: delegated.receiptRoot,
     repository: repoInfo.fullName,
@@ -332,7 +334,7 @@ function prepareRuntimeResumeEvidence({
     );
   }
   const policy = passport.consumerPolicy.receipt;
-  const authorization = authorizeV4RuntimeSelection({
+  const authorization = authorizeRuntimeSelection({
     repository: repoInfo.fullName,
     eventName: "workflow_dispatch",
     mode: "resume",
@@ -362,7 +364,7 @@ function prepareRuntimeResumeEvidence({
     rebuildPlatforms: [],
     skippedBuildStages: recovery.receipt.skippedBuildStages,
   };
-  const plan = { ...planBody, root: v4RuntimeResumeDocumentRoot(planBody) };
+  const plan = { ...planBody, root: runtimeResumeDocumentRoot(planBody) };
   const materialBody = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-v4-runtime-resume-material/v1",
@@ -389,7 +391,7 @@ function prepareRuntimeResumeEvidence({
   };
   const material = {
     ...materialBody,
-    root: v4RuntimeResumeDocumentRoot(materialBody),
+    root: runtimeResumeDocumentRoot(materialBody),
   };
   for (const [name, value] of [
     ["v4-runtime-resume-plan.json", plan],
@@ -416,7 +418,7 @@ export async function finalizeRuntimeResumeEvidence({
   delete body.root;
   if (
     material.contract !== "kungfu-buildchain-v4-runtime-resume-material/v1" ||
-    material.root !== v4RuntimeResumeDocumentRoot(body)
+    material.root !== runtimeResumeDocumentRoot(body)
   ) {
     throw new Error("cross-runtime resume material root mismatch");
   }
@@ -436,14 +438,14 @@ export async function finalizeRuntimeResumeEvidence({
   const readback = await readPublicResumeState({
     repoInfo,
     targetRef,
-    runtimeSha: resolveV4RuntimeResumePublicRuntimeSha(material),
+    runtimeSha: resolveRuntimeResumePublicRuntimeSha(material),
     version,
     transaction,
     token,
     apiUrl,
     fetchImpl,
   });
-  const resumed = createV4RuntimeResumeLineage({
+  const resumed = createRuntimeResumeLineage({
     authorization: material.authorization,
     authorizationRoot: material.authorizationRoot,
     buildAttempt: material.buildAttempt,
@@ -695,22 +697,6 @@ export function createRecoveredPublicationCandidate({
   };
   return { ...payload, candidateDigest: publicationArtifactCandidateDigest(payload) };
 }
-export function resolveRecoveredPublicationVersion({ artifactVersion, channel, rematerializeOnResume = false } = {}) {
-  const version = String(artifactVersion || "").trim(), match = version.match(/^(\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u);
-  if (!match) throw new Error(`recovered npm artifact has invalid publication version: ${version || "<empty>"}`);
-  return channel === "release" && rematerializeOnResume ? match[1] : version;
-}
-export function resolveRecoveredCandidateVersion({ artifactVersion, publicationVersion, channel, rematerializeOnResume = false, targetRef = "", candidateRef = "" } = {}) {
-  const version = String(artifactVersion || "").trim(), target = String(targetRef || "").replace(/^refs\/heads\//u, ""), candidate = String(candidateRef || "").replace(/^refs\/heads\//u, "");
-  if (channel !== "release" || !rematerializeOnResume) return version;
-  const prefix = `publish-gate/${target}/`;
-  if (!target || !candidate.startsWith(prefix)) throw new Error(`stable recovery candidate ref must descend from ${prefix || "publish-gate/<target>/"}`);
-  const candidateVersion = candidate.slice(prefix.length);
-  if (!/^\d+\.\d+\.\d+-alpha\.\d+$/u.test(candidateVersion)) throw new Error(`stable recovery candidate ref must bind an exact alpha version, got ${candidateVersion || "<empty>"}`);
-  if (candidateVersion.replace(/-alpha\.\d+$/u, "") !== publicationVersion) throw new Error(`stable recovery candidate ${candidateVersion} does not match publication ${publicationVersion || "<empty>"}`);
-  if ((version.match(/^(\d+\.\d+\.\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u)?.[1] || "") !== publicationVersion) throw new Error(`recovered npm artifact version ${version || "<empty>"} does not match publication ${publicationVersion}`);
-  return candidateVersion;
-}
 export function createRecoveredPublication({ downloads, bundleRoot, repository, passport, candidateRuntimeSha, publishArtifactKind, publishPackageMain, releasePatterns, platformManifests, channel, targetRef = "", candidateRef = "", rematerializeOnResume = false }) {
   const allFiles = downloads.flatMap((download) => download.files.map((file) => ({ path: path.relative(bundleRoot, file.absolutePath).split(path.sep).join("/"),
     size: file.size, sha256: file.sha256.replace(/^sha256:/, ""), absolutePath: file.absolutePath })))
@@ -718,6 +704,13 @@ export function createRecoveredPublication({ downloads, bundleRoot, repository, 
   const kind = String(publishArtifactKind || "npm");
   const releaseMatchers = splitPatterns(releasePatterns).map(patternMatcher);
   const releaseAssets = allFiles.filter((file) => releaseMatchers.some((matcher) => matcher.test(path.basename(file.path))));
+  if (kind === "oci") {
+    createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
+    const sealed = resolveOciCandidate({ payloadRoot: bundleRoot, passport });
+    return { manifest: sealed.manifest, bundleRoot: sealed.root, npmArtifacts: [], allFiles, releaseAssets,
+      version: sealed.manifest.version, candidateVersion: sealed.manifest.version,
+      publishRequiredArtifacts: sealed.requiredArtifacts };
+  }
   if (kind !== "npm") {
     createRecoveredPublicationCandidate({ allFiles, repository, passport, candidateRuntimeSha });
     const version = String(passport.target?.version || "").trim();
@@ -1019,7 +1012,7 @@ export async function resumeFromCandidateRun({
         npmTarballs: tarballs,
         releaseAssets: publication.releaseAssets.map((asset) => outputPath(asset.absolutePath)),
         publishRequiredArtifacts: outputPath(requiredArtifactsPath),
-        sealedBundleRoot: publication.manifest ? outputPath(bundleRoot) : "",
+        sealedBundleRoot: publication.manifest ? outputPath(publication.bundleRoot || bundleRoot) : "",
         sealedBundleManifest: publication.manifest ? outputPath(sealedManifestPath) : "",
         recoveryReceipt: outputPath(recoveryReceiptPath),
         stageCapsules: stageCapsuleFile ? outputPath(stageCapsuleFile.absolutePath) : "",

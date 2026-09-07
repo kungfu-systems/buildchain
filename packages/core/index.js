@@ -644,9 +644,9 @@ export {
 } from "./kfd3-surface-register.js";
 
 export * from "./release-propagation.js";
-export * from "./v4-floating-consumer-policy.js";
-export * from "./v4-runtime-ref-resume-authority.js";
-export * from "./v4-publication-qualification.js";
+export * from "./floating-consumer-policy.js";
+export * from "./runtime-ref-resume-authority.js";
+export * from "./publication-qualification.js";
 
 export {
   RELEASE_ACTIVATION_CONTRACT,
@@ -698,8 +698,4 @@ export {
   writePaperScaffold,
 } from "./paper.js"; export * from "./paper-work.js"; export * from "./paper-fleet.js";
 
-export {
-  SURFACE_TIMESTAMP_POLICY_CONTRACT,
-  applySurfaceTimestampPolicy,
-  createSurfaceTimestampPolicy,
-} from "./surface-manifest.js";
+export * from "./public-export-compatibility.js";

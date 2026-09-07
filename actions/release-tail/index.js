@@ -21,10 +21,10 @@ import {
   createSiteReleaseActivationAdapter,
 } from "../../packages/core/release-tail-provider-adapters.js";
 import {
-  V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
-  executeV4PublicationRehearsal,
-  resolveV4PublicationRehearsalProviderBindings,
-} from "../../packages/core/v4-publication-rehearsal.js";
+  DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
+  executeDomainPublicationRehearsal,
+  resolvePublicationRehearsalProviderBindings,
+} from "../../packages/core/publication-rehearsal.js";
 
 const BINDINGS_SCHEMA = "kungfu.buildchain.release-tail.provider-bindings/v1";
 
@@ -327,10 +327,10 @@ async function main() {
     const capsuleContract = input("capsule-contract");
     if (
       capsuleContract &&
-      capsuleContract !== V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT
+      capsuleContract !== DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT
     )
       throw new Error(
-        `buildchain-v3-v4-public-surface-migration/v1: capsule-contract must migrate to ${V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT}`,
+        `buildchain-v3-v4-public-surface-migration/v1: capsule-contract must migrate to ${DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT}`,
       );
     const capsule = readJson(rehearsalCapsuleInput, "rehearsal-capsule");
     const candidateRootInput = compatibilityInput(
@@ -351,7 +351,7 @@ async function main() {
     const bindingsInput = input("provider-bindings");
     const bindings =
       rehearsalMode === "provider"
-        ? resolveV4PublicationRehearsalProviderBindings({
+        ? resolvePublicationRehearsalProviderBindings({
             capsule,
             candidateRoot,
             providerBindings: bindingsInput
@@ -360,7 +360,7 @@ async function main() {
           })
         : null;
     const authorityInput = input("rehearsal-authority");
-    const result = await executeV4PublicationRehearsal({
+    const result = await executeDomainPublicationRehearsal({
       capsule,
       candidateRoot,
       mode: rehearsalMode,

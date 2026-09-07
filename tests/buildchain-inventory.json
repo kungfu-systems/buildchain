@@ -60,11 +60,11 @@
       "bundle": "actions/release-tail/dist/index.js"
     },
     {
-      "path": "actions/v4-release-candidate-promote",
+      "path": "actions/release-candidate-promote",
       "disposition": "v4-declarative-release-candidate-provider-plane",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/v4-release-candidate-promote/dist/index.js"
+      "bundle": "actions/release-candidate-promote/dist/index.js"
     }
   ],
   "retiredActionsExcluded": [

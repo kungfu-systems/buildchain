@@ -277,16 +277,16 @@ async function main() {
   const releasePassportPlatformManifestPaths = core.getInput("release-passport-platform-manifest-paths");
   const releasePassportImpactJson = core.getInput("release-passport-impact-json");
   const releasePassportPromotionRoutingJson = core.getInput("release-passport-promotion-routing-json");
-  const releasePassportV4ConsumerPolicyCertificationJson = core.getInput(
+  const releasePassportConsumerPolicyCertificationJson = core.getInput(
     "release-passport-v4-consumer-policy-certification-json",
   );
-  const releasePassportV4ConsumerPolicyCertificationRoot = core.getInput(
+  const releasePassportConsumerPolicyCertificationRoot = core.getInput(
     "release-passport-v4-consumer-policy-certification-root",
   );
-  const releasePassportV4RuntimeResumeEvidenceJson = core.getInput(
+  const releasePassportRuntimeResumeEvidenceJson = core.getInput(
     "release-passport-v4-runtime-resume-evidence-json",
   );
-  const releasePassportV4RuntimeResumeEvidenceCommand = core.getInput(
+  const releasePassportRuntimeResumeEvidenceCommand = core.getInput(
     "release-passport-v4-runtime-resume-evidence-command",
   );
   const releasePassportKfd1WitnessJsons = core.getInput("release-passport-kfd-1-witness-jsons");
@@ -401,10 +401,10 @@ async function main() {
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
-    releasePassportV4ConsumerPolicyCertificationJson,
-    releasePassportV4ConsumerPolicyCertificationRoot,
-    releasePassportV4RuntimeResumeEvidenceJson,
-    releasePassportV4RuntimeResumeEvidenceCommand,
+    releasePassportConsumerPolicyCertificationJson,
+    releasePassportConsumerPolicyCertificationRoot,
+    releasePassportRuntimeResumeEvidenceJson,
+    releasePassportRuntimeResumeEvidenceCommand,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,

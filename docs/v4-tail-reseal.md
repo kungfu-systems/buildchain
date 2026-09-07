@@ -70,4 +70,4 @@ and archive digest; no credential or provider effect is replayed from a Stage
 Capsule.
 
 The v3-to-v4 invariant mapping is recorded in
-[`architecture/v4-tail-reseal-parity.json`](../architecture/v4-tail-reseal-parity.json).
+[`architecture/tail-reseal-parity.json`](../architecture/tail-reseal-parity.json).

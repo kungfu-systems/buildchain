@@ -30,7 +30,7 @@ export {
 };
 export const NATIVE_QUALIFICATION_PROOF_SCHEMA =
   "kungfu.buildchain.native-qualification-proof/v4";
-const LEGACY_NATIVE_QUALIFICATION_PROOF_V3_SCHEMA =
+const LEGACY_NATIVE_QUALIFICATION_PROOF_BASELINE_SCHEMA =
   "kungfu.buildchain.native-qualification-proof/v3";
 const LEGACY_NATIVE_QUALIFICATION_PROOF_V2_SCHEMA =
   "kungfu.buildchain.native-qualification-proof/v2";
@@ -44,9 +44,13 @@ export const NATIVE_PROOF_BASE_DELTA_SCHEMA =
   "kungfu.buildchain.native-proof-base-delta/v1";
 const NATIVE_QUALIFICATION_ROOT_SEMANTICS = "semantic-native-identity-v1";
 
-function normalizeQualifiedWarrant(warrant, candidate, allowLegacyV3Readback) {
-  const qualifiedV3Readback =
-    allowLegacyV3Readback &&
+function normalizeQualifiedWarrant(
+  warrant,
+  candidate,
+  allowLegacyBaselineReadback,
+) {
+  const qualifiedBaselineReadback =
+    allowLegacyBaselineReadback &&
     !warrant.nativeCommandContract &&
     !candidate.nativeCommandContract &&
     !warrant.nativeExecutionReceiptRoot &&
@@ -59,7 +63,7 @@ function normalizeQualifiedWarrant(warrant, candidate, allowLegacyV3Readback) {
     warrant.nativeProofReuseRoot,
     "Warrant nativeProofReuseRoot",
   );
-  if (!qualifiedV3Readback) {
+  if (!qualifiedBaselineReadback) {
     warrant.nativeExecutionReceiptRoot = exactRoot(
       warrant.nativeExecutionReceiptRoot,
       "Warrant nativeExecutionReceiptRoot",
@@ -74,7 +78,7 @@ function normalizeQualifiedWarrant(warrant, candidate, allowLegacyV3Readback) {
 
 export function validateActiveDevDeliveryWarrant(
   queue,
-  { allowLegacyV3Readback = false } = {},
+  { allowLegacyBaselineReadback = false } = {},
 ) {
   const warrant = queue.activeWarrant;
   if (warrant.schema !== "kungfu.buildchain.dev-delivery-warrant/v1")
@@ -110,7 +114,7 @@ export function validateActiveDevDeliveryWarrant(
       "exactly one active candidate must match the active Warrant",
     );
   if (warrant.phase === "qualified") {
-    normalizeQualifiedWarrant(warrant, active[0], allowLegacyV3Readback);
+    normalizeQualifiedWarrant(warrant, active[0], allowLegacyBaselineReadback);
   } else if (
     warrant.phase === "provisional" &&
     (warrant.nativeProofRoot ||
@@ -288,7 +292,7 @@ export function verifyNativeQualificationProof(proofInput, expected = {}) {
     if (
       ![
         NATIVE_QUALIFICATION_PROOF_SCHEMA,
-        LEGACY_NATIVE_QUALIFICATION_PROOF_V3_SCHEMA,
+        LEGACY_NATIVE_QUALIFICATION_PROOF_BASELINE_SCHEMA,
         LEGACY_NATIVE_QUALIFICATION_PROOF_V2_SCHEMA,
         LEGACY_NATIVE_QUALIFICATION_PROOF_SCHEMA,
       ].includes(proof.schema)

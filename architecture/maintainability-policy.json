@@ -26,12 +26,12 @@
   },
   "repositoryBudgets": {
     "baselineRevision": "9569f69c2cb609372b8a3d65ce5dec8fb7b34a84",
-    "maxHandMaintainedSourceFiles": 485,
-    "maxHandMaintainedSourceLines": 173250,
+    "maxHandMaintainedSourceFiles": 508,
+    "maxHandMaintainedSourceLines": 175340,
     "maxWorkflowFiles": 80,
     "maxWorkflowLines": 26791,
-    "latestTransition": "Align generated Paper v4 Check permissions and installed-package next-development guidance.",
-    "latestTransitionRationale": "Add a bounded Paper-only guidance projection within existing owned modules, preserving source-repository guidance and surrounding consumer prose. Generated Verify callers grant only the actual public v4 callee read permissions. Update the exact source inventory; no new module, public API, write permission, debt allowance or dependency cycle. Regression tests compare real caller/callee permissions and resolve packaged script and upstream ADR paths.",
+    "latestTransition": "Preserve published exports during implementation relocation and prepare next-patch development after stable publication.",
+    "latestTransitionRationale": "Charge the exact measured compatibility forwarding modules, naming guard, frozen-reference projection, stable development planning and protected-source provider. Preserve existing file/function/complexity and aggregate debt ceilings. Historical file metrics follow the explicit relocation map without replacing their original measurements; independent governance review remains required.",
     "rationale": "Bounded modules separate candidate, evidence, native proof and execution, canonical failure verification, closed-set execution transfer, process-boundary verification, Warrant state and qualification, authority state, qualification, Landing acquisition, verified-attempt admission, Landing settlement and fence validation, provider attempt and heartbeat readback, sealed terminal evidence, hosted heartbeat, resume, store, options, command-specific adapters, and CLI orchestration responsibilities. The protected delivery workflow gives candidate and seal jobs no provider write credential, recursively rejects transfer drift, scopes every transfer artifact to the exact provider run attempt, chains every durable heartbeat state and receipt root on a distinct hosted runner domain, and permits qualification or exact failure settlement only after the finalizer verifies live jobs and the latest durable authority state. Public Landing admission and heartbeat always perform non-injectable fresh exact-attempt provider readback, tolerate only a not-yet-materialized seal job while retaining exact native and duplicate-job rejection, and heartbeat-loss coordination never invokes GitHub's run-scoped cancellation API where a successor rerun could race. The hosted process boundary anchors trust in the kernel-resolved versioned Runner.Worker path while accepting an equivalent argv-zero spelling with the same basename; its public boundary marker is allowed only at the one exact non-secret value, so a forged value under the same credential-like name still fails closed. The credentialless transfer seal validates the rooted native reuse decision against the Warrant-bound source, closure, dependency, toolchain, environment and command inputs; qualifiedBase stays in the proof and decision where it is rooted and later independently rechecked, rather than being assumed on the Warrant schema. V2 mutation cannot initialize a second empty authority beside a legacy ref: migration reads and roots the canonical live v1 ref, rechecks it, applies the explicit configured v2 policy, and atomically replaces its bytes through one expected-old non-force update, so old v1 controllers fail closed while the prior commit remains immutable history. Candidate ancestry classifies the GitHub artifact runtime token as credential authority. Every Landing settlement, including an unexpired fence, requires product-owned terminal readback. Terminal cleanup reads the immutable historical attempt, derives workflow and hosted Landing job identity from live run data, reads the exact protected ref head and compares containment against that immutable SHA, and seals merged only when the admitted merge-group head is contained by that protected base; a later different-head merge settles the old attempt as dequeued. Terminal normalization preserves transfer, finalizer boundary, native and seal job, admitted provider attempt, protected-base head, containment result, and terminal readback coordinates. The public reusable workflow truthfully retains its single-flight v1 authority without advertising v2 migration, while bounded v2 remains a separate opt-in CLI, Node API, and schema contract; the tracked self-caller stays on public v4-alpha with matching stable and alpha locks, and transient train selection is dispatch-only. Next-development parity adds one versioned transition authority, one durable controller, one bounded reservation adapter, and pure public-contract recovery evidence while retaining the existing thin floating-channel callers byte-for-byte. The floating-consumer gate reuses the existing contract-world evaluator so SHA drift passes only under the selected lock's compatibility policy, breaking surface drift still fails closed, and external certification reconstructs the receipt from the observed workflow SHA rather than the lock's historical evidence SHA. Tail reseal adds no Stage Capsule effect or general rebuild authority: it verifies the exact retained four-platform bytes, admits one known macOS tail failure through live provider readback, fences signing and finalization to explicit credentials and Warrant identity, and requires standard candidate Passport plus provider and protected readback. Compatibility Facts parity isolates canonical encoding, temporal verification, lifecycle validation, fixture projection, public authority projection, and CLI adaptation into bounded modules; legacy digest and proof arrays are derived only from exact current Fact lineage. Publication Rehearsal adds no production release authority: the content-addressed capsule contract binds source, candidate, manifest, config, canonical data-only provider bindings, provider policy, observations and core version separately from filesystem, runtime and rehearsal-only provider authority; simulate, replay and explicitly authorized provider rehearsal all reuse the release-tail planner, while same-commit local dogfood resolves the new reusable contract and exact current runtime before external callers remain on floating v4-alpha. Cross-runtime candidate recovery preserves original runtime and provider roots and creates resume lineage only after exact public ref, tag, ancestry, npm version and integrity readback. Adopter Delivery restores the reviewed public v3 gate, drivers, Passport binding, N-1 bootstrap and exact archive loader through one public v4 surface while keeping provider and release authority explicit non-claims. Floating Alpha bootstrap uses only the existing exact resolver and protected Alpha private shell to move an otherwise stale floating shell, retains public v4 stable promotion, and removes itself after protected readback. CI lane change-budget enforcement adds a bounded parser, evaluator, guard, and tests without creating another merge authority.",
     "governance": "legacy-debt-sunset-2026q4"
   },
@@ -77,12 +77,12 @@
       "rationale": "The explicit authority CLI keeps plan-only and execute transitions, provider-attempt coordinates, expected-old durable state writes, terminal provider readback, and machine-readable output in one compatibility entrypoint while the state-machine implementations remain extracted; this exact file ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/v4-architecture.mjs": {
+    "scripts/architecture.mjs": {
       "maxLines": 610,
       "rationale": "The v4 architecture validator adds only the bounded production-authority, fallback, rollback, writer-runtime, and legacy-retirement checks required for the final release cutover. This exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/v4-warrant-shadow-plan.mjs": {
+    "scripts/warrant-shadow-plan.mjs": {
       "maxLines": 601,
       "rationale": "The historical v3 comparison plan now separately verifies that the live manifest is v4-authoritative and legacy-retired, preventing comparison evidence from being mistaken for production authority. This exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
@@ -127,22 +127,22 @@
       "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "crates/buildchain-v4-contracts/src/release_tail.rs": {
+    "crates/buildchain-domain-contracts/src/release_tail.rs": {
       "maxLines": 1397,
       "rationale": "The single provider-neutral Rust release-tail authority replaces the retired 1,228-line JavaScript state machine and keeps strict declaration normalization, deterministic effect planning, rooted observations and receipts, and bounded retry/readback transitions behind the checked WASM ABI. Node retains only provider effects; this exact Rust ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/v4-runtime-ref-resume-authority.js": {
+    "packages/core/runtime-ref-resume-authority.js": {
       "maxLines": 625,
       "rationale": "The reviewed v4 authority keeps exact-runtime authorization, source and lock binding, fresh-attempt Stage Capsule reuse, floating-ref movement, final readback, and Passport lineage verification in one bounded public module; persistence scanning is separately owned and this exact ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/v4-runtime-selector-persistence.js": {
+    "packages/core/runtime-selector-persistence.js": {
       "maxLines": 228,
       "rationale": "The isolated source scanner rejects persisted exact, train, authority, variable, secret, and environment selector authority while inventorying OIDC, IAM, and external authority metadata without reading credentials; this exact ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/v4-universal-workflow-engine.mjs": {
+    "scripts/universal-workflow-engine.mjs": {
       "maxLines": 620,
       "rationale": "The exact candidate engine adds only a fail-closed OIDC preflight and a fixed npm 11.13.0 trusted-publishing shim under the already admitted ephemeral runtime path. This lets a reviewed Train candidate execute through an older floating Alpha Bootstrap shell without broadening capability, permission, provider, or mutation authority; this exact live-repair ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
@@ -1646,29 +1646,29 @@
       "rationale": "The extracted compatibility parser preserves the complete Warrant flag and environment mapping byte-for-byte while storage and command execution remain separately owned; this exact mapping ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/v4-warrant-shadow-plan.mjs#validatePlan": {
+    "scripts/warrant-shadow-plan.mjs#validatePlan": {
       "maxLines": 182,
       "maxComplexity": 26,
       "rationale": "The validator adds one conjunctive terminal assertion that separates retained v3 comparison evidence from the live v4 writer and retired migration phase. This exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "crates/buildchain-v4-contracts/src/product_publication.rs#select_product_publication_intent": {
+    "crates/buildchain-domain-contracts/src/product_publication.rs#select_product_publication_intent": {
       "maxComplexity": 38,
       "rationale": "The Rust publication selector jointly validates the closed channel, source, artifact, semantic-version, recovery, and observed-version coordinates before rooting one immutable intent. This exact complexity replaces the prior JavaScript decision tree and cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "crates/buildchain-v4-contracts/src/release_tail.rs#normalize_capability": {
+    "crates/buildchain-domain-contracts/src/release_tail.rs#normalize_capability": {
       "maxLines": 245,
       "maxComplexity": 51,
       "rationale": "The Rust normalizer keeps the closed capability registry, exact fields, regex tag binding, operation identity, idempotency, retry, and evidence validation in one fail-closed audit surface. It replaces the retired JavaScript normalizer and this exact ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "crates/buildchain-v4-contracts/src/release_tail.rs#advance_release_tail_execution": {
+    "crates/buildchain-domain-contracts/src/release_tail.rs#advance_release_tail_execution": {
       "maxLines": 193,
       "rationale": "The Rust transition dispatcher owns the bounded readback-before-mutation, apply, reconciliation, retry exhaustion, terminal fault, and next-operation decisions. It performs no provider effect and this exact line ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "crates/buildchain-v4-contracts/src/wasm.rs#dispatch": {
+    "crates/buildchain-domain-contracts/src/wasm.rs#dispatch": {
       "maxLines": 214,
       "maxComplexity": 64,
       "rationale": "The closed WASM ABI dispatcher maps a fixed operation vocabulary onto existing Rust domain functions and typed faults without adding provider, IO, credential, or fallback authority. This exact routing-only ceiling cannot grow implicitly.",

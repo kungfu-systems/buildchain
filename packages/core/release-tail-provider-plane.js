@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { invokeV4DomainWasm } from "./v4-domain-wasm.js";
+import { invokeDomainWasm } from "./domain-wasm.js";
 import { RELEASE_TAIL_PRODUCT_CAPABILITIES } from "./release-tail-product-capabilities.js";
 
 export const RELEASE_TAIL_DECLARATION_CONTRACT =
@@ -71,12 +71,12 @@ export const RELEASE_TAIL_CAPABILITY_REGISTRY = Object.freeze([
 ]);
 
 export function releaseTailStableJson(value) {
-  const canonical = invokeV4DomainWasm("canonical-json", value).canonicalUtf8;
+  const canonical = invokeDomainWasm("canonical-json", value).canonicalUtf8;
   return canonical.endsWith("\n") ? canonical.slice(0, -1) : canonical;
 }
 
 export function releaseTailRoot(value) {
-  return invokeV4DomainWasm("release-tail-root", value).root;
+  return invokeDomainWasm("release-tail-root", value).root;
 }
 
 export function parseReleaseTailDeclaration(input) {
@@ -90,26 +90,26 @@ export function parseReleaseTailDeclaration(input) {
       );
     }
   }
-  return invokeV4DomainWasm("release-tail-parse", value);
+  return invokeDomainWasm("release-tail-parse", value);
 }
 
 export function compileReleaseTailDeclaration(input) {
-  return invokeV4DomainWasm(
+  return invokeDomainWasm(
     "release-tail-compile",
     typeof input === "string" ? JSON.parse(input) : input,
   );
 }
 
 export function validateReleaseTailEffectPlan(plan) {
-  return invokeV4DomainWasm("release-tail-validate-plan", plan);
+  return invokeDomainWasm("release-tail-validate-plan", plan);
 }
 
 export function createReleaseTailTransaction(input) {
-  return invokeV4DomainWasm("release-tail-create", input);
+  return invokeDomainWasm("release-tail-create", input);
 }
 
 export function validateReleaseTailTransaction(transaction) {
-  return invokeV4DomainWasm("release-tail-validate-transaction", transaction);
+  return invokeDomainWasm("release-tail-validate-transaction", transaction);
 }
 
 export function readReleaseTailTransaction(filePath) {
@@ -173,7 +173,7 @@ export async function executeReleaseTailTransaction(
   transaction,
   { adapters, checkpoint } = {},
 ) {
-  let exchange = invokeV4DomainWasm(
+  let exchange = invokeDomainWasm(
     "release-tail-execution-start",
     transaction,
   );
@@ -214,7 +214,7 @@ export async function executeReleaseTailTransaction(
         `unsupported Rust/WASM release-tail instruction '${instruction.action}'`,
       );
     }
-    exchange = invokeV4DomainWasm("release-tail-execution-advance", {
+    exchange = invokeDomainWasm("release-tail-execution-advance", {
       transaction: exchange.transaction,
       cursor: exchange.cursor,
       signal,

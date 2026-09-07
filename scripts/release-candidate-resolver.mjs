@@ -7,10 +7,10 @@ import { execFileSync } from "node:child_process";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { pathToFileURL } from "node:url";
-import { createResolvedPublicationSealedBundle } from "./publication-candidate-sealer.mjs";
+import { resolveCandidatePublicationBundle } from "./publication-candidate-sealer.mjs";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
-import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
-import { v4PublicationQualificationRoot, validateV4PublicationQualificationReceipt } from "../packages/core/v4-publication-qualification.js";
+import { domainContentRoot } from "../packages/core/canonical-contracts.js";
+import { domainPublicationQualificationRoot, validatePublicationQualificationReceipt } from "../packages/core/publication-qualification.js";
 
 const DEFAULT_WORKFLOW_FILE = "self-build-fixture.yml";
 function env(name, fallback = "") {
@@ -436,7 +436,7 @@ function findDownloadedFile(root, filename) {
   return "";
 }
 
-function resolveV4PublicationEvidence(passportDir, passport, outputPath) {
+function resolvePublicationEvidence(passportDir, passport, outputPath) {
   const stageCapsulesPath = findDownloadedFile(passportDir, "release-candidate-stage-capsules.json");
   const publicationQualificationPath = findDownloadedFile(passportDir, "release-candidate-publication-qualification.json");
   if (!passport.consumerPolicy?.receiptRoot) {
@@ -453,12 +453,12 @@ function resolveV4PublicationEvidence(passportDir, passport, outputPath) {
   }
   const stageCapsules = JSON.parse(fs.readFileSync(stageCapsulesPath, "utf8"));
   const qualification = JSON.parse(fs.readFileSync(publicationQualificationPath, "utf8"));
-  validateV4PublicationQualificationReceipt(qualification, {
+  validatePublicationQualificationReceipt(qualification, {
     repository: passport.repository,
     candidateRoot: `sha256:${passport.candidateHash}`,
     sourceSha: passport.source.headSha,
-    sourceRoot: v4ContentRoot("candidate-identity", passport.source),
-    artifactRoot: v4PublicationQualificationRoot(stageCapsules.capsules.map(({ publicationArtifact }) => publicationArtifact)),
+    sourceRoot: domainContentRoot("candidate-identity", passport.source),
+    artifactRoot: domainPublicationQualificationRoot(stageCapsules.capsules.map(({ publicationArtifact }) => publicationArtifact)),
     policyDigest: passport.consumerPolicy.receiptRoot,
   });
   if (stageCapsules.publicationQualificationRoot !== qualification.receiptRoot) throw new Error("Stage Capsules do not bind the publication qualification receipt");
@@ -705,7 +705,7 @@ export async function resolveReleaseCandidateArtifacts({
     throw new Error("downloaded release-candidate artifacts did not contain release-candidate-passport.json and build-summary.json");
   }
   const passport = JSON.parse(fs.readFileSync(passportPath, "utf8"));
-  const v4Publication = resolveV4PublicationEvidence(passportDir, passport, outputPath);
+  const domainPublication = resolvePublicationEvidence(passportDir, passport, outputPath);
   const platformManifestPaths = findDownloadedFiles(payloadDir, "manifest.json");
   const githubArtifactAttestationPolicyPaths = findDownloadedFiles(
     payloadDir,
@@ -725,23 +725,12 @@ export async function resolveReleaseCandidateArtifacts({
     const noun = publishArtifactKind === "npm" ? "npm package tarballs" : "platform manifests";
     throw new Error(`expected at least ${minimumPayloadCount} downloaded ${noun}, found ${downloadedRequiredArtifactCount}`);
   }
-  const sealedBundle = publishArtifactKind === "npm"
-    ? createResolvedPublicationSealedBundle({
-        bundleRoot: payloadDir,
-        repository: repoInfo.fullName,
-        sourceSha: passport.source?.headSha,
-        sourceTreeSha: passport.source?.treeHash,
-        runtimeSha: releaseCandidateRuntimeSha(passport),
-        releaseCandidateRoot: passport.candidateHash,
-        npmArtifacts: npmTarballPaths.map((tarballPath) => ({
-          path: tarballPath,
-          ...readNpmPackageArtifact({ tarballPath, mainPackage: publishPackageMain }),
-        })),
-        releaseAssetPaths,
-      })
-    : undefined;
+  const sealedBundle = resolveCandidatePublicationBundle({ kind: publishArtifactKind, payloadDir, passport,
+    runtimeSha: releaseCandidateRuntimeSha(passport), releaseAssetPaths,
+    npmArtifacts: npmTarballPaths.map((tarballPath) => ({ path: tarballPath,
+      ...readNpmPackageArtifact({ tarballPath, mainPackage: publishPackageMain }) })) });
   const manifests = platformManifestPaths.map((manifestPath) => JSON.parse(fs.readFileSync(manifestPath, "utf8"))), publicationVersion = resolveFreshPublicationVersion({ sealedBundle, candidateVersion: passport.target?.version });
-  const generatedRequiredArtifacts = generatePublishRequiredArtifacts({
+  const generatedRequiredArtifacts = sealedBundle?.requiredArtifacts || generatePublishRequiredArtifacts({
     manifests,
     version: publicationVersion,
     kind: publishArtifactKind,
@@ -759,7 +748,7 @@ export async function resolveReleaseCandidateArtifacts({
     paths: {
       passport: outputPath(passportPath),
       buildSummary: outputPath(buildSummaryPath),
-      ...v4Publication.paths,
+      ...domainPublication.paths,
       payloads: outputPath(payloadDir),
       platformManifests: platformManifestPaths.map(outputPath),
       githubArtifactAttestationPolicies: githubArtifactAttestationPolicyPaths.map(outputPath),
@@ -777,7 +766,7 @@ export async function resolveReleaseCandidateArtifacts({
     githubArtifactAttestationPolicyCount: githubArtifactAttestationPolicyPaths.length,
     npmTarballCount: npmTarballPaths.length,
     publishRequiredArtifacts: generatedRequiredArtifacts,
-    publicationQualificationRoot: v4Publication.publicationQualificationRoot,
+    publicationQualificationRoot: domainPublication.publicationQualificationRoot,
   };
 }
 

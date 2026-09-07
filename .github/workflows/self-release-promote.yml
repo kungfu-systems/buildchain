@@ -179,7 +179,7 @@ jobs:
           script: |
             const { pathToFileURL } = require("node:url");
             const runtime = await import(pathToFileURL(
-              `${process.env.GITHUB_WORKSPACE}/packages/core/v4-universal-workflow-bootstrap.js`,
+              `${process.env.GITHUB_WORKSPACE}/packages/core/universal-workflow-bootstrap.js`,
             ).href);
             const requestedSha = process.env.BUILDCHAIN_TARGET_SHA;
             const head = await github.rest.git.getCommit({
@@ -210,7 +210,7 @@ jobs:
                 repo: context.repo.repo,
                 basehead: `${stateRef.object.sha}...${requestedSha}`,
               });
-              const version = runtime.v4ProductStateVersion(stateRef, match[1]);
+              const version = runtime.productStateVersion(stateRef, match[1]);
               let exactTagRef;
               try {
                 exactTagRef = (await github.rest.git.getRef({
@@ -228,7 +228,7 @@ jobs:
                 headComparisonStatus: comparison.data.status,
               });
             }
-            const finalizedVersion = runtime.selectV4FinalizedProductPublicationVersion({
+            const finalizedVersion = runtime.selectFinalizedProductPublicationVersion({
               requestedSha,
               requestedTree: head.data.tree.sha,
               targetRef: process.env.BUILDCHAIN_TARGET_REF,

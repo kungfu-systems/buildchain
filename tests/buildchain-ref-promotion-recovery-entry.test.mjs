@@ -21,7 +21,7 @@ const resolver = fs.readFileSync(
   "utf8",
 );
 const universalEngine = fs.readFileSync(
-  path.resolve("scripts/v4-universal-workflow-engine.mjs"),
+  path.resolve("scripts/universal-workflow-engine.mjs"),
   "utf8",
 );
 
@@ -80,7 +80,7 @@ test("canonical publisher accepts one closed universal request", () => {
 test("universal inspection preserves request mode for alpha admission", () => {
   assert.match(
     universalEngine,
-    /requestRoot: v4UniversalWorkflowRequestRoot\(request\),\s+mode: request\.mode,\s+candidate: request\.candidate/u,
+    /requestRoot: universalWorkflowRequestRoot\(request\),\s+mode: request\.mode,\s+candidate: request\.candidate/u,
   );
 });
 

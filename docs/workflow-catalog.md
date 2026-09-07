@@ -90,6 +90,7 @@ all related declarations. Run `pnpm run generate:workflows` and
 | [public-ops-warrant-cancel.yml](../.github/workflows/public-ops-warrant-cancel.yml) | ops | reusable | active | Dev Delivery Warrant Queued Candidate Cancel | `dev-delivery-warrant-cancel.yml` |
 | [public-ops-warrant-close.yml](../.github/workflows/public-ops-warrant-close.yml) | ops | reusable | active | Dev Delivery Warrant Close | `dev-delivery-warrant-close.yml` |
 | [public-release-artifact-attestation.yml](../.github/workflows/public-release-artifact-attestation.yml) | release | reusable | active | Buildchain GitHub Artifact Attestation | `github-artifact-attestation.yml` |
+| [public-release-oci-compose-preview.yml](../.github/workflows/public-release-oci-compose-preview.yml) | release | reusable | active | Buildchain OCI Compose Preview | — |
 | [public-release-paper-sealed.yml](../.github/workflows/public-release-paper-sealed.yml) | release | reusable | active | Buildchain Sealed Paper Release | `paper-release-sealed.yml` |
 | [public-release-paper.yml](../.github/workflows/public-release-paper.yml) | release | reusable | active | Buildchain Paper Release | `paper-release.yml` |
 | [public-release-promote.yml](../.github/workflows/public-release-promote.yml) | release | reusable | active | Release Candidate Promote | `release-candidate-promote.yml` |

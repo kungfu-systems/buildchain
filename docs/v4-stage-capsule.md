@@ -20,7 +20,7 @@ ai_provenance:
 
 ## Platform checkpoint projection
 
-`architecture/v4-platform-stage-checkpoints.json` is the single declaration
+`architecture/platform-stage-checkpoints.json` is the single declaration
 for the macOS arm64, Linux x64, and Windows x64 shadow checkpoint lanes. It
 defines the allowed platform/stage pairs and the exact declared inputs,
 outputs, environment names, toolchains, and portable restore paths.
@@ -100,19 +100,19 @@ GitHub Artifact and S3-compatible adapters expose only `effect-disabled` and
 `fixture-backed` modes in this slice. They accept rooted locators, never raw
 credentials or signed URLs, and cannot perform a provider upload or restore.
 The executable architecture ceiling is
-[`v4-stage-capsule-store-contract.json`](../architecture/v4-stage-capsule-store-contract.json),
+[`stage-capsule-store-contract.json`](../architecture/stage-capsule-store-contract.json),
 and the shared Rust/JavaScript fixture is
 [`shared.json`](../contracts/fixtures/v4-stage-capsule-store-v1/shared.json).
 
 Focused verification:
 
 ```sh
-pnpm run check:v4-contracts
+pnpm run check:contracts
 ```
 
 ## Deterministic resume planning
 
-`architecture/v4-stage-capsule-resume-planner.json` closes the Wave 2 resume
+`architecture/stage-capsule-resume-planner.json` closes the Wave 2 resume
 planner. Its request is an explicit topological stage graph with targets,
 expected Capsule identity and retention, current Capsule/availability
 observations, an evaluation clock, and separately declared provider or
@@ -133,7 +133,7 @@ shadow-only: it does not skip a v3 production stage or move v3 authority.
 
 ## Three-platform qualification and Wave reconciliation
 
-`architecture/v4-stage-capsule-qualification.json` closes the Wave 2
+`architecture/stage-capsule-qualification.json` closes the Wave 2
 qualification boundary. Buildchain and external repositories use the same
 Buildchain-owned public reusable workflow,
 `.github/workflows/public-build-stage-capsule-canary.yml`. Buildchain's caller is the thin
@@ -182,12 +182,12 @@ authorized by this qualification.
 Focused local rehearsal:
 
 ```sh
-node scripts/v4-stage-capsule-qualification.mjs campaign \
+node scripts/stage-capsule-qualification.mjs campaign \
   --work-root /tmp/buildchain-v4-stage-qualification \
   --platform linux-x64 \
   --consumer buildchain \
   --runtime-ref <exact-buildchain-commit> \
   --consumer-source-revision <exact-consumer-commit> \
   --consumer-root . \
-  --lifecycle-evidence-root .buildchain/artifacts/v4-stage-capsule-canary
+  --lifecycle-evidence-root .buildchain/artifacts/stage-capsule-canary
 ```

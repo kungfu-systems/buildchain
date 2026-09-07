@@ -4,6 +4,7 @@ import path from "node:path";
 import { createPublicationAuthorityRegistry } from "./publication-authority.js";
 
 const DESCRIPTORS = Object.freeze([
+  [".github/workflows/public-release-oci-compose-preview.yml", "product-publication", true, ["oci-compose-preview"], "caller-secrets", "none", "fixed", "caller-bound"],
   [".github/workflows/.auditable-demo.yml", "non-publication-oidc"],
   [".github/workflows/.declarative-auditable-demo.yml", "governance-write"],
   [".github/workflows/.build.yml", "non-publication-oidc"],

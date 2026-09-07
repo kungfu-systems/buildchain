@@ -175,7 +175,13 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: self-reviewed
-last_reviewed: 2026-08-11
+last_reviewed: 2026-09-07
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-07
+  visible_context: Release completion, protected development provider, and independent review sources.
+  invisible_context_boundary: No private credentials or external unpublished release state.
 ---
 
 # Next-development Transition
@@ -228,6 +234,23 @@ commit and its two-parent integration commit. Before a later product candidate
 can settle, Patrol reads every prepared version path at the candidate SHA and
 requires the exact reserved blob identities; missing or stale state blocks
 before a Release Cut or heavy candidate build.
+
+## Stable publication and the next patch
+
+A completed stable publication with \`semver/auto\` schedules the next patch at
+Alpha zero: \`4.0.2\` prepares \`4.0.3-alpha.0\`. Publication settlement is
+retained before the development PR starts. Preparation reads the exact current
+protected Dev commit and regenerates only its declared version files, preserving
+code that arrived after the stable candidate. The independent reviewer verifies
+the completed stable publication and reconstructs every tracked byte from the
+protected parent; a PR body alone grants no authority.
+
+A replay returns \`already-current\` or \`already-advanced\` when Dev already
+contains the target or a later version. A late Alpha completion cannot regress
+Dev to an older patch. A moved protected base fails before creating the version
+commit and requires a fresh preparation attempt. Pending review leaves the
+completed publication intact. Anchored version models still require a reviewed
+manual anchor.
 
 ## Version models
 

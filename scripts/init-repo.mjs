@@ -366,7 +366,7 @@ jobs:
 }
 
 function workflowYaml({ type, runnerPreset, artifactName }) {
-  return `${nextDevelopmentWorkflowHeader()}# Buildchain v4 lifecycle checkpoints are governed by architecture/v4-platform-stage-checkpoints.json.
+  return `${nextDevelopmentWorkflowHeader()}# Buildchain v4 lifecycle checkpoints are governed by architecture/platform-stage-checkpoints.json.
 # Do not add undeclared runner-only inputs, outputs, environment, or provider effects.
 # Commit both .buildchain/contract-lock.json and .buildchain/alpha-contract-lock.json.
 # Persist only @v4 or @v4-alpha; pass temporary train/SHA runtimes through workflow_dispatch.
