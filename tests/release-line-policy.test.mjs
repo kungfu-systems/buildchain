@@ -229,3 +229,47 @@ test("release to publish-gate/major is the only major bump channel", () => {
     );
   });
 });
+
+test("generated product PRs retain exact channel and package line verification", () => {
+  const headRef =
+    "chore/v4-product-pr/release-v4-v4.0/e493d3550af5-29a053e8547b-688eb18594bc";
+  withPackageVersion("4.0.4", (cwd) => {
+    assert.equal(
+      getBumpKeyword({ cwd, headRef, baseRef: "release/v4/v4.0" }),
+      "patch",
+    );
+    for (const baseRef of [
+      "release/v4/v4.1",
+      "alpha/v4/v4.0",
+      "release/v3/v3.0",
+    ])
+      assert.throws(
+        () => getBumpKeyword({ cwd, headRef, baseRef }),
+        /Versions not match/,
+      );
+    for (const bad of [
+      headRef + "/extra",
+      headRef.replace("688eb18594bc", "not-a-hash"),
+      headRef.replace("chore/v4-product-pr", "feature/v4-product-pr"),
+    ])
+      assert.throws(() =>
+        getBumpKeyword({ cwd, headRef: bad, baseRef: "release/v4/v4.0" }),
+      );
+  });
+  withPackageVersion("4.1.4", (cwd) =>
+    assert.throws(
+      () => getBumpKeyword({ cwd, headRef, baseRef: "release/v4/v4.0" }),
+      /does not match current/,
+    ),
+  );
+  withPackageVersion("4.0.4-alpha.0", (cwd) =>
+    assert.equal(
+      getBumpKeyword({
+        cwd,
+        headRef: headRef.replace("release-v4", "alpha-v4"),
+        baseRef: "alpha/v4/v4.0",
+      }),
+      "prerelease",
+    ),
+  );
+});
