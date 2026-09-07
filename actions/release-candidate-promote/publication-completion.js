@@ -26,7 +26,7 @@ export async function completePublicationDevelopment(
   } = {},
 ) {
   // Binary collection and independent review must not wait for the development PR.
-  await retain({
+  const retained = await retain({
     base: ".buildchain",
     repository,
     candidateSha: sourceSha,
@@ -43,7 +43,7 @@ export async function completePublicationDevelopment(
       exactTag: documents.tag,
       releaseSha: settlement.productProviderResult.publication.releaseSha,
       treeSha: sourceBinding.protectedSource.tree,
-      publicationRoot: settlement.releaseReceipt.receiptRoot,
+      publicationRoot: retained.receipt.receiptRoot,
       completedAt: providerRequest.publicationIntent.sourceTimestamp,
     },
     octokit,

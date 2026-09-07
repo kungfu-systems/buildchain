@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-08
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-07
+  generated_at: 2026-09-08
   invisible_context: Provider credentials and private provider state were not read.
 ---
 
@@ -84,6 +84,13 @@ APPLY retains that exact chain before waiting for next-development in the existi
 `delivery-summary.json`, which reports publication and next-development separately.
 A green workflow label cannot substitute for this receipt verification.
 
+Recovery verifies both its current execution chain and any already published
+settlement against the exact tag, source and original Passport. It preserves
+the existing settlement bytes and uses that original receipt for development
+advancement. A corrected runtime may produce different recovery observations;
+they do not authorize replacing the completed publication packet. Ambiguous,
+tampered or mismatched retained evidence still blocks recovery.
+
 Binary Distribution reads this settlement and the original publication Passport.
 Tag creation can precede settlement, so it waits at most 40 observations, 15 seconds
 apart, for missing evidence. A mismatched source, tag, Passport or receipt fails
@@ -106,6 +113,16 @@ base and merge result independently. A retry of the publication phase must first
 read retained provider facts and resume only missing operations.
 
 ## Automatic next-development review
+
+After stable completion, the producer generates the next patch at `alpha.0`
+from an isolated Git checkout of the exact current protected Dev commit. The
+checkout explicitly fetches the exact Dev commit into its own object database;
+shallow local clones alone may omit commits fetched only into `FETCH_HEAD`.
+It retains its own index so version verification can inspect the actual
+generated delta, and uses the admitted runtime dependency bridge. A source
+archive without Git metadata cannot perform that verification. The publication
+receipt remains complete if development preparation fails; recover the original
+transaction with corrected, reviewed tooling before publishing the next version.
 
 `self-release-next-development.yml` observes a successful exact `Verify` PR run
 for a same-repository `chore/next-development/*` branch. It executes only the

@@ -17,6 +17,7 @@ const request = {
     publicationIntent: { sourceTimestamp: "2026-09-05T00:00:00Z" },
   },
 };
+const publishedReceipt = { receiptRoot: "sha256:" + "e".repeat(64) };
 
 test("publication becomes readable before any development wait and retains exact source authority", async () => {
   const events = [];
@@ -25,12 +26,13 @@ test("publication becomes readable before any development wait and retains exact
     retain: async (args) => {
       assert.equal(args.candidateSha, request.sourceSha);
       events.push("published");
+      return { receipt: publishedReceipt };
     },
     advance: async (args) => {
       assert.deepEqual(events, ["published"]);
       assert.equal(
         args.completedAlpha.publicationRoot,
-        request.settlement.releaseReceipt.receiptRoot,
+        publishedReceipt.receiptRoot,
       );
       assert.equal(
         args.completedAlpha.releaseSha,
@@ -63,7 +65,7 @@ test("failed publication readback blocks development; failed development never r
   await assert.rejects(
     completePublicationDevelopment(request, {
       client: () => ({}),
-      retain: async () => events.push("published"),
+      retain: async () => { events.push("published"); return { receipt: publishedReceipt }; },
       advance: async () => {
         throw new Error("review pending");
       },
@@ -77,12 +79,12 @@ test("failed publication readback blocks development; failed development never r
 test("stable completion retains publication before scheduling the next patch", async () => {
   const events = [];
   await completePublicationDevelopment({ ...request, channel: "stable", documents: { version: "4.0.2", tag: "v4.0.2" } }, {
-    client: () => ({}), retain: async () => events.push("published"),
+    client: () => ({}), retain: async () => { events.push("published"); return { receipt: publishedReceipt }; },
     advance: async () => assert.fail("wrong channel"),
     advanceStable: async ({ completedStable }) => {
       assert.deepEqual(events, ["published"]);
       assert.equal(completedStable.version, "4.0.2");
-      assert.equal(completedStable.publicationRoot, request.settlement.releaseReceipt.receiptRoot);
+      assert.equal(completedStable.publicationRoot, publishedReceipt.receiptRoot);
       events.push("next-patch"); return { status: "verified" };
     }, write: () => events.push("recorded"),
   });
