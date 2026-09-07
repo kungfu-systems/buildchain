@@ -18,6 +18,12 @@ ai_provenance:
 
 # OCI image family publication
 
+Compose preview uses the workflow's scoped `packages: write` token for GHCR
+requests. The separate `BUILDCHAIN_PROMOTION_TOKEN` serves GitHub governance
+and receipt publication; it is never a fallback registry credential. Missing
+registry identity fails before a write, and an unsuccessful registry response
+reports only its HTTP status while retaining the exact qualification for recovery.
+
 Buildchain v4 can publish a sealed family of container images to GHCR through
 `publish-artifact-kind: oci` on the public release candidate promotion workflow.
 The candidate build produces the image bytes and smoke evidence. The built-in

@@ -3124,6 +3124,7 @@
     }
   },
   "hotspots": [
+    "tests/v4-product-publication-topology.test.mjs",
     ".github/workflows/.build.yml",
     ".github/workflows/.publication-authority.yml",
     ".github/workflows/bootstrap.yml",

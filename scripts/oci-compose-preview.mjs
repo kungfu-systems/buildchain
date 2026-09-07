@@ -25,6 +25,18 @@ function gh(args) {
 }
 const api = (route) => JSON.parse(gh(["api", route]));
 const read = (file) => JSON.parse(fs.readFileSync(file));
+export function createComposePreviewRegistry(environment, fetchImpl = fetch) {
+  const token = environment.BUILDCHAIN_REGISTRY_TOKEN;
+  const actor = environment.GITHUB_ACTOR;
+  check(
+    typeof token === "string" &&
+      token.length > 0 &&
+      typeof actor === "string" &&
+      actor.length > 0,
+    "explicit scoped registry identity required",
+  );
+  return createRegistryClient(token, fetchImpl, actor);
+}
 function output(name, value) {
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`);
 }
@@ -69,7 +81,7 @@ export async function promoteComposePreview({
     });
     check(
       result.status === 201,
-      "preview write uncertain; retain the original qualification for readback",
+      `preview write uncertain (HTTP ${result.status}); retain the original qualification for readback`,
     );
   }
   const observed = await fetchManifest(policy.alias);
@@ -186,8 +198,7 @@ async function run(mode) {
       "qualification evidence bytes mismatch",
     );
   }
-  const actor = api("user").login;
-  const { registry } = createRegistryClient(process.env.GH_TOKEN, fetch, actor);
+  const { registry } = createComposePreviewRegistry(process.env);
   async function fetchManifest(ref, allowAbsent = false) {
     const response = await registry(context.application, `manifests/${ref}`, {
       headers: {
