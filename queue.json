@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1497,
+  "generation": 1498,
   "fencingCounter": 231,
   "policy": {
     "agingSeconds": 900,
@@ -12560,8 +12560,43 @@
         "tests/oci-publication.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3596,
+      "sourceRoot": "sha256:38a84ebcead765d13c48caa1b08182a9b04bd34988717610b92b03bed01bdbe2",
+      "sourceIdentityRoot": "sha256:107450611398ca404020ce4fd987c8c73f98b7bfb20ab47c5131af70b9cd34b3",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:760d3f69ffcf9176a409d04c321c789681542fa056c18a18da12bc216eaa1b84",
+      "sourceHead": "6ebae48ccf1e3df3c85ed605495091721d1f7b11",
+      "sourcePatchRoot": "sha256:b171e0bfdedd4f615fd54be878923d61e179861cdc88a0e790df27c74c8c1887",
+      "sourceProofRoot": "sha256:8bed123e8f96658c13695d45578939bb49d54e1306504e9bf88aebb0f1c517a7",
+      "planRoot": "sha256:6a8551a798f6f04fd092afae1f5abf342da5bbb1b6b8a551b18702b7f6a4d9f2",
+      "closureRoot": "sha256:51b2238b9f2c99f41150d468bc804ebd386252ce41be59aac45dd05da7dcb2e1",
+      "dependencyRoot": "sha256:aab415ac9351a72402e0860c66e4f292c7400fbf622f36970ef9ecfdc9d88c78",
+      "toolchainRoot": "sha256:5a3b75edc053ca4c01185c2103e42a8b88005b8017118ab1e406c584be4a6550",
+      "sourceWorkflowRunId": 34083530950,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-07T04:44:37.148Z",
+      "updatedAt": "2026-09-07T04:44:37.148Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/oci-publication.md",
+        "packages/core/oci-compose-qualification.js",
+        "tests/oci-compose-publication-source.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-07T04:44:04.168Z",
-  "stateRoot": "sha256:c06504b8e457620bf3bce8cbd1b0cea06a3f1e5d40491e43b32fb34e98858c1b"
+  "updatedAt": "2026-09-07T04:44:37.148Z",
+  "stateRoot": "sha256:57201bb804513b2c86e3a8df246ab55d9d01cbc956434ac8cdf4bef1cb2f33c7"
 }
