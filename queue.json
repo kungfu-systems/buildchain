@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1509,
+  "generation": 1510,
   "fencingCounter": 235,
   "policy": {
     "agingSeconds": 900,
@@ -13341,8 +13341,43 @@
         "scripts/check-universal-workflow-bootstrap.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3612,
+      "sourceRoot": "sha256:89be22d6eaf97e81c9ad00a75a703be9c200cd53a7e594de7d31b28ecf052e4c",
+      "sourceIdentityRoot": "sha256:b6a016457c4ed2f050978acd94b5ea40745b0355cf22072f549985d784d86cfd",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:289e00b7b1d359a97cdda1a3d2d5667e9cb1a3f8c7e1ba1bdf112395d198240d",
+      "sourceHead": "fb6bfb9c7da08445723c43217306aea9e1fa6619",
+      "sourcePatchRoot": "sha256:c1daa623aca41b765013121df6f9a6ec18ba5757799f5fc4cdac3ed1dcf7025b",
+      "sourceProofRoot": "sha256:dbe35d3bf7f6abbc1de3eb9b4a2d37254cc908e89a8a65eae7d0cea411ff87ee",
+      "planRoot": "sha256:01c32719edec4305d35c8a4406b72b23c8ea21a155b00c72adeddd65b8be7d39",
+      "closureRoot": "sha256:9b890294c2158ef8f2429be73ee2b3a163b1626d4540de0c98cd781798160b71",
+      "dependencyRoot": "sha256:38f4cac5c60a9aa4952a463928d17a6cbed3f1f10d5d4249aec66df398c5ba12",
+      "toolchainRoot": "sha256:568fff24f28dfd57354dc4c7723473036dcc2dda7d625ac1a40a636520644492",
+      "sourceWorkflowRunId": 34137418507,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-07T15:22:47.561Z",
+      "updatedAt": "2026-09-07T15:22:47.561Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        "actions/release-candidate-promote/development-source.js",
+        "actions/release-candidate-promote/dist/index.js",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/v4-production-release.md",
+        "tests/development-source.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-07T14:04:08.072Z",
-  "stateRoot": "sha256:56f8af32cfc182c9585df4a4b32dc3e4fe1815ba3b55dfb0d4eb64d3215f4a4c"
+  "updatedAt": "2026-09-07T15:22:47.561Z",
+  "stateRoot": "sha256:9f57a3632f705589786e9f1a46df317d568a1ab86cb7333c6aa0cfab621e866e"
 }
