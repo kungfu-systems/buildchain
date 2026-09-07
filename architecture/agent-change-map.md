@@ -153,6 +153,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 ### Current top twenty maintenance hotspots
 
+- `tests/v4-product-publication-topology.test.mjs`
 - `.github/workflows/.build.yml`
 - `.github/workflows/.publication-authority.yml`
 - `.github/workflows/bootstrap.yml`
