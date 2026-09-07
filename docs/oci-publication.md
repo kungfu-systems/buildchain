@@ -93,7 +93,11 @@ have matching platform and content labels. Descriptor sizes, digests and media
 types are verified recursively; nested manifests are uploaded before their
 parent index. BuildKit attestation manifests must identify a runnable child and
 contain matching in-toto subjects. Missing platforms, duplicate platforms,
-foreign URLs, inline descriptor data and broken blob references fail sealing.
+foreign URLs and broken blob references fail sealing. Embedded descriptor `data`
+is accepted only as canonical Base64 for at most 1 MiB, with the declared size
+and digest matching the required local blob byte for byte. Malformed or
+inconsistent embedded content fails sealing; manifests are never rewritten.
+This follows the [OCI embedded-content contract](https://github.com/opencontainers/image-spec/blob/main/descriptor.md#embedded-content).
 
 A Compose entry declares `kind: compose`, `platform: compose`, and `targetImage`
 pointing to an image in the same family. Its unique family name may differ from
