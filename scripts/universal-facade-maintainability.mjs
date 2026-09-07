@@ -20,7 +20,11 @@ function loadUniversalFacadeMigration(root) {
       "universal facade migration requires an exact facadeSourceRevision",
     );
   }
-  return { paths: new Set(paths), sourceRevision };
+  return {
+    paths: new Set(paths),
+    sourceRevision,
+    postMigration: new Set(contract.migration?.postMigrationWorkflows || []),
+  };
 }
 
 function verifyUniversalFacadeMigration(root) {
@@ -40,6 +44,11 @@ function governUniversalFacadeWorkflowMetrics({
   verifyUniversalFacadeMigration(root);
   const frozen = workflowMetricsAtRevision(root, migration.sourceRevision);
   const governed = { ...current, workflows: { ...current.workflows } };
+  for (const file of migration.postMigration) {
+    if (frozen[file] || !migration.paths.has(file))
+      throw new Error(`invalid post-migration workflow declaration ${file}`);
+    migration.paths.delete(file);
+  }
   for (const file of migration.paths) {
     if (!frozen[file])
       throw new Error(`frozen universal facade source is missing ${file}`);

@@ -42,7 +42,8 @@
       ".github/workflows/stable-candidate-patrol.yml",
       ".github/workflows/self-release-rehearsal-dogfood.yml",
       ".github/workflows/self-release-tail-dogfood.yml",
-      ".github/workflows/self-release-next-development.yml"
+      ".github/workflows/self-release-next-development.yml",
+      ".github/workflows/public-release-oci-compose-preview.yml"
     ],
     "unknownTopologyPolicy": "fail-closed"
   },
@@ -59,7 +60,8 @@
       "npm dry-run",
       "v3 rollback workflows",
       "retired compatibility workflows",
-      "Post-publication protected development review: no package, tag or Release mutation; independently inventoried in closedWorld and privilegedExecutableClosure."
+      "Post-publication protected development review: no package, tag or Release mutation; independently inventoried in closedWorld and privilegedExecutableClosure.",
+      "Post-publication OCI Compose preview activation is measured separately in postPublicationScope; it consumes completed publication and qualification, copies one manifest to the sealed alias, and cannot materialize versions or release refs."
     ]
   },
   "authorityClosure": {
@@ -74,6 +76,7 @@
       "actions/v4-release-candidate-promote/product-provider.js",
       "packages/core/buildchain-agent-manuals.js",
       "packages/core/index.js",
+      "packages/core/oci-compose-qualification.js",
       "packages/core/publication-rehearsal-runtime.js",
       "packages/core/release-tail-provider-adapters.js",
       "packages/core/release-tail-provider-plane.js",
@@ -125,6 +128,7 @@
         "actions/v4-release-candidate-promote/index.js",
         "scripts/binary-publication-evidence.mjs",
         "scripts/next-development-review.mjs",
+        "scripts/oci-compose-preview.mjs",
         "scripts/v4-publication-settlement.mjs"
       ],
       "modules": [
@@ -135,6 +139,7 @@
         "actions/v4-release-candidate-promote/index.js",
         "actions/v4-release-candidate-promote/next-development-queue.js",
         "actions/v4-release-candidate-promote/oci-provider.js",
+        "actions/v4-release-candidate-promote/oci-registry-client.js",
         "actions/v4-release-candidate-promote/product-provider-adapters.js",
         "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
         "actions/v4-release-candidate-promote/product-provider.js",
@@ -160,7 +165,9 @@
         "packages/core/kfd-product-gates.js",
         "packages/core/kungfu-temporal-fact.js",
         "packages/core/next-development-transition.js",
+        "packages/core/oci-compose-qualification.js",
         "packages/core/oci-publication-bundle.js",
+        "packages/core/oci-publication-graph.js",
         "packages/core/package-manager.js",
         "packages/core/public-surface-audit.js",
         "packages/core/public-surface-cli.js",
@@ -194,11 +201,12 @@
         "scripts/binary-publication-evidence.mjs",
         "scripts/ensure-github-release.mjs",
         "scripts/next-development-review.mjs",
+        "scripts/oci-compose-preview.mjs",
         "scripts/release-asset-client.mjs",
         "scripts/v4-publication-settlement.mjs",
         "scripts/verify-version-state-delta.mjs"
       ],
-      "root": "sha256:ff8e127e7d500937702faa810933551a07ef4f0004187108b474c00f07d6d3df"
+      "root": "sha256:d2273ef843f1b186102ae6e6a1c2046483eafa25760c5e58f8d6f4e10827f161"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/v4-domain-wasm.js",
@@ -337,11 +345,11 @@
       }
     ],
     "metrics": {
-      "workflowCount": 34,
-      "jobCount": 90,
+      "workflowCount": 35,
+      "jobCount": 91,
       "reusableEdgeCount": 23,
-      "mutationRelevantNodeCount": 75,
-      "contentsWriteJobCount": 13,
+      "mutationRelevantNodeCount": 76,
+      "contentsWriteJobCount": 14,
       "oidcWriteJobCount": 15
     },
     "semanticMetrics": {
@@ -349,6 +357,47 @@
       "mutationRelevantNodeCount": 8,
       "contentsWriteJobCount": 1,
       "oidcWriteJobCount": 1
+    }
+  },
+  "postPublicationScope": {
+    "workflowPaths": [
+      ".github/workflows/public-release-oci-compose-preview.yml"
+    ],
+    "authority": "exact-publication-plus-source-bound-qualification-and-expected-old-digest",
+    "observedTopology": {
+      "jobRecordFields": [
+        "id",
+        "kind",
+        "uses",
+        "contentsPermission",
+        "oidcPermission",
+        "carriers",
+        "mutationSignals"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/public-release-oci-compose-preview.yml",
+          "triggers": ["workflow_call"],
+          "jobs": [
+            "promote|runner|-|write|-|artifactDownload,artifactUpload,jobOutput|contents-write"
+          ],
+          "reusableEdges": []
+        }
+      ],
+      "metrics": {
+        "workflowCount": 1,
+        "jobCount": 1,
+        "reusableEdgeCount": 0,
+        "mutationRelevantNodeCount": 1,
+        "contentsWriteJobCount": 1,
+        "oidcWriteJobCount": 0
+      },
+      "semanticMetrics": {
+        "workflowCount": 1,
+        "mutationRelevantNodeCount": 1,
+        "contentsWriteJobCount": 1,
+        "oidcWriteJobCount": 0
+      }
     }
   }
 }

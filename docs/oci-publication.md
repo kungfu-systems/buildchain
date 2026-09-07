@@ -8,7 +8,7 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-07
 ai_provenance:
   model_family: GPT-6
   product: Codex
@@ -80,3 +80,77 @@ the caller should also include the family and smoke JSON files in
 
 See [Runtime Train Validation](runtime-train-validation.md) for testing an
 unreleased runtime without persisting a train or exact SHA in the workflow.
+
+## Multi-platform images and Compose applications
+
+Use `schema: kungfu-buildchain-oci-family/v2` when the family includes an OCI
+index or a Compose application. Existing v1 families keep their published
+single-platform contract.
+
+An index entry declares `platform: multi-platform` and the complete `platforms`
+array, for example `["linux/amd64", "linux/arm64"]`. Every runnable child must
+have matching platform and content labels. Descriptor sizes, digests and media
+types are verified recursively; nested manifests are uploaded before their
+parent index. BuildKit attestation manifests must identify a runnable child and
+contain matching in-toto subjects. Missing platforms, duplicate platforms,
+foreign URLs, inline descriptor data and broken blob references fail sealing.
+
+A Compose entry declares `kind: compose`, `platform: compose`, and `targetImage`
+pointing to an image in the same family. Its unique family name may differ from
+that image, but its destination repository must match it. The immutable tag is
+`compose-v<version>`; image entries retain `v<version>`.
+
+The bounded Compose representation is an OCI 1.1 image manifest with
+`artifactType: application/vnd.docker.compose.project`, an empty JSON config
+and one `application/vnd.docker.compose.file+yaml` layer. That layer contains
+JSON, a YAML subset, so structural verification needs no executable YAML loader.
+Every service image is pinned to a digest and at least one uses the exact
+family image. Environment interpolation inside other fields can remain intact.
+These media types follow the [Docker Compose publisher](https://github.com/docker/compose/blob/v5.1.2/internal/oci/push.go).
+
+Candidate smoke evidence describes its actual pre-publication checks. It must
+not claim that an unpublished public Compose reference was installed. Public
+installation qualification occurs after immutable publication and before a
+preview alias moves.
+
+## Evidence-gated Compose preview
+
+An optional Compose `preview` declaration contains exactly the supported alias
+`compose-preview`, the previously accepted `previousDigest` (or `none`), and
+`qualificationWorkflow`, a repository workflow path. The immutable family seals
+this policy before any publication effect.
+
+After v4 publication is complete, dispatch that qualification workflow on the
+exact published alpha tag. It must pull the immutable public image and Compose,
+run fresh installation, restart, account-isolation, runtime-hardening, upgrade
+and rollback checks, and qualify both Linux architectures. The workflow has no
+registry write authority. Upload one artifact named
+`oci-compose-qualification-<run-id>-<run-attempt>` containing `qualification.json`
+and its hash-bound JSON evidence files.
+
+The receipt uses `schema: kungfu-buildchain-compose-qualification/v1` and binds
+`repository`, `tag`, published `sourceSha`, sealed `familyRoot`, `runId`,
+`runAttempt`, exact `image` and `application` repository/digest references,
+`previousDigest`, and `passed: true`. Its `checks` object requires all of
+`freshInstall`, `restartPersistence`, `upgradePersistence`, `rollbackPersistence`,
+`accountIsolation`, and `hardenedRuntime` to be true. Its `platforms` object
+requires `linux/amd64` and `linux/arm64` entries with `passed: true`; `evidence`
+contains nonempty `{path, sha256}` bindings to the actual JSON results.
+
+A thin consumer workflow listens to completion of that qualification workflow
+and calls `public-release-oci-compose-preview.yml@v4-alpha`, passing
+`BUILDCHAIN_PROMOTION_TOKEN`. The reusable workflow resolves its own exact
+runtime, enforces the dual floating-channel locks, verifies the public v4
+settlement, family and provider readback roots, and checks the live GitHub run's
+repository, source, workflow, event, attempt and successful conclusion. It never
+executes the consumer's artifact files. Only then does it copy the exact Compose
+manifest bytes to the declared alias and verify the public digest.
+
+The expected-old digest is checked immediately before mutation. An already
+matching target is an idempotent success; any other drift blocks the move.
+Publishers for this alias share repository-level concurrency. GHCR has no atomic
+tag compare-and-swap, so external writers must also avoid racing this workflow.
+The immutable release retains the appended
+`buildchain-compose-preview-<run-id>-<run-attempt>.json` receipt. A failed
+qualification leaves the existing preview intact, while the immutable alpha
+and its original publication evidence remain available for diagnosis.

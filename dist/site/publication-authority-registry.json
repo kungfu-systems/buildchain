@@ -753,6 +753,21 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/public-release-oci-compose-preview.yml",
+      "authorityClass": "product-publication",
+      "publicationCapable": true,
+      "capabilityIds": [
+        "oci-compose-preview"
+      ],
+      "credentialMode": "caller-secrets",
+      "publisherWorkflowMode": "caller-bound",
+      "publisherWorkflowPath": ".github/workflows/public-release-oci-compose-preview.yml",
+      "environment": "none",
+      "environmentMode": "fixed",
+      "runnerPolicy": "qualified-measured",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/public-release-paper-sealed.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -1700,6 +1715,13 @@
       "classified": true
     },
     {
+      "path": ".github/workflows/public-release-oci-compose-preview.yml",
+      "signals": [
+        "write-permission"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/public-release-paper-sealed.yml",
       "signals": [
         "write-permission",
@@ -2009,5 +2031,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "9c343ae9f9e778b608317d973b02cada327bd31e5149482d7f385b173c20ec14"
+  "registryDigest": "e5eb0d7ee3cce4a25674909154f6bd0bf736d5b93df41c1d435c468aad50c32a"
 }

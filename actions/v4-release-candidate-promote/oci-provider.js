@@ -1,3 +1,4 @@
+import { createRegistryClient } from "./oci-registry-client.js";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -6,76 +7,16 @@ import {
   ociBundleFile,
   verifyOciPublicationBundle,
 } from "../../packages/core/oci-publication-bundle.js";
+import { ociPublicationTag } from "../../packages/core/oci-publication-graph.js";
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
 
 const accept =
-  "application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json";
+  "application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json";
 function fault(code, kind = "conflict") {
   return Object.assign(new Error(`OCI publication: ${code}`), {
     releaseTailClass: kind,
     releaseTailCode: code,
   });
-}
-
-function createRegistryClient(token, fetchImpl, actor) {
-  const credentials = new Map();
-  async function credential(repository, write) {
-    const key = `${repository}:${write}`;
-    if (credentials.has(key)) return credentials.get(key);
-    if (write && (!token || !actor))
-      throw fault("missing-registry-write-identity");
-    const url = new URL("https://ghcr.io/token");
-    url.searchParams.set("service", "ghcr.io");
-    url.searchParams.set(
-      "scope",
-      `repository:${repository}:${write ? "pull,push" : "pull"}`,
-    );
-    const headers = write
-      ? {
-          authorization: `Basic ${Buffer.from(`${actor}:${token}`).toString("base64")}`,
-        }
-      : {};
-    const response = await send(url, { headers });
-    if (!response.ok) throw fault("registry-token-unavailable", "transient");
-    const value = (await response.json()).token;
-    if (typeof value !== "string" || !value)
-      throw fault("registry-token-invalid");
-    credentials.set(key, value);
-    return value;
-  }
-  async function send(url, options = {}) {
-    const target = new URL(url);
-    if (
-      target.protocol !== "https:" ||
-      target.host !== "ghcr.io" ||
-      target.username ||
-      target.password
-    )
-      throw fault("unsafe-registry-endpoint");
-    try {
-      return await fetchImpl(target, {
-        ...options,
-        redirect: "manual",
-        signal: AbortSignal.timeout(300_000),
-      });
-    } catch {
-      throw fault("registry-transport-uncertain", "transient");
-    }
-  }
-  async function registry(
-    image,
-    suffix,
-    { write = false, method = "GET", body, headers = {} } = {},
-  ) {
-    const repository = image.repository.slice("ghcr.io/".length);
-    const auth = await credential(repository, write);
-    return send(`https://ghcr.io/v2/${repository}/${suffix}`, {
-      method,
-      headers: { ...headers, authorization: `Bearer ${auth}` },
-      ...(body ? { body, duplex: "half" } : {}),
-    });
-  }
-  return { registry, send, credential };
 }
 
 function verifiedProviderBundle(request, intent) {
@@ -116,8 +57,13 @@ export function createOciPublicationAdapter({
     fetchImpl,
     request.actor,
   );
-  async function observedImage(image, write) {
-    const response = await registry(image, `manifests/${intent.exactTag}`, {
+  async function observedImage(
+    image,
+    write,
+    ref = ociPublicationTag(image, intent.version),
+    expected = image.digest,
+  ) {
+    const response = await registry(image, `manifests/${ref}`, {
       write,
       headers: { accept },
     });
@@ -126,7 +72,7 @@ export function createOciPublicationAdapter({
     const bytes = Buffer.from(await response.arrayBuffer());
     const digest = `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
     if (
-      digest !== image.digest ||
+      digest !== expected ||
       (response.headers.get("docker-content-digest") || digest) !== digest
     )
       throw fault("immutable-image-tag-conflict");
@@ -147,9 +93,8 @@ export function createOciPublicationAdapter({
         bundle.bundleRoot,
         `${image.layout}/blobs/sha256/${digest.slice(7)}`,
       );
-    const bytes = fs.readFileSync(digestPath(image.digest));
-    const document = JSON.parse(bytes);
-    for (const blob of [document.config, ...document.layers]) {
+    const graph = bundle.graphs.get(image.name);
+    for (const blob of graph.blobs) {
       const exists = await registry(image, `blobs/${blob.digest}`, {
         write: true,
         method: "HEAD",
@@ -168,7 +113,11 @@ export function createOciPublicationAdapter({
         "https://ghcr.io",
       );
       const repository = image.repository.slice("ghcr.io/".length);
-      if (location.pathname.match(/^\/v2\/(.+)\/blobs\/uploads?\/[^/]+$/u)?.[1] !== repository)
+      if (
+        location.pathname.match(
+          /^\/v2\/(.+)\/blobs\/uploads?\/[^/]+$/u,
+        )?.[1] !== repository
+      )
         throw fault("unsafe-registry-upload-location");
       if (
         location.protocol !== "https:" ||
@@ -199,19 +148,26 @@ export function createOciPublicationAdapter({
       if (response.status !== 201)
         throw fault("registry-upload-uncertain", "transient");
     }
-    // Recheck immediately before the immutable tag write; no existing tag is replaced.
-    if (await observedImage(image, true)) return;
-    const result = await registry(image, `manifests/${intent.exactTag}`, {
-      write: true,
-      method: "PUT",
-      body: bytes,
-      headers: {
-        "content-type": document.mediaType,
-        "content-length": String(bytes.length),
-      },
-    });
-    if (result.status !== 201)
-      throw fault("registry-manifest-write-uncertain", "transient");
+    for (const descriptor of graph.manifests) {
+      const ref =
+        descriptor.digest === image.digest
+          ? ociPublicationTag(image, intent.version)
+          : descriptor.digest;
+      // Recheck immediately before each content-addressed or immutable tag write.
+      if (await observedImage(image, true, ref, descriptor.digest)) continue;
+      const bytes = fs.readFileSync(digestPath(descriptor.digest));
+      const result = await registry(image, `manifests/${ref}`, {
+        write: true,
+        method: "PUT",
+        body: bytes,
+        headers: {
+          "content-type": descriptor.mediaType,
+          "content-length": String(bytes.length),
+        },
+      });
+      if (result.status !== 201)
+        throw fault("registry-manifest-write-uncertain", "transient");
+    }
   }
   async function readback(effect) {
     bind(effect);
@@ -222,29 +178,16 @@ export function createOciPublicationAdapter({
           providerCode: "oci-family-incomplete",
           evidenceRoots: [],
         };
-      if (!(await observedImage(image, false)))
-        throw fault("image-not-anonymously-readable", "transient");
+      for (const descriptor of bundle.graphs.get(image.name).manifests) {
+        const ref =
+          descriptor.digest === image.digest
+            ? ociPublicationTag(image, intent.version)
+            : descriptor.digest;
+        if (!(await observedImage(image, false, ref, descriptor.digest)))
+          throw fault("image-not-anonymously-readable", "transient");
+      }
     }
-    const evidence = {
-      schema: "kungfu-buildchain-oci-publication-readback/v1",
-      familyRoot: bundle.root,
-      sourceSha: intent.sourceSha,
-      candidateSourceSha: manifest.sourceSha,
-      version: intent.version,
-      images: manifest.images.map((image) => ({
-        name: image.name,
-        repository: image.repository,
-        digest: image.digest,
-        platform: image.platform,
-        action: image.action,
-        content: image.content,
-        contractMajor: image.contractMajor ?? null,
-        parentDigest: image.parentDigest ?? null,
-        ref: intent.exactTag,
-        anonymous: true,
-        smoke: image.smoke,
-      })),
-    };
+    const evidence = publicationReadback(manifest, bundle, intent);
     fs.mkdirSync(evidenceDirectory, { recursive: true });
     fs.writeFileSync(
       path.join(evidenceDirectory, "oci-publication-readback.json"),
@@ -270,5 +213,29 @@ export function createOciPublicationAdapter({
         if (!present[index]) await upload(image);
       return readback(effect);
     },
+  };
+}
+
+function publicationReadback(manifest, bundle, intent) {
+  return {
+    schema: "kungfu-buildchain-oci-publication-readback/v1",
+    familyRoot: bundle.root,
+    sourceSha: intent.sourceSha,
+    candidateSourceSha: manifest.sourceSha,
+    version: intent.version,
+    images: manifest.images.map((image) => ({
+      name: image.name,
+      repository: image.repository,
+      digest: image.digest,
+      platform: image.platform,
+      action: image.action,
+      content: image.content,
+      contractMajor: image.contractMajor ?? null,
+      parentDigest: image.parentDigest ?? null,
+      ref: ociPublicationTag(image, intent.version),
+      ...(image.platforms ? { platforms: image.platforms } : {}),
+      anonymous: true,
+      smoke: image.smoke,
+    })),
   };
 }

@@ -1370,6 +1370,17 @@
       },
       "compatibility": null,
       "rationale": "Classify the existing .github/workflows/verify.yml capability without adding execution behavior."
+    },
+    {
+      "id": "oci-compose-preview",
+      "role": "public",
+      "category": "release",
+      "purpose": "oci-compose-preview",
+      "summary": "Buildchain OCI Compose Preview",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "reusable",
+      "rationale": "Promote one digest-preserving Compose preview only after verified public v4 publication and exact-source installation qualification."
     }
   ],
   "migrationSources": {
