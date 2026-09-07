@@ -47,7 +47,8 @@ export function parseVersionStateRef(ref) {
 
 export function parseReleaseLineRecoveryRef(ref) {
   const normalizedRef = normalizeRef(ref);
-  const match = normalizedRef.match(/^fix\/(alpha|release)-line-v(\d+)-v(\d+\.\d+)-[0-9A-Za-z._-]+$/);
+  const match = normalizedRef.match(/^fix\/(alpha|release)-line-v(\d+)-v(\d+\.\d+)-[0-9A-Za-z._-]+$/)
+    || normalizedRef.match(/^chore\/v4-product-pr\/(alpha|release)-v(\d+)-v(\d+\.\d+)\/[0-9a-f]{12}-[0-9a-f]{12}-[0-9a-f]{12}$/);
   if (!match) return undefined;
   return {
     channel: match[1],
@@ -56,7 +57,6 @@ export function parseReleaseLineRecoveryRef(ref) {
     normalizedRef: `${match[1]}/v${match[2]}/v${match[3]}`,
   };
 }
-
 function getRecoveryBumpKeyword({ target, baseRef, baseChannel, version, looseVersionNumber, headRef }) {
   if (!target) return "";
   if (baseChannel !== target.channel || target.normalizedRef !== normalizeRef(baseRef)) {

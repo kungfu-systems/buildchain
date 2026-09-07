@@ -132,6 +132,7 @@ jobs:
 
   passport:
     name: Collect release passport
+    timeout-minutes: 45
     needs: [preflight, binary]
     runs-on: ubuntu-24.04
     permissions:
@@ -294,6 +295,7 @@ jobs:
             args+=(
               --release-evidence-json .buildchain/publication-evidence/buildchain-publication-settlement.json
               --release-extra-json .buildchain/publication-evidence/release.json
+              --package-version "$(node -p 'require("./.buildchain/publication-evidence/release.json").publishedVersion')"
             )
           fi
           node bin/buildchain.mjs span \

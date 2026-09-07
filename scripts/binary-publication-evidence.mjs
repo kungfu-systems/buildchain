@@ -2,10 +2,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import {
-  SETTLEMENT_ASSET,
-  verifyPublicationSettlement,
-} from "./publication-settlement.mjs";
+import { SETTLEMENT_ASSET, verifyPublicationSettlement } from "./publication-settlement.mjs";
 import { releaseAssetClient } from "./release-asset-client.mjs";
 
 export async function readBinaryPublicationEvidence({
@@ -13,7 +10,8 @@ export async function readBinaryPublicationEvidence({
   repository,
   tag,
   sourceSha,
-  attempts = 40,
+  // Protected finalization includes PR verification, review and merge queue.
+  attempts = 160,
   wait = () => new Promise((resolve) => setTimeout(resolve, 15000)),
 }) {
   for (let attempt = 0; attempt < attempts; attempt++) {
@@ -54,9 +52,7 @@ export async function readBinaryPublicationEvidence({
     }
     if (attempt + 1 < attempts) await wait();
   }
-  throw new Error(
-    "completed v4 publication evidence is not available within the bounded wait",
-  );
+  throw new Error("completed v4 publication evidence is not available within the bounded wait");
 }
 
 export function prepareBinaryAssetPaths({
@@ -94,22 +90,24 @@ export function prepareBinaryAssetPaths({
   return files;
 }
 
+export async function writeBinaryPublicationEvidence(options) {
+  const settlement = await readBinaryPublicationEvidence(options);
+  const directory = ".buildchain/publication-evidence";
+  options.client.write(`${directory}/${SETTLEMENT_ASSET}`, settlement);
+  const release = settlement.documents.passport.release;
+  options.client.write(`${directory}/release.json`, {
+    channel: release.channel,
+    publishedVersion: release.version,
+    versionLabel: release.version,
+  });
+}
+
 async function main(mode) {
   const repository = process.env.GITHUB_REPOSITORY;
   const tag = process.env.RELEASE_TAG;
   const client = releaseAssetClient(repository);
   if (mode === "read") {
-    const settlement = await readBinaryPublicationEvidence({
-      client,
-      repository,
-      tag,
-      sourceSha: process.env.SOURCE_SHA,
-    });
-    const directory = ".buildchain/publication-evidence";
-    client.write(`${directory}/${SETTLEMENT_ASSET}`, settlement);
-    client.write(`${directory}/release.json`, {
-      channel: settlement.release.channel,
-    });
+    await writeBinaryPublicationEvidence({ client, repository, tag, sourceSha: process.env.SOURCE_SHA });
   } else if (mode === "publish") {
     const release = client.release(tag);
     const files = prepareBinaryAssetPaths({
