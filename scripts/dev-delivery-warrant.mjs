@@ -17,7 +17,7 @@ import {
 } from "../packages/core/dev-delivery-warrant.js";
 import { recoverLegacyTerminalDevDeliveryQueue } from "../packages/core/dev-delivery-warrant-legacy-recovery.js";
 import { reuseExactActiveDevDeliverySourceProof } from "../packages/core/dev-delivery-candidate-identity.js";
-import { runV4DeliveryWarrantReadCandidate } from "../packages/core/v4-delivery-warrant-read-candidate.js";
+import { runDeliveryWarrantReadCandidate } from "../packages/core/delivery-warrant-read-candidate.js";
 
 import { GitHubDevDeliveryStore } from "./dev-delivery-warrant-store.mjs";
 import { persistDevDeliveryTransition } from "./dev-delivery-warrant-transition.mjs";
@@ -363,7 +363,7 @@ async function observeQueue(loaded, options) {
     throw new Error("readMode must be v3 or v4");
   let observation = observeDevDeliveryQueue(loaded.queue, {
     now: options.now,
-    allowLegacyV3Readback: true,
+    allowLegacyBaselineReadback: true,
   });
   let readCandidate;
   if (readMode === "v4") {
@@ -384,7 +384,7 @@ async function observeQueue(loaded, options) {
         );
         return { receiptRoot: evidence.evidenceRoot };
       });
-    readCandidate = await runV4DeliveryWarrantReadCandidate(loaded.queue, {
+    readCandidate = await runDeliveryWarrantReadCandidate(loaded.queue, {
       qualification,
       expectedQualificationRoot: options.readQualificationRoot,
       expectedSources: {
@@ -444,7 +444,7 @@ export async function runDevDeliveryCommand(optionsInput = {}, clientInput) {
     stateRef: options.stateRef,
     protectedBase: options.branch,
     now: options.now,
-    allowLegacyV3Readback: ["observe", "recover-legacy-terminal"].includes(
+    allowLegacyBaselineReadback: ["observe", "recover-legacy-terminal"].includes(
       options.command,
     ),
   });

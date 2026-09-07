@@ -119,7 +119,7 @@ test("read-only v3 compatibility accepts provisional and exact qualified native 
     /live native candidate requires exact native proof/u,
   );
   assert.equal(
-    normalizeDevDeliveryQueue(provisional, { allowLegacyV3Readback: true }).stateRoot,
+    normalizeDevDeliveryQueue(provisional, { allowLegacyBaselineReadback: true }).stateRoot,
     provisional.stateRoot,
   );
 
@@ -146,7 +146,7 @@ test("read-only v3 compatibility accepts provisional and exact qualified native 
   assert.deepEqual(
     observeDevDeliveryQueue(legacy, {
       now: "2026-08-04T00:05:01Z",
-      allowLegacyV3Readback: true,
+      allowLegacyBaselineReadback: true,
     }).queued,
     [],
   );
@@ -156,16 +156,16 @@ test("read-only v3 compatibility accepts provisional and exact qualified native 
   delete missingProof.stateRoot;
   missingProof.stateRoot = devDeliveryContentRoot(missingProof);
   assert.throws(
-    () => normalizeDevDeliveryQueue(missingProof, { allowLegacyV3Readback: true }),
+    () => normalizeDevDeliveryQueue(missingProof, { allowLegacyBaselineReadback: true }),
     /Warrant nativeProofRoot/u,
   );
 
-  const partialV4 = structuredClone(legacy);
-  partialV4.activeWarrant.nativeExecutionReceiptRoot = ROOTS.context;
-  delete partialV4.stateRoot;
-  partialV4.stateRoot = devDeliveryContentRoot(partialV4);
+  const partialCurrent = structuredClone(legacy);
+  partialCurrent.activeWarrant.nativeExecutionReceiptRoot = ROOTS.context;
+  delete partialCurrent.stateRoot;
+  partialCurrent.stateRoot = devDeliveryContentRoot(partialCurrent);
   assert.throws(
-    () => normalizeDevDeliveryQueue(partialV4, { allowLegacyV3Readback: true }),
+    () => normalizeDevDeliveryQueue(partialCurrent, { allowLegacyBaselineReadback: true }),
     /live native candidate requires exact native proof/u,
   );
 });

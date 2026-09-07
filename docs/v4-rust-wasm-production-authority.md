@@ -19,16 +19,16 @@ ai_provenance:
 # Buildchain v4 Rust/WASM production authority
 
 Buildchain v4 的确定性发布语义由
-`crates/buildchain-v4-contracts` 编译出的同一份 WebAssembly artifact 执行。Node
+`crates/buildchain-domain-contracts` 编译出的同一份 WebAssembly artifact 执行。Node
 仍是 GitHub Action 和 npm 包的宿主，但只负责 provider SDK、文件系统、凭据、环境变量及
 workflow 输入输出等副作用边界。权威契约见
-`architecture/v4-rust-wasm-production-authority.json`。
+`architecture/rust-wasm-production-authority.json`。
 
 ## 分发与调用
 
-`packages/core/buildchain-v4-domain.wasm` 与 JavaScript 一起提交和发布。三个生产 Action
+`packages/core/buildchain-domain.wasm` 与 JavaScript 一起提交和发布。三个生产 Action
 在构建时把完全相同的字节复制到各自 `dist/`；运行时不进入调用方仓库寻找 Rust
-源码，也不要求安装 Rust。`packages/core/v4-domain-wasm.js` 从自身相邻路径同步读取
+源码，也不要求安装 Rust。`packages/core/domain-wasm.js` 从自身相邻路径同步读取
 artifact，先核验生成元数据中的 SHA-256，再实例化 WebAssembly 并通过封闭 JSON/bytes
 ABI 调用领域操作。
 
@@ -38,9 +38,9 @@ ABI 调用领域操作。
 
 ## 构建和审计
 
-`pnpm run build:v4-wasm` 使用锁定的 Rust 工具链和 `wasm32-unknown-unknown` target 生成
+`pnpm run build:wasm` 使用锁定的 Rust 工具链和 `wasm32-unknown-unknown` target 生成
 artifact 与绑定元数据，并把 Cargo 依赖源目录映射到稳定的虚拟路径，禁止主机 Cargo
-registry 路径进入 artifact。`pnpm run check:v4-wasm` 在干净临时 target 目录重新构建并逐字节
+registry 路径进入 artifact。`pnpm run check:wasm` 在干净临时 target 目录重新构建并逐字节
 比较已跟踪 artifact。这个检查不是生产运行时的重复编译：生产只加载已提交字节；检查
 用于证明这些字节仍能由当前 Rust 真相源和锁定工具链唯一导出，从而阻止源码、二进制或
 生成元数据静默漂移。

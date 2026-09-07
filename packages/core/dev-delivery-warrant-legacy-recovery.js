@@ -140,7 +140,7 @@ export function recoverLegacyTerminalDevDeliveryQueue(
     );
   }
   const before = normalizeDevDeliveryQueue(queueInput, {
-    allowLegacyV3Readback: true,
+    allowLegacyBaselineReadback: true,
   });
   const expectedOldStateRoot = exactRoot(
     request.expectedOldStateRoot,

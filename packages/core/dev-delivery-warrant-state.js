@@ -279,7 +279,8 @@ function normalizeCandidate(input, expected) {
   }
   if (
     lacksLiveNativeProof(candidate, status, {
-      allowLegacyV3Readback: expected.allowLegacyV3Readback,
+      allowLegacyBaselineReadback:
+        expected.allowLegacyBaselineReadback ?? expected.allowLegacyV3Readback,
       allowLegacyQueuedReadback: expected.allowLegacyQueuedNativeReadback,
     })
   )
@@ -358,12 +359,12 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
   const hasExecutionReceipt = !!queue.activeWarrant?.nativeExecutionReceiptRoot;
   const hasQualificationReceipt =
     !!queue.activeWarrant?.qualificationReceiptRoot;
-  const allowLegacyV3Readback =
-    expected.allowLegacyV3Readback === true &&
-    hasExecutionReceipt === hasQualificationReceipt;
+  const allowLegacyBaselineReadback =
+    (expected.allowLegacyBaselineReadback ?? expected.allowLegacyV3Readback) ===
+      true && hasExecutionReceipt === hasQualificationReceipt;
   const candidateExpected = {
     ...queue,
-    allowLegacyV3Readback,
+    allowLegacyBaselineReadback,
     allowLegacyQueuedNativeReadback: true,
   };
   queue.candidates = (queue.candidates || []).map((candidate) =>
@@ -372,7 +373,7 @@ export function normalizeDevDeliveryQueue(input, expected = {}) {
   validateDevDeliveryCandidateChain(queue.candidates, TERMINAL_STATES);
   queue.updatedAt = timestamp(queue.updatedAt, "queue updatedAt");
   if (queue.activeWarrant) {
-    validateActiveDevDeliveryWarrant(queue, { allowLegacyV3Readback });
+    validateActiveDevDeliveryWarrant(queue, { allowLegacyBaselineReadback });
   } else if (
     queue.candidates.some((candidate) =>
       ["selected", "proving", "waiting", "blocked", "qualified"].includes(
@@ -571,12 +572,11 @@ function effectivePriority(candidate, policy, now) {
     releaseBlocker: Boolean(candidate.releaseBlockerPriority),
   };
 }
-export function rankDevDeliveryCandidates(
-  queueInput,
-  { now = new Date().toISOString(), allowLegacyV3Readback = false } = {},
-) {
+export function rankDevDeliveryCandidates(queueInput, options = {}) {
+  const { now = new Date().toISOString() } = options;
   const queue = normalizeDevDeliveryQueue(queueInput, {
-    allowLegacyV3Readback,
+    allowLegacyBaselineReadback:
+      options.allowLegacyBaselineReadback ?? options.allowLegacyV3Readback,
   });
   const currentTime = timestamp(now, "now");
   return queue.candidates

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { invokeV4DomainWasm } from "../packages/core/v4-domain-wasm.js";
+import { invokeDomainWasm } from "../packages/core/domain-wasm.js";
 
 const execute = (command, args, options = {}) =>
   execFileSync(command, args, {
@@ -16,6 +16,7 @@ const execute = (command, args, options = {}) =>
 export function verifyVersionStateDelta({
   baseSha,
   headSha,
+  completedStableVersion,
   cwd = process.cwd(),
   nodeModules = path.resolve("node_modules"),
 }) {
@@ -74,9 +75,10 @@ export function verifyVersionStateDelta({
         );
     }
     const version = JSON.parse(bytes(headSha, "package.json")).version;
-    invokeV4DomainWasm("source-version-projection", {
+    invokeDomainWasm("source-version-projection", {
       baseVersion: JSON.parse(bytes(baseSha, "package.json")).version,
       version,
+      ...(completedStableVersion ? { completedStableVersion } : {}),
     });
     const metadata = JSON.parse(bytes(headSha, "dist/site/site-manifest.json"));
     if (

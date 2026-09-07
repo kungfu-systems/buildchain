@@ -172,7 +172,7 @@ jobs:
         with:
           repository: kungfu-systems/buildchain
           ref: ${{ steps.runtime.outputs.sha }}
-          path: .buildchain/v4-policy-runtime
+          path: .buildchain/policy-runtime
           persist-credentials: false
       - name: Enforce v4 floating consumer policy
         id: policy
@@ -184,9 +184,9 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
           BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
-          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-adopter-delivery-policy-receipt.json
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/adopter-delivery-policy-receipt.json
         run: >-
-          node .buildchain/v4-policy-runtime/scripts/v4-consumer-policy.mjs scan
+          node .buildchain/policy-runtime/scripts/consumer-policy.mjs scan
           --repository "${{ inputs['consumer-repository'] || github.repository }}"
           --source-sha "${{ steps.consumer-source.outputs.sha }}"
       - name: Upload rooted consumer admission receipt
@@ -250,30 +250,30 @@ jobs:
         with:
           repository: kungfu-systems/buildchain
           ref: ${{ steps.runtime.outputs.sha }}
-          path: .buildchain/v4-runtime
+          path: .buildchain/runtime
           persist-credentials: false
       - name: Verify exact runtime binding
-        run: test "$(git -C .buildchain/v4-runtime rev-parse HEAD)" = "${{ steps.runtime.outputs.sha }}"
+        run: test "$(git -C .buildchain/runtime rev-parse HEAD)" = "${{ steps.runtime.outputs.sha }}"
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: ${{ inputs.node-version }}
       - name: Bootstrap exact public runtime dependencies
         run: |
           corepack prepare pnpm@11.7.0 --activate
-          corepack pnpm@11.7.0 install --dir .buildchain/v4-runtime --prod --frozen-lockfile --ignore-scripts
+          corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
       - name: Run public driver conformance and exact readback
         run: |
           mkdir -p .buildchain/adopter-delivery
-          node .buildchain/v4-runtime/bin/buildchain.mjs adopter-delivery run \
+          node .buildchain/runtime/bin/buildchain.mjs adopter-delivery run \
             --input "${{ inputs.input-path }}" \
             --output .buildchain/adopter-delivery/readback.json
-          node .buildchain/v4-runtime/bin/buildchain.mjs adopter-delivery verify \
+          node .buildchain/runtime/bin/buildchain.mjs adopter-delivery verify \
             --input "${{ inputs.input-path }}" \
             --readback .buildchain/adopter-delivery/readback.json \
             --output .buildchain/adopter-delivery/verified.json
       - name: Verify exact v3 N-1 bootstrap lineage
         run: >-
-          node .buildchain/v4-runtime/bin/buildchain.mjs adopter-delivery bootstrap
+          node .buildchain/runtime/bin/buildchain.mjs adopter-delivery bootstrap
           --input "${{ inputs.bootstrap-path }}"
           --output .buildchain/adopter-delivery/bootstrap.json
       - name: Fetch exact published N-1 archives
@@ -283,13 +283,13 @@ jobs:
           npm pack @kungfu-tech/kfd@1.0.0-alpha.65 --pack-destination .buildchain/adopter-delivery-archives --ignore-scripts
       - name: Load and verify published archive authority
         run: >-
-          node .buildchain/v4-runtime/bin/buildchain.mjs adopter-delivery archive
+          node .buildchain/runtime/bin/buildchain.mjs adopter-delivery archive
           --input "${{ inputs.archive-path }}"
           --output .buildchain/adopter-delivery/archive.json
       - name: Exercise failure, retry, terminal and protocol-neutral qualification
         run: >-
-          node .buildchain/v4-runtime/scripts/v4-cross-platform-adopter-qualification.mjs run
-          --runtime-root .buildchain/v4-runtime
+          node .buildchain/runtime/scripts/cross-platform-adopter-qualification.mjs run
+          --runtime-root .buildchain/runtime
           --consumer-root .
           --platform "${{ matrix.platform }}"
           --consumer "${{ inputs.consumer }}"
@@ -328,7 +328,7 @@ jobs:
         with:
           repository: kungfu-systems/buildchain
           ref: ${{ steps.runtime.outputs.sha }}
-          path: .buildchain/v4-runtime
+          path: .buildchain/runtime
           persist-credentials: false
       - name: Download raw platform reports
         uses: actions/download-artifact@v7.0.0
@@ -338,7 +338,7 @@ jobs:
       - name: Require one exact report from every platform
         shell: bash
         run: >-
-          node .buildchain/v4-runtime/scripts/v4-cross-platform-adopter-qualification.mjs aggregate
+          node .buildchain/runtime/scripts/cross-platform-adopter-qualification.mjs aggregate
           --reports-root .buildchain/platform-reports
           --consumer "${{ inputs.consumer }}"
           --output .buildchain/adopter-delivery-qualification.json

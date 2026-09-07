@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { v4ContentRoot } from "./v4-canonical-contracts.js";
+import { domainContentRoot } from "./canonical-contracts.js";
 import {
   verifyOciGraph,
   verifyOciDestination,
@@ -14,7 +14,7 @@ const namePattern = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/u;
 export function sealOciPublicationBundle({ bundleRoot, body }) {
   const manifest = {
     ...body,
-    root: v4ContentRoot("oci-publication-family", body),
+    root: domainContentRoot("oci-publication-family", body),
   };
   verifyOciPublicationBundle({
     bundleRoot,
@@ -129,7 +129,7 @@ export function verifyOciPublicationBundle({
     "unsupported manifest schema",
   );
   const { root, ...body } = manifest;
-  const computed = v4ContentRoot("oci-publication-family", body);
+  const computed = domainContentRoot("oci-publication-family", body);
   requireValue(root === computed, "manifest root mismatch");
   requireValue(
     manifest.repository === repository &&

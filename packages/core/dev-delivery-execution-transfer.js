@@ -37,10 +37,10 @@ const FAILURE_FILES = [
   "warrant.json",
 ];
 
-const V4_RUNTIME_SELECTOR =
+const DOMAIN_RUNTIME_SELECTOR =
   /^(?:[0-9a-f]{40}|v4|v4-alpha|train\/v4\/v4\.0\/[a-z0-9][a-z0-9._-]*)$/u;
 
-const V4_RUNTIME_SELECTOR_DESCRIPTION =
+const RUNTIME_SELECTOR_DESCRIPTION =
   "runtime selector must be an exact immutable SHA, v4, v4-alpha, or train/v4/v4.0/<capability>";
 
 function requiredFiles(outcome) {
@@ -165,8 +165,8 @@ function runtimeBinding(input = {}) {
     resolvedSha: exactSha(input.resolvedSha, "resolved runtime SHA"),
     selectionRoot: exactRoot(input.selectionRoot, "runtime selection root"),
   };
-  if (!V4_RUNTIME_SELECTOR.test(runtime.selector)) {
-    throw new Error(V4_RUNTIME_SELECTOR_DESCRIPTION);
+  if (!DOMAIN_RUNTIME_SELECTOR.test(runtime.selector)) {
+    throw new Error(RUNTIME_SELECTOR_DESCRIPTION);
   }
   return runtime;
 }
@@ -207,8 +207,8 @@ function verifiedRuntimeSelection(directory, expected = {}) {
   if (JSON.stringify(selection) !== JSON.stringify(normalized)) {
     throw new Error("runtime selection is not exact canonical content");
   }
-  if (!V4_RUNTIME_SELECTOR.test(normalized.selector)) {
-    throw new Error(V4_RUNTIME_SELECTOR_DESCRIPTION);
+  if (!DOMAIN_RUNTIME_SELECTOR.test(normalized.selector)) {
+    throw new Error(RUNTIME_SELECTOR_DESCRIPTION);
   }
   const selectionRoot = sha256Bytes(
     Buffer.from(`${JSON.stringify(normalized, null, 2)}\n`),

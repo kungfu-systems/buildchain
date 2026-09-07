@@ -11,7 +11,7 @@ test("post-migration workflows retain current metrics and cannot hide frozen wor
   fs.mkdirSync(path.join(root, "architecture"));
   fs.mkdirSync(path.join(root, "scripts"));
   fs.writeFileSync(
-    path.join(root, "scripts/generate-v4-universal-workflow-facades.mjs"),
+    path.join(root, "scripts/generate-universal-workflow-facades.mjs"),
     "// Fixture facade validation entry.\n",
   );
   const policy = {
@@ -23,7 +23,7 @@ test("post-migration workflows retain current metrics and cannot hide frozen wor
     },
   };
   fs.writeFileSync(
-    path.join(root, "architecture/v4-universal-workflow-bootstrap.json"),
+    path.join(root, "architecture/universal-workflow-bootstrap.json"),
     JSON.stringify(policy),
   );
   const current = { workflows: { old: { lines: 120 }, new: { lines: 90 } } };

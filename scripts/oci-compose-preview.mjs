@@ -3,13 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { verifyPublicationSettlement } from "./v4-publication-settlement.mjs";
+import { verifyPublicationSettlement } from "./publication-settlement.mjs";
 import {
   verifyComposePublication,
   verifyComposeQualification,
 } from "../packages/core/oci-compose-qualification.js";
 import { releaseTailRoot } from "../packages/core/release-tail-provider-plane.js";
-import { createRegistryClient } from "../actions/v4-release-candidate-promote/oci-registry-client.js";
+import { createRegistryClient } from "../actions/release-candidate-promote/oci-registry-client.js";
 import { ociPublicationTag } from "../packages/core/oci-publication-graph.js";
 
 const digest = (bytes) =>

@@ -6,9 +6,9 @@ import {
 } from "./publication-rehearsal-runtime.js";
 
 export const PUBLICATION_REHEARSAL_AGENT_SECTION_START =
-  "<!-- buildchain:publication-rehearsal:v4:start -->";
+  "<!-- buildchain:publication-rehearsal:start -->";
 export const PUBLICATION_REHEARSAL_AGENT_SECTION_END =
-  "<!-- buildchain:publication-rehearsal:v4:end -->";
+  "<!-- buildchain:publication-rehearsal:end -->";
 export const PUBLICATION_REHEARSAL_WORKFLOW_PATH =
   ".github/workflows/publication-rehearsal.yml";
 

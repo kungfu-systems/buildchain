@@ -3,9 +3,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { v4ContentRoot } from "../../packages/core/v4-canonical-contracts.js";
+import { domainContentRoot } from "../../packages/core/canonical-contracts.js";
 import { verifyOciPublicationBundle } from "../../packages/core/oci-publication-bundle.js";
-import { createOciPublicationAdapter } from "../../actions/v4-release-candidate-promote/oci-provider.js";
+import { createOciPublicationAdapter } from "../../actions/release-candidate-promote/oci-provider.js";
 
 export const hash = (bytes) =>
   `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
@@ -83,7 +83,7 @@ export function fixture(t) {
   };
   const manifest = {
     ...body,
-    root: v4ContentRoot("oci-publication-family", body),
+    root: domainContentRoot("oci-publication-family", body),
   };
   const manifestPath = path.join(directory, "oci-family.json");
   fs.writeFileSync(manifestPath, JSON.stringify(manifest));
@@ -308,7 +308,7 @@ export function compoundFixture(t, withAttestation = false) {
   f.manifest.schema = "kungfu-buildchain-oci-family/v2";
   f.reseal = () => {
     const { root, ...body } = f.manifest;
-    f.manifest.root = v4ContentRoot("oci-publication-family", body);
+    f.manifest.root = domainContentRoot("oci-publication-family", body);
     fs.writeFileSync(f.manifestPath, JSON.stringify(f.manifest));
     fs.writeFileSync(
       f.requiredArtifactsPath,

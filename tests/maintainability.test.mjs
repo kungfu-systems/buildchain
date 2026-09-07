@@ -140,7 +140,7 @@ test("an approved new-file transition requires an exact ceiling and rationale", 
 
 test("Rust domain sources participate in the repository source budget", () => {
   assert.equal(
-    isHandMaintainedSource("crates/buildchain-v4-bridge/src/main.rs"),
+    isHandMaintainedSource("crates/buildchain-host-bridge/src/main.rs"),
     true,
   );
   assert.equal(isHandMaintainedSource("tests/fixture.rs"), false);

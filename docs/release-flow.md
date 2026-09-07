@@ -352,7 +352,7 @@ before writing the transaction state as `complete`.
 
 | Evidence | Meaning and reuse boundary |
 | --- | --- |
-| Full source execution | `pnpm run check` runs source tests, Rust gates, policy checks and generated artifact checks. Each Node test file runs once; the focused `check:v4-contracts` command still includes its 22 contract test files. |
+| Full source execution | `pnpm run check` runs source tests, Rust gates, policy checks and generated artifact checks. Each Node test file runs once; the focused `check:contracts` command still includes its 22 contract test files. |
 | Merge queue proof | A successful full merge-group run seals its exact source SHA/tree, workflow, check definition, WASM runtime, toolchain versions, dependency locks, hosted image and platform. The proof expires after six hours and is verified against the completed GitHub run attempt and artifact archive digest. |
 | Push reuse | A Dev push may reuse that exact full execution. Its summary links the original run and proof; it does not claim to have rerun tests. Missing, failed, expired, ambiguous, tampered or unavailable evidence executes the full check. |
 | Version-state projection | Requires an authenticated full-source proof for the exact base and an ancestor-bound delta containing only declared version files and derived material. The base generator reconstructs every tracked byte, including derived digests. Any source, workflow, lock, configuration, file-mode or unexplained output change executes the full check. Projection results cannot issue a new full-source proof. |

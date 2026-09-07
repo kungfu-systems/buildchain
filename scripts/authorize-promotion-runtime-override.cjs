@@ -140,7 +140,7 @@ async function approvedRuntimeRefReadbacks({
       ref,
       sha: readback.sha,
       containsRuntimeSha,
-      readbackRoot: runtime.v4RuntimeResumeDocumentRoot({
+      readbackRoot: runtime.runtimeResumeDocumentRoot({
         provider: "github",
         repository: `${runtimeRepository.owner}/${runtimeRepository.repo}`,
         providerRef: readback.providerRef,
@@ -192,7 +192,7 @@ async function authorizePromotionRuntimeOverride({
     request.runtimeModulePath ||
       path.join(
         process.cwd(),
-        ".buildchain/router/packages/core/v4-runtime-ref-resume-authority.js",
+        ".buildchain/router/packages/core/runtime-ref-resume-authority.js",
       ),
   );
   const runtime = await import(pathToFileURL(runtimeModulePath).href);
@@ -200,7 +200,7 @@ async function authorizePromotionRuntimeOverride({
     fs.readFileSync(path.resolve(request.consumerPolicyReceiptPath), "utf8"),
   );
   const policyReceipt = policyDocument.receipt || policyDocument;
-  const persistenceScan = runtime.scanV4RuntimeSelectorPersistence({
+  const persistenceScan = runtime.scanRuntimeSelectorPersistence({
     root: consumerRoot,
     paths: trackedRuntimePersistencePaths(consumerRoot),
   });
@@ -226,7 +226,7 @@ async function authorizePromotionRuntimeOverride({
   )
     .trim()
     .toLowerCase();
-  const authorization = runtime.authorizeV4RuntimeSelection({
+  const authorization = runtime.authorizeRuntimeSelection({
     repository: `${context.repo.owner}/${context.repo.repo}`,
     eventName: context.eventName,
     mode: request.mode || "dispatch",

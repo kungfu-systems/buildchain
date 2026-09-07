@@ -66,7 +66,7 @@ test("release promotion workflow routes through the canonical invocation boundar
     workflow.indexOf("\n  settle:"),
   );
 
-  assert.match(apply, /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/);
+  assert.match(apply, /uses: \.\/\.buildchain\/runtime\/actions\/release-candidate-promote/);
   assert.match(
     apply,
     /publisher-workflow-sha: \$\{\{ needs\.qualify\.outputs\.publisher-sha \}\}/,

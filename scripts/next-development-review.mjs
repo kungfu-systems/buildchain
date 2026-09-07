@@ -1,3 +1,4 @@
+import { nextPatchDevelopmentVersion } from "../packages/core/publication-development.js";
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -5,14 +6,14 @@ import { pathToFileURL } from "node:url";
 import { verifyVersionStateDelta } from "./verify-version-state-delta.mjs";
 import { readBinaryPublicationEvidence } from "./binary-publication-evidence.mjs";
 import { releaseAssetClient } from "./release-asset-client.mjs";
-import { enqueueNextDevelopmentPullRequest } from "../actions/v4-release-candidate-promote/next-development-queue.js";
+import { enqueueNextDevelopmentPullRequest } from "../actions/release-candidate-promote/next-development-queue.js";
 
 const REPOSITORY = "kungfu-systems/buildchain";
 const WORKFLOW = ".github/workflows/self-build-verify.yml";
 const REVIEWER = "kungfu-origin";
 const SHA = /^[a-f0-9]{40}$/u;
 const BRANCH =
-  /^chore\/next-development\/(4\.\d+\.\d+-alpha\.\d+)-[a-f0-9]{16}$/u;
+  /^chore\/next-development\/((?:0|[1-9]\d*)\.\d+\.\d+-alpha\.\d+)-[a-f0-9]{16}$/u;
 
 export function assertReviewRun(run, { repository, runId, headSha } = {}) {
   if (
@@ -43,7 +44,7 @@ export function assertReviewPull(
     pull.base?.sha !== baseSha ||
     pull.head?.ref !== branch ||
     !BRANCH.test(branch || "") ||
-    !/^dev\/v4\/v4\.\d+$/u.test(pull.base?.ref || "") ||
+    pull.base?.ref !== `dev/v${BRANCH.exec(branch)?.[1].split(".")[0]}/v${BRANCH.exec(branch)?.[1].split(".").slice(0, 2).join(".")}` ||
     pull.state !== "open" ||
     pull.draft ||
     pull.merged_at ||
@@ -114,18 +115,23 @@ export async function verifyNextDevelopmentReview({
   const parents = git("show", "-s", "--format=%P", run.head_sha).split(" ");
   if (parents.length !== 1 || parents[0] !== baseSha)
     throw new Error("next-development must have one exact protected parent");
-  const projection = verifyDelta({ baseSha, headSha: run.head_sha });
-  if (BRANCH.exec(run.head_branch)[1] !== projection.version)
-    throw new Error(
-      "next-development branch version differs from regenerated version",
-    );
   const version = JSON.parse(git("show", `${baseSha}:package.json`)).version;
-  const tag = `v${version}`;
+  const targetVersion = BRANCH.exec(run.head_branch)[1];
+  const stable = targetVersion.endsWith("-alpha.0");
+  const completedStableVersion = version.split("-alpha.")[0];
+  if (stable && nextPatchDevelopmentVersion(completedStableVersion) !== targetVersion)
+    throw new Error("development target is not the completed stable patch successor");
+  const tag = `v${stable ? completedStableVersion : version}`;
   const sourceSha = client.json(`repos/${repository}/commits/${tag}`).sha;
   const settlement = await publication({ repository, tag, sourceSha });
   const publishedTree = settlement.documents.passport.source.treeHash;
-  if (publishedTree !== git("rev-parse", `${baseSha}^{tree}`))
+  if (!stable && publishedTree !== git("rev-parse", `${baseSha}^{tree}`))
     throw new Error("development base is not the completed alpha source tree");
+  if (stable && (settlement.documents.passport.release?.version !== completedStableVersion || settlement.documents.invocation?.target?.channel !== "stable"))
+    throw new Error("stable publication evidence differs from the completed version");
+  const projection = verifyDelta({ baseSha, headSha: run.head_sha, ...(stable ? { completedStableVersion } : {}) });
+  if (targetVersion !== projection.version)
+    throw new Error("next-development branch version differs from regenerated version");
   observe(client, repository, runId, {
     headSha: run.head_sha,
     baseSha,
@@ -175,7 +181,7 @@ export async function approveNextDevelopment({ client, reviewer, plan }) {
     await reviewer.post(endpoint, {
       event: "APPROVE",
       commit_id: plan.headSha,
-      body: `Verified the exact version-only transition by regenerating all tracked bytes from protected base ${plan.baseSha}. Completed alpha receipt: ${plan.publicationReceiptRoot}. Verification run: https://github.com/${plan.repository}/actions/runs/${plan.runId}.`,
+      body: `Verified the exact version-only transition by regenerating all tracked bytes from protected base ${plan.baseSha}. Completed publication receipt: ${plan.publicationReceiptRoot}. Verification run: https://github.com/${plan.repository}/actions/runs/${plan.runId}.`,
     });
   }
   observe(client, plan.repository, plan.runId, plan);

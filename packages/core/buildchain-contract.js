@@ -166,12 +166,12 @@ function declarativeAuditableDemoSurface(root, pkg, majorLine) {
   });
 }
 
-function v4ReleaseCandidatePromoteSurface(root, majorLine) {
+function releaseCandidatePromoteSurface(root, majorLine) {
   return surface(root, {
-    id: "v4-release-candidate-promote-action",
+    id: "release-candidate-promote-action",
     kind: "action",
-    path: "actions/v4-release-candidate-promote/action.yml",
-    publicRef: `kungfu-systems/buildchain/actions/v4-release-candidate-promote@${majorLine}`,
+    path: "actions/release-candidate-promote/action.yml",
+    publicRef: `kungfu-systems/buildchain/actions/release-candidate-promote@${majorLine}`,
     requiredInputs: [
       "token", "repository", "source-sha", "version", "tag", "channel",
       "candidate-passport-path", "stage-capsules-path",
@@ -514,7 +514,7 @@ export function createBuildchainContractWorld({
         "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
         "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment",
       ],
-    }), declarativeAuditableDemoSurface(root, pkg, majorLine), v4ReleaseCandidatePromoteSurface(root, majorLine),
+    }), declarativeAuditableDemoSurface(root, pkg, majorLine), releaseCandidatePromoteSurface(root, majorLine),
     surface(root, {
       id: "promote-buildchain-ref-action",
       kind: "action",

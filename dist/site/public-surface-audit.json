@@ -5187,6 +5187,44 @@
         "inputCount": 87
       },
       {
+        "id": "release-candidate-promote",
+        "path": "actions/release-candidate-promote/action.yml",
+        "inputs": [
+          "artifact-paths",
+          "candidate-build-summary-path",
+          "candidate-passport-path",
+          "failure-after-capability",
+          "mutation-token",
+          "product-publication-intent-path",
+          "publication-qualification-path",
+          "publish-artifact-kind",
+          "publish-auth",
+          "publish-command",
+          "publish-dist-tag",
+          "publish-mode",
+          "publish-package-main",
+          "publish-package-set-order",
+          "publish-rematerialize-on-resume",
+          "publish-transaction-override",
+          "publisher-workflow-sha",
+          "repository",
+          "required-artifacts-path",
+          "required-status-check",
+          "resume-transaction-id",
+          "runtime-commit",
+          "runtime-tree",
+          "sealed-bundle-manifest",
+          "sealed-bundle-root",
+          "source-sha",
+          "stage-capsules-path",
+          "state-path",
+          "target-ref",
+          "target-sha",
+          "token"
+        ],
+        "inputCount": 31
+      },
+      {
         "id": "release-tail",
         "path": "actions/release-tail/action.yml",
         "inputs": [
@@ -5288,44 +5326,6 @@
         "inputCount": 22
       },
       {
-        "id": "v4-release-candidate-promote",
-        "path": "actions/v4-release-candidate-promote/action.yml",
-        "inputs": [
-          "artifact-paths",
-          "candidate-build-summary-path",
-          "candidate-passport-path",
-          "failure-after-capability",
-          "mutation-token",
-          "product-publication-intent-path",
-          "publication-qualification-path",
-          "publish-artifact-kind",
-          "publish-auth",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-transaction-override",
-          "publisher-workflow-sha",
-          "repository",
-          "required-artifacts-path",
-          "required-status-check",
-          "resume-transaction-id",
-          "runtime-commit",
-          "runtime-tree",
-          "sealed-bundle-manifest",
-          "sealed-bundle-root",
-          "source-sha",
-          "stage-capsules-path",
-          "state-path",
-          "target-ref",
-          "target-sha",
-          "token"
-        ],
-        "inputCount": 31
-      },
-      {
         "id": "validate-config",
         "path": "actions/validate-config/action.yml",
         "inputs": [
@@ -5350,6 +5350,10 @@
         "category": "action"
       },
       {
+        "id": "action:release-candidate-promote",
+        "category": "action"
+      },
+      {
         "id": "action:release-tail",
         "category": "action"
       },
@@ -5359,10 +5363,6 @@
       },
       {
         "id": "action:run-lifecycle",
-        "category": "action"
-      },
-      {
-        "id": "action:v4-release-candidate-promote",
         "category": "action"
       },
       {
@@ -10948,8 +10948,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "fbc23073bbae240489a2f826b2c26daadc58e704050c5f8df366509f5c5a1c3e",
-    "workflowRegistryDigest": "2f51f09c544ff8fe258d07abfb22c522096d37b60b2f39766e6e821063018dae",
-    "pageRegistryDigest": "4c9fc70dc2f9989c1b962f43f68ed907864251a594463fa10bf6a9a8bd7e5721"
+    "workflowRegistryDigest": "782933c16792d4d4f6365c4923600203999e11b6d2b9092faee147efb21c89f2",
+    "pageRegistryDigest": "e5f7d2b42c3a4a3572d3036bd8f2efbfe48a63cb1daccf5cec6f3aa44ad71c26"
   },
   "comparison": {
     "missingCliRegistry": [],

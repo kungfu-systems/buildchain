@@ -275,7 +275,10 @@ function validateReverseScan(root, inventory, ids, ownedSources, issues) {
 
 function checkCoreMechanismInventory({
   root = process.cwd(),
-  inventory = loadJson(root, "architecture/v3-core-mechanism-inventory.json"),
+  inventory = loadJson(
+    root,
+    "architecture/baseline-core-mechanism-inventory.json",
+  ),
 } = {}) {
   const issues = [];
   if (

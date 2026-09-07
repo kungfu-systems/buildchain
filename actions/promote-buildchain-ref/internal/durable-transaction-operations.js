@@ -129,8 +129,8 @@ function createDurableTransactionOperations(context) {
     releasePassportPlatformManifestPaths,
     releasePassportImpactJson,
     releasePassportPromotionRoutingJson,
-    releasePassportV4RuntimeResumeEvidenceJson,
-    releasePassportV4RuntimeResumeEvidenceCommand,
+    releasePassportRuntimeResumeEvidenceJson,
+    releasePassportRuntimeResumeEvidenceCommand,
     releasePassportKfd1WitnessJsons,
     releasePassportKfd2ClaimJsons,
     releasePassportKfd3PrebuildWitnessJsons,
@@ -299,8 +299,8 @@ function createDurableTransactionOperations(context) {
       releasePassportPlatformManifestPaths,
     ),
     passportPromotionRoutingJson = releasePassportPromotionRoutingJson,
-    passportV4ConsumerPolicyCertificationJson =
-      context.releasePassportV4ConsumerPolicyCertificationJson,
+    passportV4ConsumerPolicyCertificationJson: passportDomainConsumerPolicyCertificationJson =
+      context.releasePassportConsumerPolicyCertificationJson,
     passportKfd1WitnessJsons = splitPathList(releasePassportKfd1WitnessJsons),
     passportKfd2ClaimJsons = splitPathList(releasePassportKfd2ClaimJsons),
     passportKfd3PrebuildWitnessJsons = splitPathList(
@@ -341,12 +341,12 @@ function createDurableTransactionOperations(context) {
       platformManifestPaths: passportPlatformManifestPaths,
       impactJson: releasePassportImpactJson,
       promotionRoutingJson: passportPromotionRoutingJson,
-      v4ConsumerPolicyCertificationJson: passportV4ConsumerPolicyCertificationJson,
+      v4ConsumerPolicyCertificationJson: passportDomainConsumerPolicyCertificationJson,
       v4ConsumerPolicyCertificationRoot:
-        context.releasePassportV4ConsumerPolicyCertificationRoot,
-      v4RuntimeResumeEvidenceJson: releasePassportV4RuntimeResumeEvidenceJson,
+        context.releasePassportConsumerPolicyCertificationRoot,
+      v4RuntimeResumeEvidenceJson: releasePassportRuntimeResumeEvidenceJson,
       v4RuntimeResumeEvidenceCommand:
-        releasePassportV4RuntimeResumeEvidenceCommand,
+        releasePassportRuntimeResumeEvidenceCommand,
       v4RuntimeResumeEvidenceCommandCwd: cwd,
       kfd1WitnessJsons: passportKfd1WitnessJsons,
       kfd2ClaimJsons: passportKfd2ClaimJsons,

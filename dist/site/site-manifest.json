@@ -53,7 +53,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:af7bee38e21a9ada99e1731f3576733f2897f9d19bdbf39eb2781650095ae419"
+      "digest": "sha256:93128b060fe11f0c14451966aa2ac467c47248946c577a16daed124344824282"
     },
     {
       "id": "getting-started",
@@ -141,7 +141,7 @@
       "path": "docs/next-development-transition.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:36f514efc9a7c1c6da59e93126e1512529c5c2349ea987516ef13f1e592be454"
+      "digest": "sha256:2a3556d2b7dd1e3a27878c2741aa5ae42d628afa5bb94ab62e468d789ddf0806"
     },
     {
       "id": "release-propagation",
@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1a5e35c8cdd891208525085d21ee7caad873dc156fa54db15cc38c1bf17080c0"
+      "digest": "sha256:7ead263fccd68f471a4e3fee4b9ffe39b2ef0cbbea3c961605f8a13f66f09328"
     },
     {
       "id": "build-facts",
@@ -293,7 +293,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0ea67ecc0eb6e4d49f71e11ccd670d442b811c9132736dd8c600d038dc6ebbe9"
+      "digest": "sha256:71a327274f18445d3e26392d24a707b887650603c574354009243164dbc59cdc"
     },
     {
       "id": "v4-adopter-delivery",
@@ -301,7 +301,7 @@
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1afe656ccb66bb63c73956413bb2d3551d3ba39c3f6e50389e7695877dac87a2"
+      "digest": "sha256:6679e6761bcc17d47efebee22f00db207645f134d8d61955f7b89264192ee409"
     },
     {
       "id": "publish-transaction",
@@ -309,7 +309,7 @@
       "path": "docs/publish-transaction.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:713f4fd2b9e67cefdd394170eea49ddb92e803c2e6adac20d6f3b8b1e431b960"
+      "digest": "sha256:b1ee27a958bfe2327ec4702f6f288d916b8c7362bcc01c2c59388ffbe61037bf"
     },
     {
       "id": "release-tail-contract",
@@ -349,7 +349,7 @@
       "path": "docs/release-flow.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:1b97defb4f635937ea96f92e1180625cf1a5bc3454191062ec3c76b168d4c451"
+      "digest": "sha256:c981dadaa48e5adf5dcd8712eb1d37b60285bf66b0ba3a6c13a5252fcbdeedba"
     },
     {
       "id": "runtime-train-validation",

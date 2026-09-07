@@ -1,4 +1,4 @@
-import { v4ContentRoot } from "./v4-canonical-contracts.js";
+import { domainContentRoot } from "./canonical-contracts.js";
 import { releaseTailRoot } from "./release-tail-provider-plane.js";
 import { ociPublicationTag } from "./oci-publication-graph.js";
 
@@ -20,7 +20,7 @@ export function verifyComposePublication({
   );
   check(
     family.schema === "kungfu-buildchain-oci-family/v2" &&
-      root === v4ContentRoot("oci-publication-family", body) &&
+      root === domainContentRoot("oci-publication-family", body) &&
       family.repository === repository &&
       family.version === version &&
       family.sourceSha === documents.passport.source.builtSourceSha &&

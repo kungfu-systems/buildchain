@@ -52,7 +52,7 @@ buildchain dev warrant observe \
   --read-typescript-revision <sha> \
   --read-rust-revision <sha> \
   --read-validator-version semantic-diff-gate-v1 \
-  --read-evidence-output .buildchain/dev-delivery/v4-read-evidence.json
+  --read-evidence-output .buildchain/dev-delivery/read-evidence.json
 ```
 
 The returned command result keeps the existing v3 observation schema for
@@ -64,8 +64,8 @@ root, and the retained evidence receipt root.
 Focused verification:
 
 ```sh
-node --test tests/v4-delivery-warrant-read-candidate.test.mjs
-pnpm run check:v4-contracts
+node --test tests/delivery-warrant-read-candidate.test.mjs
+pnpm run check:contracts
 ```
 
 This candidate does not authorize a v4 write cutover. Protected-window parity,

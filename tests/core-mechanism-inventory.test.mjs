@@ -21,7 +21,10 @@ test("v3 core mechanism inventory closes every required evidence dimension", () 
 
 test("reverse-discovered orphaned or ambiguously owned mechanism coordinates fail visibly", () => {
   const inventory = JSON.parse(
-    fs.readFileSync("architecture/v3-core-mechanism-inventory.json", "utf8"),
+    fs.readFileSync(
+      "architecture/baseline-core-mechanism-inventory.json",
+      "utf8",
+    ),
   );
   const devDelivery = inventory.mechanisms.find(
     ({ id }) => id === "dev-delivery-warrant",
