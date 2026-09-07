@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "a71b172a7e01ac6480e69dd46fe530c3b225a6d1d1b482a468982b3ed3c133a0",
+    "sha256": "7526915e98433b479db2a2d6ee552df95ad2df267f6c93546a555c08ce1473a5",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 114,
+      "workflowCount": 115,
       "actionCount": 8,
       "sitePageCount": 88,
       "docCommandRefCount": 1050,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "a71b172a7e01ac6480e69dd46fe530c3b225a6d1d1b482a468982b3ed3c133a0",
+      "sha256": "7526915e98433b479db2a2d6ee552df95ad2df267f6c93546a555c08ce1473a5",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 114,
+        "workflowCount": 115,
         "actionCount": 8,
         "sitePageCount": 88,
         "docCommandRefCount": 1050,
@@ -6423,6 +6423,22 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:public-release-oci-compose-preview",
+          "name": "workflow:public-release-oci-compose-preview",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/public-release-oci-compose-preview.yml",
+          "evidencePath": ".github/workflows/public-release-oci-compose-preview.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 1,
+          "inputs": [
+            "universal-request-json"
+          ],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:public-release-paper-sealed",
           "name": "workflow:public-release-paper-sealed",
           "kind": "workflow",
@@ -9116,6 +9132,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 523
+    "publicSurfaceCount": 524
   }
 }

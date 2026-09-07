@@ -163,3 +163,8 @@ paths:
     ignore:
       - 'property "workflow_ref" is not defined in object type'
       - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-release-oci-compose-preview.yml:
+    # GitHub exposes the exact called-workflow SHA; actionlint 1.7.12 predates it.
+    ignore:
+      - 'property "workflow_sha" is not defined in object type'

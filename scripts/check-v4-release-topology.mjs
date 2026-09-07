@@ -25,6 +25,7 @@ const PRIVILEGED_ENTRYPOINTS = [
   "actions/v4-release-candidate-promote/index.js",
   "scripts/binary-publication-evidence.mjs",
   "scripts/next-development-review.mjs",
+  "scripts/oci-compose-preview.mjs",
   "scripts/v4-publication-settlement.mjs",
 ];
 
@@ -502,6 +503,17 @@ export function checkV4ReleaseTopology() {
   assert.equal(ledger.contract, "kungfu-buildchain-v4-release-topology/v1");
   assertClosedWorld(ledger.closedWorld.workflowPaths);
   assertAuthorityClosure(ledger);
+  const preview = ledger.postPublicationScope;
+  assert.deepEqual(preview.workflowPaths, [
+    ".github/workflows/public-release-oci-compose-preview.yml",
+  ]);
+  const previewTopology = discoverV4ReleaseTopology(
+    preview.workflowPaths,
+    preview.workflowPaths,
+  );
+  assert.equal(previewTopology.semanticMetrics.contentsWriteJobCount, 1);
+  assert.equal(previewTopology.semanticMetrics.oidcWriteJobCount, 0);
+  assert.deepEqual(preview.observedTopology, previewTopology);
   const actual = discoverV4ReleaseTopology(
     ledger.closedWorld.workflowPaths,
     ledger.semanticScope.workflowPaths,

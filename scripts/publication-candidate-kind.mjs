@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { ociPublicationTag } from "../packages/core/oci-publication-graph.js";
 import { verifyOciPublicationBundle } from "../packages/core/oci-publication-bundle.js";
 
 export function resolveOciCandidate({ payloadRoot, passport }) {
@@ -31,7 +32,7 @@ export function resolveOciCandidate({ payloadRoot, passport }) {
     requiredArtifacts: manifest.images.map((image) => ({
       kind: "oci",
       name: image.repository,
-      ref: `v${manifest.version}`,
+      ref: ociPublicationTag(image, manifest.version),
       digest: image.digest,
       platform: image.platform,
       required: true,
