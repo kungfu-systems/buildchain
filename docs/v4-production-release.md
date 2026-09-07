@@ -107,6 +107,14 @@ read retained provider facts and resume only missing operations.
 
 ## Automatic next-development review
 
+After stable completion, the producer generates the next patch at `alpha.0`
+from an isolated Git checkout of the exact current protected Dev commit. The
+checkout retains its own index so version verification can inspect the actual
+generated delta, and uses the admitted runtime dependency bridge. A source
+archive without Git metadata cannot perform that verification. The publication
+receipt remains complete if development preparation fails; recover the original
+transaction with corrected, reviewed tooling before publishing the next version.
+
 `self-release-next-development.yml` observes a successful exact `Verify` PR run
 for a same-repository `chore/next-development/*` branch. It executes only the
 protected default branch runtime. The PR must have one parent equal to the
