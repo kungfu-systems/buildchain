@@ -291,7 +291,7 @@ direct consumer integration actions:
 - `actions/promote-buildchain-ref`
 - `actions/report-buildchain-issue`
 - `actions/release-tail`
-- `actions/v4-release-candidate-promote`
+- `actions/release-candidate-promote`
 
 Two additional release-authority components are also registered and versioned:
 

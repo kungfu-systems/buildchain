@@ -27,7 +27,7 @@ release candidate and asks the production release-tail planner and executor to
 simulate, replay, or observe provider-facing publication behavior.
 
 The rooted parity matrix is
-[`architecture/v4-publication-rehearsal-parity.json`](../architecture/v4-publication-rehearsal-parity.json),
+[`architecture/publication-rehearsal-parity.json`](../architecture/publication-rehearsal-parity.json),
 and the public schema is
 [`v4-publication-rehearsal-capsule-v1.schema.json`](../contracts/v4-publication-rehearsal-capsule-v1.schema.json).
 
@@ -125,6 +125,6 @@ records Linux, macOS and Windows projections. Their capsule, transaction,
 state, and evidence roots are byte-identical. Regenerate or verify them with:
 
 ```sh
-node scripts/v4-publication-rehearsal-fixture.mjs
-node scripts/v4-publication-rehearsal-fixture.mjs --check
+node scripts/publication-rehearsal-fixture.mjs
+node scripts/publication-rehearsal-fixture.mjs --check
 ```

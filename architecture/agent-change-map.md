@@ -56,7 +56,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `packages/core/release-passport.js`
 - sources: `packages/core/release-train.js`
 - sources: `packages/core/stable-release-gate.js`
-- sources: `packages/core/v4-runtime-ref-resume-authority.js`
+- sources: `packages/core/runtime-ref-resume-authority.js`
 - sources: `scripts/audit-github-governance.mjs`
 - sources: `scripts/audit-publication-control-plane.mjs`
 - sources: `scripts/auditable-demo.mjs`
@@ -83,22 +83,22 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - sources: `scripts/run-lifecycle-core.mjs`
 - sources: `scripts/stable-candidate-patrol.mjs`
 - sources: `scripts/stable-release-gate.mjs`
-- sources: `scripts/v4-universal-workflow-engine.mjs`
-- sources: `scripts/v4-architecture.mjs`
-- sources: `scripts/v4-warrant-shadow-plan.mjs`
+- sources: `scripts/universal-workflow-engine.mjs`
+- sources: `scripts/architecture.mjs`
+- sources: `scripts/warrant-shadow-plan.mjs`
 - sources: `scripts/web-surface-core.mjs`
 - sources: `scripts/web-surface-production-release-pr.mjs`
 - sources: `scripts/web-surface.mjs`
 - sources: `actions/promote-buildchain-ref/internal/promotion-operations.js`
-- rust: `crates/buildchain-v4-bridge/src/main.rs`
-- rust: `crates/buildchain-v4-contracts/src/main.rs`
-- rust: `crates/buildchain-v4-contracts/src/product_publication.rs`
-- rust: `crates/buildchain-v4-contracts/src/release_tail.rs`
-- rust: `crates/buildchain-v4-contracts/src/wasm.rs`
-- rust: `crates/buildchain-v4-contracts/src/provider_operation_journal.rs`
-- rust: `crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs`
-- rust: `crates/buildchain-v4-contracts/src/warrant.rs`
-- rust: `crates/buildchain-v4-contracts/src/warrant/decision.rs`
+- rust: `crates/buildchain-host-bridge/src/main.rs`
+- rust: `crates/buildchain-domain-contracts/src/main.rs`
+- rust: `crates/buildchain-domain-contracts/src/product_publication.rs`
+- rust: `crates/buildchain-domain-contracts/src/release_tail.rs`
+- rust: `crates/buildchain-domain-contracts/src/wasm.rs`
+- rust: `crates/buildchain-domain-contracts/src/provider_operation_journal.rs`
+- rust: `crates/buildchain-domain-contracts/src/provider_operation_journal/fold.rs`
+- rust: `crates/buildchain-domain-contracts/src/warrant.rs`
+- rust: `crates/buildchain-domain-contracts/src/warrant/decision.rs`
 - tests: `tests/auditable-demo-platform.test.mjs`
 - tests: `tests/auditable-demo.test.mjs`
 - tests: `tests/aws-windows-jit-controller.test.mjs`
@@ -125,9 +125,9 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/release-candidate.test.mjs`
 - tests: `tests/release-passport.test.mjs`
 - tests: `tests/release-propagation.test.mjs`
-- tests: `tests/v4-delivery-authority-parity.test.mjs`
-- tests: `tests/v4-floating-consumer-policy.test.mjs`
-- tests: `tests/v4-publication-rehearsal.test.mjs`
+- tests: `tests/delivery-authority-parity.test.mjs`
+- tests: `tests/floating-consumer-policy.test.mjs`
+- tests: `tests/publication-rehearsal.test.mjs`
 - tests: `tests/web-surface.test.mjs`
 - tests: `tests/build-surface-reusable-build.test.mjs`
 - tests: `tests/build-surface-reusable-build-signing.test.mjs`
@@ -153,16 +153,16 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 
 ### Current top twenty maintenance hotspots
 
-- `tests/v4-product-publication-topology.test.mjs`
+- `tests/product-publication-topology.test.mjs`
 - `.github/workflows/.build.yml`
 - `.github/workflows/.publication-authority.yml`
 - `.github/workflows/bootstrap.yml`
-- `scripts/check-v4-universal-workflow-bootstrap.mjs`
-- `scripts/v4-universal-workflow-engine.mjs`
-- `tests/v4-universal-workflow-bootstrap.test.mjs`
-- `tests/v3-v4-capability-inventory.test.mjs`
-- `tests/v4-floating-consumer-policy-contract.test.mjs`
-- `tests/v4-publication-qualification.test.mjs`
+- `scripts/check-universal-workflow-bootstrap.mjs`
+- `scripts/universal-workflow-engine.mjs`
+- `tests/universal-workflow-bootstrap.test.mjs`
+- `tests/capability-parity-inventory.test.mjs`
+- `tests/floating-consumer-policy-contract.test.mjs`
+- `tests/publication-qualification.test.mjs`
 - `.github/workflows/v4-adopter-delivery.yml`
 - `.github/workflows/buildchain-ref-promotion.yml`
 - `.github/workflows/dev-pr-auto-merge.yml`
@@ -174,33 +174,38 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `tests/build-surface.test.mjs`
 - `tests/internal-architecture.test.mjs`
 - `scripts/resume-from-candidate-run.mjs`
-- `scripts/check-v3-v4-capability-inventory.mjs`
+- `scripts/check-capability-parity-inventory.mjs`
 - `.github/workflows/release-candidate-promote.yml`
 - `actions/promote-buildchain-ref/lib.js`
-- `actions/v4-release-candidate-promote/index.js`
-- `actions/v4-release-candidate-promote/product-provider.js`
-- `actions/v4-release-candidate-promote/product-provider-github-adapters.js`
-- `tests/v4-release-candidate-promote.test.mjs`
+- `actions/release-candidate-promote/index.js`
+- `actions/release-candidate-promote/product-provider.js`
+- `actions/release-candidate-promote/product-provider-github-adapters.js`
+- `tests/release-candidate-promote.test.mjs`
 - `scripts/check-inventory.mjs`
 - `tests/promote-buildchain-ref.test.mjs`
 - `tests/promotion-channel-router.test.mjs`
-- `tests/v4-release-topology.test.mjs`
+- `tests/release-topology.test.mjs`
 - `scripts/site-capability-metadata.mjs`
-- `tests/v4-floating-consumer-policy.test.mjs`
-- `tests/v4-declarative-promotion-mode.test.mjs`
+- `tests/floating-consumer-policy.test.mjs`
+- `tests/declarative-promotion-mode.test.mjs`
 - `scripts/buildchain-cli-help.mjs`
-- `scripts/check-v4-floating-consumer-policy-contract.mjs`
+- `scripts/check-floating-consumer-policy-contract.mjs`
 - `tests/dev-delivery-warrant.test.mjs`
 - `packages/core/dev-delivery-warrant-state.js`
 - `actions/promote-buildchain-ref/internal/version-state.js`
-- `packages/core/v4-floating-consumer-release-passport.js`
+- `packages/core/floating-consumer-release-passport.js`
 - `packages/core/release-passport.js`
 - `tests/promote-buildchain-ref-governance.test.mjs`
 - `scripts/check-maintainability.mjs`
 - `tests/maintainability.test.mjs`
-- `scripts/generate-v4-universal-workflow-facades.mjs`
-- `scripts/check-v4-release-topology.mjs`
-- `actions/v4-release-candidate-promote/product-provider-adapters.js`
+- `scripts/generate-universal-workflow-facades.mjs`
+- `scripts/check-release-topology.mjs`
+- `actions/release-candidate-promote/product-provider-adapters.js`
+- `scripts/release-candidate-resolver.mjs`
+- `scripts/dev-delivery-warrant.mjs`
+- `scripts/generate-channel-promotion-workflow.mjs`
+- `.github/workflows/v4-stage-capsule-canary.yml`
+- `packages/core/release-tail-provider-plane.js`
 
 ## cli-command-registry
 
@@ -385,7 +390,7 @@ Owner: Buildchain Paper maintainers
 
 - `tests/cli.test.mjs`
 - `tests/paper.test.mjs`
-- `tests/paper-v4-migration.test.mjs`
+- `tests/paper-migration.test.mjs`
 - `tests/public-surface-audit.test.mjs`
 
 ### Generated outputs
@@ -395,7 +400,7 @@ Owner: Buildchain Paper maintainers
 
 ### Minimal validation
 
-- `node --test tests/cli.test.mjs tests/paper.test.mjs tests/paper-v4-migration.test.mjs tests/public-surface-audit.test.mjs`
+- `node --test tests/cli.test.mjs tests/paper.test.mjs tests/paper-migration.test.mjs tests/public-surface-audit.test.mjs`
 
 ## promotion-channel-orchestration
 
@@ -465,6 +470,7 @@ Owner: Buildchain maintainers
 ### Implementation
 
 - `actions/promote-buildchain-ref/internal/promotion-policy.js`
+- `actions/promote-buildchain-ref/internal/promotion-options.js`
 
 ### Contracts
 
@@ -730,16 +736,16 @@ Owner: Buildchain adopter delivery maintainers
 - `packages/core/kfd-adopter-category-driver.js`
 - `packages/core/legacy-kfd-adopter-driver.js`
 - `packages/core/published-delivery-authority.js`
-- `packages/core/v4-adopter-delivery.js`
-- `packages/core/v4-adopter-delivery-parity.js`
-- `packages/core/v4-cross-platform-adopter-qualification.js`
-- `scripts/v4-cross-platform-adopter-qualification.mjs`
-- `crates/buildchain-v4-contracts/src/adopter_delivery.rs`
+- `packages/core/adopter-delivery.js`
+- `packages/core/adopter-delivery-parity.js`
+- `packages/core/cross-platform-adopter-qualification.js`
+- `scripts/cross-platform-adopter-qualification.mjs`
+- `crates/buildchain-domain-contracts/src/adopter_delivery.rs`
 
 ### Contracts
 
-- `architecture/v4-adopter-delivery-parity.json`
-- `architecture/v4-cross-platform-adopter-qualification.json`
+- `architecture/adopter-delivery-parity.json`
+- `architecture/cross-platform-adopter-qualification.json`
 - `contracts/v4-adopter-delivery-v1.schema.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/archive-template.json`
 - `contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json`
@@ -752,9 +758,9 @@ Owner: Buildchain adopter delivery maintainers
 
 ### Tests
 
-- `tests/v4-adopter-delivery.test.mjs`
-- `tests/v4-adopter-delivery-parity.test.mjs`
-- `tests/v4-cross-platform-adopter-qualification.test.mjs`
+- `tests/adopter-delivery.test.mjs`
+- `tests/adopter-delivery-parity.test.mjs`
+- `tests/cross-platform-adopter-qualification.test.mjs`
 - `tests/non-kfd-specification-driver-clean-room.test.mjs`
 
 ### Generated outputs
@@ -763,7 +769,7 @@ Owner: Buildchain adopter delivery maintainers
 
 ### Minimal validation
 
-- `node --test tests/v4-adopter-delivery.test.mjs tests/v4-adopter-delivery-parity.test.mjs tests/v4-cross-platform-adopter-qualification.test.mjs tests/non-kfd-specification-driver-clean-room.test.mjs`
+- `node --test tests/adopter-delivery.test.mjs tests/adopter-delivery-parity.test.mjs tests/cross-platform-adopter-qualification.test.mjs tests/non-kfd-specification-driver-clean-room.test.mjs`
 
 ## v4-architecture-governance
 
@@ -771,60 +777,60 @@ Owner: Buildchain architecture maintainers
 
 ### Implementation
 
-- `scripts/v4-architecture.mjs`
-- `scripts/v4-bridge-bootstrap.mjs`
-- `scripts/v4-bridge-evidence.mjs`
-- `scripts/v4-host-adapter.mjs`
-- `crates/buildchain-v4-bridge/src/main.rs`
-- `packages/core/v4-provider-operation-journal.js`
-- `packages/core/v4-provider-readback-idempotency.js`
-- `packages/core/v4-release-activation-shadow.js`
-- `packages/core/v4-stable-publication-fence.js`
-- `packages/core/v4-partial-mutation-recovery-qualification.js`
-- `packages/core/v4-runtime-ref-resume-authority.js`
-- `packages/core/v4-runtime-selector-persistence.js`
-- `packages/core/v4-tail-reseal-contract.js`
-- `packages/core/v4-tail-reseal.js`
-- `packages/core/v4-tail-reseal-github.js`
-- `packages/core/v4-tail-reseal-receipt.js`
-- `scripts/v4-tail-reseal.mjs`
-- `scripts/v4-tail-reseal-macos-rehearsal.mjs`
-- `packages/core/v4-stage-capsule.js`
-- `packages/core/v4-stage-capsule-store.js`
-- `packages/core/v4-stage-capsule-local-store.js`
-- `packages/core/v4-platform-stage-checkpoints.js`
-- `scripts/v4-platform-stage-checkpoint-rehearsal.mjs`
-- `packages/core/v4-stage-capsule-qualification.js`
-- `packages/core/v4-stage-capsule-qualification-campaign.js`
-- `scripts/v4-stage-capsule-qualification.mjs`
-- `crates/buildchain-v4-contracts/src/stage_capsule.rs`
-- `crates/buildchain-v4-contracts/src/stage_capsule_store.rs`
-- `crates/buildchain-v4-contracts/src/provider_operation_journal.rs`
-- `crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs`
-- `crates/buildchain-v4-contracts/src/provider_readback_idempotency.rs`
-- `crates/buildchain-v4-contracts/src/release_activation_shadow.rs`
-- `crates/buildchain-v4-contracts/src/release_activation_shadow/model.rs`
-- `crates/buildchain-v4-contracts/src/release_activation_shadow/journal.rs`
-- `crates/buildchain-v4-contracts/src/stable_publication_fence.rs`
-- `crates/buildchain-v4-contracts/src/partial_mutation_recovery.rs`
+- `scripts/architecture.mjs`
+- `scripts/bridge-bootstrap.mjs`
+- `scripts/bridge-evidence.mjs`
+- `scripts/host-adapter.mjs`
+- `crates/buildchain-host-bridge/src/main.rs`
+- `packages/core/provider-operation-journal.js`
+- `packages/core/provider-readback-idempotency.js`
+- `packages/core/release-activation-shadow.js`
+- `packages/core/stable-publication-fence.js`
+- `packages/core/partial-mutation-recovery-qualification.js`
+- `packages/core/runtime-ref-resume-authority.js`
+- `packages/core/runtime-selector-persistence.js`
+- `packages/core/tail-reseal-contract.js`
+- `packages/core/tail-reseal.js`
+- `packages/core/tail-reseal-github.js`
+- `packages/core/tail-reseal-receipt.js`
+- `scripts/tail-reseal.mjs`
+- `scripts/tail-reseal-macos-rehearsal.mjs`
+- `packages/core/stage-capsule.js`
+- `packages/core/stage-capsule-store.js`
+- `packages/core/stage-capsule-local-store.js`
+- `packages/core/platform-stage-checkpoints.js`
+- `scripts/platform-stage-checkpoint-rehearsal.mjs`
+- `packages/core/stage-capsule-qualification.js`
+- `packages/core/stage-capsule-qualification-campaign.js`
+- `scripts/stage-capsule-qualification.mjs`
+- `crates/buildchain-domain-contracts/src/stage_capsule.rs`
+- `crates/buildchain-domain-contracts/src/stage_capsule_store.rs`
+- `crates/buildchain-domain-contracts/src/provider_operation_journal.rs`
+- `crates/buildchain-domain-contracts/src/provider_operation_journal/fold.rs`
+- `crates/buildchain-domain-contracts/src/provider_readback_idempotency.rs`
+- `crates/buildchain-domain-contracts/src/release_activation_shadow.rs`
+- `crates/buildchain-domain-contracts/src/release_activation_shadow/model.rs`
+- `crates/buildchain-domain-contracts/src/release_activation_shadow/journal.rs`
+- `crates/buildchain-domain-contracts/src/stable_publication_fence.rs`
+- `crates/buildchain-domain-contracts/src/partial_mutation_recovery.rs`
 
 ### Contracts
 
-- `architecture/v4-architecture-constitution.md`
-- `architecture/v4-capability-state-machine-manifest.json`
-- `architecture/v4-bootstrap-authority.json`
-- `architecture/v4-exception-ledger.json`
-- `architecture/v4-rust-libnode-bridge-evaluation.json`
-- `architecture/v4-rust-libnode-bridge-spike.md`
-- `architecture/v4-provider-operation-journal-contract.json`
-- `architecture/v4-release-activation-shadow-domain.json`
-- `architecture/v4-stable-publication-fence.json`
-- `architecture/v4-partial-mutation-recovery-qualification.json`
-- `architecture/v4-stage-capsule-contract.json`
-- `architecture/v4-stage-capsule-store-contract.json`
-- `architecture/v4-platform-stage-checkpoints.json`
-- `architecture/v4-stage-capsule-qualification.json`
-- `architecture/v4-runtime-ref-resume-authority.json`
+- `architecture/architecture-constitution.md`
+- `architecture/capability-state-machine-manifest.json`
+- `architecture/bootstrap-authority.json`
+- `architecture/exception-ledger.json`
+- `architecture/rust-libnode-bridge-evaluation.json`
+- `architecture/rust-libnode-bridge-spike.md`
+- `architecture/provider-operation-journal-contract.json`
+- `architecture/release-activation-shadow-domain.json`
+- `architecture/stable-publication-fence.json`
+- `architecture/partial-mutation-recovery-qualification.json`
+- `architecture/stage-capsule-contract.json`
+- `architecture/stage-capsule-store-contract.json`
+- `architecture/platform-stage-checkpoints.json`
+- `architecture/stage-capsule-qualification.json`
+- `architecture/runtime-ref-resume-authority.json`
 - `contracts/v4-host-contract-v1.schema.json`
 - `contracts/v4-provider-operation-journal-v1.schema.json`
 - `contracts/v4-release-activation-shadow-v1.schema.json`
@@ -841,7 +847,7 @@ Owner: Buildchain architecture maintainers
 - `contracts/fixtures/v4-partial-mutation-recovery-v1/shared.json`
 - `contracts/v4-runtime-ref-resume-authority-v1.schema.json`
 - `contracts/fixtures/v4-runtime-ref-resume-authority-v1/scenario.json`
-- `architecture/v4-tail-reseal-parity.json`
+- `architecture/tail-reseal-parity.json`
 - `contracts/v4-tail-reseal-v1.schema.json`
 - `contracts/fixtures/v4-tail-reseal-v1/valid.json`
 - `.github/workflows/public-ops-tail-reseal.yml`
@@ -851,20 +857,20 @@ Owner: Buildchain architecture maintainers
 
 ### Tests
 
-- `tests/v4-architecture.test.mjs`
-- `tests/v4-bridge.test.mjs`
-- `tests/v4-provider-operation-journal.test.mjs`
-- `tests/v4-provider-readback-idempotency.test.mjs`
-- `tests/v4-release-activation-shadow.test.mjs`
-- `tests/v4-stable-publication-fence.test.mjs`
-- `tests/v4-partial-mutation-recovery-qualification.test.mjs`
-- `tests/v4-stage-capsule.test.mjs`
-- `tests/v4-stage-capsule-store.test.mjs`
-- `tests/v4-platform-stage-checkpoints.test.mjs`
-- `tests/v4-stage-capsule-qualification.test.mjs`
-- `tests/v4-runtime-ref-resume-authority.test.mjs`
-- `tests/v4-tail-reseal.test.mjs`
-- `tests/v4-tail-reseal-parity.test.mjs`
+- `tests/architecture.test.mjs`
+- `tests/bridge.test.mjs`
+- `tests/provider-operation-journal.test.mjs`
+- `tests/provider-readback-idempotency.test.mjs`
+- `tests/release-activation-shadow.test.mjs`
+- `tests/stable-publication-fence.test.mjs`
+- `tests/partial-mutation-recovery-qualification.test.mjs`
+- `tests/stage-capsule.test.mjs`
+- `tests/stage-capsule-store.test.mjs`
+- `tests/platform-stage-checkpoints.test.mjs`
+- `tests/stage-capsule-qualification.test.mjs`
+- `tests/runtime-ref-resume-authority.test.mjs`
+- `tests/tail-reseal.test.mjs`
+- `tests/tail-reseal-parity.test.mjs`
 
 ### Generated outputs
 
@@ -872,7 +878,7 @@ Owner: Buildchain architecture maintainers
 
 ### Minimal validation
 
-- `node --test tests/v4-architecture.test.mjs tests/v4-bridge.test.mjs tests/v4-provider-operation-journal.test.mjs tests/v4-provider-readback-idempotency.test.mjs tests/v4-release-activation-shadow.test.mjs tests/v4-stable-publication-fence.test.mjs tests/v4-partial-mutation-recovery-qualification.test.mjs tests/v4-stage-capsule.test.mjs tests/v4-stage-capsule-store.test.mjs tests/v4-platform-stage-checkpoints.test.mjs tests/v4-stage-capsule-qualification.test.mjs tests/v4-runtime-ref-resume-authority.test.mjs tests/v4-tail-reseal.test.mjs tests/v4-tail-reseal-parity.test.mjs`
+- `node --test tests/architecture.test.mjs tests/bridge.test.mjs tests/provider-operation-journal.test.mjs tests/provider-readback-idempotency.test.mjs tests/release-activation-shadow.test.mjs tests/stable-publication-fence.test.mjs tests/partial-mutation-recovery-qualification.test.mjs tests/stage-capsule.test.mjs tests/stage-capsule-store.test.mjs tests/platform-stage-checkpoints.test.mjs tests/stage-capsule-qualification.test.mjs tests/runtime-ref-resume-authority.test.mjs tests/tail-reseal.test.mjs tests/tail-reseal-parity.test.mjs`
 
 ## v4-compatibility-facts
 
@@ -885,15 +891,15 @@ Owner: Buildchain compatibility authority maintainers
 - `packages/core/buildchain-compatibility-fact.js`
 - `packages/core/buildchain-compatibility-authority.js`
 - `packages/core/buildchain-compatibility-proof.js`
-- `crates/buildchain-v4-contracts/src/compatibility_facts.rs`
-- `crates/buildchain-v4-contracts/src/compatibility_facts/encoding.rs`
-- `crates/buildchain-v4-contracts/src/compatibility_facts/fixture.rs`
-- `crates/buildchain-v4-contracts/src/compatibility_facts/lifecycle.rs`
-- `crates/buildchain-v4-contracts/src/compatibility_facts/verifier.rs`
+- `crates/buildchain-domain-contracts/src/compatibility_facts.rs`
+- `crates/buildchain-domain-contracts/src/compatibility_facts/encoding.rs`
+- `crates/buildchain-domain-contracts/src/compatibility_facts/fixture.rs`
+- `crates/buildchain-domain-contracts/src/compatibility_facts/lifecycle.rs`
+- `crates/buildchain-domain-contracts/src/compatibility_facts/verifier.rs`
 
 ### Contracts
 
-- `architecture/v4-compatibility-facts-parity.json`
+- `architecture/compatibility-facts-parity.json`
 - `contracts/v4-compatibility-facts-v1.schema.json`
 - `contracts/fixtures/v4-compatibility-facts-v1/shared.json`
 - `dist/site/schemas/v4-compatibility-facts-v1.schema.json`
@@ -901,7 +907,7 @@ Owner: Buildchain compatibility authority maintainers
 
 ### Tests
 
-- `tests/v4-compatibility-facts.test.mjs`
+- `tests/compatibility-facts.test.mjs`
 
 ### Generated outputs
 
@@ -909,7 +915,7 @@ Owner: Buildchain compatibility authority maintainers
 
 ### Minimal validation
 
-- `node --test tests/v4-compatibility-facts.test.mjs`
+- `node --test tests/compatibility-facts.test.mjs`
 
 ## v4-delivery-authority
 
@@ -954,7 +960,7 @@ Owner: Buildchain protected delivery maintainers
 
 ### Contracts
 
-- `architecture/v4-delivery-authority-parity.json`
+- `architecture/delivery-authority-parity.json`
 - `architecture/decisions/0003-two-phase-delivery-warrant.md`
 - `contracts/dev-delivery-authority-v2.schema.json`
 - `dist/site/schemas/dev-delivery-authority-v2.schema.json`
@@ -977,7 +983,7 @@ Owner: Buildchain protected delivery maintainers
 - `tests/dev-delivery-provider-heartbeat.test.mjs`
 - `tests/dev-delivery-authority.test.mjs`
 - `tests/build-surface.test.mjs`
-- `tests/v4-delivery-authority-parity.test.mjs`
+- `tests/delivery-authority-parity.test.mjs`
 
 ### Generated outputs
 
@@ -985,7 +991,7 @@ Owner: Buildchain protected delivery maintainers
 
 ### Minimal validation
 
-- `node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-warrant-legacy-recovery.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/v4-delivery-authority-parity.test.mjs`
+- `node --test tests/dev-delivery-warrant.test.mjs tests/dev-delivery-warrant-command.test.mjs tests/dev-delivery-warrant-legacy-recovery.test.mjs tests/dev-delivery-two-phase.test.mjs tests/dev-delivery-two-phase-run.test.mjs tests/dev-delivery-native-run.test.mjs tests/dev-delivery-process-boundary.test.mjs tests/dev-delivery-process-boundary-negative.test.mjs tests/dev-delivery-provider-heartbeat.test.mjs tests/dev-delivery-authority.test.mjs tests/build-surface.test.mjs tests/delivery-authority-parity.test.mjs`
 
 ## v4-publication-rehearsal
 
@@ -993,20 +999,20 @@ Owner: Buildchain publication rehearsal maintainers
 
 ### Implementation
 
-- `packages/core/v4-publication-rehearsal-capsule.js`
-- `packages/core/v4-publication-rehearsal-provider-bindings.js`
-- `packages/core/v4-publication-rehearsal.js`
+- `packages/core/publication-rehearsal-capsule.js`
+- `packages/core/publication-rehearsal-provider-bindings.js`
+- `packages/core/publication-rehearsal.js`
 
 ### Contracts
 
-- `architecture/v4-publication-rehearsal-parity.json`
+- `architecture/publication-rehearsal-parity.json`
 - `contracts/v4-publication-rehearsal-capsule-v1.schema.json`
 - `.github/workflows/self-release-rehearsal-dogfood.yml`
 - `docs/v4-publication-rehearsal.md`
 
 ### Tests
 
-- `tests/v4-publication-rehearsal.test.mjs`
+- `tests/publication-rehearsal.test.mjs`
 
 ### Generated outputs
 
@@ -1014,7 +1020,7 @@ Owner: Buildchain publication rehearsal maintainers
 
 ### Minimal validation
 
-- `node --test tests/v4-publication-rehearsal.test.mjs`
+- `node --test tests/publication-rehearsal.test.mjs`
 
 ## v4-universal-workflow-bootstrap
 
@@ -1022,28 +1028,28 @@ Owner: Buildchain workflow maintainers
 
 ### Implementation
 
-- `packages/core/v4-universal-workflow-bootstrap.js`
-- `scripts/check-v4-universal-workflow-bootstrap.mjs`
-- `scripts/generate-v4-universal-workflow-facades.mjs`
-- `scripts/v4-universal-workflow-backflow.mjs`
-- `scripts/v4-universal-workflow-engine.mjs`
-- `scripts/v4-universal-workflow-self-dogfood.mjs`
+- `packages/core/universal-workflow-bootstrap.js`
+- `scripts/check-universal-workflow-bootstrap.mjs`
+- `scripts/generate-universal-workflow-facades.mjs`
+- `scripts/universal-workflow-backflow.mjs`
+- `scripts/universal-workflow-engine.mjs`
+- `scripts/universal-workflow-self-dogfood.mjs`
 
 ### Contracts
 
-- `architecture/v4-universal-workflow-bootstrap.json`
-- `architecture/v4-universal-workflow-fault-campaign.json`
-- `architecture/v4-universal-workflow-train-admission.json`
+- `architecture/universal-workflow-bootstrap.json`
+- `architecture/universal-workflow-fault-campaign.json`
+- `architecture/universal-workflow-train-admission.json`
 - `.github/workflows/bootstrap.yml`
 - `.github/workflows/self-ops-bootstrap-dogfood.yml`
 - `templates/universal-buildchain-bootstrap-recovery.yml`
 
 ### Tests
 
-- `tests/v4-universal-workflow-backflow.test.mjs`
-- `tests/v4-universal-workflow-bootstrap.test.mjs`
-- `tests/v4-universal-workflow-fault-campaign.test.mjs`
-- `tests/v4-universal-workflow-self-dogfood.test.mjs`
+- `tests/universal-workflow-backflow.test.mjs`
+- `tests/universal-workflow-bootstrap.test.mjs`
+- `tests/universal-workflow-fault-campaign.test.mjs`
+- `tests/universal-workflow-self-dogfood.test.mjs`
 
 ### Generated outputs
 
@@ -1051,8 +1057,8 @@ Owner: Buildchain workflow maintainers
 
 ### Minimal validation
 
-- `node scripts/check-v4-universal-workflow-bootstrap.mjs`
-- `node --test tests/v4-universal-workflow-bootstrap.test.mjs tests/v4-universal-workflow-backflow.test.mjs tests/v4-universal-workflow-fault-campaign.test.mjs tests/v4-universal-workflow-self-dogfood.test.mjs`
+- `node scripts/check-universal-workflow-bootstrap.mjs`
+- `node --test tests/universal-workflow-bootstrap.test.mjs tests/universal-workflow-backflow.test.mjs tests/universal-workflow-fault-campaign.test.mjs tests/universal-workflow-self-dogfood.test.mjs`
 
 ## web-surface-delivery
 

@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 function loadUniversalFacadeMigration(root) {
   const contract = JSON.parse(
     fs.readFileSync(
-      path.join(root, "architecture/v4-universal-workflow-bootstrap.json"),
+      path.join(root, "architecture/universal-workflow-bootstrap.json"),
       "utf8",
     ),
   );
@@ -30,7 +30,7 @@ function loadUniversalFacadeMigration(root) {
 function verifyUniversalFacadeMigration(root) {
   execFileSync(
     process.execPath,
-    ["scripts/generate-v4-universal-workflow-facades.mjs", "--check"],
+    ["scripts/generate-universal-workflow-facades.mjs", "--check"],
     { cwd: root, stdio: "pipe" },
   );
 }

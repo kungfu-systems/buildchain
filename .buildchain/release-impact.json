@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "4.0.2-alpha.53",
+    "version": "4.0.3-alpha.0",
     "line": "v4.0"
   },
   "versionImpact": {
@@ -23,14 +23,14 @@
       "impact": "minor",
       "class": "release-governance",
       "rationale": "The v4 public CLI, Node APIs, schemas, templates and generated facts expose deterministic semver-auto and anchored-manual next-development transitions with atomic recovery, protected Dev reconciliation, exact reservation readback and no Alpha publication or candidate authority.",
-      "source": "architecture/v4-next-development-parity.json"
+      "source": "architecture/next-development-parity.json"
     },
     {
       "id": "v4-production-authority-cutover",
       "impact": "major",
       "class": "publication-authority",
       "rationale": "The protected v4 release line owns the shared alpha channel and all v4 production state-machine writers; exact v4 activation, provider readback, bounded recovery, and stable fencing replace the former v3-authoritative shadow declarations without introducing a second writer.",
-      "source": "architecture/v4-capability-state-machine-manifest.json"
+      "source": "architecture/capability-state-machine-manifest.json"
     },
     {
       "id": "resume-from-candidate-run",

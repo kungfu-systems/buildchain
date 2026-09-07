@@ -30,14 +30,27 @@ test("workflow event transports sourceRoot without exposing a retired CLI pair",
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
-for (const availableWorkflow of ["self-ops-dev-delivery.yml", "buildchain-dev-delivery.yml"]) test(`dev delivery request resolves protected-base entry ${availableWorkflow}`, () => {
+for (const [availableWorkflow, largeProof] of [["self-ops-dev-delivery.yml", false], ["buildchain-dev-delivery.yml", false], ["self-ops-dev-delivery.yml", true]]) test(`dev delivery request resolves protected-base entry ${availableWorkflow}${largeProof ? " with a proof above command-line limits" : ""}`, () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delivery-request-"));
   const gh = path.join(directory, "gh");
+  const payloadPath = path.join(directory, "payload.json");
+  let affectedPaths;
+  if (largeProof) {
+    affectedPaths = Array.from({ length: 6000 }, (_, index) => `packages/relocated-implementation/responsibility-${index}.js`);
+    const proof = Object.fromEntries(["sourceIdentityRoot", "sourcePatchRoot", "planRoot", "closureRoot", "dependencyRoot", "toolchainRoot"].map((key) => [key, sourceIdentityRoot]));
+    proof.affectedPaths = affectedPaths;
+    const proofPath = path.join(directory, "proof.json");
+    fs.writeFileSync(proofPath, JSON.stringify(proof));
+    const node = path.join(directory, "node");
+    fs.writeFileSync(node, `#!/bin/bash\nif [[ "$1" == *dev-delivery-source-proof-reuse.mjs ]]; then cat "${proofPath}"; else exec "${process.execPath}" "$@"; fi\n`);
+    fs.chmodSync(node, 0o755);
+  }
   const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, encoding: "utf8" }).stdout.trim();
   const base = spawnSync("git", ["rev-parse", "HEAD^"], { cwd: repositoryRoot, encoding: "utf8" }).stdout.trim();
   fs.writeFileSync(gh, `#!/bin/bash\ncase "$1 $2" in\n  "repo view") echo 'kungfu-systems/buildchain' ;;\n  "pr view") echo '{"number":7,"state":"OPEN","isDraft":false,"baseRefName":"dev/v4/v4.0","headRefOid":"${head}","headRepository":{"nameWithOwner":"kungfu-systems/buildchain"},"statusCheckRollup":[{"workflowName":"Verify","conclusion":"SUCCESS","detailsUrl":"https://github.com/kungfu-systems/buildchain/actions/runs/123/job/1","name":"check"}]}' ;;\n  "api repos/kungfu-systems/buildchain/actions/runs/123") echo '{"conclusion":"success","event":"pull_request","head_sha":"${head}","path":".github/workflows/self-build-verify.yml@refs/pull/7/merge","pull_requests":[{"number":7,"base":{"sha":"${base}"}}]}' ;;\n  "api repos/kungfu-systems/buildchain/contents/.github/workflows/${availableWorkflow}?ref=dev/v4/v4.0") echo '{}' ;;\n  *) exit 1 ;;\nesac\n`);
+  fs.writeFileSync(gh, fs.readFileSync(gh, "utf8").replace("  *) exit 1 ;;", `  "api --method") cat > "${payloadPath}" ;;\n  *) exit 1 ;;`));
   fs.chmodSync(gh, 0o755);
-  const result = spawnSync("bash", [path.join(repositoryRoot, "scripts/dev-delivery-request.sh"), "7", "--json"], {
+  const result = spawnSync("bash", [path.join(repositoryRoot, "scripts/dev-delivery-request.sh"), "7", "--execute", "--json"], {
     cwd: repositoryRoot,
     encoding: "utf8",
     env: { ...process.env, GH_TOKEN: "", GITHUB_TOKEN: "", PATH: `${directory}:${process.env.PATH}`, BUILDCHAIN_WORK_SOURCE_ROOT: sourceRoot },
@@ -45,6 +58,11 @@ for (const availableWorkflow of ["self-ops-dev-delivery.yml", "buildchain-dev-de
   assert.equal(result.status, 0, result.stderr);
   assert.equal(JSON.parse(result.stdout).workflowId, availableWorkflow);
   assert.equal(JSON.parse(result.stdout).sourceHead, head);
+  if (largeProof) {
+    const payload = JSON.parse(fs.readFileSync(payloadPath, "utf8"));
+    assert.deepEqual(JSON.parse(payload.inputs["affected-paths-json"]), affectedPaths);
+    assert.equal(payload.inputs["source-identity-root"], sourceIdentityRoot);
+  }
   fs.rmSync(directory, { recursive: true, force: true });
 });
 

@@ -33,7 +33,7 @@ minimal v4 absorption base
 verified protected-base advances through
 `dev/v4/v4.0@e0342713c7447960c13bd73377282b2e93f4853d` before delivery. These
 identities, the v3 vector-suite root, and the KFD package cut are committed in
-[`v4-adopter-delivery-parity.json`](../architecture/v4-adopter-delivery-parity.json)
+[`adopter-delivery-parity.json`](../architecture/adopter-delivery-parity.json)
 and exposed by the public Node API.
 
 ## Public contract
@@ -139,7 +139,7 @@ terminal verification and N-1 bootstrap must pass, and the independent
 The workflow then reconciles one exact report from each platform. Final family
 qualification combines the Buildchain self-dogfood and `agent-hub-demo`
 matrices through the exported
-`@kungfu-tech/buildchain/v4-cross-platform-adopter-qualification` aggregator.
+`@kungfu-tech/buildchain/cross-platform-adopter-qualification` aggregator.
 The report and aggregate explicitly grant no production, provider, release, or
 stable-publication authority.
 

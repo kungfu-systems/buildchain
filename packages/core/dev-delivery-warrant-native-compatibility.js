@@ -1,6 +1,6 @@
 export function lacksExactNativeExecutionContract(
   candidate,
-  allowLegacyV3Readback = false,
+  allowLegacyBaselineReadback = false,
 ) {
   const native =
     candidate.deliveryClass !== "non-native-fast" ||
@@ -9,17 +9,17 @@ export function lacksExactNativeExecutionContract(
   return Boolean(
     native &&
     (!candidate.environmentRoot ||
-      (!candidate.nativeCommandContract && !allowLegacyV3Readback)),
+      (!candidate.nativeCommandContract && !allowLegacyBaselineReadback)),
   );
 }
 
 export function lacksLiveNativeProof(
   candidate,
   status,
-  { allowLegacyV3Readback = false, allowLegacyQueuedReadback = false } = {},
+  { allowLegacyV3Readback: legacyReadback = false, allowLegacyBaselineReadback = legacyReadback, allowLegacyQueuedReadback = false } = {},
 ) {
   return (
-    lacksExactNativeExecutionContract(candidate, allowLegacyV3Readback) &&
+    lacksExactNativeExecutionContract(candidate, allowLegacyBaselineReadback) &&
     !(status === "queued" && allowLegacyQueuedReadback) &&
     !TERMINAL_STATES.has(status)
   );

@@ -21,7 +21,7 @@ dist/*
 !dist/site/**
 !actions/*/dist/
 !actions/*/dist/index.js
-!actions/*/dist/buildchain-v4-domain.wasm
+!actions/*/dist/buildchain-domain.wasm
 coverage/
 __pycache__/
 *.log

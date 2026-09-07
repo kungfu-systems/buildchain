@@ -125,13 +125,13 @@ jobs:
                 observedAt: $observed_at
               }
             ' > .buildchain-review-evidence.json
-          BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON="$(jq -c '.' .buildchain/candidate/architecture/v4-universal-workflow-train-admission.json)"
+          BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON="$(jq -c '.' .buildchain/candidate/architecture/universal-workflow-train-admission.json)"
           BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON="$(jq -c '.' .buildchain-review-evidence.json)"
           BUILDCHAIN_UNIVERSAL_OBSERVED_SHA="${EXPECTED_SHA}"
           BUILDCHAIN_UNIVERSAL_OBSERVED_AT="${observed_at}"
           export BUILDCHAIN_UNIVERSAL_ADMISSION_POLICY_JSON BUILDCHAIN_UNIVERSAL_REVIEW_EVIDENCE_JSON
           export BUILDCHAIN_UNIVERSAL_OBSERVED_SHA BUILDCHAIN_UNIVERSAL_OBSERVED_AT
-          node .buildchain/candidate/scripts/v4-universal-workflow-engine.mjs admit > .buildchain-admission.json
+          node .buildchain/candidate/scripts/universal-workflow-engine.mjs admit > .buildchain-admission.json
           {
             echo "runtime-sha=${EXPECTED_SHA}"
             echo "admission-json=$(jq -c '.' .buildchain-admission.json)"
@@ -180,7 +180,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          node .buildchain/candidate/scripts/v4-universal-workflow-engine.mjs execute > .buildchain-result.json
+          node .buildchain/candidate/scripts/universal-workflow-engine.mjs execute > .buildchain-result.json
           echo "result-json=$(jq -c '.' .buildchain-result.json)" >> "${GITHUB_OUTPUT}"
 
   recovery-settle:
@@ -278,5 +278,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          node .buildchain/candidate/scripts/v4-universal-workflow-backflow.mjs > .buildchain-backflow.json
+          node .buildchain/candidate/scripts/universal-workflow-backflow.mjs > .buildchain-backflow.json
           echo "backflow-root=$(jq -r '.backflowRoot // empty' .buildchain-backflow.json)" >> "${GITHUB_OUTPUT}"

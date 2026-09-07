@@ -4,11 +4,11 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { createReleaseCandidatePassport, validateReleaseCandidatePassport } from "../packages/core/release-candidate.js";
-import { scanV4FloatingConsumerPolicy, v4ConsumerPolicyScannerRoot } from "../packages/core/v4-floating-consumer-policy.js";
-import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
-import { V4_STAGE_CAPSULE_CONTRACT, V4_STAGE_CAPSULE_IDENTITY_CONTRACT, v4StageCapsuleIdentityRoot, v4StageCapsuleRoot, validateV4StageCapsule } from "../packages/core/v4-stage-capsule.js";
-import { v4RuntimeResumeDocumentRoot } from "../packages/core/v4-runtime-ref-resume-authority.js";
-import { createV4PublicationQualificationReceipt } from "../packages/core/v4-publication-qualification.js";
+import { scanFloatingConsumerPolicy, consumerPolicyScannerRoot } from "../packages/core/floating-consumer-policy.js";
+import { domainContentRoot } from "../packages/core/canonical-contracts.js";
+import { STAGE_CAPSULE_CONTRACT, STAGE_CAPSULE_IDENTITY_CONTRACT, stageCapsuleIdentityRoot, stageCapsuleRoot, validateStageCapsule } from "../packages/core/stage-capsule.js";
+import { runtimeResumeDocumentRoot } from "../packages/core/runtime-ref-resume-authority.js";
+import { createDomainPublicationQualificationReceipt } from "../packages/core/publication-qualification.js";
 import { writeGitHubOutputs } from "./build-contract-core.mjs";
 
 const env = (name, fallback = "") => process.env[name] || fallback;
@@ -37,12 +37,12 @@ export function createReleaseCandidateStageCapsules({
     const coordinate = coordinateByPlatform.get(platform.platformId);
     if (!coordinate || coordinate.name !== platform.artifactName) throw new Error(`Stage Capsule coordinate missing for ${platform.platformId}`);
     const manifest = readJsonFile(platform.manifestPath);
-    return { role: platform.artifactName, platform: platform.platformId, artifactRoot: coordinate.digest, manifestRoot: v4ContentRoot("stage-capsule-artifact-manifest", manifest) };
+    return { role: platform.artifactName, platform: platform.platformId, artifactRoot: coordinate.digest, manifestRoot: domainContentRoot("stage-capsule-artifact-manifest", manifest) };
   });
   const qualificationExpiresAt = coordinates.artifacts.map((entry) => entry.expiresAt).sort((left, right) => Date.parse(left) - Date.parse(right))[0];
-  const qualificationReceipt = createV4PublicationQualificationReceipt({
+  const qualificationReceipt = createDomainPublicationQualificationReceipt({
     repository: passport.repository, candidateRoot: `sha256:${passport.candidateHash}`,
-    sourceSha: passport.source.headSha, sourceRoot: v4ContentRoot("candidate-identity", passport.source),
+    sourceSha: passport.source.headSha, sourceRoot: domainContentRoot("candidate-identity", passport.source),
     policyDigest: passport.consumerPolicy.receiptRoot, artifacts: qualificationArtifacts,
     issuedAt: passport.createdAt || new Date(Date.parse(qualificationExpiresAt) - 86_400_000).toISOString(), expiresAt: qualificationExpiresAt,
   });
@@ -57,13 +57,13 @@ export function createReleaseCandidateStageCapsules({
       }
       const manifest = readJsonFile(platform.manifestPath);
       const identity = {
-        schema: V4_STAGE_CAPSULE_IDENTITY_CONTRACT,
-        sourceRoot: v4ContentRoot("candidate-identity", passport.source),
+        schema: STAGE_CAPSULE_IDENTITY_CONTRACT,
+        sourceRoot: domainContentRoot("candidate-identity", passport.source),
         platform: platform.platformId,
-        platformRoot: v4ContentRoot("candidate-identity", manifest.platform),
+        platformRoot: domainContentRoot("candidate-identity", manifest.platform),
         stage: "verify",
         toolchainRoots: [],
-        runtimeRoot: v4ContentRoot("candidate-identity", {
+        runtimeRoot: domainContentRoot("candidate-identity", {
           sha: passport.buildchain.sha,
         }),
         policyRoot: passport.consumerPolicy.receiptRoot,
@@ -73,11 +73,11 @@ export function createReleaseCandidateStageCapsules({
             root: `sha256:${passport.candidateHash}`,
           },
         ],
-        transformationRoot: v4ContentRoot("candidate-identity", {
+        transformationRoot: domainContentRoot("candidate-identity", {
           lifecycle: manifest.lifecycle,
           summary: platform.summary,
         }),
-        outputManifestRoot: v4ContentRoot(
+        outputManifestRoot: domainContentRoot(
           "stage-capsule-artifact-manifest",
           { artifact: coordinate, manifest },
         ),
@@ -85,24 +85,24 @@ export function createReleaseCandidateStageCapsules({
         observationRoots: [
           {
             name: "provider-coordinate",
-            root: v4ContentRoot("provider-readback-sample", coordinate),
+            root: domainContentRoot("provider-readback-sample", coordinate),
           },
         ],
       };
       const capsule = {
-        schema: V4_STAGE_CAPSULE_CONTRACT,
+        schema: STAGE_CAPSULE_CONTRACT,
         writerAuthority: "typescript-v3",
         rustAuthority: "validation-only",
         identity,
-        identityRoot: v4StageCapsuleIdentityRoot(identity),
+        identityRoot: stageCapsuleIdentityRoot(identity),
         retentionPromise: {
           class: "github-artifact",
           retainUntil: coordinate.expiresAt,
         },
         capsuleRoot: `sha256:${"0".repeat(64)}`,
       };
-      capsule.capsuleRoot = v4StageCapsuleRoot(capsule);
-      validateV4StageCapsule(capsule);
+      capsule.capsuleRoot = stageCapsuleRoot(capsule);
+      validateStageCapsule(capsule);
       return {
         platform: platform.platformId,
         artifactName: coordinate.name,
@@ -133,7 +133,7 @@ export function createReleaseCandidateStageCapsules({
     publicationQualificationReceipt: qualificationReceipt,
     capsules: entries,
   };
-  return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
+  return { ...body, root: runtimeResumeDocumentRoot(body) };
 }
 
 function writeReleaseCandidateStageCapsules({
@@ -188,12 +188,12 @@ export function resolveLegacyConsumerPolicyReceipt(options = {}) {
   if (!/^[0-9a-f]{40}$/u.test(options.runtimeRef || "") || options.runtimeRef !== options.runtimeSha || options.sourceTreeHash !== options.runtimeTreeHash()) return undefined;
   const root = path.resolve(options.root || ".buildchain/runtime");
   const alphaLock = readJsonFile(path.join(root, ".buildchain/alpha-contract-lock.json"));
-  const result = scanV4FloatingConsumerPolicy({
+  const result = scanFloatingConsumerPolicy({
     root, repository: options.repository, sourceSha: options.sourceSha,
     invokedWorkflow: options.invokedWorkflow || ".github/workflows/build.yml", invocationSourcePath: options.invocationSourcePath,
     expectedInvocationChannel: "alpha", resolvedWorkflowSha: alphaLock.buildchain?.resolvedSha,
-    resolvedRuntimeSha: options.runtimeSha, scannerRoot: v4ConsumerPolicyScannerRoot(),
-    policy: readJsonFile(path.resolve(import.meta.dirname, "../architecture/v4-floating-consumer-policy.json")),
+    resolvedRuntimeSha: options.runtimeSha, scannerRoot: consumerPolicyScannerRoot(),
+    policy: readJsonFile(path.resolve(import.meta.dirname, "../architecture/floating-consumer-policy.json")),
   });
   if (!result.ok) throw new Error(`legacy floating-shell policy receipt invalid: ${result.failures.map(({ code }) => code).join(", ")}`);
   return { receipt: result.receipt, receiptRoot: result.receiptRoot };

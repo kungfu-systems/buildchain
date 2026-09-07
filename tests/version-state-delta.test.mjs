@@ -202,3 +202,15 @@ test("generated v4 projections never impersonate protected full source check nam
     );
   }
 });
+
+test("stable next patch reconstructs exact declared bytes and still rejects unrelated source edits", (t) => {
+  const f = fixture(t);
+  f.write("package.json", JSON.stringify({ type: "module", version: "4.0.3-alpha.0" }, null, 2) + "\n");
+  f.manifest.package.version = "4.0.3-alpha.0";
+  f.write("dist/site/site-manifest.json", JSON.stringify(f.manifest) + "\n");
+  const input = { ...f, headSha: f.commit(), completedStableVersion: "4.0.2" };
+  assert.equal(verifyVersionStateDelta(input).version, "4.0.3-alpha.0");
+  assert.throws(() => verifyVersionStateDelta({ ...input, completedStableVersion: undefined }));
+  f.write("scripts/unrelated.mjs", "process.exit(0);\n");
+  assert.throws(() => verifyVersionStateDelta({ ...input, headSha: f.commit() }), /undeclared/u);
+});

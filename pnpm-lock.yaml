@@ -52,6 +52,15 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
 
+  actions/release-candidate-promote:
+    devDependencies:
+      '@actions/core':
+        specifier: 1.11.1
+        version: 1.11.1
+      '@actions/github':
+        specifier: 6.0.1
+        version: 6.0.1
+
   actions/release-tail:
     devDependencies:
       '@actions/core':
@@ -76,15 +85,6 @@ importers:
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(typescript@5.9.3)
-
-  actions/v4-release-candidate-promote:
-    devDependencies:
-      '@actions/core':
-        specifier: 1.11.1
-        version: 1.11.1
-      '@actions/github':
-        specifier: 6.0.1
-        version: 6.0.1
 
   actions/validate-config:
     dependencies:

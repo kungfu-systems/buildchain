@@ -146,7 +146,7 @@ test("canonical publisher contains legacy bypass inputs outside APPLY authority"
   assert.match(workflow, /branch-protection-bypass-apps:/);
   const apply = workflow.slice(workflow.indexOf("  apply:"), workflow.indexOf("  settle:"));
   assert.doesNotMatch(apply, /^    permissions:/mu);
-  assert.match(apply, /uses:.*actions\/v4-release-candidate-promote/u);
+  assert.match(apply, /uses:.*actions\/release-candidate-promote/u);
   assert.doesNotMatch(apply, /branch-protection-bypass-(apps|users|teams)/);
 });
 test("qualification installs the exact runtime before legacy input admission", () => {
@@ -1466,7 +1466,7 @@ test("self-dogfood never bridges an adjacent major or bypasses contract compatib
 
 test("major self-dogfood bootstrap authority is exact and qualification-bound", () => {
   const authority = JSON.parse(
-    fs.readFileSync(path.join(root, "architecture/v4-bootstrap-authority.json"), "utf8"),
+    fs.readFileSync(path.join(root, "architecture/bootstrap-authority.json"), "utf8"),
   );
   assert.equal(
     hasQualifiedSelfDogfoodBootstrapAuthority({
@@ -2732,7 +2732,7 @@ test("self promotion classifies finalization from rooted state instead of displa
     "utf8",
   );
   assert.match(workflow, /^  classify-workflow-run:/m);
-  assert.match(workflow, /selectV4FinalizedProductPublicationVersion/u);
+  assert.match(workflow, /selectFinalizedProductPublicationVersion/u);
   assert.match(workflow, /needs\.classify-workflow-run\.outputs\.action == 'promote'/u);
   assert.doesNotMatch(workflow, /workflow_run\.display_title/u);
 });

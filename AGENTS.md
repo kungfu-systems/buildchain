@@ -89,18 +89,18 @@ implementations, run `pnpm run generate:workflows`, and pass
 independent `@kungfu-origin` review through CODEOWNERS.
 
 Buildchain v4 Stage Capsule checkpoint work is governed by
-`architecture/v4-platform-stage-checkpoints.json`. Agents must use that single
+`architecture/platform-stage-checkpoints.json`. Agents must use that single
 platform/stage declaration for shadow emission and clean-process restore. Do
 not add undeclared runner-only inputs, outputs, environment, provider effects,
 credentials, or production stage-skipping authority.
 
 Stage Capsule resume planning is governed by
-`architecture/v4-stage-capsule-resume-planner.json`. Keep its Rust core and
+`architecture/stage-capsule-resume-planner.json`. Keep its Rust core and
 TypeScript projection pure and byte-identical; explicit provider/release-tail
 effects always require readback and never become Capsule reuse.
 
 Stage Capsule qualification and Wave 2 reconciliation are governed by
-`architecture/v4-stage-capsule-qualification.json`. Buildchain v4 dogfood is a
+`architecture/stage-capsule-qualification.json`. Buildchain v4 dogfood is a
 repository invariant, not an implementation convenience: this repository must
 consume `kungfu-systems/buildchain/.github/workflows/public-build-stage-capsule-canary.yml`
 through the same public reusable-workflow contract as every other consumer.
@@ -132,7 +132,7 @@ failures in the train/public contract; never solve recursion with an internal ex
 Never use a persisted train/SHA selector. After qualification and protected
 merge, the durable caller remains on the floating channel with refreshed dual
 contract locks. `pnpm run check` and protected Verify run
-`scripts/check-v4-public-dogfood-contract.mjs`; changing this rule, its gate, or
+`scripts/check-public-dogfood-contract.mjs`; changing this rule, its gate, or
 the protected caller requires independent `@kungfu-origin` review.
 
 `pnpm run check` validates inventory data, generated public references and site

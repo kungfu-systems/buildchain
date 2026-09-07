@@ -128,7 +128,7 @@ in the final Release Passport. See
 [`v4-runtime-ref-resume-authority.md`](v4-runtime-ref-resume-authority.md).
 
 See the normative
-[`v4 floating consumer policy`](../architecture/v4-floating-consumer-policy.md)
+[`v4 floating consumer policy`](../architecture/floating-consumer-policy.md)
 and its machine declaration for the exact acceptance boundary. This policy does
 not change v3 behavior.
 

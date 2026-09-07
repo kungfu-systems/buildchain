@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { invokeV4DomainWasm } from "../packages/core/v4-domain-wasm.js";
+import { invokeDomainWasm } from "../packages/core/domain-wasm.js";
 
 const workflow = ".github/workflows/self-build-verify.yml";
 const proofPath = ".buildchain/source-verification/evidence.json";
@@ -46,14 +46,14 @@ export function verificationIdentity({
       "scripts/verify-version-state-delta.mjs",
     ]),
     runtimeRoot: named([
-      "packages/core/buildchain-v4-domain.wasm",
-      "packages/core/v4-domain-wasm-artifact.js",
+      "packages/core/buildchain-domain.wasm",
+      "packages/core/domain-wasm-artifact.js",
     ]),
     dependencyRoot: named([
       "pnpm-lock.yaml",
       "pnpm-workspace.yaml",
-      "crates/buildchain-v4-contracts/Cargo.lock",
-      "crates/buildchain-v4-bridge/Cargo.lock",
+      "crates/buildchain-domain-contracts/Cargo.lock",
+      "crates/buildchain-host-bridge/Cargo.lock",
     ]),
     toolchainRoot: hash(
       JSON.stringify([
@@ -99,11 +99,11 @@ export function verificationIdentity({
 }
 
 export function planVerification(input) {
-  return invokeV4DomainWasm("source-verification-plan", input);
+  return invokeDomainWasm("source-verification-plan", input);
 }
 
 export function sealVerification(input) {
-  return invokeV4DomainWasm("source-verification-seal", input);
+  return invokeDomainWasm("source-verification-seal", input);
 }
 
 const api = (endpoint, binary = false) =>

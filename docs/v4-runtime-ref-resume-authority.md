@@ -60,9 +60,9 @@ construction and verification.
 
 Normative files:
 
-- `architecture/v4-runtime-ref-resume-authority.json`
+- `architecture/runtime-ref-resume-authority.json`
 - `contracts/v4-runtime-ref-resume-authority-v1.schema.json`
-- `packages/core/v4-runtime-ref-resume-authority.js`
+- `packages/core/runtime-ref-resume-authority.js`
 - `scripts/authorize-promotion-runtime-override.cjs`
 
 This contract changes no v3 behavior, grants no provider mutation authority,

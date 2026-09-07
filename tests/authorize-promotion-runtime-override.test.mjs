@@ -111,7 +111,7 @@ test("promotion runtime override roots provider reachability and source persiste
   });
   const policyPath = path.join(
     consumerRoot,
-    ".buildchain/evidence/v4-consumer-policy-receipt.json",
+    ".buildchain/evidence/consumer-policy-receipt.json",
   );
   fs.writeFileSync(
     policyPath,
@@ -159,7 +159,7 @@ test("promotion runtime override roots provider reachability and source persiste
   const request = {
     consumerRoot,
     runtimeModulePath: path.resolve(
-      "packages/core/v4-runtime-ref-resume-authority.js",
+      "packages/core/runtime-ref-resume-authority.js",
     ),
     consumerPolicyReceiptPath: policyPath,
     consumerPolicyReceiptRoot: ROOT_A,
@@ -183,7 +183,7 @@ test("promotion runtime override roots provider reachability and source persiste
   assert.ok(
     !result.persistenceScan.files.some(
       (entry) =>
-        entry.path === ".buildchain/evidence/v4-consumer-policy-receipt.json",
+        entry.path === ".buildchain/evidence/consumer-policy-receipt.json",
     ),
   );
   assert.ok(requests.includes("heads/v4-alpha"));

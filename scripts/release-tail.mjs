@@ -12,9 +12,9 @@ import {
 } from "../packages/core/release-tail-provider-plane.js";
 import { diagnoseLegacyReleaseTailHooks } from "../packages/core/release-tail-compatibility.js";
 import {
-  V4_PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT,
-  executeV4PublicationRehearsal,
-} from "../packages/core/v4-publication-rehearsal.js";
+  DOMAIN_PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT,
+  executeDomainPublicationRehearsal,
+} from "../packages/core/publication-rehearsal.js";
 
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);
@@ -76,7 +76,7 @@ export async function runReleaseTailCli(args = process.argv.slice(2)) {
         error.code = "ambient-environment-forbidden";
         throw error;
       }
-      const result = await executeV4PublicationRehearsal({
+      const result = await executeDomainPublicationRehearsal({
         capsule: readJson(capsulePath, "--capsule"),
         candidateRoot,
         mode: rehearsalMode,
@@ -89,7 +89,7 @@ export async function runReleaseTailCli(args = process.argv.slice(2)) {
     } catch (error) {
       output(
         {
-          schema: V4_PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT,
+          schema: DOMAIN_PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT,
           status: "rejected",
           code: error.code || "publication-rehearsal-runtime-error",
           message: error.message,

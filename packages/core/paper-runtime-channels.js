@@ -264,7 +264,7 @@ function explicitWorld(root, ref) {
   };
 }
 
-export function paperV4Channels({
+export function paperChannels({
   cwd,
   buildchainRoot,
   buildchainVersion,
@@ -312,7 +312,7 @@ export function paperV4Channels({
   return { selectedRef, channels };
 }
 
-export function bindPaperV4Authority(authority, channelPlan, files) {
+export function bindPaperAuthority(authority, channelPlan, files) {
   const { selectedRef, channels } = channelPlan;
   const entryPath = authority.agentEntry.policyPath;
   const entry = JSON.parse(files.get(entryPath));

@@ -130,9 +130,9 @@ if ! gh api "repos/$repository/contents/.github/workflows/$workflow?ref=$base" >
   workflow="buildchain-dev-delivery.yml"
   gh api "repos/$repository/contents/.github/workflows/$workflow?ref=$base" >/dev/null 2>&1 || workflow="native-dev-delivery.yml"
 fi
-payload="$(jq -n --arg ref "$base" --arg runtime "$runtime_sha" --arg number "$number" \
+payload="$(jq --arg ref "$base" --arg runtime "$runtime_sha" --arg number "$number" \
   --arg head "$source_head" --arg roots "$(jq -cn --arg root "$source_root" '{sourceRoot:$root}')" \
-  --arg run "$run_id" --arg legacyBinding "$legacy_active_owner_binding" --argjson proof "$predicates" '{ref:$ref,inputs:{
+  --arg run "$run_id" --arg legacyBinding "$legacy_active_owner_binding" '. as $proof | {ref:$ref,inputs:{
     "buildchain-ref":$runtime,"target-branch":$ref,"expected-pr-number":$number,
     "expected-head-sha":$head,"native-roots-json":$roots,"source-workflow-run-id":$run,
     "legacy-active-owner-binding-json":$legacyBinding,"source-identity-root":$proof.sourceIdentityRoot,
@@ -142,7 +142,7 @@ payload="$(jq -n --arg ref "$base" --arg runtime "$runtime_sha" --arg number "$n
     "affected-paths-json":($proof.affectedPaths|tojson),"shard-evidence-roots-json":"[]",
     "release-blocker-priority-json":"","native-proof-json":"","native-command":"",
     "native-command-root":"","native-heartbeat-seconds":"30","delivery-class":"non-native-fast",
-    "delivery-priority":"ordinary"}}')"
+    "delivery-priority":"ordinary"}}' <<<"$predicates")"
 
 if [ "$execute" = true ]; then
   gh api --method POST "repos/$repository/actions/workflows/$workflow/dispatches" --input - <<<"$payload" >/dev/null

@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
+import { domainContentRoot } from "../packages/core/canonical-contracts.js";
 import { verifyOciPublicationBundle } from "../packages/core/oci-publication-bundle.js";
 import { resolveOciCandidate } from "../scripts/publication-candidate-kind.mjs";
 
@@ -17,12 +17,12 @@ import {
   resolveCandidateProviderInputs,
   sealedCandidateVersion,
   planProductPublication,
-} from "../actions/v4-release-candidate-promote/product-provider.js";
+} from "../actions/release-candidate-promote/product-provider.js";
 import {
-  selectV4ProductPublicationIntent,
-  createV4ProductPublicationPlan,
-  createV4ProductPublicationDeclaration,
-} from "../packages/core/v4-product-publication.js";
+  selectProductPublicationIntent,
+  createProductPublicationPlan,
+  createProductPublicationDeclaration,
+} from "../packages/core/product-publication.js";
 import { compileReleaseTailDeclaration } from "../packages/core/release-tail-provider-plane.js";
 
 test("sealed OCI candidate verifies exact complete family and rejects tampering", (t) => {
@@ -51,7 +51,7 @@ test("sealed OCI candidate verifies exact complete family and rejects tampering"
   const altered = structuredClone(f.manifest);
   altered.images.pop();
   delete altered.root;
-  altered.root = v4ContentRoot("oci-publication-family", altered);
+  altered.root = domainContentRoot("oci-publication-family", altered);
   assert.throws(
     () => verifyOciPublicationBundle({ ...args, manifest: altered }),
     /incomplete/u,
@@ -163,7 +163,7 @@ test("OCI discovery and recovery preserve the sealed family into the rooted APPL
     requiredArtifactsPath: f.requiredArtifactsPath,
   });
   assert.equal(paths.sealedBundleManifest, f.manifestPath);
-  const intent = selectV4ProductPublicationIntent({
+  const intent = selectProductPublicationIntent({
     channel: "alpha",
     targetRef: "alpha/v1/v1.3",
     sourceSha: f.sourceSha,
@@ -171,7 +171,7 @@ test("OCI discovery and recovery preserve the sealed family into the rooted APPL
     repository: f.repository,
     artifactKind: "oci",
     sealedBundleRoot: f.manifest.root,
-    requiredArtifactsRoot: v4ContentRoot(
+    requiredArtifactsRoot: domainContentRoot(
       "v4-product-required-artifacts",
       recovered.publishRequiredArtifacts,
     ),
@@ -188,7 +188,7 @@ test("OCI discovery and recovery preserve the sealed family into the rooted APPL
     ).version,
     f.version,
   );
-  const plan = createV4ProductPublicationPlan({
+  const plan = createProductPublicationPlan({
     intent,
     invocationRoot: `sha256:${"f".repeat(64)}`,
     transactionRoot: `sha256:${"1".repeat(64)}`,
@@ -200,7 +200,7 @@ test("OCI discovery and recovery preserve the sealed family into the rooted APPL
   ]);
   assert.equal(plan.operations[1].authority, "packages-write");
   const compiled = compileReleaseTailDeclaration(
-    createV4ProductPublicationDeclaration({ intent, plan }),
+    createProductPublicationDeclaration({ intent, plan }),
   );
   assert.deepEqual(
     compiled.effects.map((e) => e.capabilityId),
