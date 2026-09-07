@@ -47,9 +47,11 @@ test("development snapshot uses the exact protected commit instead of stale publ
   );
 });
 
-test("protected snapshot supports real version generation and rejects unrelated writes", (t) => {
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-generator-test-"));
-  t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
+for (const shallow of [false, true]) test(`protected snapshot supports real version generation and rejects unrelated writes (shallow=${shallow})`, (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-generator-test-"));
+  let cwd = path.join(root, "origin");
+  fs.mkdirSync(cwd);
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const git = (...args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: "pipe" }).trim();
   for (const directory of [".buildchain", "dist/site", "scripts", "node_modules"])
     fs.mkdirSync(path.join(cwd, directory), { recursive: true });
@@ -78,11 +80,26 @@ if (fs.existsSync(".buildchain/runtime/reject-unrelated")) fs.writeFileSync("sou
   git("add", ".");
   git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "source");
   git("remote", "add", "origin", cwd);
+  git("branch", "alpha");
+  fs.writeFileSync(path.join(cwd, "source.txt"), "new protected source\n");
+  git("add", ".");
+  git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "new development");
   const sourceSha = git("rev-parse", "HEAD");
+  if (shallow) {
+    const caller = path.join(root, "caller");
+    git("clone", "--depth", "1", "--single-branch", "--branch", "alpha", `file://${cwd}`, caller);
+    cwd = caller;
+    git("checkout", "--detach");
+    fs.mkdirSync(path.join(cwd, "node_modules"));
+    assert.equal(git("rev-parse", "--is-shallow-repository"), "true");
+    assert.notEqual(git("rev-parse", "HEAD"), sourceSha);
+  }
+  const callerHead = git("rev-parse", "HEAD");
   fs.writeFileSync(path.join(cwd, "source.txt"), "caller dirty work\n");
   const before = git("status", "--porcelain", "--untracked-files=all");
   const snapshot = prepareDevelopmentSource({ cwd, sourceSha });
   t.after(snapshot.dispose);
+  assert.equal(fs.readFileSync(path.join(snapshot.cwd, "source.txt"), "utf8"), "new protected source\n");
   const intent = { channel: "alpha", version: "4.0.4-alpha.0", sourceSha, sourceTimestamp: "2026-09-07T15:01:00.000Z" };
   const files = localVersionFiles(snapshot.cwd, intent);
   assert.deepEqual(files.map(({ path: file }) => file), ["dist/site/kfd-claims.json", "package.json"]);
@@ -90,6 +107,7 @@ if (fs.existsSync(".buildchain/runtime/reject-unrelated")) fs.writeFileSync("sou
   assert.equal(execFileSync("git", ["rev-parse", "HEAD"], { cwd: snapshot.cwd, encoding: "utf8" }).trim(), sourceSha);
   assert.equal(JSON.parse(fs.readFileSync(path.join(snapshot.cwd, "package.json"))).version, "4.0.3-alpha.1");
   assert.equal(git("status", "--porcelain", "--untracked-files=all"), before);
+  assert.equal(git("rev-parse", "HEAD"), callerHead);
   fs.writeFileSync(path.join(snapshot.cwd, ".buildchain/runtime/reject-unrelated"), "");
   assert.throws(() => localVersionFiles(snapshot.cwd, intent), /Unexpected version changes:.*source\.txt/u);
   assert.equal(fs.readFileSync(path.join(cwd, "source.txt"), "utf8"), "caller dirty work\n");

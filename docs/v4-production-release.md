@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-08
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-07
+  generated_at: 2026-09-08
   invisible_context: Provider credentials and private provider state were not read.
 ---
 
@@ -116,7 +116,9 @@ read retained provider facts and resume only missing operations.
 
 After stable completion, the producer generates the next patch at `alpha.0`
 from an isolated Git checkout of the exact current protected Dev commit. The
-checkout retains its own index so version verification can inspect the actual
+checkout explicitly fetches the exact Dev commit into its own object database;
+shallow local clones alone may omit commits fetched only into `FETCH_HEAD`.
+It retains its own index so version verification can inspect the actual
 generated delta, and uses the admitted runtime dependency bridge. A source
 archive without Git metadata cannot perform that verification. The publication
 receipt remains complete if development preparation fails; recover the original
