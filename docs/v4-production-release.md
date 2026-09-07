@@ -84,6 +84,13 @@ APPLY retains that exact chain before waiting for next-development in the existi
 `delivery-summary.json`, which reports publication and next-development separately.
 A green workflow label cannot substitute for this receipt verification.
 
+Recovery verifies both its current execution chain and any already published
+settlement against the exact tag, source and original Passport. It preserves
+the existing settlement bytes and uses that original receipt for development
+advancement. A corrected runtime may produce different recovery observations;
+they do not authorize replacing the completed publication packet. Ambiguous,
+tampered or mismatched retained evidence still blocks recovery.
+
 Binary Distribution reads this settlement and the original publication Passport.
 Tag creation can precede settlement, so it waits at most 40 observations, 15 seconds
 apart, for missing evidence. A mismatched source, tag, Passport or receipt fails

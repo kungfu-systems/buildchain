@@ -138,44 +138,50 @@ export async function settlePublication({
     );
   const tag = documents.invocation.target.tag;
   const release = client.release(tag);
-  const sourceSha = client.json(
-    `repos/${repository}/commits/${encodeURIComponent(tag)}`,
-  ).sha;
-  const matches = release.assets.filter(
-    ({ name }) => name === "buildchain.release.json",
-  );
+  const sourceSha = client.json(`repos/${repository}/commits/${encodeURIComponent(tag)}`).sha;
+  const matches = release.assets.filter(({ name }) => name === "buildchain.release.json");
   if (matches.length !== 1)
     throw new Error(
       "exact public publication passport is missing or ambiguous",
     );
   const publicPassport = JSON.parse(client.assetBytes(matches[0]));
-  const status = verifyPublicationSettlement(documents, {
+  const expected = {
     repository,
     tag,
     sourceSha,
     publicPassport,
-  });
+    candidateSha,
+  };
+  let status = verifyPublicationSettlement(documents, expected);
   // Publication completion is immutable; next-development and distribution progress stay separate.
-  const settlement = {
+  let settlement = {
     schemaVersion: 1,
     contract: "buildchain-v4-publication-settlement/v1",
     id: "v4-publication",
     release: { sourceSha, tag, channel: documents.invocation.target.channel },
     documents,
   };
+  const retained = release.assets.filter(({ name }) => name === SETTLEMENT_ASSET);
+  if (retained.length > 1) throw new Error("ambiguous immutable publication settlement");
+  if (retained.length === 1) {
+    const original = JSON.parse(client.assetBytes(retained[0]));
+    if (original.contract !== settlement.contract ||
+        original.release?.sourceSha !== sourceSha || original.release?.tag !== tag ||
+        original.release?.channel !== documents.invocation.target.channel)
+      throw new Error("retained publication settlement identity mismatch");
+    status = verifyPublicationSettlement(original.documents, expected);
+    settlement = original;
+  }
   const file = path.join(base, "release-tail", SETTLEMENT_ASSET);
   client.write(file, settlement);
-  await client.publish(release, [file]);
+  if (retained.length === 0) await client.publish(release, [file]);
   const summary = {
     ...status,
     nextDevelopment: applyOutcome === "success" ? "advanced" : "incomplete",
     binaryDistribution: "pending-provider-readback",
   };
-  client.write(
-    path.join(base, "release-tail", "delivery-summary.json"),
-    summary,
-  );
-  return { summary, receipt: documents.receipt };
+  client.write(path.join(base, "release-tail", "delivery-summary.json"), summary);
+  return { summary, receipt: settlement.documents.receipt };
 }
 
 async function main() {
