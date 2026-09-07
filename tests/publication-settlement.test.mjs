@@ -3,6 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import * as binaryEvidence from "../scripts/binary-publication-evidence.mjs";
+import { collectGitHubReleasePassport } from "../packages/core/release-passport.js";
 import {
   verifyPublicationSettlement,
   SETTLEMENT_ASSET,
@@ -234,5 +236,133 @@ test("immutable upload checks every collision before writing and rejects absent 
   await assert.rejects(
     missing.publish({ ...release, assets: [] }, files),
     /missing on readback/u,
+  );
+});
+
+test("binary settlement tolerates protected finalization beyond ten minutes but remains bounded", async () => {
+  const settlement = {
+    contract: "buildchain-v4-publication-settlement/v1",
+    release: { sourceSha: expected.sourceSha, tag: expected.tag },
+    documents,
+  };
+  let reads = 0;
+  const client = {
+    release: () => ({
+      assets:
+        ++reads > 48
+          ? [{ name: SETTLEMENT_ASSET }, { name: "buildchain.release.json" }]
+          : [],
+    }),
+    json: () => ({ sha: expected.sourceSha }),
+    assetBytes: ({ name }) =>
+      JSON.stringify(
+        name === SETTLEMENT_ASSET ? settlement : documents.passport,
+      ),
+  };
+  assert.deepEqual(
+    await readBinaryPublicationEvidence({
+      ...expected,
+      client,
+      wait: async () => {},
+    }),
+    settlement,
+  );
+  reads = 0;
+  await assert.rejects(
+    readBinaryPublicationEvidence({
+      ...expected,
+      client: {
+        ...client,
+        release: () => {
+          reads++;
+          return { assets: [] };
+        },
+      },
+      wait: async () => {},
+    }),
+    /bounded wait/,
+  );
+  assert.equal(reads, 160);
+});
+
+test("stable binary Passport uses verified publication version despite alpha source package", async (t) => {
+  const settlement = JSON.parse(
+    fs.readFileSync(
+      new URL(
+        "./fixtures/stable404-publication-settlement.json",
+        import.meta.url,
+      ),
+    ),
+  );
+  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "binary-stable-passport-"));
+  t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
+  fs.writeFileSync(
+    path.join(cwd, "package.json"),
+    JSON.stringify({
+      name: "@kungfu-tech/buildchain",
+      version: "4.0.4-alpha.0",
+    }),
+  );
+  fs.mkdirSync(path.join(cwd, "assets"));
+  fs.writeFileSync(
+    path.join(cwd, "assets", "buildchain.tar.gz"),
+    "binary fixture",
+  );
+  const writes = new Map();
+  const client = {
+    release: () => ({
+      assets: [{ name: SETTLEMENT_ASSET }, { name: "buildchain.release.json" }],
+    }),
+    json: () => ({ sha: settlement.release.sourceSha }),
+    assetBytes: ({ name }) =>
+      JSON.stringify(
+        name === SETTLEMENT_ASSET ? settlement : settlement.documents.passport,
+      ),
+    write: (name, value) => writes.set(name, value),
+  };
+  await binaryEvidence.writeBinaryPublicationEvidence({
+    client,
+    repository: "kungfu-systems/buildchain",
+    tag: settlement.release.tag,
+    sourceSha: settlement.release.sourceSha,
+  });
+  const release = writes.get(".buildchain/publication-evidence/release.json");
+  const collected = collectGitHubReleasePassport({
+    cwd,
+    tag: settlement.release.tag,
+    sourceSha: settlement.release.sourceSha,
+    assetsDir: "assets",
+    outputDir: "passport",
+    packageVersion: release.publishedVersion,
+    releaseJsonExtra: JSON.stringify(release),
+  });
+  const passport = JSON.parse(
+    fs.readFileSync(path.join(collected.outputDir, "buildchain.release.json")),
+  );
+  for (const actual of [
+    passport.release.publishedVersion,
+    passport.release.versionLabel,
+    passport.release.package.version,
+  ])
+    assert.equal(actual, "4.0.4");
+  assert.equal(passport.release.channel, "stable");
+  assert.deepEqual(
+    writes.get(`.buildchain/publication-evidence/${SETTLEMENT_ASSET}`),
+    settlement,
+  );
+  const workflow = fs.readFileSync(
+    new URL(
+      "../.github/workflows/self-build-binary-distribution.yml",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /--package-version.*publication-evidence\/release\.json.*publishedVersion/,
+  );
+  assert.match(
+    workflow,
+    /name: Collect release passport[\s\S]*?timeout-minutes: 45/,
   );
 });
