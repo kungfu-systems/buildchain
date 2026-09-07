@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { verifyComposePublication } from "../packages/core/oci-compose-qualification.js";
-import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
+import { domainContentRoot } from "../packages/core/canonical-contracts.js";
 import { releaseTailRoot } from "../packages/core/release-tail-provider-plane.js";
 
 function fixture(merged) {
@@ -38,7 +38,7 @@ function fixture(merged) {
   };
   const family = {
     ...body,
-    root: v4ContentRoot("oci-publication-family", body),
+    root: domainContentRoot("oci-publication-family", body),
   };
   const readback = {
     familyRoot: family.root,

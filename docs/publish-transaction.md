@@ -142,9 +142,9 @@ in `waiting-anchor`; it does not invent the next upstream anchor. Multi-package
 stable rematerialization is not supported by this provider and fails before
 publication. The existing singleton stable flow remains available.
 
-The contract is exercised by `v4-product-publication-topology.test.mjs`,
-`v4-product-provider-adapters.test.mjs`, and
-`v4-alpha-next-development-provider.test.mjs` under `tests/`.
+The contract is exercised by `product-publication-topology.test.mjs`,
+`product-provider-adapters.test.mjs`, and
+`alpha-next-development-provider.test.mjs` under `tests/`.
 
 ## Lifecycle
 

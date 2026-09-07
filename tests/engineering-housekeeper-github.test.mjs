@@ -336,11 +336,11 @@ test("inventory is deterministic for the same observation and retains unsafe ref
 });
 
 test("empty target discovers every protected mainline but mutates only allowlisted temporary families", async () => {
-  const v4Branch = "dev/v4/v4.0";
+  const domainBranch = "dev/v4/v4.0";
   const client = new FakeGitHubClient({
     branches: [
       branch(targetBranch, oid("b")),
-      branch(v4Branch, oid("e")),
+      branch(domainBranch, oid("e")),
       branch("feature/v4-merged", oid("a")),
       branch("experiment/v4-merged", oid("c")),
     ],
@@ -356,7 +356,7 @@ test("empty target discovers every protected mainline but mutates only allowlist
             sha: oid("a"),
             repo: { full_name: repository },
           },
-          base: { ref: v4Branch },
+          base: { ref: domainBranch },
         }),
       ],
     },
@@ -367,7 +367,7 @@ test("empty target discovers every protected mainline but mutates only allowlist
     plan.actions
       .filter((entry) => entry.kind === "delete-branch")
       .map((entry) => ({ name: entry.name, target: entry.targetName })),
-    [{ name: "feature/v4-merged", target: v4Branch }],
+    [{ name: "feature/v4-merged", target: domainBranch }],
   );
   const unknown = plan.inventory.find(
     (entry) => entry.name === "experiment/v4-merged",

@@ -51,31 +51,31 @@ const DEV_DELIVERY_AUTHORITY_SCHEMA =
   "schemas/dev-delivery-authority-v2.schema.json";
 const DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE =
   "contracts/dev-delivery-authority-v2.schema.json";
-const V4_COMPATIBILITY_FACTS_SCHEMA =
+const COMPATIBILITY_FACTS_SCHEMA =
   "schemas/v4-compatibility-facts-v1.schema.json";
-const V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE =
+const COMPATIBILITY_FACTS_SCHEMA_SOURCE =
   "contracts/v4-compatibility-facts-v1.schema.json";
-const V4_PUBLICATION_REHEARSAL_SCHEMA =
+const PUBLICATION_REHEARSAL_SCHEMA =
   "schemas/v4-publication-rehearsal-capsule-v1.schema.json";
-const V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE =
+const PUBLICATION_REHEARSAL_SCHEMA_SOURCE =
   "contracts/v4-publication-rehearsal-capsule-v1.schema.json";
-const V4_ADOPTER_DELIVERY_SCHEMA =
+const ADOPTER_DELIVERY_SCHEMA =
   "schemas/v4-adopter-delivery-v1.schema.json";
-const V4_ADOPTER_DELIVERY_SCHEMA_SOURCE =
+const ADOPTER_DELIVERY_SCHEMA_SOURCE =
   "contracts/v4-adopter-delivery-v1.schema.json";
 const RELEASE_TAIL_CAPABILITIES_SCHEMA =
   "schemas/release-tail-capabilities-v1.schema.json";
 const RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE =
   "contracts/release-tail-capabilities-v1.schema.json";
-const V4_PUBLICATION_QUALIFICATION_SCHEMA =
+const PUBLICATION_QUALIFICATION_SCHEMA =
   "schemas/v4-publication-qualification-v1.schema.json";
-const V4_PUBLICATION_QUALIFICATION_SCHEMA_SOURCE =
+const PUBLICATION_QUALIFICATION_SCHEMA_SOURCE =
   "contracts/v4-publication-qualification-v1.schema.json";
 const PUBLICATION_REHEARSAL_SITE_SCHEMAS = [
-  V4_PUBLICATION_REHEARSAL_SCHEMA,
-  V4_ADOPTER_DELIVERY_SCHEMA,
+  PUBLICATION_REHEARSAL_SCHEMA,
+  ADOPTER_DELIVERY_SCHEMA,
   RELEASE_TAIL_CAPABILITIES_SCHEMA,
-  V4_PUBLICATION_QUALIFICATION_SCHEMA,
+  PUBLICATION_QUALIFICATION_SCHEMA,
 ];
 const root = path.resolve(import.meta.dirname, "..");
 const outputDir = path.join(root, "dist", "site");
@@ -106,10 +106,10 @@ function stableJson(value) {
 
 function siteFileBytes(name, value) {
   if (name === DEV_DELIVERY_AUTHORITY_SCHEMA) return readText(DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE);
-  if (name === V4_COMPATIBILITY_FACTS_SCHEMA) return readText(V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE);
-  if (name === V4_PUBLICATION_REHEARSAL_SCHEMA) return readText(V4_PUBLICATION_REHEARSAL_SCHEMA_SOURCE);
-  if (name === V4_PUBLICATION_QUALIFICATION_SCHEMA) return readText(V4_PUBLICATION_QUALIFICATION_SCHEMA_SOURCE);
-  if (name === V4_ADOPTER_DELIVERY_SCHEMA) return readText(V4_ADOPTER_DELIVERY_SCHEMA_SOURCE);
+  if (name === COMPATIBILITY_FACTS_SCHEMA) return readText(COMPATIBILITY_FACTS_SCHEMA_SOURCE);
+  if (name === PUBLICATION_REHEARSAL_SCHEMA) return readText(PUBLICATION_REHEARSAL_SCHEMA_SOURCE);
+  if (name === PUBLICATION_QUALIFICATION_SCHEMA) return readText(PUBLICATION_QUALIFICATION_SCHEMA_SOURCE);
+  if (name === ADOPTER_DELIVERY_SCHEMA) return readText(ADOPTER_DELIVERY_SCHEMA_SOURCE);
   if (name === RELEASE_TAIL_CAPABILITIES_SCHEMA) return readText(RELEASE_TAIL_CAPABILITIES_SCHEMA_SOURCE);
   return stableJson(value);
 }
@@ -1331,8 +1331,8 @@ function buildSiteBundle() {
     [DEV_DELIVERY_AUTHORITY_SCHEMA]: readJson(
       DEV_DELIVERY_AUTHORITY_SCHEMA_SOURCE,
     ),
-    [V4_COMPATIBILITY_FACTS_SCHEMA]: readJson(
-      V4_COMPATIBILITY_FACTS_SCHEMA_SOURCE,
+    [COMPATIBILITY_FACTS_SCHEMA]: readJson(
+      COMPATIBILITY_FACTS_SCHEMA_SOURCE,
     ),
     ...Object.fromEntries(
       PUBLICATION_REHEARSAL_SITE_SCHEMAS.map((name) => [

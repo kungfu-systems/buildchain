@@ -534,10 +534,10 @@ export const reconcileDevDeliveryTerminalEvidence =
   });
 export function observeDevDeliveryQueue(
   queueInput,
-  { now = new Date().toISOString(), allowLegacyV3Readback = false } = {},
+  { now = new Date().toISOString(), allowLegacyV3Readback: legacyReadback = false, allowLegacyBaselineReadback = legacyReadback } = {},
 ) {
   const queue = normalizeDevDeliveryQueue(queueInput, {
-    allowLegacyV3Readback,
+    allowLegacyBaselineReadback,
   });
   const currentTime = timestamp(now, "now");
   const states = {};
@@ -545,7 +545,7 @@ export function observeDevDeliveryQueue(
     states[candidate.status] = (states[candidate.status] || 0) + 1;
   const queued = rankDevDeliveryCandidates(queue, {
     now: currentTime,
-    allowLegacyV3Readback,
+    allowLegacyBaselineReadback,
   });
   return {
     schema: "kungfu.buildchain.dev-delivery-queue-observation/v1",

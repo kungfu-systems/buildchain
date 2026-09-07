@@ -16,8 +16,8 @@ import {
 const r = `sha256:${"1".repeat(64)}`;
 
 test("verification identity hashes the complete tracked WASM above the default subprocess buffer", () => {
-  const wasm = "packages/core/buildchain-v4-domain.wasm";
-  const manifestPath = "packages/core/v4-domain-wasm-artifact.js";
+  const wasm = "packages/core/buildchain-domain.wasm";
+  const manifestPath = "packages/core/domain-wasm-artifact.js";
   const git = (args) => execFileSync("git", args, { encoding: "utf8" }).trim();
   const root = process.cwd();
   const fixture = fs.mkdtempSync(
@@ -33,8 +33,8 @@ test("verification identity hashes the complete tracked WASM above the default s
     "scripts/verify-version-state-delta.mjs",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
-    "crates/buildchain-v4-contracts/Cargo.lock",
-    "crates/buildchain-v4-bridge/Cargo.lock",
+    "crates/buildchain-domain-contracts/Cargo.lock",
+    "crates/buildchain-host-bridge/Cargo.lock",
   ];
   try {
     for (const file of files) {
@@ -59,7 +59,7 @@ test("verification identity hashes the complete tracked WASM above the default s
     const manifest = execFileSync("git", ["show", `HEAD:${manifestPath}`]);
     const wasmDigest = manifest
       .toString()
-      .match(/V4_DOMAIN_WASM_SHA256\s*=\s*"([a-f0-9]{64})"/u)[1];
+      .match(/DOMAIN_WASM_SHA256\s*=\s*"([a-f0-9]{64})"/u)[1];
     const digest = (bytes) =>
       `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}`;
     const actual = verificationIdentity({
@@ -248,11 +248,11 @@ test("discovery binds the provider run and artifact and falls back on transport 
   assert.equal((await discoverVerification(input)).decision, "execute");
 });
 
-test("Rust/WASM version projection admits only the immediate v4 alpha successor", async () => {
-  const { invokeV4DomainWasm } =
-    await import("../packages/core/v4-domain-wasm.js");
+test("Rust/WASM version projection admits only the immediate alpha successor", async () => {
+  const { invokeDomainWasm } =
+    await import("../packages/core/domain-wasm.js");
   const project = (version, baseVersion = "4.0.2-alpha.34") =>
-    invokeV4DomainWasm("source-version-projection", { baseVersion, version });
+    invokeDomainWasm("source-version-projection", { baseVersion, version });
   assert.equal(project("4.0.2-alpha.35").valid, true);
   for (const version of [
     "4.0.2-alpha.34",
@@ -266,5 +266,5 @@ test("Rust/WASM version projection admits only the immediate v4 alpha successor"
   assert.throws(() =>
     project("4.0.2-alpha.1", "4.0.2-alpha.18446744073709551615"),
   );
-  assert.throws(() => project("3.0.2-alpha.35", "3.0.2-alpha.34"));
+  assert.equal(project("3.0.2-alpha.35", "3.0.2-alpha.34").valid, true);
 });

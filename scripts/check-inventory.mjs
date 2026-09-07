@@ -207,7 +207,7 @@ const currentBuildchainContract = JSON.parse(
   fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
 );
 const selfDogfoodBootstrapAuthority = JSON.parse(
-  fs.readFileSync(path.join(root, "architecture/v4-bootstrap-authority.json"), "utf8"),
+  fs.readFileSync(path.join(root, "architecture/bootstrap-authority.json"), "utf8"),
 );
 const selfDogfoodMajorResolution = resolveSelfDogfoodMajor({
   packageVersion: rootPackage.version,
@@ -546,7 +546,8 @@ if (!coreIndexSource.includes("KFD2_RELEASE_TRUST_PASSPORT_CONTRACT")) {
 if (!coreIndexSource.includes("KFD2_TRUST_PROOF_CONTRACT")) {
   throw new Error("packages/core/index.js must export KFD-2 trust proof contract");
 }
-if (!coreIndexSource.includes("createSurfaceTimestampPolicy")) {
+const publicCore = await import("../packages/core/index.js");
+if (typeof publicCore.createSurfaceTimestampPolicy !== "function") {
   throw new Error("packages/core/index.js must export surface manifest timestamp policy APIs");
 }
 for (const requiredSnippet of [
@@ -1044,7 +1045,7 @@ for (const requiredSnippet of [
   "uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha",
   "github.event.workflow_run.event == 'push'",
   "name: Classify generated product-state finalization",
-  "selectV4FinalizedProductPublicationVersion",
+  "selectFinalizedProductPublicationVersion",
   "resume-candidate-run-id:",
   "resume-expected-source-tree:",
   "resume-buildchain-runtime-ref:",
@@ -1066,9 +1067,9 @@ for (const requiredSnippet of [
   "name: QUALIFY canonical v4 release invocation inputs",
   "name: APPLY one rooted provider transaction",
   "name: SETTLE terminal ReleaseReceipt projection",
-  "uses: ./.buildchain/runtime/actions/v4-release-candidate-promote",
+  "uses: ./.buildchain/runtime/actions/release-candidate-promote",
   "name: Resolve one exact product publication recovery",
-  "selectV4RecoveredProductPublicationVersion",
+  "selectRecoveredProductPublicationVersion",
   "publisher-workflow-sha:",
   "runtime-commit:",
   "runtime-tree:",

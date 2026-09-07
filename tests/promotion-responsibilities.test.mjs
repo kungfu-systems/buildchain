@@ -331,3 +331,31 @@ test("durable transaction responsibility emits an auditable dry-run plan and enf
     /expected 3\.0\.2-alpha\.4, got 3\.0\.2-alpha\.5/,
   );
 });
+
+test("published promotion option names forward without overriding explicit responsibility options", async () => {
+  const { normalizePromotionOptions } =
+    await import("../actions/promote-buildchain-ref/internal/promotion-options.js");
+  const aliases = {
+    releasePassportV4ConsumerPolicyCertificationJson:
+      "releasePassportConsumerPolicyCertificationJson",
+    releasePassportV4ConsumerPolicyCertificationRoot:
+      "releasePassportConsumerPolicyCertificationRoot",
+    releasePassportV4RuntimeResumeEvidenceJson:
+      "releasePassportRuntimeResumeEvidenceJson",
+    releasePassportV4RuntimeResumeEvidenceCommand:
+      "releasePassportRuntimeResumeEvidenceCommand",
+  };
+  for (const [legacy, current] of Object.entries(aliases)) {
+    assert.equal(
+      normalizePromotionOptions({ [legacy]: "retained" })[current],
+      "retained",
+    );
+    assert.equal(
+      normalizePromotionOptions({
+        [legacy]: "retained",
+        [current]: "explicit",
+      })[current],
+      "explicit",
+    );
+  }
+});

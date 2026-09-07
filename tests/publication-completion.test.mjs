@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { completePublicationDevelopment } from "../actions/v4-release-candidate-promote/publication-completion.js";
+import { completePublicationDevelopment } from "../actions/release-candidate-promote/publication-completion.js";
 
 const request = {
   repository: "owner/repo",
@@ -72,4 +72,19 @@ test("failed publication readback blocks development; failed development never r
     /review pending/u,
   );
   assert.deepEqual(events, ["published"]);
+});
+
+test("stable completion retains publication before scheduling the next patch", async () => {
+  const events = [];
+  await completePublicationDevelopment({ ...request, channel: "stable", documents: { version: "4.0.2", tag: "v4.0.2" } }, {
+    client: () => ({}), retain: async () => events.push("published"),
+    advance: async () => assert.fail("wrong channel"),
+    advanceStable: async ({ completedStable }) => {
+      assert.deepEqual(events, ["published"]);
+      assert.equal(completedStable.version, "4.0.2");
+      assert.equal(completedStable.publicationRoot, request.settlement.releaseReceipt.receiptRoot);
+      events.push("next-patch"); return { status: "verified" };
+    }, write: () => events.push("recorded"),
+  });
+  assert.deepEqual(events, ["published", "next-patch", "recorded"]);
 });

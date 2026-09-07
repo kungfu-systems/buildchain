@@ -222,11 +222,32 @@ test("fresh provider observations fence review authority and stale plans", async
 
 test("authority closure follows module imports without treating generated program text as executable imports", async () => {
   const { localModuleSpecifiers } =
-    await import("../scripts/check-v4-release-topology.mjs");
+    await import("../scripts/check-release-topology.mjs");
   assert.deepEqual(
     localModuleSpecifiers(
       "import x from './actual.js'; export { y } from './export.js'; const program = `import z from './generated.js'`; await import('./dynamic.js'); // import './comment.js'\n",
     ),
     ["./actual.js", "./dynamic.js", "./export.js"],
   );
+});
+
+test("stable next patch requires completed stable evidence and exact protected-base regeneration", async () => {
+  const f = fixture();
+  f.run.head_branch = "chore/next-development/4.0.3-alpha.0-1234567890abcdef";
+  f.pull.head.ref = f.run.head_branch;
+  let regenerated = false;
+  f.options.verifyDelta = (input) => {
+    assert.equal(input.completedStableVersion, "4.0.2");
+    assert.equal(input.baseSha, baseSha);
+    regenerated = true;
+    return { ...input, version: "4.0.3-alpha.0" };
+  };
+  f.options.publication = async ({ tag }) => {
+    assert.equal(tag, "v4.0.2");
+    return { release: { channel: "release" }, documents: { invocation: { target: { channel: "stable" } }, passport: { release: { version: "4.0.2" }, source: { treeHash: "older-stable-tree" } }, receipt: { receiptRoot: "sha256:" + "d".repeat(64) } } };
+  };
+  await verifyNextDevelopmentReview(f.options);
+  assert.equal(regenerated, true);
+  f.options.publication = async () => ({ release: { channel: "alpha" }, documents: { passport: { release: { version: "4.0.2" }, source: { treeHash: "tree" } } } });
+  await assert.rejects(verifyNextDevelopmentReview(f.options), /stable publication evidence/u);
 });

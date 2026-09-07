@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { bindPaperV4Authority, paperV4Channels, selectPaperRuntime, paperRuntimeLockPath, paperProvisioningWorkflowErrors, resolvePaperNpmRuntimeSha } from "./paper-runtime-channels.js";
+import { bindPaperAuthority, paperChannels, selectPaperRuntime, paperRuntimeLockPath, paperProvisioningWorkflowErrors, resolvePaperNpmRuntimeSha } from "./paper-runtime-channels.js";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -808,7 +808,7 @@ function migrationFiles({
     [".gitignore", paperDependencyIgnore(fs.existsSync(path.join(cwd, ".gitignore")) ? fs.readFileSync(path.join(cwd, ".gitignore"), "utf8") : "")],
   ]);
   if (runtimeIdentity.version.startsWith("4.")) {
-    const channelPlan = paperV4Channels({
+    const channelPlan = paperChannels({
       cwd, buildchainRoot, buildchainVersion: runtimeIdentity.version,
       buildchainSha: runtimeSha, contractWorld: runtimeContractWorld(buildchainRoot),
       acceptedAt: contractLock.buildchain.acceptedAt,
@@ -823,7 +823,7 @@ function migrationFiles({
     const alphaJob = releaseJob.replace("  paper-release:\n", "  paper-release-alpha:\n    if: ${{ startsWith(github.ref_name, 'alpha/') }}\n").replaceAll(runtimeSha, "v4-alpha").replaceAll(".buildchain/contract-lock.json", ".buildchain/alpha-contract-lock.json");
     const stableJob = releaseJob.replace("  paper-release:\n", "  paper-release:\n    if: ${{ startsWith(github.ref_name, 'release/') }}\n").replaceAll(runtimeSha, "v4");
     files.set(PAPER_PATHS.releaseWorkflow, `${releaseWorkflow.slice(0, releaseStart)}${alphaJob}\n${stableJob}`);
-    files.set(PAPER_PATHS.provisioningAuthority, jsonText(bindPaperV4Authority(provisioningAuthority, channelPlan, files)));
+    files.set(PAPER_PATHS.provisioningAuthority, jsonText(bindPaperAuthority(provisioningAuthority, channelPlan, files)));
   }
   return files;
 }

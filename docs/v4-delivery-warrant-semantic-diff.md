@@ -50,7 +50,7 @@ provider effects, modify v3 authority, or provide a v4 write cutover receipt.
 
 ## Run the gate
 
-Call `runV4DeliveryWarrantSemanticDiffGate` with exact source revisions,
+Call `runDeliveryWarrantSemanticDiffGate` with exact source revisions,
 explicit observation time, schema and runner roots, public-safe retained cases,
 bounded fault probes, an observation retention sink, and a report retention
 sink. The returned report is canonical JSON data suitable for a caller-owned
@@ -59,7 +59,7 @@ retained evidence file.
 The checked-in focused suite exercises that API against the real Rust host:
 
 ```sh
-node --test tests/v4-delivery-warrant-fixture-runner.test.mjs
+node --test tests/delivery-warrant-fixture-runner.test.mjs
 ```
 
 A qualified report makes only the next
@@ -71,5 +71,5 @@ documented in
 Focused verification:
 
 ```sh
-pnpm run check:v4-contracts
+pnpm run check:contracts
 ```

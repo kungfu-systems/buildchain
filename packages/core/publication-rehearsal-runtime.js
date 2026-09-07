@@ -3,18 +3,18 @@ import path from "node:path";
 
 import { releaseTailRoot } from "./release-tail-provider-plane.js";
 import {
-  V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
-  V4_PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT,
-  createV4PublicationRehearsalCapsule,
-  executeV4PublicationRehearsal,
-  validateV4PublicationRehearsalCapsule,
-  verifyV4PublicationRehearsalCapsule,
-} from "./v4-publication-rehearsal.js";
+  DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
+  DOMAIN_PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT,
+  createDomainPublicationRehearsalCapsule,
+  executeDomainPublicationRehearsal,
+  validatePublicationRehearsalCapsule,
+  verifyDomainPublicationRehearsalCapsule,
+} from "./publication-rehearsal.js";
 
 export const PUBLICATION_REHEARSAL_CAPSULE_CONTRACT =
-  V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT;
+  DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT;
 export const PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT =
-  V4_PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT;
+  DOMAIN_PUBLICATION_REHEARSAL_EVIDENCE_CONTRACT;
 export const PUBLICATION_REHEARSAL_DIAGNOSTIC_CONTRACT =
   "buildchain-v4-publication-rehearsal-compatibility-diagnostic/v1";
 export const RELEASE_LOCAL_CONSTRUCTIBILITY_ADR =
@@ -24,7 +24,7 @@ export const RELEASE_LOCAL_CONSTRUCTIBILITY_INVARIANT =
 export const PUBLICATION_REHEARSAL_COMMAND =
   'buildchain release-tail rehearse --capsule "$PWD/.buildchain/publication-rehearsal/capsule.json" --candidate-root "$PWD/.buildchain/publication-rehearsal/candidate" --mode simulate --state "$PWD/.buildchain/publication-rehearsal/state.json" --evidence "$PWD/.buildchain/publication-rehearsal/evidence.json"';
 
-const REQUIRED_V4_INPUTS = Object.freeze([
+const REQUIRED_INPUTS = Object.freeze([
   "source.repository",
   "source.revision",
   "manifest.path",
@@ -41,8 +41,8 @@ function migrationReceipt(surface, reasonCode) {
     reasonCode,
     replacement: {
       module: "@kungfu-tech/buildchain/v4-publication-rehearsal",
-      capsuleContract: V4_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
-      requiredInputs: REQUIRED_V4_INPUTS,
+      capsuleContract: DOMAIN_PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
+      requiredInputs: REQUIRED_INPUTS,
     },
     productionAuthority: false,
   };
@@ -68,7 +68,7 @@ export class PublicationRehearsalError extends Error {
   }
 }
 
-function hasV4CreationBindings(input) {
+function hasCreationBindings(input) {
   return Boolean(
     input?.source?.repository &&
     input?.source?.revision &&
@@ -79,8 +79,8 @@ function hasV4CreationBindings(input) {
   );
 }
 
-function requireV4CreationBindings(input, surface) {
-  if (hasV4CreationBindings(input)) return;
+function requireCreationBindings(input, surface) {
+  if (hasCreationBindings(input)) return;
   const migration = migrationReceipt(surface, "v4-source-binding-required");
   throw new PublicationRehearsalError(
     "v3 rehearsal capsules cannot be upgraded implicitly; provide the v4 source, manifest, and config bindings",
@@ -89,15 +89,15 @@ function requireV4CreationBindings(input, surface) {
 }
 
 export function createPublicationRehearsalCapsule(input = {}) {
-  requireV4CreationBindings(
+  requireCreationBindings(
     input,
     "@kungfu-tech/buildchain/publication-rehearsal-runtime#createPublicationRehearsalCapsule",
   );
-  return createV4PublicationRehearsalCapsule(input);
+  return createDomainPublicationRehearsalCapsule(input);
 }
 
 export function normalizePublicationRehearsalCapsule(input) {
-  return validateV4PublicationRehearsalCapsule(input);
+  return validatePublicationRehearsalCapsule(input);
 }
 
 export function verifyPublicationRehearsalCapsule({
@@ -105,11 +105,11 @@ export function verifyPublicationRehearsalCapsule({
   capsuleRoot,
   candidateRoot = capsuleRoot,
 } = {}) {
-  return verifyV4PublicationRehearsalCapsule({ capsule, candidateRoot });
+  return verifyDomainPublicationRehearsalCapsule({ capsule, candidateRoot });
 }
 
 export function publicationRehearsalBindingRoot(capsule) {
-  return validateV4PublicationRehearsalCapsule(capsule).capsuleRoot;
+  return validatePublicationRehearsalCapsule(capsule).capsuleRoot;
 }
 
 export function publicationRehearsalDiagnostic(error, { capsule } = {}) {
@@ -156,7 +156,7 @@ export async function executePublicationRehearsal({
       { code: "undeclared-environment", classification: "input", migration },
     );
   }
-  return executeV4PublicationRehearsal({
+  return executeDomainPublicationRehearsal({
     capsule,
     candidateRoot,
     mode,

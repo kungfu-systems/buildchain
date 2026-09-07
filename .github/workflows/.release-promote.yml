@@ -816,7 +816,7 @@ jobs:
           script: |
             const { pathToFileURL } = require("node:url");
             const runtime = await import(pathToFileURL(
-              `${process.env.BUILDCHAIN_RUNTIME_ROOT}/packages/core/v4-release-invocation.js`,
+              `${process.env.BUILDCHAIN_RUNTIME_ROOT}/packages/core/release-invocation.js`,
             ).href);
             const targetRef = (process.env.INPUT_TARGET_REF || context.ref.replace(/^refs\/heads\//, ""))
               .replace(/^refs\/heads\//, "");
@@ -843,7 +843,7 @@ jobs:
               });
               comparisonStatus = comparison.data.status;
             }
-            const route = runtime.planV4ReleaseRoute({
+            const route = runtime.planReleaseRoute({
               requestedSha,
               observedSha: currentSha,
               comparisonStatus,
@@ -876,13 +876,13 @@ jobs:
           BUILDCHAIN_PROMOTION_INPUTS_JSON: ${{ toJSON(inputs) }}
           BUILDCHAIN_RUNTIME_REF: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_DECLARATIVE_RELEASE_TAIL: "true"
-        run: node .buildchain/runtime/scripts/v4-declarative-promotion-admission.mjs
+        run: node .buildchain/runtime/scripts/declarative-promotion-admission.mjs
 
       - name: Resolve and qualify the sealed release candidate
         if: ${{ steps.intent.outputs.action == 'promote' }}
         id: candidate
         shell: bash
-        run: node .buildchain/runtime/scripts/v4-release-candidate-adapter.mjs
+        run: node .buildchain/runtime/scripts/release-candidate-adapter.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
@@ -929,7 +929,7 @@ jobs:
           script: |
             const { pathToFileURL } = require("node:url");
             const runtime = await import(pathToFileURL(
-              `${process.env.BUILDCHAIN_RUNTIME_ROOT}/packages/core/v4-universal-workflow-bootstrap.js`,
+              `${process.env.BUILDCHAIN_RUNTIME_ROOT}/packages/core/universal-workflow-bootstrap.js`,
             ).href);
             const requestedSha = process.env.BUILDCHAIN_REQUESTED_SHA;
             const explicitResume = process.env.BUILDCHAIN_EXPLICIT_RESUME === "true";
@@ -944,7 +944,7 @@ jobs:
             );
             const recoveryStates = [];
             for (const stateRef of refs) {
-              const version = runtime.v4ProductStateVersion(stateRef, requestedSha);
+              const version = runtime.productStateVersion(stateRef, requestedSha);
               const stateCommit = (await github.rest.git.getCommit({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -974,7 +974,7 @@ jobs:
                 if (error.status !== 404) throw error;
               }
             }
-            const version = runtime.selectV4RecoveredProductPublicationVersion({
+            const version = runtime.selectRecoveredProductPublicationVersion({
               routeDecision: "Resume",
               candidateVersion: process.env.BUILDCHAIN_CANDIDATE_VERSION,
               requestedSha,
@@ -988,7 +988,7 @@ jobs:
         if: ${{ steps.intent.outputs.action == 'promote' }}
         id: publication
         shell: bash
-        run: node .buildchain/runtime/scripts/v4-product-publication-intent.mjs
+        run: node .buildchain/runtime/scripts/product-publication-intent.mjs
         env:
           BUILDCHAIN_REPOSITORY: ${{ github.repository }}
           BUILDCHAIN_CHANNEL: ${{ steps.intent.outputs.channel }}
@@ -1078,7 +1078,7 @@ jobs:
         id: interrupted-provider
         if: ${{ inputs.provider-failure-after-capability != '' }}
         continue-on-error: true
-        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        uses: ./.buildchain/runtime/actions/release-candidate-promote
         with: &provider-inputs
           token: ${{ github.token }}
           mutation-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
@@ -1118,13 +1118,13 @@ jobs:
       - name: Execute Provider Plane
         id: provider
         if: ${{ inputs.provider-failure-after-capability == '' }}
-        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        uses: ./.buildchain/runtime/actions/release-candidate-promote
         with: *provider-inputs
 
       - name: Resume the same transaction journal
         id: resume
         if: ${{ steps.interrupted-provider.outcome == 'failure' }}
-        uses: ./.buildchain/runtime/actions/v4-release-candidate-promote
+        uses: ./.buildchain/runtime/actions/release-candidate-promote
         with: *provider-inputs
 
       - name: Retain completed publication independently of next-development
@@ -1134,7 +1134,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           CANDIDATE_SHA: ${{ needs.qualify.outputs.requested-sha }}
           APPLY_OUTCOME: ${{ (steps.resume.outcome == 'success' || steps.resume.outcome == 'failure') && steps.resume.outcome || steps.provider.outcome }}
-        run: node .buildchain/runtime/scripts/v4-publication-settlement.mjs .buildchain
+        run: node .buildchain/runtime/scripts/publication-settlement.mjs .buildchain
 
       - name: Retain canonical APPLY and ReleaseReceipt evidence
         if: ${{ always() }}
@@ -1187,7 +1187,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from "node:fs";
-          const { readApplyDocuments, verifyPublicationSettlement } = await import("./.buildchain/runtime/scripts/v4-publication-settlement.mjs");
+          const { readApplyDocuments, verifyPublicationSettlement } = await import("./.buildchain/runtime/scripts/publication-settlement.mjs");
           const documents = readApplyDocuments(".buildchain/evidence");
           verifyPublicationSettlement(documents, {
             repository: process.env.GITHUB_REPOSITORY,

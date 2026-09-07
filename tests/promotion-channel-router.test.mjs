@@ -128,8 +128,8 @@ test("a matching workflow ref cannot authorize a different runtime SHA", () => {
 });
 
 test("floating promotion refs resolve once even when the ref moves during routing", async () => {
-  const firstV3 = "1".repeat(40);
-  const movedV3 = "2".repeat(40);
+  const firstBaseline = "1".repeat(40);
+  const movedBaseline = "2".repeat(40);
   let calls = 0;
   const identities = await resolvePromotionIdentities({
     routerRef: "v3-alpha",
@@ -140,7 +140,7 @@ test("floating promotion refs resolve once even when the ref moves during routin
     resolveRef: async (ref) => {
       assert.equal(ref, "v3");
       calls += 1;
-      return calls === 1 ? firstV3 : movedV3;
+      return calls === 1 ? firstBaseline : movedBaseline;
     },
   });
 
@@ -148,8 +148,8 @@ test("floating promotion refs resolve once even when the ref moves during routin
   assert.equal(identities.shellRef, "v3");
   assert.equal(identities.shellCallRef, "v3");
   assert.equal(identities.runtimeRef, "v3");
-  assert.equal(identities.shellSha, firstV3);
-  assert.equal(identities.runtimeSha, firstV3);
+  assert.equal(identities.shellSha, firstBaseline);
+  assert.equal(identities.runtimeSha, firstBaseline);
 });
 
 function workflowFields(source, section) {
@@ -269,7 +269,7 @@ test("promotion router contains no native build or provider mutation implementat
   assert.doesNotMatch(router, /matrix:|Build native|pnpm run build/);
   assert.doesNotMatch(
     router,
-    /actions\/v4-release-candidate-promote/,
+    /actions\/release-candidate-promote/,
   );
   assert.match(router, /^  resolve-promotion:/m);
   assert.match(router, /^  consumer-admission:/m);

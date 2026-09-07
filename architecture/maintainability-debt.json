@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64598,
-    "current": 56537
+    "measuredExcess": 64542,
+    "current": 56481
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -174,28 +174,28 @@
         "baseline": {
           "lines": 5132,
           "functions": {
-            "resolvePublishContract@258": {
+            "resolvePublishContract@259": {
               "complexity": 30
             },
-            "validatePromotionReleaseCandidate@528": {
+            "validatePromotionReleaseCandidate@529": {
               "complexity": 27
             },
-            "runPublishTransaction@1419": {
+            "runPublishTransaction@1420": {
               "lines": 247,
               "complexity": 33
             }
           }
         },
         "current": {
-          "lines": 3468,
+          "lines": 3423,
           "functions": {
-            "resolvePublishContract@258": {
+            "resolvePublishContract@259": {
               "complexity": 30
             },
-            "validatePromotionReleaseCandidate@528": {
+            "validatePromotionReleaseCandidate@529": {
               "complexity": 27
             },
-            "runPublishTransaction@1419": {
+            "runPublishTransaction@1420": {
               "lines": 247,
               "complexity": 33
             }
@@ -204,13 +204,13 @@
         "target": {
           "lines": 600,
           "functions": {
-            "resolvePublishContract@258": {
+            "resolvePublishContract@259": {
               "complexity": 25
             },
-            "validatePromotionReleaseCandidate@528": {
+            "validatePromotionReleaseCandidate@529": {
               "complexity": 25
             },
-            "runPublishTransaction@1419": {
+            "runPublishTransaction@1420": {
               "lines": 180,
               "complexity": 25
             }
@@ -402,21 +402,21 @@
       "packages/core/dev-delivery-native-proof.js": {
         "baseline": {
           "functions": {
-            "validateActiveDevDeliveryWarrant@75": {
+            "validateActiveDevDeliveryWarrant@79": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "validateActiveDevDeliveryWarrant@75": {
+            "validateActiveDevDeliveryWarrant@79": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "validateActiveDevDeliveryWarrant@75": {
+            "validateActiveDevDeliveryWarrant@79": {
               "complexity": 25
             }
           }
@@ -569,7 +569,7 @@
           "lines": 705
         },
         "current": {
-          "lines": 705
+          "lines": 701
         },
         "target": {
           "lines": 600
@@ -1124,12 +1124,12 @@
           }
         }
       },
-      "packages/core/v4-runtime-ref-resume-authority.js": {
+      "packages/core/runtime-ref-resume-authority.js": {
         "baseline": {
           "lines": 625
         },
         "current": {
-          "lines": 625
+          "lines": 621
         },
         "target": {
           "lines": 600
@@ -1214,7 +1214,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1474
+          "lines": 1475
         },
         "target": {
           "lines": 600
@@ -1223,21 +1223,21 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@253": {
+            "evaluateMaintainability@260": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@253": {
+            "evaluateMaintainability@260": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@253": {
+            "evaluateMaintainability@260": {
               "complexity": 25
             }
           }
@@ -1748,7 +1748,7 @@
           }
         }
       },
-      "scripts/v4-universal-workflow-engine.mjs": {
+      "scripts/universal-workflow-engine.mjs": {
         "baseline": {
           "lines": 620
         },
@@ -1759,7 +1759,7 @@
           "lines": 600
         }
       },
-      "scripts/v4-architecture.mjs": {
+      "scripts/architecture.mjs": {
         "baseline": {
           "lines": 610
         },
@@ -1770,7 +1770,7 @@
           "lines": 600
         }
       },
-      "scripts/v4-warrant-shadow-plan.mjs": {
+      "scripts/warrant-shadow-plan.mjs": {
         "baseline": {
           "lines": 601,
           "functions": {
@@ -1956,7 +1956,7 @@
       }
     },
     "rust": {
-      "crates/buildchain-v4-bridge/src/main.rs": {
+      "crates/buildchain-host-bridge/src/main.rs": {
         "baseline": {
           "functions": {
             "execute@222": {
@@ -1979,30 +1979,30 @@
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/main.rs": {
+      "crates/buildchain-domain-contracts/src/main.rs": {
         "baseline": {
           "functions": {
-            "run@482": {
+            "run@484": {
               "complexity": 32
             }
           }
         },
         "current": {
           "functions": {
-            "run@482": {
+            "run@484": {
               "complexity": 32
             }
           }
         },
         "target": {
           "functions": {
-            "run@482": {
+            "run@484": {
               "complexity": 30
             }
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/product_publication.rs": {
+      "crates/buildchain-domain-contracts/src/product_publication.rs": {
         "baseline": {
           "functions": {
             "select_product_publication_intent@219": {
@@ -2025,7 +2025,7 @@
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/release_tail.rs": {
+      "crates/buildchain-domain-contracts/src/release_tail.rs": {
         "baseline": {
           "lines": 1399,
           "functions": {
@@ -2063,7 +2063,7 @@
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/wasm.rs": {
+      "crates/buildchain-domain-contracts/src/wasm.rs": {
         "baseline": {
           "functions": {
             "dispatch@61": {
@@ -2089,7 +2089,7 @@
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/provider_operation_journal.rs": {
+      "crates/buildchain-domain-contracts/src/provider_operation_journal.rs": {
         "baseline": {
           "functions": {
             "validate@239": {
@@ -2112,7 +2112,7 @@
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/provider_operation_journal/fold.rs": {
+      "crates/buildchain-domain-contracts/src/provider_operation_journal/fold.rs": {
         "baseline": {
           "functions": {
             "fold_provider_operation_journal@43": {
@@ -2138,7 +2138,7 @@
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/warrant.rs": {
+      "crates/buildchain-domain-contracts/src/warrant.rs": {
         "baseline": {
           "functions": {
             "validate@150": {
@@ -2161,7 +2161,7 @@
           }
         }
       },
-      "crates/buildchain-v4-contracts/src/warrant/decision.rs": {
+      "crates/buildchain-domain-contracts/src/warrant/decision.rs": {
         "baseline": {
           "functions": {
             "decide_delivery_warrant@126": {
@@ -2694,7 +2694,7 @@
           "lines": 600
         }
       },
-      "tests/v4-delivery-authority-parity.test.mjs": {
+      "tests/delivery-authority-parity.test.mjs": {
         "baseline": {
           "lines": 1038,
           "functions": {
@@ -2723,18 +2723,18 @@
           }
         }
       },
-      "tests/v4-floating-consumer-policy.test.mjs": {
+      "tests/floating-consumer-policy.test.mjs": {
         "baseline": {
           "lines": 714
         },
         "current": {
-          "lines": 714
+          "lines": 710
         },
         "target": {
           "lines": 600
         }
       },
-      "tests/v4-publication-rehearsal.test.mjs": {
+      "tests/publication-rehearsal.test.mjs": {
         "baseline": {
           "lines": 773
         },
@@ -3124,16 +3124,16 @@
     }
   },
   "hotspots": [
-    "tests/v4-product-publication-topology.test.mjs",
+    "tests/product-publication-topology.test.mjs",
     ".github/workflows/.build.yml",
     ".github/workflows/.publication-authority.yml",
     ".github/workflows/bootstrap.yml",
-    "scripts/check-v4-universal-workflow-bootstrap.mjs",
-    "scripts/v4-universal-workflow-engine.mjs",
-    "tests/v4-universal-workflow-bootstrap.test.mjs",
-    "tests/v3-v4-capability-inventory.test.mjs",
-    "tests/v4-floating-consumer-policy-contract.test.mjs",
-    "tests/v4-publication-qualification.test.mjs",
+    "scripts/check-universal-workflow-bootstrap.mjs",
+    "scripts/universal-workflow-engine.mjs",
+    "tests/universal-workflow-bootstrap.test.mjs",
+    "tests/capability-parity-inventory.test.mjs",
+    "tests/floating-consumer-policy-contract.test.mjs",
+    "tests/publication-qualification.test.mjs",
     ".github/workflows/v4-adopter-delivery.yml",
     ".github/workflows/buildchain-ref-promotion.yml",
     ".github/workflows/dev-pr-auto-merge.yml",
@@ -3145,33 +3145,38 @@
     "tests/build-surface.test.mjs",
     "tests/internal-architecture.test.mjs",
     "scripts/resume-from-candidate-run.mjs",
-    "scripts/check-v3-v4-capability-inventory.mjs",
+    "scripts/check-capability-parity-inventory.mjs",
     ".github/workflows/release-candidate-promote.yml",
     "actions/promote-buildchain-ref/lib.js",
-    "actions/v4-release-candidate-promote/index.js",
-    "actions/v4-release-candidate-promote/product-provider.js",
-    "actions/v4-release-candidate-promote/product-provider-github-adapters.js",
-    "tests/v4-release-candidate-promote.test.mjs",
+    "actions/release-candidate-promote/index.js",
+    "actions/release-candidate-promote/product-provider.js",
+    "actions/release-candidate-promote/product-provider-github-adapters.js",
+    "tests/release-candidate-promote.test.mjs",
     "scripts/check-inventory.mjs",
     "tests/promote-buildchain-ref.test.mjs",
     "tests/promotion-channel-router.test.mjs",
-    "tests/v4-release-topology.test.mjs",
+    "tests/release-topology.test.mjs",
     "scripts/site-capability-metadata.mjs",
-    "tests/v4-floating-consumer-policy.test.mjs",
-    "tests/v4-declarative-promotion-mode.test.mjs",
+    "tests/floating-consumer-policy.test.mjs",
+    "tests/declarative-promotion-mode.test.mjs",
     "scripts/buildchain-cli-help.mjs",
-    "scripts/check-v4-floating-consumer-policy-contract.mjs",
+    "scripts/check-floating-consumer-policy-contract.mjs",
     "tests/dev-delivery-warrant.test.mjs",
     "packages/core/dev-delivery-warrant-state.js",
     "actions/promote-buildchain-ref/internal/version-state.js",
-    "packages/core/v4-floating-consumer-release-passport.js",
+    "packages/core/floating-consumer-release-passport.js",
     "packages/core/release-passport.js",
     "tests/promote-buildchain-ref-governance.test.mjs",
     "scripts/check-maintainability.mjs",
     "tests/maintainability.test.mjs",
-    "scripts/generate-v4-universal-workflow-facades.mjs",
-    "scripts/check-v4-release-topology.mjs",
-    "actions/v4-release-candidate-promote/product-provider-adapters.js"
+    "scripts/generate-universal-workflow-facades.mjs",
+    "scripts/check-release-topology.mjs",
+    "actions/release-candidate-promote/product-provider-adapters.js",
+    "scripts/release-candidate-resolver.mjs",
+    "scripts/dev-delivery-warrant.mjs",
+    "scripts/generate-channel-promotion-workflow.mjs",
+    ".github/workflows/v4-stage-capsule-canary.yml",
+    "packages/core/release-tail-provider-plane.js"
   ],
   "burnDownSlices": [
     {
@@ -3179,7 +3184,7 @@
       "path": "actions/promote-buildchain-ref/lib.js",
       "metric": "lines",
       "baseline": 5132,
-      "current": 3468
+      "current": 3423
     },
     {
       "domain": "tests",

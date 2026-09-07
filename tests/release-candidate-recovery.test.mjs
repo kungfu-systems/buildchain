@@ -26,9 +26,9 @@ import {
   resolveRecoveryTransaction,
   resolveRecoveredCandidateVersion,
   resolveRecoveredPublicationVersion,
-  resolveV4RuntimeResumePublicRuntimeSha,
+  resolveRuntimeResumePublicRuntimeSha,
   trackedRuntimePersistenceScan,
-  validateV4RuntimeResumePublicReadback,
+  validateRuntimeResumePublicReadback,
   verifyReleaseCandidateStageCapsules,
 } from "../scripts/resume-from-candidate-run.mjs";
 import { createReleaseCandidateStageCapsules } from "../scripts/generate-release-candidate-passport.mjs";
@@ -447,16 +447,16 @@ test("resume public readback preserves exact history while the protected alpha c
   };
   const valid = { targetRef, targetSha, targetVersion: "4.0.1-alpha.8", alphaSha, exactTagSha,
     tagLineage: { status: "ahead" }, runtimeLineage: { status: "ahead" }, floatingTargetLineage: { status: "ahead" }, runtimeSha, version, transaction, main, npm };
-  assert.doesNotThrow(() => validateV4RuntimeResumePublicReadback(valid));
+  assert.doesNotThrow(() => validateRuntimeResumePublicReadback(valid));
   assert.throws(
-    () => validateV4RuntimeResumePublicReadback({ ...valid, tagLineage: { status: "diverged" } }),
+    () => validateRuntimeResumePublicReadback({ ...valid, tagLineage: { status: "diverged" } }),
     /does not match durable publication/,
   );
   const regressed = structuredClone(npm);
   regressed["dist-tags"].alpha = "4.0.1-alpha.5";
   regressed.versions["4.0.1-alpha.5"] = { dist: { integrity: "sha512-regressed" } };
   assert.throws(
-    () => validateV4RuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }),
+    () => validateRuntimeResumePublicReadback({ ...valid, targetVersion: "4.0.1-alpha.5", npm: regressed }),
     /does not match durable publication/,
   );
 });
@@ -465,7 +465,7 @@ test("resume public readback follows runtime A while runtime B remains transient
   const buildRuntimeSha = "8".repeat(40);
   const recoveryRuntimeSha = "9".repeat(40);
   assert.equal(
-    resolveV4RuntimeResumePublicRuntimeSha({
+    resolveRuntimeResumePublicRuntimeSha({
       runtimeSha: recoveryRuntimeSha,
       buildAttempt: { runtimeSha: buildRuntimeSha },
       floatingRefBefore: { ref: "v4-alpha", sha: buildRuntimeSha },
@@ -1043,7 +1043,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "utf8",
   );
   const candidateAdapter = fs.readFileSync(
-    new URL("../scripts/v4-release-candidate-adapter.mjs", import.meta.url),
+    new URL("../scripts/release-candidate-adapter.mjs", import.meta.url),
     "utf8",
   );
 
@@ -1070,7 +1070,7 @@ test("workflow recovery resumes through the same canonical publisher transaction
   assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
   assert.match(
     advanced,
-    /node \.buildchain\/runtime\/scripts\/v4-release-candidate-adapter\.mjs/,
+    /node \.buildchain\/runtime\/scripts\/release-candidate-adapter\.mjs/,
   );
   assert.match(
     candidateAdapter,

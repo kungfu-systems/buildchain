@@ -113,7 +113,7 @@ jobs:
           fi
           echo "ready=${ready}" >> "${GITHUB_OUTPUT}"
           for channel in conformance alpha stable; do
-            request="$(node .buildchain/candidate/scripts/v4-universal-workflow-self-dogfood.mjs request \
+            request="$(node .buildchain/candidate/scripts/universal-workflow-self-dogfood.mjs request \
               --candidate-sha "${CANDIDATE_SHA}" \
               --consumer-sha "${CONSUMER_SHA}" \
               --pull-request "${REVIEW_PR}" \
@@ -217,7 +217,7 @@ jobs:
             recovery_name="${upper}_RECOVERY"
             BUILDCHAIN_PRIMARY_RESULT_JSON="${!primary_name}" \
             BUILDCHAIN_RECOVERY_RESULT_JSON="${!recovery_name}" \
-              node .buildchain/candidate/scripts/v4-universal-workflow-self-dogfood.mjs verify-pair \
+              node .buildchain/candidate/scripts/universal-workflow-self-dogfood.mjs verify-pair \
                 --candidate-sha "${CANDIDATE_SHA}" \
                 --channel "${channel}" > ".buildchain/self-dogfood/${channel}.json"
           done

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { verifyV4FloatingConsumerPolicyReceipt } from "./v4-floating-consumer-policy.js";
+import { verifyFloatingConsumerPolicyReceipt } from "./floating-consumer-policy.js";
 import { normalizeControllerReceiptReferences, validateControllerReceiptReference } from "./controller-evidence.js";
 
 export const RELEASE_CANDIDATE_PASSPORT_CONTRACT = "kungfu-buildchain-release-candidate-passport";
@@ -172,7 +172,7 @@ function normalizeGateProfileEvidence(gateAggregate = undefined) {
   };
 }
 
-function isV4BuildchainRuntime(buildchain = {}) {
+function isBuildchainRuntime(buildchain = {}) {
   return [buildchain.ref, buildchain.workflowShellRef]
     .some((value) => /^v4(?:-alpha)?$/u.test(String(value || "")))
     || /^4\./u.test(String(buildchain.version || ""));
@@ -184,7 +184,7 @@ function normalizeConsumerPolicyEvidence(value, expected = {}) {
     throw new Error("consumerPolicyReceipt must be an object");
   }
   const receipt = value.receipt || value;
-  const verification = verifyV4FloatingConsumerPolicyReceipt({
+  const verification = verifyFloatingConsumerPolicyReceipt({
     receipt,
     receiptRoot: value.receiptRoot || "",
     repository: expected.repository,
@@ -198,11 +198,11 @@ function normalizeConsumerPolicyEvidence(value, expected = {}) {
 }
 
 function validateConsumerPolicyEvidence(passport, check) {
-  if (isV4BuildchainRuntime(passport.buildchain)) {
+  if (isBuildchainRuntime(passport.buildchain)) {
     check(Boolean(passport.consumerPolicy), "Buildchain v4 release candidate requires consumer policy evidence");
   }
   if (!passport.consumerPolicy) return;
-  const verification = verifyV4FloatingConsumerPolicyReceipt({
+  const verification = verifyFloatingConsumerPolicyReceipt({
     receipt: passport.consumerPolicy.receipt,
     receiptRoot: passport.consumerPolicy.receiptRoot,
     repository: passport.repository,
@@ -406,7 +406,7 @@ export function createReleaseCandidatePassport({
     sourceSha: normalizedSummary.publishSource?.ref === "publish-gate/anchor" ? (consumerPolicyReceipt?.receipt || consumerPolicyReceipt)?.caller?.sourceSha : sourceSha,
     runtimeSha: resolvedBuildchain.sha,
   });
-  if (isV4BuildchainRuntime(resolvedBuildchain) && !normalizedConsumerPolicy) {
+  if (isBuildchainRuntime(resolvedBuildchain) && !normalizedConsumerPolicy) {
     throw new Error("Buildchain v4 release candidate passport requires a valid floating consumer policy receipt");
   }
   const controllerReceiptEvidence = normalizeControllerReceiptReferences({

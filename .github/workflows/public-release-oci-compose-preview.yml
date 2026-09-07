@@ -70,8 +70,8 @@ jobs:
           BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
           BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
           BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
-          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/v4-consumer-policy-receipt.json
-        run: node .buildchain/runtime/scripts/v4-consumer-policy.mjs scan
+          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/consumer-policy-receipt.json
+        run: node .buildchain/runtime/scripts/consumer-policy.mjs scan
       - uses: actions/download-artifact@v7.0.0
         with:
           artifact-ids: ${{ steps.qualified.outputs.artifact-id }}

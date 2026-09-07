@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 import {
   SETTLEMENT_ASSET,
   verifyPublicationSettlement,
-} from "./v4-publication-settlement.mjs";
+} from "./publication-settlement.mjs";
 import { releaseAssetClient } from "./release-asset-client.mjs";
 
 export async function readBinaryPublicationEvidence({

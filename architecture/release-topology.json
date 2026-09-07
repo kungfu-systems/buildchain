@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 1,
+  "contract": "kungfu-buildchain-v4-release-topology/v1",
+  "sourceCut": {
+    "branch": "dev/v4/v4.0",
+    "commit": "c3a50c941d018fcc3bec624e19a1298357b7f84a",
+    "tree": "213cdcaded8d90c823ecdafdd9968bceceed9057"
+  },
+  "enforcement": "converged",
+  "closedWorld": {
+    "workflowPaths": [
+      ".github/workflows/.binary-release-assets.yml",
+      ".github/workflows/.build.yml",
+      ".github/workflows/.declarative-auditable-demo.yml",
+      ".github/workflows/.publication-authority.yml",
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.web-surface.yml",
+      ".github/workflows/self-build-demo-dogfood.yml",
+      ".github/workflows/self-release-binary-assets.yml",
+      ".github/workflows/self-build-fixture.yml",
+      ".github/workflows/build.yml",
+      ".github/workflows/self-build-alpha-dogfood.yml",
+      ".github/workflows/self-ops-dev-delivery.yml",
+      ".github/workflows/self-ops-promotion-recovery.yml",
+      ".github/workflows/self-release-promote.yml",
+      ".github/workflows/self-ops-patrol-daily.yml",
+      ".github/workflows/self-ops-patrol-monthly.yml",
+      ".github/workflows/self-ops-patrol-weekly.yml",
+      ".github/workflows/self-ops-stable-candidate-patrol.yml",
+      ".github/workflows/dev-alpha-candidate-patrol.yml",
+      ".github/workflows/dev-pr-auto-merge.yml",
+      ".github/workflows/github-artifact-attestation.yml",
+      ".github/workflows/self-release-npm-dry-run.yml",
+      ".github/workflows/paper-release-sealed.yml",
+      ".github/workflows/paper-release.yml",
+      ".github/workflows/patrol-observed-evidence.yml",
+      ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/self-release-line-open.yml",
+      ".github/workflows/self-release-new-version-compat.yml",
+      ".github/workflows/release-propagation.yml",
+      ".github/workflows/release-tail.yml",
+      ".github/workflows/stable-candidate-patrol.yml",
+      ".github/workflows/self-release-rehearsal-dogfood.yml",
+      ".github/workflows/self-release-tail-dogfood.yml",
+      ".github/workflows/self-release-next-development.yml",
+      ".github/workflows/public-release-oci-compose-preview.yml"
+    ],
+    "unknownTopologyPolicy": "fail-closed"
+  },
+  "semanticScope": {
+    "workflowPaths": [
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/self-ops-promotion-recovery.yml",
+      ".github/workflows/self-release-promote.yml",
+      ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/self-release-tail-dogfood.yml"
+    ],
+    "excludedMechanisms": [
+      "Paper product release",
+      "npm dry-run",
+      "v3 rollback workflows",
+      "retired compatibility workflows",
+      "Post-publication protected development review: no package, tag or Release mutation; independently inventoried in closedWorld and privilegedExecutableClosure.",
+      "Post-publication OCI Compose preview activation is measured separately in postPublicationScope; it consumes completed publication and qualification, copies one manifest to the sealed alias, and cannot materialize versions or release refs."
+    ]
+  },
+  "authorityClosure": {
+    "providerAdapters": [
+      "actions/promote-buildchain-ref/github-release.js",
+      "actions/promote-buildchain-ref/provider-plane.js",
+      "actions/release-candidate-promote/index.js",
+      "actions/release-candidate-promote/oci-provider.js",
+      "actions/release-candidate-promote/product-provider-adapters.js",
+      "actions/release-candidate-promote/product-provider-github-adapters.js",
+      "actions/release-candidate-promote/product-provider.js",
+      "actions/release-tail/index.js",
+      "packages/core/buildchain-agent-manuals.js",
+      "packages/core/index.js",
+      "packages/core/oci-compose-qualification.js",
+      "packages/core/publication-rehearsal-capsule.js",
+      "packages/core/publication-rehearsal-runtime.js",
+      "packages/core/publication-rehearsal.js",
+      "packages/core/release-tail-provider-adapters.js",
+      "packages/core/release-tail-provider-plane.js"
+    ],
+    "runtimeSelectors": [
+      ".github/workflows/.build-engine.yml",
+      ".github/workflows/.build.yml",
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.release-promote.yml",
+      ".github/workflows/.web-surface.yml",
+      ".github/workflows/paper-release.yml",
+      ".github/workflows/public-build-publication.yml",
+      ".github/workflows/public-ops-tail-reseal.yml",
+      ".github/workflows/public-release-paper.yml",
+      ".github/workflows/public-release-promote.yml",
+      ".github/workflows/public-release-web.yml",
+      ".github/workflows/publication-artifact.yml",
+      ".github/workflows/release-candidate-promote.yml",
+      ".github/workflows/self-ops-promotion-recovery.yml",
+      ".github/workflows/self-release-promote.yml",
+      "packages/core/buildchain-contract.js",
+      "packages/core/public-export-compatibility.js",
+      "packages/core/runtime-ref-resume-authority.js",
+      "packages/core/runtime-selector-persistence.js",
+      "scripts/aggregate-build-summary.mjs",
+      "scripts/artifact-signing-controller-core.mjs",
+      "scripts/authorize-promotion-runtime-override.cjs",
+      "scripts/buildchain-contract-lock.mjs",
+      "scripts/check-inventory.mjs",
+      "scripts/declarative-promotion-admission.mjs",
+      "scripts/generate-channel-promotion-workflow.mjs",
+      "scripts/generate-release-candidate-passport.mjs",
+      "scripts/release-candidate-adapter.mjs",
+      "scripts/release-candidate-resolver.mjs",
+      "scripts/resume-from-candidate-run.mjs"
+    ],
+    "runtimeEngines": ["actions/release-candidate-promote/index.js"],
+    "terminalProjections": [
+      ".github/workflows/.release-candidate-promote.yml",
+      ".github/workflows/.release-promote.yml",
+      "actions/release-candidate-promote/index.js",
+      "packages/core/release-invocation.js",
+      "scripts/publication-settlement.mjs",
+      "scripts/universal-workflow-engine.mjs"
+    ],
+    "privilegedExecutableClosure": {
+      "entrypoints": [
+        "actions/release-candidate-promote/index.js",
+        "scripts/binary-publication-evidence.mjs",
+        "scripts/next-development-review.mjs",
+        "scripts/oci-compose-preview.mjs",
+        "scripts/publication-settlement.mjs"
+      ],
+      "modules": [
+        "actions/promote-buildchain-ref/github-release.js",
+        "actions/promote-buildchain-ref/internal/version-state.js",
+        "actions/promote-buildchain-ref/provider-plane.js",
+        "actions/promote-buildchain-ref/reuse-complete-release.js",
+        "actions/release-candidate-promote/development-source.js",
+        "actions/release-candidate-promote/index.js",
+        "actions/release-candidate-promote/next-development-provider.js",
+        "actions/release-candidate-promote/next-development-queue.js",
+        "actions/release-candidate-promote/oci-provider.js",
+        "actions/release-candidate-promote/oci-registry-client.js",
+        "actions/release-candidate-promote/product-provider-adapters.js",
+        "actions/release-candidate-promote/product-provider-github-adapters.js",
+        "actions/release-candidate-promote/product-provider.js",
+        "actions/release-candidate-promote/publication-completion.js",
+        "packages/core/adopter-delivery-gate.js",
+        "packages/core/adopter-delivery-json.js",
+        "packages/core/adopter-delivery-passport.js",
+        "packages/core/artifact-verification-envelope.js",
+        "packages/core/buildchain-channel-identity.js",
+        "packages/core/buildchain-compatibility-authority.js",
+        "packages/core/buildchain-compatibility-fact.js",
+        "packages/core/buildchain-compatibility-facts.json",
+        "packages/core/buildchain-compatibility-proof.js",
+        "packages/core/buildchain-config.js",
+        "packages/core/buildchain-contract.js",
+        "packages/core/buildchain-layout.js",
+        "packages/core/canonical-contracts.js",
+        "packages/core/controller-evidence.js",
+        "packages/core/dev-delivery-common.js",
+        "packages/core/dev-delivery-contract-surface.js",
+        "packages/core/domain-wasm-artifact.js",
+        "packages/core/domain-wasm.js",
+        "packages/core/floating-consumer-evidence.js",
+        "packages/core/floating-consumer-policy.js",
+        "packages/core/floating-consumer-release-passport.js",
+        "packages/core/github-artifact-attestation.js",
+        "packages/core/kfd-adopter-manifest.js",
+        "packages/core/kfd-gate.js",
+        "packages/core/kfd-product-gates.js",
+        "packages/core/kungfu-temporal-fact.js",
+        "packages/core/next-development-transition.js",
+        "packages/core/oci-compose-qualification.js",
+        "packages/core/oci-publication-bundle.js",
+        "packages/core/oci-publication-graph.js",
+        "packages/core/package-manager.js",
+        "packages/core/product-publication.js",
+        "packages/core/protected-publication-source.js",
+        "packages/core/public-surface-audit.js",
+        "packages/core/public-surface-cli.js",
+        "packages/core/publication-artifact-candidate.js",
+        "packages/core/publication-authority.js",
+        "packages/core/publication-development.js",
+        "packages/core/publication-qualification.js",
+        "packages/core/publication-sealed-bundle.js",
+        "packages/core/publish-transaction.js",
+        "packages/core/release-candidate-recovery.js",
+        "packages/core/release-candidate.js",
+        "packages/core/release-invocation.js",
+        "packages/core/release-passport-contract.js",
+        "packages/core/release-passport.js",
+        "packages/core/release-tail-product-capabilities.js",
+        "packages/core/release-tail-provider-adapters.js",
+        "packages/core/release-tail-provider-plane.js",
+        "packages/core/runtime-ref-resume-authority.js",
+        "packages/core/runtime-selector-persistence.js",
+        "packages/core/spawn-command.js",
+        "packages/core/surface-manifest.js",
+        "packages/core/web-surface-publication-candidate.js",
+        "packages/core/workflow-yaml-contract.js",
+        "scripts/binary-publication-evidence.mjs",
+        "scripts/ensure-github-release.mjs",
+        "scripts/next-development-review.mjs",
+        "scripts/oci-compose-preview.mjs",
+        "scripts/publication-settlement.mjs",
+        "scripts/release-asset-client.mjs",
+        "scripts/verify-version-state-delta.mjs"
+      ],
+      "root": "sha256:1794b541c105bf048758988b73b4fc0f5e191770a1c091f448a8a4714ee4323c"
+    },
+    "rustWasmAuthority": {
+      "loader": "packages/core/domain-wasm.js",
+      "metadata": "packages/core/domain-wasm-artifact.js",
+      "artifact": "packages/core/buildchain-domain.wasm",
+      "artifactRoot": "sha256:e04814473796c483e82e450b651b60e63609bfca182140b333dd0e6994ae63db",
+      "distributedArtifacts": [
+        "actions/promote-buildchain-ref/dist/buildchain-domain.wasm",
+        "actions/release-tail/dist/buildchain-domain.wasm",
+        "actions/release-candidate-promote/dist/buildchain-domain.wasm"
+      ],
+      "byteIdenticalDistributions": true,
+      "fallbackWriterCount": 0
+    },
+    "legacyEngineModules": [
+      "actions/promote-buildchain-ref/internal/durable-transaction-operations.js",
+      "actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
+      "actions/promote-buildchain-ref/internal/promote-major-channel.js",
+      "actions/promote-buildchain-ref/internal/promote-release-channel.js",
+      "actions/promote-buildchain-ref/lib.js"
+    ],
+    "freshEntry": ".github/workflows/release-candidate-promote.yml",
+    "recoveryEntry": ".github/workflows/self-ops-promotion-recovery.yml",
+    "forbiddenLegacyEnginePatterns": [
+      "legacy-promote",
+      "v4-declarative-promote",
+      "BUILDCHAIN_DECLARATIVE_PROMOTION",
+      "Select declarative or legacy promotion result"
+    ]
+  },
+  "baselineMetrics": {
+    "workflowCount": 15,
+    "jobCount": 38,
+    "reusableEdgeCount": 11,
+    "mutationRelevantNodeCount": 25,
+    "contentsWriteJobCount": 10,
+    "oidcWriteJobCount": 9,
+    "semanticMutationRelevantNodeCount": 17
+  },
+  "targetBudgets": {
+    "semanticBoundaries": ["QUALIFY", "APPLY", "SETTLE"],
+    "maximumMutationRelevantNodeCount": 8,
+    "contentsWriteJobCount": 1,
+    "oidcWriteJobCount": 1,
+    "publisherIdentityCount": 1,
+    "runtimeIdentityCount": 1,
+    "terminalReceiptAuthorityCount": 1
+  },
+  "authorityClassification": {
+    "publisher": {
+      "current": [
+        ".github/workflows/.release-candidate-promote.yml#legacy-promote",
+        ".github/workflows/.release-candidate-promote.yml#v4-declarative-promote"
+      ],
+      "target": ".github/workflows/.release-candidate-promote.yml#apply"
+    },
+    "runtimeSelectors": {
+      "discoveryOnly": ["v4-alpha", "v4", "alpha/v4/v4.0"],
+      "postAdmissionPolicy": "exact-sha-only"
+    },
+    "engines": {
+      "current": ["legacy-promote", "v4-declarative-promote"],
+      "target": "release-transaction"
+    },
+    "terminalProjections": {
+      "current": ["promote", "controller-receipt", "release-tail receipt"],
+      "target": "ReleaseReceipt"
+    }
+  },
+  "observedTopology": {
+    "jobRecordFields": [
+      "id",
+      "kind",
+      "uses",
+      "contentsPermission",
+      "oidcPermission",
+      "carriers",
+      "mutationSignals"
+    ],
+    "workflows": [
+      {
+        "path": ".github/workflows/.release-candidate-promote.yml",
+        "triggers": ["workflow_call"],
+        "jobs": [
+          "apply|runner|-|inherited|inherited|artifactDownload,artifactUpload|contents-write,oidc-write,promotion-runtime",
+          "qualify|runner|-|read|-|artifactUpload,jobOutput|-",
+          "settle|runner|-|read|-|artifactDownload,artifactUpload,jobOutput|-"
+        ],
+        "reusableEdges": []
+      },
+      {
+        "path": ".github/workflows/self-ops-promotion-recovery.yml",
+        "triggers": ["workflow_dispatch"],
+        "jobs": [
+          "resume|reusable-call|kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write"
+        ],
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha"
+        ]
+      },
+      {
+        "path": ".github/workflows/self-release-promote.yml",
+        "triggers": ["workflow_dispatch", "workflow_run:completed"],
+        "jobs": [
+          "classify-workflow-run|runner|-|read|-|-|-",
+          "promote|reusable-call|kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha|write|write|-|contents-write,oidc-write",
+          "reject-invalid-candidate-recovery|runner|-|read|-|-|-",
+          "reject-invalid-durable-recovery|runner|-|read|-|-|-",
+          "reject-manual-apply|runner|-|read|-|-|-"
+        ],
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha"
+        ]
+      },
+      {
+        "path": ".github/workflows/release-candidate-promote.yml",
+        "triggers": ["workflow_call"],
+        "jobs": [
+          "consumer-admission|runner|-|read|-|artifactUpload|-",
+          "invoke|reusable-call|kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha|-|-|-|-",
+          "resolve-promotion|runner|-|read|-|jobOutput|-"
+        ],
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha"
+        ]
+      },
+      {
+        "path": ".github/workflows/self-release-tail-dogfood.yml",
+        "triggers": ["workflow_dispatch"],
+        "jobs": [
+          "publish|reusable-call|kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha|-|-|-|-"
+        ],
+        "reusableEdges": [
+          "kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@v4-alpha"
+        ]
+      }
+    ],
+    "metrics": {
+      "workflowCount": 35,
+      "jobCount": 91,
+      "reusableEdgeCount": 23,
+      "mutationRelevantNodeCount": 76,
+      "contentsWriteJobCount": 14,
+      "oidcWriteJobCount": 15
+    },
+    "semanticMetrics": {
+      "workflowCount": 5,
+      "mutationRelevantNodeCount": 8,
+      "contentsWriteJobCount": 1,
+      "oidcWriteJobCount": 1
+    }
+  },
+  "postPublicationScope": {
+    "workflowPaths": [
+      ".github/workflows/public-release-oci-compose-preview.yml"
+    ],
+    "authority": "exact-publication-plus-source-bound-qualification-and-expected-old-digest",
+    "observedTopology": {
+      "jobRecordFields": [
+        "id",
+        "kind",
+        "uses",
+        "contentsPermission",
+        "oidcPermission",
+        "carriers",
+        "mutationSignals"
+      ],
+      "workflows": [
+        {
+          "path": ".github/workflows/public-release-oci-compose-preview.yml",
+          "triggers": ["workflow_call"],
+          "jobs": [
+            "promote|runner|-|write|-|artifactDownload,artifactUpload,jobOutput|contents-write"
+          ],
+          "reusableEdges": []
+        }
+      ],
+      "metrics": {
+        "workflowCount": 1,
+        "jobCount": 1,
+        "reusableEdgeCount": 0,
+        "mutationRelevantNodeCount": 1,
+        "contentsWriteJobCount": 1,
+        "oidcWriteJobCount": 0
+      },
+      "semanticMetrics": {
+        "workflowCount": 1,
+        "mutationRelevantNodeCount": 1,
+        "contentsWriteJobCount": 1,
+        "oidcWriteJobCount": 0
+      }
+    }
+  }
+}

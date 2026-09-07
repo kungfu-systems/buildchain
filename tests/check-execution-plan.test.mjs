@@ -41,7 +41,7 @@ function assertCompleteOnce(definitions) {
 test("full check runs every Node test file exactly once and retains all Rust gates", () => {
   assertCompleteOnce(scripts);
   const plan = commands("check");
-  for (const crate of ["buildchain-v4-bridge", "buildchain-v4-contracts"]) {
+  for (const crate of ["buildchain-host-bridge", "buildchain-domain-contracts"]) {
     for (const gate of ["fmt", "clippy", "test"]) {
       assert.equal(
         plan.filter(
@@ -53,14 +53,14 @@ test("full check runs every Node test file exactly once and retains all Rust gat
       );
     }
   }
-  const focused = nodeTests(commands("check:v4-contracts"));
+  const focused = nodeTests(commands("check:contracts"));
   assert.equal(focused.length, 22);
   assert.ok(focused.every((file) => files.includes(file)));
 });
 
 test("test-plan audit detects duplicate, missing and unknown test coverage", () => {
   for (const changed of [
-    { ...scripts, check: `${scripts.check} && pnpm run check:v4-contracts` },
+    { ...scripts, check: `${scripts.check} && pnpm run check:contracts` },
     { ...scripts, "test:unit": `node --test ${files.slice(1).join(" ")}` },
     { ...scripts, "test:unit": "node --test tests/missing.test.mjs" },
   ])

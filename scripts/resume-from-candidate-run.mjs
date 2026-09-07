@@ -33,15 +33,15 @@ import {
 } from "../packages/core/publication-artifact-candidate.js";
 import { createPublicationSealedBundle } from "../packages/core/publication-sealed-bundle.js";
 import { releaseTransactionStateRef } from "../packages/core/publish-transaction.js";
-import { v4ContentRoot } from "../packages/core/v4-canonical-contracts.js";
-import { validateV4StageCapsule } from "../packages/core/v4-stage-capsule.js";
+import { domainContentRoot } from "../packages/core/canonical-contracts.js";
+import { validateStageCapsule } from "../packages/core/stage-capsule.js";
 import {
-  authorizeV4RuntimeSelection,
-  createV4RuntimeResumeLineage,
-  scanV4RuntimeSelectorPersistence,
-  v4RuntimeResumeDocumentRoot,
-  verifyV4RuntimeAuthorizationReceipt,
-} from "../packages/core/v4-runtime-ref-resume-authority.js";
+  authorizeRuntimeSelection,
+  createRuntimeResumeLineage,
+  scanRuntimeSelectorPersistence,
+  runtimeResumeDocumentRoot,
+  verifyRuntimeAuthorizationReceipt,
+} from "../packages/core/runtime-ref-resume-authority.js";
 
 function env(name, fallback = "") { return process.env[name] || fallback; }
 function requiredEnv(name) {
@@ -119,7 +119,7 @@ export function trackedRuntimePersistenceScan({
   )
     .split(/\r?\n/)
     .filter((entry) => /\.(?:json|toml|ya?ml)$/u.test(entry));
-  return scanV4RuntimeSelectorPersistence({ root: runtimeRoot, paths });
+  return scanRuntimeSelectorPersistence({ root: runtimeRoot, paths });
 }
 
 export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloads }) {
@@ -138,7 +138,7 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
   const expectedAttempt =
     `github-run:${passport.workflow.runId}:attempt:${passport.workflow.runAttempt}`;
   if (
-    sidecar.root !== v4RuntimeResumeDocumentRoot(payload) ||
+    sidecar.root !== runtimeResumeDocumentRoot(payload) ||
     sidecar.repository !== passport.repository ||
     sidecar.source?.sha !== passport.source.headSha ||
     sidecar.source?.treeSha !== passport.source.treeHash ||
@@ -160,7 +160,7 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
     throw new Error("release-candidate Stage Capsule platform set is incomplete");
   }
   return entries.map((entry) => {
-    validateV4StageCapsule(entry.capsule);
+    validateStageCapsule(entry.capsule);
     const download = artifactByName.get(entry.artifactName);
     const artifact = entry.artifact;
     if (
@@ -176,9 +176,9 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
         new Date(download.artifact.expires_at).toISOString() ||
       entry.capsule.identity.policyRoot !== sidecar.consumerPolicyReceiptRoot ||
       entry.capsule.identity.sourceRoot !==
-        v4ContentRoot("candidate-identity", passport.source) ||
+        domainContentRoot("candidate-identity", passport.source) ||
       entry.capsule.identity.runtimeRoot !==
-        v4ContentRoot("candidate-identity", { sha: passport.buildchain.sha })
+        domainContentRoot("candidate-identity", { sha: passport.buildchain.sha })
     ) {
       throw new Error(
         `Stage Capsule ${entry.platform} does not bind the verified provider artifact`,
@@ -198,7 +198,7 @@ export function verifyReleaseCandidateStageCapsules({ sidecar, passport, downloa
   });
 }
 
-export function validateV4RuntimeResumePublicReadback({
+export function validateRuntimeResumePublicReadback({
   targetRef,
   targetSha,
   targetVersion,
@@ -275,7 +275,7 @@ export async function readPublicResumeState({
   if (targetPackageFile?.type !== "file" || targetPackageFile.encoding !== "base64" || !targetPackageFile.content)
     throw new Error("cross-runtime recovery requires protected target version state");
   const targetVersion = JSON.parse(Buffer.from(String(targetPackageFile.content).replace(/\s/g, ""), "base64").toString("utf8")).version;
-  validateV4RuntimeResumePublicReadback({ targetRef, targetSha, targetVersion, alphaSha,
+  validateRuntimeResumePublicReadback({ targetRef, targetSha, targetVersion, alphaSha,
     exactTagSha, tagLineage, runtimeLineage, floatingTargetLineage, runtimeSha,
     version, transaction, main, npm });
   const body = {
@@ -298,10 +298,10 @@ export async function readPublicResumeState({
       distTagIntegrity: npm.versions[npm["dist-tags"].alpha].dist.integrity,
     },
   };
-  return { ...body, root: v4RuntimeResumeDocumentRoot(body) };
+  return { ...body, root: runtimeResumeDocumentRoot(body) };
 }
 
-export const resolveV4RuntimeResumePublicRuntimeSha = (material) =>
+export const resolveRuntimeResumePublicRuntimeSha = (material) =>
   material?.buildAttempt?.runtimeSha || "";
 
 function prepareRuntimeResumeEvidence({
@@ -315,14 +315,14 @@ function prepareRuntimeResumeEvidence({
   recovery,
   outputDir,
 }) {
-  const authorizationPath = path.resolve(".buildchain/release-candidate/v4-runtime-authorization.json");
+  const authorizationPath = path.resolve(".buildchain/release-candidate/runtime-authorization.json");
   const delegatedRaw = env("BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON").trim();
   const delegatedRoot = env("BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT").trim();
   const authorizationFileExists = fs.existsSync(authorizationPath);
   if (!authorizationFileExists && (!delegatedRaw || !delegatedRoot)) throw new Error("cross-runtime recovery requires a fresh runtime authorization receipt");
   const delegated = authorizationFileExists ? readOnlyJson([{ absolutePath: authorizationPath }], "runtime authorization") : JSON.parse(delegatedRaw);
   if (!authorizationFileExists && delegated.receiptRoot !== delegatedRoot) throw new Error("fresh recovery runtime authorization handoff root mismatch");
-  const delegatedVerification = verifyV4RuntimeAuthorizationReceipt({
+  const delegatedVerification = verifyRuntimeAuthorizationReceipt({
     receipt: delegated.receipt,
     receiptRoot: delegated.receiptRoot,
     repository: repoInfo.fullName,
@@ -334,7 +334,7 @@ function prepareRuntimeResumeEvidence({
     );
   }
   const policy = passport.consumerPolicy.receipt;
-  const authorization = authorizeV4RuntimeSelection({
+  const authorization = authorizeRuntimeSelection({
     repository: repoInfo.fullName,
     eventName: "workflow_dispatch",
     mode: "resume",
@@ -364,7 +364,7 @@ function prepareRuntimeResumeEvidence({
     rebuildPlatforms: [],
     skippedBuildStages: recovery.receipt.skippedBuildStages,
   };
-  const plan = { ...planBody, root: v4RuntimeResumeDocumentRoot(planBody) };
+  const plan = { ...planBody, root: runtimeResumeDocumentRoot(planBody) };
   const materialBody = {
     schemaVersion: 1,
     contract: "kungfu-buildchain-v4-runtime-resume-material/v1",
@@ -391,7 +391,7 @@ function prepareRuntimeResumeEvidence({
   };
   const material = {
     ...materialBody,
-    root: v4RuntimeResumeDocumentRoot(materialBody),
+    root: runtimeResumeDocumentRoot(materialBody),
   };
   for (const [name, value] of [
     ["v4-runtime-resume-plan.json", plan],
@@ -418,7 +418,7 @@ export async function finalizeRuntimeResumeEvidence({
   delete body.root;
   if (
     material.contract !== "kungfu-buildchain-v4-runtime-resume-material/v1" ||
-    material.root !== v4RuntimeResumeDocumentRoot(body)
+    material.root !== runtimeResumeDocumentRoot(body)
   ) {
     throw new Error("cross-runtime resume material root mismatch");
   }
@@ -438,14 +438,14 @@ export async function finalizeRuntimeResumeEvidence({
   const readback = await readPublicResumeState({
     repoInfo,
     targetRef,
-    runtimeSha: resolveV4RuntimeResumePublicRuntimeSha(material),
+    runtimeSha: resolveRuntimeResumePublicRuntimeSha(material),
     version,
     transaction,
     token,
     apiUrl,
     fetchImpl,
   });
-  const resumed = createV4RuntimeResumeLineage({
+  const resumed = createRuntimeResumeLineage({
     authorization: material.authorization,
     authorizationRoot: material.authorizationRoot,
     buildAttempt: material.buildAttempt,

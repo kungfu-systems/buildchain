@@ -1,9 +1,9 @@
 import {
-  loadV4PublishedAdopterDeliveryAuthority,
-  qualifyV4AdopterDeliveryBootstrap,
-  runV4AdopterDeliveryGate,
-  verifyV4AdopterDeliveryReadback,
-} from "../../packages/core/v4-adopter-delivery.js";
+  loadPublishedAdopterDeliveryAuthority,
+  qualifyAdopterDeliveryBootstrap,
+  runAdopterDeliveryGate,
+  verifyAdopterDeliveryReadback,
+} from "../../packages/core/adopter-delivery.js";
 import {
   printJson,
   readFlag,
@@ -22,7 +22,7 @@ export async function runAdopterDeliveryCli(args = []) {
     const input = readJsonInput(readFlag(commandArgs, "input", ""), {
       label: "adopter delivery input",
     });
-    emit(commandArgs, runV4AdopterDeliveryGate(input));
+    emit(commandArgs, runAdopterDeliveryGate(input));
     return;
   }
   if (subcommand === "verify") {
@@ -32,21 +32,21 @@ export async function runAdopterDeliveryCli(args = []) {
     const readback = readJsonInput(readFlag(commandArgs, "readback", ""), {
       label: "adopter delivery readback",
     });
-    emit(commandArgs, verifyV4AdopterDeliveryReadback({ input, readback }));
+    emit(commandArgs, verifyAdopterDeliveryReadback({ input, readback }));
     return;
   }
   if (subcommand === "bootstrap") {
     const request = readJsonInput(readFlag(commandArgs, "input", ""), {
       label: "adopter delivery bootstrap input",
     });
-    emit(commandArgs, qualifyV4AdopterDeliveryBootstrap(request));
+    emit(commandArgs, qualifyAdopterDeliveryBootstrap(request));
     return;
   }
   if (subcommand === "archive") {
     const request = readJsonInput(readFlag(commandArgs, "input", ""), {
       label: "published archive input",
     });
-    const authority = await loadV4PublishedAdopterDeliveryAuthority(request);
+    const authority = await loadPublishedAdopterDeliveryAuthority(request);
     try {
       emit(commandArgs, {
         schemaVersion: authority.schemaVersion,

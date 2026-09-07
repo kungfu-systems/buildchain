@@ -54,7 +54,10 @@ function decodeGitHubBlobEnvelope(raw) {
   ).toString("utf8");
 }
 
-function validateStoredState(queue, { allowLegacyV3Readback = false } = {}) {
+function validateStoredState(
+  queue,
+  { allowLegacyBaselineReadback = false } = {},
+) {
   const body = structuredClone(queue || {});
   const embeddedStateRoot = body.stateRoot;
   delete body.stateRoot;
@@ -67,7 +70,7 @@ function validateStoredState(queue, { allowLegacyV3Readback = false } = {}) {
   ) {
     normalizeDevDeliveryAuthorityState(queue);
   } else {
-    normalizeDevDeliveryQueue(queue, { allowLegacyV3Readback });
+    normalizeDevDeliveryQueue(queue, { allowLegacyBaselineReadback });
   }
   return queue;
 }
@@ -157,9 +160,19 @@ export class GitHubDevDeliveryStore {
     return raw;
   }
 
-  async read({ stateRef, protectedBase, now, allowLegacyV3Readback = false }) {
+  async read({
+    stateRef,
+    protectedBase,
+    now,
+    allowLegacyBaselineReadback = false,
+  }) {
     return this.retryParseableRead(async () =>
-      this.readOnce({ stateRef, protectedBase, now, allowLegacyV3Readback }),
+      this.readOnce({
+        stateRef,
+        protectedBase,
+        now,
+        allowLegacyBaselineReadback,
+      }),
     );
   }
 
@@ -167,7 +180,7 @@ export class GitHubDevDeliveryStore {
     stateRef,
     protectedBase,
     now,
-    allowLegacyV3Readback = false,
+    allowLegacyBaselineReadback = false,
   }) {
     let ref;
     try {
@@ -189,18 +202,24 @@ export class GitHubDevDeliveryStore {
     }
     const commitSha = exactSha(ref?.object?.sha, "state ref commit");
     const readback = await this.readCommit(commitSha, {
-      allowLegacyV3Readback,
+      allowLegacyBaselineReadback,
     });
     return { exists: true, ...readback };
   }
 
-  async readCommit(commitShaInput, { allowLegacyV3Readback = false } = {}) {
+  async readCommit(
+    commitShaInput,
+    { allowLegacyBaselineReadback = false } = {},
+  ) {
     return this.retryParseableRead(async () =>
-      this.readCommitOnce(commitShaInput, { allowLegacyV3Readback }),
+      this.readCommitOnce(commitShaInput, { allowLegacyBaselineReadback }),
     );
   }
 
-  async readCommitOnce(commitShaInput, { allowLegacyV3Readback = false } = {}) {
+  async readCommitOnce(
+    commitShaInput,
+    { allowLegacyBaselineReadback = false } = {},
+  ) {
     const commitSha = exactSha(commitShaInput, "state commit");
     const commit = await this.request(
       "GET",
@@ -221,7 +240,7 @@ export class GitHubDevDeliveryStore {
     );
     const bytes = decodeGitHubBlobEnvelope(raw);
     const queue = validateStoredState(JSON.parse(bytes), {
-      allowLegacyV3Readback,
+      allowLegacyBaselineReadback,
     });
     return { commitSha, queue, bytes };
   }

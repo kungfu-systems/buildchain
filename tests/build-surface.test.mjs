@@ -744,7 +744,7 @@ test("release-candidate promotion converges on one canonical v4 publisher", () =
   assert.match(workflow, /name: SETTLE terminal ReleaseReceipt projection/);
   assert.match(
     workflow,
-    /uses: \.\/\.buildchain\/runtime\/actions\/v4-release-candidate-promote/,
+    /uses: \.\/\.buildchain\/runtime\/actions\/release-candidate-promote/,
   );
   assert.doesNotMatch(
     workflow,

@@ -92,7 +92,7 @@ jobs:
         with:
           repository: kungfu-systems/buildchain
           ref: ${{ steps.runtime.outputs.sha }}
-          path: .buildchain/v4-runtime
+          path: .buildchain/runtime
           persist-credentials: false
       - uses: actions/setup-node@v6.4.0
         with:
@@ -116,7 +116,7 @@ jobs:
       - name: Plan effect-pure reuse and explicit macOS tail
         id: plan
         run: >-
-          node .buildchain/v4-runtime/bin/buildchain.mjs tail-reseal plan
+          node .buildchain/runtime/bin/buildchain.mjs tail-reseal plan
           --request .buildchain/tail-reseal/request.json
           --output .buildchain/tail-reseal/plan.json
       - name: Verify runtime, source event, and original consumer policy bindings
@@ -127,12 +127,12 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from "node:fs";
-          import { verifyV4FloatingConsumerPolicyReceipt } from "./.buildchain/v4-runtime/packages/core/v4-floating-consumer-policy.js";
+          import { verifyFloatingConsumerPolicyReceipt } from "./.buildchain/runtime/packages/core/floating-consumer-policy.js";
           const request = JSON.parse(fs.readFileSync(".buildchain/tail-reseal/request.json", "utf8"));
           const receipt = JSON.parse(fs.readFileSync(".buildchain/tail-reseal/consumer-policy-receipt.json", "utf8"));
           if (request.runtime.sha !== process.env.BUILDCHAIN_RUNTIME_SHA) throw new Error("tail runtime differs from job.workflow_sha");
           if (request.source.sha !== process.env.BUILDCHAIN_SOURCE_SHA) throw new Error("tail source differs from the fresh workflow source");
-          const result = verifyV4FloatingConsumerPolicyReceipt({
+          const result = verifyFloatingConsumerPolicyReceipt({
             receipt,
             receiptRoot: process.env.BUILDCHAIN_POLICY_ROOT,
             repository: request.repository,
@@ -146,7 +146,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.BUILDCHAIN_EVIDENCE_READ_TOKEN }}
         run: >-
-          node .buildchain/v4-runtime/bin/buildchain.mjs tail-reseal admit
+          node .buildchain/runtime/bin/buildchain.mjs tail-reseal admit
           --request .buildchain/tail-reseal/request.json
           --output .buildchain/tail-reseal/admission.json
       - name: Name retained request evidence
@@ -185,7 +185,7 @@ jobs:
         with:
           repository: kungfu-systems/buildchain
           ref: ${{ needs.plan.outputs.runtime-sha }}
-          path: .buildchain/v4-runtime
+          path: .buildchain/runtime
           persist-credentials: false
       - uses: actions/setup-node@v6.4.0
         with:
@@ -213,7 +213,7 @@ jobs:
           path: .buildchain/artifacts/${{ matrix.platform.id }}
       - name: Verify exact retained bytes before any effect
         run: >-
-          node .buildchain/v4-runtime/bin/buildchain.mjs tail-reseal verify-platform
+          node .buildchain/runtime/bin/buildchain.mjs tail-reseal verify-platform
           --request .buildchain/tail-reseal/request.json
           --platform "${{ matrix.platform.id }}"
           --artifact-root .
@@ -256,7 +256,7 @@ jobs:
       - name: Verify resealed macOS bytes and provider evidence
         if: matrix.platform.id == 'macos-arm64'
         run: >-
-          node .buildchain/v4-runtime/bin/buildchain.mjs tail-reseal verify-platform
+          node .buildchain/runtime/bin/buildchain.mjs tail-reseal verify-platform
           --request .buildchain/tail-reseal/request.json
           --platform macos-arm64
           --artifact-root .
@@ -298,7 +298,7 @@ jobs:
         with:
           repository: kungfu-systems/buildchain
           ref: ${{ needs.plan.outputs.runtime-sha }}
-          path: .buildchain/v4-runtime
+          path: .buildchain/runtime
           persist-credentials: false
       - uses: actions/setup-node@v6.4.0
         with:
@@ -337,7 +337,7 @@ jobs:
           BUILDCHAIN_RUNTIME_CLASS: alpha
           BUILDCHAIN_RUNTIME_OVERRIDE: "false"
           BUILDCHAIN_WORKFLOW_SHELL_REF: v4-alpha
-        run: node .buildchain/v4-runtime/scripts/aggregate-build-summary.mjs
+        run: node .buildchain/runtime/scripts/aggregate-build-summary.mjs
       - name: Generate standard v4 candidate Release Passport
         id: passport
         env:
@@ -356,14 +356,14 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
-        run: node .buildchain/v4-runtime/scripts/generate-release-candidate-passport.mjs
+        run: node .buildchain/runtime/scripts/generate-release-candidate-passport.mjs
       - name: Seal tail receipt after all provider readbacks
         id: receipt
         env:
           GITHUB_RUN_ID: ${{ github.run_id }}
           GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: >-
-          node .buildchain/v4-runtime/bin/buildchain.mjs tail-reseal seal
+          node .buildchain/runtime/bin/buildchain.mjs tail-reseal seal
           --request .buildchain/tail-reseal/request.json
           --plan .buildchain/tail-reseal/plan.json
           --readbacks .buildchain/tail-reseal/platforms

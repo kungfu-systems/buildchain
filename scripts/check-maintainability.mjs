@@ -112,6 +112,13 @@ function ensureMaintainabilityRevisionsAvailable(
   );
 }
 
+function implementationPathAtPresent(root, historicalPath) {
+  const policyPath = path.join(root, "architecture/implementation-naming.json");
+  if (!fs.existsSync(policyPath)) return historicalPath;
+  const policy = readJson(root, "architecture/implementation-naming.json");
+  return policy.pathMigrations[historicalPath] || historicalPath;
+}
+
 function sourceMetricsAtRevision(root, revision) {
   const files = gitOutput(root, ["ls-tree", "-r", "--name-only", revision])
     .split("\n")
@@ -119,7 +126,7 @@ function sourceMetricsAtRevision(root, revision) {
     .sort();
   return Object.fromEntries(
     files.map((file) => [
-      file,
+      implementationPathAtPresent(root, file),
       analyzeSource(file, gitOutput(root, ["show", `${revision}:${file}`])),
     ]),
   );
@@ -134,7 +141,7 @@ function testMetricsAtRevision(root, revision) {
     .sort();
   return Object.fromEntries(
     files.map((file) => [
-      file,
+      implementationPathAtPresent(root, file),
       analyzeSource(file, gitOutput(root, ["show", `${revision}:${file}`])),
     ]),
   );
