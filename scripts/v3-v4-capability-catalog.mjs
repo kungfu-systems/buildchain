@@ -85,7 +85,7 @@ export function ensureCapabilityCutAncestor({
   try {
     execFileSync(
       "git",
-      ["fetch", "--no-tags", "--depth=128", "origin", descendantCommit],
+      ["fetch", "--no-tags", "--depth=256", "origin", descendantCommit],
       { cwd: root, stdio: "ignore" },
     );
   } catch {
