@@ -23,7 +23,10 @@ export function verifyComposePublication({
       root === v4ContentRoot("oci-publication-family", body) &&
       family.repository === repository &&
       family.version === version &&
-      family.sourceSha === documents.invocation.candidate.commit &&
+      family.sourceSha === documents.passport.source.builtSourceSha &&
+      documents.passport.source.builtSourceTreeSha ===
+        documents.invocation.candidate.tree &&
+      readback.sourceSha === documents.invocation.candidate.commit &&
       readback.familyRoot === root &&
       readback.version === version &&
       readback.candidateSourceSha === family.sourceSha &&
