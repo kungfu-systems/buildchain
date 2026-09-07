@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1500,
+  "generation": 1501,
   "fencingCounter": 232,
   "policy": {
     "agingSeconds": 900,
@@ -12603,8 +12603,48 @@
         "tests/oci-compose-publication-source.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3600,
+      "sourceRoot": "sha256:93e0924b2c37b0d51132a8426112fc3e0a3845acceb5b7c480786795eda67952",
+      "sourceIdentityRoot": "sha256:127a3afef09d2bde18520a61cd98cc8343e3459eed433e89010c486af6bd7737",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:32b89ea4ccbc6d2a35aff7a9f49b47262462bcf7dfed069d9f3829939349ad44",
+      "sourceHead": "4bf58b665663b1916f283edf37672b1ed8e559cf",
+      "sourcePatchRoot": "sha256:e1f39f478a3ffd9f5e382ed5ca45798b111a105c0b312b2875254d0aa947bda6",
+      "sourceProofRoot": "sha256:6a8e09184db6b85cbe957ecb78401ab38a9cfb9258d18fa99d2b353be8dd3f96",
+      "planRoot": "sha256:23fd83fa62323a4b4c1c4275fe4366ad8bec8f7dd86bd7f39a26cc0680e6ed3e",
+      "closureRoot": "sha256:292e00d715d7c122b70ee739748773f21bdc94ef61a77e50d3c9cfb2aa6019fb",
+      "dependencyRoot": "sha256:9cec520237ee07c8b2db7020074f40bf5d0b373b4aa7c735466bf6851bc910fb",
+      "toolchainRoot": "sha256:d251b739d25004e8fff1054e0b082c715c17f0b01df4724e841e7199c51406ca",
+      "sourceWorkflowRunId": 34090186183,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-07T06:39:15.107Z",
+      "updatedAt": "2026-09-07T06:39:15.107Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/public-release-oci-compose-preview.yml",
+        "architecture/agent-change-map.md",
+        "architecture/maintainability-debt.json",
+        "architecture/maintainability-policy.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/oci-publication.md",
+        "scripts/oci-compose-preview.mjs",
+        "scripts/v3-v4-capability-catalog.mjs",
+        "tests/oci-compose-registry-identity.test.mjs",
+        "tests/v3-v4-capability-inventory.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-07T06:38:30.865Z",
-  "stateRoot": "sha256:52169873fdeefd32acba72466cda8e36b8b534549f3072c5bbfddf218b477f38"
+  "updatedAt": "2026-09-07T06:39:15.107Z",
+  "stateRoot": "sha256:6ba5ea1ef3b7edc6ef9f506c2e75fb47959ec7bdf3fab033b3929eefe90f4f21"
 }
