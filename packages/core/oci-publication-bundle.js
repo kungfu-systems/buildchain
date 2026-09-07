@@ -178,8 +178,7 @@ export function verifyOciPublicationBundle({
         digestPattern.test(descriptor.digest) &&
           Number.isSafeInteger(descriptor.size) &&
           descriptor.size >= 0 &&
-          !descriptor.urls &&
-          !descriptor.data,
+          !descriptor.urls,
         "invalid OCI descriptor",
       );
       const relative = `${prefix}/blobs/sha256/${descriptor.digest.slice(7)}`;
@@ -193,6 +192,13 @@ export function verifyOciPublicationBundle({
           fileDigest(file) === descriptor.digest,
           "OCI blob digest mismatch",
         );
+      if (Object.hasOwn(descriptor, "data")) {
+        requireValue(
+          descriptor.size <= 1024 * 1024 &&
+            descriptor.data === fs.readFileSync(file).toString("base64"),
+          "embedded OCI content mismatch",
+        );
+      }
       files.set(file, descriptor);
       return file;
     };
