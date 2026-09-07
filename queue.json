@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1518,
+  "generation": 1519,
   "fencingCounter": 238,
   "policy": {
     "agingSeconds": 900,
@@ -13472,8 +13472,43 @@
         "tests/development-source.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3623,
+      "sourceRoot": "sha256:b64098073a5880e44ec21800814af79b755cf14a492d8471142e09ca0cc8ec2c",
+      "sourceIdentityRoot": "sha256:aec738d05723527b4224fd419f12c2027c35aa2e27568321a1e5c2857c3a1fb3",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:4e833f10ec612aea90758267c73e0058da6efcd79541bee28518099f4185f711",
+      "sourceHead": "961eb35efe7233b4eb6af01bae9a11d8ce64c7a1",
+      "sourcePatchRoot": "sha256:5f4330cdd8ff6ad3f6ee75294333e7d2b580b81aedcf8dc091f34a4ecf2bebb8",
+      "sourceProofRoot": "sha256:e2066011a0207e51e1239bf93e9d907bca039da8e5c23f98d5a0b11a13d7a93d",
+      "planRoot": "sha256:54d2863eaa592f80d02a7d22e2ffc03062bbeda23c4cd1699d2761e6f93ab88d",
+      "closureRoot": "sha256:fe5ac297b41b2db7b5159812c90dbce54037893061b5ec8fc2eaee8604e99669",
+      "dependencyRoot": "sha256:022e6b32d8344107c76362085112cd1d0328b0ef13dbf2036f348f6763c50852",
+      "toolchainRoot": "sha256:78c15ba11bb94d2ded3b1c2d47e6900ab1faf168835465a3256a48b788bd8a25",
+      "sourceWorkflowRunId": 34152710229,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-07T18:49:04.799Z",
+      "updatedAt": "2026-09-07T18:49:04.799Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/self-build-binary-distribution.yml",
+        "dist/site/buildchain-contract.json",
+        "scripts/binary-publication-evidence.mjs",
+        "scripts/release-line-policy.mjs",
+        "tests/fixtures/stable404-publication-settlement.json",
+        "tests/internal-architecture.test.mjs",
+        "tests/publication-settlement.test.mjs",
+        "tests/release-line-policy.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-07T16:41:09.448Z",
-  "stateRoot": "sha256:4d6c6d482ae3dca263f9e31fd481c606c7e9b09b787e78bf3dbf5f11d3be7483"
+  "updatedAt": "2026-09-07T18:49:04.799Z",
+  "stateRoot": "sha256:078ee4a38553774c376383fa0e333e4d3c6631865d04e7e0ccd72d3c7632e2c0"
 }
