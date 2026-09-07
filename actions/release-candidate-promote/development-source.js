@@ -31,7 +31,7 @@ export function prepareDevelopmentSource({ cwd, sourceSha }) {
       ],
       { cwd, stdio: "pipe" },
     );
-    execFileSync("tar", ["-xf", archive, "-C", source], { stdio: "pipe" });
+    execFileSync("tar", ["-xf", "source.tar", "-C", "source"], { cwd: temporary, stdio: "pipe" });
     fs.symlinkSync(
       path.resolve(cwd, "node_modules"),
       path.join(source, "node_modules"),
