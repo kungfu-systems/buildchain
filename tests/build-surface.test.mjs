@@ -1424,38 +1424,13 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   );
   assert.match(qualification, /workflows: \["Buildchain Alpha Self-Dogfood"\]/);
   assert.match(qualification, /statuses: write/);
-  assert.match(
-    qualification,
-    /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
-  );
-  assert.match(
-    qualification,
-    /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/,
-  );
-  assert.match(
-    qualification,
-    /name: buildchain-v4-dual-channel-self-dogfood-evidence/,
-  );
-  assert.match(
-    qualification,
-    /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/,
-  );
-  assert.match(
-    qualification,
-    /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/,
-  );
-  assert.doesNotMatch(
-    qualification,
-    /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.candidate-sha \}\}/,
-  );
-  assert.match(
-    qualification,
-    /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ steps\.candidate\.outputs\.sha \}\}/,
-  );
-  assert.doesNotMatch(
-    qualification,
-    /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ github\.event\.workflow_run\.head_sha/,
-  );
+  assert.match(qualification, /GITHUB_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.match(qualification, /name: \$\{\{ steps\.source\.outputs\.artifact-name \}\}/);
+  assert.match(qualification, /run-id: \$\{\{ github\.event\.workflow_run\.id \|\| inputs\.run-id \}\}/);
+  assert.match(qualification, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
+  assert.match(qualification, /resolve-public-build/);
+  assert.match(qualification, /qualify-public-build/);
+  assert.doesNotMatch(qualification, /secrets\.|dual-channel-self-dogfood|canary-ref|candidate-sha/);
   assert.match(qualification, /stable-candidate-qualification\.mjs/);
 });
 
