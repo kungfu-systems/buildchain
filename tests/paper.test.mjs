@@ -481,7 +481,7 @@ test("paper agent entry is managed, preserves repository instructions, and fails
   const cliEntry = spawnSync(
     process.execPath,
     [bin, "paper", "agent", "verify", "--cwd", cwd, "--offline", "--json"],
-    { cwd: root, encoding: "utf8" },
+    { cwd: root, encoding: "utf8", env: { ...process.env, BUILDCHAIN_RUNTIME_SHA: runtimeSha } },
   );
   assert.equal(cliEntry.status, 0, cliEntry.stderr || cliEntry.stdout);
   assert.equal(JSON.parse(cliEntry.stdout).ok, true);

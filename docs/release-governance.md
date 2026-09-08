@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-08
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-27
+  generated_at: 2026-09-08
   invisible_context: not asserted
 ---
 
@@ -243,15 +243,16 @@ This keeps the test channel self-describing. If a consumer checks out
 alpha ref removes routine consumer edits when Buildchain opens a newer minor,
 while exact tags and SHAs remain the reproducible audit choice.
 
-### Buildchain Alpha Self-Dogfood
+### Buildchain public build self-dogfood
 
-Buildchain continuously consumes its own current major alpha through
-`.github/workflows/self-build-alpha-dogfood.yml`. Both lanes call the
-released channel router at `build.yml@v3-alpha`. The auto lane must resolve
-`v3-alpha`; the explicit stable lane must resolve `v3`. Both execute the same
-declared install, build, and verify fixture, proving that a single consumer
-surface routes to distinct released runtimes without duplicating lifecycle
-configuration in the consumer.
+Two independent thin workflows continuously qualify the published channels.
+`self-build-alpha-dogfood.yml` calls `build.yml@v4-alpha` with zero inputs and
+runs the root project's real install, build, and verify lifecycle.
+`self-build-stable-dogfood.yml` calls `build.yml@v4` with only the nested fixture's
+`config-path`, including native and Linux container builds. Project settings
+live in TOML; the called workflow binds its exact runtime SHA and configuration
+root into the build receipts. Separate workflow validation allows each channel
+to advance independently during a breaking producer-first release.
 
 Buildchain's generic artifact-signing contract seals source-, tree-, runtime-,
 platform-, and digest-bound requests from ordinary credential-free build jobs.
@@ -717,13 +718,13 @@ status to failure, while the merge group must still produce its own final check.
 that want a stable day-to-day operations contract, Buildchain also exposes a
 patrol workflow family:
 
-| Workflow | Intended cadence | Default intent |
-| --- | --- | --- |
-| `.github/workflows/patrol-daily.yml` | daily | lightweight inspection plus ready dev PR maintenance |
-| `.github/workflows/patrol-weekly.yml` | weekly | release-state, passport, gate, and stale-state health checks as they are added |
-| `.github/workflows/patrol-monthly.yml` | monthly | governance, permission, branch-protection, and workflow drift checks as they are added |
-| `.github/workflows/patrol-observed-evidence.yml` | caller-selected schedule | validated immutable observation plus atomic last-known-good publication; no per-refresh PR |
-| `.github/workflows/stable-candidate-patrol.yml` | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR |
+| Workflow                                         | Intended cadence                   | Default intent                                                                             |
+| ------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| `.github/workflows/patrol-daily.yml`             | daily                              | lightweight inspection plus ready dev PR maintenance                                       |
+| `.github/workflows/patrol-weekly.yml`            | weekly                             | release-state, passport, gate, and stale-state health checks as they are added             |
+| `.github/workflows/patrol-monthly.yml`           | monthly                            | governance, permission, branch-protection, and workflow drift checks as they are added     |
+| `.github/workflows/patrol-observed-evidence.yml` | caller-selected schedule           | validated immutable observation plus atomic last-known-good publication; no per-refresh PR |
+| `.github/workflows/stable-candidate-patrol.yml`  | repository-selected release window | qualify immutable alpha candidates and open the exact source-lock stable PR                |
 
 The cadence names describe patrol intensity, not release cadence:
 

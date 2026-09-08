@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { discoverBuildConfiguration, normalizeBuildConfiguration } from "../packages/core/build-configuration.js";
 import { resolveBuildConfiguration } from "../scripts/resolve-build-configuration.mjs";
 import { selectReleaseCandidateArtifacts } from "../scripts/release-candidate-resolver.mjs";
+import { loadBuildchainConfig } from "../packages/core/buildchain-config.js";
 
 function fixture(t, relative = "buildchain.toml", extra = "") {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-config-plan-"));
@@ -18,6 +19,13 @@ function resolve(root, overrides = {}) {
   return resolveBuildConfiguration({ root, repository: "kungfu-systems/buildchain", workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha", workflowSha: "a".repeat(40), sourceSha: "b".repeat(40), sourceRef: "refs/heads/dev/v4/v4.0", ...overrides });
 }
 
+test("root verification declares Rust components for a minimal toolchain", () => {
+  const { config } = loadBuildchainConfig(process.cwd());
+  const commands = config.lifecycle.verify.commands;
+  assert.ok(commands.includes(`rustup component add --toolchain ${config.build.tools.rust} rustfmt clippy`));
+  assert.ok(commands.indexOf(`rustup component add --toolchain ${config.build.tools.rust} rustfmt clippy`) < commands.indexOf("corepack pnpm@11.7.0 run check"));
+});
+
 test("zero-input discovery binds lifecycle, configuration bytes and exact runtime", (t) => {
   const root = fixture(t, ".buildchain/buildchain.toml");
   const resolved = resolve(root);
@@ -29,6 +37,28 @@ test("zero-input discovery binds lifecycle, configuration bytes and exact runtim
   assert.notEqual(resolved.root, resolve(root, { sourceSha: "c".repeat(40) }).root);
   fs.appendFileSync(path.join(root, ".buildchain/buildchain.toml"), "\n# a reviewed change\n");
   assert.notEqual(resolved.root, resolve(root).root);
+});
+
+test("optional Go setup derives from TOML and changes the toolchain root", (t) => {
+  const root = fixture(t);
+  const before = resolve(root).plan;
+  assert.equal(before.tools.setup_go, false);
+  fs.appendFileSync(path.join(root, "buildchain.toml"), '\n[build.tools]\ngo = "1.25.x"\n');
+  const after = resolve(root).plan;
+  assert.equal(after.tools.go, "1.25.x");
+  assert.equal(after.tools.setup_go, true);
+  assert.notEqual(after.cache.toolchain_root, before.cache.toolchain_root);
+  fs.writeFileSync(path.join(root, "go.sum"), "example.com/library v1.0.0 h1:first\n");
+  const dependencyRoot = resolve(root).plan.cache.dependency_root;
+  assert.notEqual(dependencyRoot, after.cache.dependency_root);
+  fs.appendFileSync(path.join(root, "go.sum"), "example.com/library v1.1.0 h1:second\n");
+  assert.notEqual(resolve(root).plan.cache.dependency_root, dependencyRoot);
+  assert.throws(() => normalizeBuildConfiguration({ tools: { go: true } }));
+  const action = fs.readFileSync("actions/build-lifecycle-stage/action.yml", "utf8");
+  assert.match(action, /if: inputs.stage == 'install' && fromJSON\(inputs.plan-json\).tools.setup_go/u);
+  assert.match(action, /uses: actions\/setup-go@/u);
+  assert.match(action, /go-version: \$\{\{ fromJSON\(inputs.plan-json\).tools.go \}\}/u);
+  assert.match(action, /cache: false/u);
 });
 
 test("one locator selects a nested project and paths stay relative to that project", (t) => {
