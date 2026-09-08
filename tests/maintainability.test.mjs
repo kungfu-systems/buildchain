@@ -326,6 +326,69 @@ test("missing maintainability revisions are hydrated in bounded shallow fetches"
   assert.equal(git(shallow, ["cat-file", "-t", enforcementRevision]), "commit");
   assert.equal(ensureRevisionAvailable(shallow, baselineRevision), false);
   assert.equal(ensureRevisionAvailable(shallow, enforcementRevision), false);
+  const retryShallow = path.join(fixtureRoot, "retry-shallow");
+  git(fixtureRoot, ["clone", "--depth=1", `file://${source}`, retryShallow]);
+  let successAttempts = 0;
+  assert.equal(
+    ensureRevisionAvailable(retryShallow, baselineRevision, {
+      fetchRevision() {
+        successAttempts += 1;
+        if (successAttempts === 1)
+          throw new Error("fatal: shallow file has changed since we read it");
+        git(retryShallow, [
+          "fetch",
+          "--no-tags",
+          "--depth=1",
+          "origin",
+          baselineRevision,
+        ]);
+      },
+    }),
+    true,
+  );
+  assert.equal(successAttempts, 2);
+  assert.equal(
+    git(retryShallow, ["cat-file", "-t", baselineRevision]),
+    "commit",
+  );
+  const missing = "f".repeat(40);
+  let attempts = 0;
+  assert.throws(
+    () =>
+      ensureRevisionAvailable(shallow, missing, {
+        fetchRevision() {
+          attempts += 1;
+          throw new Error("fatal: shallow file has changed since we read it");
+        },
+      }),
+    /shallow file has changed since we read it/u,
+  );
+  assert.equal(attempts, 3);
+  attempts = 0;
+  assert.throws(
+    () =>
+      ensureRevisionAvailable(shallow, missing, {
+        fetchRevision() {
+          attempts += 1;
+          throw new Error("repository unavailable");
+        },
+      }),
+    /repository unavailable/u,
+  );
+  assert.equal(attempts, 1);
+  attempts = 0;
+  assert.throws(
+    () =>
+      ensureRevisionAvailable(shallow, missing, {
+        fetchRevision() {
+          attempts += 1;
+          if (attempts === 1)
+            throw new Error("fatal: shallow file has changed since we read it");
+        },
+      }),
+    /unavailable after a successful origin fetch/u,
+  );
+  assert.equal(attempts, 2);
   assert.deepEqual(
     collectHotspots(
       shallow,

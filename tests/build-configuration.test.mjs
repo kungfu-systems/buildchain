@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { discoverBuildConfiguration, normalizeBuildConfiguration } from "../packages/core/build-configuration.js";
 import { resolveBuildConfiguration } from "../scripts/resolve-build-configuration.mjs";
 import { selectReleaseCandidateArtifacts } from "../scripts/release-candidate-resolver.mjs";
+import { loadBuildchainConfig } from "../packages/core/buildchain-config.js";
 
 function fixture(t, relative = "buildchain.toml", extra = "") {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-config-plan-"));
@@ -17,6 +18,13 @@ function fixture(t, relative = "buildchain.toml", extra = "") {
 function resolve(root, overrides = {}) {
   return resolveBuildConfiguration({ root, repository: "kungfu-systems/buildchain", workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha", workflowSha: "a".repeat(40), sourceSha: "b".repeat(40), sourceRef: "refs/heads/dev/v4/v4.0", ...overrides });
 }
+
+test("root verification declares Rust components for a minimal toolchain", () => {
+  const { config } = loadBuildchainConfig(process.cwd());
+  const commands = config.lifecycle.verify.commands;
+  assert.ok(commands.includes(`rustup component add --toolchain ${config.build.tools.rust} rustfmt clippy`));
+  assert.ok(commands.indexOf(`rustup component add --toolchain ${config.build.tools.rust} rustfmt clippy`) < commands.indexOf("corepack pnpm@11.7.0 run check"));
+});
 
 test("zero-input discovery binds lifecycle, configuration bytes and exact runtime", (t) => {
   const root = fixture(t, ".buildchain/buildchain.toml");

@@ -8,11 +8,6 @@ on:
       - alpha/v*/v*
       - release/v*/v*
   workflow_dispatch:
-    inputs:
-      artifact-transfer-mode: { description: "Artifact transfer mode for dogfood validation", default: "github-artifacts" }
-      buildchain-ref: { default: "v4-alpha" }
-      publish-source-ref: { default: "" }
-      publish-anchor-request-json: { default: "" }
 
 permissions: { actions: read, contents: read, issues: write, id-token: write }
 jobs:
@@ -21,31 +16,12 @@ jobs:
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
     secrets: inherit
     with:
-      buildchain-channel: alpha
-      buildchain-ref: ${{ github.event.inputs['buildchain-ref'] || 'v4-alpha' }}
-      working-directory: fixtures/libnode-shaped
-      runner-preset: github-hosted
-      linux-container-preset: kungfu-verify
-      artifact-transfer-mode: ${{ github.event.inputs['artifact-transfer-mode'] || 'github-artifacts' }}
-      buildchain-contract-drift-issue-mode: "off"
-      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
-      publish-channel: ${{ github.event.inputs['publish-source-ref'] != '' && 'alpha' || 'none' }}
-      publish-source-ref: ${{ github.event.inputs['publish-source-ref'] }}
-      publish-anchor-request-json: ${{ github.event.inputs['publish-anchor-request-json'] }}
-      checkout-cache-fallback: github
-      artifact-name: libnode-shaped
-      artifact-name-template: "{artifact}-{platform}-{shortSha}"
-      artifact-paths: |
-        fixtures/libnode-shaped/dist
-        .buildchain/artifacts
-      release-candidate: true
-      expected-artifacts-json: >-
-        {"minFiles":2,"requiredPaths":["fixtures/libnode-shaped/dist/install.txt","fixtures/libnode-shaped/dist/libnode-shaped.txt"]}
+      config-path: fixtures/libnode-shaped/buildchain.toml
 
   buildchain-package-candidate:
     name: Seal Buildchain npm product payload
     needs: [libnode-shaped]
-    if: ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || (github.event_name == 'workflow_dispatch' && inputs['publish-source-ref'] != '')) }}
+    if: ${{ needs.libnode-shaped.result == 'success' && ((github.event_name == 'pull_request' && (startsWith(github.base_ref, 'alpha/') || startsWith(github.base_ref, 'release/'))) || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
@@ -54,7 +30,7 @@ jobs:
       - name: Checkout exact candidate source
         uses: actions/checkout@v7.0.0
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs['publish-source-ref'] || github.sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - uses: actions/setup-node@v6.4.0
@@ -65,8 +41,7 @@ jobs:
       - name: Download exact Release Candidate Passport
         uses: actions/download-artifact@v7.0.0
         with:
-          pattern: libnode-shaped-release-candidate-*
-          merge-multiple: true
+          name: ${{ needs.libnode-shaped.outputs.release-candidate-artifact }}
           path: .buildchain/buildchain-package-candidate/passport
 
       - name: Pack Buildchain product bytes once and bind them to the candidate

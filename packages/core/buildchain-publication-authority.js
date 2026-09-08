@@ -24,6 +24,7 @@ const DESCRIPTORS = Object.freeze([
   [".github/workflows/build.yml", "non-publication-oidc"],
   [".github/workflows/bootstrap.yml", "product-publication", true, ["universal-candidate-execution"], "caller-secrets", "none", "fixed", "caller-bound"],
   [".github/workflows/self-build-alpha-dogfood.yml", "non-publication-oidc"],
+  [".github/workflows/self-build-stable-dogfood.yml", "non-publication-oidc"],
   [".github/workflows/self-ops-dev-delivery.yml", "governance-write"],
   [".github/workflows/self-ops-patrol-daily.yml", "governance-write"],
   [".github/workflows/self-ops-patrol-monthly.yml", "governance-write"],
