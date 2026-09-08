@@ -32,6 +32,17 @@ that public alpha on the exact consumer source. Record the called workflow SHA,
 source SHA, channel-matching contract lock, configuration root and artifact
 manifests. Promote stable only after the required alpha evidence succeeds.
 
+For a breaking build-interface change, publish the producer before changing
+its own public consumers. Retain the callers and locks for the currently
+published interface while creating the first alpha from a successful PR-stage
+candidate. Then migrate the callers and accept the published alpha contract,
+qualify that public interface, and publish the completed alpha and stable.
+This ordering adds no compatibility inputs to the new build workflow.
+
+Source checks verify each consumer lock against the immutable source contract
+at its accepted SHA. Hosted consumer admission separately verifies the actual
+called floating workflow; unpublished producer code is not that dependency.
+
 A train branch is a temporary diagnostic pointer, never a release channel or a
 persisted consumer dependency. Ordinary builds do not accept train, SHA or
 `buildchain-ref` inputs. Initialization does not create a runtime pass-through.

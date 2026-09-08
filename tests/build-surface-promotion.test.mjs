@@ -282,18 +282,51 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
-test("build fixture keeps project settings in TOML and seals exact candidate bytes", () => {
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/self-build-fixture.yml"), "utf8");
-  const config = fs.readFileSync(path.join(root, "fixtures/libnode-shaped/buildchain.toml"), "utf8");
-  assert.match(workflow, /config-path: fixtures\/libnode-shaped\/buildchain.toml/u);
-  assert.doesNotMatch(workflow, /artifact-transfer-mode:|buildchain-ref:|publish-source-ref:|publish-anchor-request-json:/u);
-  assert.match(config, /environment = "github-hosted-container"/u);
-  assert.match(config, /release_candidate = true/u);
-  assert.match(workflow, /uses: kungfu-systems\/buildchain\/.github\/workflows\/build.yml@v4-alpha/u);
-  assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
-  assert.match(workflow, /name: \$\{\{ needs\.libnode-shaped\.outputs\.release-candidate-artifact \}\}/u);
-  assert.match(workflow, /\["show", "-s", "--format=%T", "HEAD"\]/u);
-  assert.match(workflow, /tree !== passport.source.treeHash/u);
+test("build surface fixture can dogfood artifact transfer modes declaratively", () => {
+  const workflow = fs.readFileSync(
+    path.join(root, ".github/workflows/self-build-fixture.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /- dev\/v\*\/v\*/);
+  assert.match(workflow, /- alpha\/v\*\/v\*/);
+  assert.match(workflow, /- release\/v\*\/v\*/);
+  assert.doesNotMatch(workflow, /v\*\.\*/);
+  assert.match(workflow, /artifact-transfer-mode:/);
+  assert.match(workflow, /default: "github-artifacts"/);
+  assert.match(workflow, /buildchain-ref: \{ default: "v4-alpha" \}/);
+  assert.match(workflow, /publish-source-ref: \{ default: "" \}/);
+  assert.match(workflow, /publish-anchor-request-json: \{ default: "" \}/);
+  assert.match(workflow, /issues: write/);
+  assert.match(workflow, /id-token: write/);
+  assert.match(workflow, /secrets: inherit/);
+  assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4-alpha/);
+  assert.match(workflow, /buildchain-channel: alpha/);
+  assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.inputs\['buildchain-ref'\] \|\| 'v4-alpha' \}\}/);
+  assert.match(workflow, /publish-channel: \$\{\{ github\.event\.inputs\['publish-source-ref'\] != '' && 'alpha' \|\| 'none' \}\}/);
+  assert.match(workflow, /publish-anchor-request-json: \$\{\{ github\.event\.inputs\['publish-anchor-request-json'\] \}\}/);
+  assert.doesNotMatch(workflow, /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.match(
+    workflow,
+    /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
+  );
+  assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
+  assert.match(workflow, /buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/);
+  assert.doesNotMatch(workflow, /checkout-cache-mode:/);
+  assert.match(workflow, /checkout-cache-fallback: github/);
+  assert.match(
+    workflow,
+    /buildchain-package-candidate:[\s\S]*?github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] != ''/,
+  );
+  assert.match(workflow, /ref: \$\{\{ github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] \|\| github\.sha \}\}/);
+  assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
+  assert.match(workflow, /\["show", "-s", "--format=%T", "HEAD"\]/);
+  assert.doesNotMatch(workflow, /"--format=%T", process\.env\.GITHUB_SHA/);
+  assert.match(workflow, /merge-multiple: true/);
+  assert.doesNotMatch(
+    workflow,
+    /needs\.libnode-shaped\.outputs\['release-candidate-artifact'\]/,
+  );
+  assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
 });
 
 test("canonical publisher carries no issue-reporting mutation authority", () => {
@@ -1358,8 +1391,7 @@ test("Buildchain self-dogfoods v4 through the floating canonical alpha publisher
   );
   assert.match(workflow, /workflows: \["Buildchain Ref Promotion"\]/);
   assert.match(workflow, /build\.yml@v4-alpha/);
-  assert.match(workflow, /build\.yml@v4\n/);
-  assert.doesNotMatch(workflow, /buildchain-channel:/);
+  assert.match(workflow, /buildchain-channel: auto/);
   assert.match(promotion, /^  promote:/m);
   assert.match(
     promotion,

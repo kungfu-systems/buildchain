@@ -1,13 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import {
   assertPublicSurfaceReverseAudit,
   collectPublicSurfaceReverseAudit,
 } from "../packages/core/public-surface-audit.js";
-import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
+import { createBuildchainContractLock, evaluateBuildchainContractLock, finalizeBuildchainContractWorld } from "../packages/core/buildchain-contract.js";
 import {
-  canAdmitSelfDogfoodLockEvaluation,
-  contractForSelfDogfoodEvaluation,
   hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
@@ -203,9 +202,6 @@ const selfDogfoodWorkflow = fs.readFileSync(
 const selfDogfoodAlphaLock = JSON.parse(
   fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
 );
-const currentBuildchainContract = JSON.parse(
-  fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
-);
 const selfDogfoodBootstrapAuthority = JSON.parse(
   fs.readFileSync(path.join(root, "architecture/bootstrap-authority.json"), "utf8"),
 );
@@ -227,27 +223,63 @@ if (!/^[0-9a-f]{40}$/.test(selfDogfoodAlphaLock.buildchain?.resolvedSha || "")) 
 if (selfDogfoodAlphaLock.buildchain?.compatibilityPolicy !== "major-compatible") {
   throw new Error("Buildchain self-dogfood alpha lock must enforce major-compatible policy");
 }
-const selfDogfoodAlphaEvaluation = evaluateBuildchainContractLock({
-  lock: selfDogfoodAlphaLock,
-  current: contractForSelfDogfoodEvaluation({
-    currentContract: currentBuildchainContract,
-    majorResolution: selfDogfoodMajorResolution,
-  }),
-  runtimeRef: `v${selfDogfoodMajor}-alpha`,
-  runtimeSha: "current-development-contract",
-  runtimeClass: "alpha", workflowShellRef: `v${selfDogfoodMajor}-alpha`,
-});
-if (
-  !canAdmitSelfDogfoodLockEvaluation({
-    evaluation: selfDogfoodAlphaEvaluation,
-    majorResolution: selfDogfoodMajorResolution,
-  })
-) {
-  throw new Error("Buildchain self-dogfood alpha lock requires review after a breaking contract change");
+// Consumer locks describe accepted published runtimes, not this unpublished producer.
+// Validate their immutable source worlds here; hosted admission checks floating drift.
+for (const channel of ["alpha-contract-lock.json", "contract-lock.json"]) {
+  const lock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain", channel), "utf8"),
+  );
+  const sha = lock.buildchain?.resolvedSha;
+  if (!/^[0-9a-f]{40}$/u.test(sha || ""))
+    throw new Error(`${channel}: invalid accepted SHA`);
+  let world;
+  try {
+    world = JSON.parse(
+      execFileSync(
+        "git",
+        ["show", `${sha}:dist/site/buildchain-contract.json`],
+        { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      ),
+    );
+  } catch {
+    const response = await fetch(
+      `https://raw.githubusercontent.com/kungfu-systems/buildchain/${sha}/dist/site/buildchain-contract.json`,
+      { signal: AbortSignal.timeout(30000) },
+    );
+    if (!response.ok)
+      throw new Error(
+        `${channel}: accepted source contract unavailable (${response.status})`,
+      );
+    world = await response.json();
+  }
+  const verified = finalizeBuildchainContractWorld(world);
+  for (const field of ["contractDigest", "compatibilityDigest"]) {
+    if (
+      world[field] !== verified[field] ||
+      lock.buildchain[field] !== world[field]
+    )
+      throw new Error(`${channel}: accepted ${field} mismatch`);
+  }
+  const accepted = createBuildchainContractLock({ contractWorld: verified }).buildchain;
+  if (JSON.stringify(lock.buildchain.surfaces) !== JSON.stringify(accepted.surfaces) || lock.buildchain.majorLine !== verified.majorLine || lock.buildchain.compatibilityPolicy !== "major-compatible") throw new Error(`${channel}: accepted surface set or policy mismatch`);
+  const ref = channel.startsWith("alpha")
+    ? `v${selfDogfoodMajor}-alpha`
+    : `v${selfDogfoodMajor}`;
+  const evaluation = evaluateBuildchainContractLock({
+    lock,
+    current: verified,
+    runtimeRef: ref,
+    runtimeSha: sha,
+    runtimeClass: channel.startsWith("alpha") ? "alpha" : "stable",
+    workflowShellRef: ref,
+  });
+  if (!evaluation.ok || lock.buildchain.ref !== ref)
+    throw new Error(`${channel}: invalid accepted runtime contract`);
 }
 for (const requiredSnippet of [
   `/.github/workflows/build.yml@v${selfDogfoodMajor}-alpha`,
-  "config-path: fixtures/libnode-shaped/buildchain.toml",
+  "buildchain-channel: auto",
+  "buildchain-channel: stable",
   `const alphaRef = "v${selfDogfoodMajor}-alpha"`,
   `const stableRef = "v${selfDogfoodMajor}"`,
 ]) {

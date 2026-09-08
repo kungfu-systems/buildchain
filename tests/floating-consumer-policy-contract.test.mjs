@@ -3,6 +3,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import {
+  createBuildchainContractLock,
+  createBuildchainContractWorld,
+} from "../packages/core/buildchain-contract.js";
 import { initBuildchainRepo } from "../scripts/init-repo.mjs";
 import {
   assertPromotionCertificationWiring,
@@ -50,13 +54,50 @@ test("public adopter delivery uploads the receipt resolved under the consumer ro
   assert.doesNotMatch(workflow, /github\.event_name == 'workflow_dispatch'/u);
 });
 
-test("alpha promotion caller passes the same runtime admission used in GitHub", () => {
+function writeCurrentRuntimeLocks(consumerRoot) {
+  fs.mkdirSync(path.join(consumerRoot, ".buildchain"), { recursive: true });
+  const contractWorld = createBuildchainContractWorld({ root });
+  for (const [ref, file] of [
+    ["v4", "contract-lock.json"],
+    ["v4-alpha", "alpha-contract-lock.json"],
+  ]) {
+    fs.writeFileSync(
+      path.join(consumerRoot, ".buildchain", file),
+      JSON.stringify(
+        createBuildchainContractLock({
+          buildchainRef: ref,
+          resolvedSha: "b".repeat(40),
+          contractWorld,
+        }),
+      ),
+    );
+  }
+}
+
+test("alpha promotion wiring admits a consumer that accepted the selected runtime", (t) => {
+  const consumerRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-promotion-wiring-"),
+  );
+  t.after(() => fs.rmSync(consumerRoot, { recursive: true, force: true }));
+  fs.cpSync(path.join(root, ".github"), path.join(consumerRoot, ".github"), {
+    recursive: true,
+  });
+  for (const action of fs.readdirSync(path.join(root, "actions"))) {
+    fs.mkdirSync(path.join(consumerRoot, "actions", action), {
+      recursive: true,
+    });
+    fs.copyFileSync(
+      path.join(root, "actions", action, "action.yml"),
+      path.join(consumerRoot, "actions", action, "action.yml"),
+    );
+  }
+  writeCurrentRuntimeLocks(consumerRoot);
   const authority = resolveFloatingConsumerPolicyAuthority({
     runtimeRoot: root,
-    callerRoot: root,
+    callerRoot: consumerRoot,
   });
   const result = scanFloatingConsumerPolicy({
-    root,
+    root: consumerRoot,
     repository: "kungfu-systems/buildchain",
     sourceSha: "a".repeat(40),
     invokedWorkflow: ".github/workflows/.release-candidate-promote.yml",
@@ -109,11 +150,7 @@ test("bounded recovery is a one-way adapter into the same public publisher", () 
       "",
     ].join("\n"),
   );
-  for (const lock of ["contract-lock.json", "alpha-contract-lock.json"])
-    fs.copyFileSync(
-      path.join(root, ".buildchain", lock),
-      path.join(consumerRoot, ".buildchain", lock),
-    );
+  writeCurrentRuntimeLocks(consumerRoot);
   try {
     const result = scanFloatingConsumerPolicy({
       root: consumerRoot,

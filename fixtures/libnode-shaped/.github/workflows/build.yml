@@ -13,4 +13,10 @@ jobs:
   build:
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
     with:
-      config-path: fixtures/libnode-shaped/buildchain.toml
+      working-directory: fixtures/libnode-shaped
+      runner-preset: github-hosted
+      require-install: true
+      require-build: true
+      require-verify: true
+      artifact-name: libnode-shaped
+      artifact-paths: fixtures/libnode-shaped/dist
