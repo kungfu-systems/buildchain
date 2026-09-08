@@ -48,6 +48,11 @@ test("optional Go setup derives from TOML and changes the toolchain root", (t) =
   assert.equal(after.tools.go, "1.25.x");
   assert.equal(after.tools.setup_go, true);
   assert.notEqual(after.cache.toolchain_root, before.cache.toolchain_root);
+  fs.writeFileSync(path.join(root, "go.sum"), "example.com/library v1.0.0 h1:first\n");
+  const dependencyRoot = resolve(root).plan.cache.dependency_root;
+  assert.notEqual(dependencyRoot, after.cache.dependency_root);
+  fs.appendFileSync(path.join(root, "go.sum"), "example.com/library v1.1.0 h1:second\n");
+  assert.notEqual(resolve(root).plan.cache.dependency_root, dependencyRoot);
   assert.throws(() => normalizeBuildConfiguration({ tools: { go: true } }));
   const action = fs.readFileSync("actions/build-lifecycle-stage/action.yml", "utf8");
   assert.match(action, /if: inputs.stage == 'install' && fromJSON\(inputs.plan-json\).tools.setup_go/u);

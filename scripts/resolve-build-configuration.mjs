@@ -45,7 +45,7 @@ export function resolveBuildConfiguration({ root, locator = "", workflowRef, wor
     return selected;
   };
   const evidence = (relative) => relative ? JSON.stringify(JSON.parse(fs.readFileSync(containedBuildPath(root, projectPath(relative)), "utf8"))) : "";
-  const dependencyFiles = ["pnpm-lock.yaml", "package-lock.json", "Cargo.lock"].map(projectPath).filter((file) => fs.existsSync(path.join(root, file)));
+  const dependencyFiles = ["pnpm-lock.yaml", "package-lock.json", "Cargo.lock", "go.sum"].map(projectPath).filter((file) => fs.existsSync(path.join(root, file)));
   const plan = {
     schema: "buildchain.build-plan/v1", project,
     configuration_root: digest(fs.readFileSync(loaded.filePath)),
