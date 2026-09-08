@@ -92,7 +92,7 @@ they do not authorize replacing the completed publication packet. Ambiguous,
 tampered or mismatched retained evidence still blocks recovery.
 
 Binary Distribution reads this settlement and the original publication Passport.
-Tag creation can precede settlement, so it waits at most 40 observations, 15 seconds
+Tag creation can precede settlement, so it waits at most 160 observations, 15 seconds
 apart, for missing evidence. A mismatched source, tag, Passport or receipt fails
 immediately. It no longer requires a legacy `buildchain/release-state/*` ref for v4.
 
@@ -111,6 +111,24 @@ The native publication receipt authorizes no stable promotion and makes no claim
 that a pending next-development PR has merged. Inspect the exact PR head, protected
 base and merge result independently. A retry of the publication phase must first
 read retained provider facts and resume only missing operations.
+
+## Protected stable finalization
+
+A successful protected `Verify` on the release branch starts the same floating
+alpha publisher used for prereleases. The publisher creates the stable version
+PR and waits within the original transaction for protected merge and the exact
+merged commit's successful `Verify`, before moving floating tags and completing
+the publication receipt. Generated finalization heads are classified from their
+rooted product state and exact source tag, so their checks do not publish again.
+
+The independent version reviewer also handles generated stable finalization PRs.
+It requires the exact protected source parent, the rooted version-state parent,
+the matching immutable stable tag, and byte-for-byte regeneration of the complete
+declared version delta. Verification uses protected source code without approval
+credentials. A separate step approves only the verified head and enables normal
+protected auto-merge. Changed source/base, modified PR contents, requested changes,
+failed final checks, and timeout remain failures. Recover an interrupted run using
+the original source and retained provider evidence; never rewrite published bytes.
 
 ## Automatic next-development review
 

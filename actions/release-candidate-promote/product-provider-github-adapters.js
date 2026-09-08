@@ -1,4 +1,5 @@
 import { releaseTailRoot } from "../../packages/core/release-tail-provider-plane.js";
+import { waitForProductFinalization } from "./product-finalization-wait.js";
 const COMMIT_IDENTITY = { name: "Keren Dong", email: "keren.dong@kungfu.link" };
 const SIGN_OFF = `Signed-off-by: ${COMMIT_IDENTITY.name} <${COMMIT_IDENTITY.email}>`;
 function providerError(message, releaseTailClass, releaseTailCode) {
@@ -341,13 +342,7 @@ async function ensureGeneratedCheck(context, repository, branch, sha) {
     }),
   );
 }
-async function openProtectedRefPullRequest(
-  context,
-  repository,
-  branch,
-  sha,
-  error,
-) {
+async function openProtectedRefPullRequest(context, repository, branch, sha, error) {
   const { request, intent, updates, versionFiles } = context;
   const { owner, repo } = splitRepository(repository);
   const current = await getRef(
@@ -424,7 +419,11 @@ async function openProtectedRefPullRequest(
       `Converge the rooted v4 product publication state for ${intent.exactTag}.\n\n` +
       `Direct protected ref update was rejected: ${error?.message || "provider policy"}`,
   };
-  await githubMutation(
+  const { data: existingPulls } = await request.octokit.rest.pulls.list({
+    owner, repo, state: "all", base: branch, head: `${owner}:${head}`, per_page: 100,
+  });
+  if (existingPulls.length > 1) throw providerError("ambiguous finalization PR", "conflict", "protected-finalization-ambiguous");
+  const { data: pull } = existingPulls.length ? { data: existingPulls[0] } : await githubMutation(
     context,
     () => request.mutationOctokit.rest.pulls.create(pullRequest),
     async () => {
@@ -438,11 +437,14 @@ async function openProtectedRefPullRequest(
       return existing.data?.[0] ? { data: existing.data[0] } : null;
     },
   );
-  updates.push({
-    action: "pending-protected-ref-pr",
-    ref: branch,
-    sha: pullRequestCommit.sha,
+  updates.push({ action: "pending-protected-ref-pr", ref: branch, sha: pullRequestCommit.sha });
+  if (intent.channel !== "stable") return false;
+  await waitForProductFinalization({
+    octokit: request.octokit, repository, pull, branch,
+    headSha: pullRequestCommit.sha, baseSha: current.object.sha, wait: context.wait,
+    requiredStatusCheck: request.requiredStatusCheck || "check",
   });
+  return true;
 }
 async function convergeBranch(context, repository, ref, sha) {
   const { request, updates } = context;
@@ -478,18 +480,11 @@ async function convergeBranch(context, repository, ref, sha) {
     if (![403, 409, 422].includes(error?.status || error?.response?.status))
       throw error;
     try {
-      await openProtectedRefPullRequest(
-        context,
-        repository,
-        branch,
-        sha,
-        error,
-      );
+      return await openProtectedRefPullRequest(context, repository, branch, sha, error);
     } catch (cause) {
       if (cause?.releaseTailClass) throw cause;
       throw transientMutationError(cause, "github-protected-ref-finalization");
     }
-    return false;
   }
 }
 async function updateTag(context, repository, ref, sha) {

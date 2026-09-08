@@ -154,8 +154,8 @@ jobs:
           exit 1
 
   classify-workflow-run:
-    name: Classify exact Alpha head
-    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && startsWith(github.event.workflow_run.head_branch, 'alpha/') }}
+    name: Classify exact publication head
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && (startsWith(github.event.workflow_run.head_branch, 'alpha/') || startsWith(github.event.workflow_run.head_branch, 'release/')) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -163,7 +163,7 @@ jobs:
       action: ${{ steps.classify.outputs.action }}
       finalized-version: ${{ steps.classify.outputs.finalized-version }}
     steps:
-      - name: Checkout the exact verified Alpha head
+      - name: Checkout the exact verified publication head
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -237,7 +237,7 @@ jobs:
             core.setOutput("action", finalizedVersion ? "noop" : "promote");
             core.setOutput("finalized-version", finalizedVersion);
             if (finalizedVersion) {
-              core.info(`Alpha head is generated finalization for v${finalizedVersion}; no new promotion is required.`);
+              core.info(`Publication head is generated finalization for v${finalizedVersion}; no new promotion is required.`);
             }
 
   promote:
@@ -257,7 +257,7 @@ jobs:
           github.event_name == 'workflow_run' &&
           github.event.workflow_run.conclusion == 'success' &&
           github.event.workflow_run.event == 'push' &&
-          startsWith(github.event.workflow_run.head_branch, 'alpha/') &&
+          (startsWith(github.event.workflow_run.head_branch, 'alpha/') || startsWith(github.event.workflow_run.head_branch, 'release/')) &&
           needs.classify-workflow-run.result == 'success' &&
           needs.classify-workflow-run.outputs.action == 'promote'
           )
