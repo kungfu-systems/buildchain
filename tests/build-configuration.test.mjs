@@ -19,8 +19,9 @@ function resolve(root, overrides = {}) {
   return resolveBuildConfiguration({ root, repository: "kungfu-systems/buildchain", workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha", workflowSha: "a".repeat(40), sourceSha: "b".repeat(40), sourceRef: "refs/heads/dev/v4/v4.0", ...overrides });
 }
 
-test("root verification declares Rust components for a minimal toolchain", () => {
+test("root verification declares Go and Rust prerequisites", () => {
   const { config } = loadBuildchainConfig(process.cwd());
+  assert.ok(config.build.tools.go, "workflow lint needs a configured Go toolchain");
   const commands = config.lifecycle.verify.commands;
   assert.ok(commands.includes(`rustup component add --toolchain ${config.build.tools.rust} rustfmt clippy`));
   assert.ok(commands.indexOf(`rustup component add --toolchain ${config.build.tools.rust} rustfmt clippy`) < commands.indexOf("corepack pnpm@11.7.0 run check"));
