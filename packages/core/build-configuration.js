@@ -4,7 +4,7 @@ import path from "node:path";
 // Project choices only. Provider endpoints, roles, runner labels and cache
 // transport authority belong to the selected, runtime-owned environment.
 const sections = {
-  tools: { node: "24", rust: "" },
+  tools: { node: "24", rust: "", go: "" },
   artifacts: {
     name: "buildchain-artifact", paths: ["dist", "build/stage"],
     required_paths: [], min_files: 0, max_files: Number.MAX_SAFE_INTEGER,
