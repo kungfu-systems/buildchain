@@ -62,6 +62,30 @@ test("repository source inventory excludes transient root test sandboxes", (t) =
   assert.deepEqual(repositorySourceFiles(temporaryRoot), []);
 });
 
+test("downloaded runtime bootstrap copies are ignored while project source remains inventoried", (t) => {
+  const temporaryRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-bootstrap-inventory-"),
+  );
+  t.after(() => fs.rmSync(temporaryRoot, { recursive: true, force: true }));
+  execFileSync("git", ["init", "-q"], { cwd: temporaryRoot });
+  fs.copyFileSync(
+    path.join(root, ".gitignore"),
+    path.join(temporaryRoot, ".gitignore"),
+  );
+  fs.mkdirSync(path.join(temporaryRoot, ".buildchain/runtime-bootstrap"), {
+    recursive: true,
+  });
+  fs.writeFileSync(
+    path.join(
+      temporaryRoot,
+      ".buildchain/runtime-bootstrap/locked-source-checkout.mjs",
+    ),
+    "export {};\n",
+  );
+  fs.writeFileSync(path.join(temporaryRoot, "project.mjs"), "export {};\n");
+  assert.deepEqual(repositorySourceFiles(temporaryRoot), ["project.mjs"]);
+});
+
 test("internal architecture check rejects an unowned repository source", () => {
   const unowned = structuredClone(index);
   unowned.ownershipRules = unowned.ownershipRules.filter(
