@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1541,
+  "generation": 1542,
   "fencingCounter": 246,
   "policy": {
     "agingSeconds": 900,
@@ -12,45 +12,7 @@
     "emergencyPolicy": "reviewed-explicit-only",
     "minimumWriterProtocolRoot": "sha256:54a203cadf0b14d4e3c198a3cc3c177c42813aa1c0cca03e900df714b6ae5563"
   },
-  "activeWarrant": {
-    "schema": "kungfu.buildchain.dev-delivery-warrant/v1",
-    "repository": "kungfu-systems/buildchain",
-    "protectedBase": "dev/v4/v4.0",
-    "candidateId": "sha256:f4e38b7537beb527d7628842e2f30afa1a6cc7352cf7ee21a02214ffb5793607",
-    "pullRequestNumber": 3666,
-    "sourceHead": "b532d539e26c7dd7cdde1334a89a48b084bbdce3",
-    "sourceRoot": "sha256:954a07ac674561b73fd7e6fc42c878490ce49abe18f02f60fec7c97d18e094a3",
-    "sourceIdentityRoot": "sha256:63aa64aaa278e9213265a64828628d039fe4bde19561dadbf3cfa26835123f6d",
-    "sourcePatchRoot": "sha256:25135a08e07d0b5d033722669f4c0676a222c11778b8cec9798e44912c1b66fd",
-    "sourceProofRoot": "sha256:42375ae5f52f7f98cb5a84f5ce78d1c984c3821f9af6ecbf64729a717aec2b16",
-    "planRoot": "sha256:13566c8de58f838a5b2c139f483db93d03ad057564a113a79d87dceb8042c136",
-    "closureRoot": "sha256:92d6a68a0b3aa6c8097923ec00c47ba18ec663cfdee84ddc4f32d322d24e54c1",
-    "dependencyRoot": "sha256:3856f766d1d3226aa6452b9f43a8fb27d4c3dbb47f3542b8d5ec83677e0a256b",
-    "toolchainRoot": "sha256:f0d7ca94d7fcef7832fef7dbcf6ecfb3adabaf1a43785cb5dad5b5ad3ddac932",
-    "affectedPaths": [
-      ".github/workflows/self-build-stable-candidate-qualification.yml",
-      "architecture/maintainability-debt.json",
-      "architecture/workflow-taxonomy.json",
-      "dist/site/buildchain-site.json",
-      "dist/site/kfd-claims.json",
-      "dist/site/page-registry.json",
-      "dist/site/public-surface-audit.json",
-      "docs/v4-production-release.md",
-      "scripts/stable-candidate-qualification.mjs",
-      "tests/build-surface.test.mjs",
-      "tests/stable-candidate-qualification.test.mjs"
-    ],
-    "shardEvidenceRoots": [],
-    "sourceWorkflowRunId": 34247237060,
-    "deliveryClass": "non-native-fast",
-    "priority": "ordinary",
-    "generation": 246,
-    "expectedOldStateRoot": "sha256:97477976ddf868d7821e36c795aee22be3b8e3e983e807d75d9c9d488eef24f3",
-    "issuedAt": "2026-09-08T16:06:10.258Z",
-    "expiresAt": "2026-09-08T17:06:10.258Z",
-    "fencingToken": "sha256:4329893418eb39d22ade442da627b4b8e446857f52725d58a1f41fce829df970",
-    "nextAction": "Replay on the exact current dev base, prove required checks, then enqueue the unchanged PR head."
-  },
+  "activeWarrant": null,
   "candidates": [
     {
       "repository": "kungfu-systems/buildchain",
@@ -13948,11 +13910,19 @@
       "sourceWorkflowRunId": 34247237060,
       "priority": "ordinary",
       "enqueuedAt": "2026-09-08T16:06:06.482Z",
-      "updatedAt": "2026-09-08T16:06:10.258Z",
+      "updatedAt": "2026-09-08T17:00:49.002Z",
       "attempts": 1,
       "recoveries": 0,
-      "status": "selected",
-      "terminal": null,
+      "status": "cancelled",
+      "terminal": {
+        "outcome": "cancelled",
+        "reason": "Buildchain observed a terminal PR or changed PR head before a new minimal delivery request.",
+        "evidenceRoot": "sha256:4c12e7771660b38fe135206f23cbe2790f17f412e614c0cc52c4841b26930c19",
+        "closedAt": "2026-09-08T17:00:49.002Z",
+        "fencingToken": "sha256:4329893418eb39d22ade442da627b4b8e446857f52725d58a1f41fce829df970",
+        "leaseGeneration": 246,
+        "successorWake": null
+      },
       "affectedPaths": [
         ".github/workflows/self-build-stable-candidate-qualification.yml",
         "architecture/maintainability-debt.json",
@@ -13969,6 +13939,6 @@
       "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-08T16:06:10.258Z",
-  "stateRoot": "sha256:f8234dbe23004851902c60f56357561b5af7891e7b0a5ba6467a9b7621352115"
+  "updatedAt": "2026-09-08T17:00:49.002Z",
+  "stateRoot": "sha256:547ce1c7e3a6a5f4092c38f78e3446bf994f93c501e859ecef637e11f360e73d"
 }
