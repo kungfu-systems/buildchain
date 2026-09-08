@@ -6,33 +6,66 @@ import {
   normalizeStableCandidateQualificationOptions,
   resolveStableCandidateQualificationCandidate,
   runStableCandidateQualification,
+  validatePublicBuildRun,
+  qualifyPublicBuild,
 } from "../scripts/stable-candidate-qualification.mjs";
 
 const SHA = "a".repeat(40);
-test("binds automatic qualification to the exact alpha proved by self-dogfood", () => {
-  assert.equal(resolveStableCandidateQualificationCandidate({
-    eventName: "workflow_run",
-    selfDogfoodEvidence: {
-      contract: "kungfu-buildchain-alpha-self-dogfood",
-      status: "passed",
-      observed: { alpha: { ref: "v4-alpha", sha: SHA, expectedSha: SHA } },
-    },
-  }), SHA);
-  assert.throws(() => resolveStableCandidateQualificationCandidate({
-    eventName: "workflow_run",
-    selfDogfoodEvidence: {
-      contract: "kungfu-buildchain-alpha-self-dogfood",
-      status: "passed",
-      observed: { alpha: { ref: "v4-alpha", sha: SHA, expectedSha: "b".repeat(40) } },
-    },
-  }), /does not bind observed and expected/);
+function publicBuild() {
+  const repositoryName = "kungfu-systems/buildchain";
+  const sourceRun = { id: 42, run_attempt: 1, head_sha: "b".repeat(40), workflow_id: 7,
+    repository: { full_name: repositoryName }, head_repository: { full_name: repositoryName },
+    status: "completed", conclusion: "success", name: "Buildchain Alpha Self-Dogfood",
+    html_url: "https://github.com/kungfu-systems/buildchain/actions/runs/42" };
+  const buildSummary = { contract: "kungfu-buildchain-build-summary", artifactName: "buildchain",
+    git: { repository: repositoryName, sha: sourceRun.head_sha, runId: "42", runAttempt: "1" },
+    runtime: { ref: "v4-alpha", workflowShellRef: "v4-alpha", sha: SHA, class: "alpha", override: false, trustDecision: "workflow-identity" },
+    platformCount: 3, platforms: ["linux-x64", "macos", "windows-x64"].map((id) => ({ platform: { id },
+      expectedArtifacts: { ok: true }, summary: { digest: "c".repeat(64) },
+      observability: { lifecycle: { stages: Object.fromEntries(["install", "build", "verify"].map((stage) => [stage, { eventCount: 1 }])) } } })) };
+  return { repositoryName, sourceRun, buildSummary };
+}
+
+test("public qualification binds source run, runtime identity, and all three lifecycle artifacts", () => {
+  assert.equal(resolveStableCandidateQualificationCandidate(publicBuild()), SHA);
+  for (const mutate of [
+    (v) => { v.sourceRun.conclusion = "failure"; },
+    (v) => { v.buildSummary.git.sha = SHA; },
+    (v) => { v.buildSummary.git.runId = "43"; },
+    (v) => { v.buildSummary.git.runAttempt = "2"; },
+    (v) => { v.buildSummary.runtime.override = true; },
+    (v) => { v.buildSummary.runtime.sha = ""; },
+    (v) => { v.buildSummary.runtime.ref = "v4"; },
+    (v) => { v.buildSummary.platforms.pop(); },
+    (v) => { v.buildSummary.platforms[1].platform.id = "linux-x64"; },
+    (v) => { v.buildSummary.platforms[0].expectedArtifacts.ok = false; },
+    (v) => { delete v.buildSummary.platforms[0].observability.lifecycle.stages.verify; },
+  ]) { const value = publicBuild(); mutate(value); assert.throws(() => resolveStableCandidateQualificationCandidate(value)); }
 });
 
-test("keeps manual qualification bound to its explicit immutable candidate", () => {
-  assert.equal(resolveStableCandidateQualificationCandidate({
-    eventName: "workflow_dispatch",
-    inputCandidateSha: SHA,
-  }), SHA);
+test("source run readback admits only the authoritative successful workflow in this repository", () => {
+  const value = publicBuild();
+  const workflow = { id: 7, path: ".github/workflows/self-build-alpha-dogfood.yml" };
+  assert.equal(validatePublicBuildRun(value.sourceRun, workflow, value.repositoryName), value.sourceRun);
+  assert.throws(() => validatePublicBuildRun(value.sourceRun, { ...workflow, id: 8 }, value.repositoryName));
+  assert.throws(() => validatePublicBuildRun(value.sourceRun, { ...workflow, path: "another.yml" }, value.repositoryName));
+  assert.throws(() => validatePublicBuildRun({ ...value.sourceRun, head_repository: { full_name: "fork/project" } }, workflow, value.repositoryName));
+});
+
+test("public qualification never dispatches a workflow or attests a substituted alpha ancestor", async () => {
+  const client = fakeClient();
+  client.resolveExactAlpha = async () => ({ sha: SHA, tag: "v4.0.9-alpha.1" });
+  const result = await qualifyPublicBuild(publicBuild(), client);
+  assert.equal(result.candidate.sha, SHA);
+  assert.match(result.summaryRoot, /^sha256:[a-f0-9]{64}$/u);
+  assert.equal(client.calls.length, 1);
+  assert.equal(client.calls[0][0], "status");
+  assert.equal(client.calls[0][1].repository, "kungfu-systems/buildchain");
+  assert.equal(client.calls[0][1].context, "buildchain-canary/buildchain-zero-input");
+  client.calls.length = 0;
+  client.resolveExactAlpha = async () => ({ sha: "c".repeat(40) });
+  await assert.rejects(qualifyPublicBuild(publicBuild(), client), /never an ancestor/);
+  assert.equal(client.calls.length, 0);
 });
 
 function fakeClient(overrides = {}) {
