@@ -905,7 +905,7 @@ function buildSiteBundle() {
       ...publicSurfaceLifecycle({
         owner: "buildchain-actions",
         maturity: "stable",
-        introducedVersion: entry.id.startsWith("build-") ? packageJson.version : undefined,
+        introducedVersion: entry.id.startsWith("build-") ? "4.0.9-alpha.0" : undefined,
         nonDuplicationRationale: "Existing action identity retained as the canonical composite or JavaScript action boundary.",
       }),
     })),
