@@ -161,15 +161,12 @@ release/vX/vX.Y -> publish-gate/major
   wrapper to merge ready, conflict-free dev PRs. The wrapper is policy-gated:
   required checks, ready/block labels, same-repository heads, approvals,
   branch prefixes, max merges, and dry-run are all declared inputs.
-- When a Buildchain change needs downstream validation before stable refs move,
-  publish a temporary runtime train ref such as
-  `train/v3/v3.0/<capability>` and ask consumers to run trusted
-  `workflow_dispatch` with `buildchain-ref` set to that train. Keep the pull
-  request against the `dev/*` branch; the train is only a validation pointer,
-  not a pending merge target. After validation succeeds, merge into the active
-  `dev/*` mainline and run the requested alpha or release promotion. The train
-  may remain for a retention window as a fast-use and rollback channel; old
-  trains are cleaned by a separate periodic cleanup task.
+- Ordinary build callers use `build.yml@v4` or `build.yml@v4-alpha` with
+  project settings in `buildchain.toml`. They have no runtime override input.
+  Validate the implementation and exact contract before merging into protected
+  Dev, publish Alpha, then qualify the public Alpha build before Stable.
+  Specialized release/recovery train admission follows its own bounded
+  contract in `docs/runtime-train-validation.md`.
 - Merging into `alpha/*`, `release/*`, or `publish-gate/major` expresses a
   release intent. Buildchain promotion then creates version-state commits,
   exact tags, floating tags, npm publish evidence, and next-alpha state.

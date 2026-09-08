@@ -38,6 +38,10 @@ test("one locator selects a nested project and paths stay relative to that proje
   assert.equal(plan.project.cwd, "packages/a");
   assert.equal(plan.artifacts.paths, "packages/a/output");
   assert.deepEqual(JSON.parse(plan.artifacts.expected_json).requiredPaths, ["packages/a/binary"]);
+  for (const invalid of ["/tmp/output", "../output"]) {
+    fs.writeFileSync(path.join(root, "packages/a/.buildchain/buildchain.toml"), `schema = 1\n[lifecycle.build]\ncommand = "build"\n[build.artifacts]\npaths = [${JSON.stringify(invalid)}]\n`);
+    assert.throws(() => resolve(root, { locator: "packages/a/.buildchain/buildchain.toml" }), /repository-relative/);
+  }
 });
 
 test("candidate publication derives intent from source context and preserves the publisher artifact identity", (t) => {

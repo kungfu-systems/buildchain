@@ -39,6 +39,7 @@ export function resolveBuildConfiguration({ root, locator = "", workflowRef, wor
   const overrides = environmentRegistry.profiles[build.environment];
   const environment = Object.fromEntries(Object.entries(environmentRegistry.defaults).map(([group, values]) => [group, { ...values, ...overrides[group] }]));
   const projectPath = (relative) => {
+    containedBuildPath(path.resolve(root, project.cwd), relative);
     const selected = path.posix.join(project.cwd, relative);
     containedBuildPath(root, selected);
     return selected;

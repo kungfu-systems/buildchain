@@ -129,14 +129,14 @@ export function verifyGoldenPath() {
       "Golden Path validation did not retain the required lifecycle stages",
     );
     assert(
-      /uses:\s+kungfu-systems\/buildchain\/.github\/workflows\/.build.yml@v4/.test(
+      /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/.test(
         workflow,
       ),
       "Golden Path workflow is not a thin v4 reusable-workflow caller",
     );
     assert(
-      /buildchain-ref:/.test(workflow),
-      "Golden Path workflow lacks the bounded runtime override input",
+      !/\n\s+(?:inputs|with|steps):/.test(workflow),
+      "Golden Path ordinary caller must have zero inputs and delegate its steps",
     );
     assert(
       releaseDryRun && typeof releaseDryRun === "object",

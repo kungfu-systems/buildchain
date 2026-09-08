@@ -769,8 +769,9 @@ const registeredActionIds = (workflowRegistry.actions || []).map((entry) => entr
 const readmeActionIndex = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
-if (registeredActionIds.length !== 8) {
-  throw new Error(`workflow-registry.json must expose the eight current action entries, got ${registeredActionIds.length}`);
+const buildOwners = JSON.parse(fs.readFileSync(path.join(root, "architecture/build-orchestration.json"), "utf8")).owners;
+if (registeredActionIds.length !== 8 + Object.keys(buildOwners).length) {
+  throw new Error(`workflow-registry.json must expose the eight public actions and owned build composites, got ${registeredActionIds.length}`);
 }
 for (const actionId of registeredActionIds) {
   if (!readmeActionIndex.includes(`actions/${actionId}`) || !mapActionIndex.includes(`actions/${actionId}`)) {
@@ -914,16 +915,16 @@ for (const requiredSnippet of [
 }
 const reusableBuildSurfaceDoc = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
 for (const requiredSnippet of [
-  "Floating Ref Contract Lock",
-  "dist/site/buildchain-contract.json",
-  "buildchain-contract-drift-issue-mode",
-  "compatible drift",
-  "Locked Source Checkout Cache",
-  "checkout-cache-mode",
-  "BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE",
-  "sourceCheckout",
-  "Shifu Cache Profile Passthrough",
-  "opaque reference and digest",
+  "config-path",
+  "buildchain.toml",
+  ".buildchain/contract-lock.json",
+  ".buildchain/alpha-contract-lock.json",
+  "architecture/build-environments.json",
+  "build.contract",
+  "cache roots",
+  "exact consumer source",
+  "build-lifecycle-stage",
+  "build-artifact-transfer",
 ]) {
   if (!reusableBuildSurfaceDoc.includes(requiredSnippet)) {
     throw new Error(`reusable build surface doc missing contract lock snippet: ${requiredSnippet}`);
@@ -1308,7 +1309,12 @@ if (!Array.isArray(inventory.migratedActions) || inventory.migratedActions.lengt
   throw new Error("migratedActions must be empty; buildchain v2 only ships native actions");
 }
 const shippedActions = internalActions;
-const shippedActionNames = shippedActions.map((action) => action.path.replace(/^actions\//, "")).sort();
+if (inventory.compositeActionOwnership !== "architecture/build-orchestration.json#owners") throw new Error("composite action ownership must use the build orchestration contract");
+const compositeNames = Object.keys(buildOwners).map((file) => {
+  if (!/^actions\/[^/]+\/action\.yml$/.test(file) || !/using:\s*composite/.test(fs.readFileSync(path.join(root, file), "utf8"))) throw new Error(`invalid owned composite action: ${file}`);
+  return path.posix.basename(path.posix.dirname(file));
+});
+const shippedActionNames = [...shippedActions.map((action) => action.path.replace(/^actions\//, "")), ...compositeNames].sort();
 
 if (JSON.stringify(actualActions) !== JSON.stringify(shippedActionNames)) {
   throw new Error(
