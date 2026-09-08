@@ -202,6 +202,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `scripts/generate-channel-promotion-workflow.mjs`
 - `.github/workflows/v4-stage-capsule-canary.yml`
 - `packages/core/release-tail-provider-plane.js`
+- `packages/core/buildchain-publication-authority.js`
 
 ## cli-command-registry
 

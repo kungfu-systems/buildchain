@@ -30,6 +30,13 @@ for stable, with matching stable and alpha contract locks. Exact commits and
 immutable release tags identify retained evidence and explicitly admitted runtime
 inputs; tracked v4 reusable-workflow selectors remain `@v4` or `@v4-alpha`.
 
+When generated stable version commits make a direct alpha-to-release merge
+conflict, use the supported `publish-gate/release/v4/v4.0/<exact-alpha-version>`
+source-lock PR. Its reconciliation commit preserves the exact published alpha
+tree and admits the current release head as a parent. Verify both parents and
+tree equality before review. This ancestry preparation does not grant publication
+qualification; the protected PR checks and native stable fence still apply.
+
 Before qualifying a new release, run `node scripts/check-universal-workflow-bootstrap.mjs`.
 The required repository check rejects an expired or not-yet-valid candidate admission
 policy before publication. Renew the bounded validity window through protected review;
@@ -59,8 +66,16 @@ A stable release is complete only when all of these coordinates agree:
 
 - `release/v4/v4.0`, `v4`, `v4.0`, and the exact `v4.0.x` tag;
 - the GitHub Release tag and attached Release Passport evidence;
-- npm `@kungfu-tech/buildchain@4.0.x`, its `gitHead`, and the `latest` tag;
+- npm `@kungfu-tech/buildchain@4.0.x`, its sealed package integrity, and the `latest` tag;
 - the protected source and release transaction roots.
+
+The immutable version tag identifies the publication source. Stable finalization
+can place the release branch and floating runtime tags on a later generated
+version commit. Verify their rooted version delta and ancestry rather than
+requiring those distinct commits to be identical. Registry `gitHead`, when
+present, is additional source evidence; publishing a sealed tarball can omit it.
+The original payload manifest, published package digest and Passport retain the
+required source binding.
 
 The alpha channel applies the same rule to `alpha/v4/v4.0`, `v4-alpha`, the
 exact alpha tag, and npm's `alpha` tag.
