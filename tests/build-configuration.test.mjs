@@ -39,6 +39,28 @@ test("zero-input discovery binds lifecycle, configuration bytes and exact runtim
   assert.notEqual(resolved.root, resolve(root).root);
 });
 
+test("optional Go setup derives from TOML and changes the toolchain root", (t) => {
+  const root = fixture(t);
+  const before = resolve(root).plan;
+  assert.equal(before.tools.setup_go, false);
+  fs.appendFileSync(path.join(root, "buildchain.toml"), '\n[build.tools]\ngo = "1.25.x"\n');
+  const after = resolve(root).plan;
+  assert.equal(after.tools.go, "1.25.x");
+  assert.equal(after.tools.setup_go, true);
+  assert.notEqual(after.cache.toolchain_root, before.cache.toolchain_root);
+  fs.writeFileSync(path.join(root, "go.sum"), "example.com/library v1.0.0 h1:first\n");
+  const dependencyRoot = resolve(root).plan.cache.dependency_root;
+  assert.notEqual(dependencyRoot, after.cache.dependency_root);
+  fs.appendFileSync(path.join(root, "go.sum"), "example.com/library v1.1.0 h1:second\n");
+  assert.notEqual(resolve(root).plan.cache.dependency_root, dependencyRoot);
+  assert.throws(() => normalizeBuildConfiguration({ tools: { go: true } }));
+  const action = fs.readFileSync("actions/build-lifecycle-stage/action.yml", "utf8");
+  assert.match(action, /if: inputs.stage == 'install' && fromJSON\(inputs.plan-json\).tools.setup_go/u);
+  assert.match(action, /uses: actions\/setup-go@/u);
+  assert.match(action, /go-version: \$\{\{ fromJSON\(inputs.plan-json\).tools.go \}\}/u);
+  assert.match(action, /cache: false/u);
+});
+
 test("one locator selects a nested project and paths stay relative to that project", (t) => {
   const root = fixture(t, "packages/a/.buildchain/buildchain.toml", '[build.artifacts]\npaths = ["output"]\nrequired_paths = ["binary"]\n');
   assert.throws(() => resolve(root), /Expected one/);
