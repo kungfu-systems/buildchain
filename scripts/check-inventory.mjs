@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { parseWorkflowCallJobs } from "../packages/core/workflow-yaml-contract.js";
 import { execFileSync } from "node:child_process";
 import {
   assertPublicSurfaceReverseAudit,
@@ -160,6 +161,7 @@ const requiredPaths = [
   ".github/workflows/self-ops-patrol-weekly.yml",
   ".github/workflows/self-ops-patrol-monthly.yml",
   ".github/workflows/self-build-alpha-dogfood.yml",
+  ".github/workflows/self-build-stable-dogfood.yml",
   ".github/workflows/release-candidate-promote.yml",
   ".github/workflows/.release-candidate-promote.yml",
   ".github/workflows/release-propagation.yml",
@@ -195,10 +197,6 @@ if (rootPackage.name !== "@kungfu-tech/buildchain") {
 if (rootPackage.private !== false) {
   throw new Error("root package must be publishable with private=false");
 }
-const selfDogfoodWorkflow = fs.readFileSync(
-  path.join(root, ".github/workflows/self-build-alpha-dogfood.yml"),
-  "utf8",
-);
 const selfDogfoodAlphaLock = JSON.parse(
   fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
 );
@@ -276,16 +274,13 @@ for (const channel of ["alpha-contract-lock.json", "contract-lock.json"]) {
   if (!evaluation.ok || lock.buildchain.ref !== ref)
     throw new Error(`${channel}: invalid accepted runtime contract`);
 }
-for (const requiredSnippet of [
-  `/.github/workflows/build.yml@v${selfDogfoodMajor}-alpha`,
-  "buildchain-channel: auto",
-  "buildchain-channel: stable",
-  `const alphaRef = "v${selfDogfoodMajor}-alpha"`,
-  `const stableRef = "v${selfDogfoodMajor}"`,
-]) {
-  if (!selfDogfoodWorkflow.includes(requiredSnippet)) {
-    throw new Error(`Buildchain self-dogfood workflow missing current-major snippet: ${requiredSnippet}`);
-  }
+for (const [channel, ref] of [["alpha", `v${selfDogfoodMajor}-alpha`], ["stable", `v${selfDogfoodMajor}`]]) {
+  const workflow = fs.readFileSync(path.join(root, `.github/workflows/self-build-${channel}-dogfood.yml`), "utf8");
+  if (!workflow.includes(`/.github/workflows/build.yml@${ref}`) || /steps:|buildchain-channel:|runner-preset:|working-directory:/u.test(workflow)) throw new Error(`${channel} self-dogfood must remain a thin public TOML build caller`);
+  if (!workflow.includes(`group: buildchain-${channel}-self-dogfood-`) || !workflow.includes("cancel-in-progress: false")) throw new Error(`${channel} self-dogfood must serialize its own runs`);
+  const expectedInputs = channel === "alpha" ? [] : ["config-path"];
+  const call = parseWorkflowCallJobs(workflow).find((job) => job.id === `${channel}-consumer`);
+  if (JSON.stringify(Object.keys(call.with || {})) !== JSON.stringify(expectedInputs)) throw new Error(`${channel} self-dogfood input contract drift`);
 }
 const reusableBuildWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/.build.yml"),
@@ -381,14 +376,6 @@ for (const workflow of [channelBuildWorkflow, reusableBuildWorkflow]) {
 }
 if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 1) {
   throw new Error("public build facade must invoke its exact backbone once");
-}
-for (const requiredSnippet of [
-  "group: buildchain-release-promotion-${{ github.repository }}",
-  "cancel-in-progress: false",
-]) {
-  if (!selfDogfoodWorkflow.includes(requiredSnippet)) {
-    throw new Error(`Buildchain self-dogfood workflow missing promotion serialization: ${requiredSnippet}`);
-  }
 }
 const actionlintConfig = fs.readFileSync(
   path.join(root, ".github/actionlint.yaml"),

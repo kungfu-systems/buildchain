@@ -1550,7 +1550,7 @@ test("diagnostics SDK collects compiler cache stats through injectable runners",
     throw error;
   };
 
-  const compilerCaches = collectCompilerCacheDiagnostics({ cwd: root, runCommand });
+  const compilerCaches = collectCompilerCacheDiagnostics({ cwd: root, runCommand, env: {} });
   assert.equal(compilerCaches.ccache.available, true);
   assert.equal(compilerCaches.ccache.format, "json");
   assert.equal(compilerCaches.ccache.stats.cache_hit_direct, 7);

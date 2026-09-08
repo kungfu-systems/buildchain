@@ -4,7 +4,7 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 115,
+    "workflowCount": 116,
     "actionCount": 14,
     "sitePageCount": 88,
     "docCommandRefCount": 1048,
@@ -4345,6 +4345,17 @@
       {
         "id": "self-build-stable-candidate-qualification",
         "path": ".github/workflows/self-build-stable-candidate-qualification.yml",
+        "reusable": false,
+        "inputs": [],
+        "inputCount": 0,
+        "secrets": [],
+        "secretCount": 0,
+        "outputs": [],
+        "outputCount": 0
+      },
+      {
+        "id": "self-build-stable-dogfood",
+        "path": ".github/workflows/self-build-stable-dogfood.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -10628,8 +10639,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "547dde42a349a047f2aadcfc3ee9e3e31b6a7f6bfc75b7d37e5dcff7abd15308",
-    "workflowRegistryDigest": "df3d6b36a6d80e98951c2c709d8bc52ace93667d0e44f517b8591e1bf000ca83",
-    "pageRegistryDigest": "a28101c7e678dbdd499b0b263f809884381d7ddecd9d8ba7820c6912bc4f8c4c"
+    "workflowRegistryDigest": "e5784fc8daadf6d2acb79f6e0662b7ae6b516022a57ee3f31a3997c7b60a15e2",
+    "pageRegistryDigest": "57de14408acbd57b5665078b2ff5a644c8ac8b0a43b4acd69d98b73724e03706"
   },
   "comparison": {
     "missingCliRegistry": [],

@@ -80,6 +80,7 @@ fail_fast = false
 [build.tools]
 node = "24"
 rust = "stable"
+go = "1.25.x" # optional; omitted toolchains are not installed
 
 [build.artifacts]
 name = "my-library"

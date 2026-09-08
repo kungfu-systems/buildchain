@@ -29,6 +29,13 @@ runs:
           *) echo "::error::Invalid build lifecycle stage"; exit 1 ;;
         esac
 
+    - name: Set up configured Go toolchain
+      if: inputs.stage == 'install' && fromJSON(inputs.plan-json).tools.setup_go
+      uses: actions/setup-go@v6.5.0
+      with:
+        go-version: ${{ fromJSON(inputs.plan-json).tools.go }}
+        cache: false
+
     - name: Run configured lifecycle stage
       uses: ./.buildchain/runtime/actions/run-lifecycle
       env:

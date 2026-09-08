@@ -59,7 +59,7 @@ export function resolveBuildConfiguration({ root, locator = "", workflowRef, wor
     environment, environment_root: rootOf(environment),
     build,
     lifecycle: Object.fromEntries(["install", "build", "verify"].map((stage) => [stage, { required: stage === "build" || Boolean(loaded.config.lifecycle?.[stage]), configured: Boolean(loaded.config.lifecycle?.[stage]) }])),
-    tools: { node: build.tools.node, setup_node: Boolean(build.tools.node), rust: build.tools.rust || "stable", setup_rust: Boolean(build.tools.rust) },
+    tools: { node: build.tools.node, setup_node: Boolean(build.tools.node), rust: build.tools.rust || "stable", setup_rust: Boolean(build.tools.rust), go: build.tools.go, setup_go: Boolean(build.tools.go) },
     artifacts: {
       name: build.artifacts.name,
       paths: build.artifacts.paths.map(projectPath).join("\n"),

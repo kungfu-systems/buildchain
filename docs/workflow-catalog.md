@@ -130,6 +130,7 @@ all related declarations. Run `pnpm run generate:workflows` and
 | [self-build-public-consumer-dogfood.yml](../.github/workflows/self-build-public-consumer-dogfood.yml) | build | repository | active | V4 Public Consumer Dogfood | — |
 | [self-build-release-verify-compat.yml](../.github/workflows/self-build-release-verify-compat.yml) | build | repository | compatibility | Release - Verify | — |
 | [self-build-stable-candidate-qualification.yml](../.github/workflows/self-build-stable-candidate-qualification.yml) | build | repository | active | Buildchain Stable Candidate Qualification | — |
+| [self-build-stable-dogfood.yml](../.github/workflows/self-build-stable-dogfood.yml) | build | repository | active | Buildchain Stable Self-Dogfood | — |
 | [self-build-verify.yml](../.github/workflows/self-build-verify.yml) | build | repository | active | Verify | — |
 | [self-ops-bootstrap-dogfood.yml](../.github/workflows/self-ops-bootstrap-dogfood.yml) | ops | repository | active | Universal Bootstrap Train-First Self-Dogfood | — |
 | [self-ops-dev-delivery.yml](../.github/workflows/self-ops-dev-delivery.yml) | ops | repository | active | Buildchain Dev Delivery | — |

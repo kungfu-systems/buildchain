@@ -21,10 +21,10 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "644beb25f10c3a1c57d5e1f60a8e4eea7e977af5c25c575c6fa82abe30bf12fc",
+    "sha256": "a9b94f9fa34a70d046035f53c5b3fb1f9e98941c1dd59715fa0a88ae0590dc52",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 115,
+      "workflowCount": 116,
       "actionCount": 14,
       "sitePageCount": 88,
       "docCommandRefCount": 1048,
@@ -246,10 +246,10 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "644beb25f10c3a1c57d5e1f60a8e4eea7e977af5c25c575c6fa82abe30bf12fc",
+      "sha256": "a9b94f9fa34a70d046035f53c5b3fb1f9e98941c1dd59715fa0a88ae0590dc52",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 115,
+        "workflowCount": 116,
         "actionCount": 14,
         "sitePageCount": 88,
         "docCommandRefCount": 1048,
@@ -6899,6 +6899,20 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
+          "id": "workflow:self-build-stable-dogfood",
+          "name": "workflow:self-build-stable-dogfood",
+          "kind": "workflow",
+          "sourcePath": ".github/workflows/self-build-stable-dogfood.yml",
+          "evidencePath": ".github/workflows/self-build-stable-dogfood.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 0,
+          "inputs": [],
+          "reverseAuditSource": ".github/workflows"
+        },
+        {
           "id": "workflow:self-build-verify",
           "name": "workflow:self-build-verify",
           "kind": "workflow",
@@ -8966,6 +8980,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 538
+    "publicSurfaceCount": 539
   }
 }

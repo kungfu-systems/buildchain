@@ -253,7 +253,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:29b6f9cfccefae36ce402485b8c4e4c86bfd7cab18a8dcdfab7c1369b2301b4e"
+      "digest": "sha256:0b971a24b4fb850cf941d05f0ee8b3493f0dfe3ddbea5479bf2e344ea8a1553e"
     },
     {
       "id": "build-facts",
@@ -293,7 +293,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:42eda071001e232c0d4f6236c362c862fe7d63cd7b123db9780e0a3b468bc09f"
+      "digest": "sha256:bc609cad079a44afb8c2cf2b4459d44612bfd5ff09ed3064f85a2a3f02a5ec1e"
     },
     {
       "id": "v4-adopter-delivery",
@@ -333,7 +333,7 @@
       "path": "docs/release-governance.md",
       "plane": "why",
       "exists": true,
-      "digest": "sha256:dab1c9cdc92b96fc79a45d33916973a6006c0be834d2a3adbf70f63f23bf00b5"
+      "digest": "sha256:4dca8751549a33393a0eb6f7237e1e70e9c586929b1e2792f7b32e9beadef75f"
     },
     {
       "id": "v4-compatibility-facts",
