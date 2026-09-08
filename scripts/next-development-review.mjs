@@ -7,6 +7,7 @@ import { verifyVersionStateDelta } from "./verify-version-state-delta.mjs";
 import { readBinaryPublicationEvidence } from "./binary-publication-evidence.mjs";
 import { releaseAssetClient } from "./release-asset-client.mjs";
 import { enqueueNextDevelopmentPullRequest } from "../actions/release-candidate-promote/next-development-queue.js";
+import { FINALIZATION_BRANCH, verifyReleaseFinalization } from "./release-finalization-review.mjs";
 
 const REPOSITORY = "kungfu-systems/buildchain";
 const WORKFLOW = ".github/workflows/self-build-verify.yml";
@@ -26,7 +27,7 @@ export function assertReviewRun(run, { repository, runId, headSha } = {}) {
     run.status !== "completed" ||
     run.conclusion !== "success" ||
     !SHA.test(run.head_sha || "") ||
-    !BRANCH.test(run.head_branch || "") ||
+    !(BRANCH.test(run.head_branch || "") || FINALIZATION_BRANCH.test(run.head_branch || "")) ||
     (headSha && run.head_sha !== headSha)
   )
     throw new Error("unqualified next-development verification run");
@@ -36,6 +37,9 @@ export function assertReviewPull(
   pull,
   { repository, headSha, baseSha, branch },
 ) {
+  const finalization = FINALIZATION_BRANCH.exec(branch || "");
+  const expectedBase = finalization ? `release/v${finalization[1]}/v${finalization[1]}.${finalization[2]}` :
+    `dev/v${BRANCH.exec(branch)?.[1].split(".")[0]}/v${BRANCH.exec(branch)?.[1].split(".").slice(0, 2).join(".")}`;
   if (
     repository !== REPOSITORY ||
     pull.head?.repo?.full_name !== repository ||
@@ -43,8 +47,8 @@ export function assertReviewPull(
     pull.head?.sha !== headSha ||
     pull.base?.sha !== baseSha ||
     pull.head?.ref !== branch ||
-    !BRANCH.test(branch || "") ||
-    pull.base?.ref !== `dev/v${BRANCH.exec(branch)?.[1].split(".")[0]}/v${BRANCH.exec(branch)?.[1].split(".").slice(0, 2).join(".")}` ||
+    !(BRANCH.test(branch || "") || finalization) ||
+    pull.base?.ref !== expectedBase ||
     pull.state !== "open" ||
     pull.draft ||
     pull.merged_at ||
@@ -107,6 +111,12 @@ export async function verifyNextDevelopmentReview({
   publication,
 }) {
   const { run, pull, baseSha } = observe(client, repository, runId);
+  if (FINALIZATION_BRANCH.test(run.head_branch)) {
+    git("fetch", "--no-tags", "origin", baseSha, run.head_sha);
+    const plan = verifyReleaseFinalization({ client, repository, run, pull, baseSha, git });
+    observe(client, repository, runId, plan);
+    return plan;
+  }
   if (git("rev-parse", "HEAD") !== baseSha)
     throw new Error(
       "review runtime is not the exact protected development base",
@@ -181,7 +191,7 @@ export async function approveNextDevelopment({ client, reviewer, plan }) {
     await reviewer.post(endpoint, {
       event: "APPROVE",
       commit_id: plan.headSha,
-      body: `Verified the exact version-only transition by regenerating all tracked bytes from protected base ${plan.baseSha}. Completed publication receipt: ${plan.publicationReceiptRoot}. Verification run: https://github.com/${plan.repository}/actions/runs/${plan.runId}.`,
+      body: `Verified the exact version-only transition by regenerating all tracked bytes from protected base ${plan.baseSha}. Publication binding: ${plan.publicationReceiptRoot || plan.publicationSourceSha}. Verification run: https://github.com/${plan.repository}/actions/runs/${plan.runId}.`,
     });
   }
   observe(client, plan.repository, plan.runId, plan);
@@ -287,6 +297,15 @@ async function main(mode) {
       )
     )
       throw new Error("independent approval no longer qualifies enqueue");
+    if (plan.kind === "stable-finalization") {
+      // Release branches use protected auto-merge; Dev retains its required merge queue.
+      const result = client.post("graphql", {
+        query: "mutation($input: EnablePullRequestAutoMergeInput!) { enablePullRequestAutoMerge(input: $input) { pullRequest { id } } }",
+        variables: { input: { pullRequestId: pull.node_id, mergeMethod: "MERGE" } },
+      });
+      if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join("; "));
+      return;
+    }
     await enqueueNextDevelopmentPullRequest({
       pull,
       headSha: plan.headSha,

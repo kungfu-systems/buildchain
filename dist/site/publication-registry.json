@@ -19,7 +19,7 @@
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "dc7eca1f63e1312deda990ae85bbec13678f69dc",
+  "sourceRevision": "22dfb19018052451f18ca9e9f1f838a817246c2e",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -32,7 +32,7 @@
   },
   "package": {
     "name": "@kungfu-tech/buildchain",
-    "version": "4.0.5",
+    "version": "4.0.6-alpha.0",
     "versionSource": "package.json#version"
   },
   "sourceKind": "package-site-bundle",

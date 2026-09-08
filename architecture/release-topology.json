@@ -59,7 +59,7 @@
       "Paper product release",
       "npm dry-run",
       "v3 rollback workflows",
-      "retired compatibility workflows",
+      "Protected generated version review: no package, tag or Release mutation; independently inventoried in closedWorld and privilegedExecutableClosure. Stable finalization review consumes the exact tag and regenerates the rooted version state before protected auto-merge.",
       "Post-publication protected development review: no package, tag or Release mutation; independently inventoried in closedWorld and privilegedExecutableClosure.",
       "Post-publication OCI Compose preview activation is measured separately in postPublicationScope; it consumes completed publication and qualification, copies one manifest to the sealed alias, and cannot materialize versions or release refs."
     ]
@@ -143,6 +143,7 @@
         "actions/release-candidate-promote/next-development-queue.js",
         "actions/release-candidate-promote/oci-provider.js",
         "actions/release-candidate-promote/oci-registry-client.js",
+        "actions/release-candidate-promote/product-finalization-wait.js",
         "actions/release-candidate-promote/product-provider-adapters.js",
         "actions/release-candidate-promote/product-provider-github-adapters.js",
         "actions/release-candidate-promote/product-provider.js",
@@ -208,9 +209,10 @@
         "scripts/oci-compose-preview.mjs",
         "scripts/publication-settlement.mjs",
         "scripts/release-asset-client.mjs",
+        "scripts/release-finalization-review.mjs",
         "scripts/verify-version-state-delta.mjs"
       ],
-      "root": "sha256:1794b541c105bf048758988b73b4fc0f5e191770a1c091f448a8a4714ee4323c"
+      "root": "sha256:7a51840f34c85125fc7b65c6b1881d59e62ea05ad8265f7c8f3a66a3d11539f7"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/domain-wasm.js",
