@@ -298,12 +298,11 @@ async function main(mode) {
     )
       throw new Error("independent approval no longer qualifies enqueue");
     if (plan.kind === "stable-finalization") {
-      // Release branches use protected auto-merge; Dev retains its required merge queue.
-      const result = client.post("graphql", {
-        query: "mutation($input: EnablePullRequestAutoMergeInput!) { enablePullRequestAutoMerge(input: $input) { pullRequest { id } } }",
-        variables: { input: { pullRequestId: pull.node_id, mergeMethod: "MERGE" } },
+      // The CLI merges ready/UNSTABLE heads or enables auto-merge while blocked.
+      execFileSync("gh", ["pr", "merge", String(pull.number), "--repo", repository,
+        "--merge", "--auto", "--match-head-commit", plan.headSha], {
+        encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
       });
-      if (result.errors?.length) throw new Error(result.errors.map((error) => error.message).join("; "));
       return;
     }
     await enqueueNextDevelopmentPullRequest({
