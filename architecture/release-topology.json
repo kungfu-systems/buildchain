@@ -43,7 +43,8 @@
       ".github/workflows/self-release-rehearsal-dogfood.yml",
       ".github/workflows/self-release-tail-dogfood.yml",
       ".github/workflows/self-release-next-development.yml",
-      ".github/workflows/public-release-oci-compose-preview.yml"
+      ".github/workflows/public-release-oci-compose-preview.yml",
+      ".github/workflows/self-build-stable-dogfood.yml"
     ],
     "unknownTopologyPolicy": "fail-closed"
   },
@@ -352,12 +353,12 @@
       }
     ],
     "metrics": {
-      "workflowCount": 35,
-      "jobCount": 86,
+      "workflowCount": 36,
+      "jobCount": 85,
       "reusableEdgeCount": 21,
-      "mutationRelevantNodeCount": 72,
+      "mutationRelevantNodeCount": 71,
       "contentsWriteJobCount": 14,
-      "oidcWriteJobCount": 12
+      "oidcWriteJobCount": 10
     },
     "semanticMetrics": {
       "workflowCount": 5,

@@ -3,32 +3,28 @@
   "contract": "kungfu-buildchain-contract-lock",
   "buildchain": {
     "ref": "v4-alpha",
-    "resolvedSha": "a39da2aa29c0ed51700fcc492f3530b8a138c104",
+    "resolvedSha": "411b6da879d28391bde09b88105fe510e25c519a",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:03a426725bcd6dabadb17989bb1d508e70f239c2f9eee2d81bf81f71240d9352",
-    "compatibilityDigest": "sha256:a0d4f48bb6236f6932466cfb2802b866035c5be5861a9d41c2975307a640fb18",
+    "contractDigest": "sha256:8162675fe297d2f5404d5308041e9dbe4f9c22eda70ac69c845be9894c799014",
+    "compatibilityDigest": "sha256:e398528e54509c05569630ffcc98a04d41e831479ab921df65943b49bf077719",
     "compatibilityFactRegistryRoot": "sha256:232fd556a2372b29db586bbc2acbdfce6464a68c93902797ff527f75f7816c42",
     "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
     "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
     "majorLine": "v4",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-09-08T12:21:49.818Z",
+    "acceptedAt": "2026-09-08T13:11:27.151Z",
     "surfaces": [
       {
         "id": "reusable-build",
         "kind": "workflow",
-        "breakingDigest": "sha256:dfbedd543ae0c067982b5c8c02d98dd2f7f7df88752be97fb330da6b0ba30faa",
-        "compatibilityProofRoots": [
-          "sha256:b99176f414752ffb276f4add6183aa81eeb480598368ca4f57804f024212d0f5"
-        ],
-        "compatibilityFactRoots": [
-          "sha256:7c85c77b8282d123924b89b4f5b239b58b7b1383af91b9006425d9269a2c6ce5"
-        ]
+        "breakingDigest": "sha256:eee8d601f94fae3b9d440e467792ca5cb9e7fd0a42cd3ad13a72f3f7087de5e9",
+        "compatibilityProofRoots": [],
+        "compatibilityFactRoots": []
       },
       {
         "id": "channel-build-router",
         "kind": "workflow",
-        "breakingDigest": "sha256:c4597dfa89e1a58f1023905092b849644f5c080abf150aeba9c7e1cd5ed43962",
+        "breakingDigest": "sha256:f49f1c3e437f82b60852aa232054799abe821987ae81b990ed5f85f604bca572",
         "compatibilityProofRoots": [],
         "compatibilityFactRoots": []
       },
@@ -187,26 +183,9 @@
       {
         "id": "controller:build-lifecycle",
         "kind": "controller",
-        "breakingDigest": "sha256:6b8d38e92b2c67b5bc83fae0a3fd95bfa47582fbc176e6cdeebe7630a57534cb",
-        "compatibilityProofRoots": [
-          "sha256:3bd1c54198b78a462d2005ac66c139ad4d6f1962925c8f0971b4d0a222f1a7c5",
-          "sha256:9024634cef43a9d695fa224d26be9aeb6370d3c981b003ece3b659dde8e73713"
-        ],
-        "compatibilityFactRoots": [
-          "sha256:c803aa7787c92e9ac71e0f52b6d2ec0cc76e8bc0e55f192affa9546286899ce9",
-          "sha256:b45ecad5988d358bc4604f28db0faad793a02d8ee8592cc1f4323365e951c6f0"
-        ]
-      },
-      {
-        "id": "controller:build-channel-router",
-        "kind": "controller",
-        "breakingDigest": "sha256:30549aa26cd1e1dd81f10fe3529d3c6e3f8438a6efa0100c47ebae4d2f3d71df",
-        "compatibilityProofRoots": [
-          "sha256:36d2e188f43385d6191116393aa81ea025ccf61e21a1c5eae1d56be92a203b31"
-        ],
-        "compatibilityFactRoots": [
-          "sha256:47c1d78adba0d75ac74409d85ad6cf1188d10d25165d2d561118cf76e9ccb701"
-        ]
+        "breakingDigest": "sha256:51ef685c6a85a669785d5de240cdda95ed6fe947485d6b2552e2b17d96acdfe1",
+        "compatibilityProofRoots": [],
+        "compatibilityFactRoots": []
       },
       {
         "id": "controller:shifu-gate-profile-envelope",

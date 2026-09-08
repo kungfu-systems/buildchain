@@ -659,6 +659,23 @@
         "expectedContributionSeconds": 0,
         "rationale": "The public facade delegates once to the backbone; no additional build or controller runs."
       }
+    },
+    {
+      "laneId": ".github/workflows/self-build-stable-dogfood.yml#stable-consumer",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "ref-scoped",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "Published stable TOML build qualification latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Independent thin public stable fixture caller permits producer-first channel upgrades without duplicating build orchestration."
+      }
     }
   ],
   "declarationFamilies": [

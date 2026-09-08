@@ -1002,6 +1002,19 @@
       "notes": ""
     },
     {
+      "workflowPath": ".github/workflows/self-build-stable-dogfood.yml",
+      "authorityClass": "non-publication-oidc",
+      "publicationCapable": false,
+      "capabilityIds": [],
+      "credentialMode": "none",
+      "publisherWorkflowMode": "fixed",
+      "publisherWorkflowPath": ".github/workflows/self-build-stable-dogfood.yml",
+      "environment": "",
+      "environmentMode": "fixed",
+      "runnerPolicy": "unqualified",
+      "notes": ""
+    },
+    {
       "workflowPath": ".github/workflows/self-ops-bootstrap-dogfood.yml",
       "authorityClass": "product-publication",
       "publicationCapable": true,
@@ -1862,6 +1875,14 @@
       "classified": false
     },
     {
+      "path": ".github/workflows/self-build-stable-dogfood.yml",
+      "signals": [
+        "write-permission",
+        "oidc"
+      ],
+      "classified": true
+    },
+    {
       "path": ".github/workflows/self-build-verify.yml",
       "signals": [],
       "classified": false
@@ -2031,5 +2052,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "e5eb0d7ee3cce4a25674909154f6bd0bf736d5b93df41c1d435c468aad50c32a"
+  "registryDigest": "40ae53e5bf87b44395bd7bf04b19effb2cae1ada5f9864c02dbef4220fc92106"
 }

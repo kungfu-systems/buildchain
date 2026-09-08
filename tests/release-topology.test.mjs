@@ -360,12 +360,12 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
 test("the topology ledger exactly freezes all current release jobs and authority signals", () => {
   const topology = checkReleaseTopology();
   assert.deepEqual(topology.metrics, {
-    workflowCount: 35,
-    jobCount: 86,
+    workflowCount: 36,
+    jobCount: 85,
     reusableEdgeCount: 21,
-    mutationRelevantNodeCount: 72,
+    mutationRelevantNodeCount: 71,
     contentsWriteJobCount: 14,
-    oidcWriteJobCount: 12,
+    oidcWriteJobCount: 10,
   });
   assert.deepEqual(topology.semanticMetrics, {
     workflowCount: 5,

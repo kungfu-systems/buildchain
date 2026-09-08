@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 62271,
-    "current": 54210
+    "measuredExcess": 62215,
+    "current": 54154
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1214,7 +1214,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1502
+          "lines": 1489
         },
         "target": {
           "lines": 600
@@ -2241,15 +2241,15 @@
         "baseline": {
           "lines": 3181,
           "functions": {
-            "<anonymous@1537>@1537": {
+            "<anonymous@1494>@1494": {
               "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2711,
+          "lines": 2668,
           "functions": {
-            "<anonymous@1537>@1537": {
+            "<anonymous@1494>@1494": {
               "lines": 206
             }
           }
@@ -2257,7 +2257,7 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@1537>@1537": {
+            "<anonymous@1494>@1494": {
               "lines": 180
             }
           }

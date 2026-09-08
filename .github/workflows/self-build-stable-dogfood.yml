@@ -1,4 +1,4 @@
-name: Buildchain Alpha Self-Dogfood
+name: Buildchain Stable Self-Dogfood
 
 on:
   workflow_run:
@@ -15,10 +15,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: buildchain-alpha-self-dogfood-${{ github.repository }}-${{ github.ref }}
+  group: buildchain-stable-self-dogfood-${{ github.repository }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  alpha-consumer:
+  stable-consumer:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
+    with:
+      config-path: fixtures/libnode-shaped/buildchain.toml
