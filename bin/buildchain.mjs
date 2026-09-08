@@ -1344,7 +1344,7 @@ async function handleInitCommand(args) {
       force: readBooleanFlag(args, "force"),
       packageManager: readFlag(args, "package-manager", ""),
       runnerPreset: readFlag(args, "runner-preset", "github-hosted"),
-      artifactName: readFlag(args, "artifact-name", "{repo}-{version}-{platform}"),
+      artifactName: readFlag(args, "artifact-name", ""),
     });
     printJson(result);
     return;

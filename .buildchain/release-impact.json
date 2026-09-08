@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "4.0.8-alpha.0",
+    "version": "4.0.9-alpha.0",
     "line": "v4.0"
   },
   "versionImpact": {
@@ -11,6 +11,13 @@
     "rationale": "Buildchain v4.0 retires v3 publication authority and establishes the protected v4 line, v4 provider journal, activation planner, recovery planner, and stable publication fence as the sole production release authority."
   },
   "surfaceImpacts": [
+    {
+      "id": "toml-owned-build-orchestration",
+      "impact": "major",
+      "class": "workflow-contract",
+      "rationale": "Ordinary reusable builds remove all project and runtime overrides and expose only an optional configuration locator. Project choices move into buildchain.toml; the called workflow fixes runtime identity. Six owner-scoped composites share native and container execution while the backbone retains admission, sequencing, signing boundaries and receipts.",
+      "source": "architecture/build-orchestration.json"
+    },
     {
       "id": "v4-oci-image-family-publication",
       "impact": "minor",
@@ -43,8 +50,8 @@
       "id": "configurable-build-control-runner",
       "impact": "minor",
       "class": "workflow-contract",
-      "rationale": "The channel router and reusable build expose an additive control-runner-json input so trusted consumers can route control-plane and lifecycle jobs to the same governed self-hosted runner while existing callers retain the GitHub-hosted default.",
-      "source": ".github/workflows/build.yml"
+      "rationale": "Buildchain-owned environment profiles now govern control runners, native/container placement, mirrors, cache and transport. Projects select a profile in TOML instead of passing runner and provider settings through reusable workflow inputs.",
+      "source": "architecture/build-environments.json"
     },
     {
       "id": "auditable-demo-artifact-gate",
@@ -492,5 +499,5 @@
   "breaking": true,
   "security": false,
   "migrationRequired": true,
-  "summary": "Buildchain v4.0 establishes the Architecture Constitution, exact N-1 bootstrap qualification, and protected v4 release-line governance as the sole production publication authority."
+  "summary": "Buildchain v4.0 centralizes project build configuration in TOML, derives exact runtime identity, and shares owned build stages across native and Linux container orchestration."
 }

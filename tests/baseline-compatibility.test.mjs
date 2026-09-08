@@ -11,9 +11,8 @@ function source(relativePath) {
 
 test("active runtime defaults use the v3 baseline", () => {
   const expectations = new Map([
-    [".github/workflows/.build.yml", ["BUILDCHAIN_DEFAULT_REF: v3", 'BUILDCHAIN_DEFAULT_REF || "v3"']],
     [".github/workflows/.web-surface.yml", ["BUILDCHAIN_DEFAULT_REF: v3", 'BUILDCHAIN_DEFAULT_REF || "v3"']],
-    ["packages/core/buildchain-contract.js", ['buildchainRefDefault: "workflow-shell-ref-or-v3"', 'buildchainRef = "v3"']],
+    ["packages/core/buildchain-contract.js", ['buildchainRef = "v3"']],
     ["packages/core/paper.js", ['buildchainRef = "v3"']],
     ["scripts/buildchain-contract-lock.mjs", ['BUILDCHAIN_RUNTIME_REF", "v3"']],
     ["scripts/paper.mjs", ['buildchainRef = "v3"']],

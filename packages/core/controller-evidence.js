@@ -22,6 +22,7 @@ const CONTROLLER_SPECS = [
     id: "build-lifecycle",
     workflowId: ".build",
     version: 1,
+    derivedInputs: { "configuration-root": { classification: "included", source: "resolved-build-plan" } },
     capabilities: [
       "source-lock",
       "lifecycle-build",
@@ -46,15 +47,6 @@ const CONTROLLER_SPECS = [
       "build-summary",
       "controller-receipt",
     ],
-  },
-  {
-    id: "build-channel-router",
-    workflowId: "build",
-    version: 1,
-    capabilities: ["channel-selection", "runtime-selection", "build-delegation"],
-    stages: ["resolve-channel", "override", "alpha", "stable", "aggregate"],
-    optionalStages: ["override", "alpha", "stable"],
-    evidence: ["nested-controller-receipt", "controller-receipt"],
   },
   {
     id: "shifu-gate-profile-envelope",
@@ -208,6 +200,7 @@ export function createControllerRegistry({ workflows = [] } = {}) {
       classification: classifyInput(name, secrets),
       source: secrets.has(name) ? "workflow-call-secret" : "workflow-call-input",
     }]));
+    Object.assign(inputs, spec.derivedInputs || {});
     for (const [name, policy] of Object.entries(workflow.inputPolicies || {})) {
       if (!inputs[name]) throw new Error(`controller ${spec.id} input policy references undeclared input ${name}`);
       inputs[name] = { ...inputs[name], ...policy };

@@ -168,7 +168,7 @@ test("init package creates .buildchain/buildchain.toml and reusable workflow", (
     "--package-manager",
     "npm",
     "--artifact-name",
-    "fixture-{platform}",
+    "fixture",
   ]));
 
   assert.equal(result.type, "package");
@@ -178,10 +178,10 @@ test("init package creates .buildchain/buildchain.toml and reusable workflow", (
   assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /npm ci/);
   const workflow = fs.readFileSync(path.join(cwd, ".github/workflows/build.yml"), "utf8");
   assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /buildchain-ref:/);
-  assert.match(workflow, /Temporary Buildchain runtime ref/);
-  assert.match(workflow, /buildchain-ref: \$\{\{ inputs\.buildchain-ref \|\| '' \}\}/);
-  assert.match(workflow, /artifact-name-template: "fixture-\{platform\}"/);
+  assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/);
+  assert.doesNotMatch(workflow, /with:|buildchain-ref:|artifact-name-template:/);
+  const config = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
+  assert.match(config, /\[build.artifacts\][\s\S]*name = "fixture"/);
   const failure = runBuildchainFailure(["init", "--cwd", cwd]);
   assert.notEqual(failure.status, 0);
   assert.match(failure.stderr, /already exists/);
@@ -205,11 +205,11 @@ test("init infra-contract creates a directly valid observed contract scaffold", 
     "infra/desired.json",
     "infra/outputs.json",
   ]);
-  assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /type = "infra-contract"/);
-  assert.match(fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8"), /--mode ci/);
   const workflow = fs.readFileSync(path.join(cwd, ".github", "workflows", "build.yml"), "utf8");
-  assert.match(workflow, /\.buildchain\/infra-contract-plan\.json/);
-  assert.match(workflow, /\.buildchain\/infra-contract-evidence-verification\.json/);
+  assert.doesNotMatch(workflow, /with:/);
+  const config = fs.readFileSync(path.join(cwd, ".buildchain", "buildchain.toml"), "utf8");
+  assert.match(config, /type = "infra-contract"[\s\S]*--mode ci[\s\S]*\.buildchain\/infra-contract-plan\.json/);
+  assert.match(config, /\.buildchain\/infra-contract-evidence-verification\.json/);
 
   const outputPath = path.join(cwd, "infra-validation.json");
   runBuildchain([

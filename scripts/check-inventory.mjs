@@ -1,13 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import {
   assertPublicSurfaceReverseAudit,
   collectPublicSurfaceReverseAudit,
 } from "../packages/core/public-surface-audit.js";
-import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
+import { createBuildchainContractLock, evaluateBuildchainContractLock, finalizeBuildchainContractWorld } from "../packages/core/buildchain-contract.js";
 import {
-  canAdmitSelfDogfoodLockEvaluation,
-  contractForSelfDogfoodEvaluation,
   hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
@@ -203,9 +202,6 @@ const selfDogfoodWorkflow = fs.readFileSync(
 const selfDogfoodAlphaLock = JSON.parse(
   fs.readFileSync(path.join(root, ".buildchain/alpha-contract-lock.json"), "utf8"),
 );
-const currentBuildchainContract = JSON.parse(
-  fs.readFileSync(path.join(root, "dist/site/buildchain-contract.json"), "utf8"),
-);
 const selfDogfoodBootstrapAuthority = JSON.parse(
   fs.readFileSync(path.join(root, "architecture/bootstrap-authority.json"), "utf8"),
 );
@@ -227,23 +223,58 @@ if (!/^[0-9a-f]{40}$/.test(selfDogfoodAlphaLock.buildchain?.resolvedSha || "")) 
 if (selfDogfoodAlphaLock.buildchain?.compatibilityPolicy !== "major-compatible") {
   throw new Error("Buildchain self-dogfood alpha lock must enforce major-compatible policy");
 }
-const selfDogfoodAlphaEvaluation = evaluateBuildchainContractLock({
-  lock: selfDogfoodAlphaLock,
-  current: contractForSelfDogfoodEvaluation({
-    currentContract: currentBuildchainContract,
-    majorResolution: selfDogfoodMajorResolution,
-  }),
-  runtimeRef: `v${selfDogfoodMajor}-alpha`,
-  runtimeSha: "current-development-contract",
-  runtimeClass: "alpha", workflowShellRef: `v${selfDogfoodMajor}-alpha`,
-});
-if (
-  !canAdmitSelfDogfoodLockEvaluation({
-    evaluation: selfDogfoodAlphaEvaluation,
-    majorResolution: selfDogfoodMajorResolution,
-  })
-) {
-  throw new Error("Buildchain self-dogfood alpha lock requires review after a breaking contract change");
+// Consumer locks describe accepted published runtimes, not this unpublished producer.
+// Validate their immutable source worlds here; hosted admission checks floating drift.
+for (const channel of ["alpha-contract-lock.json", "contract-lock.json"]) {
+  const lock = JSON.parse(
+    fs.readFileSync(path.join(root, ".buildchain", channel), "utf8"),
+  );
+  const sha = lock.buildchain?.resolvedSha;
+  if (!/^[0-9a-f]{40}$/u.test(sha || ""))
+    throw new Error(`${channel}: invalid accepted SHA`);
+  let world;
+  try {
+    world = JSON.parse(
+      execFileSync(
+        "git",
+        ["show", `${sha}:dist/site/buildchain-contract.json`],
+        { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      ),
+    );
+  } catch {
+    const response = await fetch(
+      `https://raw.githubusercontent.com/kungfu-systems/buildchain/${sha}/dist/site/buildchain-contract.json`,
+      { signal: AbortSignal.timeout(30000) },
+    );
+    if (!response.ok)
+      throw new Error(
+        `${channel}: accepted source contract unavailable (${response.status})`,
+      );
+    world = await response.json();
+  }
+  const verified = finalizeBuildchainContractWorld(world);
+  for (const field of ["contractDigest", "compatibilityDigest"]) {
+    if (
+      world[field] !== verified[field] ||
+      lock.buildchain[field] !== world[field]
+    )
+      throw new Error(`${channel}: accepted ${field} mismatch`);
+  }
+  const accepted = createBuildchainContractLock({ contractWorld: verified }).buildchain;
+  if (JSON.stringify(lock.buildchain.surfaces) !== JSON.stringify(accepted.surfaces) || lock.buildchain.majorLine !== verified.majorLine || lock.buildchain.compatibilityPolicy !== "major-compatible") throw new Error(`${channel}: accepted surface set or policy mismatch`);
+  const ref = channel.startsWith("alpha")
+    ? `v${selfDogfoodMajor}-alpha`
+    : `v${selfDogfoodMajor}`;
+  const evaluation = evaluateBuildchainContractLock({
+    lock,
+    current: verified,
+    runtimeRef: ref,
+    runtimeSha: sha,
+    runtimeClass: channel.startsWith("alpha") ? "alpha" : "stable",
+    workflowShellRef: ref,
+  });
+  if (!evaluation.ok || lock.buildchain.ref !== ref)
+    throw new Error(`${channel}: invalid accepted runtime contract`);
 }
 for (const requiredSnippet of [
   `/.github/workflows/build.yml@v${selfDogfoodMajor}-alpha`,
@@ -262,8 +293,8 @@ const reusableBuildWorkflow = fs.readFileSync(
 );
 for (const requiredSnippet of [
   "BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}",
-  "process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF",
-  'replace(/^refs\\/(?:heads|tags)\\//, "")',
+  "BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}",
+  "Resolve rooted build plan from TOML",
 ]) {
   if (!reusableBuildWorkflow.includes(requiredSnippet)) {
     throw new Error(`reusable build workflow missing called-workflow identity: ${requiredSnippet}`);
@@ -343,23 +374,13 @@ const promotionOverrideAuthorization = fs.readFileSync(
 if (!promotionOverrideAuthorization.includes("promotion runtime override is only allowed for trusted workflow_dispatch runs")) {
   throw new Error("promotion runtime override authorization must remain fail closed");
 }
-for (const requiredSnippet of [
-  "buildchain-channel:",
-  "uses: ./.github/workflows/.build.yml",
-  "needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'alpha'",
-  "needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'stable'",
-  "needs.resolve-channel.outputs.buildchain-ref",
-  "needs.resolve-channel.outputs.contract-lock-path",
-]) {
-  if (!channelBuildWorkflow.includes(requiredSnippet)) {
-    throw new Error(`channel build workflow missing routing contract: ${requiredSnippet}`);
-  }
+for (const workflow of [channelBuildWorkflow, reusableBuildWorkflow]) {
+  const block = workflow.split("    inputs:\n")[1].split("    secrets:\n")[0];
+  const names = [...block.matchAll(/^      ([a-z0-9-]+):$/gm)].map((match) => match[1]);
+  if (JSON.stringify(names) !== '["config-path"]') throw new Error("ordinary build inputs must contain only config-path");
 }
-if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 3) {
-  throw new Error("channel build workflow must bind override, alpha, and stable to the exact caller workflow shell");
-}
-if (channelBuildWorkflow.includes("uses: kungfu-systems/buildchain/.github/workflows/.build.yml@")) {
-  throw new Error("channel build workflow must not statically fetch another channel shell before its ref exists");
+if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 1) {
+  throw new Error("public build facade must invoke its exact backbone once");
 }
 for (const requiredSnippet of [
   "group: buildchain-release-promotion-${{ github.repository }}",
@@ -780,8 +801,9 @@ const registeredActionIds = (workflowRegistry.actions || []).map((entry) => entr
 const readmeActionIndex = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const mapActionIndex = fs.readFileSync(path.join(root, "docs/MAP.md"), "utf8");
 const retrospectiveActionIndex = fs.readFileSync(path.join(root, ".github/retrospectives/2026-07-10-buildchain-consolidation.md"), "utf8");
-if (registeredActionIds.length !== 8) {
-  throw new Error(`workflow-registry.json must expose the eight current action entries, got ${registeredActionIds.length}`);
+const buildOwners = JSON.parse(fs.readFileSync(path.join(root, "architecture/build-orchestration.json"), "utf8")).owners;
+if (registeredActionIds.length !== 8 + Object.keys(buildOwners).length) {
+  throw new Error(`workflow-registry.json must expose the eight public actions and owned build composites, got ${registeredActionIds.length}`);
 }
 for (const actionId of registeredActionIds) {
   if (!readmeActionIndex.includes(`actions/${actionId}`) || !mapActionIndex.includes(`actions/${actionId}`)) {
@@ -925,16 +947,16 @@ for (const requiredSnippet of [
 }
 const reusableBuildSurfaceDoc = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
 for (const requiredSnippet of [
-  "Floating Ref Contract Lock",
-  "dist/site/buildchain-contract.json",
-  "buildchain-contract-drift-issue-mode",
-  "compatible drift",
-  "Locked Source Checkout Cache",
-  "checkout-cache-mode",
-  "BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE",
-  "sourceCheckout",
-  "Shifu Cache Profile Passthrough",
-  "opaque reference and digest",
+  "config-path",
+  "buildchain.toml",
+  ".buildchain/contract-lock.json",
+  ".buildchain/alpha-contract-lock.json",
+  "architecture/build-environments.json",
+  "build.contract",
+  "cache roots",
+  "exact consumer source",
+  "build-lifecycle-stage",
+  "build-artifact-transfer",
 ]) {
   if (!reusableBuildSurfaceDoc.includes(requiredSnippet)) {
     throw new Error(`reusable build surface doc missing contract lock snippet: ${requiredSnippet}`);
@@ -1319,7 +1341,12 @@ if (!Array.isArray(inventory.migratedActions) || inventory.migratedActions.lengt
   throw new Error("migratedActions must be empty; buildchain v2 only ships native actions");
 }
 const shippedActions = internalActions;
-const shippedActionNames = shippedActions.map((action) => action.path.replace(/^actions\//, "")).sort();
+if (inventory.compositeActionOwnership !== "architecture/build-orchestration.json#owners") throw new Error("composite action ownership must use the build orchestration contract");
+const compositeNames = Object.keys(buildOwners).map((file) => {
+  if (!/^actions\/[^/]+\/action\.yml$/.test(file) || !/using:\s*composite/.test(fs.readFileSync(path.join(root, file), "utf8"))) throw new Error(`invalid owned composite action: ${file}`);
+  return path.posix.basename(path.posix.dirname(file));
+});
+const shippedActionNames = [...shippedActions.map((action) => action.path.replace(/^actions\//, "")), ...compositeNames].sort();
 
 if (JSON.stringify(actualActions) !== JSON.stringify(shippedActionNames)) {
   throw new Error(

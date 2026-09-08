@@ -123,15 +123,12 @@ export function checkFloatingConsumerPolicyContract() {
   ]);
   const buildWorkflow = read(".github/workflows/.build.yml");
   if (
-    !buildWorkflow.includes("Normalize v3 expected identity aliases") ||
+    buildWorkflow.includes("Normalize v3 expected identity aliases") ||
+    buildWorkflow.includes("buildchain-expected-channel:") ||
     !buildWorkflow.includes(
-      "buildchain-contract-expected-channel conflicts with buildchain-expected-channel",
+      "BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ fromJSON(needs.configure.outputs.plan-json).identity.channel }}",
     ) ||
-    !buildWorkflow.includes(
-      "BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ steps.expected-identity.outputs.expected-channel }}",
-    ) ||
-    buildWorkflow.indexOf("Normalize v3 expected identity aliases") >
-      buildWorkflow.indexOf("Enforce v4 floating consumer policy")
+    !buildWorkflow.includes("BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}")
   )
     fail("channel builds must disambiguate dual-channel caller invocations");
   assertTrustGatedJobs(read(".github/workflows/.build.yml"), [

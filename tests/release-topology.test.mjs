@@ -223,10 +223,7 @@ test("fresh, resume, no-op, and blocked routing is provider-free and determinist
     targetRef: "alpha/v4/v4.0",
   };
   assert.equal(planReleaseRoute(base).decision, "Fresh");
-  assert.equal(
-    planReleaseRoute({ ...base, resume: true }).decision,
-    "Resume",
-  );
+  assert.equal(planReleaseRoute({ ...base, resume: true }).decision, "Resume");
   assert.equal(
     planReleaseRoute({
       ...base,
@@ -328,9 +325,7 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
       }));
     },
   );
-  const scratch = fs.mkdtempSync(
-    path.join(os.tmpdir(), "release-invocation-"),
-  );
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "release-invocation-"));
   const fixturePath = path.join(scratch, "roots.json");
   fs.writeFileSync(
     fixturePath,
@@ -366,11 +361,11 @@ test("the topology ledger exactly freezes all current release jobs and authority
   const topology = checkReleaseTopology();
   assert.deepEqual(topology.metrics, {
     workflowCount: 35,
-    jobCount: 91,
-    reusableEdgeCount: 23,
-    mutationRelevantNodeCount: 76,
+    jobCount: 86,
+    reusableEdgeCount: 21,
+    mutationRelevantNodeCount: 72,
     contentsWriteJobCount: 14,
-    oidcWriteJobCount: 15,
+    oidcWriteJobCount: 12,
   });
   assert.deepEqual(topology.semanticMetrics, {
     workflowCount: 5,

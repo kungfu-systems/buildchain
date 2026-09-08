@@ -7,12 +7,12 @@ source_level: local-files
 confidence: high
 sensitivity: public
 evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-08-01
+review_state: unreviewed
+last_reviewed: 2026-09-08
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-01
+  generated_at: 2026-09-08
   invisible_context: not asserted
 ---
 
@@ -77,11 +77,12 @@ If the generated lifecycle commands do not match the repository, edit only
 
 ## 4. Inspect the reusable workflow and release dry-run
 
-The generated caller should contain one reusable `uses:` edge and a manual
-`buildchain-ref` input for bounded train validation:
+The generated caller contains one reusable `uses:` edge and no inputs.
+Project choices belong in `.buildchain/buildchain.toml`; `@v4` or `@v4-alpha`
+selects the runtime channel:
 
 ```bash
-rg -n 'uses:|buildchain-ref:' .github/workflows/build.yml
+rg -n 'uses:' .github/workflows/build.yml
 pnpm exec buildchain release --dry-run \
   --target-ref alpha/v4/v4.0 \
   --json

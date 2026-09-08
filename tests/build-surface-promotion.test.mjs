@@ -195,21 +195,14 @@ test("reusable build exposes release-candidate passport outputs", () => {
     "utf8",
   );
 
-  assert.match(workflow, /release-candidate:/);
-  assert.match(workflow, /release-candidate-family-evidence-json:/);
-  assert.match(workflow, /github-artifact-attestation-subject-path:/);
-  assert.match(workflow, /github-artifact-attestation-signer-sha:/);
-  assert.match(workflow, /BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA:/);
-  assert.match(workflow, /name: Create GitHub artifact attestation policy/);
-  assert.match(workflow, /create-github-artifact-attestation-policy\.mjs/);
-  assert.match(workflow, /name: Upload GitHub artifact attestation policy/);
+  assert.match(workflow, /build.artifacts.release_candidate/);
+  assert.match(workflow, /build-attestation-policy/);
   assert.match(workflow, /publish-source-tree-sha:/);
   assert.match(workflow, /Resolve source tree SHA/);
   assert.match(workflow, /Generate release candidate passport/);
   assert.match(workflow, /BUILDCHAIN_RC_SOURCE_TREE_HASH/);
   assert.match(workflow, /release-candidate-passport-artifact/);
   assert.match(workflow, /release-candidate-passport-json/);
-  assert.match(workflow, /gate-profile-aggregate-json:/);
   assert.match(workflow, /BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON/);
   assert.match(workflow, /BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON/);
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
@@ -501,26 +494,11 @@ test("stable recovery keeps candidate bytes immutable while preparing the next a
   );
 });
 
-test("publish source-lock docs distinguish source refs from promotion targets", () => {
-  const docs = fs.readFileSync(
-    path.join(root, "docs/reusable-build-surface.md"),
-    "utf8",
-  );
-
-  assert.match(docs, /target-ref: release\/v22\/v22\.22/);
-  assert.match(
-    docs,
-    /`target-ref` stays the Buildchain channel promotion target/,
-  );
-  assert.match(
-    docs,
-    /`publish-source-ref` is the reviewed source-lock branch/,
-  );
-  assert.match(
-    docs,
-    /source-lock branch must point at the exact channel-line commit/,
-  );
-  assert.match(docs, /it is not a replacement for `target-ref`/);
+test("build docs keep ordinary source identity separate from release promotion", () => {
+  const docs = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
+  assert.match(docs, /source SHA, called-workflow SHA/);
+  assert.match(docs, /specialized release\/recovery entry points/);
+  assert.match(docs, /Release promotion consumes an already sealed candidate/);
 });
 
 test("promote action docs describe publish source-lock inputs", () => {
@@ -1903,16 +1881,11 @@ test("runLifecycle applies a clear fallback timeout to commands and configured s
   }
 });
 
-test("reusable build bounds matrix jobs and lifecycle actions with one timeout input", () => {
+test("TOML build timeout bounds both matrix jobs and the shared lifecycle action", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const action = fs.readFileSync(path.join(root, "actions/run-lifecycle/action.yml"), "utf8");
-
-  assert.match(workflow, /lifecycle-timeout-minutes:[\s\S]*?default: 120[\s\S]*?type: number/);
-  assert.equal(
-    (workflow.match(/timeout-minutes: \$\{\{ inputs\.lifecycle-timeout-minutes \}\}/g) || []).length,
-    8,
-  );
-  assert.match(action, /timeout-minutes:[\s\S]*?default: "120"/);
+  const action = fs.readFileSync(path.join(root, "actions/build-lifecycle-stage/action.yml"), "utf8");
+  assert.equal((workflow.match(/timeout-minutes: .*build\.timeout_minutes/g) || []).length, 2);
+  assert.match(action, /timeout-minutes: .*build\.timeout_minutes/u);
 });
 
 test("signed platform metadata artifacts exclude imported payload trees", () => {
@@ -1934,7 +1907,7 @@ test("signed platform metadata artifacts exclude imported payload trees", () => 
   );
   assert.match(
     workflow,
-    /\$\{\{ inputs\.artifact-name \}\}-credential-manifest-macos-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
+    /\$\{\{ fromJSON\(needs\.configure\.outputs\.plan-json\)\.artifacts\.name \}\}-credential-manifest-macos-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
   );
   assert.match(
     workflow,

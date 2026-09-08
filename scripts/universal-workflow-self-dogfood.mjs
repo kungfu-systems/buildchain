@@ -70,7 +70,14 @@ export function createUniversalSelfDogfoodRequest({
           id: "bootstrap-conformance",
           payload: {
             schema: "kungfu-buildchain-v4-universal-bootstrap-conformance/v1",
-            expectedGovernedWorkflowCount: 40,
+            expectedGovernedWorkflowCount: JSON.parse(
+              fs.readFileSync(
+                new URL(
+                  "../architecture/universal-workflow-bootstrap.json",
+                  import.meta.url,
+                ),
+              ),
+            ).bootstrapGovernedWorkflows.length,
           },
         }
       : {

@@ -116,7 +116,6 @@
   "bootstrapGovernedWorkflows": [
     ".github/workflows/.auditable-demo.yml",
     ".github/workflows/.binary-release-assets.yml",
-    ".github/workflows/.build.yml",
     ".github/workflows/.bump-minor-version.yml",
     ".github/workflows/.declarative-auditable-demo.yml",
     ".github/workflows/.gate-profile.yml",
@@ -129,7 +128,6 @@
     ".github/workflows/.web-surface.yml",
     ".github/workflows/.wheel-verify.yml",
     ".github/workflows/bootstrap.yml",
-    ".github/workflows/build.yml",
     ".github/workflows/buildchain-patrol.yml",
     ".github/workflows/check.yml",
     ".github/workflows/dev-alpha-candidate-patrol.yml",
@@ -160,7 +158,6 @@
     "compatibilityFacadeGenerator": "scripts/generate-universal-workflow-facades.mjs",
     "facadeSourceRevision": "06a2d9f7d5753c5c9b2bf0e7f0e3220fc18cc183",
     "channelGeneratedFacades": [
-      ".github/workflows/build.yml",
       ".github/workflows/release-candidate-promote.yml"
     ],
     "staticBootstrap": "implemented",
@@ -172,5 +169,9 @@
     "postMigrationWorkflows": [
       ".github/workflows/public-release-oci-compose-preview.yml"
     ]
-  }
+  },
+  "configurationGovernedWorkflows": [
+    ".github/workflows/.build.yml",
+    ".github/workflows/build.yml"
+  ]
 }
