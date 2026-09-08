@@ -1,0 +1,81 @@
+name: build-signing-request
+description: "Shared build steps owned by Buildchain signing maintainers"
+inputs:
+  platform-json:
+    description: "Resolved platform-json; supplied by the build backbone"
+    required: true
+  plan-json:
+    description: "Resolved plan-json; supplied by the build backbone"
+    required: true
+  source-json:
+    description: "Resolved source-json; supplied by the build backbone"
+    required: true
+  artifact-name:
+    description: "Resolved artifact-name; supplied by the build backbone"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Seal declared artifact signing requests
+      id: signing-requests
+      shell: bash
+      run: node .buildchain/runtime/scripts/seal-artifact-signing-requests.mjs
+      env:
+        BUILDCHAIN_SIGNING_CWD: ${{ fromJSON(inputs.plan-json).project.cwd }}
+        BUILDCHAIN_SIGNING_ARTIFACT_MANIFEST: .buildchain/artifacts/${{ fromJSON(inputs.platform-json).id }}/manifest-build.json
+        BUILDCHAIN_SIGNING_OUTPUT_ROOT: .buildchain/signing/requests/${{ fromJSON(inputs.platform-json).id }}
+        BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+        BUILDCHAIN_SOURCE_SHA: ${{ fromJSON(inputs.source-json).publish-source-sha }}
+        BUILDCHAIN_SOURCE_TREE_SHA: ${{ fromJSON(inputs.source-json).publish-source-tree-sha }}
+        BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(inputs.plan-json).identity.sha }}
+        BUILDCHAIN_PLATFORM_ID: ${{ fromJSON(inputs.platform-json).id }}
+
+    - name: Resolve artifact signing request upload route
+      id: signing-request-upload-route
+      if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+      shell: bash
+      run: node .buildchain/runtime/scripts/resolve-artifact-signing-upload-route.mjs
+      env:
+        BUILDCHAIN_SIGNING_REQUEST_UPLOAD_NO_PROXY: ${{ fromJSON(inputs.plan-json).environment.signing.upload_no_proxy }}
+
+    - name: Publish Buildchain-owned artifact signing request
+      if: ${{ steps.signing-requests.outputs.request-count != '0' }}
+      uses: actions/upload-artifact@v7.0.1
+      env:
+        NO_PROXY: ${{ steps.signing-request-upload-route.outputs.no-proxy }}
+      with:
+        name: ${{ fromJSON(inputs.plan-json).artifacts.name }}-signing-request-${{ fromJSON(inputs.platform-json).id }}-${{ fromJSON(inputs.source-json).publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ steps.signing-requests.outputs.request-root }}
+        include-hidden-files: true
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.plan-json).build.artifacts.retention_days }}
+
+    - name: Seal detached signing control request
+      shell: bash
+      run: node .buildchain/runtime-bootstrap/artifact-signing-controller.mjs seal
+      env:
+        BUILDCHAIN_SIGNING_CWD: ${{ fromJSON(inputs.plan-json).project.cwd }}
+        BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ fromJSON(inputs.platform-json).id }}/request.json
+        BUILDCHAIN_SOURCE_SHA: ${{ fromJSON(inputs.source-json).publish-source-sha }}
+        BUILDCHAIN_SOURCE_TREE_SHA: ${{ fromJSON(inputs.source-json).publish-source-tree-sha }}
+        BUILDCHAIN_RUNTIME_REPOSITORY: ${{ fromJSON(inputs.plan-json).identity.repository }}
+        BUILDCHAIN_RUNTIME_REF: ${{ fromJSON(inputs.plan-json).identity.ref }}
+        BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(inputs.plan-json).identity.sha }}
+        BUILDCHAIN_PLATFORM_ID: ${{ fromJSON(inputs.platform-json).id }}
+        BUILDCHAIN_PLATFORM_NAME: ${{ fromJSON(inputs.platform-json).name }}
+        BUILDCHAIN_SIGNING_REQUEST_COUNT: ${{ steps.signing-requests.outputs.request-count }}
+        BUILDCHAIN_SIGNING_REQUEST_INDEX: ${{ steps.signing-requests.outputs.request-index }}
+        BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ fromJSON(inputs.plan-json).artifacts.name }}-signing-request-${{ fromJSON(inputs.platform-json).id }}-${{ fromJSON(inputs.source-json).publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ fromJSON(inputs.plan-json).identity.repository }}
+        BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ fromJSON(inputs.plan-json).artifacts.name }}-signing-result-${{ fromJSON(inputs.platform-json).id }}-${{ fromJSON(inputs.source-json).publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        BUILDCHAIN_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        BUILDCHAIN_MANIFEST_ARTIFACT_NAME: ${{ fromJSON(inputs.plan-json).artifacts.name }}-manifest-${{ fromJSON(inputs.platform-json).id }}-${{ fromJSON(inputs.source-json).publish-source-sha }}
+        BUILDCHAIN_DIAGNOSTICS_ARTIFACT_NAME: ${{ fromJSON(inputs.plan-json).artifacts.name }}-diagnostics-${{ fromJSON(inputs.platform-json).id }}-${{ fromJSON(inputs.source-json).publish-source-sha }}
+
+    - name: Publish detached signing control request
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.plan-json).artifacts.name }}-signing-control-request-${{ fromJSON(inputs.platform-json).id }}-${{ fromJSON(inputs.source-json).publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        path: .buildchain/signing/control-requests/${{ fromJSON(inputs.platform-json).id }}/request.json
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.plan-json).build.artifacts.retention_days }}

@@ -247,8 +247,7 @@ if (
 }
 for (const requiredSnippet of [
   `/.github/workflows/build.yml@v${selfDogfoodMajor}-alpha`,
-  "buildchain-channel: auto",
-  "buildchain-channel: stable",
+  "config-path: fixtures/libnode-shaped/buildchain.toml",
   `const alphaRef = "v${selfDogfoodMajor}-alpha"`,
   `const stableRef = "v${selfDogfoodMajor}"`,
 ]) {
@@ -262,8 +261,8 @@ const reusableBuildWorkflow = fs.readFileSync(
 );
 for (const requiredSnippet of [
   "BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}",
-  "process.env.BUILDCHAIN_WORKFLOW_REF || process.env.GITHUB_WORKFLOW_REF",
-  'replace(/^refs\\/(?:heads|tags)\\//, "")',
+  "BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}",
+  "Resolve rooted build plan from TOML",
 ]) {
   if (!reusableBuildWorkflow.includes(requiredSnippet)) {
     throw new Error(`reusable build workflow missing called-workflow identity: ${requiredSnippet}`);
@@ -343,23 +342,13 @@ const promotionOverrideAuthorization = fs.readFileSync(
 if (!promotionOverrideAuthorization.includes("promotion runtime override is only allowed for trusted workflow_dispatch runs")) {
   throw new Error("promotion runtime override authorization must remain fail closed");
 }
-for (const requiredSnippet of [
-  "buildchain-channel:",
-  "uses: ./.github/workflows/.build.yml",
-  "needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'alpha'",
-  "needs.resolve-channel.outputs.runtime-override != 'true' && needs.resolve-channel.outputs.channel == 'stable'",
-  "needs.resolve-channel.outputs.buildchain-ref",
-  "needs.resolve-channel.outputs.contract-lock-path",
-]) {
-  if (!channelBuildWorkflow.includes(requiredSnippet)) {
-    throw new Error(`channel build workflow missing routing contract: ${requiredSnippet}`);
-  }
+for (const workflow of [channelBuildWorkflow, reusableBuildWorkflow]) {
+  const block = workflow.split("    inputs:\n")[1].split("    secrets:\n")[0];
+  const names = [...block.matchAll(/^      ([a-z0-9-]+):$/gm)].map((match) => match[1]);
+  if (JSON.stringify(names) !== '["config-path"]') throw new Error("ordinary build inputs must contain only config-path");
 }
-if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 3) {
-  throw new Error("channel build workflow must bind override, alpha, and stable to the exact caller workflow shell");
-}
-if (channelBuildWorkflow.includes("uses: kungfu-systems/buildchain/.github/workflows/.build.yml@")) {
-  throw new Error("channel build workflow must not statically fetch another channel shell before its ref exists");
+if ((channelBuildWorkflow.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length !== 1) {
+  throw new Error("public build facade must invoke its exact backbone once");
 }
 for (const requiredSnippet of [
   "group: buildchain-release-promotion-${{ github.repository }}",

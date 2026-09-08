@@ -1,0 +1,70 @@
+name: Buildchain configured lifecycle stage
+description: "Lifecycle manifests and diagnostics owned by Buildchain workflow maintainers"
+inputs:
+  plan-json:
+    description: "Rooted build configuration resolved by the backbone"
+    required: true
+  source-json:
+    description: "Exact resolved source receipt"
+    required: true
+  platform-json:
+    description: "Selected platform contract"
+    required: true
+  artifact-name:
+    description: "Resolved deterministic platform artifact name"
+    required: true
+  stage:
+    description: "One of install, build, verify"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Validate stage
+      shell: bash
+      env:
+        STAGE: ${{ inputs.stage }}
+      run: |
+        case "$STAGE" in
+          install|build|verify) ;;
+          *) echo "::error::Invalid build lifecycle stage"; exit 1 ;;
+        esac
+
+    - name: Run configured lifecycle stage
+      uses: ./.buildchain/runtime/actions/run-lifecycle
+      env:
+        BUILDCHAIN_SOURCE_SHA: ${{ fromJSON(inputs.source-json).publish-source-sha }}
+        BUILDCHAIN_SOURCE_TREE_SHA: ${{ fromJSON(inputs.source-json).publish-source-tree-sha }}
+        BUILDCHAIN_SOURCE_REF: ${{ fromJSON(inputs.source-json).publish-source-ref || github.ref }}
+        BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(inputs.plan-json).identity.sha }}
+        BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ fromJSON(inputs.plan-json).cache.dependency_root }}
+        BUILDCHAIN_TOOLCHAIN_ROOT: ${{ fromJSON(inputs.plan-json).cache.toolchain_root }}
+        BUILDCHAIN_CACHE_POLICY_ROOT: ${{ fromJSON(inputs.plan-json).cache.policy_root }}
+        BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ fromJSON(inputs.plan-json).environment.cache.provider }}
+        BUILDCHAIN_PLATFORM_ID: ${{ fromJSON(inputs.platform-json).id }}
+        SHIFU_CACHE_PROFILE_REF: ${{ fromJSON(inputs.plan-json).environment.cache.profile_ref }}
+        SHIFU_CACHE_PROFILE_DIGEST: ${{ fromJSON(inputs.plan-json).environment.cache.profile_digest }}
+        # Only the protected credential-island job may discover signing identities.
+        CSC_IDENTITY_AUTO_DISCOVERY: ${{ inputs.stage == 'build' && fromJSON(inputs.plan-json).build.macos_signing.app_path != '' && 'false' || '' }}
+      with:
+        cwd: ${{ fromJSON(inputs.plan-json).project.cwd }}
+        stage: ${{ inputs.stage }}
+        required: ${{ fromJSON(inputs.plan-json).lifecycle[inputs.stage].required }}
+        timeout-minutes: ${{ fromJSON(inputs.plan-json).build.timeout_minutes }}
+        artifact-name: ${{ inputs.artifact-name }}
+        platform-id: ${{ fromJSON(inputs.platform-json).id }}
+        platform-name: ${{ fromJSON(inputs.platform-json).name }}
+        artifact-paths: |
+          ${{ fromJSON(inputs.plan-json).artifacts.paths }}
+          ${{ inputs.stage == 'verify' && '.buildchain/artifacts/signing' || '' }}
+        manifest-path: .buildchain/artifacts/${{ fromJSON(inputs.platform-json).id }}/${{ inputs.stage == 'verify' && 'manifest.json' || format('manifest-{0}.json', inputs.stage) }}
+        summary-path: .buildchain/artifacts/${{ fromJSON(inputs.platform-json).id }}/${{ inputs.stage == 'verify' && 'summary.json' || format('summary-{0}.json', inputs.stage) }}
+        manifest-artifact-name: ${{ inputs.stage == 'verify' && format('{0}-manifest-{1}-{2}', fromJSON(inputs.plan-json).artifacts.name, fromJSON(inputs.platform-json).id, fromJSON(inputs.source-json).publish-source-sha) || '' }}
+        diagnostics-artifact-name: ${{ inputs.stage == 'verify' && format('{0}-diagnostics-{1}-{2}', fromJSON(inputs.plan-json).artifacts.name, fromJSON(inputs.platform-json).id, fromJSON(inputs.source-json).publish-source-sha) || '' }}
+        expected-artifacts-json: ${{ inputs.stage == 'verify' && fromJSON(inputs.plan-json).artifacts.expected_json || '' }}
+        sample-process-tree: ${{ inputs.stage == 'build' && fromJSON(inputs.plan-json).build.diagnostics.sample_process_tree }}
+        process-summary-path: ${{ inputs.stage != 'install' && fromJSON(inputs.plan-json).build.diagnostics.sample_process_tree && '.buildchain/diagnostics/process-summary.json' || '' }}
+        process-samples-path: .buildchain/diagnostics/process-samples.jsonl
+        process-sample-interval-ms: ${{ fromJSON(inputs.plan-json).build.diagnostics.sample_interval_ms }}
+        requested-parallelism: ${{ fromJSON(inputs.plan-json).build.diagnostics.requested_parallelism }}
+        process-summary-required: true
+        substage-evidence-path: ${{ inputs.stage == 'verify' && fromJSON(inputs.plan-json).build.verification.substage_evidence_path || '' }}

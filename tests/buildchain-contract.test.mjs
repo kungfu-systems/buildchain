@@ -329,7 +329,6 @@ test("contract world exposes versioned controller evidence surfaces", () => {
   assert.deepEqual(controllers.map((entry) => entry.id), [
     "controller:source-check",
     "controller:build-lifecycle",
-    "controller:build-channel-router",
     "controller:shifu-gate-profile-envelope",
     "controller:web-surface",
     "controller:publication-artifact",
@@ -342,17 +341,14 @@ test("contract world exposes versioned controller evidence surfaces", () => {
   assert.ok(controllers.every((entry) => entry.breakingDefaults.evidenceContract === "buildchain.controller-evidence/v1"));
   assert.match(
     controllers.find((entry) => entry.id === "controller:build-lifecycle")
-      .controllerDescriptor.inputClassifications["build-command"].classification,
-    /digest-only/,
+      .controllerDescriptor.inputClassifications["configuration-root"].classification,
+    /included/,
   );
   const buildLifecycle = controllers.find((entry) => entry.id === "controller:build-lifecycle");
   assert.ok(buildLifecycle.breakingDefaults.requiredStages.includes("signing-finalization"));
   assert.ok(buildLifecycle.breakingDefaults.capabilities.includes("artifact-signing-finalization"));
-  assert.ok(
-    buildLifecycle.compatibleBreakingDigests.includes(
-      "sha256:30745921541e9b0f70475bb2178c2559f6aef248f6680670ccd44d8c5a69a6b1",
-    ),
-  );
+  assert.equal((buildLifecycle.compatibleBreakingDigests || []).length, 0);
+
 });
 
 test("write-lock records resolved SHA and contract digest", () => {

@@ -159,58 +159,16 @@ test("runLifecycle embeds independently verified consumer substages", (t) => {
   assert.equal(fs.existsSync(path.join(root, "verify-substages.json")), true);
 });
 
-test("the public workflow and bundled action carry the substage evidence contract", () => {
-  const publicWorkflow = fs.readFileSync(
-    path.join(ROOT, ".github/workflows/build.yml"),
-    "utf8",
-  );
-  const engine = fs.readFileSync(
-    path.join(ROOT, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-  const action = fs.readFileSync(
-    path.join(ROOT, "actions/run-lifecycle/action.yml"),
-    "utf8",
-  );
-  const bundle = fs.readFileSync(
-    path.join(ROOT, "actions/run-lifecycle/dist/index.js"),
-    "utf8",
-  );
-  assert.match(publicWorkflow, /verify-substage-evidence-path:/u);
-  assert.match(
-    publicWorkflow,
-    /verify-substage-evidence-path: \$\{\{ inputs\.verify-substage-evidence-path \}\}/u,
-  );
-  assert.equal(
-    engine.match(/Independently verify lifecycle substage evidence/gu)?.length,
-    2,
-  );
-  assert.equal(
-    engine.match(/id: verify-substage-evidence/gu)?.length,
-    2,
-  );
-  assert.equal(
-    engine.match(
-      /node "\$\{\{ github\.workspace \}\}\/\.buildchain\/runtime\/scripts\/lifecycle-substage-evidence\.mjs"/gu,
-    )?.length,
-    2,
-  );
-  assert.doesNotMatch(
-    engine,
-    /\$\{GITHUB_WORKSPACE\}\/\.buildchain\/runtime\/scripts\/lifecycle-substage-evidence\.mjs/u,
-  );
-  assert.equal(
-    engine.match(
-      /steps\.verify-lifecycle\.outcome != 'success' \|\| steps\.verify-substage-evidence\.outcome != 'success'/gu,
-    )?.length,
-    2,
-  );
-  assert.equal(
-    engine.match(
-      /substage-evidence-path: \$\{\{ inputs\.verify-substage-evidence-path \}\}/gu,
-    )?.length,
-    2,
-  );
-  assert.match(action, /^  substage-evidence-path:/mu);
-  assert.match(bundle, /substage-evidence-path/u);
+test("TOML verification evidence reaches the shared stage and independent verifier", () => {
+  const read = (file) => fs.readFileSync(path.join(ROOT, file), "utf8");
+  const engine = read(".github/workflows/.build.yml");
+  const stage = read("actions/build-lifecycle-stage/action.yml");
+  const evidence = read("actions/build-verification-evidence/action.yml");
+  assert.equal(engine.match(/uses: \.\/\.buildchain\/runtime\/actions\/build-verification-evidence/gu)?.length, 2);
+  assert.match(stage, /substage-evidence-path:.*build\.verification\.substage_evidence_path/u);
+  assert.match(evidence, /lifecycle-substage-evidence\.mjs/u);
+  assert.match(evidence, /publish-source-tree-sha/u);
+  assert.match(evidence, /always\(\).*verify-outcome != 'success'.*steps\.verify-substage-evidence\.outcome != 'success'/u);
+  assert.match(read("actions/run-lifecycle/action.yml"), /^  substage-evidence-path:/mu);
+  assert.match(read("actions/run-lifecycle/dist/index.js"), /substage-evidence-path/u);
 });

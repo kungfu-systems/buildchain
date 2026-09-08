@@ -187,7 +187,7 @@ test("historical CLI, Action, and workflow inputs have bounded v4 routes", () =>
   );
   assert.match(
     sources.get(".github/workflows/.build.yml"),
-    /steps\.expected-identity\.outputs\.expected-channel/u,
+    /fromJSON\(needs\.configure\.outputs\.plan-json\)\.identity\.channel/u,
   );
   assert.match(
     sources.get(".github/workflows/dev-pr-auto-merge.yml"),

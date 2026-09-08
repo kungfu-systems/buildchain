@@ -588,7 +588,7 @@ function actionCapabilityGroup(id) {
   if (id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
   if (id === "release-tail") return capabilityGroup("release-passport-trust");
   if (id === "promote-buildchain-ref") return capabilityGroup("release-passport-trust");
-  if (id === "run-lifecycle" || id === "validate-config") return capabilityGroup("reusable-build");
+  if (id.startsWith("build-") || id === "run-lifecycle" || id === "validate-config") return capabilityGroup("reusable-build");
   if (id === "report-buildchain-issue") return capabilityGroup("observability-diagnostics");
   return capabilityGroup("api-cli-reference");
 }
@@ -905,6 +905,7 @@ function buildSiteBundle() {
       ...publicSurfaceLifecycle({
         owner: "buildchain-actions",
         maturity: "stable",
+        introducedVersion: entry.id.startsWith("build-") ? packageJson.version : undefined,
         nonDuplicationRationale: "Existing action identity retained as the canonical composite or JavaScript action boundary.",
       }),
     })),

@@ -1,0 +1,18 @@
+{
+  "schema": "buildchain.build-orchestration/v1",
+  "configurationAuthority": "buildchain.toml",
+  "ordinaryInputs": ["config-path"],
+  "backbone": ".github/workflows/.build.yml",
+  "facade": ".github/workflows/build.yml",
+  "maximumBackboneLines": 2300,
+  "maximumFacadeLines": 200,
+  "lifecycleOrder": ["install", "build", "verify"],
+  "owners": {
+    "actions/build-lifecycle-stage/action.yml": "Buildchain workflow maintainers",
+    "actions/build-signing-request/action.yml": "Buildchain signing maintainers",
+    "actions/build-verification-evidence/action.yml": "Buildchain verification maintainers",
+    "actions/build-attestation-policy/action.yml": "Buildchain signing maintainers",
+    "actions/build-agent-hub-evidence/action.yml": "Buildchain verification maintainers",
+    "actions/build-artifact-transfer/action.yml": "Buildchain artifact transport maintainers"
+  }
+}

@@ -102,7 +102,7 @@ test("workflow keeps trust ahead of dynamic CodeBuild runner selection", () => {
   );
   assert.match(
     nativeBlock,
-    /if: \$\{\{ inputs\.universal-request-json == '' && \(needs\.trust-gate\.outputs\.trusted == 'true'/,
+    /if: \$\{\{ \(needs\.trust-gate\.outputs\.trusted == 'true'/,
   );
   assert.match(nativeBlock, /codebuild-\{0\}-\{1\}-\{2\}/);
   assert.match(nativeBlock, /aws-runner-burst\.mjs evidence/);
@@ -147,28 +147,12 @@ test("CodeBuild native toolchain rejects unsupported Linux images", () => {
   );
 });
 
-test("workflow bounds CodeBuild jobs and lifecycle stages with the caller timeout", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-  const action = fs.readFileSync(
-    path.join(root, "actions/run-lifecycle/action.yml"),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /lifecycle-timeout-minutes:\n\s+description: "Maximum minutes for the build matrix job and fallback timeout for each lifecycle stage"\n\s+default: 120\n\s+type: number/,
-  );
-  assert.equal(
-    (
-      workflow.match(
-        /timeout-minutes: \$\{\{ inputs\.lifecycle-timeout-minutes \}\}/g,
-      ) || []
-    ).length,
-    8,
-  );
-  assert.match(action, /timeout-minutes:[\s\S]*?default: "120"/);
+test("workflow bounds CodeBuild jobs and shared lifecycle stages with the TOML timeout", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "actions/build-lifecycle-stage/action.yml"), "utf8");
+  assert.equal((workflow.match(/timeout-minutes: .*build\.timeout_minutes/g) || []).length, 2);
+  assert.match(stage, /timeout-minutes: .*build\.timeout_minutes/u);
+  assert.doesNotMatch(workflow, /inputs\.lifecycle-timeout-minutes/u);
 });
 
 test("CodeBuild stack is credential-free, bounded, and fail closed", () => {
