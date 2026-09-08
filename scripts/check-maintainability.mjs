@@ -82,15 +82,30 @@ function revisionAvailable(root, revision) {
   }
 }
 
-function ensureRevisionAvailable(root, revision) {
+function ensureRevisionAvailable(
+  root,
+  revision,
+  {
+    fetchRevision = () =>
+      gitOutput(root, ["fetch", "--no-tags", "--depth=1", "origin", revision]),
+  } = {},
+) {
   if (revisionAvailable(root, revision)) return false;
-  try {
-    gitOutput(root, ["fetch", "--no-tags", "--depth=1", "origin", revision]);
-  } catch (error) {
-    const detail = String(error?.stderr || error?.message || error).trim();
-    throw new Error(
-      `maintainability revision ${revision} is unavailable and could not be fetched from origin${detail ? `: ${detail}` : ""}`,
-    );
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      fetchRevision();
+      break;
+    } catch (error) {
+      const detail = String(error?.stderr || error?.message || error).trim();
+      if (
+        attempt < 2 &&
+        /shallow file has changed since we read it/u.test(detail)
+      )
+        continue;
+      throw new Error(
+        `maintainability revision ${revision} is unavailable and could not be fetched from origin${detail ? `: ${detail}` : ""}`,
+      );
+    }
   }
   if (!revisionAvailable(root, revision)) {
     throw new Error(

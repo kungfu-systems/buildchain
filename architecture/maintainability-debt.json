@@ -1223,21 +1223,21 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@260": {
+            "evaluateMaintainability@275": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@260": {
+            "evaluateMaintainability@275": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@260": {
+            "evaluateMaintainability@275": {
               "complexity": 25
             }
           }

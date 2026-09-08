@@ -287,17 +287,16 @@ test("generated router bootstraps empty inputs and preserves explicit refs", (t)
   const script = step.split("        run: |\n")[1]
     .split("\n").map((line) => line.replace(/^          /, "")).join("\n");
   assert.ok(script.includes("git ls-remote"));
-  const stub = path.join(directory, "git");
-  fs.writeFileSync(stub, `#!/bin/sh\nprintf '%s\\t%s\\n' '${sha}' "$3"\n`, { mode: 0o755 });
+  const stub = `git() { printf '%s\\t%s\\n' '${sha}' "$3"; }\n`;
   for (const requestedRef of [undefined, "", "v4", "refs/tags/v4-alpha", "../bad"]) {
     const output = path.join(directory, "output");
     fs.writeFileSync(output, "");
-    const env = { ...process.env, PATH: `${directory}${path.delimiter}${process.env.PATH}`,
+    const env = { ...process.env,
       BUILDCHAIN_ROUTER_REPOSITORY: "kungfu-systems/buildchain",
       BUILDCHAIN_RESUME_RUN_ID: "", BUILDCHAIN_RESUME_RUNTIME_SHA: "", GITHUB_OUTPUT: output };
     delete env.BUILDCHAIN_ROUTER_REF;
     if (requestedRef !== undefined) env.BUILDCHAIN_ROUTER_REF = requestedRef;
-    const result = spawnSync("bash", ["-c", script], { env, encoding: "utf8" });
+    const result = spawnSync("bash", ["-c", stub + script], { env, encoding: "utf8" });
     if (requestedRef === "../bad") {
       assert.notEqual(result.status, 0);
       assert.equal(fs.readFileSync(output, "utf8"), "");
