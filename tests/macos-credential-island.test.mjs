@@ -820,18 +820,13 @@ test("public action and workflow keep credentials outside the build matrix", () 
   );
   assert.match(
     publicWorkflow,
-    /credential-island-macos-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.override\.outputs\.credential-island-macos-artifact \|\| jobs\.alpha\.outputs\.credential-island-macos-artifact \|\| jobs\.stable\.outputs\.credential-island-macos-artifact \}\}/,
+    /credential-island-macos-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-artifact \}\}/,
   );
   assert.match(
     publicWorkflow,
-    /credential-island-macos-manifest-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.override\.outputs\.credential-island-macos-manifest-artifact \|\| jobs\.alpha\.outputs\.credential-island-macos-manifest-artifact \|\| jobs\.stable\.outputs\.credential-island-macos-manifest-artifact \}\}/,
+    /credential-island-macos-manifest-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-manifest-artifact \}\}/,
   );
-  assert.match(
-    publicWorkflow,
-    new RegExp(
-      `\\n  alpha:\\n[\\s\\S]*?uses: \\.\\/\\.github\\/workflows\\/\\.build\\.yml\\n[\\s\\S]*?\\n  stable:\\n[\\s\\S]*?uses: \\.\\/\\.github\\/workflows\\/\\.build\\.yml\\n`,
-    ),
-  );
+  assert.match(publicWorkflow, /uses: \.\/\.github\/workflows\/\.build\.yml/u);
   for (const buildJob of [nativeBuildJob, containerBuildJob]) {
     assert.doesNotMatch(
       buildJob,
@@ -839,22 +834,10 @@ test("public action and workflow keep credentials outside the build matrix", () 
     );
   }
   assert.match(workflow, /Seal macOS credential-island input/);
-  assert.match(
-    workflow,
-    /credential-island-caller-owned:\n\s+description:[^\n]+\n\s+default: false\n\s+type: boolean/,
-  );
-  assert.match(
-    workflow,
-    /CSC_IDENTITY_AUTO_DISCOVERY: \$\{\{ inputs\.credential-island-macos-app-path != '' && 'false' \|\| '' \}\}/,
-  );
-  assert.match(
-    workflow,
-    /Upload macOS credential-island runtime[\s\S]*?if: \$\{\{ inputs\.credential-island-macos-app-path != '' \}\}/,
-  );
-  assert.match(
-    workflow,
-    /caller-owned credential-island signing must bind its environment in the caller workflow/,
-  );
+  const stage = fs.readFileSync(path.join(root, "actions/build-lifecycle-stage/action.yml"), "utf8");
+  assert.match(stage, /CSC_IDENTITY_AUTO_DISCOVERY:.*build\.macos_signing\.app_path.*'false'/u);
+  assert.match(workflow, /Upload macOS credential-island runtime[\s\S]*?build\.macos_signing\.app_path/u);
+  assert.doesNotMatch(workflow, /inputs\.credential-island-caller-owned/u);
   assert.match(
     workflow,
     /credential-island-input-manifest-\$\{\{ matrix\.platform\.id \}\}/,
@@ -872,7 +855,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
     /Download source-bound sealed application archive[\s\S]*?name: unsigned-app\.zip[\s\S]*?Download source-bound sealed application manifest/,
   );
   assert.match(
-    nativeBuildJob,
+    fs.readFileSync(path.join(root, "actions/build-artifact-transfer/action.yml"), "utf8"),
     /BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_PATHS:[\s\S]*?\.buildchain\/credential-island\/\{0\}/,
   );
   assert.match(
@@ -885,7 +868,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
   assert.ok(credentialJob);
   assert.match(
     credentialJob,
-    /always\(\)[\s\S]*?!inputs\.credential-island-caller-owned[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'[\s\S]*?needs\.relay-artifacts\.result == 'success'/,
+    /always\(\)[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'[\s\S]*?needs\.relay-artifacts\.result == 'success'/,
   );
   assert.match(
     credentialJob,
@@ -893,7 +876,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
   );
   assert.match(
     credentialJob,
-    /environment:\s*\n\s+name: \$\{\{ inputs\.credential-island-environment \}\}/,
+    /environment:\s*\n\s+name: \$\{\{ fromJSON\(needs\.configure\.outputs\.plan-json\)\.environment\.signing\.environment \}\}/,
   );
   assert.match(
     credentialJob,
@@ -905,7 +888,7 @@ test("public action and workflow keep credentials outside the build matrix", () 
   );
   assert.match(
     workflow,
-    /BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: \$\{\{ inputs\.credential-island-macos-app-path != '' && !inputs\.credential-island-caller-owned && '1' \|\| '0' \}\}/,
+    /BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: \$\{\{ fromJSON\(needs\.configure\.outputs\.plan-json\)\.build\.macos_signing\.app_path != '' && '1' \|\| '0' \}\}/,
   );
   assert.doesNotMatch(implementation, /execSync|shell:\s*true/);
   assert.match(implementation, /schema:\s*EVIDENCE_CONTRACT/);

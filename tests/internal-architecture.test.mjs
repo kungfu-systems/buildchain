@@ -21,11 +21,11 @@ test("internal architecture index covers implementations, tests, and dependency 
   assert.deepEqual(checkInternalArchitecture({ root, index }), {
     schemaVersion: 2,
     capabilities: 24,
-    implementations: 172,
-    repositorySources: 510,
-    ownedSources: 510,
+    implementations: 174,
+    repositorySources: 512,
+    ownedSources: 512,
     excludedSources: 0,
-    dependencyEdges: 488,
+    dependencyEdges: 492,
     dependencyRules: 4,
     dependencyCycles: 0,
   });
@@ -60,6 +60,30 @@ test("repository source inventory excludes transient root test sandboxes", (t) =
   );
 
   assert.deepEqual(repositorySourceFiles(temporaryRoot), []);
+});
+
+test("downloaded runtime bootstrap copies are ignored while project source remains inventoried", (t) => {
+  const temporaryRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-bootstrap-inventory-"),
+  );
+  t.after(() => fs.rmSync(temporaryRoot, { recursive: true, force: true }));
+  execFileSync("git", ["init", "-q"], { cwd: temporaryRoot });
+  fs.copyFileSync(
+    path.join(root, ".gitignore"),
+    path.join(temporaryRoot, ".gitignore"),
+  );
+  fs.mkdirSync(path.join(temporaryRoot, ".buildchain/runtime-bootstrap"), {
+    recursive: true,
+  });
+  fs.writeFileSync(
+    path.join(
+      temporaryRoot,
+      ".buildchain/runtime-bootstrap/locked-source-checkout.mjs",
+    ),
+    "export {};\n",
+  );
+  fs.writeFileSync(path.join(temporaryRoot, "project.mjs"), "export {};\n");
+  assert.deepEqual(repositorySourceFiles(temporaryRoot), ["project.mjs"]);
 });
 
 test("internal architecture check rejects an unowned repository source", () => {

@@ -37,3 +37,17 @@ auth = "trusted-publishing"
 dist_tag = "latest"
 package_set_order = "platforms-first-main-last"
 main_package = "@kungfu-tech/libnode"
+
+[build]
+environment = "github-hosted-container"
+
+[build.artifacts]
+name = "libnode-shaped"
+paths = ["dist"]
+release_candidate = true
+min_files = 2
+required_paths = ["dist/install.txt", "dist/libnode-shaped.txt"]
+retention_days = 7
+
+[build.contract]
+drift_issue_mode = "off"

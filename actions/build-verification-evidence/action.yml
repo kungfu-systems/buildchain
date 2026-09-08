@@ -1,0 +1,39 @@
+name: build-verification-evidence
+description: "Shared build steps owned by Buildchain verification maintainers"
+inputs:
+  plan-json:
+    description: "Resolved plan-json; supplied by the build backbone"
+    required: true
+  source-json:
+    description: "Resolved source-json; supplied by the build backbone"
+    required: true
+  platform-json:
+    description: "Resolved platform-json; supplied by the build backbone"
+    required: true
+  verify-outcome:
+    description: "Resolved verify-outcome; supplied by the build backbone"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Independently verify lifecycle substage evidence
+      id: verify-substage-evidence
+      if: ${{ always() && fromJSON(inputs.plan-json).build.verification.substage_evidence_path != '' }}
+      working-directory: ${{ fromJSON(inputs.plan-json).project.cwd }}
+      shell: bash
+      run: >-
+        node "${{ github.workspace }}/.buildchain/runtime/scripts/lifecycle-substage-evidence.mjs"
+        --file "${{ fromJSON(inputs.plan-json).build.verification.substage_evidence_path }}"
+        --stage verify
+        --source-sha "${{ fromJSON(inputs.source-json).publish-source-sha }}"
+        --source-tree "${{ fromJSON(inputs.source-json).publish-source-tree-sha }}"
+        --platform-id "${{ fromJSON(inputs.platform-json).id }}"
+
+    - name: Upload failed verify substage evidence
+      if: ${{ always() && fromJSON(inputs.plan-json).build.verification.substage_evidence_path != '' && (inputs.verify-outcome != 'success' || steps.verify-substage-evidence.outcome != 'success') }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.plan-json).artifacts.name }}-verify-substages-${{ fromJSON(inputs.platform-json).id }}-${{ fromJSON(inputs.source-json).publish-source-sha }}-${{ github.run_attempt }}
+        path: ${{ fromJSON(inputs.plan-json).project.cwd }}/${{ fromJSON(inputs.plan-json).build.verification.substage_evidence_path }}
+        if-no-files-found: warn
+        retention-days: ${{ fromJSON(inputs.plan-json).build.artifacts.retention_days }}

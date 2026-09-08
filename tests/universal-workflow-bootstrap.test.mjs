@@ -298,7 +298,7 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
   requestValue.capability.id = "bootstrap-conformance";
   requestValue.payload = {
     schema: "kungfu-buildchain-v4-universal-bootstrap-conformance/v1",
-    expectedGovernedWorkflowCount: 41,
+    expectedGovernedWorkflowCount: 39,
   };
   const engine = fileURLToPath(
     new URL("../scripts/universal-workflow-engine.mjs", import.meta.url),
@@ -329,7 +329,7 @@ test("the fixed CLI executes only the exact admitted candidate", () => {
   });
   assert.equal(result.status, "succeeded");
   assert.equal(result.output.status, "candidate-engine-executed");
-  assert.equal(result.output.governedWorkflowCount, 41);
+  assert.equal(result.output.governedWorkflowCount, 39);
   assert.match(result.output.engineRoot, /^sha256:[0-9a-f]{64}$/u);
   assert.equal(result.runtime.sha, sha("1"));
   const receipt = run("terminal", {

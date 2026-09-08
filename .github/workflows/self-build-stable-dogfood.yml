@@ -1,0 +1,26 @@
+name: Buildchain Stable Self-Dogfood
+
+on:
+  workflow_run:
+    workflows: ["Buildchain Ref Promotion"]
+    types: [completed]
+  schedule:
+    - cron: "47 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  id-token: write
+
+concurrency:
+  group: buildchain-stable-self-dogfood-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  stable-consumer:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
+    with:
+      config-path: fixtures/libnode-shaped/buildchain.toml

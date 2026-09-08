@@ -115,7 +115,7 @@ test("current v4 world derives legacy arrays only from exact-target Facts", () =
       (count, surface) => count + surface.compatibilityFactRoots.length,
       0,
     ),
-    8,
+    4,
   );
   assert.equal(
     world.surfaces.find((surface) => surface.id === "release-candidate-promote")

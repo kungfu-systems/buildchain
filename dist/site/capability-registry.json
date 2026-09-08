@@ -90,7 +90,7 @@
         "cliCommandCount": 10,
         "nodeApiCount": 19,
         "workflowCount": 4,
-        "actionCount": 2
+        "actionCount": 8
       },
       "manuals": [
         "docs/auditable-demo.md",
@@ -298,7 +298,7 @@
         "pageCount": 12,
         "cliCommandCount": 0,
         "nodeApiCount": 2,
-        "workflowCount": 85,
+        "workflowCount": 86,
         "actionCount": 2
       },
       "manuals": [

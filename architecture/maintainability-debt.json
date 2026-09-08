@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 64542,
-    "current": 56481
+    "measuredExcess": 62190,
+    "current": 54129
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -315,10 +315,10 @@
       },
       "packages/core/buildchain-config.js": {
         "baseline": {
-          "lines": 1885
+          "lines": 1887
         },
         "current": {
-          "lines": 1885
+          "lines": 1887
         },
         "target": {
           "lines": 600
@@ -334,10 +334,10 @@
           }
         },
         "current": {
-          "lines": 1078,
+          "lines": 1048,
           "functions": {
             "createBuildchainContractWorld@199": {
-              "lines": 681
+              "lines": 651
             }
           }
         },
@@ -1214,7 +1214,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1475
+          "lines": 1489
         },
         "target": {
           "lines": 600
@@ -1223,21 +1223,21 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@260": {
+            "evaluateMaintainability@275": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@260": {
+            "evaluateMaintainability@275": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@260": {
+            "evaluateMaintainability@275": {
               "complexity": 25
             }
           }
@@ -1457,7 +1457,7 @@
       },
       "scripts/generate-site-bundle.mjs": {
         "baseline": {
-          "lines": 1410,
+          "lines": 1411,
           "functions": {
             "buildSiteBundle@720": {
               "lines": 637
@@ -1465,10 +1465,10 @@
           }
         },
         "current": {
-          "lines": 1410,
+          "lines": 1411,
           "functions": {
             "buildSiteBundle@720": {
-              "lines": 636
+              "lines": 637
             }
           }
         },
@@ -2191,7 +2191,7 @@
     "tests": {
       "tests/auditable-demo-platform.test.mjs": {
         "baseline": {
-          "lines": 712
+          "lines": 714
         },
         "current": {
           "lines": 712
@@ -2241,15 +2241,15 @@
         "baseline": {
           "lines": 3181,
           "functions": {
-            "<anonymous@1559>@1559": {
+            "<anonymous@1494>@1494": {
               "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2738,
+          "lines": 2668,
           "functions": {
-            "<anonymous@1559>@1559": {
+            "<anonymous@1494>@1494": {
               "lines": 206
             }
           }
@@ -2257,7 +2257,7 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@1559>@1559": {
+            "<anonymous@1494>@1494": {
               "lines": 180
             }
           }
@@ -2267,33 +2267,27 @@
         "baseline": {
           "lines": 4639,
           "functions": {
-            "<anonymous@170>@170": {
-              "lines": 195
-            },
-            "<anonymous@544>@544": {
+            "<anonymous@445>@445": {
               "lines": 183
             },
-            "<anonymous@1678>@1678": {
+            "<anonymous@1554>@1554": {
               "lines": 249
             },
-            "<anonymous@2684>@2684": {
+            "<anonymous@2560>@2560": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 3027,
+          "lines": 2884,
           "functions": {
-            "<anonymous@170>@170": {
-              "lines": 186
-            },
-            "<anonymous@544>@544": {
+            "<anonymous@445>@445": {
               "lines": 183
             },
-            "<anonymous@1678>@1678": {
+            "<anonymous@1554>@1554": {
               "lines": 249
             },
-            "<anonymous@2684>@2684": {
+            "<anonymous@2560>@2560": {
               "lines": 188
             }
           }
@@ -2301,16 +2295,13 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@170>@170": {
+            "<anonymous@445>@445": {
               "lines": 180
             },
-            "<anonymous@544>@544": {
+            "<anonymous@1554>@1554": {
               "lines": 180
             },
-            "<anonymous@1678>@1678": {
-              "lines": 180
-            },
-            "<anonymous@2684>@2684": {
+            "<anonymous@2560>@2560": {
               "lines": 180
             }
           }
@@ -2329,7 +2320,7 @@
       },
       "tests/cli.test.mjs": {
         "baseline": {
-          "lines": 2840,
+          "lines": 2842,
           "functions": {
             "<anonymous@2363>@2363": {
               "lines": 253
@@ -2485,7 +2476,7 @@
           "lines": 916
         },
         "current": {
-          "lines": 916
+          "lines": 899
         },
         "target": {
           "lines": 600
@@ -2756,75 +2747,6 @@
           "lines": 600
         }
       },
-      "tests/build-surface-reusable-build.test.mjs": {
-        "baseline": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 342
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 342
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "tests/build-surface-reusable-build-signing.test.mjs": {
-        "baseline": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 266
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 266
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "tests/build-surface-reusable-build-artifacts.test.mjs": {
-        "baseline": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 232
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 230
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "<anonymous@3>@3": {
-              "lines": 180
-            }
-          }
-        }
-      },
       "tests/promote-buildchain-ref-durable-recovery.test.mjs": {
         "baseline": {
           "functions": {
@@ -2922,17 +2844,17 @@
       ".github/workflows/.build.yml": {
         "baseline": {
           "lines": 3370,
-          "jobs": 14,
+          "jobs": 15,
           "steps": 194,
           "maxStepsPerJob": 44,
           "decisions": 113
         },
         "current": {
-          "lines": 3341,
-          "jobs": 14,
-          "steps": 194,
-          "maxStepsPerJob": 44,
-          "decisions": 113
+          "lines": 2244,
+          "jobs": 15,
+          "steps": 170,
+          "maxStepsPerJob": 32,
+          "decisions": 87
         },
         "target": {
           "lines": 600,
@@ -3019,17 +2941,6 @@
           "jobs": 8,
           "steps": 50,
           "decisions": 25
-        }
-      },
-      ".github/workflows/build.yml": {
-        "baseline": {
-          "lines": 1218
-        },
-        "current": {
-          "lines": 1218
-        },
-        "target": {
-          "lines": 600
         }
       },
       ".github/workflows/check.yml": {
@@ -3191,7 +3102,7 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 3027
+      "current": 2884
     },
     {
       "domain": "workflows",

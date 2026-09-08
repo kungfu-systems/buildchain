@@ -8,6 +8,7 @@ import {
   resolveBuildchainConfigPath,
 } from "./buildchain-layout.js";
 import { runShellCommandSync } from "./spawn-command.js";
+import { normalizeBuildConfiguration } from "./build-configuration.js";
 
 const CONFIG_FILE = BUILDCHAIN_CONFIG_PATH;
 const RESERVED_LIFECYCLE_KEYS = new Set(["env", "shell"]);
@@ -206,6 +207,7 @@ export function loadBuildchainConfig(cwd = process.cwd()) {
 export function normalizeBuildchainConfig(config) {
   assertPlainObject(config, CONFIG_FILE);
   const normalized = { ...config };
+  if (normalized.build !== undefined) normalized.build = normalizeBuildConfiguration(normalized.build);
   if (normalized.project !== undefined) {
     normalized.project = normalizeProjectSection(normalized.project);
   }

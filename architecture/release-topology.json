@@ -43,7 +43,8 @@
       ".github/workflows/self-release-rehearsal-dogfood.yml",
       ".github/workflows/self-release-tail-dogfood.yml",
       ".github/workflows/self-release-next-development.yml",
-      ".github/workflows/public-release-oci-compose-preview.yml"
+      ".github/workflows/public-release-oci-compose-preview.yml",
+      ".github/workflows/self-build-stable-dogfood.yml"
     ],
     "unknownTopologyPolicy": "fail-closed"
   },
@@ -152,6 +153,7 @@
         "packages/core/adopter-delivery-json.js",
         "packages/core/adopter-delivery-passport.js",
         "packages/core/artifact-verification-envelope.js",
+        "packages/core/build-configuration.js",
         "packages/core/buildchain-channel-identity.js",
         "packages/core/buildchain-compatibility-authority.js",
         "packages/core/buildchain-compatibility-fact.js",
@@ -212,7 +214,7 @@
         "scripts/release-finalization-review.mjs",
         "scripts/verify-version-state-delta.mjs"
       ],
-      "root": "sha256:7a51840f34c85125fc7b65c6b1881d59e62ea05ad8265f7c8f3a66a3d11539f7"
+      "root": "sha256:5301e4d5f49b4700ef4a7f69de5a8ba2bd42261364a1492e813633228f7f4c0f"
     },
     "rustWasmAuthority": {
       "loader": "packages/core/domain-wasm.js",
@@ -351,12 +353,12 @@
       }
     ],
     "metrics": {
-      "workflowCount": 35,
-      "jobCount": 91,
-      "reusableEdgeCount": 23,
-      "mutationRelevantNodeCount": 76,
+      "workflowCount": 36,
+      "jobCount": 85,
+      "reusableEdgeCount": 21,
+      "mutationRelevantNodeCount": 71,
       "contentsWriteJobCount": 14,
-      "oidcWriteJobCount": 15
+      "oidcWriteJobCount": 10
     },
     "semanticMetrics": {
       "workflowCount": 5,

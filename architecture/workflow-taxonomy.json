@@ -442,6 +442,19 @@
       "rationale": "Classify the existing .github/workflows/buildchain-alpha-self-dogfood.yml capability without adding execution behavior."
     },
     {
+      "id": "buildchain-stable-self-dogfood",
+      "role": "self",
+      "category": "build",
+      "purpose": "stable-dogfood",
+      "summary": "Buildchain Stable Self-Dogfood",
+      "owner": "kungfu-origin",
+      "status": "active",
+      "invocation": "repository",
+      "migration": null,
+      "compatibility": null,
+      "rationale": "Independently qualify the published stable TOML build contract with a nested project locator."
+    },
+    {
       "id": "buildchain-candidate-recovery-dogfood-failure",
       "role": "self",
       "category": "ops",
@@ -603,7 +616,7 @@
         "originalSha256": "7280bc3e9c8b9033c74f136d5a6c6998eb0f0b1caf0184510d0f7567b24b1282"
       },
       "compatibility": null,
-      "rationale": "Classify the existing .github/workflows/buildchain-stable-candidate-qualification.yml capability without adding execution behavior."
+      "rationale": "Qualify the exact published alpha runtime observed by a successful public zero-input Buildchain build, binding its source run and three-platform artifacts without cross-repository dispatch or publication authority."
     },
     {
       "id": "candidate-lab",

@@ -77,7 +77,6 @@ test("controller registry freezes the first project-independent public inventory
   assert.deepEqual(value.controllers.map((entry) => entry.id), [
     "source-check",
     "build-lifecycle",
-    "build-channel-router",
     "shifu-gate-profile-envelope",
     "web-surface",
     "publication-artifact",
@@ -290,25 +289,11 @@ test("build workflow receipts emit every stage declared by the build controller 
   }
 });
 
-test("channel router workflow receipt emits every lane-aware controller stage", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github", "workflows", "build.yml"),
-    "utf8",
-  );
-  const stagesBlock = workflow.match(
-    /BUILDCHAIN_CONTROLLER_STAGES_JSON:\s*>-\s*\n([\s\S]*?)\n\s+BUILDCHAIN_CONTROLLER_EVIDENCE_/,
-  );
-  assert.ok(stagesBlock, "channel router workflow must declare controller receipt stages");
-  const emitted = [...stagesBlock[1].matchAll(/\{"id":"([^"]+)"/g)].map((match) => match[1]);
-  const declared = descriptor("build-channel-router").expected.stages.map((stage) => stage.id);
-
-  assert.deepEqual(emitted, declared);
-  assert.deepEqual(
-    descriptor("build-channel-router").expected.stages
-      .filter((stage) => !stage.required)
-      .map((stage) => stage.id),
-    ["override", "alpha", "stable"],
-  );
+test("the facade forwards the source-bound backbone controller receipt", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
+  assert.match(workflow, /controller-receipt-digest:[\s\S]*?value: \$\{\{ jobs\.build\.outputs\.controller-receipt-digest \}\}/u);
+  assert.equal(registry().controllers.some((entry) => entry.id === "build-channel-router"), false);
+  assert.deepEqual(descriptor().inputs["configuration-root"], { classification: "included", source: "resolved-build-plan" });
 });
 
 test("source, runtime, and plan mismatches invalidate receipts", () => {

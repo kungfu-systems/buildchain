@@ -19,26 +19,19 @@ restating them.
 
 ## Using this repo as a Buildchain consumer
 
-Consumers that want Buildchain to select alpha for development/prerelease work
-and stable for production releases use the channel router. The router defaults
-to `auto`; repositories only add channel configuration when they intentionally
-override that policy:
+Ordinary builds read project configuration from `buildchain.toml`. Single-project
+consumers call the public workflow with no inputs:
 
 ```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3
+uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
 ```
 
-During v3 prerelease evaluation windows, canaries call the same router through
-the matching prerelease ref:
-
-```yaml
-uses: kungfu-systems/buildchain/.github/workflows/build.yml@v3-alpha
-```
-
-The default policy selects `vN-alpha` for pull requests, development, nightly,
-and prerelease intent; it selects stable `vN` for stable release intent. The
-advanced `.build.yml` surface and explicit `buildchain-ref` train/SHA validation
-remain available when a repository needs precise control.
+Use `@v4-alpha` for the alpha runtime. The called workflow ref and SHA determine
+runtime identity and the matching contract lock. A nested project may supply
+only `config-path`; all project settings belong in TOML and infrastructure
+settings belong to a governed Buildchain environment profile. `.build.yml`
+remains the core install/build/verify backbone. Historical build inputs and
+runtime overrides are removed.
 
 For new repositories, prefer the CLI:
 
@@ -65,9 +58,9 @@ See [`docs/cli.md`](docs/cli.md), [`docs/lifecycle-protocol.md`](docs/lifecycle-
 and [`docs/reusable-build-surface.md`](docs/reusable-build-surface.md) for the
 consumer contract.
 
-For temporary validation of an unreleased Buildchain runtime, keep the committed
-workflow ref on `@v3` and use the trusted `workflow_dispatch` `buildchain-ref`
-pass-through. See [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
+Ordinary builds do not accept runtime overrides. Specialized release/recovery
+contracts retain their bounded, non-persistent validation mechanisms; see
+[`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
 
 ## Building this repo
 

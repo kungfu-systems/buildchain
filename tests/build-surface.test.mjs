@@ -171,7 +171,6 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   const workflows = [
     ".github/workflows/check.yml",
     ".github/workflows/.build.yml",
-    ".github/workflows/build.yml",
     ".github/workflows/.gate-profile.yml",
     ".github/workflows/.web-surface.yml",
     ".github/workflows/publication-artifact.yml",
@@ -250,108 +249,10 @@ test("public reusable controllers expose source-bound plan and always-aggregated
     /BUILDCHAIN_CONTROLLER_(?:GATE_IDS|GATE_RESULTS)/,
   );
 
-  const channelRouter = readRepoText(".github/workflows/build.yml");
-  assert.match(
-    channelRouter,
-    /router-repository: \$\{\{ steps\.router\.outputs\.repository \}\}/,
-  );
-  assert.match(
-    channelRouter,
-    /router-ref: \$\{\{ steps\.router\.outputs\.ref \}\}/,
-  );
-  assert.match(channelRouter, /Checkout Buildchain controller workflow shell/);
-  assert.match(
-    channelRouter,
-    /\.buildchain\/controller-runtime\/scripts\/controller-evidence\.mjs/,
-  );
-  assert.match(
-    channelRouter,
-    /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/,
-  );
-  assert.doesNotMatch(
-    channelRouter,
-    /\.buildchain\/runtime\/scripts\/controller-evidence\.mjs/,
-  );
-  assert.match(
-    channelRouter,
-    /needs:\n      - resolve-channel\n      - override\n      - alpha\n      - stable\n      - controller-receipt/,
-    "the aggregate must include the trusted exact-runtime self-dogfood lane",
-  );
-  assert.match(channelRouter, /Enforce public channel router aggregate/);
-
-  const governanceReconciliation = readRepoText(
-    ".github/workflows/release-governance-reconcile.yml",
-  );
-  assert.match(governanceReconciliation, /workflow_call:/);
-  assert.match(governanceReconciliation, /workflow_dispatch:/);
-  assert.match(
-    governanceReconciliation,
-    /--candidate-sha "\$\{BUILDCHAIN_CANDIDATE_SHA\}"/,
-  );
-  assert.match(governanceReconciliation, /args\+\=\(--apply\)/);
-  assert.match(governanceReconciliation, /persist-credentials: false/);
-
-  const libnodeConsumer = readRepoText(
-    "fixtures/libnode-shaped/.github/workflows/build.yml",
-  );
-  assert.match(
-    libnodeConsumer,
-    /  build:\n    uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4/,
-  );
-
-  const reusableBuild = readRepoText(".github/workflows/.build.yml");
-  assert.match(reusableBuild, /Checkout build controller workflow shell/);
-  assert.match(
-    reusableBuild,
-    /BUILDCHAIN_CONTROLLER_RUNTIME_REF: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-ref \}\}/,
-  );
-  assert.match(
-    reusableBuild,
-    /BUILDCHAIN_CONTROLLER_RUNTIME_SHA: \$\{\{ needs\.trust-gate\.outputs\.buildchain-runtime-sha \}\}/,
-  );
-  assert.match(
-    reusableBuild,
-    /BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: \$\{\{ needs\.trust-gate\.outputs\.buildchain-contract-digest \}\}/,
-  );
-  assert.doesNotMatch(
-    reusableBuild,
-    /BUILDCHAIN_CONTROLLER_RUNTIME_(?:REF|SHA): \$\{\{ needs\.trust-gate\.outputs\.buildchain-workflow-shell-/,
-  );
-  assert.match(
-    reusableBuild,
-    /BUILDCHAIN_CONTROLLER_REGISTRY: \.buildchain\/controller-runtime\/dist\/site\/controller-registry\.json/,
-  );
-
-  const paperRelease = readRepoText(".github/workflows/paper-release.yml");
-  const promotion = readRepoText(
-    ".github/workflows/.release-candidate-promote.yml",
-  );
-  assert.match(paperRelease, /!inputs\.dry-run.*controller-receipt-qualifying/);
-  assert.match(
-    promotion,
-    /^  qualify:\n[\s\S]*^  apply:\n[\s\S]*^  settle:/m,
-    "the canonical publisher must expose exactly the QUALIFY, APPLY, and SETTLE phases",
-  );
-  assert.match(
-    promotion,
-    /publisher-workflow-sha: \$\{\{ needs\.qualify\.outputs\.publisher-sha \}\}/,
-    "APPLY must consume the qualified immutable publisher SHA",
-  );
-  assert.match(
-    promotion,
-    /runtime-commit: \$\{\{ needs\.qualify\.outputs\.runtime-sha \}\}/,
-    "APPLY must consume the qualified immutable runtime SHA",
-  );
-  assert.match(
-    promotion,
-    /controller-receipt-digest: \$\{\{ steps\.verify\.outputs\.receipt-root \}\}/,
-    "SETTLE must expose the verified terminal receipt root",
-  );
-  assert.doesNotMatch(
-    promotion,
-    /^  (?:publication-authority|promote|stable):/m,
-    "legacy publisher jobs must not remain parallel mutation paths",
-  );
+  const router = readRepoText(".github/workflows/build.yml");
+  assert.match(router, /value: \$\{\{ jobs\.build\.outputs\.controller-plan-json \}\}/u);
+  assert.match(router, /value: \$\{\{ jobs\.build\.outputs\.controller-receipt-json \}\}/u);
+  assert.doesNotMatch(router, /BUILDCHAIN_CONTROLLER_SOURCE_SHA:/u);
 });
 
 test("publication artifact workflow exposes paper artifact contract", () => {
@@ -1523,38 +1424,13 @@ test("stable candidate patrol persists exact candidates and uses source-lock PR 
   );
   assert.match(qualification, /workflows: \["Buildchain Alpha Self-Dogfood"\]/);
   assert.match(qualification, /statuses: write/);
-  assert.match(
-    qualification,
-    /GITHUB_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}/,
-  );
-  assert.match(
-    qualification,
-    /BUILDCHAIN_QUALIFICATION_ATTESTATION_TOKEN: \$\{\{ github\.token \}\}/,
-  );
-  assert.match(
-    qualification,
-    /name: buildchain-v4-dual-channel-self-dogfood-evidence/,
-  );
-  assert.match(
-    qualification,
-    /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/,
-  );
-  assert.match(
-    qualification,
-    /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/,
-  );
-  assert.doesNotMatch(
-    qualification,
-    /ref: \$\{\{ github\.event\.workflow_run\.head_sha \|\| inputs\.candidate-sha \}\}/,
-  );
-  assert.match(
-    qualification,
-    /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ steps\.candidate\.outputs\.sha \}\}/,
-  );
-  assert.doesNotMatch(
-    qualification,
-    /BUILDCHAIN_QUALIFICATION_CANDIDATE_SHA: \$\{\{ github\.event\.workflow_run\.head_sha/,
-  );
+  assert.match(qualification, /GITHUB_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.match(qualification, /name: \$\{\{ steps\.source\.outputs\.artifact-name \}\}/);
+  assert.match(qualification, /run-id: \$\{\{ github\.event\.workflow_run\.id \|\| inputs\.run-id \}\}/);
+  assert.match(qualification, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
+  assert.match(qualification, /resolve-public-build/);
+  assert.match(qualification, /qualify-public-build/);
+  assert.doesNotMatch(qualification, /secrets\.|dual-channel-self-dogfood|canary-ref|candidate-sha/);
   assert.match(qualification, /stable-candidate-qualification\.mjs/);
 });
 
@@ -2872,7 +2748,6 @@ test("runtime selection accepts official channels and gates train or SHA overrid
 
 test("runtime-aware workflows distinguish official channels from overrides", () => {
   const workflowFiles = [
-    ".github/workflows/.build.yml",
     ".github/workflows/.release-verify.yml",
     ".github/workflows/.web-surface.yml",
     ".github/workflows/paper-release.yml",
@@ -2894,7 +2769,6 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
       /const officialChannel = officialChannelRef\.test\(requested\)/,
     );
     if (
-      workflowFile === ".github/workflows/.build.yml" ||
       workflowFile === ".github/workflows/paper-release.yml" ||
       workflowFile === ".github/workflows/publication-artifact.yml"
     ) {
@@ -2919,15 +2793,10 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
   }
 });
 
-test("pinned self runtime inherits the explicitly declared contract-lock lane", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: \$\{\{ steps\.runtime\.outputs\.runtime-override == 'true' \|\| steps\.runtime\.outputs\.runtime-trust-decision == 'pinned-self' \}\}/,
-  );
+test("ordinary builds cannot authorize opaque runtimes", () => {
+  const workflow = readRepoText(".github/workflows/.build.yml");
+  assert.match(workflow, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: false/u);
+  assert.doesNotMatch(workflow, /pinned-self|runtime-override == 'true'/u);
 });
 
 test("web-surface release PR close hands production to the protected main push", () => {
@@ -2956,7 +2825,6 @@ test("web-surface release PR close hands production to the protected main push",
 
 test("runtime-aware workflows pin same-repository pull request merge refs", () => {
   const workflowFiles = [
-    ".github/workflows/.build.yml",
     ".github/workflows/.gate-profile.yml",
     ".github/workflows/.release-verify.yml",
     ".github/workflows/.web-surface.yml",
@@ -3008,20 +2876,9 @@ test("Gate profile treats its exact workflow shell SHA as a pinned self runtime"
   );
 });
 
-test("build workflow only trusts an exact same-repository pull request head override", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /const trustedSameRepositoryPullRequestHead =/);
-  assert.match(workflow, /pullRequestHeadRepository === repository/);
-  assert.match(
-    workflow,
-    /requested\.toLowerCase\(\) === pullRequestHeadSha\.toLowerCase\(\)/,
-  );
-  assert.match(
-    workflow,
-    /!trustedSameRepositoryPullRequestHead && context\.eventName !== "workflow_dispatch"/,
-  );
-  assert.match(workflow, /\? "same-repository-pr-head"/);
+test("build runtime and source come from independent exact GitHub identities", () => {
+  const workflow = readRepoText(".github/workflows/.build.yml");
+  assert.match(workflow, /ref: \$\{\{ job\.workflow_sha \}\}/u);
+  assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
+  assert.doesNotMatch(workflow, /inputs\.buildchain-ref|same-repository-pr-head/u);
 });

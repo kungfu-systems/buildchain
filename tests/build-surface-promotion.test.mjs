@@ -195,21 +195,14 @@ test("reusable build exposes release-candidate passport outputs", () => {
     "utf8",
   );
 
-  assert.match(workflow, /release-candidate:/);
-  assert.match(workflow, /release-candidate-family-evidence-json:/);
-  assert.match(workflow, /github-artifact-attestation-subject-path:/);
-  assert.match(workflow, /github-artifact-attestation-signer-sha:/);
-  assert.match(workflow, /BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA:/);
-  assert.match(workflow, /name: Create GitHub artifact attestation policy/);
-  assert.match(workflow, /create-github-artifact-attestation-policy\.mjs/);
-  assert.match(workflow, /name: Upload GitHub artifact attestation policy/);
+  assert.match(workflow, /build.artifacts.release_candidate/);
+  assert.match(workflow, /build-attestation-policy/);
   assert.match(workflow, /publish-source-tree-sha:/);
   assert.match(workflow, /Resolve source tree SHA/);
   assert.match(workflow, /Generate release candidate passport/);
   assert.match(workflow, /BUILDCHAIN_RC_SOURCE_TREE_HASH/);
   assert.match(workflow, /release-candidate-passport-artifact/);
   assert.match(workflow, /release-candidate-passport-json/);
-  assert.match(workflow, /gate-profile-aggregate-json:/);
   assert.match(workflow, /BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON/);
   assert.match(workflow, /BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON/);
   assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
@@ -289,53 +282,19 @@ test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () 
   assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
-test("build surface fixture can dogfood artifact transfer modes declaratively", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-build-fixture.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /- dev\/v\*\/v\*/);
-  assert.match(workflow, /- alpha\/v\*\/v\*/);
-  assert.match(workflow, /- release\/v\*\/v\*/);
-  assert.doesNotMatch(workflow, /v\*\.\*/);
-  assert.match(workflow, /artifact-transfer-mode:/);
-  assert.match(workflow, /default: "github-artifacts"/);
-  assert.match(workflow, /buildchain-ref: \{ default: "v4-alpha" \}/);
-  assert.match(workflow, /publish-source-ref: \{ default: "" \}/);
-  assert.match(workflow, /publish-anchor-request-json: \{ default: "" \}/);
-  assert.match(workflow, /issues: write/);
-  assert.match(workflow, /id-token: write/);
-  assert.match(workflow, /secrets: inherit/);
-  assert.match(workflow, /uses: kungfu-systems\/buildchain\/\.github\/workflows\/build\.yml@v4-alpha/);
-  assert.match(workflow, /buildchain-channel: alpha/);
-  assert.match(workflow, /buildchain-ref: \$\{\{ github\.event\.inputs\['buildchain-ref'\] \|\| 'v4-alpha' \}\}/);
-  assert.match(workflow, /publish-channel: \$\{\{ github\.event\.inputs\['publish-source-ref'\] != '' && 'alpha' \|\| 'none' \}\}/);
-  assert.match(workflow, /publish-anchor-request-json: \$\{\{ github\.event\.inputs\['publish-anchor-request-json'\] \}\}/);
-  assert.doesNotMatch(workflow, /buildchain-ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
-  assert.match(
-    workflow,
-    /artifact-transfer-mode: \$\{\{ github\.event\.inputs\['artifact-transfer-mode'\] \|\| 'github-artifacts' \}\}/,
-  );
-  assert.match(workflow, /buildchain-contract-drift-issue-mode: "off"/);
-  assert.match(workflow, /buildchain-contract-lock-path: \.buildchain\/alpha-contract-lock\.json/);
-  assert.doesNotMatch(workflow, /checkout-cache-mode:/);
-  assert.match(workflow, /checkout-cache-fallback: github/);
-  assert.match(
-    workflow,
-    /buildchain-package-candidate:[\s\S]*?github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] != ''/,
-  );
-  assert.match(workflow, /ref: \$\{\{ github\.event_name == 'workflow_dispatch' && inputs\['publish-source-ref'\] \|\| github\.sha \}\}/);
-  assert.match(workflow, /pattern: libnode-shaped-release-candidate-\*/);
-  assert.match(workflow, /\["show", "-s", "--format=%T", "HEAD"\]/);
-  assert.doesNotMatch(workflow, /"--format=%T", process\.env\.GITHUB_SHA/);
-  assert.match(workflow, /merge-multiple: true/);
-  assert.doesNotMatch(
-    workflow,
-    /needs\.libnode-shaped\.outputs\['release-candidate-artifact'\]/,
-  );
-  assert.doesNotMatch(workflow, /run: node scripts\/artifact-relay-s3\.mjs/);
+test("build fixture keeps project settings in TOML and seals exact candidate bytes", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/self-build-fixture.yml"), "utf8");
+  const config = fs.readFileSync(path.join(root, "fixtures/libnode-shaped/buildchain.toml"), "utf8");
+  assert.match(workflow, /config-path: fixtures\/libnode-shaped\/buildchain.toml/u);
+  assert.doesNotMatch(workflow, /artifact-transfer-mode:|buildchain-ref:|publish-source-ref:|publish-anchor-request-json:/u);
+  assert.match(config, /environment = "github-hosted-container"/u);
+  assert.match(config, /release_candidate = true/u);
+  assert.match(workflow, /uses: kungfu-systems\/buildchain\/.github\/workflows\/build.yml@v4-alpha/u);
+  assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
+  assert.match(workflow, /name: \$\{\{ needs\.libnode-shaped\.outputs\.release-candidate-artifact \}\}/u);
+  assert.match(workflow, /\["show", "-s", "--format=%T", "HEAD"\]/u);
+  assert.match(workflow, /tree !== passport.source.treeHash/u);
 });
-
 test("canonical publisher carries no issue-reporting mutation authority", () => {
   const workflow = fs.readFileSync(
     path.join(root, ".github/workflows/.release-candidate-promote.yml"),
@@ -501,26 +460,11 @@ test("stable recovery keeps candidate bytes immutable while preparing the next a
   );
 });
 
-test("publish source-lock docs distinguish source refs from promotion targets", () => {
-  const docs = fs.readFileSync(
-    path.join(root, "docs/reusable-build-surface.md"),
-    "utf8",
-  );
-
-  assert.match(docs, /target-ref: release\/v22\/v22\.22/);
-  assert.match(
-    docs,
-    /`target-ref` stays the Buildchain channel promotion target/,
-  );
-  assert.match(
-    docs,
-    /`publish-source-ref` is the reviewed source-lock branch/,
-  );
-  assert.match(
-    docs,
-    /source-lock branch must point at the exact channel-line commit/,
-  );
-  assert.match(docs, /it is not a replacement for `target-ref`/);
+test("build docs keep ordinary source identity separate from release promotion", () => {
+  const docs = fs.readFileSync(path.join(root, "docs/reusable-build-surface.md"), "utf8");
+  assert.match(docs, /source SHA, called-workflow SHA/);
+  assert.match(docs, /specialized release\/recovery entry points/);
+  assert.match(docs, /Release promotion consumes an already sealed candidate/);
 });
 
 test("promote action docs describe publish source-lock inputs", () => {
@@ -1402,24 +1346,15 @@ test("generated release model publishes the generic major alpha channel contract
   assert.match(releaseModel.floatingTags, /highest minor in major X with a published alpha/);
 });
 
-test("Buildchain self-dogfoods v4 through the floating canonical alpha publisher", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-build-alpha-dogfood.yml"),
-    "utf8",
-  );
-  const promotion = fs.readFileSync(
-    path.join(root, ".github/workflows/self-release-promote.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /workflows: \["Buildchain Ref Promotion"\]/);
-  assert.match(workflow, /build\.yml@v4-alpha/);
-  assert.match(workflow, /buildchain-channel: auto/);
-  assert.match(promotion, /^  promote:/m);
-  assert.match(
-    promotion,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
-  );
-  assert.doesNotMatch(promotion, /^  promote-stable:/m);
+test("Buildchain independently dogfoods zero-input alpha and one-input stable TOML builds", () => {
+  for (const channel of ["alpha", "stable"]) {
+    const workflow = fs.readFileSync(path.join(root, `.github/workflows/self-build-${channel}-dogfood.yml`), "utf8");
+    assert.match(workflow, /workflows: \["Buildchain Ref Promotion"\]/u);
+    assert.ok(workflow.includes(`build.yml@${channel === "alpha" ? "v4-alpha" : "v4"}`));
+    assert.doesNotMatch(workflow, /steps:|buildchain-channel:|working-directory:|runner-preset:/u);
+    if (channel === "alpha") assert.doesNotMatch(workflow, /with:|config-path:/u);
+    else assert.match(workflow, /config-path: fixtures\/libnode-shaped\/buildchain.toml/u);
+  }
 });
 test("self-dogfood never bridges an adjacent major or bypasses contract compatibility", () => {
   assert.deepEqual(
@@ -1903,16 +1838,11 @@ test("runLifecycle applies a clear fallback timeout to commands and configured s
   }
 });
 
-test("reusable build bounds matrix jobs and lifecycle actions with one timeout input", () => {
+test("TOML build timeout bounds both matrix jobs and the shared lifecycle action", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const action = fs.readFileSync(path.join(root, "actions/run-lifecycle/action.yml"), "utf8");
-
-  assert.match(workflow, /lifecycle-timeout-minutes:[\s\S]*?default: 120[\s\S]*?type: number/);
-  assert.equal(
-    (workflow.match(/timeout-minutes: \$\{\{ inputs\.lifecycle-timeout-minutes \}\}/g) || []).length,
-    8,
-  );
-  assert.match(action, /timeout-minutes:[\s\S]*?default: "120"/);
+  const action = fs.readFileSync(path.join(root, "actions/build-lifecycle-stage/action.yml"), "utf8");
+  assert.equal((workflow.match(/timeout-minutes: .*build\.timeout_minutes/g) || []).length, 2);
+  assert.match(action, /timeout-minutes: .*build\.timeout_minutes/u);
 });
 
 test("signed platform metadata artifacts exclude imported payload trees", () => {
@@ -1934,7 +1864,7 @@ test("signed platform metadata artifacts exclude imported payload trees", () => 
   );
   assert.match(
     workflow,
-    /\$\{\{ inputs\.artifact-name \}\}-credential-manifest-macos-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
+    /\$\{\{ fromJSON\(needs\.configure\.outputs\.plan-json\)\.artifacts\.name \}\}-credential-manifest-macos-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
   );
   assert.match(
     workflow,
