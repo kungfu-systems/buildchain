@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-dev-delivery-warrant-queue",
   "repository": "kungfu-systems/buildchain",
   "protectedBase": "dev/v4/v4.0",
-  "generation": 1521,
+  "generation": 1522,
   "fencingCounter": 239,
   "policy": {
     "agingSeconds": 900,
@@ -13515,8 +13515,53 @@
         "tests/release-line-policy.test.mjs"
       ],
       "shardEvidenceRoots": []
+    },
+    {
+      "repository": "kungfu-systems/buildchain",
+      "protectedBase": "dev/v4/v4.0",
+      "pullRequestNumber": 3631,
+      "sourceRoot": "sha256:3cc587f69f87a6f750afe76647dca3e13965e9039a3424a0d786a61e4f741019",
+      "sourceIdentityRoot": "sha256:2bb81e71e4dbbe3d3766f0702654247ef4c38829430f845dbc8a44b2a6dc015e",
+      "deliveryClass": "non-native-fast",
+      "candidateId": "sha256:5491e9d44b01fa3a156c592c4d1b2fe9d0ce20cce1d0fa2e0a935c7cbf3b390f",
+      "sourceHead": "88ba6b53feaf42b19638cc2ec0e4544d8b82fbee",
+      "sourcePatchRoot": "sha256:0f5a9085741d0f946ac84c8c5a59c4c4870c060cc438e610437ce7fe9a3e686b",
+      "sourceProofRoot": "sha256:e9a89cbd56f27fcdb00daf581dd0e998dd1201e3fd0837c92d4faa09987b9cae",
+      "planRoot": "sha256:483ae17d0722f427113650b860c2a8104f9387136a15f95b02476bbcbbb2a652",
+      "closureRoot": "sha256:6a9f23e95bc8e96d342c9a2b6caa6a8afa77217c3d9bd00e03d53c037046ba0d",
+      "dependencyRoot": "sha256:7e2d81335e61e8734d7b800163548ba44da331ed9d61ffc53fbfa29cfc3a4324",
+      "toolchainRoot": "sha256:b910aff00eb502e996446fd6576422e08c61599fc42c1d0d160a896de2c817bd",
+      "sourceWorkflowRunId": 34177716005,
+      "priority": "ordinary",
+      "enqueuedAt": "2026-09-08T01:53:28.059Z",
+      "updatedAt": "2026-09-08T01:53:28.059Z",
+      "attempts": 1,
+      "recoveries": 0,
+      "status": "queued",
+      "terminal": null,
+      "affectedPaths": [
+        ".github/workflows/self-release-next-development.yml",
+        ".github/workflows/self-release-promote.yml",
+        "actions/release-candidate-promote/dist/index.js",
+        "actions/release-candidate-promote/product-finalization-wait.js",
+        "actions/release-candidate-promote/product-provider-github-adapters.js",
+        "architecture/maintainability-policy.json",
+        "architecture/release-topology.json",
+        "architecture/workflow-taxonomy.json",
+        "dist/site/buildchain-site.json",
+        "dist/site/kfd-claims.json",
+        "dist/site/page-registry.json",
+        "dist/site/public-surface-audit.json",
+        "docs/v4-production-release.md",
+        "scripts/next-development-review.mjs",
+        "scripts/release-finalization-review.mjs",
+        "tests/internal-architecture.test.mjs",
+        "tests/product-finalization.test.mjs",
+        "tests/release-finalization-review.test.mjs"
+      ],
+      "shardEvidenceRoots": []
     }
   ],
-  "updatedAt": "2026-09-07T18:55:07.312Z",
-  "stateRoot": "sha256:cf2375e852a760f961b4c2dac7264ba4d328cd7a52e9a4e10da0b9354bd6945b"
+  "updatedAt": "2026-09-08T01:53:28.059Z",
+  "stateRoot": "sha256:4ac96571c22c9f513e0655f2064f8e72d7de4fffebb25ed522ec5a6a66964511"
 }
