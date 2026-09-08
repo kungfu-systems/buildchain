@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 62215,
-    "current": 54154
+    "measuredExcess": 62190,
+    "current": 54129
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -2270,24 +2270,24 @@
             "<anonymous@445>@445": {
               "lines": 183
             },
-            "<anonymous@1579>@1579": {
+            "<anonymous@1554>@1554": {
               "lines": 249
             },
-            "<anonymous@2585>@2585": {
+            "<anonymous@2560>@2560": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 2909,
+          "lines": 2884,
           "functions": {
             "<anonymous@445>@445": {
               "lines": 183
             },
-            "<anonymous@1579>@1579": {
+            "<anonymous@1554>@1554": {
               "lines": 249
             },
-            "<anonymous@2585>@2585": {
+            "<anonymous@2560>@2560": {
               "lines": 188
             }
           }
@@ -2298,10 +2298,10 @@
             "<anonymous@445>@445": {
               "lines": 180
             },
-            "<anonymous@1579>@1579": {
+            "<anonymous@1554>@1554": {
               "lines": 180
             },
-            "<anonymous@2585>@2585": {
+            "<anonymous@2560>@2560": {
               "lines": 180
             }
           }
@@ -3102,7 +3102,7 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 2909
+      "current": 2884
     },
     {
       "domain": "workflows",

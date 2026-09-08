@@ -43,6 +43,16 @@ ancestry, and target roots. Confirmed operations are never replayed; uncertain
 operations require provider readback before retry; stable publication requires
 an N-1 or independently sealed qualification.
 
+## Public build qualification
+
+After a successful Alpha Self-Dogfood run, Stable Candidate Qualification reads
+its exact `buildchain-summary-<source SHA>` artifact. Protected default-branch
+code verifies the source run, published alpha runtime, all three platform
+artifacts and install/build/verify evidence before writing
+`buildchain-canary/buildchain-zero-input` on that runtime commit. Manual replay
+accepts only the source run ID. This observation remains Buildchain-owned; it
+neither dispatches another repository nor grants stable publication authority.
+
 ## Provider readback
 
 A stable release is complete only when all of these coordinates agree:

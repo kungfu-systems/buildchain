@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createHash } from "node:crypto";
 
 const DEFAULTS = {
   buildWorkflowFile: "self-build-fixture.yml",
@@ -41,27 +42,49 @@ function optionalSha(value, label) {
   return normalized;
 }
 
-export function resolveStableCandidateQualificationCandidate({ eventName, inputCandidateSha = "", selfDogfoodEvidence } = {}) {
-  if (text(eventName) === "workflow_dispatch") {
-    return optionalSha(inputCandidateSha, "candidate SHA");
+export function validatePublicBuildRun(run, workflow, repositoryName) {
+  if (run?.repository?.full_name !== repositoryName || run?.head_repository?.full_name !== repositoryName
+    || run?.workflow_id !== workflow?.id || workflow?.path !== ".github/workflows/self-build-alpha-dogfood.yml"
+    || run?.name !== "Buildchain Alpha Self-Dogfood" || !successful(run) || !optionalSha(run?.head_sha, "source SHA")) {
+    throw new Error("qualification requires the exact successful repository-owned public build run");
   }
-  if (text(eventName) !== "workflow_run") {
-    throw new Error(`qualification candidate resolver does not admit event ${eventName || "<empty>"}`);
+  return run;
+}
+
+export function resolveStableCandidateQualificationCandidate({ sourceRun, buildSummary, repositoryName } = {}) {
+  const evidence = buildSummary, runtime = evidence?.runtime;
+  if (!successful(sourceRun) || sourceRun?.repository?.full_name !== repositoryName
+    || evidence?.artifactName !== "buildchain" || evidence?.contract !== "kungfu-buildchain-build-summary" || evidence?.git?.repository !== repositoryName
+    || evidence?.git?.sha !== sourceRun?.head_sha || String(evidence?.git?.runId) !== String(sourceRun?.id)
+    || String(evidence?.git?.runAttempt) !== String(sourceRun?.run_attempt)
+    || runtime?.ref !== "v4-alpha" || runtime?.workflowShellRef !== "v4-alpha" || runtime?.class !== "alpha"
+    || runtime?.override !== false || runtime?.trustDecision !== "workflow-identity") {
+    throw new Error("public build summary does not bind the exact source run and alpha workflow identity");
   }
-  const evidence = selfDogfoodEvidence;
-  if (
-    evidence?.contract !== "kungfu-buildchain-alpha-self-dogfood"
-    || evidence?.status !== "passed"
-    || evidence?.observed?.alpha?.ref !== "v4-alpha"
-  ) {
-    throw new Error("self-dogfood evidence is not a passing v4-alpha observation");
+  const platforms = evidence.platforms || [];
+  const ids = platforms.map((entry) => entry.platform?.id).sort();
+  if (evidence.platformCount !== 3 || JSON.stringify(ids) !== JSON.stringify(["linux-x64", "macos", "windows-x64"])
+    || platforms.some((entry) => entry.expectedArtifacts?.ok !== true || !/^[a-f0-9]{64}$/u.test(entry.summary?.digest || "")
+      || ["install", "build", "verify"].some((stage) => !(entry.observability?.lifecycle?.stages?.[stage]?.eventCount > 0)))) {
+    throw new Error("public build summary requires verified artifacts for all three platforms");
   }
-  const observedSha = optionalSha(evidence.observed.alpha.sha, "observed v4-alpha SHA");
-  const expectedSha = optionalSha(evidence.observed.alpha.expectedSha, "expected v4-alpha SHA");
-  if (!observedSha || observedSha !== expectedSha) {
-    throw new Error("self-dogfood evidence does not bind observed and expected v4-alpha SHAs");
-  }
-  return observedSha;
+  const sha = optionalSha(runtime.sha, "observed alpha SHA");
+  if (!sha) throw new Error("public build summary is missing its runtime SHA");
+  return sha;
+}
+
+export async function qualifyPublicBuild({ repositoryName, sourceRun, buildSummary }, client) {
+  const sha = resolveStableCandidateQualificationCandidate({ repositoryName, sourceRun, buildSummary });
+  const candidate = await client.resolveExactAlpha(repositoryName, sha);
+  if (!candidate || candidate.sha !== sha) throw new Error("observed runtime must be an exact published alpha, never an ancestor");
+  const context = "buildchain-canary/buildchain-zero-input";
+  const status = await client.createCommitStatus({ repository: repositoryName, sha, context,
+    targetUrl: sourceRun.html_url, description: "Zero-input public build passed on all three platforms" });
+  if (status.state !== "success") throw new Error("public build qualification status readback failed");
+  return { contract: "kungfu-buildchain-public-build-qualification/v1", candidate, sourceSha: sourceRun.head_sha,
+    runId: sourceRun.id, runAttempt: sourceRun.run_attempt, context, status: status.state,
+    summaryRoot: `sha256:${createHash("sha256").update(JSON.stringify(buildSummary)).digest("hex")}`,
+    artifacts: buildSummary.platforms.map((entry) => ({ platform: entry.platform.id, digest: entry.summary.digest })) };
 }
 
 function optionalRef(value, label) {
@@ -253,6 +276,12 @@ export function createGitHubQualificationClient({
       .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0];
   }
   return {
+    async readPublicBuildRun(repositoryName, runId) {
+      if (!/^[1-9][0-9]*$/u.test(String(runId))) throw new Error("source run ID must be a positive integer");
+      const run = await api(`/repos/${repositoryName}/actions/runs/${runId}`);
+      const workflow = await api(`/repos/${repositoryName}/actions/workflows/self-build-alpha-dogfood.yml`);
+      return validatePublicBuildRun(run, workflow, repositoryName);
+    },
     async resolveExactAlpha(repositoryName, candidateSha) {
       const releases = (await api(`/repos/${repositoryName}/releases?per_page=100`)).sort((left, right) => right.tag_name.localeCompare(left.tag_name, "en", { numeric: true }));
       for (const release of releases) {
@@ -297,22 +326,18 @@ export function createGitHubQualificationClient({
 }
 
 async function main() {
-  if (bool(process.env.BUILDCHAIN_QUALIFICATION_RESOLVE_CANDIDATE, false)) {
-    let selfDogfoodEvidence;
-    if (text(process.env.BUILDCHAIN_QUALIFICATION_EVENT_NAME) === "workflow_run") {
-      const fs = await import("node:fs");
-      const evidencePath = text(process.env.BUILDCHAIN_QUALIFICATION_SELF_DOGFOOD_EVIDENCE);
-      selfDogfoodEvidence = JSON.parse(fs.readFileSync(evidencePath, "utf8"));
-    }
-    const sha = resolveStableCandidateQualificationCandidate({
-      eventName: process.env.BUILDCHAIN_QUALIFICATION_EVENT_NAME,
-      inputCandidateSha: process.env.BUILDCHAIN_QUALIFICATION_INPUT_CANDIDATE_SHA,
-      selfDogfoodEvidence,
-    });
-    process.stdout.write(`${sha}\n`);
-    if (process.env.GITHUB_OUTPUT) {
-      const fs = await import("node:fs");
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `sha=${sha}\n`);
+  if (["resolve-public-build", "qualify-public-build"].includes(process.argv[2])) {
+    const fs = await import("node:fs");
+    const repositoryName = repository(process.env.GITHUB_REPOSITORY);
+    const client = createGitHubQualificationClient({ token: process.env.GITHUB_TOKEN });
+    const sourceRun = await client.readPublicBuildRun(repositoryName, process.env.BUILDCHAIN_QUALIFICATION_RUN_ID);
+    if (process.argv[2] === "resolve-public-build") {
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `artifact-name=buildchain-summary-${sourceRun.head_sha}\n`);
+    } else {
+      const buildSummary = JSON.parse(fs.readFileSync(".buildchain/qualification/source/build-summary.json", "utf8"));
+      const result = await qualifyPublicBuild({ repositoryName, sourceRun, buildSummary }, client);
+      fs.writeFileSync(".buildchain/qualification/result.json", JSON.stringify(result, null, 2) + "\n");
+      process.stdout.write(JSON.stringify(result) + "\n");
     }
     return;
   }
