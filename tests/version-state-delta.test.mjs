@@ -37,6 +37,7 @@ function fixture(t) {
   };
   for (const file of [
     "buildchain-config.js",
+    "build-configuration.js",
     "buildchain-layout.js",
     "spawn-command.js",
   ])
@@ -118,10 +119,27 @@ test("version-only delta regenerates all declared outputs from the exact base", 
 
 test("version projection ignores ambient archive line-ending conversion", (t) => {
   const { cwd, baseSha, headSha, nodeModules } = fixture(t);
-  const moduleUrl = new URL("../scripts/verify-version-state-delta.mjs", import.meta.url).href;
-  const result = spawnSync(process.execPath, ["--input-type=module", "-e",
-    `import { verifyVersionStateDelta } from ${JSON.stringify(moduleUrl)}; verifyVersionStateDelta(${JSON.stringify({ cwd, baseSha, headSha, nodeModules })});`,
-  ], { encoding: "utf8", env: { ...process.env, GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "core.autocrlf", GIT_CONFIG_VALUE_0: "true" } });
+  const moduleUrl = new URL(
+    "../scripts/verify-version-state-delta.mjs",
+    import.meta.url,
+  ).href;
+  const result = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `import { verifyVersionStateDelta } from ${JSON.stringify(moduleUrl)}; verifyVersionStateDelta(${JSON.stringify({ cwd, baseSha, headSha, nodeModules })});`,
+    ],
+    {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        GIT_CONFIG_COUNT: "1",
+        GIT_CONFIG_KEY_0: "core.autocrlf",
+        GIT_CONFIG_VALUE_0: "true",
+      },
+    },
+  );
   assert.equal(result.status, 0, result.stderr);
 });
 
@@ -205,12 +223,21 @@ test("generated v4 projections never impersonate protected full source check nam
 
 test("stable next patch reconstructs exact declared bytes and still rejects unrelated source edits", (t) => {
   const f = fixture(t);
-  f.write("package.json", JSON.stringify({ type: "module", version: "4.0.3-alpha.0" }, null, 2) + "\n");
+  f.write(
+    "package.json",
+    JSON.stringify({ type: "module", version: "4.0.3-alpha.0" }, null, 2) +
+      "\n",
+  );
   f.manifest.package.version = "4.0.3-alpha.0";
   f.write("dist/site/site-manifest.json", JSON.stringify(f.manifest) + "\n");
   const input = { ...f, headSha: f.commit(), completedStableVersion: "4.0.2" };
   assert.equal(verifyVersionStateDelta(input).version, "4.0.3-alpha.0");
-  assert.throws(() => verifyVersionStateDelta({ ...input, completedStableVersion: undefined }));
+  assert.throws(() =>
+    verifyVersionStateDelta({ ...input, completedStableVersion: undefined }),
+  );
   f.write("scripts/unrelated.mjs", "process.exit(0);\n");
-  assert.throws(() => verifyVersionStateDelta({ ...input, headSha: f.commit() }), /undeclared/u);
+  assert.throws(
+    () => verifyVersionStateDelta({ ...input, headSha: f.commit() }),
+    /undeclared/u,
+  );
 });

@@ -150,7 +150,9 @@
     "scripts/maintainability-metrics.mjs",
     "scripts/generate-agent-change-map.mjs",
     "scripts/maintainability-domain-metrics.mjs",
-    "scripts/maintainability-governance.mjs"
+    "scripts/maintainability-governance.mjs",
+    "packages/core/build-configuration.js",
+    "scripts/resolve-build-configuration.mjs"
   ],
   "ownershipRules": [
     {
@@ -383,7 +385,9 @@
         "scripts/generate-channel-build-workflow.mjs",
         "scripts/resolve-artifact-transfer-mode.mjs",
         "scripts/resolve-build-summary-names.sh",
-        "scripts/run-lifecycle-core.mjs"
+        "scripts/run-lifecycle-core.mjs",
+        "packages/core/build-configuration.js",
+        "scripts/resolve-build-configuration.mjs"
       ],
       "tests": [
         "tests/artifact-transfer-mode.test.mjs",
@@ -391,11 +395,20 @@
         "tests/build-surface-reusable-build-artifacts.test.mjs",
         "tests/build-surface.test.mjs",
         "tests/build-surface-promotion.test.mjs",
-        "tests/controller-evidence.test.mjs"
+        "tests/controller-evidence.test.mjs",
+        "tests/build-configuration.test.mjs"
       ],
       "contracts": [
         ".github/workflows/.build.yml",
-        ".github/workflows/build.yml"
+        ".github/workflows/build.yml",
+        "architecture/build-environments.json",
+        "actions/build-lifecycle-stage/action.yml",
+        "actions/build-signing-request/action.yml",
+        "actions/build-verification-evidence/action.yml",
+        "actions/build-attestation-policy/action.yml",
+        "actions/build-agent-hub-evidence/action.yml",
+        "actions/build-artifact-transfer/action.yml",
+        "architecture/build-orchestration.json"
       ],
       "generatedOutputs": [
         ".github/workflows/build.yml",

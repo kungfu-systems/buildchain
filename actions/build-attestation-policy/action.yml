@@ -1,0 +1,39 @@
+name: build-attestation-policy
+description: "Shared build steps owned by Buildchain signing maintainers"
+inputs:
+  plan-json:
+    description: "Resolved plan-json; supplied by the build backbone"
+    required: true
+  platform-json:
+    description: "Resolved platform-json; supplied by the build backbone"
+    required: true
+  source-json:
+    description: "Resolved source-json; supplied by the build backbone"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Create GitHub artifact attestation policy
+      if: ${{ fromJSON(inputs.plan-json).build.attestation.subject_path != '' && fromJSON(inputs.platform-json).id == fromJSON(inputs.plan-json).build.attestation.platform }}
+      shell: bash
+      run: node .buildchain/runtime/scripts/create-github-artifact-attestation-policy.mjs
+      env:
+        BUILDCHAIN_SOURCE_CWD: ${{ fromJSON(inputs.plan-json).project.cwd }}
+        BUILDCHAIN_GITHUB_ATTESTATION_SUBJECT_PATH: ${{ fromJSON(inputs.plan-json).build.attestation.subject_path }}
+        BUILDCHAIN_GITHUB_ATTESTATION_PLATFORM_MANIFEST: .buildchain/artifacts/${{ fromJSON(inputs.platform-json).id }}/manifest.json
+        BUILDCHAIN_GITHUB_ATTESTATION_POLICY_OUTPUT: .buildchain/artifacts/${{ fromJSON(inputs.platform-json).id }}/github-artifact-attestation-policy.json
+        BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
+        BUILDCHAIN_SOURCE_SHA: ${{ fromJSON(inputs.source-json).publish-source-sha }}
+        BUILDCHAIN_SOURCE_TREE_SHA: ${{ fromJSON(inputs.source-json).publish-source-tree-sha }}
+        BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(inputs.plan-json).identity.sha }}
+        BUILDCHAIN_GITHUB_ATTESTATION_SIGNER_SHA: ${{ fromJSON(inputs.plan-json).identity.sha }}
+        BUILDCHAIN_PLATFORM_ID: ${{ fromJSON(inputs.platform-json).id }}
+
+    - name: Upload GitHub artifact attestation policy
+      if: ${{ fromJSON(inputs.plan-json).build.attestation.subject_path != '' && fromJSON(inputs.platform-json).id == fromJSON(inputs.plan-json).build.attestation.platform }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.plan-json).artifacts.name }}-attestation-policy-${{ fromJSON(inputs.platform-json).id }}-${{ fromJSON(inputs.source-json).publish-source-sha }}
+        path: .buildchain/artifacts/${{ fromJSON(inputs.platform-json).id }}/github-artifact-attestation-policy.json
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.plan-json).build.artifacts.retention_days }}

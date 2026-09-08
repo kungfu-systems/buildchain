@@ -6,183 +6,56 @@ doc_type: technical-reference
 source_level: local-files
 confidence: high
 sensitivity: public
-evidence_grade: A
+evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-07-31
+last_reviewed: 2026-09-08
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-07-31
+  generated_at: 2026-09-08
   invisible_context: not asserted
 ---
 
 # Runtime Train Validation
 
-Buildchain consumers should keep stable workflow refs such as `@v3` in
-committed workflow YAML. Runtime trains provide a temporary validation pointer
-for Buildchain changes that are ready for downstream testing but not yet
-promoted through the normal `dev -> alpha -> release` chain.
+Ordinary builds use the public `build.yml@v4` or `build.yml@v4-alpha`
+workflow and select all project settings from `buildchain.toml`. The called
+workflow SHA also selects the runtime; there is no second runtime selector.
+See [Reusable Build Surface](reusable-build-surface.md) for configuration,
+zero-input calls and the optional nested-project locator.
 
-Official floating channels are not runtime overrides. A consumer that
-deliberately follows `@v3-alpha` gets the matching runtime on pull requests and
-pushes because the reusable workflow reads the called workflow identity from
-`job.workflow_ref`. Passing `buildchain-ref: v3-alpha` explicitly is also
-accepted when the caller wants the channel binding visible in its input set.
-The caller's `github.workflow_ref` is not used for this inference because it
-identifies the caller workflow during reusable calls.
+## Alpha qualification
 
-## Train refs
+Buildchain changes enter the protected development branch after review and
+checks. Publish an alpha through the protected release workflow, then exercise
+that public alpha on the exact consumer source. Record the called workflow SHA,
+source SHA, channel-matching contract lock, configuration root and artifact
+manifests. Promote stable only after the required alpha evidence succeeds.
 
-A train ref is a branch in the Buildchain repository:
+For a breaking build-interface change, publish the producer before changing
+its own public consumers. Retain the callers and locks for the currently
+published interface while creating the first alpha from a successful PR-stage
+candidate. Then migrate the callers and accept the published alpha contract,
+qualify that public interface, and publish the completed alpha and stable.
+This ordering adds no compatibility inputs to the new build workflow.
 
-```text
-train/v3/v3.0/<capability>
-```
+Source checks verify each consumer lock against the immutable source contract
+at its accepted SHA. Hosted consumer admission separately verifies the actual
+called floating workflow; unpublished producer code is not that dependency.
 
-It is a validation pointer, not a release channel:
+A train branch is a temporary diagnostic pointer, never a release channel or a
+persisted consumer dependency. Ordinary builds do not accept train, SHA or
+`buildchain-ref` inputs. Initialization does not create a runtime pass-through.
 
-- it does not move `v3`, `vX.Y`, `vX.Y-alpha`, exact tags, npm dist-tags, or
-  production refs;
-- it must not be pinned as a long-term production dependency;
-- it should point at the Buildchain commit that downstream maintainers are
-  expected to validate;
-- it is not a pending merge target or a delivery state;
-- the final durable path is still a pull request into the active `dev/*`
-  channel, followed by the requested alpha or release promotion.
-- it may remain for a retention window after release so initiating repositories
-  have a stable fast-use and rollback channel while stable refs, caches, or
-  rollout windows settle.
+## Specialized release and recovery
 
-## Buildchain contributor requirement
+Release and recovery entry points retain their own bounded runtime admission
+contracts. Their runtime override capability does not extend to ordinary builds.
+Follow [Release Flow](release-flow.md) and the particular entry point's contract;
+a diagnostic train does not authorize publication, signing, or floating-ref
+movement. Preserve existing source locks, exact candidate lineage and terminal
+receipts when recovering a release.
 
-When a Buildchain change needs downstream validation before stable refs move,
-publish a train ref before asking consumers to test it:
-
-```sh
-git push origin HEAD:refs/heads/train/v3/v3.0/<capability>
-```
-
-Use a capability slug that names the behavior being validated, for example:
-
-```text
-train/v3/v3.0/runtime-loader
-train/v3/v3.0/toolkit-diagnostics
-train/v3/v3.0/site-source-of-truth
-```
-
-The pull request or validation request should include the train ref, the exact
-commit SHA it points to, and the downstream evidence expected from consumers.
-If the train is refreshed, state the new SHA in the validation thread.
-
-After downstream validation succeeds, close out through the normal release
-path. Merge the Buildchain pull request into the active `dev/*` mainline, run
-the requested alpha or release promotion, and record the final mainline commit
-plus release ref or tag in the delivery thread. Do not leave the train as the
-item that still needs to be merged; it is only a temporary fast-use,
-diagnostic, and rollback channel for initiating repositories. Retained trains
-are cleaned up by a separate periodic Buildchain cleanup task.
-
-## Formal artifact-signing authority ref
-
-Artifact signing uses a durable, channel-neutral authority ref after its
-runtime has passed downstream validation:
-
-```text
-authority/v3/v3.0/artifact-signing
-```
-
-Unlike a train, this ref is a protected execution boundary. Alpha and stable
-release intent use the same authority ref and the same
-`buildchain-artifact-signing` environment; channel promotion never selects a
-different certificate environment. Updates to the authority ref require a
-reviewed pull request, the normal `check` and `verify` status contexts, and a
-fast-forward-safe protected branch policy. Deletion and non-fast-forward
-updates are forbidden.
-
-The temporary `train/v3/v3.0/artifact-signing-authority` ref remains a bounded
-rollback and diagnostic pointer during migration. It is not the production
-identity and must not regain credential ownership.
-
-## Consumer workflow requirement
-
-Consumers keep their reusable workflow pinned to the stable shell:
-
-```yaml
-jobs:
-  build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
-```
-
-To validate a train without committing temporary workflow refs, expose a
-trusted manual pass-through once:
-
-```yaml
-on:
-  workflow_dispatch:
-    inputs:
-      buildchain-ref:
-        description: "Temporary Buildchain runtime ref for trusted manual validation"
-        required: false
-        default: ""
-
-jobs:
-  build:
-    uses: kungfu-systems/buildchain/.github/workflows/.build.yml@v3
-    with:
-      buildchain-ref: ${{ inputs.buildchain-ref || '' }}
-```
-
-Buildchain initializes new package workflows with this pass-through. Existing
-consumers that do not have it should add it once before validating a train.
-
-## Validation request
-
-Use this short request when a train is ready:
-
-```text
-Buildchain train ready: buildchain-ref=train/v3/v3.0/<capability>.
-Keep uses: ...@v3; run workflow_dispatch with that buildchain-ref and report the runtime evidence summary.
-```
-
-The consumer should run a trusted `workflow_dispatch`, paste the train ref into
-`buildchain-ref`, and report the workflow summary or aggregate Buildchain
-summary. The evidence should include:
-
-- workflow shell ref;
-- requested runtime ref;
-- resolved runtime ref;
-- resolved runtime SHA;
-- stability class;
-- trust decision;
-- rollback ref.
-
-## Trust and limitation
-
-Official floating channel refs such as `v3` and `v3-alpha` may be selected on
-pull requests and pushes. Train refs and arbitrary exact-SHA overrides still
-fail closed unless the event is `workflow_dispatch` and the actor has write,
-maintain, or admin permission on the caller repository. Pull requests,
-including fork-originated pull requests, cannot use train or exact-SHA
-overrides.
-
-That permission does not create a third channel. A train, authority ref, or
-exact SHA must be bound to an alpha or stable shell lane, and the consumer lock
-must prove that same lane and major. Trusted overrides can replace the runtime
-coordinate for validation; they cannot combine a stable shell or lock with an
-alpha runtime, or the reverse.
-
-Runtime train validation covers Buildchain runtime scripts, CLI code, local
-actions, configuration parsing, and lifecycle behavior. It cannot validate
-changes that require the outer reusable workflow YAML itself to change, such as
-new jobs, permissions, workflow outputs, or matrix topology. Those changes need
-a canary workflow path or a temporary explicit workflow ref.
-
-## v4 persisted-selector boundary
-
-For v4 consumers, never commit a train or exact SHA in a `uses` node. Keep the
-caller on `@v4` or `@v4-alpha`, retain both stable and alpha contract locks, and
-pass a temporary train/SHA only through the trusted `workflow_dispatch`
-`buildchain-ref` input. Consumer admission binds the selected lock to the exact
-workflow-shell commit while recording the separately resolved runtime SHA.
-Therefore a train can exercise candidate runtime code without weakening the
-durable floating-selector policy or masquerading as a channel promotion.
+The Buildchain self-build callers exercise the public floating channels using
+root or fixture TOML. They do not commit a private runtime selector to qualify
+that channel.

@@ -75,13 +75,23 @@ for (const relative of contract.retiredWorkflowSurfaces) {
 const activeWorkflows = contract.inventoryWorkflows.filter(
   (relative) =>
     !contract.retiredWorkflowSurfaces.includes(relative) &&
+    !contract.configurationGovernedWorkflows.includes(relative) &&
     relative !== contract.bootstrap.consumerRecoveryWorkflow,
 );
 assert.deepEqual(
   contract.bootstrapGovernedWorkflows,
   activeWorkflows,
-  "every active public reusable workflow must be Bootstrap-governed",
+  "every active reusable workflow must have its declared configuration or Bootstrap authority",
 );
+assert.deepEqual(contract.configurationGovernedWorkflows, [
+  ".github/workflows/.build.yml", ".github/workflows/build.yml",
+]);
+for (const relative of contract.configurationGovernedWorkflows) {
+  const source = fs.readFileSync(path.join(root, relative), "utf8");
+  const inputBlock = source.split("    inputs:\n")[1].split("    secrets:\n")[0];
+  assert.deepEqual([...inputBlock.matchAll(/^      ([a-z0-9-]+):$/gmu)].map((match) => match[1]), ["config-path"]);
+  assert.doesNotMatch(source, /universal-request-json/u);
+}
 for (const relative of contract.bootstrapGovernedWorkflows) {
   assert.ok(
     contract.inventoryWorkflows.includes(relative),

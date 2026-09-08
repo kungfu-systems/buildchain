@@ -156,3 +156,15 @@ evidence = [
   "package:.buildchain/kfd-3/collaboration-interface.json",
   "package:standards.json",
 ]
+
+[build.tools]
+rust = "1.96.0"
+
+[build.artifacts]
+name = "buildchain"
+paths = ["dist/site", "actions/run-lifecycle/dist"]
+min_files = 1
+retention_days = 7
+
+[build.contract]
+drift_issue_mode = "off"

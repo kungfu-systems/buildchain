@@ -990,7 +990,7 @@ buildchain infra-contract ...
 - Syntax:
 
 ```text
-buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force] [--package-manager pnpm|npm|yarn] [--runner-preset <preset>] [--artifact-name <template>]
+buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force] [--package-manager pnpm|npm|yarn] [--runner-preset <preset>] [--artifact-name <name>]
 ```
 
 ## `inspect`

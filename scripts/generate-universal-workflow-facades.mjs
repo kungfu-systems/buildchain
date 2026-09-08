@@ -53,6 +53,7 @@ function activeFacadePaths() {
     (relative) =>
       relative !== contract.bootstrap.publicWorkflow &&
       relative !== contract.bootstrap.consumerRecoveryWorkflow &&
+      !contract.configurationGovernedWorkflows.includes(relative) &&
       !retired.has(relative),
   );
 }

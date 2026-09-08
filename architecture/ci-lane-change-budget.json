@@ -625,6 +625,40 @@
         "expectedContributionSeconds": 0,
         "rationale": "Runs only after completed exact-source public installation qualification; no merge-critical runner lane is added."
       }
+    },
+    {
+      "laneId": ".github/workflows/.build.yml#configure",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 5,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "configured build planning and execution latency",
+        "expectedContributionSeconds": 20,
+        "rationale": "Resolve exact source TOML and runtime-owned environment before admission or matrix scheduling."
+      }
+    },
+    {
+      "laneId": ".github/workflows/build.yml#build",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 120,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "configured build planning and execution latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "The public facade delegates once to the backbone; no additional build or controller runs."
+      }
     }
   ],
   "declarationFamilies": [
@@ -646,7 +680,6 @@
       "laneIds": [
         ".github/workflows/.auditable-demo.yml#universal-bootstrap",
         ".github/workflows/.binary-release-assets.yml#universal-bootstrap",
-        ".github/workflows/.build.yml#universal-bootstrap",
         ".github/workflows/.bump-minor-version.yml#universal-bootstrap",
         ".github/workflows/.declarative-auditable-demo.yml#universal-bootstrap",
         ".github/workflows/.gate-profile.yml#universal-bootstrap",
@@ -658,7 +691,6 @@
         ".github/workflows/.sync-remote-git.yml#universal-bootstrap",
         ".github/workflows/.web-surface.yml#universal-bootstrap",
         ".github/workflows/.wheel-verify.yml#universal-bootstrap",
-        ".github/workflows/build.yml#universal-bootstrap",
         ".github/workflows/buildchain-patrol.yml#universal-bootstrap",
         ".github/workflows/check.yml#universal-bootstrap",
         ".github/workflows/dev-alpha-candidate-patrol.yml#universal-bootstrap",

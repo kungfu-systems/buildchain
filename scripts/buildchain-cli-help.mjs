@@ -24,7 +24,7 @@ export const BUILDCHAIN_USAGE = `Usage:
   buildchain candidate timeline --input <file-or-json> [--output <file>] [--json]
   buildchain init [--cwd <dir>] [--type package|native|web-surface|infra-contract|publication-artifact|anchored-package] [--force]
                   [--package-manager pnpm|npm|yarn] [--runner-preset <preset>]
-                  [--artifact-name <template>]
+                  [--artifact-name <name>]
   buildchain validate [--cwd <dir>] [--require-version-state]
                       [--require-lifecycle-stages <comma-list>]
   buildchain lifecycle run <stage> [--cwd <dir>] [--required]

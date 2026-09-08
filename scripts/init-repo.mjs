@@ -10,7 +10,7 @@ import {
   nextDevelopmentWorkflowHeader,
 } from "../packages/core/next-development-projection.js";
 
-const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/.build.yml@v4";
+const BUILDCHAIN_WORKFLOW_REF = "kungfu-systems/buildchain/.github/workflows/build.yml@v4";
 const DEFAULT_PUBLICATION_LATEX_IMAGE = "ghcr.io/kungfu-systems/build-images/latex-pdf-builder";
 const DEFAULT_PUBLICATION_LATEX_DIGEST = "sha256:c20f3809e96836c1c78e97c76939d12f1de3fed0ea9b7c40c43332ec2ea480f8";
 const DEFAULT_PUBLICATION_LATEX_COMMAND = "latexmk -pdf -outdir=_build paper/main.tex";
@@ -365,41 +365,27 @@ jobs:
 `;
 }
 
-function workflowYaml({ type, runnerPreset, artifactName }) {
-  return `${nextDevelopmentWorkflowHeader()}# Buildchain v4 lifecycle checkpoints are governed by architecture/platform-stage-checkpoints.json.
-# Do not add undeclared runner-only inputs, outputs, environment, or provider effects.
-# Commit both .buildchain/contract-lock.json and .buildchain/alpha-contract-lock.json.
-# Persist only @v4 or @v4-alpha; pass temporary train/SHA runtimes through workflow_dispatch.
+function workflowYaml() {
+  return `${nextDevelopmentWorkflowHeader()}# Project build settings live only in .buildchain/buildchain.toml.
+# Commit .buildchain/contract-lock.json and .buildchain/alpha-contract-lock.json.
+# The called ref selects the runtime; architecture/platform-stage-checkpoints.json owns checkpoint projections.
 name: Build
 
 on:
   workflow_dispatch:
-    inputs:
-      buildchain-ref:
-        description: "Temporary Buildchain runtime ref for trusted manual validation"
-        required: false
-        default: ""
   pull_request:
   push:
-    branches:
-      - "dev/**"
-      - "alpha/**"
-      - "release/**"
-      - "publish-gate/**"
+    branches: ["dev/**", "alpha/**", "release/**"]
 
 permissions:
+  actions: read
   contents: read
+  issues: write
+  id-token: write
 
 jobs:
   build:
     uses: ${BUILDCHAIN_WORKFLOW_REF}
-    with:
-      working-directory: "."
-      buildchain-ref: \${{ inputs.buildchain-ref || '' }}
-      runner-preset: "${runnerPreset}"
-      artifact-name-template: "${artifactName}"
-      artifact-paths: |
-        ${workflowArtifactPaths(type)}
 `;
 }
 
@@ -425,11 +411,11 @@ export function initBuildchainRepo({
   force = false,
   packageManager = "",
   runnerPreset = "github-hosted",
-  artifactName = "{repo}-{version}-{platform}",
+  artifactName = "",
 } = {}) {
   const resolvedCwd = path.resolve(cwd);
   const manager = detectOrDefaultPackageManager(resolvedCwd, packageManager);
-  const toml = appendNextDevelopmentToml((() => {
+  let toml = appendNextDevelopmentToml((() => {
     if (type === "package") {
       return packageToml(resolvedCwd, manager);
     }
@@ -450,6 +436,19 @@ export function initBuildchainRepo({
     }
     throw new Error("init --type must be one of package, native, web-surface, infra-contract, publication-artifact, or anchored-package");
   })());
+
+
+  if (type !== "publication-artifact") {
+    const paths = workflowArtifactPaths(type).split("\n").map((entry) => entry.trim());
+    toml += `
+[build]
+environment = ${JSON.stringify(runnerPreset)}
+
+[build.artifacts]
+name = ${JSON.stringify(artifactName || repoName(resolvedCwd))}
+paths = ${JSON.stringify(paths)}
+`;
+  }
 
   const agentsPath = path.join(resolvedCwd, "AGENTS.md");
   const currentAgents = fs.existsSync(agentsPath)
@@ -509,7 +508,7 @@ if (!process.env.BUILDCHAIN_EMBEDDED_ENTRYPOINT && process.argv[1] && import.met
       force: process.argv.includes("--force"),
       packageManager: readArg("package-manager", ""),
       runnerPreset: readArg("runner-preset", "github-hosted"),
-      artifactName: readArg("artifact-name", "{repo}-{version}-{platform}"),
+      artifactName: readArg("artifact-name", ""),
     });
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } catch (error) {

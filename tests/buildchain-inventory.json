@@ -88,7 +88,9 @@
     "action-sync-pr",
     "action-update-dependencies-version"
   ],
-  "retiredWorkflowsExcluded": [".github/workflows/.batch-pull-request.yml"],
+  "retiredWorkflowsExcluded": [
+    ".github/workflows/.batch-pull-request.yml"
+  ],
   "stableRefs": {
     "actions": "kungfu-systems/buildchain/actions/<name>@v4",
     "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v4"
@@ -180,5 +182,6 @@
         "selfHostedSignerDenied": true
       }
     }
-  }
+  },
+  "compositeActionOwnership": "architecture/build-orchestration.json#owners"
 }

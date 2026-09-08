@@ -1,0 +1,71 @@
+{
+  "schema": "buildchain.build-environments/v1",
+  "owner": "Buildchain infrastructure maintainers",
+  "defaults": {
+    "runners": {
+      "preset": "github-hosted",
+      "platforms_json": "",
+      "control_json": "[\"ubuntu-24.04\"]",
+      "codebuild_project": "",
+      "windows_label": "",
+      "macos_label": "",
+      "offline_fallback": false,
+      "container_preset": "",
+      "container_image": ""
+    },
+    "tools": {
+      "rustup_dist_server": "",
+      "rustup_update_root": "",
+      "cargo_registry_index": "",
+      "kfd_agent_hub": "off"
+    },
+    "signing": {
+      "upload_no_proxy": "",
+      "environment": ""
+    },
+    "transfer": {
+      "mode": "github-artifacts",
+      "bucket": "",
+      "region": "",
+      "prefix": "",
+      "upload_role_arn": "",
+      "download_role_arn": "",
+      "oidc_audience": ""
+    },
+    "checkout": {
+      "mode": "off",
+      "mirror_url_template": "",
+      "reference_repository_template": "",
+      "fallback": "github",
+      "timeout_seconds": 60.0,
+      "github_timeout_seconds": 600.0,
+      "fetch_attempts": 3.0,
+      "history_mode": "shallow"
+    },
+    "cache": {
+      "profile_ref": "",
+      "profile_digest": "",
+      "provider": "none",
+      "platforms_json": "[]",
+      "required": false
+    }
+  },
+  "profiles": {
+    "github-hosted": {},
+    "github-hosted-container": {
+      "runners": {
+        "container_preset": "kungfu-verify"
+      }
+    },
+    "kungfu-v4-native": {
+      "runners": {
+        "preset": "kungfu-v4-native"
+      }
+    },
+    "kungfu-v4-self-hosted": {
+      "runners": {
+        "preset": "kungfu-v4-self-hosted"
+      }
+    }
+  }
+}

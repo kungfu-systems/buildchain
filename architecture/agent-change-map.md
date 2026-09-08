@@ -129,9 +129,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/floating-consumer-policy.test.mjs`
 - tests: `tests/publication-rehearsal.test.mjs`
 - tests: `tests/web-surface.test.mjs`
-- tests: `tests/build-surface-reusable-build.test.mjs`
-- tests: `tests/build-surface-reusable-build-signing.test.mjs`
-- tests: `tests/build-surface-reusable-build-artifacts.test.mjs`
 - tests: `tests/promote-buildchain-ref-durable-recovery.test.mjs`
 - tests: `tests/promote-buildchain-ref-major-promotion.test.mjs`
 - tests: `tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs`
@@ -142,7 +139,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - workflows: `.github/workflows/.release-candidate-promote.yml`
 - workflows: `.github/workflows/.release-verify.yml`
 - workflows: `.github/workflows/.web-surface.yml`
-- workflows: `.github/workflows/build.yml`
 - workflows: `.github/workflows/check.yml`
 - workflows: `.github/workflows/dev-pr-auto-merge.yml`
 - workflows: `.github/workflows/paper-release-sealed.yml`
@@ -607,11 +603,21 @@ Owner: Buildchain workflow maintainers
 - `scripts/resolve-artifact-transfer-mode.mjs`
 - `scripts/resolve-build-summary-names.sh`
 - `scripts/run-lifecycle-core.mjs`
+- `packages/core/build-configuration.js`
+- `scripts/resolve-build-configuration.mjs`
 
 ### Contracts
 
 - `.github/workflows/.build.yml`
 - `.github/workflows/build.yml`
+- `architecture/build-environments.json`
+- `actions/build-lifecycle-stage/action.yml`
+- `actions/build-signing-request/action.yml`
+- `actions/build-verification-evidence/action.yml`
+- `actions/build-attestation-policy/action.yml`
+- `actions/build-agent-hub-evidence/action.yml`
+- `actions/build-artifact-transfer/action.yml`
+- `architecture/build-orchestration.json`
 
 ### Tests
 
@@ -621,6 +627,7 @@ Owner: Buildchain workflow maintainers
 - `tests/build-surface.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
 - `tests/controller-evidence.test.mjs`
+- `tests/build-configuration.test.mjs`
 
 ### Generated outputs
 
