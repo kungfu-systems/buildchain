@@ -12,10 +12,12 @@ const repo = path.resolve(import.meta.dirname, "..");
 test("real lifecycle artifacts survive transfer and isolated finalization; provider failures cannot qualify", async (t) => {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pipeline-"));
   t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
+  const gitConfig = path.join(workspace, "empty.gitconfig");
+  fs.writeFileSync(gitConfig, "");
   const source = path.join(workspace, "source");
   fs.cpSync(path.join(repo, "fixtures/libnode-shaped"), source, { recursive: true });
   const git = (...args) => execFileSync("git", args, { cwd: source, encoding: "utf8", env: {
-    ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: os.devNull,
+    ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: gitConfig,
   } }).trim();
   git("init", "--quiet"); git("add", ".");
   git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "--quiet", "-m", "fixture");

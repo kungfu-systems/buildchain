@@ -17,11 +17,13 @@ const repo = path.resolve(import.meta.dirname, "..");
 function fixture(t, nested = false) {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-backbone-"));
   t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
+  const gitConfig = path.join(workspace, "empty.gitconfig");
+  fs.writeFileSync(gitConfig, "");
   const source = path.join(workspace, "source");
   fs.mkdirSync(source);
   const directory = nested ? path.join(source, "packages/library") : source;
   fs.cpSync(path.join(repo, "fixtures/libnode-shaped"), directory, { recursive: true });
-  const git = (...args) => execFileSync("git", args, { cwd: source, encoding: "utf8", env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: os.devNull } }).trim();
+  const git = (...args) => execFileSync("git", args, { cwd: source, encoding: "utf8", env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: gitConfig } }).trim();
   git("init", "--quiet"); git("add", ".");
   git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "--quiet", "-m", "fixture");
   const { plan } = resolveBuildConfiguration({ root: source, locator: nested ? "packages/library/buildchain.toml" : "", repository: "kungfu-systems/buildchain",
