@@ -24,8 +24,8 @@ export function workflowJobBlock(source, job) {
 export function assertTrustGatedJobs(source, jobs) {
   for (const job of jobs) {
     const block = workflowJobBlock(source, job);
-    if (!block.includes("- trust-gate")) {
-      fail(`.build.yml job ${job} is not directly gated by trust-gate`);
+    if (!block.includes("- plan")) {
+      fail(`.build.yml job ${job} is not directly gated by plan`);
     }
   }
 }
@@ -117,29 +117,13 @@ export function checkFloatingConsumerPolicyContract() {
     fail("contract lock must bind the visible workflow shell");
   }
   assertPersistedSelectors();
-  assertOrdered(".github/workflows/.build.yml", [
-    "Enforce v4 floating consumer policy",
-    "Validate consumer package manager contract",
-  ]);
+  assertOrdered("scripts/build/plan.mjs", ["consumer-policy.mjs", "validate-package-manager-contract.mjs", "buildchain-contract-lock.mjs"]);
   const buildWorkflow = read(".github/workflows/.build.yml");
-  if (
-    buildWorkflow.includes("Normalize v3 expected identity aliases") ||
-    buildWorkflow.includes("buildchain-expected-channel:") ||
-    !buildWorkflow.includes(
-      "BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ fromJSON(needs.configure.outputs.plan-json).identity.channel }}",
-    ) ||
-    !buildWorkflow.includes("BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}")
-  )
-    fail("channel builds must disambiguate dual-channel caller invocations");
-  assertTrustGatedJobs(read(".github/workflows/.build.yml"), [
-    "resolve-source",
-    "resolve-contract",
-    "controller-plan",
-    "artifact-transfer",
-    "build-native",
-    "build-linux-container",
-    "summarize",
-  ]);
+  const planner = read("scripts/build/plan.mjs");
+  if (!planner.includes("BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: plan.identity.channel") ||
+      !buildWorkflow.includes("workflow-sha: ${{ job.workflow_sha }}") ||
+      !buildWorkflow.includes("actions/resolve-build-plan")) fail("build planning must bind called workflow and channel admission");
+  assertTrustGatedJobs(buildWorkflow, ["build-native", "build-container", "sign", "attest", "deliver"]);
   assertOrdered(".github/workflows/publication-artifact.yml", [
     "Enforce v4 floating consumer policy",
     "Resolve controller identities",

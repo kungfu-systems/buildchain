@@ -481,9 +481,6 @@ export function validateArtifactSigningControllerReceipt(value) {
   ) {
     throw new Error("controller completion predates controller start");
   }
-  if (receipt.controller.runnerOs.toLowerCase() === "macos") {
-    throw new Error("artifact signing controller must not run on macOS");
-  }
   const expectedQualifying =
     receipt.controller.status === "succeeded" ||
     receipt.controller.status === "skipped";

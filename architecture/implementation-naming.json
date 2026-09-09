@@ -1136,8 +1136,7 @@
       "kungfu-buildchain-v4-universal-workflow-bootstrap/v1"
     ],
     "scripts/generate-release-candidate-passport.mjs": [
-      "kungfu-buildchain-v4-release-candidate-stage-capsules/v1",
-      "v4-alpha"
+      "kungfu-buildchain-v4-release-candidate-stage-capsules/v1"
     ],
     "scripts/generate-site-bundle.mjs": [
       "v4-adopter-delivery",

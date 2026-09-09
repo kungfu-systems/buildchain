@@ -1,55 +1,45 @@
 import { assert, assertOrder, readComposite, readRepoText, test, workflowJob } from "./build-surface-reusable-build-harness.mjs";
 import { parseReusableWorkflowInterface } from "../packages/core/workflow-yaml-contract.js";
+import fs from "node:fs";
 
-test("ordinary build surfaces expose only a locator and derive identity before privileged execution", () => {
+test("the build backbone has six jobs, seven owned composites and one optional locator", () => {
   const policy = JSON.parse(readRepoText("architecture/build-orchestration.json"));
-  assert.ok(readRepoText(policy.backbone).split("\n").length - 1 <= policy.maximumBackboneLines);
+  const source = readRepoText(policy.backbone);
+  assert.deepEqual([...source.matchAll(/^  ([a-z][a-z-]+):$/gmu)].map((m) => m[1]).filter((name) => name !== "workflow_call"), policy.jobs);
+  assert.ok(source.split("\n").length - 1 <= policy.maximumBackboneLines);
   assert.ok(readRepoText(policy.facade).split("\n").length - 1 <= policy.maximumFacadeLines);
+  assert.equal(Object.keys(policy.owners).length, 7);
   for (const [file, owner] of Object.entries(policy.owners)) {
-    assert.ok(owner && readRepoText(file).includes("using: composite"), file);
+    assert.ok(owner);
+    assert.ok(readRepoText(file).includes("using: composite"));
+    assert.ok(readRepoText(file).split("\n").length - 1 <= policy.maximumCompositeLines);
   }
-  for (const path of [".github/workflows/.build.yml", ".github/workflows/build.yml"]) {
-    const source = readRepoText(path);
-    const contract = parseReusableWorkflowInterface(source);
-    assert.deepEqual(contract.inputs.map(({ name, required }) => ({ name, required })), [{ name: "config-path", required: false }]);
-    assert.doesNotMatch(source, /inputs\.(?!config-path)[a-z0-9-]+/u);
-    assert.doesNotMatch(source, /universal-request-json|Normalize v3 expected identity aliases/u);
+  for (const file of fs.readdirSync("scripts/build")) assert.ok(readRepoText(`scripts/build/${file}`).split("\n").length - 1 <= policy.maximumModuleLines, file);
+  for (const file of [policy.backbone, policy.facade]) {
+    assert.deepEqual(parseReusableWorkflowInterface(readRepoText(file)).inputs.map(({ name, required }) => ({ name, required })), [{ name: "config-path", required: false }]);
+    assert.doesNotMatch(readRepoText(file), /\brun:|source-json|transfer-json|plan-json|publish-source-/u);
   }
-  const configure = workflowJob("configure");
-  assert.match(configure, /permissions:\n\s+contents: read/u);
-  assert.doesNotMatch(configure, /secrets\.|id-token: write/u);
-  assert.match(configure, /ref: \$\{\{ job\.workflow_sha \}\}/u);
-  assert.match(configure, /ref: \$\{\{ github\.sha \}\}/u);
-  assert.match(configure, /--prod --frozen-lockfile --ignore-scripts/u);
-  const trust = workflowJob("trust-gate");
-  assertOrder(trust, ["Enforce v4 floating consumer policy", "Validate consumer package manager contract", "Check Buildchain contract lock", "Evaluate event trust", "Verify publish target channel ref and PR lineage"]);
-  assert.match(trust, /identity\.channel/u);
-  assert.match(trust, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: false/u);
-  for (const job of ["resolve-source", "resolve-contract", "controller-plan", "artifact-transfer", "build-native", "build-linux-container", "summarize"]) {
-    assert.match(workflowJob(job), /needs:[\s\S]*?      - trust-gate/u, job);
-  }
+  assert.deepEqual(parseReusableWorkflowInterface(source).outputs, ["result"]);
+  const plan = workflowJob("plan");
+  assert.match(plan, /ref: \$\{\{ job.workflow_sha \}\}/u);
+  assert.match(plan, /ref: \$\{\{ github.sha \}\}/u);
+  assert.doesNotMatch(plan, /id-token: write/u);
+  assertOrder(readRepoText("scripts/build/plan.mjs"), ["Untrusted source", "resolveBuildConfiguration", "consumer-policy.mjs", "validate-package-manager-contract.mjs", "buildchain-contract-lock.mjs", "verify-publish-channel-ref.mjs"]);
 });
 
-test("lifecycle stages share one implementation while native and container placement stay explicit", () => {
-  for (const job of ["build-native", "build-linux-container"]) {
+test("native and container jobs keep install, build and verify together", () => {
+  for (const job of ["build-native", "build-container"]) {
     const source = workflowJob(job);
-    assert.deepEqual([...source.matchAll(/          stage: (install|build|verify)/gu)].map((match) => match[1]), ["install", "build", "verify"]);
-    assert.equal((source.match(/uses: \.\/\.buildchain\/runtime\/actions\/build-lifecycle-stage/gu) || []).length, 3);
-    assert.match(source, /timeout-minutes: \$\{\{ fromJSON\(needs\.configure\.outputs\.plan-json\)\.build\.timeout_minutes \}\}/u);
-    assert.match(source, /build-agent-hub-evidence/u);
+    assert.deepEqual([...source.matchAll(/stage: (install|build|verify)/gu)].map((m) => m[1]), ["install", "build", "verify"]);
+    assert.equal((source.match(/actions\/run-build-stage/gu) || []).length, 3);
+    assertOrder(source, ["prepare-build-environment", "stage: install", "stage: build", "stage: verify", "transfer-build-artifact"]);
+    assert.match(source, /always\(\)/u);
+    assert.doesNotMatch(source, /MACOS_CERTIFICATE|NOTARY_API|PROMOTION_TOKEN/u);
   }
-  const native = workflowJob("build-native");
-  assert.match(native, /shell: cmd/u);
-  assert.match(native, /--no-modify-path/u);
-  assert.match(native, /dtolnay\/rust-toolchain@/u);
-  assert.match(workflowJob("build-linux-container"), /container:\n\s+image:/u);
-  const stage = readComposite("build-lifecycle-stage");
-  assert.doesNotMatch(stage, /\n        command:/u);
-  assert.match(stage, /lifecycle\[inputs\.stage\]\.required/u);
-  assert.match(stage, /inputs\.stage == 'build' &&.*sample_process_tree/u);
-  assert.match(stage, /inputs\.stage == 'verify'.*substage_evidence_path/u);
-  assert.match(stage, /process-summary-required: true/u);
-  const verification = readComposite("build-verification-evidence");
-  assert.match(verification, /always\(\).*verify-outcome != 'success'/u);
-  assert.match(verification, /BUILDCHAIN|publish-source-tree-sha/u);
+  assert.match(workflowJob("build-container"), /container:\n\s+image:/u);
+  const prepare = readComposite("prepare-build-environment");
+  assert.match(prepare, /actions\/setup-go@/u);
+  assert.match(prepare, /dtolnay\/rust-toolchain@/u);
+  assert.match(prepare, /windows-rust/u);
+  assert.doesNotMatch(readComposite("run-build-stage"), /command:/u);
 });

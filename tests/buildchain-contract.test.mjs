@@ -345,7 +345,7 @@ test("contract world exposes versioned controller evidence surfaces", () => {
     /included/,
   );
   const buildLifecycle = controllers.find((entry) => entry.id === "controller:build-lifecycle");
-  assert.ok(buildLifecycle.breakingDefaults.requiredStages.includes("signing-finalization"));
+  assert.ok(buildLifecycle.breakingDefaults.requiredStages.includes("sign"));
   assert.ok(buildLifecycle.breakingDefaults.capabilities.includes("artifact-signing-finalization"));
   assert.equal((buildLifecycle.compatibleBreakingDigests || []).length, 0);
 

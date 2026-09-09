@@ -283,7 +283,7 @@ plus fail-closed product-evidence gates for KFD-4, KFD-5, and KFD-7. These
 gates preserve product-owned qualification and support decisions; they do not
 turn a schema-valid record into certification or shipped support.
 
-Buildchain's action registry contains fourteen active entries. Six are
+Buildchain's action registry contains fifteen active entries. Six are
 direct consumer integration actions:
 
 - `actions/validate-config`
@@ -298,15 +298,16 @@ Two additional release-authority components are also registered and versioned:
 - `actions/github-artifact-attestation`
 - `actions/macos-credential-island`
 
-Six shared build components have explicit ownership in
+Seven shared build components have explicit ownership in
 `architecture/build-orchestration.json`:
 
-- [`actions/build-lifecycle-stage`](actions/build-lifecycle-stage/action.yml)
-- [`actions/build-signing-request`](actions/build-signing-request/action.yml)
-- [`actions/build-verification-evidence`](actions/build-verification-evidence/action.yml)
-- [`actions/build-attestation-policy`](actions/build-attestation-policy/action.yml)
-- [`actions/build-agent-hub-evidence`](actions/build-agent-hub-evidence/action.yml)
-- [`actions/build-artifact-transfer`](actions/build-artifact-transfer/action.yml)
+- [`actions/resolve-build-plan`](actions/resolve-build-plan/action.yml)
+- [`actions/prepare-build-environment`](actions/prepare-build-environment/action.yml)
+- [`actions/run-build-stage`](actions/run-build-stage/action.yml)
+- [`actions/transfer-build-artifact`](actions/transfer-build-artifact/action.yml)
+- [`actions/sign-build-artifact`](actions/sign-build-artifact/action.yml)
+- [`actions/attest-build-artifact`](actions/attest-build-artifact/action.yml)
+- [`actions/finalize-build-result`](actions/finalize-build-result/action.yml)
 
 `dist/site/workflow-registry.json#actions` is the machine-readable inventory;
 this split keeps the older four-action consumer snapshot from being mistaken for

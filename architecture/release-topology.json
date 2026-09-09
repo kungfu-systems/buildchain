@@ -85,8 +85,6 @@
       "packages/core/release-tail-provider-plane.js"
     ],
     "runtimeSelectors": [
-      ".github/workflows/.build-engine.yml",
-      ".github/workflows/.build.yml",
       ".github/workflows/.release-candidate-promote.yml",
       ".github/workflows/.release-promote.yml",
       ".github/workflows/.web-surface.yml",
@@ -107,6 +105,8 @@
       "scripts/aggregate-build-summary.mjs",
       "scripts/artifact-signing-controller-core.mjs",
       "scripts/authorize-promotion-runtime-override.cjs",
+      "scripts/build/context.mjs",
+      "scripts/build/plan.mjs",
       "scripts/buildchain-contract-lock.mjs",
       "scripts/check-inventory.mjs",
       "scripts/declarative-promotion-admission.mjs",
@@ -354,11 +354,11 @@
     ],
     "metrics": {
       "workflowCount": 36,
-      "jobCount": 85,
+      "jobCount": 76,
       "reusableEdgeCount": 21,
-      "mutationRelevantNodeCount": 71,
+      "mutationRelevantNodeCount": 63,
       "contentsWriteJobCount": 14,
-      "oidcWriteJobCount": 10
+      "oidcWriteJobCount": 14
     },
     "semanticMetrics": {
       "workflowCount": 5,

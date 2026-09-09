@@ -149,12 +149,12 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
   const passed = createControllerReceipt({
     plan: expectedPlan,
     stages: [
-      { id: "resolve-runtime", status: "passed" },
-      { id: "resolve-source", status: "passed" },
+      { id: "plan", status: "passed" },
+      { id: "install", status: "passed" },
       { id: "build", status: "passed", evidence: [{ kind: "artifact", digest: `sha256:${"d".repeat(64)}` }] },
-      { id: "signing-finalization", status: "passed" },
+      { id: "sign", status: "passed" },
       { id: "verify", status: "passed" },
-      { id: "aggregate", status: "passed" },
+      { id: "deliver", status: "passed" },
     ],
     evidence: [
       { kind: "platform-manifests", digest: `sha256:${"2".repeat(64)}` },
@@ -164,7 +164,7 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
   });
   const failed = createControllerReceipt({
     plan: expectedPlan,
-    stages: [{ id: "resolve-runtime", status: "passed" }, { id: "resolve-source", status: "failed" }],
+    stages: [{ id: "plan", status: "passed" }, { id: "install", status: "failed" }],
     reason: { code: "source-mismatch", summary: "source lock changed" },
   });
   const skipped = createControllerReceipt({
@@ -175,8 +175,8 @@ test("controller receipts preserve pass, fail, skip, and partial outcomes", () =
   const partial = createControllerReceipt({
     plan: expectedPlan,
     stages: [
-      { id: "resolve-runtime", status: "passed" },
-      { id: "resolve-source", status: "passed" },
+      { id: "plan", status: "passed" },
+      { id: "install", status: "passed" },
       { id: "build", status: "partial" },
     ],
     reason: { code: "cancelled", summary: "run was cancelled" },
@@ -268,30 +268,20 @@ test("release propagation workflow emits only stages declared by its controller 
   assert.deepEqual(emitted, declared);
 });
 
-test("build workflow receipts emit every stage declared by the build controller descriptor", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github", "workflows", ".build.yml"),
-    "utf8",
-  );
-  const stageBlocks = [...workflow.matchAll(
-    /BUILDCHAIN_CONTROLLER_STAGES_JSON:\s*>-\s*\n([\s\S]*?)\n\s+BUILDCHAIN_CONTROLLER_EVIDENCE_/g,
-  )];
-  assert.equal(stageBlocks.length, 2, "build workflow must emit both controller receipt stage sets");
-  const declared = descriptor("build-lifecycle").expected.stages.map((stage) => stage.id);
-
-  for (const [index, stageBlock] of stageBlocks.entries()) {
-    const emitted = [...stageBlock[1].matchAll(/\{"id":"([^"]+)"/g)].map((match) => match[1]);
-    assert.deepEqual(
-      emitted,
-      declared,
-      "build controller receipt " + (index + 1) + " must match its descriptor",
-    );
-  }
+test("build finalizer emits every stage declared by its controller descriptor", async () => {
+  const { buildControllerStages } = await import("../scripts/build/finalize.mjs");
+  const plan = { platforms: [{ id: "linux" }], lifecycle: Object.fromEntries(["install", "build", "verify"].map((id) => [id, { configured: true }])) };
+  const records = [{ stages: { install: "success", build: "success", verify: "success" } }];
+  const stages = buildControllerStages(plan, { sign: { result: "success" }, attest: { result: "skipped" } }, records, true);
+  assert.deepEqual(stages.map((s) => s.id), descriptor("build-lifecycle").expected.stages.map((s) => s.id));
+  const incomplete = buildControllerStages(plan, {}, [], false);
+  assert.equal(incomplete.find((s) => s.id === "install").status, "skipped");
+  assert.equal(incomplete.find((s) => s.id === "deliver").status, "failure");
 });
 
 test("the facade forwards the source-bound backbone controller receipt", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
-  assert.match(workflow, /controller-receipt-digest:[\s\S]*?value: \$\{\{ jobs\.build\.outputs\.controller-receipt-digest \}\}/u);
+  assert.match(workflow, /fromJSON\(jobs.build.outputs.result\).artifacts.controller_receipt.name/u);
   assert.equal(registry().controllers.some((entry) => entry.id === "build-channel-router"), false);
   assert.deepEqual(descriptor().inputs["configuration-root"], { classification: "included", source: "resolved-build-plan" });
 });

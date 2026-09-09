@@ -133,7 +133,6 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - tests: `tests/promote-buildchain-ref-major-promotion.test.mjs`
 - tests: `tests/promote-buildchain-ref-recovery-alpha-finalization.test.mjs`
 - tests: `tests/promote-buildchain-ref-recovery-release-reconciliation.test.mjs`
-- workflows: `.github/workflows/.build.yml`
 - workflows: `.github/workflows/.gate-profile.yml`
 - workflows: `.github/workflows/.publication-authority.yml`
 - workflows: `.github/workflows/.release-candidate-promote.yml`
@@ -203,6 +202,7 @@ Safe change route: Reduce one owned responsibility behind the stable facade, run
 - `.github/workflows/v4-stage-capsule-canary.yml`
 - `packages/core/release-tail-provider-plane.js`
 - `packages/core/buildchain-publication-authority.js`
+- `.github/workflows/build.yml`
 
 ## cli-command-registry
 
@@ -600,30 +600,38 @@ Owner: Buildchain workflow maintainers
 
 ### Implementation
 
-- `scripts/generate-channel-build-workflow.mjs`
 - `scripts/resolve-artifact-transfer-mode.mjs`
-- `scripts/resolve-build-summary-names.sh`
 - `scripts/run-lifecycle-core.mjs`
 - `packages/core/build-configuration.js`
 - `scripts/resolve-build-configuration.mjs`
+- `scripts/build/artifact-contract.mjs`
+- `scripts/build/artifact-store.mjs`
+- `scripts/build/attest.mjs`
+- `scripts/build/context.mjs`
+- `scripts/build/finalize.mjs`
+- `scripts/build/plan.mjs`
+- `scripts/build/prepare.mjs`
+- `scripts/build/sign.mjs`
+- `scripts/build/stage.mjs`
+- `scripts/build/transfer.mjs`
 
 ### Contracts
 
 - `.github/workflows/.build.yml`
 - `.github/workflows/build.yml`
 - `architecture/build-environments.json`
-- `actions/build-lifecycle-stage/action.yml`
-- `actions/build-signing-request/action.yml`
-- `actions/build-verification-evidence/action.yml`
-- `actions/build-attestation-policy/action.yml`
-- `actions/build-agent-hub-evidence/action.yml`
-- `actions/build-artifact-transfer/action.yml`
+- `actions/resolve-build-plan/action.yml`
+- `actions/prepare-build-environment/action.yml`
+- `actions/run-build-stage/action.yml`
+- `actions/transfer-build-artifact/action.yml`
+- `actions/sign-build-artifact/action.yml`
+- `actions/attest-build-artifact/action.yml`
+- `actions/finalize-build-result/action.yml`
 - `architecture/build-orchestration.json`
 
 ### Tests
 
 - `tests/artifact-transfer-mode.test.mjs`
-- `tests/resolve-build-summary-names.test.mjs`
 - `tests/build-surface-reusable-build-artifacts.test.mjs`
 - `tests/build-surface.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
@@ -637,7 +645,7 @@ Owner: Buildchain workflow maintainers
 
 ### Minimal validation
 
-- `node --test tests/artifact-transfer-mode.test.mjs tests/resolve-build-summary-names.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs`
+- `node --test tests/artifact-transfer-mode.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs`
 
 ## reusable-workflow-call-contract
 

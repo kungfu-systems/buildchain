@@ -627,23 +627,6 @@
       }
     },
     {
-      "laneId": ".github/workflows/.build.yml#configure",
-      "authorityClass": "evidence",
-      "triggerClass": "reusable",
-      "concurrencyPolicy": {
-        "mode": "none",
-        "cancelInProgress": false
-      },
-      "expectedRunnerMinutes": 5,
-      "cancellationBehavior": "finish-started",
-      "sloImpact": {
-        "mergeCritical": false,
-        "metric": "configured build planning and execution latency",
-        "expectedContributionSeconds": 20,
-        "rationale": "Resolve exact source TOML and runtime-owned environment before admission or matrix scheduling."
-      }
-    },
-    {
       "laneId": ".github/workflows/build.yml#build",
       "authorityClass": "governed-delegation",
       "triggerClass": "reusable",
@@ -675,6 +658,108 @@
         "metric": "Published stable TOML build qualification latency",
         "expectedContributionSeconds": 0,
         "rationale": "Independent thin public stable fixture caller permits producer-first channel upgrades without duplicating build orchestration."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.build.yml#plan",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 10,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Admit the source and runtime and resolve the read-only project plan."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.build.yml#build-container",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 180,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Run ordered project stages on the governed Linux container."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.build.yml#sign",
+      "authorityClass": "governed-delegation",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 180,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Keep detached signing and certificate instances separate from source execution."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.build.yml#attest",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 15,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Attest only the verified final artifact identity."
+      }
+    },
+    {
+      "laneId": ".github/workflows/.build.yml#deliver",
+      "authorityClass": "evidence",
+      "triggerClass": "reusable",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 15,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "build orchestration latency",
+        "expectedContributionSeconds": 0,
+        "rationale": "Verify every required producer and publish rooted final references."
+      }
+    },
+    {
+      "laneId": ".github/workflows/verify.yml#build-backbone",
+      "authorityClass": "evidence",
+      "triggerClass": "mixed",
+      "concurrencyPolicy": {
+        "mode": "none",
+        "cancelInProgress": false
+      },
+      "expectedRunnerMinutes": 20,
+      "cancellationBehavior": "finish-started",
+      "sloImpact": {
+        "mergeCritical": false,
+        "metric": "candidate native and container build module qualification",
+        "expectedContributionSeconds": 0,
+        "rationale": "Run the exact candidate lifecycle and artifact boundary tests on Linux, macOS, Windows and the declared Linux container with no provider write credentials or public runtime override."
       }
     }
   ],

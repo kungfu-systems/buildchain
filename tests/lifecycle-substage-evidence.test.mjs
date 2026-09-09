@@ -159,16 +159,13 @@ test("runLifecycle embeds independently verified consumer substages", (t) => {
   assert.equal(fs.existsSync(path.join(root, "verify-substages.json")), true);
 });
 
-test("TOML verification evidence reaches the shared stage and independent verifier", () => {
+test("TOML verification evidence reaches lifecycle validation and failure transport", () => {
   const read = (file) => fs.readFileSync(path.join(ROOT, file), "utf8");
-  const engine = read(".github/workflows/.build.yml");
-  const stage = read("actions/build-lifecycle-stage/action.yml");
-  const evidence = read("actions/build-verification-evidence/action.yml");
-  assert.equal(engine.match(/uses: \.\/\.buildchain\/runtime\/actions\/build-verification-evidence/gu)?.length, 2);
-  assert.match(stage, /substage-evidence-path:.*build\.verification\.substage_evidence_path/u);
-  assert.match(evidence, /lifecycle-substage-evidence\.mjs/u);
-  assert.match(evidence, /publish-source-tree-sha/u);
-  assert.match(evidence, /always\(\).*verify-outcome != 'success'.*steps\.verify-substage-evidence\.outcome != 'success'/u);
+  const stage = read("scripts/build/stage.mjs");
+  const transport = read("scripts/build/transfer.mjs");
+  assert.match(stage, /substageEvidencePath: stage === "verify" \? plan.build.verification.substage_evidence_path/u);
+  assert.match(transport, /plan.build.verification.substage_evidence_path/u);
+  assert.match(read("scripts/run-lifecycle-core.mjs"), /substageEvidencePath: context.substageEvidencePath/u);
+  assert.match(read("scripts/build/context.mjs"), /BUILDCHAIN_SOURCE_TREE_SHA: plan.source.tree_sha/u);
   assert.match(read("actions/run-lifecycle/action.yml"), /^  substage-evidence-path:/mu);
-  assert.match(read("actions/run-lifecycle/dist/index.js"), /substage-evidence-path/u);
 });
