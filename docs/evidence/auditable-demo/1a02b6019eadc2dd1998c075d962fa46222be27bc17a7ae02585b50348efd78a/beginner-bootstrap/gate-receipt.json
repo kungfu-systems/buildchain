@@ -1,0 +1,57 @@
+{
+  "adapter": {
+    "argumentsRoot": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "path": "scripts/auditable-demo-platform.mjs",
+    "sha256": "sha256:6bc89e337b68b3171c46b9459c6fcc117b4e8f1c171d0e73c54a315440974730"
+  },
+  "qualifiedInputs": {
+    "claimBoundary": "This exact standalone-binary scenario proves deterministic local bootstrap behavior only; it does not grant release, repository, network, or production authority.",
+    "evidenceClass": "exact-standalone-binary-declarative-demo/v1",
+    "projection": "sha256:7134dcff70458e5d218716e548d6588c78c12e61332fe911b86e16ab491f8d01",
+    "renditionSet": {
+      "renditions": [
+        {
+          "captureRoot": "sha256:b60e471db509789feeb1a199d73d1940d455884f23a9d0a4971bb718004bf156",
+          "id": "1080p",
+          "projectionRoot": "sha256:7134dcff70458e5d218716e548d6588c78c12e61332fe911b86e16ab491f8d01",
+          "role": "primary",
+          "sceneRoot": "sha256:78171028f80fe9dfbe4d13e8c646be9c6e9ba132f8243aa442985b968e8d1eeb",
+          "transcriptRoot": "sha256:98670f963d7b8aea3c9513ce212f8f2fa53ceb969ce7580ac81405144994e3f6"
+        },
+        {
+          "captureRoot": "sha256:5219e2c39b840591e249b12e85cb69fb026d2e7fcb4d00f9c7dcc691c27ea207",
+          "id": "720p",
+          "projectionRoot": "sha256:7134dcff70458e5d218716e548d6588c78c12e61332fe911b86e16ab491f8d01",
+          "role": "responsive",
+          "sceneRoot": "sha256:11d599cfea08be38c2bfcdf4d81626ae177f5b8ba7bc9f0dcb957c2217d19588",
+          "transcriptRoot": "sha256:98670f963d7b8aea3c9513ce212f8f2fa53ceb969ce7580ac81405144994e3f6"
+        }
+      ],
+      "root": "sha256:be0df84b7bb3e2dd41aaf0122a2f02ea6fa4c86bd375214656d9f5629ce1b0af",
+      "schema": "kungfu.auditable-demo.rendition-set/v1"
+    },
+    "scene": "sha256:78171028f80fe9dfbe4d13e8c646be9c6e9ba132f8243aa442985b968e8d1eeb",
+    "terminalCapture": {
+      "root": "sha256:b60e471db509789feeb1a199d73d1940d455884f23a9d0a4971bb718004bf156",
+      "schema": "kungfu.terminal-capture/v1"
+    },
+    "transcript": "sha256:98670f963d7b8aea3c9513ce212f8f2fa53ceb969ce7580ac81405144994e3f6"
+  },
+  "renderer": {
+    "image": "ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:3a49708163fedaaabe07b45bba910026a1828151b5d4e9bbdaf0d62e75c927c1",
+    "mediaProfile": "responsive-web-delivery-v1",
+    "mediaQualificationRoot": "sha256:dc63889a2d2adb5dbe93491d31031830cf04399a6cc0aa02c5d4d5d65051d53e",
+    "smokeManifestRoot": "sha256:a8ad957749ae3d12a4e68ac76b974785067de83a9baec7109f3243458a6060ef"
+  },
+  "schema": "buildchain.auditable-demo-gate/v1",
+  "sourceArtifact": {
+    "digest": "sha256:4ee698f1406d69007d239a37d726b180e20af6284dc714a4980c30d5e8b2cd97",
+    "expiresAt": "2026-09-22T17:19:34Z",
+    "id": "10068025544",
+    "name": "declarative-demo-captures-c951b90a6dc6-34256228097-1",
+    "runId": "34256228097"
+  },
+  "sourceRepository": "kungfu-systems/buildchain",
+  "sourceSha": "c951b90a6dc6cffa8e62a75218194019ad47679f",
+  "status": "passed"
+}
