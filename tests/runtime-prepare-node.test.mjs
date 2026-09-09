@@ -62,7 +62,7 @@ test("Corepack resolves the package manager inside the exact runtime checkout", 
   );
   fs.writeFileSync(
     path.join(bin, "corepack"),
-    '#!/bin/sh\nprintf "%s\\n" "$PWD" >> "$COREPACK_CWD_LOG"\n',
+    '#!/usr/bin/env node\nrequire("node:fs").appendFileSync(process.env.COREPACK_CWD_LOG, `${process.cwd()}\\n`);\n',
     { mode: 0o755 },
   );
   const result = spawnSync("bash", ["-c", step.run], {
@@ -70,13 +70,13 @@ test("Corepack resolves the package manager inside the exact runtime checkout", 
     encoding: "utf8",
     env: {
       ...process.env,
-      PATH: `${bin}:${process.env.PATH}`,
+      PATH: `${bin}${path.delimiter}${process.env.PATH}`,
       COREPACK_CWD_LOG: log,
     },
   });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(fs.readFileSync(log, "utf8").trim().split("\n"), [
-    runtime,
-    runtime,
+    fs.realpathSync(runtime),
+    fs.realpathSync(runtime),
   ]);
 });

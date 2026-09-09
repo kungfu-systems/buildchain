@@ -601,7 +601,7 @@ test("queued Warrant cancellation workflow binds exact terminal event authority"
 test("Buildchain self-delivery exposes the complete two-phase Warrant caller", () => {
   const workflow = readWorkflow(".github/workflows/self-ops-dev-delivery.yml"), job = workflow.jobs.deliver;
   assert.deepEqual(workflow.on.repository_dispatch.types, ["buildchain-dev-delivery-wake"]);
-  assert.equal(job.uses, "kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha");
+  assert.equal(job.uses, "./.github/workflows/public-ops-dev-auto-merge.yml");
   assert.equal(job.with["delivery-warrant-mode"], "required");
   assert.equal(job.with["landing-mode"], "queue");
   assert.equal(job.with["dry-run"], false);

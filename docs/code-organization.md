@@ -63,6 +63,8 @@ writer or transfer production authority.
 
 The development delivery API has six semantic nodes: `source`, `reserve`,
 `native`, `qualify`, `settle`, and `land`, under `actions/dev-delivery/`.
+Buildchain invokes this public delivery workflow from the same source commit, so
+its workflow, action paths and runtime modules share one implementation identity.
 The native node runs in separate hosted jobs where the trust boundary requires
 process and credential isolation. A semantic node need not mean one runner.
 

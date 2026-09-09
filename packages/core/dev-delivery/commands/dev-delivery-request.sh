@@ -39,7 +39,7 @@ case "$pull_request" in
 esac
 [[ "$repository" =~ ^[^/]+/[^/]+$ && "$number" =~ ^[1-9][0-9]*$ ]] || usage
 
-pr="$(gh pr view "$number" --repo "$repository" --json number,state,isDraft,baseRefName,headRefOid,headRepository,statusCheckRollup)"
+pr="$(gh pr view "$number" --repo "$repository" --json number,state,isDraft,baseRefName,headRefName,headRefOid,headRepository,statusCheckRollup)"
 jq -e --arg repository "$repository" '
   .state == "OPEN" and (.isDraft | not) and .headRepository.nameWithOwner == $repository
 ' >/dev/null <<<"$pr" || {
@@ -48,6 +48,17 @@ jq -e --arg repository "$repository" '
 }
 base="$(jq -r .baseRefName <<<"$pr")"
 source_head="$(jq -r .headRefOid <<<"$pr")"
+runtime_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+runtime_sha="$(git -C "$runtime_root" rev-parse 'HEAD^{commit}')"
+workflow_ref="$base"
+if [ "$repository" = kungfu-systems/buildchain ]; then
+  [ "$runtime_sha" = "$source_head" ] || {
+    echo "buildchain dev deliver: source-owned workflow and runtime must match the exact PR head" >&2
+    exit 1
+  }
+  workflow_ref="$(jq -er '.headRefName | select(type == "string" and length > 0)' <<<"$pr")"
+fi
+
 run_id="$(jq -r '[.statusCheckRollup[] | select(.workflowName == "Verify" and .conclusion == "SUCCESS") | .detailsUrl | capture("/runs/(?<id>[0-9]+)").id] | unique | last // empty' <<<"$pr")"
 [ -n "$run_id" ] || { echo "buildchain dev deliver: no successful Verify run covers the PR head" >&2; exit 1; }
 run="$(gh api "repos/$repository/actions/runs/$run_id")"
@@ -70,7 +81,7 @@ paths_at_head() {
   done | jq -Rsc 'split("\n") | map(select(length > 0)) | sort'
 }
 existing_paths="$(jq -r '.[]' <<<"$affected_paths" | paths_at_head)"
-policy_paths="$(printf '%s\n' .github/workflows/self-build-verify.yml .github/workflows/self-ops-dev-delivery.yml .github/workflows/native-dev-delivery.yml buildchain.toml .buildchain/buildchain.toml | paths_at_head)"
+policy_paths="$(printf '%s\n' .github/workflows/self-build-verify.yml .github/workflows/self-ops-dev-delivery.yml buildchain.toml .buildchain/buildchain.toml | paths_at_head)"
 [ "$(jq length <<<"$policy_paths")" -gt 0 ] || policy_paths="$(jq '.[0:1]' <<<"$existing_paths")"
 [ "$(jq length <<<"$existing_paths")" -gt 0 ] || existing_paths="$policy_paths"
 dependency_paths="$(printf '%s\n' package.json pnpm-lock.yaml package-lock.json yarn.lock Cargo.toml Cargo.lock go.mod go.sum | paths_at_head)"
@@ -78,8 +89,6 @@ dependency_paths="$(printf '%s\n' package.json pnpm-lock.yaml package-lock.json 
 required_contexts="$(jq '[.statusCheckRollup[] | select(.conclusion == "SUCCESS") | .name] | unique | sort' <<<"$pr")"
 [ "$(jq length <<<"$required_contexts")" -gt 0 ] || { echo "buildchain dev deliver: exact PR head has no successful checks" >&2; exit 1; }
 
-runtime_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-runtime_sha="$(git -C "$runtime_root" rev-parse 'HEAD^{commit}')"
 predicates="$(node "$runtime_root/packages/core/dev-delivery/commands/dev-delivery-source-proof-reuse.mjs" predicates \
   --cwd "$PWD" --repository "$repository" --branch "$base" --qualified-base "$qualified_base" \
   --source-head "$source_head" --runtime-ref "$runtime_sha" --runtime-sha "$runtime_sha" \
@@ -123,10 +132,10 @@ if [ -n "$github_token" ]; then
 
 fi
 workflow="self-ops-dev-delivery.yml"
-payload="$(jq --arg ref "$base" --arg runtime "$runtime_sha" --arg number "$number" \
+payload="$(jq --arg ref "$workflow_ref" --arg base "$base" --arg runtime "$runtime_sha" --arg number "$number" \
   --arg head "$source_head" --arg roots "$(jq -cn --arg root "$source_root" '{sourceRoot:$root}')" \
   --arg run "$run_id" '. as $proof | {ref:$ref,inputs:{
-    "buildchain-ref":$runtime,"target-branch":$ref,"expected-pr-number":$number,
+    "buildchain-ref":$runtime,"target-branch":$base,"expected-pr-number":$number,
     "expected-head-sha":$head,"native-roots-json":$roots,"source-workflow-run-id":$run,
     "source-identity-root":$proof.sourceIdentityRoot,
     "source-patch-root":$proof.sourcePatchRoot,"plan-root":$proof.planRoot,

@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       buildchain-ref:
-        description: Trusted non-persistent v4 runtime selector; durable caller remains @v4-alpha
+        description: Exact runtime used for this source-owned delivery invocation
         type: string
         required: false
-        default: v4-alpha
+        default: ""
       target-branch:
         description: Exact protected development branch
         type: string
@@ -22,7 +22,7 @@ on:
         type: string
         required: true
       native-roots-json:
-        description: Machine-supplied Work sourceRoot or historical root pair
+        description: Machine-supplied canonical Work sourceRoot
         type: string
         required: false
         default: ""
@@ -115,10 +115,10 @@ permissions:
   statuses: write
 jobs:
   deliver:
-    uses: kungfu-systems/buildchain/.github/workflows/public-ops-dev-auto-merge.yml@v4-alpha
+    uses: ./.github/workflows/public-ops-dev-auto-merge.yml
     with:
       buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ github.event.inputs.buildchain-ref || 'v4-alpha' }}
+      buildchain-ref: ${{ github.event.inputs.buildchain-ref || github.sha }}
       target-branch: ${{ github.event.client_payload.candidate.targetBranch || github.event.inputs.target-branch || 'dev/v4/v4.1' }}
       expected-pr-number: ${{ github.event.client_payload.candidate.pullRequestNumber || fromJSON(github.event.inputs.expected-pr-number) }}
       expected-head-sha: ${{ github.event.client_payload.candidate.sourceHead || github.event.inputs.expected-head-sha }}
