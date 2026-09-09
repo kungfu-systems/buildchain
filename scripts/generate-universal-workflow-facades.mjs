@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import { rewriteImplementationReferences } from "./implementation-references.mjs";
 import fs from "node:fs";
+import {
+  expandDevDeliveryWorkflow,
+  normalizeWorkflowOperations,
+} from "./dev-delivery-workflow-view.mjs";
 import crypto from "node:crypto";
 import {
   currentWorkflowPath,
@@ -244,22 +248,24 @@ function inheritPublicationProviderAuthority(source, relative) {
 }
 
 export function migrateUniversalWorkflowFacade(source, relative) {
-  return rewriteImplementationReferences(rewriteRepositoryWorkflowPaths(
-    root,
-    inheritPublicationProviderAuthority(
-      applyPublicationFacadePatches(
-        guardCompatibilityJobs(
-          addUniversalInput(
-            addRuntimeBootstrapDependencies(source, relative),
+  return rewriteImplementationReferences(
+    rewriteRepositoryWorkflowPaths(
+      root,
+      inheritPublicationProviderAuthority(
+        applyPublicationFacadePatches(
+          guardCompatibilityJobs(
+            addUniversalInput(
+              addRuntimeBootstrapDependencies(source, relative),
+              relative,
+            ),
             relative,
           ),
           relative,
         ),
         relative,
       ),
-      relative,
     ),
-  ));
+  );
 }
 
 function verify(source, relative) {
@@ -286,7 +292,15 @@ function verify(source, relative) {
       frozenFacadeSource(relative),
       relative,
     );
-    if (source !== expected)
+    const ownedNodes = source.includes(
+      "./.buildchain/workflow-shell/.github/actions/dev-delivery/",
+    );
+    const equivalent = ownedNodes
+      ? normalizeWorkflowOperations(
+          expandDevDeliveryWorkflow(currentWorkflowPath(root, relative), root),
+        ) === normalizeWorkflowOperations(expected)
+      : source === expected;
+    if (!equivalent)
       fail(
         `${relative} differs from the exact generated facade rooted at ${sourceRevision()}`,
       );
@@ -446,6 +460,20 @@ function updateLaneBudgets() {
   fs.writeFileSync(laneBudgetPath, `${JSON.stringify(policy, null, 2)}\n`);
 }
 
+export function facadeGenerationSource(currentSource, relative, fresh) {
+  // Owned nodes remain canonical even during a fresh legacy facade rebuild.
+  // The verifier still compares their expanded operations to the frozen source.
+  if (
+    currentSource.includes(
+      "./.buildchain/workflow-shell/.github/actions/dev-delivery/",
+    )
+  ) {
+    verify(currentSource, relative);
+    return currentSource;
+  }
+  return fresh ? frozenFacadeSource(relative) : currentSource;
+}
+
 function main() {
   const check = process.argv.includes("--check");
   const fresh = process.argv.includes("--fresh");
@@ -468,9 +496,8 @@ function main() {
   for (const relative of activeFacadePaths()) {
     const current = currentWorkflowPath(root, relative);
     const target = path.join(root, current);
-    const source = fresh
-      ? frozenFacadeSource(relative)
-      : fs.readFileSync(target, "utf8");
+    const currentSource = fs.readFileSync(target, "utf8");
+    const source = facadeGenerationSource(currentSource, relative, fresh);
     if (check) verify(source, relative);
     else
       writeWorkflowSource(

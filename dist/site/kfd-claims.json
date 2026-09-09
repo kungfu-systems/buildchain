@@ -21,12 +21,12 @@
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "27fb1758ca58afe481b93e164f2ea9143b0e2d5e3cf1add0230b995286ea402d",
+    "sha256": "4853af317b1cca5436a27f693b7a2d3459c59e51ae39a24a0fefd88ac779ca30",
     "summary": {
       "cliCommandCount": 117,
       "workflowCount": 114,
       "actionCount": 15,
-      "sitePageCount": 88,
+      "sitePageCount": 89,
       "docCommandRefCount": 1048,
       "failureCount": 0
     },
@@ -246,12 +246,12 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "27fb1758ca58afe481b93e164f2ea9143b0e2d5e3cf1add0230b995286ea402d",
+      "sha256": "4853af317b1cca5436a27f693b7a2d3459c59e51ae39a24a0fefd88ac779ca30",
       "summary": {
         "cliCommandCount": 117,
         "workflowCount": 114,
         "actionCount": 15,
-        "sitePageCount": 88,
+        "sitePageCount": 89,
         "docCommandRefCount": 1048,
         "failureCount": 0
       },
@@ -8110,6 +8110,18 @@
           "reverseAuditSource": "dist/site/page-registry.json"
         },
         {
+          "id": "site-page:manual:dev-delivery-orchestration",
+          "name": "site-page:manual:dev-delivery-orchestration",
+          "kind": "site-page",
+          "sourcePath": "dist/site/page-registry.json",
+          "evidencePath": "dist/site/page-registry.json",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "reverseAuditSource": "dist/site/page-registry.json"
+        },
+        {
           "id": "site-page:manual:dev-delivery-qualification-landing-adr",
           "name": "site-page:manual:dev-delivery-qualification-landing-adr",
           "kind": "site-page",
@@ -8964,6 +8976,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 538
+    "publicSurfaceCount": 539
   }
 }
