@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { expandDevDeliveryWorkflow } from "../scripts/dev-delivery-workflow-view.mjs";
 import {
   GitHubDevDeliveryStore,
   defaultDevDeliveryStateRef,
@@ -320,12 +321,9 @@ test("terminal failure settlement reconciles a concurrent identical winner as an
 });
 
 test("terminal workflow resolves active fencing or an explicit settlement no-op", () => {
-  const workflow = fs.readFileSync(
-    path.join(
-      REPOSITORY_ROOT,
-      ".github/workflows/dev-delivery-warrant-close.yml",
-    ),
-    "utf8",
+  const workflow = expandDevDeliveryWorkflow(
+    ".github/workflows/dev-delivery-warrant-close.yml",
+    REPOSITORY_ROOT,
   );
   assert.match(
     workflow,

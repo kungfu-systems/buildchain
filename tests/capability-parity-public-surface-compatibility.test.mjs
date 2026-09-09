@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
+import { expandDevDeliveryWorkflow } from "../scripts/dev-delivery-workflow-view.mjs";
 
 import {
   PUBLICATION_REHEARSAL_CAPSULE_CONTRACT,
@@ -190,7 +191,7 @@ test("historical CLI, Action, and workflow inputs have bounded v4 routes", () =>
     /fromJSON\(needs\.configure\.outputs\.plan-json\)\.identity\.channel/u,
   );
   assert.match(
-    sources.get(".github/workflows/dev-pr-auto-merge.yml"),
+    expandDevDeliveryWorkflow(".github/workflows/dev-pr-auto-merge.yml"),
     /Exact required Warrant qualified; landing is explicitly deferred/u,
   );
   assert.match(

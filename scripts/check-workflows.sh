@@ -7,3 +7,5 @@ else
   find .github/workflows -maxdepth 1 -name '*.yml' -print0 | \
     xargs -0 go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 -color=false
 fi
+
+node scripts/check-dev-delivery-actions.mjs

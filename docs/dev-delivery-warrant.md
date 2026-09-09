@@ -28,6 +28,9 @@ advances the ref without force. The transition receipt binds the expected old
 state root; a competing controller receives a visible non-fast-forward failure
 instead of a second authority claim.
 
+The [six-node orchestration](dev-delivery-orchestration.md) documents workflow
+ownership, cross-node contracts, execution isolation and recovery boundaries.
+
 ## Contract
 
 A submission binds the repository, protected dev line, pull request, semantic

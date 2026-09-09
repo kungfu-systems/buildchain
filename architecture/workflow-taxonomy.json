@@ -712,7 +712,7 @@
         "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
         "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
       },
-      "rationale": "Classify the existing .github/workflows/dev-delivery-warrant-close.yml capability without adding execution behavior."
+      "rationale": "Asynchronous terminal entry for the shared settlement node in architecture/dev-delivery-orchestration.json; preserves terminal evidence and successor wake behavior."
     },
     {
       "id": "dev-merge-queue-governance",
@@ -748,7 +748,7 @@
         "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
         "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
       },
-      "rationale": "Classify the existing .github/workflows/dev-pr-auto-merge.yml capability without adding execution behavior."
+      "rationale": "Six owned composite nodes declared in architecture/dev-delivery-orchestration.json preserve the published interface and five hosted execution domains."
     },
     {
       "id": "dev-qualification-patrol",
