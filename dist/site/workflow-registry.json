@@ -717,7 +717,6 @@
         "auto-merge",
         "buildchain-ref",
         "buildchain-repository",
-        "create-pull-request",
         "dev-workflow-path",
         "dry-run",
         "max-age-seconds",
@@ -729,7 +728,7 @@
         "source-branch",
         "target-branch"
       ],
-      "inputCount": 15,
+      "inputCount": 14,
       "secrets": [
         "promotion-token"
       ],

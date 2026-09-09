@@ -46,11 +46,6 @@ on:
         default: ""
         required: false
         type: string
-      create-pull-request:
-        description: Backward-compatible alias for settlement-authorized
-        default: false
-        required: false
-        type: boolean
       settlement-authorized:
         description: Run the separately permissioned candidate settlement job
         default: false
@@ -172,7 +167,7 @@ jobs:
     if: >-
       ${{
         (
-          (inputs.settlement-authorized || inputs.create-pull-request) &&
+          inputs.settlement-authorized &&
           !inputs.dry-run &&
           (needs.observe.outputs.controller-state == 'eligible-for-settlement' ||
           needs.observe.outputs.controller-state == 'active' ||

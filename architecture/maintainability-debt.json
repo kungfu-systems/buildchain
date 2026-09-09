@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 44048,
-    "current": 35987
+    "measuredExcess": 44059,
+    "current": 35998
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -1975,18 +1975,18 @@
             "<anonymous@279>@279": {
               "lines": 183
             },
-            "<anonymous@1510>@1510": {
+            "<anonymous@1512>@1512": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 1755,
+          "lines": 1766,
           "functions": {
             "<anonymous@279>@279": {
               "lines": 183
             },
-            "<anonymous@1510>@1510": {
+            "<anonymous@1512>@1512": {
               "lines": 188
             }
           }
@@ -1997,7 +1997,7 @@
             "<anonymous@279>@279": {
               "lines": 180
             },
-            "<anonymous@1510>@1510": {
+            "<anonymous@1512>@1512": {
               "lines": 180
             }
           }
@@ -2556,12 +2556,12 @@
   "hotspots": [
     "tests/internal-architecture.test.mjs",
     "tests/build-surface-promotion.test.mjs",
-    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
     "tests/build-surface.test.mjs",
+    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
     "scripts/check-inventory.mjs",
     ".github/workflows/.build.yml",
-    "scripts/generate-channel-promotion-workflow.mjs",
     "tests/dev-delivery-minimal-request.test.mjs",
+    "scripts/generate-channel-promotion-workflow.mjs",
     "tests/build-configuration.test.mjs",
     ".github/workflows/build.yml",
     "tests/release-candidate-recovery.test.mjs",
@@ -2581,7 +2581,7 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 1755
+      "current": 1766
     }
   ]
 }

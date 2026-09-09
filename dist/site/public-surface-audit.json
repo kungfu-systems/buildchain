@@ -1066,7 +1066,6 @@
           "auto-merge",
           "buildchain-ref",
           "buildchain-repository",
-          "create-pull-request",
           "dev-workflow-path",
           "dry-run",
           "max-age-seconds",
@@ -1078,7 +1077,7 @@
           "source-branch",
           "target-branch"
         ],
-        "inputCount": 15,
+        "inputCount": 14,
         "secrets": [
           "promotion-token"
         ],
@@ -9524,7 +9523,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "064977352dff4ecf6696c7b91e7bb6cc647a2e87aa89c5dddd8127340f6d949c",
-    "workflowRegistryDigest": "751868bbcb576cafdb501f4f397959d285dfda7a54faadc9e48d8193418f6c7a",
+    "workflowRegistryDigest": "356f8a653a8e08292b7ab0674cbae78a97e29dd645d90dfeeb619d15fa8c0726",
     "pageRegistryDigest": "3955e8050d4df1eb12a9baa254624abce80958e37261101cda732696fdfac85e"
   },
   "comparison": {

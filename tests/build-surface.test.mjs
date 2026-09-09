@@ -690,11 +690,13 @@ test("patrol workflow family exposes daily weekly monthly reusable entries and d
     assert.equal(workflow.permissions.contents, "write");
     assert.equal(workflow.permissions["pull-requests"], "write");
     assert.ok(caller.on.schedule.length);
+    assert.equal(caller.jobs.patrol.with["buildchain-ref"], "${{ inputs.buildchain-ref || github.sha }}");
     assert.ok(Object.values(caller.jobs).some(job => job.uses === `./.github/workflows/public-ops-patrol-${cadence}.yml`));
   }
 });
 
 test("stable candidate patrol persists exact candidates and uses source-lock PR promotion", () => {
+  assert.equal(readWorkflow(".github/workflows/self-ops-stable-candidate-patrol.yml").jobs.patrol.with["buildchain-ref"], "${{ inputs.buildchain-ref || github.sha }}");
   const graph = inspectWorkflowJob(".github/workflows/public-ops-stable-candidate-patrol.yml", "patrol");
   assert.equal(graph.workflow.concurrency["cancel-in-progress"], false);
   for (const field of ["release-now", "auto-promote", "auto-merge"])
@@ -1752,4 +1754,13 @@ test("build runtime and source come from independent exact GitHub identities", (
   assert.match(workflow, /ref: \$\{\{ job\.workflow_sha \}\}/u);
   assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
   assert.doesNotMatch(workflow, /inputs\.buildchain-ref|same-repository-pr-head/u);
+});
+
+
+test("alpha patrol has one explicit settlement authorization input", () => {
+  const workflow = readWorkflow(".github/workflows/public-ops-alpha-candidate-patrol.yml");
+  assert.equal(workflow.on.workflow_call.inputs["create-pull-request"], undefined);
+  assert.ok(workflow.on.workflow_call.inputs["settlement-authorized"]);
+  assert.match(workflow.jobs.settle.if, /inputs\.settlement-authorized/u);
+  assert.doesNotMatch(workflow.jobs.settle.if, /create-pull-request/u);
 });

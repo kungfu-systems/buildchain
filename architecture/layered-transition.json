@@ -17,10 +17,10 @@
     "handMaintainedSourceFiles": 759,
     "handMaintainedSourceLines": 186878,
     "workflowFiles": 68,
-    "workflowLines": 8719,
+    "workflowLines": 8714,
     "actionDefinitions": 135,
     "actionDefinitionLines": 12172,
-    "automationImplementationLines": 207769
+    "automationImplementationLines": 207764
   },
   "invariants": [
     "No historical runtime path forwarding",

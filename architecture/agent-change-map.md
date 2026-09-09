@@ -131,12 +131,12 @@ Safe change route: Reduce one declared responsibility in its owning module, run 
 
 - `tests/internal-architecture.test.mjs`
 - `tests/build-surface-promotion.test.mjs`
-- `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
 - `tests/build-surface.test.mjs`
+- `tests/buildchain-ref-promotion-recovery-entry.test.mjs`
 - `scripts/check-inventory.mjs`
 - `.github/workflows/.build.yml`
-- `scripts/generate-channel-promotion-workflow.mjs`
 - `tests/dev-delivery-minimal-request.test.mjs`
+- `scripts/generate-channel-promotion-workflow.mjs`
 - `tests/build-configuration.test.mjs`
 - `.github/workflows/build.yml`
 - `tests/release-candidate-recovery.test.mjs`
