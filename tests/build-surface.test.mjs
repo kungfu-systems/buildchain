@@ -1,3 +1,4 @@
+import { expandDevDeliveryWorkflow } from "../scripts/dev-delivery-workflow-view.mjs";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -89,7 +90,6 @@ import {
   BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
   BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
 } from "../packages/core/diagnostics.js";
-
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function readRepoText(relativePath) {
@@ -847,7 +847,7 @@ test("fully retired workflow tombstones are absent", () => {
 });
 
 test("dev PR auto-merge workflow exposes protected dev policy gates", () => {
-  const workflow = readRepoText(".github/workflows/dev-pr-auto-merge.yml");
+  const workflow = expandDevDeliveryWorkflow(".github/workflows/dev-pr-auto-merge.yml");
   assert.match(workflow, /workflow_call:/);
   assert.match(workflow, /target-branch:/);
   assert.match(workflow, /expected-pr-number:/);
@@ -1086,7 +1086,7 @@ test("Buildchain self-delivery exposes the complete two-phase Warrant caller", (
 });
 
 test("PR-controlled native delivery and provider finalization use distinct hosted jobs", () => {
-  const workflow = readRepoText(".github/workflows/dev-pr-auto-merge.yml");
+  const workflow = expandDevDeliveryWorkflow(".github/workflows/dev-pr-auto-merge.yml");
   const template = readRepoText("templates/native-dev-delivery.yml");
   assert.match(
     workflow,

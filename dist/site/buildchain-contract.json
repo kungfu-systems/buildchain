@@ -1465,7 +1465,7 @@
         "durable consumers call the public floating workflow and may route a train or exact runtime only through trusted non-persistent dispatch input"
       ],
       "breakingDigest": "sha256:21b65d0746d2e8b3e8a7df4c6fab295a85c8fd42cc405ec3bc5df5cdab0421f0",
-      "auditDigest": "sha256:d86830e186b6ec56816e875adfebd33d705ae309983cc37106717ce05ec9ccca"
+      "auditDigest": "sha256:afc5ba3216429943f57a6f5c805cefe85e342d70a65fab3bc561c08f5a838cf9"
     },
     {
       "contractVersion": 1,
@@ -4354,5 +4354,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:e398528e54509c05569630ffcc98a04d41e831479ab921df65943b49bf077719",
-  "contractDigest": "sha256:f6d82d2ee65427a7fb6f1bac41b20e273e6f662131d4b95773e4c6fca998ae9f"
+  "contractDigest": "sha256:5dc0765f9c864dccea1a4cb22cea59aa05a30a00f276b7818cb2c9ea84f69fd6"
 }

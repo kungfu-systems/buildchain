@@ -6,7 +6,7 @@
     "cliCommandCount": 117,
     "workflowCount": 116,
     "actionCount": 14,
-    "sitePageCount": 88,
+    "sitePageCount": 89,
     "docCommandRefCount": 1048,
     "failureCount": 0
   },
@@ -5160,6 +5160,10 @@
       },
       {
         "id": "manual:dev-alpha-candidate-patrol",
+        "category": "manual"
+      },
+      {
+        "id": "manual:dev-delivery-orchestration",
         "category": "manual"
       },
       {
@@ -10640,7 +10644,7 @@
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "547dde42a349a047f2aadcfc3ee9e3e31b6a7f6bfc75b7d37e5dcff7abd15308",
     "workflowRegistryDigest": "5c2a53c099e5e5164bd7dcf33a0020af3f46d1037b697b7ea2195f8c8c333b37",
-    "pageRegistryDigest": "4e167e415d89756e862dd2cd01c808d1861918fccc87f721a43ff4c5dd348cbd"
+    "pageRegistryDigest": "a9f106b8e58f4ceaaca17a1e3a0c39c7bc1653c503bd386d86bbbf019a83ddf5"
   },
   "comparison": {
     "missingCliRegistry": [],

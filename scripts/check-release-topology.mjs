@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { expandDevDeliveryWorkflow } from "./dev-delivery-workflow-view.mjs";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import ts from "typescript";
@@ -227,7 +228,12 @@ function permission(block, name) {
 }
 
 function workflowSnapshot(relative) {
-  const source = read(relative);
+  const raw = read(relative);
+  const source = raw.includes(
+    "./.buildchain/workflow-shell/.github/actions/dev-delivery/",
+  )
+    ? expandDevDeliveryWorkflow(relative, root)
+    : raw;
   const document = parseWorkflowDocument(source);
   const jobs = document.jobs
     .filter((job) => job.id !== "universal-bootstrap")
@@ -488,10 +494,7 @@ function assertAuthorityClosure(ledger) {
   const canonicalWorkflow = read(
     ".github/workflows/.release-candidate-promote.yml",
   );
-  assert.match(
-    canonicalWorkflow,
-    /scripts\/release-candidate-adapter\.mjs/u,
-  );
+  assert.match(canonicalWorkflow, /scripts\/release-candidate-adapter\.mjs/u);
   assert.match(
     canonicalWorkflow,
     /release-invocation\.json[\s\S]*release-transaction\.json[\s\S]*release-receipt\.json/u,
