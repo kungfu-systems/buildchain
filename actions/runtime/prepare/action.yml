@@ -16,11 +16,10 @@ runs:
       run: node -e 'require("node:fs").appendFileSync(process.env.GITHUB_OUTPUT, "path=" + process.execPath.replaceAll("\\", "/") + "\n")'
     - name: Install locked runtime dependencies
       shell: bash
-      env:
-        BUILDCHAIN_RUNTIME_DIRECTORY: ${{ inputs.directory }}
+      working-directory: ${{ inputs.directory }}
       run: |
         corepack enable
-        corepack pnpm --dir "$BUILDCHAIN_RUNTIME_DIRECTORY" install --frozen-lockfile --prod --ignore-scripts
+        corepack pnpm install --frozen-lockfile --prod --ignore-scripts
 outputs:
   node-path:
     description: Exact Node 24 executable for Buildchain after the caller selects its own toolchain.

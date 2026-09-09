@@ -23,22 +23,7 @@ const positive = JSON.parse(
   fs.readFileSync(path.join(fixtures, "gate-positive.json"), "utf8"),
 );
 
-function packageConfig(overrides = {}) {
-  return {
-    schema: 1,
-    adopter_delivery: {
-      contract: "kungfu-buildchain-v4-adopter-delivery/v1",
-      input_path: "contracts/input.json",
-      readback_path: ".buildchain/adopter-delivery/readback.json",
-      result_path: ".buildchain/adopter-delivery/result.json",
-      driver_selector: "json-assertion",
-      artifact_profile_selector: "git-commit",
-      ...overrides,
-    },
-  };
-}
-
-test("public schema and current configuration reject unsupported selectors and paths", () => {
+test("public Adopter Delivery uses one closed JSON request", () => {
   const schema = JSON.parse(
     fs.readFileSync(
       path.join(root, "contracts/v4-adopter-delivery-v1.schema.json"),
@@ -46,25 +31,32 @@ test("public schema and current configuration reject unsupported selectors and p
   );
   const validate = new Ajv2020({ strict: false }).compile(schema);
   assert.equal(validate(positive), true, JSON.stringify(validate.errors));
-  const normalized = normalizeBuildchainConfig(packageConfig());
-  assert.equal(normalized.adopter_delivery.driverSelector, "json-assertion");
+  for (const field of ["driverSelector", "artifactProfileSelector"]) {
+    assert.throws(
+      () => runAdopterDeliveryGate({ ...positive, [field]: "private" }),
+      /unknown .*selector/,
+    );
+  }
   assert.throws(
-    () =>
-      normalizeBuildchainConfig(packageConfig({ driver_selector: "private" })),
-    /selector is unsupported/,
-  );
-  assert.throws(
-    () => normalizeBuildchainConfig(packageConfig({ input_path: "../escape" })),
-    /repository-relative/,
+    () => normalizeBuildchainConfig({ schema: 1, adopter_delivery: {} }),
+    /closed JSON request/,
   );
 });
 
 test("retired KFD adapter cannot be selected or exported", () => {
   const input = structuredClone(positive);
   input.driverSelector = "legacy-kfd";
-  assert.throws(() => runAdopterDeliveryGate(input), /unknown driver selector/u);
-  const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
-  assert.equal(Object.hasOwn(pkg.exports, "./legacy-kfd-adopter-driver"), false);
+  assert.throws(
+    () => runAdopterDeliveryGate(input),
+    /unknown driver selector/u,
+  );
+  const pkg = JSON.parse(
+    fs.readFileSync(path.join(root, "package.json"), "utf8"),
+  );
+  assert.equal(
+    Object.hasOwn(pkg.exports, "./legacy-kfd-adopter-driver"),
+    false,
+  );
 });
 
 test("public driver run and exact readback are deterministic and fail closed", () => {
@@ -129,11 +121,31 @@ test("CLI and public self-dogfood workflow expose the same public boundary", () 
 });
 
 test("candidate dispatch binds an external adopter through the admitted source output", () => {
-  const workflow = YAML.parse(fs.readFileSync(path.join(root, ".github/workflows/public-build-adopter-qualification.yml"), "utf8"));
+  const workflow = YAML.parse(
+    fs.readFileSync(
+      path.join(
+        root,
+        ".github/workflows/public-build-adopter-qualification.yml",
+      ),
+      "utf8",
+    ),
+  );
   for (const trigger of ["workflow_call", "workflow_dispatch"]) {
-    for (const input of ["consumer-repository", "consumer-ref", "invocation-source-path"]) assert.ok(workflow.on[trigger].inputs[input]);
-    for (const removed of ["bootstrap-path", "archive-path"]) assert.equal(Object.hasOwn(workflow.on[trigger].inputs, removed), false);
+    for (const input of [
+      "consumer-repository",
+      "consumer-ref",
+      "invocation-source-path",
+    ])
+      assert.ok(workflow.on[trigger].inputs[input]);
+    for (const removed of ["bootstrap-path", "archive-path"])
+      assert.equal(Object.hasOwn(workflow.on[trigger].inputs, removed), false);
   }
-  assert.equal(workflow.jobs.conformance.steps[1].with["consumer-sha"], "${{ needs.consumer-admission.outputs.consumer-source-sha }}");
-  assert.equal(workflow.jobs["consumer-admission"].steps[1].uses, "./.buildchain/workflow-shell/actions/adoption/admit-adopter");
+  assert.equal(
+    workflow.jobs.conformance.steps[1].with["consumer-sha"],
+    "${{ needs.consumer-admission.outputs.consumer-source-sha }}",
+  );
+  assert.equal(
+    workflow.jobs["consumer-admission"].steps[1].uses,
+    "./.buildchain/workflow-shell/actions/adoption/admit-adopter",
+  );
 });

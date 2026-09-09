@@ -1,6 +1,6 @@
 ---
 status: preview
-period: 2026-09-09
+period: 2026-09-10
 theme: buildchain-adopter-delivery
 doc_type: product-manual
 source_level: local-files
@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-10
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-09
+  generated_at: 2026-09-10
   visible_context: Current adopter runtime, public workflow, composite actions and local execution tests.
   invisible_context_boundary: No hosted cross-platform execution or publication was performed for this documentation.
 ---
@@ -52,15 +52,10 @@ rooted evidence fail. The API has two operations: `run` and `verify`.
 
 ## Configuration
 
-```toml
-[adopter_delivery]
-contract = "kungfu-buildchain-v4-adopter-delivery/v1"
-input_path = "contracts/adopter-delivery/input.json"
-readback_path = ".buildchain/adopter-delivery/readback.json"
-result_path = ".buildchain/adopter-delivery/result.json"
-driver_selector = "kfd-category"
-artifact_profile_selector = "package"
-```
+The closed JSON input owns `driverSelector`, `artifactProfileSelector`, `request`
+and `context`. The public workflow's `input-path` names that document; CLI
+`--input`, `--readback` and `--output` arguments locate the request and evidence.
+Build configuration contains no duplicate Adopter Delivery declaration.
 
 Paths must stay inside the consumer repository. Workflow inputs name `consumer`
 and `input-path`. External qualification additionally requires the complete

@@ -49,7 +49,7 @@ function collectHotspots(
     maintained.has(file) && counts.set(file, (counts.get(file) || 0) + 1);
   for (const args of [
     ["log", "-n", "500", "--format=", "--name-only"],
-    ["diff", "--name-only"],
+    ["diff", "HEAD", "--name-only"],
   ])
     for (const file of gitOutput(root, args).split("\n").filter(Boolean))
       record(file);

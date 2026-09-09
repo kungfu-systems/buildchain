@@ -6,7 +6,7 @@
   "files": [
     {
       "path": "actions/runtime/prepare/action.yml",
-      "root": "sha256:d0599b5f500269c84b50fdab4ff90ecd8f31c85df64b7f5312097a8c5f855df8"
+      "root": "sha256:2e17c1a831936eceb0d63216c2d0646a0fab907339c329d172924eaa4f412a35"
     },
     {
       "path": "actions/workflow/bootstrap-recovery-admit/action.yml",

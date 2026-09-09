@@ -15,12 +15,12 @@
   },
   "after": {
     "handMaintainedSourceFiles": 759,
-    "handMaintainedSourceLines": 186916,
+    "handMaintainedSourceLines": 186878,
     "workflowFiles": 68,
     "workflowLines": 8719,
     "actionDefinitions": 135,
-    "actionDefinitionLines": 12174,
-    "automationImplementationLines": 207809
+    "actionDefinitionLines": 12172,
+    "automationImplementationLines": 207769
   },
   "invariants": [
     "No historical runtime path forwarding",

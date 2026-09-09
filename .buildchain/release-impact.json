@@ -8,9 +8,16 @@
   "versionImpact": {
     "final": "major",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v4.1 retires v3 publication authority and establishes the protected v4 line, v4 provider journal, activation planner, recovery planner, and stable publication fence as the sole production release authority."
+    "rationale": "Buildchain 4.1 intentionally changes owned workflow and action paths, promotion request contracts and implementation exports to enforce one workflow API, semantic action adapters and capability-owned modules. Retired forwarders and alternate normal publishers are removed; native domain authority remains explicit."
   },
   "surfaceImpacts": [
+    {
+      "id": "layered-architecture-41",
+      "impact": "major",
+      "class": "workflow-contract",
+      "rationale": "Enforce workflow, action, JavaScript and Rust responsibility layers; replace inline workflow implementation with semantic nodes; remove retired paths and publisher switches; migrate every owned caller, module import, bootstrap distribution and generated contract together.",
+      "source": "architecture/code-layout.json"
+    },
     {
       "id": "toml-owned-build-orchestration",
       "impact": "major",
@@ -499,5 +506,5 @@
   "breaking": true,
   "security": false,
   "migrationRequired": true,
-  "summary": "Buildchain v4.1 centralizes project build configuration in TOML, derives exact runtime identity, and shares owned build stages across native and Linux container orchestration."
+  "summary": "Buildchain v4.1 makes reusable workflows the primary API, composes semantic actions, organizes JavaScript modules by capability and retains authoritative Rust/WASM domains. It removes historical forwarding paths, closes owned consumers and distribution, and advances development without publishing alpha."
 }

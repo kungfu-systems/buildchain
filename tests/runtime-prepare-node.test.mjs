@@ -35,3 +35,48 @@ test("runtime preparation exposes an executable path that survives consumer PATH
   assert.equal(execution.status, 0, execution.error?.message);
   assert.equal(execution.stdout.trim(), process.version);
 });
+
+test("Corepack resolves the package manager inside the exact runtime checkout", (t) => {
+  const action = YAML.parse(
+    fs.readFileSync(
+      new URL("../actions/runtime/prepare/action.yml", import.meta.url),
+      "utf8",
+    ),
+  );
+  const step = action.runs.steps.find(
+    (s) => s.name === "Install locked runtime dependencies",
+  );
+  assert.equal(step["working-directory"], "${{ inputs.directory }}");
+  const root = fs.mkdtempSync(
+    path.join(os.tmpdir(), "runtime-package-manager-"),
+  );
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const runtime = path.join(root, "runtime"),
+    bin = path.join(root, "bin"),
+    log = path.join(root, "corepack-cwd");
+  fs.mkdirSync(runtime);
+  fs.mkdirSync(bin);
+  fs.writeFileSync(
+    path.join(runtime, "package.json"),
+    JSON.stringify({ packageManager: "pnpm@11.7.0" }),
+  );
+  fs.writeFileSync(
+    path.join(bin, "corepack"),
+    '#!/bin/sh\nprintf "%s\\n" "$PWD" >> "$COREPACK_CWD_LOG"\n',
+    { mode: 0o755 },
+  );
+  const result = spawnSync("bash", ["-c", step.run], {
+    cwd: runtime,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      PATH: `${bin}:${process.env.PATH}`,
+      COREPACK_CWD_LOG: log,
+    },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(fs.readFileSync(log, "utf8").trim().split("\n"), [
+    runtime,
+    runtime,
+  ]);
+});

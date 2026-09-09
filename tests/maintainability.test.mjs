@@ -517,3 +517,41 @@ test("public API governance rejects missing ownership and historical compatibili
     fs.rmSync(fixtureRoot, { recursive: true, force: true });
   }
 });
+
+test("hotspot accounting preserves staged changes when the same tree is committed", (t) => {
+  const cwd = fs.mkdtempSync(
+    path.join(os.tmpdir(), "buildchain-hotspot-staged-"),
+  );
+  t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
+  git(cwd, ["init", "--initial-branch=main"]);
+  const commit = (message) =>
+    git(cwd, [
+      "-c",
+      "user.name=Buildchain Test",
+      "-c",
+      "user.email=buildchain-test@example.invalid",
+      "commit",
+      "-m",
+      message,
+    ]);
+  for (const file of ["a.js", "z.js"])
+    fs.writeFileSync(path.join(cwd, file), "export const value = 1;\n");
+  git(cwd, ["add", "."]);
+  commit("baseline");
+  const current = {
+    files: { "a.js": {}, "z.js": {} },
+    tests: {},
+    workflows: {},
+  };
+  fs.writeFileSync(path.join(cwd, "z.js"), "export const value = 2;\n");
+  git(cwd, ["add", "z.js"]);
+  const staged = collectHotspots(cwd, current, 20, [], {
+    baseRef: "dev/v4/v4.1",
+  });
+  assert.deepEqual(staged, ["z.js", "a.js"]);
+  commit("change staged route");
+  assert.deepEqual(
+    collectHotspots(cwd, current, 20, [], { baseRef: "dev/v4/v4.1" }),
+    staged,
+  );
+});

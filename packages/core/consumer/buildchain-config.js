@@ -243,9 +243,7 @@ export function normalizeBuildchainConfig(config) {
     );
   }
   if (normalized.adopter_delivery !== undefined) {
-    normalized.adopter_delivery = normalizeAdopterDeliverySection(
-      normalized.adopter_delivery,
-    );
+    throw new Error("Adopter Delivery configuration belongs in its closed JSON request");
   }
   if (normalized.consumers !== undefined) {
     normalized.consumers = normalizeConsumersSection(normalized.consumers);
@@ -721,42 +719,6 @@ function normalizePublicationRehearsalSection(rehearsal) {
   })) {
     if (value.startsWith("/") || value.includes("\\") || value.split("/").includes("..")) {
       throw new Error(`publication_rehearsal.${key} must be repository-relative`);
-    }
-  }
-  return normalized;
-}
-
-function normalizeAdopterDeliverySection(delivery) {
-  assertPlainObject(delivery, "adopter_delivery");
-  const allowed = ["contract", "input_path", "readback_path", "result_path", "driver_selector", "artifact_profile_selector"];
-  const unknown = Object.keys(delivery).filter((key) => !allowed.includes(key));
-  if (unknown.length > 0) {
-    throw new Error(`adopter_delivery contains unsupported fields: ${unknown.join(", ")}`);
-  }
-  const normalized = {
-    contract: assertString(delivery.contract, "adopter_delivery.contract"),
-    inputPath: posixPath(assertString(delivery.input_path, "adopter_delivery.input_path")),
-    readbackPath: posixPath(assertString(delivery.readback_path, "adopter_delivery.readback_path")),
-    resultPath: posixPath(assertString(delivery.result_path, "adopter_delivery.result_path")),
-    driverSelector: assertString(delivery.driver_selector, "adopter_delivery.driver_selector"),
-    artifactProfileSelector: assertString(delivery.artifact_profile_selector, "adopter_delivery.artifact_profile_selector"),
-  };
-  if (normalized.contract !== "kungfu-buildchain-v4-adopter-delivery/v1") {
-    throw new Error("adopter_delivery contract is unsupported");
-  }
-  if (
-    !["json-assertion", "kfd-category"].includes(normalized.driverSelector) ||
-    !["git-commit", "package"].includes(normalized.artifactProfileSelector)
-  ) {
-    throw new Error("adopter_delivery selector is unsupported");
-  }
-  for (const [key, value] of Object.entries({
-    input_path: normalized.inputPath,
-    readback_path: normalized.readbackPath,
-    result_path: normalized.resultPath,
-  })) {
-    if (value.startsWith("/") || value.includes("\\") || value.split("/").includes("..")) {
-      throw new Error(`adopter_delivery.${key} must be repository-relative`);
     }
   }
   return normalized;
