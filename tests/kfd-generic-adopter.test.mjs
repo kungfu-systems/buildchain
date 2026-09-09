@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { kfdProductGateDigest } from "../packages/core/kfd-product-gates.js";
-import { createKfdAdopterManifestGate, createKfdLegacySupportMatrixProjection, validateKfdAdopterManifestGate, validateKfdLegacySupportMatrixProjection } from "../packages/core/kfd-adopter-manifest.js";
-import { collectGitHubReleasePassport, verifyReleasePassport } from "../packages/core/release-passport.js";
-import { collectKfdAdopterReleaseEvidence } from "../packages/core/release-passport-contract.js";
+import { kfdProductGateDigest } from "../packages/core/adoption/kfd-product-gates.js";
+import { createKfdAdopterManifestGate, createKfdLegacySupportMatrixProjection, validateKfdAdopterManifestGate, validateKfdLegacySupportMatrixProjection } from "../packages/core/adoption/kfd-adopter-manifest.js";
+import { collectGitHubReleasePassport } from "../packages/core/release/passport/collection.js";
+import { verifyReleasePassport } from "../packages/core/release/release-passport.js";
+import { collectKfdAdopterReleaseEvidence } from "../packages/core/release/release-passport-contract.js";
 import { sourceSha, checkedAt, kfdPackageArtifactRoot, buildchainRepository, kungfuRepository, tempDir, writeJson, passingGate, adopterManifest } from "./helpers/kfd-product-gates.mjs";
 
 test("non-self adopter identity and source remain exact through gate, projection, passport, and artifact evidence", async () => {

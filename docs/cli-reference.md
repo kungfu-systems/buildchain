@@ -35,28 +35,6 @@ Every listed help command is intercepted before dispatch, exits zero, and perfor
 buildchain adopter-delivery
 ```
 
-### `buildchain adopter-delivery archive`
-
-- Help: `buildchain adopter-delivery archive --help`
-- Canonical id: `adopter-delivery`
-- Options: `--input`, `--output`
-- Syntax:
-
-```text
-buildchain adopter-delivery archive --input <json-or-path> [--output <path>]
-```
-
-### `buildchain adopter-delivery bootstrap`
-
-- Help: `buildchain adopter-delivery bootstrap --help`
-- Canonical id: `adopter-delivery`
-- Options: `--input`, `--output`
-- Syntax:
-
-```text
-buildchain adopter-delivery bootstrap --input <json-or-path> [--output <path>]
-```
-
 ### `buildchain adopter-delivery run`
 
 - Help: `buildchain adopter-delivery run --help`
@@ -833,11 +811,11 @@ buildchain facts compatibility verify [--cwd <dir>] [--registry <json-or-path>] 
 
 - Help: `buildchain facts module --help`
 - Canonical id: `build-facts`
-- Options: `--cwd`, `--json`, `--legacy-kungfu-buildinfo`, `--module`, `--module-root`, `--output`, `--output-path`, `--version-source`
+- Options: `--cwd`, `--json`, `--module`, `--module-root`, `--output`, `--output-path`, `--version-source`
 - Syntax:
 
 ```text
-buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>] [--version-source <id>] [--output <file>] [--output-path <path>]... [--legacy-kungfu-buildinfo <file>] [--json]
+buildchain facts module [--cwd <dir>] [--module <id>] [--module-root <path>] [--version-source <id>] [--output <file>] [--output-path <path>]... [--json]
 ```
 
 ### `buildchain facts verify`
@@ -2268,17 +2246,6 @@ buildchain release-propagation <plan|write-lock|work|entry|pickup> ...
 
 ```text
 buildchain release-tail
-```
-
-### `buildchain release-tail compat`
-
-- Help: `buildchain release-tail compat --help`
-- Canonical id: `release-tail`
-- Options: `--hooks-json`, `--output`
-- Syntax:
-
-```text
-buildchain release-tail compat --hooks-json <json-or-path> [--output <path>]
 ```
 
 ### `buildchain release-tail init`

@@ -9,21 +9,21 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   DOMAIN_WASM_ABI_VERSION,
   DOMAIN_WASM_SHA256,
-} from "../packages/core/domain-wasm-artifact.js";
+} from "../packages/core/runtime/domain-wasm-artifact.js";
 import {
   DOMAIN_WASM_REQUEST_CONTRACT,
   DOMAIN_WASM_RESPONSE_CONTRACT,
   domainWasmInfo,
-} from "../packages/core/domain-wasm.js";
-import { spawnSyncCommand } from "../packages/core/spawn-command.js";
+} from "../packages/core/runtime/domain-wasm.js";
+import { spawnSyncCommand } from "../packages/core/runtime/spawn-command.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const coreDirectory = path.join(root, "packages", "core");
+const coreDirectory = path.join(root, "packages", "core", "runtime");
 const artifactPath = path.join(coreDirectory, "buildchain-domain.wasm");
 const actionArtifacts = [
-  "actions/promote-buildchain-ref/dist/buildchain-domain.wasm",
-  "actions/release-tail/dist/buildchain-domain.wasm",
-  "actions/release-candidate-promote/dist/buildchain-domain.wasm",
+  "actions/release/promote-ref/dist/buildchain-domain.wasm",
+  "actions/release/settle/dist/buildchain-domain.wasm",
+  "actions/release/promote-candidate/dist/buildchain-domain.wasm",
 ];
 
 function sha256(bytes) {
@@ -74,7 +74,7 @@ test("a clean Node process loads the committed artifact without Rust", () => {
     [
       "--input-type=module",
       "--eval",
-      'import { domainWasmInfo } from "./packages/core/domain-wasm.js"; process.stdout.write(JSON.stringify(domainWasmInfo()));',
+      'import { domainWasmInfo } from "./packages/core/runtime/domain-wasm.js"; process.stdout.write(JSON.stringify(domainWasmInfo()));',
     ],
     { cwd: root, encoding: "utf8" },
   );

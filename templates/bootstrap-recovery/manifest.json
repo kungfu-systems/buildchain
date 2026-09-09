@@ -1,0 +1,60 @@
+{
+  "schema": "buildchain.bootstrap-recovery-distribution/v1",
+  "installDirectory": ".buildchain/bootstrap-recovery",
+  "workflowDestination": ".github/workflows/buildchain-bootstrap-recovery.yml",
+  "workflowRoot": "sha256:089d11e9484a948cab830a354a7fd1f3c2e403d1eae3b1b748f49526d3b51806",
+  "files": [
+    {
+      "path": "actions/runtime/prepare/action.yml",
+      "root": "sha256:d0599b5f500269c84b50fdab4ff90ecd8f31c85df64b7f5312097a8c5f855df8"
+    },
+    {
+      "path": "actions/workflow/bootstrap-recovery-admit/action.yml",
+      "root": "sha256:cb685efe1161341928ec35f497188ccc68b7295a36cd9564c6b7fc1a515c9194"
+    },
+    {
+      "path": "actions/workflow/bootstrap-recovery-execute/action.yml",
+      "root": "sha256:b3ce1b0976e986dd18dd1b360945fdd75cbb2285568c3bda9592b0428ac02cf5"
+    },
+    {
+      "path": "actions/workflow/bootstrap-recovery-settle/action.yml",
+      "root": "sha256:5f2195e70ff255d109ef9ba2cba2cd2cc5a84ab830ca9e21be717088cf3b8f0a"
+    },
+    {
+      "path": "package.json",
+      "root": "sha256:528dac2d4ea33c2b6855754a247eb690683cbde7d887acae457d3c67f17bfe36"
+    },
+    {
+      "path": "packages/core/providers/commands/github-output.mjs",
+      "root": "sha256:a7b97324ab7f5002271d762a377d78cc0810fe0d6fc8736adaa9a3497f2bd10f"
+    },
+    {
+      "path": "packages/core/runtime/action-process.mjs",
+      "root": "sha256:1fc2325c8a98c4cf1a41263fe5ee0785f8969c2d709549a0169b7897ca93288a"
+    },
+    {
+      "path": "packages/core/runtime/spawn-command.js",
+      "root": "sha256:d344ba067932db14629b97fff44e95106de0b47eb2ffb18b0b09f518f95765c0"
+    },
+    {
+      "path": "packages/core/workflow/nodes/bootstrap-io.mjs",
+      "root": "sha256:7e75ef5ceb2c91be16e51b1c51a2b3d4fcad9aa85e23c54de69c239919c970bc"
+    },
+    {
+      "path": "packages/core/workflow/nodes/bootstrap-recovery.mjs",
+      "root": "sha256:793401be9e46dcd58fde38820303c147138799c28bc479f01fec9e106260cce0"
+    },
+    {
+      "path": "packages/core/workflow/nodes/bootstrap-review.mjs",
+      "root": "sha256:4bc4c960e6de0fa69bb49d270b479b73ab626ba66bb3d5f315882871f6137d59"
+    },
+    {
+      "path": "packages/core/workflow/nodes/recovery-contract.mjs",
+      "root": "sha256:3176603b4e69310944aaeda84f6f27c6d57e73bb082a7d7ee6ee62d9bc0816ea"
+    },
+    {
+      "path": "packages/core/workflow/universal-workflow-bootstrap.js",
+      "root": "sha256:18546a18c951a7d594b42fc38ee2f8ce90e2506ed514332af0e67d092e2d1f40"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+name: sign-build-artifact
+description: Dispatch signing authority, finalize verified bytes, or run the isolated macOS credential instance.
+inputs:
+  plan:
+    description: Rooted build plan
+    required: true
+  platform:
+    description: Selected platform
+    required: true
+  kind:
+    description: artifact or credential
+    required: true
+  control-token:
+    description: Detached authority token
+    required: false
+    default: ''
+  certificate-p12-base64:
+    description: Credential instance only
+    required: false
+    default: ''
+  certificate-password:
+    description: Credential instance only
+    required: false
+    default: ''
+  notary-api-key-p8-base64:
+    description: Credential instance only
+    required: false
+    default: ''
+  notary-api-key-id:
+    description: Credential instance only
+    required: false
+    default: ''
+  notary-api-issuer:
+    description: Credential instance only
+    required: false
+    default: ''
+  expected-team-id:
+    description: Credential instance only
+    required: false
+    default: ''
+  certificate-sha1:
+    description: Credential instance only
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+  - name: Configure scoped artifact transport
+    if: ${{ fromJSON(inputs.plan).transfer.mode == 's3-to-github-artifacts' }}
+    uses: aws-actions/configure-aws-credentials@v6.1.0
+    with:
+      role-to-assume: ${{ fromJSON(inputs.plan).environment.transfer.download_role_arn }}
+      aws-region: ${{ fromJSON(inputs.plan).transfer.s3Region }}
+      audience: ${{ fromJSON(inputs.plan).transfer.oidcAudience }}
+  - name: Resolve detached signing authority
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/commands/sign.mjs" control
+    env:
+      BUILDCHAIN_PLAN: ${{ inputs.plan }}
+      GITHUB_TOKEN: ${{ github.token }}
+      BUILDCHAIN_PLATFORM: ${{ inputs.platform }}
+      BUILDCHAIN_CONTROL_TOKEN: ${{ inputs.control-token }}
+    if: ${{ inputs.kind == 'artifact' }}
+  - name: Verify and finalize artifact bytes
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/commands/sign.mjs" finalize
+    env:
+      BUILDCHAIN_PLAN: ${{ inputs.plan }}
+      GITHUB_TOKEN: ${{ github.token }}
+      BUILDCHAIN_PLATFORM: ${{ inputs.platform }}
+    if: ${{ inputs.kind == 'artifact' }}
+    id: final
+  - name: Validate sealed credential input
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/commands/sign.mjs" prepare-credential
+    env:
+      BUILDCHAIN_PLAN: ${{ inputs.plan }}
+      GITHUB_TOKEN: ${{ github.token }}
+      BUILDCHAIN_PLATFORM: ${{ inputs.platform }}
+    if: ${{ inputs.kind == 'credential' }}
+    id: identity
+  - name: Sign and notarize sealed macOS input
+    if: ${{ inputs.kind == 'credential' }}
+    id: credential
+    uses: ./.buildchain/runtime/actions/build/macos-credential-island
+    with:
+      input-root: .buildchain/credential-input
+      output-root: .buildchain/credential-output
+      source-repository: ${{ github.repository }}
+      source-sha: ${{ fromJSON(inputs.plan).source.sha }}
+      source-tree-sha: ${{ fromJSON(inputs.plan).source.tree_sha }}
+      source-ref: ${{ fromJSON(inputs.plan).source.ref }}
+      buildchain-runtime-sha: ${{ fromJSON(inputs.plan).identity.sha }}
+      artifact-name: ${{ format('{0}-macos-credential-{1}', fromJSON(inputs.plan).artifacts.name, fromJSON(inputs.plan).source.sha)
+        }}
+      platform-id: ${{ format('{0}-credential', fromJSON(inputs.platform).id) }}
+      artifact-relative-output: product/release
+      expected-bundle-id: ${{ steps.identity.outputs.bundle-id }}
+      expected-team-id: ${{ inputs.expected-team-id }}
+      certificate-sha1: ${{ inputs.certificate-sha1 }}
+      certificate-p12-base64: ${{ inputs.certificate-p12-base64 }}
+      certificate-password: ${{ inputs.certificate-password }}
+      notary-api-key-p8-base64: ${{ inputs.notary-api-key-p8-base64 }}
+      notary-api-key-id: ${{ inputs.notary-api-key-id }}
+      notary-api-issuer: ${{ inputs.notary-api-issuer }}
+  - name: Publish signed credential evidence
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/commands/sign.mjs" publish-credential
+    env:
+      BUILDCHAIN_PLAN: ${{ inputs.plan }}
+      GITHUB_TOKEN: ${{ github.token }}
+      BUILDCHAIN_PLATFORM: ${{ inputs.platform }}
+      BUILDCHAIN_CREDENTIAL_ARTIFACT_ROOT: ${{ steps.credential.outputs.artifact-root }}
+      BUILDCHAIN_CREDENTIAL_MANIFEST: ${{ steps.credential.outputs.manifest-path }}
+    if: ${{ inputs.kind == 'credential' }}

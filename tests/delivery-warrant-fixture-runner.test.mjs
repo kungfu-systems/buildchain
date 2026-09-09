@@ -7,16 +7,16 @@ import { fileURLToPath } from "node:url";
 import {
   DELIVERY_WARRANT_PROJECTION_CONTRACT,
   runDeliveryWarrantTraceFixture,
-} from "../packages/core/delivery-warrant-fixture-runner.js";
+} from "../packages/core/dev-delivery/delivery-warrant-fixture-runner.js";
 import {
   DELIVERY_WARRANT_SHADOW_OBSERVATION_CONTRACT,
   runDeliveryWarrantShadow,
-} from "../packages/core/delivery-warrant-shadow-adapter.js";
+} from "../packages/core/dev-delivery/delivery-warrant-shadow-adapter.js";
 import {
   DELIVERY_WARRANT_SEMANTIC_DIFF_REQUIRED_COVERAGE,
   runDeliveryWarrantSemanticDiffGate,
-} from "../packages/core/delivery-warrant-semantic-diff-gate.js";
-import { domainContentRoot } from "../packages/core/canonical-contracts.js";
+} from "../packages/core/dev-delivery/delivery-warrant-semantic-diff-gate.js";
+import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fixtureRoot = new URL(
@@ -222,7 +222,7 @@ test("the trace schema and pure runners remain closed and provider-free", () => 
 
   const javascript = fs.readFileSync(
     new URL(
-      "../packages/core/delivery-warrant-fixture-runner.js",
+      "../packages/core/dev-delivery/delivery-warrant-fixture-runner.js",
       import.meta.url,
     ),
     "utf8",

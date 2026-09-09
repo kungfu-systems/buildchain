@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
-import { verifyVersionStateDelta } from "../scripts/verify-version-state-delta.mjs";
-import { planVersionProjection } from "../scripts/source-verification-evidence.mjs";
+import { verifyVersionStateDelta } from "../packages/core/release/commands/verify-version-state-delta.mjs";
+import { planVersionProjection } from "../packages/core/build/commands/source-verification-evidence.mjs";
 
 function fixture(t) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-delta-test-"));
@@ -36,10 +36,10 @@ function fixture(t) {
     return git("rev-parse", "HEAD");
   };
   for (const file of [
-    "buildchain-config.js",
-    "build-configuration.js",
-    "buildchain-layout.js",
-    "spawn-command.js",
+    "consumer/buildchain-config.js",
+    "build/build-configuration.js",
+    "contracts/buildchain-layout.js",
+    "runtime/spawn-command.js",
   ])
     write(
       `packages/core/${file}`,
@@ -120,7 +120,7 @@ test("version-only delta regenerates all declared outputs from the exact base", 
 test("version projection ignores ambient archive line-ending conversion", (t) => {
   const { cwd, baseSha, headSha, nodeModules } = fixture(t);
   const moduleUrl = new URL(
-    "../scripts/verify-version-state-delta.mjs",
+    "../packages/core/release/commands/verify-version-state-delta.mjs",
     import.meta.url,
   ).href;
   const result = spawnSync(
@@ -195,8 +195,7 @@ test("differential verification requires full base proof and cannot reseal a pro
 });
 
 test("generated v4 projections never impersonate protected full source check names", async () => {
-  const { createGeneratedVersionStateChecks } =
-    await import("../actions/promote-buildchain-ref/lib.js");
+  const { createGeneratedVersionStateChecks } = await import("../packages/core/release/promote-ref/internal/generated-ref.js");
   for (const [branch, expected] of [
     ["dev/v4/v4.0", "Version-state projection / check"],
     ["alpha/v3/v3.0", "check"],

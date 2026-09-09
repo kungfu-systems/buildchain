@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   sealedCandidateVersion,
   selectProductPublicationPlan,
-} from "../actions/release-candidate-promote/product-provider.js";
+} from "../packages/core/release/promote-candidate/product-provider.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 
@@ -87,11 +87,11 @@ test("canonical APPLY recovers the candidate version from the sealed package man
 
 test("canonical APPLY activates the pnpm shim required by nested lifecycle scripts", () => {
   const provider = fs.readFileSync(
-    path.join(root, "actions/release-candidate-promote/product-provider.js"),
+    path.join(root, "packages/core/release/promote-candidate/product-provider.js"),
     "utf8",
   );
   const action = fs.readFileSync(
-    path.join(root, "actions/release-candidate-promote/index.js"),
+    path.join(root, "packages/core/release/promote-candidate/action.js"),
     "utf8",
   );
   assert.match(provider, /exec corepack pnpm@11\.7\.0/u);
@@ -104,21 +104,22 @@ test("canonical APPLY activates the pnpm shim required by nested lifecycle scrip
 
 test("fork governance retains a credential-limited receipt without claiming authority", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-ops-governance-audit.yml"),
+    path.join(root, "actions/governance/audit/action.yml"),
     "utf8",
   );
   assert.match(
     workflow,
-    /name: Mint bounded governance auditor token[\s\S]+KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''[\s\S]+continue-on-error: true/,
+    /name: Mint bounded governance auditor token[\s\S]+inputs\.auditor-private-key != ''[\s\S]+continue-on-error: true/,
   );
   assert.match(
     workflow,
-    /GH_TOKEN: \$\{\{ steps\.auditor\.outputs\.token \|\| secrets\.BUILDCHAIN_GOVERNANCE_READ_TOKEN \|\| github\.token \}\}/,
+    /GH_TOKEN: \$\{\{ steps\.auditor\.outputs\.token \|\| inputs\.governance-read-token \|\| github\.token \}\}/,
   );
   assert.match(
     workflow,
-    /FORK_PULL_REQUEST:[\s\S]+github\.event\.pull_request\.head\.repo\.fork[\s\S]+Fork PR governance is credential-limited/,
+    /FORK_PULL_REQUEST:[\s\S]+github\.event\.pull_request\.head\.repo\.fork/,
   );
+  assert.match(fs.readFileSync(path.join(root, "packages/core/governance/audit/enforce.mjs"), "utf8"), /Fork PR governance is credential-limited/);
 });
 
 test("fork pull requests cannot enter the release fixture authority path", () => {

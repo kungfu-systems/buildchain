@@ -135,7 +135,7 @@ impl ReleaseInvocation {
             ));
         }
         if self.publisher.repository != "kungfu-systems/buildchain"
-            || self.publisher.workflow != ".github/workflows/.release-candidate-promote.yml"
+            || self.publisher.workflow != ".github/workflows/.release-promote.yml"
             || self.publisher.job != "apply"
             || !git_sha(&self.publisher.workflow_sha)
         {

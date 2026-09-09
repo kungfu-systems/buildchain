@@ -5,7 +5,7 @@ import {
   containedPublishedGovernanceReleaseSha,
   containedPublishedReleaseCandidateVersion,
   containedPublishedVersionState,
-} from "../actions/promote-buildchain-ref/internal/contained-published-version-state.js";
+} from "../packages/core/release/promote-ref/internal/contained-published-version-state.js";
 
 const SHA = "a".repeat(40);
 

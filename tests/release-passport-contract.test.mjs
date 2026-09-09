@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createReleasePassport } from "../packages/core/release-passport.js";
+import { createReleasePassport } from "../packages/core/release/passport/assembly.js";
 import {
   RELEASE_PASSPORT_CHECK_MANIFEST_CONTRACT,
   RELEASE_PASSPORT_SCHEMA,
   RELEASE_PASSPORT_SCHEMA_ID,
   createReleasePassportCheckManifest,
   validateReleasePassportSchema,
-} from "../packages/core/release-passport-contract.js";
+} from "../packages/core/release/release-passport-contract.js";
 
 test("standalone release passport schema accepts a generated Buildchain passport", () => {
   const passport = createReleasePassport({

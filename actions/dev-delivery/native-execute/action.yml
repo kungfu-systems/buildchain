@@ -1,0 +1,118 @@
+name: Native delivery execute
+description: Own the execute adapter inside its isolated caller job.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  needs-json:
+    description: Exact dependency job results and admitted output coordinates.
+    required: false
+    default: '{}'
+runs:
+  using: composite
+  steps:
+  - name: Checkout Buildchain runtime without persisted credentials
+    if: ${{ success() }}
+    uses: actions/checkout@v7.0.0
+    with:
+      repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+      ref: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+      path: .buildchain/runtime
+      persist-credentials: false
+  - name: Verify exact admitted Buildchain runtime
+    if: ${{ success() }}
+    shell: bash
+    run: 'test "$(git -C .buildchain/runtime rev-parse --verify ''HEAD^{commit}'')" = "${ADMITTED_RUNTIME_SHA}"
+
+      '
+    env:
+      ADMITTED_RUNTIME_SHA: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+  - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+    with:
+      directory: .buildchain/runtime
+    if: ${{ success() }}
+  - name: Download immutable admission state
+    if: ${{ success() }}
+    uses: actions/download-artifact@v7.0.0
+    with:
+      name: buildchain-dev-delivery-control-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+        }}
+      path: .buildchain/dev-delivery
+  - name: Verify rooted runtime selection readback
+    if: ${{ success() }}
+    shell: bash
+    run: 'test "$(jq -er ''.resolvedSha'' .buildchain/dev-delivery/runtime-selection.json)" = "${ADMITTED_RUNTIME_SHA}"
+
+      test "sha256:$(sha256sum .buildchain/dev-delivery/runtime-selection.json | cut -d'' '' -f1)" = "${ADMITTED_RUNTIME_ROOT}"
+
+      '
+    env:
+      ADMITTED_RUNTIME_SHA: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+      ADMITTED_RUNTIME_ROOT: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-selection-root }}
+  - name: Checkout exact candidate for native qualification
+    if: ${{ success() }}
+    uses: actions/checkout@v7.0.0
+    with:
+      ref: ${{ fromJSON(inputs.request-json).expected-head-sha }}
+      fetch-depth: 0
+      path: .buildchain/candidate
+      persist-credentials: false
+  - name: Materialize optional reusable native proof
+    id: native-input
+    if: ${{ success() && (fromJSON(inputs.request-json).native-proof-json != '') }}
+    shell: bash
+    run: "printf '%s\\n' \"${NATIVE_PROOF_JSON}\" > .buildchain/dev-delivery/reusable-native-proof.json\nnode .buildchain/runtime/packages/core/dev-delivery/commands/dev-delivery-proof.mjs\
+      \ verify-native \\\n  --source-proof .buildchain/dev-delivery/reusable-native-proof.json \\\n  --output .buildchain/dev-delivery/reusable-native-proof-verification.json\n\
+      jq -e '.ok == true and .reason == \"exact-native-proof\"' \\\n  .buildchain/dev-delivery/reusable-native-proof-verification.json\
+      \ >/dev/null\necho \"path=.buildchain/dev-delivery/reusable-native-proof.json\" >> \"${GITHUB_OUTPUT}\"\n"
+    env:
+      NATIVE_PROOF_JSON: ${{ fromJSON(inputs.request-json).native-proof-json }}
+  - name: Run or reuse native proof without provider credentials
+    if: ${{ success() }}
+    id: native-run
+    continue-on-error: true
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/native.mjs" execute
+    env:
+      TARGET_BRANCH: ${{ fromJSON(inputs.needs-json).admission.outputs.target-branch }}
+      EXPECTED_PR: ${{ fromJSON(inputs.request-json).expected-pr-number }}
+      EXPECTED_HEAD: ${{ fromJSON(inputs.request-json).expected-head-sha }}
+      SOURCE_IDENTITY_ROOT: ${{ fromJSON(inputs.request-json).source-identity-root }}
+      SOURCE_PATCH_ROOT: ${{ fromJSON(inputs.request-json).source-patch-root }}
+      PLAN_ROOT: ${{ fromJSON(inputs.request-json).plan-root }}
+      CLOSURE_ROOT: ${{ fromJSON(inputs.request-json).closure-root }}
+      DEPENDENCY_ROOT: ${{ fromJSON(inputs.request-json).dependency-root }}
+      TOOLCHAIN_ROOT: ${{ fromJSON(inputs.request-json).toolchain-root }}
+      ENVIRONMENT_ROOT: ${{ fromJSON(inputs.request-json).environment-root }}
+      AFFECTED_PATHS: ${{ fromJSON(inputs.request-json).affected-paths-json }}
+      SHARD_ROOTS: ${{ fromJSON(inputs.request-json).shard-evidence-roots-json }}
+      NATIVE_COMMAND: ${{ fromJSON(inputs.request-json).native-command }}
+      NATIVE_PROOF_PATH: ${{ steps.native-input.outputs.path }}
+      LEASE_SECONDS: ${{ fromJSON(inputs.request-json).warrant-lease-seconds }}
+      HEARTBEAT_SECONDS: ${{ fromJSON(inputs.request-json).native-heartbeat-seconds }}
+      BUILDCHAIN_CREDENTIAL_ANCESTRY_BOUNDARY: github-actions-runner-worker/v1
+  - name: Record credentialless native job context
+    if: ${{ always() }}
+    shell: bash
+    run: "outcome=failed\nif [ \"${NATIVE_STEP_OUTCOME}\" = \"success\" ]; then\n  outcome=succeeded\nfi\nnode .buildchain/runtime/packages/core/dev-delivery/commands/dev-delivery-process-boundary.mjs\
+      \ record-native \\\n  --job native-execution \\\n  --outcome \"${outcome}\" \\\n  --output .buildchain/dev-delivery/native-job-context.json\n"
+    env:
+      BUILDCHAIN_RUNNER_ENVIRONMENT: ${{ runner.environment }}
+      NATIVE_STEP_OUTCOME: ${{ steps.native-run.outcome }}
+  - name: Upload raw native execution output
+    if: ${{ always() }}
+    uses: actions/upload-artifact@v7.0.1
+    with:
+      name: buildchain-dev-delivery-native-raw-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+        }}
+      path: .buildchain/dev-delivery/
+      if-no-files-found: error
+      retention-days: 30
+  - name: Preserve native execution outcome for provider settlement
+    if: ${{ always() && steps.native-run.outcome != 'success' }}
+    shell: bash
+    run: 'echo "::error::Native execution failed; the fresh provider finalizer must settle the retained fence"
+
+      exit 1
+
+      '

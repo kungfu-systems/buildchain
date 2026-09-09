@@ -7,7 +7,7 @@ import {
   collectGitHubHousekeeperInventory,
   formatGitHubHousekeeperPlan,
   runGitHubHousekeeper,
-} from "../packages/core/engineering-housekeeper-github.js";
+} from "../packages/core/governance/engineering-housekeeper-github.js";
 
 const repository = "kungfu-systems/buildchain";
 const targetBranch = "dev/v3/v3.0";

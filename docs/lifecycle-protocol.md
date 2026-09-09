@@ -205,7 +205,7 @@ git diff --check
 `lifecycle.check` is the repository-owned source-acceptance gate. It should
 validate the checked-out source revision without entering the build, artifact,
 or release lifecycle. Consumers can run it on GitHub-hosted Linux through
-`.github/workflows/check.yml@v3` with `mode: source`; the reusable workflow runs
+`.github/workflows/public-build-check.yml@v3` with `mode: source`; the reusable workflow runs
 only `lifecycle.install` and `lifecycle.check`. The default `mode: verify`
 continues to run `lifecycle.install` and `lifecycle.verify` for existing callers.
 Both executed stages receive `BUILDCHAIN_CHECK_MODE=source` or
@@ -246,7 +246,7 @@ disabled by default.
 ```yaml
 jobs:
   source-acceptance:
-    uses: kungfu-systems/buildchain/.github/workflows/check.yml@<exact-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-build-check.yml@<exact-sha>
     with:
       mode: source
       source-proof-reuse: true
@@ -290,7 +290,7 @@ node scripts/write-publish-evidence.mjs
 """
 ```
 
-When `actions/promote-buildchain-ref` runs with `publish-transaction: "true"`,
+When `actions/release/promote-ref` runs with `publish-transaction: "true"`,
 the publish stage receives the transaction identity plus the resolved publish
 contract:
 
@@ -336,7 +336,7 @@ any publish transaction side effect.
 
 ## Promotion Semantics
 
-`actions/promote-buildchain-ref` consumes `version.files`, `lifecycle.verify`,
+`actions/release/promote-ref` consumes `version.files`, `lifecycle.verify`,
 and optionally `lifecycle.publish`.
 
 The verify stage runs after Buildchain has applied the generated version-state
@@ -390,7 +390,7 @@ Buildchain preserves the platform-default shell for compatibility.
 ## Migration Preflight
 
 Heavy repositories can validate their Buildchain declaration before they are
-ready to run the real build. `actions/validate-config` checks that
+ready to run the real build. `actions/build/validate-config` checks that
 `.buildchain/buildchain.toml` parses, configured version-state files exist, configured
 version keys are strings, and required lifecycle stage names are declared.
 For web-surface repositories it also validates `project`, `channels`, `deploy`,
@@ -402,7 +402,7 @@ build and the first migration milestone is to prove the release metadata and
 lifecycle protocol without consuming build runners.
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/validate-config@v3
+- uses: kungfu-systems/buildchain/actions/build/validate-config@v3
   with:
     require-version-state: "true"
     require-lifecycle-stages: "install,build,verify"
@@ -412,7 +412,7 @@ Web-surface repositories can use the same action without requiring version
 state:
 
 ```yaml
-- uses: kungfu-systems/buildchain/actions/validate-config@v3
+- uses: kungfu-systems/buildchain/actions/build/validate-config@v3
   with:
     require-lifecycle-stages: "build,verify"
 ```
@@ -587,7 +587,7 @@ The lifecycle protocol is also the command source for the reusable build
 surface. `.github/workflows/.build.yml` runs `lifecycle.install`,
 `lifecycle.build`, and `lifecycle.verify` by default, while allowing callers to
 override each stage with explicit workflow inputs. The underlying
-`actions/run-lifecycle` action can be used directly by repositories that need a
+`actions/build/run-lifecycle` action can be used directly by repositories that need a
 custom workflow but still want Buildchain's lifecycle and deterministic manifest
 contract.
 

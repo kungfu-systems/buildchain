@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { selectMergedChannelPullRequest } from "../scripts/release-candidate-resolver.mjs";
+import { selectMergedChannelPullRequest } from "../packages/core/release/commands/release-candidate-resolver.mjs";
 
 const REPOSITORY = "kungfu-systems/buildchain";
 const TARGET_REF = "alpha/v4/v4.0";

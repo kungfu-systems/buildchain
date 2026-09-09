@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { completePublicationDevelopment } from "../actions/release-candidate-promote/publication-completion.js";
+import { completePublicationDevelopment } from "../packages/core/release/promote-candidate/publication-completion.js";
 
 const request = {
   repository: "owner/repo",

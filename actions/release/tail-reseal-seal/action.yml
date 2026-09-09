@@ -1,0 +1,129 @@
+name: tail-reseal-seal
+description: Execute the tail-reseal seal capability within its caller job boundary.
+inputs:
+  needs-plan-outputs-runtime-sha:
+    description: Caller needs.plan.outputs.runtime-sha value.
+    required: true
+  needs-plan-outputs-request-artifact:
+    description: Caller needs.plan.outputs.request-artifact value.
+    required: true
+  needs-plan-outputs-platforms-json:
+    description: Caller needs.plan.outputs.platforms-json value.
+    required: true
+  needs-plan-outputs-source-sha:
+    description: Caller needs.plan.outputs.source-sha value.
+    required: true
+  needs-plan-outputs-target-version:
+    description: Caller needs.plan.outputs.target-version value.
+    required: true
+  needs-plan-outputs-source-tree-sha:
+    description: Caller needs.plan.outputs.source-tree-sha value.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  needs-plan-outputs-consumer-policy-receipt-root:
+    description: Caller needs.plan.outputs.consumer-policy-receipt-root value.
+    required: true
+  needs-plan-outputs-warrant-readback-root:
+    description: Caller needs.plan.outputs.warrant-readback-root value.
+    required: true
+outputs:
+  release-candidate-passport-json:
+    description: release-candidate-passport-json node result.
+    value: ${{ steps.passport.outputs.release-candidate-passport-json }}
+  tail-reseal-receipt-root:
+    description: tail-reseal-receipt-root node result.
+    value: ${{ steps.receipt.outputs.receipt-root }}
+runs:
+  using: composite
+  steps:
+  - name: Checkout exact Buildchain tail runtime
+    uses: actions/checkout@v7.0.0
+    with:
+      repository: kungfu-systems/buildchain
+      ref: ${{ fromJSON(inputs.needs-plan-outputs-runtime-sha) }}
+      path: .buildchain/runtime
+      persist-credentials: false
+  - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+    with:
+      directory: .buildchain/runtime
+  - name: Download exact tail plan
+    uses: actions/download-artifact@v7.0.0
+    with:
+      name: ${{ fromJSON(inputs.needs-plan-outputs-request-artifact) }}
+      path: .buildchain/tail-reseal
+  - name: Download platform manifests and readbacks
+    uses: actions/download-artifact@v7.0.0
+    with:
+      pattern: '*-manifest-*'
+      path: .buildchain/tail-reseal/platforms
+  - name: Aggregate exact retained platform summary
+    id: summary
+    env:
+      BUILDCHAIN_SUMMARY_INPUT: .buildchain/tail-reseal/platforms
+      BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/tail-reseal/build-summary.json
+      BUILDCHAIN_ARTIFACT_NAME: v4-tail-reseal
+      BUILDCHAIN_PLATFORM_COUNT: 4
+      BUILDCHAIN_EXPECTED_PLATFORMS_JSON: ${{ fromJSON(inputs.needs-plan-outputs-platforms-json) }}
+      BUILDCHAIN_TRUSTED_EVENT: 'true'
+      BUILDCHAIN_PUBLISH_CHANNEL: alpha
+      BUILDCHAIN_PUBLISH_ALLOWED: 'true'
+      BUILDCHAIN_PUBLISH_REASON: exact-v4-tail-reseal
+      BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ fromJSON(inputs.needs-plan-outputs-source-sha) }}
+      BUILDCHAIN_PUBLISH_SOURCE_LOCKED: 'true'
+      BUILDCHAIN_PUBLISH_SOURCE_CHANNEL: alpha
+      BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION: ${{ fromJSON(inputs.needs-plan-outputs-target-version) }}
+      BUILDCHAIN_SOURCE_SHA: ${{ fromJSON(inputs.needs-plan-outputs-source-sha) }}
+      BUILDCHAIN_SOURCE_TREE_SHA: ${{ fromJSON(inputs.needs-plan-outputs-source-tree-sha) }}
+      BUILDCHAIN_RUNTIME_REF: v4-alpha
+      BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(inputs.needs-plan-outputs-runtime-sha) }}
+      BUILDCHAIN_RUNTIME_CLASS: alpha
+      BUILDCHAIN_RUNTIME_OVERRIDE: 'false'
+      BUILDCHAIN_WORKFLOW_SHELL_REF: v4-alpha
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/release/nodes/tail-reseal.mjs" aggregate
+    shell: bash -e {0}
+  - name: Generate standard v4 candidate Release Passport
+    id: passport
+    env:
+      BUILDCHAIN_BUILD_SUMMARY_PATH: .buildchain/tail-reseal/build-summary.json
+      BUILDCHAIN_RC_PASSPORT_PATH: .buildchain/tail-reseal/release-candidate-passport.json
+      BUILDCHAIN_RC_TARGET_CHANNEL: alpha
+      BUILDCHAIN_RC_VERSION: ${{ fromJSON(inputs.needs-plan-outputs-target-version) }}
+      BUILDCHAIN_RC_SOURCE_HEAD_SHA: ${{ fromJSON(inputs.needs-plan-outputs-source-sha) }}
+      BUILDCHAIN_RC_MERGE_REF_SHA: ${{ fromJSON(inputs.needs-plan-outputs-source-sha) }}
+      BUILDCHAIN_RC_SOURCE_TREE_HASH: ${{ fromJSON(inputs.needs-plan-outputs-source-tree-sha) }}
+      BUILDCHAIN_RUNTIME_REF: v4-alpha
+      BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(inputs.needs-plan-outputs-runtime-sha) }}
+      BUILDCHAIN_WORKFLOW_SHELL_REF: v4-alpha
+      BUILDCHAIN_V4_POLICY_RECEIPT_JSON: ${{ fromJSON(inputs.request-json).consumer-policy-receipt-json }}
+      BUILDCHAIN_V4_POLICY_RECEIPT_ROOT: ${{ fromJSON(inputs.needs-plan-outputs-consumer-policy-receipt-root) }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      GITHUB_RUN_ID: ${{ github.run_id }}
+      GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+    run: node .buildchain/runtime/packages/core/publication/commands/generate-release-candidate-passport.mjs
+    shell: bash -e {0}
+  - name: Seal tail receipt after all provider readbacks
+    id: receipt
+    env:
+      GITHUB_RUN_ID: ${{ github.run_id }}
+      GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+    run: node .buildchain/runtime/bin/buildchain.mjs tail-reseal seal --request .buildchain/tail-reseal/request.json --plan .buildchain/tail-reseal/plan.json --readbacks .buildchain/tail-reseal/platforms --passport .buildchain/tail-reseal/release-candidate-passport.json --protected-readback-root "${{ fromJSON(inputs.needs-plan-outputs-warrant-readback-root) }}" --output .buildchain/tail-reseal/receipt.json
+    shell: bash -e {0}
+  - name: Upload standard candidate and rooted tail evidence
+    uses: actions/upload-artifact@v7.0.1
+    with:
+      name: v4-tail-reseal-${{ fromJSON(inputs.needs-plan-outputs-source-sha) }}
+      path: '.buildchain/tail-reseal/admission.json
+
+        .buildchain/tail-reseal/plan.json
+
+        .buildchain/tail-reseal/build-summary.json
+
+        .buildchain/tail-reseal/release-candidate-passport.json
+
+        .buildchain/tail-reseal/receipt.json
+
+        '
+      if-no-files-found: error
+      retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}

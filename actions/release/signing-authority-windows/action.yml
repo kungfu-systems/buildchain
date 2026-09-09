@@ -1,0 +1,68 @@
+name: signing-authority-windows
+description: Execute the signing-authority windows capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  secrets-buildchain-windows-certificate-pfx-base64:
+    description: Explicit scoped provider credential.
+    required: true
+  secrets-buildchain-windows-certificate-password:
+    description: Explicit scoped provider credential.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .
+    - uses: actions/download-artifact@v7.0.0
+      with:
+        name: authority-intake-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/authority-intake
+    - name: Materialize exact unsigned PE
+      shell: pwsh
+      run: node packages/core/build/commands/materialize-artifact-signing-request.mjs
+      env:
+        BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
+        BUILDCHAIN_SIGNING_REQUEST_PATH: ${{ fromJSON(inputs.matrix-json).request.request }}
+        BUILDCHAIN_SIGNING_EXPECTED_PROFILE: windows-authenticode
+        BUILDCHAIN_UNSIGNED_OUTPUT: .buildchain/native-work/${{ fromJSON(inputs.matrix-json).request.slug }}/signed-payload.exe
+    - name: Authenticode sign, timestamp, and policy verify
+      shell: pwsh
+      run: ./packages/core/providers/commands/sign-windows-authenticode-request.ps1
+      env:
+        BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ fromJSON(inputs.matrix-json).request.slug }}/signed-payload.exe
+        BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ fromJSON(inputs.matrix-json).request.slug }}/provider-evidence.json
+        BUILDCHAIN_WINDOWS_CERTIFICATE_PFX_BASE64: ${{ inputs.secrets-buildchain-windows-certificate-pfx-base64 }}
+        BUILDCHAIN_WINDOWS_CERTIFICATE_PASSWORD: ${{ inputs.secrets-buildchain-windows-certificate-password }}
+        BUILDCHAIN_WINDOWS_CERTIFICATE_SHA1: ${{ vars.BUILDCHAIN_WINDOWS_CERTIFICATE_SHA1 }}
+        BUILDCHAIN_WINDOWS_TIMESTAMP_URL: ${{ vars.BUILDCHAIN_WINDOWS_TIMESTAMP_URL }}
+    - name: Seal native signed result
+      shell: pwsh
+      run: node packages/core/build/commands/finalize-native-artifact-signing-result.mjs
+      env:
+        BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
+        BUILDCHAIN_SIGNING_REQUEST_PATH: ${{ fromJSON(inputs.matrix-json).request.request }}
+        BUILDCHAIN_SIGNED_PAYLOAD: .buildchain/native-work/${{ fromJSON(inputs.matrix-json).request.slug }}/signed-payload.exe
+        BUILDCHAIN_SIGNING_EVIDENCE: .buildchain/native-work/${{ fromJSON(inputs.matrix-json).request.slug }}/provider-evidence.json
+        BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/provider-results/${{ fromJSON(inputs.matrix-json).request.slug }}
+        BUILDCHAIN_SIGNING_VERIFICATION_CHECKS: signtool-policy,sha256-file-digest,rfc3161-timestamp,publisher-fingerprint,powershell-valid
+    - uses: actions/upload-artifact@v7.0.1
+      with:
+        name: authority-result-windows-${{ fromJSON(inputs.matrix-json).request.slug }}-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/provider-results/${{ fromJSON(inputs.matrix-json).request.slug }}
+        if-no-files-found: error
+        retention-days: 14
+        compression-level: 0

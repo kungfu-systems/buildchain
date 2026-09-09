@@ -29,10 +29,10 @@
   "publicationTargets": ["stable-ref", "npm-tag", "oci-tag", "github-release"],
   "implementations": {
     "rustDomain": "crates/buildchain-domain-contracts/src/stable_publication_fence.rs",
-    "typescript": "packages/core/stable-publication-fence.js",
-    "wasmRuntime": "packages/core/domain-wasm.js",
-    "wasmArtifact": "packages/core/buildchain-domain.wasm",
-    "artifactMetadata": "packages/core/domain-wasm-artifact.js"
+    "typescript": "packages/core/release/stable-publication-fence.js",
+    "wasmRuntime": "packages/core/runtime/domain-wasm.js",
+    "wasmArtifact": "packages/core/runtime/buildchain-domain.wasm",
+    "artifactMetadata": "packages/core/runtime/domain-wasm-artifact.js"
   },
   "roots": [
     "stable-publication-candidate",

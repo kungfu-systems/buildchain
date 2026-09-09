@@ -13,7 +13,7 @@ The canonical order is:
 5. `public-readback`
 6. `evidence-synthesized`
 
-`packages/core/release-activation-transaction.js` is the executable authority.
+`packages/core/release/release-activation-transaction.js` is the executable authority.
 Every transaction binds an exact product source SHA, exact reviewed site source
 SHA, tag, channel, version, environment, artifact-set root, and the three
 repository owners. A later phase cannot pass while an earlier phase is

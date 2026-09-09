@@ -6,7 +6,7 @@
   "nodes": [
     {
       "id": "source",
-      "action": ".github/actions/dev-delivery/source/action.yml",
+      "action": "actions/dev-delivery/source/action.yml",
       "domains": ["admission"],
       "inputs": ["request-json", "github-token"],
       "outputs": [
@@ -22,7 +22,7 @@
     },
     {
       "id": "reserve",
-      "action": ".github/actions/dev-delivery/reserve/action.yml",
+      "action": "actions/dev-delivery/reserve/action.yml",
       "domains": ["admission"],
       "inputs": [
         "request-json",
@@ -48,7 +48,7 @@
     },
     {
       "id": "native",
-      "action": ".github/actions/dev-delivery/native/action.yml",
+      "action": "actions/dev-delivery/native/action.yml",
       "domains": [
         "native-execution",
         "seal-native-execution",
@@ -63,7 +63,7 @@
     },
     {
       "id": "qualify",
-      "action": ".github/actions/dev-delivery/qualify/action.yml",
+      "action": "actions/dev-delivery/qualify/action.yml",
       "domains": ["merge-dev-prs"],
       "inputs": ["request-json", "github-token", "needs-json"],
       "outputs": [
@@ -79,7 +79,7 @@
     },
     {
       "id": "settle",
-      "action": ".github/actions/dev-delivery/settle/action.yml",
+      "action": "actions/dev-delivery/settle/action.yml",
       "domains": ["merge-dev-prs", "close"],
       "inputs": [
         "request-json",
@@ -87,7 +87,8 @@
         "needs-json",
         "boundary-outcome",
         "boundary-native-outcome",
-        "phase"
+        "phase",
+        "runtime-ref"
       ],
       "outputs": [
         "evidence-integration-proof-root",
@@ -99,7 +100,7 @@
     },
     {
       "id": "land",
-      "action": ".github/actions/dev-delivery/land/action.yml",
+      "action": "actions/dev-delivery/land/action.yml",
       "domains": ["merge-dev-prs"],
       "inputs": [
         "request-json",
@@ -143,6 +144,6 @@
       "nodes": ["settle"]
     }
   },
-  "maxNodeLines": 360,
-  "maxTotalNodeLines": 1600
+  "maxNodeLines": 160,
+  "maxTotalNodeLines": 960
 }

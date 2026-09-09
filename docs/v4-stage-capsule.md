@@ -182,7 +182,7 @@ authorized by this qualification.
 Focused local rehearsal:
 
 ```sh
-node scripts/stage-capsule-qualification.mjs campaign \
+node packages/core/build/commands/stage-capsule-qualification.mjs campaign \
   --work-root /tmp/buildchain-v4-stage-qualification \
   --platform linux-x64 \
   --consumer buildchain \

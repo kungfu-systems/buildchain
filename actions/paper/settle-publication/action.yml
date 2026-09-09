@@ -1,0 +1,135 @@
+name: settle-publication
+description: Paper settle publication.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  secrets-buildchain-generated-write-token:
+    description: Explicit scoped provider credential.
+    required: true
+  promote-outcome:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-package-name:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-package-version:
+    description: Exact preceding paper node result.
+    required: true
+  promote-outputs-public-release-tag:
+    description: Exact preceding paper node result.
+    required: true
+  target-outputs-sha:
+    description: Exact preceding paper node result.
+    required: true
+  target-outputs-channel:
+    description: Exact preceding paper node result.
+    required: true
+  promote-outputs-release-passport-path:
+    description: Exact preceding paper node result.
+    required: true
+  core-node-outputs-node-path:
+    description: Exact preceding paper node result.
+    required: true
+  controller-plan-outcome:
+    description: Exact preceding Paper node result.
+    required: true
+  publish-outcome:
+    description: Exact preceding Paper node result.
+    required: true
+  candidate-outputs-manifest-path:
+    description: Exact preceding Paper node result.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Seal exact downstream propagation release envelope
+      id: upstream-release
+      if: ${{ !fromJSON(inputs.request-json).dry-run && inputs.promote-outcome == 'success' }}
+      env:
+        PACKAGE_NAME: ${{ inputs.candidate-outputs-package-name }}
+        PACKAGE_VERSION: ${{ inputs.candidate-outputs-package-version }}
+        RELEASE_TAG: ${{ inputs.promote-outputs-public-release-tag }}
+        SOURCE_SHA: ${{ inputs.target-outputs-sha }}
+        CHANNEL: ${{ inputs.target-outputs-channel }}
+        RELEASE_PASSPORT_PATH: ${{ inputs.promote-outputs-release-passport-path }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/paper/nodes/publish.mjs" envelope
+    - name: Upload exact downstream propagation release envelope
+      if: ${{ !fromJSON(inputs.request-json).dry-run && steps.upstream-release.outcome == 'success' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: paper-upstream-release-${{ inputs.candidate-outputs-package-version }}-${{ inputs.target-outputs-sha }}
+        path: .buildchain/upstream-release.json
+        if-no-files-found: error
+    - name: Capture configured downstream propagation work
+      id: capture-propagation
+      if: ${{ !fromJSON(inputs.request-json).dry-run && steps.upstream-release.outcome == 'success' }}
+      env:
+        GH_TOKEN: ${{ inputs.secrets-buildchain-generated-write-token || github.token }}
+        SOURCE_SHA: ${{ inputs.target-outputs-sha }}
+        PACKAGE_VERSION: ${{ inputs.candidate-outputs-package-version }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/paper/nodes/publish.mjs" capture
+    - name: Upload configured downstream propagation work
+      if: ${{ !fromJSON(inputs.request-json).dry-run && steps.capture-propagation.outputs.configured == 'true' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ steps.capture-propagation.outputs.artifact-name }}
+        path: |
+          .buildchain/release-propagation-config.json
+          .buildchain/release-propagation-plan.json
+          .buildchain/release-propagation-work/*/work.json
+          .buildchain/release-propagation-work/*/status.json
+        if-no-files-found: error
+    - name: Aggregate Paper publication controller receipt
+      id: controller-receipt
+      if: ${{ always() && inputs.controller-plan-outcome == 'success' }}
+      shell: bash
+      env:
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+        PUBLISH_OUTCOME: ${{ inputs.publish-outcome }}
+        READBACK_OUTCOME: ${{ steps.upstream-release.outcome }}
+        AGGREGATE_OUTCOME: ${{ success() && 'success' || 'failure' }}
+        MANIFEST_PATH: ${{ inputs.candidate-outputs-manifest-path }}
+        RELEASE_PASSPORT_PATH: ${{ inputs.promote-outputs-release-passport-path }}
+        RELEASE_TAG: ${{ inputs.promote-outputs-public-release-tag }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/paper/nodes/controller.mjs" receipt
+    - name: Upload Paper publication controller receipt
+      if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ steps.controller-receipt.outputs.controller-receipt-artifact }}
+        path: .buildchain/paper-controller/receipt.json
+        if-no-files-found: error
+    - name: Require qualifying Paper publication controller receipt
+      if: ${{ always() && inputs.controller-plan-outcome == 'success' }}
+      shell: bash
+      env:
+        QUALIFYING: ${{ steps.controller-receipt.outputs.controller-receipt-qualifying }}
+      run: |
+        test "$QUALIFYING" = true
+outputs:
+  upstream-release-json:
+    description: upstream-release-json node result.
+    value: ${{ steps.upstream-release.outputs.json }}
+  propagation-work-artifact:
+    description: propagation-work-artifact node result.
+    value: ${{ steps.capture-propagation.outputs.artifact-name }}
+  controller-receipt-json:
+    description: Complete Paper publication controller receipt.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+  controller-receipt-digest:
+    description: Complete Paper publication controller receipt.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+  controller-receipt-artifact:
+    description: Complete Paper publication controller receipt.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-artifact }}
+  controller-receipt-status:
+    description: Complete Paper publication controller receipt.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-status }}

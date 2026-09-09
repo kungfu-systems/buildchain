@@ -8,8 +8,8 @@ import {
   BUILDCHAIN_COMPILER_CACHE_PREPARATION_CONTRACT,
   prepareCompilerCacheEvidence,
   verifyCompilerCacheActivity,
-} from "../scripts/compiler-cache-evidence.mjs";
-import { createStructuredCacheEvidence } from "../packages/core/diagnostics.js";
+} from "../packages/core/build/commands/compiler-cache-evidence.mjs";
+import { createStructuredCacheEvidence } from "../packages/core/observability/diagnostics.js";
 
 function commandResult(stdout = "") {
   return {

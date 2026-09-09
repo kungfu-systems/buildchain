@@ -6,12 +6,12 @@
     "revision": "3fd14c7a6237c3a1709ce29fc9fcb4ac150a0e5d",
     "inventory": "architecture/baseline-core-mechanism-inventory.json",
     "manifest": "architecture/capability-state-machine-manifest.json",
-    "legacyCore": "packages/core/dev-delivery-warrant.js",
-    "legacyStore": "scripts/dev-delivery-warrant.mjs",
+    "legacyCore": "packages/core/dev-delivery/dev-delivery-warrant.js",
+    "legacyStore": "packages/core/dev-delivery/commands/dev-delivery-warrant.mjs",
     "legacyWorkflows": [
       ".github/workflows/self-ops-dev-delivery.yml",
-      ".github/workflows/dev-delivery-warrant-close.yml",
-      ".github/workflows/dev-delivery-warrant-cancel.yml"
+      ".github/workflows/public-ops-warrant-close.yml",
+      ".github/workflows/public-ops-warrant-cancel.yml"
     ]
   },
   "legacyAuthority": {

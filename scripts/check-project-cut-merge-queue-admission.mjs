@@ -4,7 +4,7 @@ import {
   ProjectCutAdmissionError,
   qualifyProjectCut,
   releaseFamilyQueueLease,
-} from "./project-cut-merge-queue-admission.mjs";
+} from "../packages/core/dev-delivery/commands/project-cut-merge-queue-admission.mjs";
 
 function parseArguments(argv) {
   const options = {};

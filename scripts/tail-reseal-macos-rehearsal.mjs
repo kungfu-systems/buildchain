@@ -6,8 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { domainContentRoot } from "../packages/core/canonical-contracts.js";
-import { verifyTailResealPlatform } from "./tail-reseal.mjs";
+import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
+import { verifyTailResealPlatform } from "../packages/core/release/commands/tail-reseal.mjs";
 
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);

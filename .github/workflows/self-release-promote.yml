@@ -1,158 +1,147 @@
 name: Buildchain Ref Promotion
-
 on:
   workflow_run:
-    workflows: ["Verify"]
+    workflows:
+      - Verify
     branches:
-      - "alpha/v*/v*"
-      - "release/v*/v*"
-      - "publish-gate/major"
-      - "major-gate"
-    types: [completed]
+      - alpha/v*/v*
+      - release/v*/v*
+      - publish-gate/major
+    types:
+      - completed
   workflow_dispatch:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        required: false
-        default: ""
       sha:
-        description: "Verified alpha/release commit to promote. Defaults to the current workflow ref SHA."
+        description: Verified alpha/release commit to promote. Defaults to the current workflow ref SHA.
         required: false
         default: ""
       target-ref:
-        description: "Buildchain channel branch to promote"
+        description: Buildchain channel branch to promote
         required: true
-        default: "alpha/v4/v4.0"
+        default: alpha/v4/v4.1
       dry-run:
-        description: "Only print planned tag updates"
+        description: Only print planned tag updates
         required: true
         default: "true"
       recover-durable-transaction:
-        description: "Recover an existing durable transaction from its exact original source SHA using fresh GitHub-hosted admission"
+        description: Recover an existing durable transaction from its exact original source SHA using fresh GitHub-hosted admission
         required: true
         default: false
         type: boolean
       publication-admission-json:
-        description: "Fresh sealed admission JSON required for manual apply"
+        description: Fresh sealed admission JSON required for manual apply
         required: false
         default: ""
       publication-runner-provenance-json:
-        description: "Runner provenance receipt JSON bound by the admission"
+        description: Runner provenance receipt JSON bound by the admission
         required: false
         default: ""
       publication-control-plane-audit-json:
-        description: "Fresh external control-plane audit receipt JSON"
+        description: Fresh external control-plane audit receipt JSON
         required: false
         default: ""
       publication-gate-aggregate-json:
-        description: "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision"
+        description: Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision
         required: false
         default: ""
       publication-expected-json:
-        description: "Independent exact publication bindings JSON"
+        description: Independent exact publication bindings JSON
         required: false
         default: ""
       publication-used-nonces-json:
-        description: "JSON array of consumed admission nonces"
+        description: JSON array of consumed admission nonces
         required: false
         default: "[]"
       release-passport-v4-runtime-resume-evidence-json:
-        description: "Verified runtime A+B Stage Capsule resume evidence JSON"
+        description: Verified runtime A+B Stage Capsule resume evidence JSON
         required: false
         default: ""
       resume-candidate-repository:
-        description: "Repository that owns the sealed candidate run"
+        description: Repository that owns the sealed candidate run
         required: false
         default: ""
       resume-candidate-run-id:
-        description: "Exact successful Build Surface Fixture run ID to recover"
+        description: Exact successful Build Surface Fixture run ID to recover
         required: false
         default: ""
       resume-expected-source-tree:
-        description: "Exact Git tree recorded for the candidate"
+        description: Exact Git tree recorded for the candidate
         required: false
         default: ""
       resume-expected-candidate-root:
-        description: "Optional exact sha256 Release Candidate root"
+        description: Optional exact sha256 Release Candidate root
         required: false
         default: ""
       resume-expected-candidate-runtime-sha:
-        description: "Exact Buildchain runtime SHA recorded in the candidate Passport"
+        description: Exact Buildchain runtime SHA recorded in the candidate Passport
         required: false
         default: ""
       resume-buildchain-runtime-sha:
-        description: "Exact current Buildchain tooling SHA used by this recovery run"
+        description: Exact current Buildchain tooling SHA used by this recovery run
         required: false
         default: ""
       resume-buildchain-runtime-ref:
-        description: "Approved v4 train or authority ref resolving to the recovery runtime SHA"
+        description: Approved v4 train or authority ref resolving to the recovery runtime SHA
         required: false
         default: ""
       resume-transaction-id:
-        description: "Optional existing durable transaction identity"
+        description: Optional existing durable transaction identity
         required: false
         default: ""
-
 permissions:
   contents: read
-
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate promotion
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs['universal-request-json'] != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    permissions:
-      actions: write
-      artifact-metadata: write
-      attestations: write
-      checks: write
-      contents: write
-      deployments: write
-      id-token: write
-      issues: write
-      packages: write
-      pages: write
-      pull-requests: write
-      security-events: write
-      statuses: write
-    secrets: inherit
-    with:
-      request-json: ${{ inputs['universal-request-json'] }}
-
   reject-manual-apply:
-    if: ${{ inputs['universal-request-json'] == '' && github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['recover-durable-transaction'] != true && inputs['resume-candidate-run-id'] == '' && inputs['publication-admission-json'] == '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['dry-run'] != 'true' && inputs['recover-durable-transaction'] != true && inputs['resume-candidate-run-id'] == '' && inputs['publication-admission-json'] == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
+      - name: Load request admission node
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
       - name: Reject manual apply
-        run: |
-          echo "::error::Manual apply requires a fresh sealed publication admission."
-          echo "::error::Provide admission, runner, control-plane audit, expected bindings, and used nonces JSON."
-          exit 1
-
+        uses: ./.buildchain/workflow-shell/actions/workflow/reject-request
+        with:
+          reason: Manual apply requires a fresh sealed publication admission. Provide admission, runner, control-plane audit, expected bindings, and used nonces JSON.
   reject-invalid-durable-recovery:
-    if: ${{ inputs['universal-request-json'] == '' && github.event_name == 'workflow_dispatch' && inputs['recover-durable-transaction'] == true && inputs.sha == '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['recover-durable-transaction'] == true && inputs.sha == '' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
+      - name: Load request admission node
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
       - name: Require exact recovery SHA
-        run: |
-          echo "::error::Durable transaction recovery requires the exact original transaction source SHA."
-          exit 1
-
+        uses: ./.buildchain/workflow-shell/actions/workflow/reject-request
+        with:
+          reason: Durable transaction recovery requires the exact original transaction source SHA.
   reject-invalid-candidate-recovery:
-    if: ${{ inputs['universal-request-json'] == '' && github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && ((!startsWith(inputs['target-ref'], 'alpha/') && !startsWith(inputs['target-ref'], 'release/')) || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || inputs['resume-expected-source-tree'] == '') }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs['resume-candidate-run-id'] != '' && ((!startsWith(inputs['target-ref'], 'alpha/') && !startsWith(inputs['target-ref'], 'release/')) || inputs.sha == '' || inputs['resume-candidate-repository'] == '' || inputs['resume-buildchain-runtime-ref'] == '' || inputs['resume-buildchain-runtime-sha'] == '' || inputs['resume-expected-candidate-runtime-sha'] == '' || inputs['resume-expected-source-tree'] == '') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
+      - name: Load request admission node
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
       - name: Require exact candidate recovery identity
-        run: |
-          echo "::error::Candidate recovery requires an exact channel, source, candidate, tree, and runtime identity."
-          exit 1
-
+        uses: ./.buildchain/workflow-shell/actions/workflow/reject-request
+        with:
+          reason: Candidate recovery requires an exact channel, source, candidate, tree, and runtime identity.
   classify-workflow-run:
     name: Classify exact publication head
     if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && (startsWith(github.event.workflow_run.head_branch, 'alpha/') || startsWith(github.event.workflow_run.head_branch, 'release/')) }}
@@ -160,92 +149,34 @@ jobs:
     permissions:
       contents: read
     outputs:
-      action: ${{ steps.classify.outputs.action }}
-      finalized-version: ${{ steps.classify.outputs.finalized-version }}
+      action: ${{ steps.node.outputs.action }}
+      finalized-version: ${{ steps.node.outputs.finalized-version }}
     steps:
       - name: Checkout the exact verified publication head
         uses: actions/checkout@v7.0.0
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
-
-      - name: Classify generated product-state finalization
-        id: classify
-        uses: actions/github-script@v8
-        env:
-          BUILDCHAIN_TARGET_REF: ${{ github.event.workflow_run.head_branch }}
-          BUILDCHAIN_TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+        id: source-checkout
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          script: |
-            const { pathToFileURL } = require("node:url");
-            const runtime = await import(pathToFileURL(
-              `${process.env.GITHUB_WORKSPACE}/packages/core/universal-workflow-bootstrap.js`,
-            ).href);
-            const requestedSha = process.env.BUILDCHAIN_TARGET_SHA;
-            const head = await github.rest.git.getCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: requestedSha,
-            });
-            const refs = await github.paginate(github.rest.git.listMatchingRefs, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: "heads/buildchain/v4-product-state/",
-              per_page: 100,
-            });
-            const recoveryStates = [];
-            for (const stateRef of refs) {
-              const match = stateRef.ref.match(
-                /^refs\/heads\/buildchain\/v4-product-state\/([0-9a-f]{40})-/,
-              );
-              if (!match) continue;
-              const stateCommit = (await github.rest.git.getCommit({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                commit_sha: stateRef.object.sha,
-              })).data;
-              if (stateCommit.tree?.sha !== head.data.tree?.sha) continue;
-              const comparison = await github.rest.repos.compareCommitsWithBasehead({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                basehead: `${stateRef.object.sha}...${requestedSha}`,
-              });
-              const version = runtime.productStateVersion(stateRef, match[1]);
-              let exactTagRef;
-              try {
-                exactTagRef = (await github.rest.git.getRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: `tags/v${version}`,
-                })).data;
-              } catch (error) {
-                if (error.status !== 404) throw error;
-              }
-              recoveryStates.push({
-                stateRef,
-                stateCommit,
-                exactTagRef,
-                headComparisonStatus: comparison.data.status,
-              });
-            }
-            const finalizedVersion = runtime.selectFinalizedProductPublicationVersion({
-              requestedSha,
-              requestedTree: head.data.tree.sha,
-              targetRef: process.env.BUILDCHAIN_TARGET_REF,
-              recoveryStates,
-            });
-            core.setOutput("action", finalizedVersion ? "noop" : "promote");
-            core.setOutput("finalized-version", finalizedVersion);
-            if (finalizedVersion) {
-              core.info(`Publication head is generated finalization for v${finalizedVersion}; no new promotion is required.`);
-            }
-
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+        if: ${{ always() }}
+      - name: Classify exact publication head
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/release/promote-classify-workflow-run
+        if: ${{ always() }}
+        with:
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}
   promote:
     needs: classify-workflow-run
-    if: >-
+    if: |-
       ${{
         always() &&
-        inputs['universal-request-json'] == '' &&
         (
           (
           github.event_name == 'workflow_dispatch' &&
@@ -263,7 +194,7 @@ jobs:
           )
         )
       }}
-    uses: kungfu-systems/buildchain/.github/workflows/.release-candidate-promote.yml@v4-alpha
+    uses: ./.github/workflows/public-release-promote.yml
     permissions:
       actions: write
       artifact-metadata: write
@@ -275,50 +206,50 @@ jobs:
       pull-requests: write
     secrets: inherit
     with:
-      buildchain-repository: kungfu-systems/buildchain
-      buildchain-ref: ${{ inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && github.sha || 'v4-alpha' }}
-      buildchain-expected-channel: alpha
-      buildchain-expected-major: "4"
-      buildchain-contract-lock-path: .buildchain/alpha-contract-lock.json
-      buildchain-alpha-contract-lock-path: .buildchain/alpha-contract-lock.json
-      buildchain-stable-contract-lock-path: .buildchain/contract-lock.json
-      target-ref: ${{ github.event.workflow_run.head_branch || inputs['target-ref'] }}
-      target-sha: ${{ github.event.workflow_run.head_sha || inputs.sha || github.sha }}
-      package-manager: pnpm
-      artifact-name: libnode-shaped
-      release-candidate-workflow-file: self-build-fixture.yml
-      release-candidate-workflow-name: Build Surface Fixture
-      resume-candidate-repository: ${{ inputs['resume-candidate-repository'] }}
-      resume-candidate-run-id: ${{ inputs['resume-candidate-run-id'] }}
-      resume-expected-workflow-file: self-build-fixture.yml
-      resume-expected-workflow-name: Build Surface Fixture
-      resume-expected-source-tree: ${{ inputs['resume-expected-source-tree'] }}
-      resume-expected-candidate-root: ${{ inputs['resume-expected-candidate-root'] }}
-      resume-expected-candidate-runtime-sha: ${{ inputs['resume-expected-candidate-runtime-sha'] }}
-      resume-buildchain-runtime-sha: ${{ inputs['resume-buildchain-runtime-sha'] }}
-      resume-transaction-id: ${{ inputs['resume-transaction-id'] }}
-      artifact-patterns: buildchain-package-*
-      publish-rematerialize-on-resume: true
-      github-release: true
-      github-release-payload-patterns: ${{ inputs['resume-candidate-run-id'] != '' && '*.tgz' || '' }}
-      standalone-binary-distribution: ${{ inputs['resume-candidate-run-id'] == '' }}
-      required-status-check: check
-      branch-protection-bypass-apps: ${{ vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions' }}
-      required-artifact-count: 0
-      publish-transaction-override: ${{ inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '' }}
-      publish-required-artifacts-json: '[{"group":"node","kind":"npm","name":"@kungfu-tech/buildchain","ref_template":"{version}","role":"main","required":true}]'
-      publish-package-main: "@kungfu-tech/buildchain"
-      trusted-publishing: true
-      release-passport: true
-      release-passport-product-name: Buildchain
-      release-passport-buildchain-self-kfd: true
-      release-passport-impact-json: .buildchain/release-impact.json
-      publication-auto-admission: true
-      publication-auto-no-gate: true
-      publication-publisher-workflow-path: .github/workflows/self-release-promote.yml
-      publication-authority-workflow-path: .github/workflows/.release-candidate-promote.yml
-      publication-product: Buildchain
-      publication-target: npm:@kungfu-tech/buildchain
-      publication-package-name: "@kungfu-tech/buildchain"
-      declarative-release-tail: true
-      dry-run: ${{ inputs['dry-run'] == 'true' }}
+      request-json: |-
+        {
+          "schema": "buildchain.promotion-request/v1",
+          "buildchain-repository": "kungfu-systems/buildchain",
+          "buildchain-ref": ${{ toJSON(inputs['resume-candidate-run-id'] != '' && inputs['resume-buildchain-runtime-ref'] || inputs['recover-durable-transaction'] == true && github.sha || '') }},
+          "buildchain-contract-lock-path": ".buildchain/alpha-contract-lock.json",
+          "buildchain-alpha-contract-lock-path": ".buildchain/alpha-contract-lock.json",
+          "buildchain-stable-contract-lock-path": ".buildchain/contract-lock.json",
+          "target-ref": ${{ toJSON(github.event.workflow_run.head_branch || inputs['target-ref']) }},
+          "target-sha": ${{ toJSON(github.event.workflow_run.head_sha || inputs.sha || github.sha) }},
+          "package-manager": "pnpm",
+          "artifact-name": "libnode-shaped",
+          "release-candidate-workflow-file": "self-build-fixture.yml",
+          "release-candidate-workflow-name": "Build Surface Fixture",
+          "resume-candidate-repository": ${{ toJSON(inputs['resume-candidate-repository']) }},
+          "resume-candidate-run-id": ${{ toJSON(inputs['resume-candidate-run-id']) }},
+          "resume-expected-workflow-file": "self-build-fixture.yml",
+          "resume-expected-workflow-name": "Build Surface Fixture",
+          "resume-expected-source-tree": ${{ toJSON(inputs['resume-expected-source-tree']) }},
+          "resume-expected-candidate-root": ${{ toJSON(inputs['resume-expected-candidate-root']) }},
+          "resume-expected-candidate-runtime-sha": ${{ toJSON(inputs['resume-expected-candidate-runtime-sha']) }},
+          "resume-buildchain-runtime-sha": ${{ toJSON(inputs['resume-buildchain-runtime-sha']) }},
+          "resume-transaction-id": ${{ toJSON(inputs['resume-transaction-id']) }},
+          "artifact-patterns": "buildchain-package-*",
+          "publish-rematerialize-on-resume": true,
+          "github-release": true,
+          "github-release-payload-patterns": ${{ toJSON(inputs['resume-candidate-run-id'] != '' && '*.tgz' || '') }},
+          "standalone-binary-distribution": ${{ toJSON(inputs['resume-candidate-run-id'] == '') }},
+          "required-status-check": "check",
+          "branch-protection-bypass-apps": ${{ toJSON(vars.BUILDCHAIN_PROMOTION_BYPASS_APPS || 'github-actions') }},
+          "required-artifact-count": 0,
+          "publish-transaction-override": ${{ toJSON(inputs['recover-durable-transaction'] == true || inputs['resume-candidate-run-id'] != '') }},
+          "publish-required-artifacts-json": "[{\"group\":\"node\",\"kind\":\"npm\",\"name\":\"@kungfu-tech/buildchain\",\"ref_template\":\"{version}\",\"role\":\"main\",\"required\":true}]",
+          "publish-package-main": "@kungfu-tech/buildchain",
+          "trusted-publishing": true,
+          "release-passport": true,
+          "release-passport-product-name": "Buildchain",
+          "release-passport-buildchain-self-kfd": true,
+          "release-passport-impact-json": ".buildchain/release-impact.json",
+          "publication-auto-admission": true,
+          "publication-auto-no-gate": true,
+          "publication-publisher-workflow-path": ".github/workflows/self-release-promote.yml",
+          "publication-product": "Buildchain",
+          "publication-target": "npm:@kungfu-tech/buildchain",
+          "publication-package-name": "@kungfu-tech/buildchain",
+          "dry-run": ${{ toJSON(inputs['dry-run'] == 'true') }}
+        }

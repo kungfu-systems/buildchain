@@ -1,0 +1,156 @@
+name: demo-adapter-gate
+description: Execute the demo-adapter gate capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  job-workflow-sha:
+    description: Caller job.workflow_sha value.
+    required: true
+outputs:
+  source-sha:
+    description: source-sha node result.
+    value: ${{ steps.source.outputs.source-sha }}
+  gate-artifact-name:
+    description: gate-artifact-name node result.
+    value: ${{ steps.finalize.outputs.gate-artifact-name }}
+  gate-artifact-id:
+    description: gate-artifact-id node result.
+    value: ${{ steps.upload.outputs.artifact-id }}
+  gate-artifact-digest:
+    description: gate-artifact-digest node result.
+    value: ${{ steps.upload.outputs.artifact-digest }}
+  gate-artifact-url:
+    description: gate-artifact-url node result.
+    value: ${{ steps.upload.outputs.artifact-url }}
+  gate-root:
+    description: gate-root node result.
+    value: ${{ steps.finalize.outputs.gate-root }}
+runs:
+  using: composite
+  steps:
+    - name: Evaluate event trust
+      id: trust
+      shell: bash
+      env:
+        REQUIRE_TRUSTED_EVENT: ${{ fromJSON(inputs.request-json).require-trusted-event }}
+        PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        CALLER_REPOSITORY: ${{ github.repository }}
+      run: |
+        trusted=true
+        if [ "${REQUIRE_TRUSTED_EVENT}" = "true" ] && [ "${GITHUB_EVENT_NAME}" = "pull_request" ] && [ "${PR_HEAD_REPOSITORY}" != "${CALLER_REPOSITORY}" ]; then
+          trusted=false
+        fi
+        echo "trusted=${trusted}" >> "${GITHUB_OUTPUT}"
+        if [ "${trusted}" != "true" ]; then
+          echo "::error::Untrusted fork events cannot execute a consumer-owned demo adapter."
+          exit 1
+        fi
+    - name: Checkout exact consumer source
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        ref: ${{ fromJSON(inputs.request-json).source-ref || github.sha }}
+        path: source
+        clean: true
+        persist-credentials: false
+    - name: Record exact consumer source
+      id: source
+      shell: bash
+      run: echo "source-sha=$(git -C source rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+    - name: Checkout exact Buildchain workflow runtime
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.job-workflow-sha) }}
+        path: .buildchain/runtime
+        clean: true
+        persist-credentials: false
+    - name: Prepare exact workflow runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Resolve exact source artifact coordinate
+      id: source-artifact
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      env:
+        EXPECTED_NAME: ${{ fromJSON(inputs.request-json).source-artifact-name }}
+        EXPECTED_DIGEST: ${{ fromJSON(inputs.request-json).source-artifact-digest }}
+        SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+        BUILDCHAIN_ACTION_ROOT: ${{ github.action_path }}
+      with:
+        script: |
+          const { pathToFileURL } = require("node:url");
+          const { resolveSourceArtifact } = await import(pathToFileURL(`${process.env.BUILDCHAIN_ACTION_ROOT}/../../../packages/core/build/nodes/demo-artifact-coordinate.mjs`).href);
+          await resolveSourceArtifact({ github, context, core });
+    - name: Download exact source artifact
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: ${{ fromJSON(inputs.request-json).source-artifact-name }}
+        path: source-artifact
+    - name: Run checked-in consumer adapter
+      shell: bash
+      env:
+        ADAPTER_PATH: ${{ fromJSON(inputs.request-json).adapter-path }}
+        ADAPTER_ARGUMENTS_JSON: ${{ fromJSON(inputs.request-json).adapter-arguments-json }}
+      run: |
+        set -euo pipefail
+        node .buildchain/runtime/packages/core/build/commands/auditable-demo.mjs run-adapter \
+          --source-root "${GITHUB_WORKSPACE}/source" \
+          --artifact-root "${GITHUB_WORKSPACE}/source-artifact" \
+          --source-coordinate "${GITHUB_WORKSPACE}/gate-work/source-artifact.json" \
+          --adapter "${ADAPTER_PATH}" \
+          --adapter-arguments-json "${ADAPTER_ARGUMENTS_JSON}" \
+          --output "${GITHUB_WORKSPACE}/gate-work/adapter-output" \
+          --diagnostics "${GITHUB_WORKSPACE}/gate-diagnostics"
+    - name: Prepare bounded renderer smoke
+      shell: bash
+      run: |
+        set -euo pipefail
+        node .buildchain/runtime/packages/core/build/commands/auditable-demo.mjs prepare-smoke \
+          --adapter-output "${GITHUB_WORKSPACE}/gate-work/adapter-output" \
+          --output "${GITHUB_WORKSPACE}/gate-work/smoke-input"
+    - name: Run immutable network-disabled renderer smoke
+      shell: bash
+      env:
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-adapter.mjs" smoke
+    - name: Independently inspect Gate smoke media
+      if: ${{ fromJSON(inputs.request-json).media-profile != 'archive-v1' }}
+      shell: bash
+      env:
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-adapter.mjs" inspect-smoke
+    - name: Finalize content-addressed Gate bundle
+      id: finalize
+      shell: bash
+      env:
+        ADAPTER_PATH: ${{ fromJSON(inputs.request-json).adapter-path }}
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+        SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+        MEDIA_PROFILE: ${{ fromJSON(inputs.request-json).media-profile }}
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-adapter.mjs" finalize-gate
+    - name: Upload content-addressed qualified Gate bundle
+      id: upload
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: ${{ steps.finalize.outputs.gate-artifact-name }}
+        path: gate-bundle
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false
+    - name: Upload Gate diagnostics
+      if: ${{ always() }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: auditable-demo-gate-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+        path: |
+          gate-diagnostics
+          gate-work/source-artifact.json
+        if-no-files-found: warn
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false

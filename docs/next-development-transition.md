@@ -20,9 +20,9 @@ ai_provenance:
 # Next-development Transition
 
 This document is generated from
-`packages/core/next-development-transition.js` and
-`packages/core/next-development-controller.js` and
-`packages/core/next-development-projection.js`. Edit those sources and run
+`packages/core/release/next-development-transition.js` and
+`packages/core/release/next-development-controller.js` and
+`packages/core/release/next-development-projection.js`. Edit those sources and run
 `node scripts/generate-next-development-guidance.mjs`; direct edits fail the
 projection drift check.
 
@@ -118,7 +118,7 @@ remain audit evidence and never become durable selectors.
 From a normal Buildchain checkout:
 
 ```sh
-node scripts/next-development-transition.mjs materialize --cwd . --input <request.json>
+node packages/core/release/commands/next-development-transition.mjs materialize --cwd . --input <request.json>
 ```
 
 The command prints a rooted plan and performs no write by default. `--write`

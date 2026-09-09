@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { getBumpKeyword } from "../scripts/release-line-policy.mjs";
+import { getBumpKeyword } from "../packages/core/release/commands/release-line-policy.mjs";
 
 function withPackageVersion(version, fn) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-bump-ref-"));
@@ -128,16 +128,11 @@ test("version-state publish-gate/major PRs are valid verify-only major release c
   });
 });
 
-test("legacy major-gate version-state PRs remain explicit compatibility aliases", () => {
+test("retired major-gate version-state aliases cannot authorize a release", () => {
   withPackageVersion("2.0.0", (cwd) => {
-    assert.equal(
-      getBumpKeyword({
-        cwd,
-        headRef: "buildchain/version-state/major-gate/c249a32edecf",
-        baseRef: "major-gate",
-      }),
-      "patch",
-    );
+    assert.throws(() => getBumpKeyword({ cwd,
+      headRef: "buildchain/version-state/major-gate/c249a32edecf", baseRef: "major-gate",
+    }), /Versions not match/);
   });
 });
 

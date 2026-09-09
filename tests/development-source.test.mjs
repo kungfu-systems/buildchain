@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import test from "node:test";
-import { prepareDevelopmentSource } from "../actions/release-candidate-promote/development-source.js";
-import { localVersionFiles } from "../actions/release-candidate-promote/product-provider-adapters.js";
+import { prepareDevelopmentSource } from "../packages/core/release/promote-candidate/development-source.js";
+import { localVersionFiles } from "../packages/core/release/promote-candidate/product-provider-adapters.js";
 
 test("development snapshot uses the exact protected commit instead of stale publication or dirty local files", (t) => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-source-test-"));

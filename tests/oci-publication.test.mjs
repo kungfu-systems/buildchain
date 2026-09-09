@@ -8,22 +8,22 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { domainContentRoot } from "../packages/core/canonical-contracts.js";
-import { verifyOciPublicationBundle } from "../packages/core/oci-publication-bundle.js";
-import { resolveOciCandidate } from "../scripts/publication-candidate-kind.mjs";
+import { domainContentRoot } from "../packages/core/contracts/canonical-contracts.js";
+import { verifyOciPublicationBundle } from "../packages/core/publication/oci-publication-bundle.js";
+import { resolveOciCandidate } from "../packages/core/publication/commands/publication-candidate-kind.mjs";
 
-import { createRecoveredPublication } from "../scripts/resume-from-candidate-run.mjs";
+import { createRecoveredPublication } from "../packages/core/release/commands/resume-from-candidate-run.mjs";
 import {
   resolveCandidateProviderInputs,
   sealedCandidateVersion,
   planProductPublication,
-} from "../actions/release-candidate-promote/product-provider.js";
+} from "../packages/core/release/promote-candidate/product-provider.js";
 import {
   selectProductPublicationIntent,
   createProductPublicationPlan,
   createProductPublicationDeclaration,
-} from "../packages/core/product-publication.js";
-import { compileReleaseTailDeclaration } from "../packages/core/release-tail-provider-plane.js";
+} from "../packages/core/release/product-publication.js";
+import { compileReleaseTailDeclaration } from "../packages/core/release/release-tail-provider-plane.js";
 
 test("sealed OCI candidate verifies exact complete family and rejects tampering", (t) => {
   const f = fixture(t);

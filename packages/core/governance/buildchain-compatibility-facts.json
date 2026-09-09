@@ -1,0 +1,18 @@
+{
+  "schema": "kungfu.buildchain.compatibility-fact-source/v1",
+  "rootProtocol": "kungfu.fact-root.canonical/v2",
+  "authority": {
+    "kind": "protected-base-contract-authority",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.1"
+  },
+  "registryCut": {
+    "kind": "protected-git-cut",
+    "repository": "kungfu-systems/buildchain",
+    "protectedBase": "dev/v4/v4.1",
+    "commit": "1bb6333b97ad94e94a81178e956a703dff2b5f84"
+  },
+  "facts": [],
+  "supersessions": [],
+  "revocations": []
+}

@@ -1,0 +1,37 @@
+name: provider-closure
+description: Verify the admitted runtime commit and tree before installing and exposing its provider dependencies.
+inputs:
+  repository:
+    description: Admitted runtime repository.
+    required: true
+  sha:
+    description: Admitted immutable runtime commit.
+    required: true
+  tree:
+    description: Admitted immutable runtime tree.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Checkout the admitted runtime only
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Verify the privileged executable closure
+      shell: bash
+      env:
+        RUNTIME_SHA: ${{ inputs.sha }}
+        RUNTIME_TREE: ${{ inputs.tree }}
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/runtime/nodes/provider-closure.mjs" verify
+    - name: Install exact provider runtime dependencies and expose the verified bridge
+      shell: bash
+      run: |
+        set -euo pipefail
+        corepack pnpm@11.7.0 install --dir .buildchain/runtime --frozen-lockfile --ignore-scripts
+        ln -s .buildchain/runtime/node_modules node_modules

@@ -5,11 +5,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { createBuildchainLogger } from "../packages/core/logging.js";
+import { createBuildchainLogger } from "../packages/core/observability/logging.js";
 import {
   resolveSpawnCommand,
   usesShellForSpawnCommand,
-} from "../packages/core/spawn-command.js";
+} from "../packages/core/runtime/spawn-command.js";
 
 export { resolveSpawnCommand, usesShellForSpawnCommand };
 

@@ -1,0 +1,900 @@
+{
+  "schema": "buildchain.warrant-historical-observations/v1",
+  "sourceCommit": "1bb6333b97ad94e94a81178e956a703dff2b5f84",
+  "producer": "scripts/warrant-shadow-plan.mjs#runTrace",
+  "producerSha256": "be093727e387f18b7b980185ab73b03a0de2097bd17a0f7a495bbbd6036f5886",
+  "traces": [
+    {
+      "trace": {
+        "id": "submission-selection-heartbeat-close",
+        "create": {
+          "repository": "kungfu-systems/buildchain",
+          "protectedBase": "dev/v4/v4.0",
+          "policy": {
+            "agingSeconds": 300,
+            "leaseSeconds": 600
+          },
+          "now": "2026-08-07T00:00:00Z"
+        },
+        "steps": [
+          {
+            "id": "submit-101",
+            "operation": "submit",
+            "pullRequestNumber": 101,
+            "overrides": {
+              "deliveryClass": "non-native-fast"
+            },
+            "now": "2026-08-07T00:00:01Z"
+          },
+          {
+            "id": "submit-102",
+            "operation": "submit",
+            "pullRequestNumber": 102,
+            "overrides": {
+              "deliveryClass": "non-native-fast",
+              "priority": "expedited"
+            },
+            "now": "2026-08-07T00:00:02Z"
+          },
+          {
+            "id": "duplicate-101",
+            "operation": "submit",
+            "pullRequestNumber": 101,
+            "overrides": {
+              "deliveryClass": "non-native-fast"
+            },
+            "now": "2026-08-07T00:00:03Z"
+          },
+          {
+            "id": "select",
+            "operation": "select",
+            "saveWarrant": "selected",
+            "now": "2026-08-07T00:00:04Z"
+          },
+          {
+            "id": "renew",
+            "operation": "heartbeat",
+            "useWarrant": "selected",
+            "now": "2026-08-07T00:01:00Z"
+          },
+          {
+            "id": "close",
+            "operation": "close",
+            "useWarrant": "selected",
+            "outcome": "merged",
+            "reason": "exact merge group passed",
+            "now": "2026-08-07T00:02:00Z"
+          }
+        ],
+        "expectedLegacyProjectionRoot": "sha256:eb860ad33e3abb6a93c0635b0f06b4f433bc9b76deaa8e7b648e0ef2e296679b"
+      },
+      "result": {
+        "id": "submission-selection-heartbeat-close",
+        "projectionRoot": "sha256:eb860ad33e3abb6a93c0635b0f06b4f433bc9b76deaa8e7b648e0ef2e296679b",
+        "projections": [
+          {
+            "id": "submit-101",
+            "operation": "submit",
+            "action": "submitted",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:58c794b221e121a604f3ba063a8df9cf82f3c56fada220115ff2c72a323f1622",
+            "nextStateRoot": "sha256:cfc7b869b638bcd79161e887a736c2a3abf987c8a561066c1ea6c0269e443d80",
+            "receiptRoot": "sha256:b891c7b205f8db28dbc9804fef950c9b42eb3b4ed8c3285a580e25827cc16268",
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 101,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "submit-102",
+            "operation": "submit",
+            "action": "submitted",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:cfc7b869b638bcd79161e887a736c2a3abf987c8a561066c1ea6c0269e443d80",
+            "nextStateRoot": "sha256:c1e27e9442aa2a46664da1a49c67ba4c78c5f65779664460f520bb4a3ea7218d",
+            "receiptRoot": "sha256:0ba4188b270ec714c14ebfbd2a5806ac87a4fd2d519317f559cda41e5c92d21a",
+            "generation": 2,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 101,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 102,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "duplicate-101",
+            "operation": "submit",
+            "action": "duplicate-noop",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:c1e27e9442aa2a46664da1a49c67ba4c78c5f65779664460f520bb4a3ea7218d",
+            "nextStateRoot": "sha256:c0837f2444b4674148304f2bd1d76587542ec7a7ca3495cd7c1e999e25ea097d",
+            "receiptRoot": "sha256:2abcf277fc3196430c8b06f6f5d11558381b2e2b78ad7c5994008f7c358731e1",
+            "generation": 3,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 101,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 102,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "select",
+            "operation": "select",
+            "action": "fifo-bounded-priority",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:c0837f2444b4674148304f2bd1d76587542ec7a7ca3495cd7c1e999e25ea097d",
+            "nextStateRoot": "sha256:ce3ab82867127bf14cdb7dd8d3a57b016e10f92af5d1fa776b916cc34560c188",
+            "receiptRoot": "sha256:95ad973f032e2ead367ff88b15d15f732865a1d92c1a5aab5fa0adcdf0a5a0f9",
+            "generation": 4,
+            "fencingCounter": 1,
+            "activePullRequest": 102,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 101,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 102,
+                "status": "selected",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "renew",
+            "operation": "heartbeat",
+            "action": "heartbeat",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:ce3ab82867127bf14cdb7dd8d3a57b016e10f92af5d1fa776b916cc34560c188",
+            "nextStateRoot": "sha256:28048f7654e42ae77e9feebab0871f523872f939dc1005ddfcef008627c65ddb",
+            "receiptRoot": "sha256:4cf885ebf416b4c0cec87d0a1c34f9e2b01d25a2c7950c4bbd1ced3b9f249a48",
+            "generation": 5,
+            "fencingCounter": 1,
+            "activePullRequest": 102,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 101,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 102,
+                "status": "proving",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "close",
+            "operation": "close",
+            "action": "terminal-closeout",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:28048f7654e42ae77e9feebab0871f523872f939dc1005ddfcef008627c65ddb",
+            "nextStateRoot": "sha256:c4ebe70f56d96abc61806995bb97af0ba59ba627c174d105d582ddb7283f6a3d",
+            "receiptRoot": "sha256:67abef8e647b85f2402c9019ed7abcc30eeda340dfc6cd5b83fe477ebcbad578",
+            "generation": 6,
+            "fencingCounter": 1,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 101,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 102,
+                "status": "merged",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "trace": {
+        "id": "lease-expiry-and-stale-fence",
+        "create": {
+          "repository": "kungfu-systems/buildchain",
+          "protectedBase": "dev/v4/v4.0",
+          "policy": {
+            "agingSeconds": 300,
+            "leaseSeconds": 60
+          },
+          "now": "2026-08-07T01:00:00Z"
+        },
+        "steps": [
+          {
+            "id": "submit",
+            "operation": "submit",
+            "pullRequestNumber": 120,
+            "overrides": {
+              "environmentRoot": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+              "nativeCommandContract": {
+                "schema": "kungfu.buildchain.native-command-contract/v1",
+                "runner": "bash-lc",
+                "command": "node --test tests/v4-warrant-shadow-plan.test.mjs",
+                "commandRoot": "sha256:4d9a03536802c46fe254f247b7236925aec49d789e5e9ac7b2dceac08d7cefab"
+              }
+            },
+            "now": "2026-08-07T01:00:01Z"
+          },
+          {
+            "id": "submit-successor",
+            "operation": "submit",
+            "pullRequestNumber": 121,
+            "overrides": {
+              "deliveryClass": "non-native-fast"
+            },
+            "now": "2026-08-07T01:00:02Z"
+          },
+          {
+            "id": "select-old",
+            "operation": "select",
+            "saveWarrant": "old",
+            "leaseSeconds": 60,
+            "now": "2026-08-07T01:00:03Z"
+          },
+          {
+            "id": "recover",
+            "operation": "recover-expired",
+            "now": "2026-08-07T01:02:00Z"
+          },
+          {
+            "id": "close-expired",
+            "operation": "close",
+            "useWarrant": "old",
+            "outcome": "terminal-failure",
+            "reason": "fenced native worker stop proved",
+            "now": "2026-08-07T01:02:01Z"
+          },
+          {
+            "id": "select-new",
+            "operation": "select",
+            "saveWarrant": "new",
+            "leaseSeconds": 60,
+            "now": "2026-08-07T01:02:02Z"
+          },
+          {
+            "id": "reject-old",
+            "operation": "heartbeat",
+            "useWarrant": "old",
+            "expectError": "stale-fencing-token",
+            "now": "2026-08-07T01:02:03Z"
+          }
+        ],
+        "expectedLegacyProjectionRoot": "sha256:3f734b04ac8baaf84a95d9f8746db5fd41dbfd73f147de2f884c09e373157aa9"
+      },
+      "result": {
+        "id": "lease-expiry-and-stale-fence",
+        "projectionRoot": "sha256:3f734b04ac8baaf84a95d9f8746db5fd41dbfd73f147de2f884c09e373157aa9",
+        "projections": [
+          {
+            "id": "submit",
+            "operation": "submit",
+            "action": "submitted",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:50e51fbdf00fa832a93ca03e5811054960a75605689be05a1889133f862d0e64",
+            "nextStateRoot": "sha256:d3af021ad13ee9ad10015aa8cc8ab563583a5ac9842fcd75abdd3ff1e7d56428",
+            "receiptRoot": "sha256:d0b9ed17497cbed1b082b776d231bc1bd01bc6ce8bb1da5f9bb2c5f6bff8bdc1",
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 120,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "submit-successor",
+            "operation": "submit",
+            "action": "submitted",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:d3af021ad13ee9ad10015aa8cc8ab563583a5ac9842fcd75abdd3ff1e7d56428",
+            "nextStateRoot": "sha256:92c2dee332730aa8374c249e1bf3fb059d8171b108183b76b2f7215e165645c5",
+            "receiptRoot": "sha256:96dae532130cc0144deb4e1e6276d77ffab2e87acab68ba96cd3f8230fe5be8c",
+            "generation": 2,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 120,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 121,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "select-old",
+            "operation": "select",
+            "action": "fifo-bounded-priority",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:92c2dee332730aa8374c249e1bf3fb059d8171b108183b76b2f7215e165645c5",
+            "nextStateRoot": "sha256:3bbc1a0fbd2584cb1a976247e4c7ef05e4a26b2529c3cda186383b4fa4098240",
+            "receiptRoot": "sha256:6aab86086a33de56f96914735ef7c5f10633db5f108bc535e958ae60d328aa6e",
+            "generation": 3,
+            "fencingCounter": 1,
+            "activePullRequest": 120,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 120,
+                "status": "selected",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 121,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "recover",
+            "operation": "recover-expired",
+            "action": "expired-lease-fenced-stop-required",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:3bbc1a0fbd2584cb1a976247e4c7ef05e4a26b2529c3cda186383b4fa4098240",
+            "nextStateRoot": "sha256:3bbc1a0fbd2584cb1a976247e4c7ef05e4a26b2529c3cda186383b4fa4098240",
+            "receiptRoot": "sha256:cffe2731f4efa95df82dfe7477f6c71e4e09f74ee4c53d61a79abe17ba529563",
+            "generation": 3,
+            "fencingCounter": 1,
+            "activePullRequest": 120,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 120,
+                "status": "selected",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 121,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "close-expired",
+            "operation": "close",
+            "action": "terminal-closeout",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:3bbc1a0fbd2584cb1a976247e4c7ef05e4a26b2529c3cda186383b4fa4098240",
+            "nextStateRoot": "sha256:4ae924c6e126a96a11f9262072a8fff8dcd0911d7a93825f3bb6e3d3285420f7",
+            "receiptRoot": "sha256:7a9f9642a285fd371826f2125cb0f49dece2e6d39b627d9b8b28445680a35c4b",
+            "generation": 4,
+            "fencingCounter": 1,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 120,
+                "status": "terminal-failure",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 121,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "select-new",
+            "operation": "select",
+            "action": "fifo-bounded-priority",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:4ae924c6e126a96a11f9262072a8fff8dcd0911d7a93825f3bb6e3d3285420f7",
+            "nextStateRoot": "sha256:535d7d5a7c9b454ec4b88d802691ae34b0a9e0b0fb6229231b2b1dcf9655f51c",
+            "receiptRoot": "sha256:2aa200d1fd1cf954c203afb10336dbedcdf7740b5ac7a6cb57127075120d0c02",
+            "generation": 5,
+            "fencingCounter": 2,
+            "activePullRequest": 121,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 120,
+                "status": "terminal-failure",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 121,
+                "status": "selected",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "reject-old",
+            "operation": "heartbeat",
+            "action": null,
+            "errorCode": "stale-fencing-token",
+            "expectedOldStateRoot": "sha256:535d7d5a7c9b454ec4b88d802691ae34b0a9e0b0fb6229231b2b1dcf9655f51c",
+            "nextStateRoot": "sha256:535d7d5a7c9b454ec4b88d802691ae34b0a9e0b0fb6229231b2b1dcf9655f51c",
+            "receiptRoot": null,
+            "generation": 5,
+            "fencingCounter": 2,
+            "activePullRequest": 121,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 120,
+                "status": "terminal-failure",
+                "attempts": 1,
+                "recoveries": 0
+              },
+              {
+                "pullRequestNumber": 121,
+                "status": "selected",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "trace": {
+        "id": "settlement-idempotence",
+        "create": {
+          "repository": "kungfu-systems/buildchain",
+          "protectedBase": "dev/v4/v4.0",
+          "policy": {
+            "agingSeconds": 300,
+            "leaseSeconds": 600
+          },
+          "now": "2026-08-07T02:00:00Z"
+        },
+        "steps": [
+          {
+            "id": "not-applicable",
+            "operation": "settle-not-applicable",
+            "pullRequestNumber": 149,
+            "sourceHead": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "outcome": "merged",
+            "reason": "terminal before Warrant admission",
+            "now": "2026-08-07T02:00:01Z"
+          },
+          {
+            "id": "submit",
+            "operation": "submit",
+            "pullRequestNumber": 150,
+            "overrides": {
+              "deliveryClass": "non-native-fast"
+            },
+            "now": "2026-08-07T02:00:02Z"
+          },
+          {
+            "id": "select",
+            "operation": "select",
+            "saveWarrant": "active",
+            "now": "2026-08-07T02:00:03Z"
+          },
+          {
+            "id": "settle",
+            "operation": "settle-active",
+            "useWarrant": "active",
+            "saveSettlement": "terminal",
+            "outcome": "merged",
+            "reason": "exact merge group passed",
+            "now": "2026-08-07T02:01:00Z"
+          },
+          {
+            "id": "duplicate",
+            "operation": "settle-duplicate",
+            "useSettlement": "terminal",
+            "now": "2026-08-07T02:02:00Z"
+          }
+        ],
+        "expectedLegacyProjectionRoot": "sha256:b71de84b0483fcce3f0ba1f45ac20dead3227fc24a62769192eb16abca7f3a2f"
+      },
+      "result": {
+        "id": "settlement-idempotence",
+        "projectionRoot": "sha256:b71de84b0483fcce3f0ba1f45ac20dead3227fc24a62769192eb16abca7f3a2f",
+        "projections": [
+          {
+            "id": "not-applicable",
+            "operation": "settle-not-applicable",
+            "action": "terminal-event-not-applicable",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:c377ea5da8f3464a896359901ca047325c4b4766c308261a829805e62d280f7b",
+            "nextStateRoot": "sha256:c377ea5da8f3464a896359901ca047325c4b4766c308261a829805e62d280f7b",
+            "receiptRoot": "sha256:5a40c526ea597c378c83da0db48a3dce99f33c21464adbe30604647b6098243f",
+            "generation": 0,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": []
+          },
+          {
+            "id": "submit",
+            "operation": "submit",
+            "action": "submitted",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:c377ea5da8f3464a896359901ca047325c4b4766c308261a829805e62d280f7b",
+            "nextStateRoot": "sha256:55d54bc861c2c78ffbeea6d659b8ff2d3298dd953e45dc98f0876bf4d9c5fb35",
+            "receiptRoot": "sha256:1db983db23db6e580e79ff9dc0496bf5ffb2b1d1329bcb355b3efc2cffef53d3",
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 150,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "select",
+            "operation": "select",
+            "action": "fifo-bounded-priority",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:55d54bc861c2c78ffbeea6d659b8ff2d3298dd953e45dc98f0876bf4d9c5fb35",
+            "nextStateRoot": "sha256:3e8985891346d57dff0741706a446d7e611911f604e5b4f9ae247a21f75a501b",
+            "receiptRoot": "sha256:4d99f259d941e67199f62967c9cb9d0cebcf3e92bfbf596a8e777dcd5c00b7b9",
+            "generation": 2,
+            "fencingCounter": 1,
+            "activePullRequest": 150,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 150,
+                "status": "selected",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "settle",
+            "operation": "settle-active",
+            "action": "terminal-closeout",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:3e8985891346d57dff0741706a446d7e611911f604e5b4f9ae247a21f75a501b",
+            "nextStateRoot": "sha256:da63ec909014378ad52a547b04e325f21e7150f8a17a17c6dd925db94e1b4d93",
+            "receiptRoot": "sha256:9da07a29ec251cb57d00a47d25d27b3c07a8088c37486cb6cefe62c1e6f284d9",
+            "generation": 3,
+            "fencingCounter": 1,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 150,
+                "status": "merged",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "duplicate",
+            "operation": "settle-duplicate",
+            "action": "duplicate-terminal-event-noop",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:da63ec909014378ad52a547b04e325f21e7150f8a17a17c6dd925db94e1b4d93",
+            "nextStateRoot": "sha256:da63ec909014378ad52a547b04e325f21e7150f8a17a17c6dd925db94e1b4d93",
+            "receiptRoot": "sha256:e13d6046618554a0a9fcbdcb1bff2b5f2f7c55341c7f09f9c8a0c054b5f23a14",
+            "generation": 3,
+            "fencingCounter": 1,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 150,
+                "status": "merged",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "trace": {
+        "id": "queued-cancellation-idempotence",
+        "create": {
+          "repository": "kungfu-systems/buildchain",
+          "protectedBase": "dev/v4/v4.0",
+          "policy": {
+            "agingSeconds": 300,
+            "leaseSeconds": 600
+          },
+          "now": "2026-08-07T03:00:00Z"
+        },
+        "steps": [
+          {
+            "id": "submit",
+            "operation": "submit",
+            "pullRequestNumber": 151,
+            "overrides": {
+              "deliveryClass": "non-native-fast"
+            },
+            "now": "2026-08-07T03:00:01Z"
+          },
+          {
+            "id": "cancel",
+            "operation": "cancel-queued",
+            "pullRequestNumber": 151,
+            "observedSourceHead": "ffffffffffffffffffffffffffffffffffffffff",
+            "reason": "pull request closed",
+            "now": "2026-08-07T03:00:02Z"
+          },
+          {
+            "id": "duplicate",
+            "operation": "cancel-queued",
+            "pullRequestNumber": 151,
+            "observedSourceHead": "ffffffffffffffffffffffffffffffffffffffff",
+            "reason": "pull request closed",
+            "now": "2026-08-07T03:00:03Z"
+          }
+        ],
+        "expectedLegacyProjectionRoot": "sha256:a9ce9cad968234febd2ef74c2e6fab77f45899bc5dd74ee7128cadd02a997b8c"
+      },
+      "result": {
+        "id": "queued-cancellation-idempotence",
+        "projectionRoot": "sha256:a9ce9cad968234febd2ef74c2e6fab77f45899bc5dd74ee7128cadd02a997b8c",
+        "projections": [
+          {
+            "id": "submit",
+            "operation": "submit",
+            "action": "submitted",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:0e827a1042623869109dade1e3b971564cdf8e038d33f6a89bfe994470b4e1bf",
+            "nextStateRoot": "sha256:e6e70aa998a0a4026e0983b330a303dfbe55ff2b3a7d73d3216f82e6e3bc20d0",
+            "receiptRoot": "sha256:22bff67e77d1bf95638147c0c2625bab5da87d73e0ce985ca64339ee102d3e98",
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 151,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "cancel",
+            "operation": "cancel-queued",
+            "action": "queued-candidate-cancelled",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:e6e70aa998a0a4026e0983b330a303dfbe55ff2b3a7d73d3216f82e6e3bc20d0",
+            "nextStateRoot": "sha256:52606f1e7659f0e91487ab0017f7a42f5325f0d882d27bea644a6489314c5525",
+            "receiptRoot": "sha256:c0441b2e3cbff7db1f21083e46394da8e81bf4470d3c8762fc4d43b9d67a634d",
+            "generation": 2,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 151,
+                "status": "cancelled",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "duplicate",
+            "operation": "cancel-queued",
+            "action": "duplicate-cancellation-noop",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:52606f1e7659f0e91487ab0017f7a42f5325f0d882d27bea644a6489314c5525",
+            "nextStateRoot": "sha256:52606f1e7659f0e91487ab0017f7a42f5325f0d882d27bea644a6489314c5525",
+            "receiptRoot": "sha256:6ef14b3ed5974723de4545e455abf5021c2ac23abc3ceb2c9f9c2ef7947779fb",
+            "generation": 2,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 151,
+                "status": "cancelled",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "trace": {
+        "id": "cas-response-loss-provider-conflict",
+        "create": {
+          "repository": "kungfu-systems/buildchain",
+          "protectedBase": "dev/v4/v4.0",
+          "policy": {
+            "agingSeconds": 300,
+            "leaseSeconds": 600
+          },
+          "now": "2026-08-07T04:00:00Z"
+        },
+        "steps": [
+          {
+            "id": "submit",
+            "operation": "submit",
+            "pullRequestNumber": 160,
+            "overrides": {
+              "deliveryClass": "non-native-fast"
+            },
+            "now": "2026-08-07T04:00:01Z"
+          },
+          {
+            "id": "accept-current",
+            "operation": "expected-old",
+            "expectedRoot": "submit"
+          },
+          {
+            "id": "reject-stale",
+            "operation": "expected-old",
+            "expectedRoot": "initial"
+          },
+          {
+            "id": "readback",
+            "operation": "response-loss-readback",
+            "committedRoot": "submit"
+          },
+          {
+            "id": "provider-stop",
+            "operation": "provider-conflict"
+          }
+        ],
+        "expectedLegacyProjectionRoot": "sha256:be002515ae6304c3cd325ee4bb6d07e6229922d620389285474325eb20aa27e9"
+      },
+      "result": {
+        "id": "cas-response-loss-provider-conflict",
+        "projectionRoot": "sha256:be002515ae6304c3cd325ee4bb6d07e6229922d620389285474325eb20aa27e9",
+        "projections": [
+          {
+            "id": "submit",
+            "operation": "submit",
+            "action": "submitted",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:4b9feac0a972a0ac0e5a8f9b3fa9e0ca5c95b52e256f4cfd9dcad91b8045145a",
+            "nextStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "receiptRoot": "sha256:319f8f54bb1c845a1751cac7f6af2559be4af77329dd3d3665fab911aae295dd",
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 160,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "accept-current",
+            "operation": "expected-old",
+            "action": "cas-accepted",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "nextStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "receiptRoot": null,
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 160,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "reject-stale",
+            "operation": "expected-old",
+            "action": "cas-rejected",
+            "errorCode": "stale-expected-old",
+            "expectedOldStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "nextStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "receiptRoot": null,
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 160,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "readback",
+            "operation": "response-loss-readback",
+            "action": "committed-readback",
+            "errorCode": null,
+            "expectedOldStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "nextStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "receiptRoot": null,
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 160,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          },
+          {
+            "id": "provider-stop",
+            "operation": "provider-conflict",
+            "action": "provider-conflict-stop",
+            "errorCode": "provider-conflict",
+            "expectedOldStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "nextStateRoot": "sha256:1e5325e15c27cfd3b7d10eeb8d4953de40e95bd483e495d16f25f3e81c5725f6",
+            "receiptRoot": null,
+            "generation": 1,
+            "fencingCounter": 0,
+            "activePullRequest": null,
+            "candidateStates": [
+              {
+                "pullRequestNumber": 160,
+                "status": "queued",
+                "attempts": 1,
+                "recoveries": 0
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

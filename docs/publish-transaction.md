@@ -53,7 +53,7 @@ It is not the GitHub Actions run id.
 
 ## Durable State
 
-`actions/promote-buildchain-ref` stores release transaction state in a
+`actions/release/promote-ref` stores release transaction state in a
 machine-managed Git branch:
 
 ```text
@@ -104,7 +104,7 @@ the next version; it never rebinds or overwrites the earlier source lock. The
 same source SHA reuses its own lock so authority planning and mutation stay on
 one exact version.
 
-`release-candidate-promote.yml` can establish or restore this state from an
+`public-release-promote.yml` can establish or restore this state from an
 older successful candidate run through the documented fresh-event recovery
 inputs. The recovery receipt and sealed bundle are verified before the action
 reads or creates transaction state. If `resume-transaction-id` is supplied,
@@ -166,7 +166,7 @@ commands = [
 ]
 ```
 
-`actions/promote-buildchain-ref` runs `lifecycle.publish` only when
+`actions/release/promote-ref` runs `lifecycle.publish` only when
 `publish-transaction: "true"` is set or when a `publish-command` input is
 provided. The action sets:
 
@@ -197,7 +197,7 @@ Buildchain itself uses this contract for npm publishing:
 
 ```toml
 [lifecycle.publish]
-command = "node scripts/npm-publish-transaction.mjs"
+command = "node packages/core/publication/commands/npm-publish-transaction.mjs"
 ```
 
 That script validates that `package.json` matches `BUILDCHAIN_VERSION`, runs
@@ -314,7 +314,7 @@ For package sets, `package_set_order = "platforms-first-main-last"` makes the
 main package the visibility gate. Platform package side effects are planned or
 retried first, and the main package or main dist-tag move happens last.
 
-When the transaction reaches `complete`, `actions/promote-buildchain-ref`
+When the transaction reaches `complete`, `actions/release/promote-ref`
 generates `.buildchain/release-passport/buildchain.release.json` and persists
 the `release-passport/*` files into the durable `buildchain/release-state/...`
 ref. The passport is the stable release artifact for agents and people: it
@@ -595,15 +595,15 @@ material conflict and blocks recovery.
 Local recovery commands operate on the same state/evidence files:
 
 ```bash
-node scripts/release-transaction.mjs inspect --version v3.0.2
-node scripts/release-transaction.mjs recover --version v3.0.2
-node scripts/release-transaction.mjs finalize --version v3.0.2
-node scripts/release-transaction.mjs abort --version v3.0.2 --superseded-by v3.0.3
+node packages/core/release/commands/release-transaction.mjs inspect --version v3.0.2
+node packages/core/release/commands/release-transaction.mjs recover --version v3.0.2
+node packages/core/release/commands/release-transaction.mjs finalize --version v3.0.2
+node packages/core/release/commands/release-transaction.mjs abort --version v3.0.2 --superseded-by v3.0.3
 ```
 
 The CLI is a diagnostic and local repair surface. It reports the durable
 `state_ref`, but remote durable-ref writes and public Git ref finalization are
-owned by `actions/promote-buildchain-ref`, because that action runs inside the
+owned by `actions/release/promote-ref`, because that action runs inside the
 same governed GitHub permissions and branch-protection checks as release
 promotion. In other words, CLI `finalize` can mark the local transaction state
 complete after valid evidence; the machine-operated public finalization path is

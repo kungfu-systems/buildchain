@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 const source = fs.readFileSync(
-  new URL("../scripts/resume-from-candidate-run.mjs", import.meta.url),
+  new URL("../packages/core/release/commands/resume-from-candidate-run.mjs", import.meta.url),
   "utf8",
 );
 

@@ -7,70 +7,45 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-const {
-  alphaDistTagForPromotion,
-  alignMajorBootstrapReleaseImpact,
-  versionVerificationAllowedPathsForPromotion,
-  assertAllowedLocalChanges,
-  assertExpectedPublicationVersion,
-  assertChannelPromotionPr,
-  assertProviderEnforcedChannelTransaction,
-  assertProtectedChannel,
-  assertPromotableRepository,
-  assertPromotableTargetRef,
-  createTreeEquivalentReleaseImpact,
-  finalizationRequirements,
-  discoverVersionStateFiles,
-  ensureManagedChannelBranchProtection,
-  expectedHeadRefForTarget,
-  isAllowedReleaseLineRecoveryPath,
-  latestAlphaForPatch,
-  ownsMajorAlphaChannel,
-  parseReleaseLineRef,
-  parseTags,
-  persistDurableReleaseTransaction,
-  promoteBuildchainRefs,
-  recordGitHubReleaseTransactionCompletion,
-  restoreDurableReleaseTransaction,
-  runPublishTransaction,
-  resolveTagsForTarget,
-  testReleaseCommitMatchesTransactionMaterial,
-  runVersionVerification,
-  resolveReleaseImpactInput,
-  generateReleaseEvidenceInputs,
-  resolveProtectedStatusCheckContext,
-  releasePassportArtifactFiles,
-  selectAlphaTag,
-  selectReleaseTag,
-  updateVersionStateContents,
-  validatePromotionReleaseCandidate,
-} = await import("../actions/promote-buildchain-ref/lib.js");
+const { alphaDistTagForPromotion } = await import("../packages/core/release/promote-ref/internal/publish-contract.js");
+const { alignMajorBootstrapReleaseImpact, versionVerificationAllowedPathsForPromotion, assertAllowedLocalChanges, createTreeEquivalentReleaseImpact, discoverVersionStateFiles, runVersionVerification, resolveReleaseImpactInput, updateVersionStateContents } = await import("../packages/core/release/version-state.js");
+const { assertExpectedPublicationVersion } = await import("../packages/core/release/promote-ref/internal/generated-ref.js");
+const { assertChannelPromotionPr, assertProviderEnforcedChannelTransaction, assertProtectedChannel, resolveProtectedStatusCheckContext } = await import("../packages/core/release/promote-ref/internal/channel-governance.js");
+const { assertPromotableRepository, assertPromotableTargetRef, expectedHeadRefForTarget, isAllowedReleaseLineRecoveryPath, parseReleaseLineRef, parseTags } = await import("../packages/core/release/promote-ref/internal/promotion-policy.js");
+const { finalizationRequirements } = await import("../packages/core/release/promote-ref/internal/durable-transaction-operations.js");
+const { ensureManagedChannelBranchProtection } = await import("../packages/core/release/promote-ref/internal/branch-protection.js");
+const { latestAlphaForPatch, ownsMajorAlphaChannel, resolveTagsForTarget } = await import("../packages/core/release/promote-ref/internal/channel-tags.js");
+const { persistDurableReleaseTransaction, restoreDurableReleaseTransaction } = await import("../packages/core/release/promote-ref/internal/durable-transaction-store.js");
+const { promoteBuildchainRefs } = await import("../packages/core/release/promote-ref/lib.js");
+const { recordGitHubReleaseTransactionCompletion, runPublishTransaction } = await import("../packages/core/release/promote-ref/internal/publish-transaction.js");
+const { releaseCommitMatchesTransactionMaterial: testReleaseCommitMatchesTransactionMaterial } = await import("../packages/core/release/promote-ref/internal/transaction-recovery.js");
+const { generateReleaseEvidenceInputs } = await import("../packages/core/release/promote-ref/internal/passport-generation.js");
+const { releasePassportArtifactFiles } = await import("../packages/core/release/promote-ref/internal/passport-files.js");
+const { selectAlphaTag, selectReleaseTag } = await import("../packages/core/release/promote-ref/internal/tag-selection.js");
+const { validatePromotionReleaseCandidate } = await import("../packages/core/release/promote-ref/internal/candidate-admission.js");
 const { loadBuildchainConfig } =
-  await import("../packages/core/buildchain-config.js");
-const { sha256Json } = await import("../packages/core/release-candidate.js");
+  await import("../packages/core/consumer/buildchain-config.js");
+const { sha256Json } = await import("../packages/core/release/release-candidate.js");
 
 const { explainReleaseLineDryRun, formatReleaseLineDryRun } =
-  await import("../packages/core/release-line-dry-run.js");
+  await import("../packages/core/release/release-line-dry-run.js");
 const { transitionReleaseTransaction } =
-  await import("../packages/core/publish-transaction.js");
+  await import("../packages/core/release/publish-transaction.js");
 const {
   PUBLICATION_ARTIFACT_CANDIDATE_CONTRACT,
   publicationArtifactCandidateDigest,
-} = await import("../packages/core/publication-artifact-candidate.js");
+} = await import("../packages/core/publication/publication-artifact-candidate.js");
 const { createPublicationSealedBundle } =
-  await import("../packages/core/publication-sealed-bundle.js");
-const {
-  validateRequiredPublishSourceLock,
-  plannedPublicationExactTag,
-  collectGitHubReleaseEvidenceAssets,
-  publishGitHubReleaseEvidence,
-  reuseCompleteGitHubReleaseEvidence,
-} = await import("../actions/promote-buildchain-ref/index.js");
+  await import("../packages/core/publication/publication-sealed-bundle.js");
+const { validateRequiredPublishSourceLock } = await import("../packages/core/release/promote-ref/source-lock.js");
+const { plannedPublicationExactTag } = await import("../packages/core/release/promote-ref/action-outputs.js");
+const { collectGitHubReleaseEvidenceAssets, publishGitHubReleaseEvidence } = await import("../packages/core/release/github-release.js");
+const { reuseCompleteGitHubReleaseEvidence } = await import("../packages/core/release/reuse-complete-release.js");
 const { resolveExistingVersionState } = await import(
-  "../actions/promote-buildchain-ref/internal/version-state-operations.js"
+  "../packages/core/release/promote-ref/internal/version-state-operations.js"
 );
 const { containedReleaseExecutionIdentity, transactionContainedInRelease } =
-  await import("../actions/promote-buildchain-ref/internal/promote-release-channel.js");
+  await import("../packages/core/release/promote-ref/internal/promote-release-channel.js");
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 import {

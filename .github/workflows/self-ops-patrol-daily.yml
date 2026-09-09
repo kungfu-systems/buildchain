@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   patrol:
-    uses: ./.github/workflows/patrol-daily.yml
+    uses: ./.github/workflows/public-ops-patrol-daily.yml
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || 'v4-alpha' }}
       required-status-checks: check

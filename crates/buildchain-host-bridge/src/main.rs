@@ -222,7 +222,7 @@ fn read_bounded(
 fn execute(request: &HostRequest, serialized_request: &[u8]) -> HostResponse {
     let command = env::var("BUILDCHAIN_V4_HOST_COMMAND").unwrap_or_else(|_| "node".to_owned());
     let script = env::var("BUILDCHAIN_V4_HOST_SCRIPT")
-        .unwrap_or_else(|_| "scripts/host-adapter.mjs".to_owned());
+        .unwrap_or_else(|_| "packages/core/runtime/commands/host-adapter.mjs".to_owned());
     let mut child = match Command::new(&command)
         .arg(&script)
         .stdin(Stdio::piped())

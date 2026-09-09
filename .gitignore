@@ -10,6 +10,7 @@ crates/*/target/
 .buildchain/logs/
 .buildchain/tmp/
 .buildchain/runtime/
+.buildchain/workflow-shell/
 .buildchain/runtime-bootstrap/
 .buildchain/release-state/
 .buildchain/release-evidence/
@@ -20,9 +21,9 @@ crates/*/target/
 dist/*
 !dist/site/
 !dist/site/**
-!actions/*/dist/
-!actions/*/dist/index.js
-!actions/*/dist/buildchain-domain.wasm
+!actions/*/*/dist/
+!actions/*/*/dist/index.js
+!actions/*/*/dist/buildchain-domain.wasm
 coverage/
 __pycache__/
 *.log

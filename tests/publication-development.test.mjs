@@ -3,8 +3,8 @@ import test from "node:test";
 import {
   nextPatchDevelopmentVersion,
   compareDevelopmentVersions,
-} from "../packages/core/publication-development.js";
-import { invokeDomainWasm } from "../packages/core/domain-wasm.js";
+} from "../packages/core/publication/publication-development.js";
+import { invokeDomainWasm } from "../packages/core/runtime/domain-wasm.js";
 
 test("next patch selection has no product generation and compares arbitrarily large counters", () => {
   for (const major of [3, 4, 5, 12])

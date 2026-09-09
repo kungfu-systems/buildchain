@@ -1,0 +1,64 @@
+name: signing-authority-intake
+description: Execute the signing-authority intake capability within its caller job boundary.
+inputs:
+  secrets-buildchain-authority-token:
+    description: Explicit scoped provider credential.
+    required: true
+  secrets-buildchain-promotion-token:
+    description: Explicit scoped provider credential.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+outputs:
+  detached-matrix:
+    description: detached-matrix node result.
+    value: ${{ steps.inspect.outputs.detached-fromJSON(inputs.matrix-json) }}
+  macos-matrix:
+    description: macos-matrix node result.
+    value: ${{ steps.inspect.outputs.macos-fromJSON(inputs.matrix-json) }}
+  windows-matrix:
+    description: windows-matrix node result.
+    value: ${{ steps.inspect.outputs.windows-fromJSON(inputs.matrix-json) }}
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .
+    - name: Download consumer-sealed requests only
+      uses: actions/download-artifact@v7.0.0
+      with:
+        github-token: ${{ inputs.secrets-buildchain-authority-token || inputs.secrets-buildchain-promotion-token }}
+        repository: ${{ fromJSON(inputs.request-json).source-repository }}
+        run-id: ${{ fromJSON(inputs.request-json).source-run-id }}
+        pattern: ${{ fromJSON(inputs.request-json).request-artifact-pattern }}
+        path: .buildchain/authority-intake
+    - name: Validate source, runtime, profiles, and duplicate admission
+      id: inspect
+      run: node packages/core/build/commands/inspect-artifact-signing-requests.mjs
+      env:
+        BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/authority-intake
+        BUILDCHAIN_SIGNING_SOURCE_REPOSITORY: ${{ fromJSON(inputs.request-json).source-repository }}
+        BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(inputs.request-json).expected-runtime-sha }}
+        BUILDCHAIN_SIGNING_EXPECTED_REQUEST_ROOT: ${{ fromJSON(inputs.request-json).expected-request-root }}
+      shell: bash -e {0}
+    - name: Retain admitted request set for isolated provider jobs
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: authority-intake-${{ fromJSON(inputs.request-json).correlation-id }}
+        path: .buildchain/authority-intake
+        include-hidden-files: true
+        if-no-files-found: error
+        retention-days: 14

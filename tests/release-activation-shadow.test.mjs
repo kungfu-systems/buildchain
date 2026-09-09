@@ -4,12 +4,12 @@ import fs from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { ContractFault } from "../packages/core/canonical-contracts.js";
+import { ContractFault } from "../packages/core/contracts/canonical-contracts.js";
 import {
   foldReleaseActivation,
   planReleaseActivation,
   projectReleaseActivation,
-} from "../packages/core/release-activation-shadow.js";
+} from "../packages/core/release/release-activation-shadow.js";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const fixture = JSON.parse(
@@ -269,7 +269,10 @@ test("the sole schema and architecture authorities remain closed and production-
 
 test("activation implementations contain no provider, network, filesystem, process, or ambient authority", () => {
   const javascript = fs.readFileSync(
-    new URL("../packages/core/release-activation-shadow.js", import.meta.url),
+    new URL(
+      "../packages/core/release/release-activation-shadow.js",
+      import.meta.url,
+    ),
     "utf8",
   );
   const rust = [

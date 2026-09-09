@@ -4,11 +4,6 @@ on:
   workflow_call:
 
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
     secrets:
       BUILDCHAIN_PROMOTION_TOKEN:
         required: true
@@ -21,72 +16,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   promote:
-    if: ${{ inputs.universal-request-json == '' && (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: write
       packages: write
     steps:
-      - name: Resolve called workflow runtime
-        id: runtime
-        env:
-          WORKFLOW_SHA: ${{ job.workflow_sha }}
-        run: |
-          [[ "${WORKFLOW_SHA}" =~ ^[0-9a-f]{40}$ ]]
-          printf 'sha=%s\n' "${WORKFLOW_SHA}" >> "${GITHUB_OUTPUT}"
-      - uses: actions/checkout@v7.0.0
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          repository: kungfu-systems/buildchain
-          ref: ${{ steps.runtime.outputs.sha }}
-          path: .buildchain/runtime
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
           persist-credentials: false
-      - uses: actions/setup-node@v6.4.0
+      - name: Execute oci-compose-preview-promote
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/publication/oci-compose-preview-promote
         with:
-          node-version: "24"
-      - name: Verify completed publication and exact qualification run
-        id: qualified
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node .buildchain/runtime/scripts/oci-compose-preview.mjs prepare
-      - uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ steps.qualified.outputs.source-sha }}
-          path: .buildchain/consumer
-          persist-credentials: false
-      - name: Enforce floating v4 consumer policy
-        env:
-          BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
-          BUILDCHAIN_INVOKED_WORKFLOW: .github/workflows/public-release-oci-compose-preview.yml
-          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ steps.runtime.outputs.sha }}
-          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
-          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
-          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/consumer-policy-receipt.json
-        run: node .buildchain/runtime/scripts/consumer-policy.mjs scan
-      - uses: actions/download-artifact@v7.0.0
-        with:
-          artifact-ids: ${{ steps.qualified.outputs.artifact-id }}
-          run-id: ${{ steps.qualified.outputs.run-id }}
-          github-token: ${{ github.token }}
-          path: .buildchain/compose-preview/qualification
-          merge-multiple: true
-      - name: Reverify evidence and promote the declared preview
-        env:
-          GH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-          BUILDCHAIN_REGISTRY_TOKEN: ${{ github.token }}
-        run: node .buildchain/runtime/scripts/oci-compose-preview.mjs apply
-      - uses: actions/upload-artifact@v7.0.1
-        if: always()
-        with:
-          name: compose-preview-readback-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .buildchain/compose-preview/buildchain-compose-preview-*.json
-          if-no-files-found: ignore
+          job-workflow-sha: ${{ toJSON(job.workflow_sha) }}
+          secrets-buildchain-promotion-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}

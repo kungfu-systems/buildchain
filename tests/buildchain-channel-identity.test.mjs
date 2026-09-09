@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { evaluateBuildchainChannelBinding, parseBuildchainRefIdentity } from "../packages/core/buildchain-channel-identity.js";
+import { evaluateBuildchainChannelBinding, parseBuildchainRefIdentity } from "../packages/core/consumer/buildchain-channel-identity.js";
 
 test("channel identity is generic across majors and exact releases", () => {
   for (const major of [2, 3, 7, 42]) {

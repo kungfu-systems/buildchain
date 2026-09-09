@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { inspectWorkflowJob } from "../scripts/workflow-action-graph.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
 
 import {
@@ -14,12 +15,12 @@ import {
   createReleaseReceipt,
   createDomainReleaseTransaction,
   planReleaseRoute,
-} from "../packages/core/release-invocation.js";
+} from "../packages/core/release/release-invocation.js";
 import {
   ContractFault,
   domainCanonicalBytes,
   domainContentRoot,
-} from "../packages/core/canonical-contracts.js";
+} from "../packages/core/contracts/canonical-contracts.js";
 import {
   checkReleaseTopology,
   discoverReleaseTopology,
@@ -74,6 +75,18 @@ test("all entry and recovery adapters collapse to one rooted invocation per sema
   assert.notEqual(
     projections.get("alpha-fresh").roots.invocationRoot,
     projections.get("stable-fresh").roots.invocationRoot,
+  );
+});
+
+test("historical release adapter surface cannot enter the current domain", () => {
+  assert.throws(
+    () =>
+      adaptReleaseInvocation({
+        schema: RELEASE_INVOCATION_ADAPTER_CONTRACT,
+        route: { surface: "legacy-compatible", execution: "resume" },
+        invocation: structuredClone(fixture.invocations.alpha),
+      }),
+    { code: "invalid-release-adapter" },
   );
 });
 
@@ -360,12 +373,12 @@ test("Rust and JavaScript produce byte-identical ReleaseInvocation root DAGs", (
 test("the topology ledger exactly freezes all current release jobs and authority signals", () => {
   const topology = checkReleaseTopology();
   assert.deepEqual(topology.metrics, {
-    workflowCount: 36,
-    jobCount: 76,
-    reusableEdgeCount: 21,
-    mutationRelevantNodeCount: 63,
-    contentsWriteJobCount: 14,
-    oidcWriteJobCount: 14,
+    workflowCount: 34,
+    jobCount: 73,
+    reusableEdgeCount: 20,
+    mutationRelevantNodeCount: 61,
+    contentsWriteJobCount: 22,
+    oidcWriteJobCount: 19,
   });
   assert.deepEqual(topology.semanticMetrics, {
     workflowCount: 5,
@@ -384,11 +397,11 @@ test("the topology ledger exactly freezes all current release jobs and authority
 
 test("fresh, recovery, and startup-failure routes cannot reach a legacy release engine", () => {
   const canonical = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-promote.yml"),
     "utf8",
   );
   const publicWrapper = fs.readFileSync(
-    path.join(root, ".github/workflows/release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/public-release-promote.yml"),
     "utf8",
   );
   const recovery = fs.readFileSync(
@@ -396,16 +409,16 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     "utf8",
   );
   assert.deepEqual(topologyLedger.authorityClosure.runtimeEngines, [
-    "actions/release-candidate-promote/index.js",
+    "packages/core/release/promote-candidate/action.js",
   ]);
   assert.deepEqual(
     topologyLedger.authorityClosure.privilegedExecutableClosure.entrypoints,
     [
-      "actions/release-candidate-promote/index.js",
-      "scripts/binary-publication-evidence.mjs",
-      "scripts/next-development-review.mjs",
-      "scripts/oci-compose-preview.mjs",
-      "scripts/publication-settlement.mjs",
+      "packages/core/release/promote-candidate/action.js",
+      "packages/core/publication/commands/binary-publication-evidence.mjs",
+      "packages/core/release/commands/next-development-review.mjs",
+      "packages/core/publication/commands/oci-compose-preview.mjs",
+      "packages/core/publication/commands/publication-settlement.mjs",
     ],
   );
   assert.match(
@@ -414,11 +427,11 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
   );
   assert.ok(
     topologyLedger.authorityClosure.privilegedExecutableClosure.modules.includes(
-      "actions/release-candidate-promote/product-provider.js",
+      "packages/core/release/promote-candidate/product-provider.js",
     ),
   );
   assert.deepEqual(
-    topologyLedger.authorityClosure.legacyEngineModules.filter((relative) =>
+    topologyLedger.authorityClosure.excludedRefPromotionModules.filter((relative) =>
       topologyLedger.authorityClosure.privilegedExecutableClosure.modules.includes(
         relative,
       ),
@@ -429,21 +442,18 @@ test("fresh, recovery, and startup-failure routes cannot reach a legacy release 
     [canonical, publicWrapper, recovery].join("\n"),
     /legacy-promote|v4-declarative-promote/u,
   );
-  assert.match(
-    canonical,
-    /uses: \.\/\.buildchain\/runtime\/actions\/release-candidate-promote/u,
-  );
-  assert.match(
-    canonical,
-    /source-sha: \$\{\{ needs\.qualify\.outputs\.requested-sha \}\}/u,
-  );
+  const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply");
+  assert.ok(graph.actions.has("actions/release/promote-candidate"));
+  assert.equal(graph.job.steps.find(step => step.id === "node").with["needs-qualify-outputs-requested-sha"], "${{ toJSON(needs.qualify.outputs.requested-sha) }}");
+  for (const step of graph.steps.filter(step => step.uses?.endsWith("/actions/release/promote-candidate")))
+    assert.equal(step.with["source-sha"], "${{ fromJSON(inputs.needs-qualify-outputs-requested-sha) }}");
   assert.match(
     publicWrapper,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@/u,
+    /uses: \.\/\.github\/workflows\/\.release-promote\.yml/u,
   );
   assert.match(
     recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@/u,
+    /uses: \.\/\.github\/workflows\/public-release-promote\.yml/u,
   );
 });
 
@@ -454,7 +464,7 @@ test("closed-world discovery rejects an undeclared release topology workflow", (
       ["known.yml", "new.yml", "unrelated.yml"],
       (relative) =>
         relative === "new.yml"
-          ? "uses: kungfu-systems/buildchain/actions/promote-buildchain-ref@v4"
+          ? "uses: kungfu-systems/buildchain/actions/release/promote-ref@v4"
           : "jobs:\n  check:\n    runs-on: ubuntu-24.04\n",
     ),
     ["new.yml"],

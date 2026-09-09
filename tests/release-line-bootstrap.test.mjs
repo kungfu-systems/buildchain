@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { writeReleaseLineBootstrapVersionState } from "../packages/core/release-line-bootstrap.js";
+import { writeReleaseLineBootstrapVersionState } from "../packages/core/release/release-line-bootstrap.js";
 
 test("release-line bootstrap relines version-bound release impact text", (t) => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-release-line-bootstrap-"));

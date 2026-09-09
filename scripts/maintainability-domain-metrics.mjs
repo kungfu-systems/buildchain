@@ -1,4 +1,4 @@
-import { parseWorkflowDocument } from "../packages/core/workflow-yaml-contract.js";
+import { parseWorkflowDocument } from "../packages/core/contracts/workflow-yaml-contract.js";
 
 function lineCount(source) {
   const text = String(source || "");

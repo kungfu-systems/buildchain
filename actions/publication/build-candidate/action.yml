@@ -1,0 +1,128 @@
+name: build-candidate
+description: Publication build candidate.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  core-node-outputs-node-path:
+    description: Exact preceding publication node result.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Setup Buildchain Node.js
+      if: ${{ fromJSON(inputs.request-json).setup-node }}
+      uses: actions/setup-node@v6.0.0
+      with:
+        node-version: ${{ fromJSON(inputs.request-json).node-version }}
+    - name: Resolve publication toolchain
+      id: toolchain
+      shell: bash
+      working-directory: ${{ fromJSON(inputs.request-json).working-directory }}
+      env:
+        INPUT_TOOLCHAIN_TYPE: ${{ fromJSON(inputs.request-json).toolchain-type }}
+        INPUT_TOOLCHAIN_IMAGE: ${{ fromJSON(inputs.request-json).toolchain-image }}
+        INPUT_TOOLCHAIN_DIGEST: ${{ fromJSON(inputs.request-json).toolchain-digest }}
+        INPUT_TOOLCHAIN_COMMAND: ${{ fromJSON(inputs.request-json).toolchain-command }}
+        INPUT_BUILD_COMMAND: ${{ fromJSON(inputs.request-json).build-command }}
+        BUILDCHAIN_PUBLICATION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/publication/nodes/build-candidate.mjs" toolchain
+    - name: Hydrate cumulative publication registry
+      if: ${{ fromJSON(inputs.request-json).prepare-paper-package }}
+      shell: bash
+      working-directory: ${{ fromJSON(inputs.request-json).working-directory }}
+      run: '"$BUILDCHAIN_NODE_PATH" "${GITHUB_WORKSPACE}/.buildchain/runtime/packages/core/publication/commands/publication-registry-hydrate.mjs" --cwd .'
+      env:
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+    - name: Prove publication reproducibility
+      id: build
+      if: ${{ steps.toolchain.outputs.command != '' }}
+      shell: bash
+      working-directory: ${{ fromJSON(inputs.request-json).working-directory }}
+      env:
+        BUILDCHAIN_PUBLICATION_TOOLCHAIN_TYPE: ${{ steps.toolchain.outputs.type }}
+        BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE: ${{ steps.toolchain.outputs.image }}
+        BUILDCHAIN_PUBLICATION_TOOLCHAIN_DIGEST: ${{ steps.toolchain.outputs.digest }}
+        BUILDCHAIN_PUBLICATION_TOOLCHAIN_COMMAND: ${{ steps.toolchain.outputs.command }}
+        BUILDCHAIN_PUBLICATION_TOOLCHAIN_IMAGE_REF: ${{ steps.toolchain.outputs.image-ref }}
+        INPUT_PACKAGE_NAME: ${{ fromJSON(inputs.request-json).package-name }}
+        INPUT_PREPARE_PAPER_PACKAGE: ${{ fromJSON(inputs.request-json).prepare-paper-package }}
+        BUILDCHAIN_PUBLICATION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/publication/nodes/build-candidate.mjs" reproducibility
+    - name: Verify publication
+      id: verify
+      if: ${{ fromJSON(inputs.request-json).verify-command != '' }}
+      shell: bash
+      working-directory: ${{ fromJSON(inputs.request-json).working-directory }}
+      run: |
+        bash --noprofile --norc -e -u -o pipefail -c "$BUILDCHAIN_VERIFY_COMMAND"
+      env:
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+        BUILDCHAIN_VERIFY_COMMAND: ${{ fromJSON(inputs.request-json).verify-command }}
+    - name: Read qualified publication artifact manifest
+      id: manifest
+      shell: bash
+      working-directory: ${{ fromJSON(inputs.request-json).working-directory }}
+      env:
+        INPUT_PREPARE_PAPER_PACKAGE: ${{ fromJSON(inputs.request-json).prepare-paper-package }}
+        BUILDCHAIN_PUBLICATION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/publication/nodes/build-candidate.mjs" manifest
+    - name: Bind qualified npm paper package
+      id: package
+      if: ${{ fromJSON(inputs.request-json).prepare-paper-package }}
+      shell: bash
+      working-directory: ${{ fromJSON(inputs.request-json).working-directory }}
+      env:
+        INPUT_PACKAGE_NAME: ${{ fromJSON(inputs.request-json).package-name }}
+        INPUT_PUBLISH_DIST_TAG: ${{ fromJSON(inputs.request-json).publish-dist-tag }}
+        INPUT_TARGET_REF: ${{ fromJSON(inputs.request-json).target-ref || github.ref_name }}
+        BUILDCHAIN_PUBLICATION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/publication/nodes/build-candidate.mjs" package
+outputs:
+  build-outcome:
+    description: Exact publication step result.
+    value: ${{ steps.build.outcome }}
+  verify-outcome:
+    description: Exact publication step result.
+    value: ${{ steps.verify.outcome }}
+  manifest-outcome:
+    description: Exact publication step result.
+    value: ${{ steps.manifest.outcome }}
+  package-outcome:
+    description: Exact publication step result.
+    value: ${{ steps.package.outcome }}
+  manifest-outputs-manifest-path:
+    description: Exact publication step result.
+    value: ${{ steps.manifest.outputs.manifest-path }}
+  manifest-outputs-passport-path:
+    description: Exact publication step result.
+    value: ${{ steps.manifest.outputs.passport-path }}
+  publication-manifest-path:
+    description: publication-manifest-path node result.
+    value: ${{ steps.manifest.outputs.manifest-path }}
+  publication-passport-path:
+    description: publication-passport-path node result.
+    value: ${{ steps.manifest.outputs.passport-path }}
+  publication-registry-path:
+    description: publication-registry-path node result.
+    value: ${{ steps.manifest.outputs.registry-path }}
+  publication-manifest-json:
+    description: publication-manifest-json node result.
+    value: ${{ steps.manifest.outputs.manifest-json }}
+  package-name:
+    description: package-name node result.
+    value: ${{ steps.package.outputs.package-name }}
+  package-version:
+    description: package-version node result.
+    value: ${{ steps.package.outputs.package-version }}
+  publish-dist-tag:
+    description: publish-dist-tag node result.
+    value: ${{ steps.package.outputs.dist-tag }}

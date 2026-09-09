@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { projectWorkflowIdentities } from "./workflow-taxonomy.mjs";
 
 import fs from "node:fs";
 import path from "node:path";
@@ -17,7 +16,7 @@ import {
 
 const JS_EXTENSIONS = new Set([".js", ".mjs", ".cjs"]);
 const HAND_MAINTAINED_EXTENSIONS = new Set([...JS_EXTENSIONS, ".rs"]);
-const GENERATED_PATTERN = /^actions\/[^/]+\/dist\/.*\.js$/u;
+const GENERATED_PATTERN = /^actions\/(?:[^/]+\/)+dist\/.*\.js$/u;
 
 function gitText(root, args, encoding = "utf8") {
   return execFileSync("git", args, {
@@ -51,7 +50,10 @@ function isTestFile(file) {
 }
 
 function isGeneratedFile(file) {
-  return GENERATED_PATTERN.test(file);
+  return (
+    GENERATED_PATTERN.test(file) ||
+    file.startsWith("templates/bootstrap-recovery/")
+  );
 }
 
 function isHandMaintainedSource(file) {
@@ -243,15 +245,16 @@ function architectureSummary(root, revision = "") {
   };
 }
 
-function selectedFunction(files, file, name) {
-  const entry = files[file];
-  const matches =
-    entry?.functions.filter((candidate) => candidate.name === name) || [];
-  if (matches.length !== 1) {
+function selectedFunction(files, name) {
+  const matches = Object.entries(files).flatMap(([file, entry]) =>
+    (entry.functions || [])
+      .filter((candidate) => candidate.name === name)
+      .map((candidate) => ({ file, ...candidate })),
+  );
+  if (matches.length !== 1)
     throw new Error(
-      `${file} must contain exactly one ${name} function; found ${matches.length}`,
+      `source revision must contain exactly one ${name} function; found ${matches.length}`,
     );
-  }
   return matches[0];
 }
 
@@ -266,6 +269,9 @@ function collectMaintainabilityMetrics({
   );
   const workflowFiles = files.filter((file) =>
     /^\.github\/workflows\/.*\.ya?ml$/u.test(file),
+  );
+  const actionDefinitions = files.filter((file) =>
+    /(?:^|\/)action\.ya?ml$/u.test(file),
   );
   const generatedFiles = files.filter(isGeneratedFile);
   const documentationFiles = files.filter((file) => file.endsWith(".md"));
@@ -285,9 +291,7 @@ function collectMaintainabilityMetrics({
     path: file,
     text: readTrackedFile(root, file, revision),
   }));
-  const logicalWorkflows = revision
-    ? physicalWorkflows
-    : projectWorkflowIdentities(root, physicalWorkflows);
+  const logicalWorkflows = physicalWorkflows;
   const workflowMetrics = Object.fromEntries(
     logicalWorkflows.map((entry) => [
       entry.path,
@@ -310,6 +314,12 @@ function collectMaintainabilityMetrics({
   const reverseAudit = JSON.parse(
     readTrackedFile(root, "dist/site/public-surface-audit.json", revision),
   );
+  const sourceLines = Object.values(sourceMetrics).reduce(
+    (total, entry) => total + entry.lines,
+    0,
+  );
+  const workflowLines = sumLines(workflowFiles);
+  const actionDefinitionLines = sumLines(actionDefinitions);
   const head = revision || gitText(root, ["rev-parse", "HEAD"]).trim();
   return {
     schemaVersion: 1,
@@ -318,17 +328,15 @@ function collectMaintainabilityMetrics({
     repository: {
       trackedFiles: files.length,
       handMaintainedSourceFiles: sourceFiles.length,
-      handMaintainedSourceLines: Object.values(sourceMetrics).reduce(
-        (total, entry) => total + entry.lines,
-        0,
-      ),
+      handMaintainedSourceLines: sourceLines,
       testFiles: testFiles.length,
       testLines: sumLines(testFiles),
       workflowFiles: logicalWorkflows.length,
-      workflowLines: logicalWorkflows.reduce(
-        (total, entry) => total + lineCount(entry.text),
-        0,
-      ),
+      workflowLines,
+      actionDefinitions: actionDefinitions.length,
+      actionDefinitionLines,
+      automationImplementationLines:
+        sourceLines + workflowLines + actionDefinitionLines,
       documentationFiles: documentationFiles.length,
       documentationLines: sumLines(documentationFiles),
       generatedFiles: generatedFiles.length,
@@ -357,22 +365,14 @@ function collectMaintainabilityMetrics({
     },
     architecture: architectureSummary(root, revision),
     hotspots: {
-      promoteBuildchainRefs: {
-        file: "actions/promote-buildchain-ref/lib.js",
-        ...selectedFunction(
-          sourceMetrics,
-          "actions/promote-buildchain-ref/lib.js",
-          "promoteBuildchainRefs",
-        ),
-      },
-      createReleaseCheckReport: {
-        file: "packages/core/release-passport.js",
-        ...selectedFunction(
-          sourceMetrics,
-          "packages/core/release-passport.js",
-          "createReleaseCheckReport",
-        ),
-      },
+      promoteBuildchainRefs: selectedFunction(
+        sourceMetrics,
+        "promoteBuildchainRefs",
+      ),
+      createReleaseCheckReport: selectedFunction(
+        sourceMetrics,
+        "createReleaseCheckReport",
+      ),
     },
     files: sourceMetrics,
     tests: testMetrics,

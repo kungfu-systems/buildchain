@@ -37,7 +37,7 @@ Passport have been sealed and uploaded. It downloads those files as data and
 never checks out or executes consumer source.
 
 The attester checks out only
-`actions/github-artifact-attestation` from an exact Buildchain commit. It
+`actions/build/github-attestation` from an exact Buildchain commit. It
 rejects a floating Buildchain ref, a different caller repository, a different
 source SHA, a different workflow run, a non-Linux platform manifest, or a
 subject digest absent from the Release Passport.
@@ -137,7 +137,7 @@ permissions:
 
 jobs:
   promote:
-    uses: kungfu-systems/buildchain/.github/workflows/release-candidate-promote.yml@<exact-buildchain-v3-runtime-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-promote.yml@<exact-buildchain-v3-runtime-sha>
     with:
       buildchain-ref: <exact-buildchain-v3-runtime-sha>
       github-release: true
@@ -166,7 +166,7 @@ jobs:
       attestations: write
       contents: read
       id-token: write
-    uses: kungfu-systems/buildchain/.github/workflows/github-artifact-attestation.yml@<exact-signer-bootstrap-sha>
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-artifact-attestation.yml@<exact-signer-bootstrap-sha>
     with:
       buildchain-ref: <exact-signer-bootstrap-sha>
       evidence-run-id: ${{ github.run_id }}

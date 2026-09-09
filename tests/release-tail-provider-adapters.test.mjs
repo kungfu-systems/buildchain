@@ -10,11 +10,11 @@ import {
   createGitHubReleaseAssetsAdapter,
   createSignedStaticChannelAdapter,
   githubReleaseAssetsTargetRoot,
-} from "../packages/core/release-tail-provider-adapters.js";
+} from "../packages/core/release/release-tail-provider-adapters.js";
 import {
   compileReleaseTailDeclaration,
   releaseTailRoot,
-} from "../packages/core/release-tail-provider-plane.js";
+} from "../packages/core/release/release-tail-provider-plane.js";
 
 function declaration() {
   return JSON.parse(

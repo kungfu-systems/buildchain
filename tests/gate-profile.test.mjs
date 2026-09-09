@@ -9,13 +9,13 @@ import {
   createGateExecutionMatrix,
   normalizeGateEnvironment,
   sha256,
-} from "../scripts/gate-profile-core.mjs";
+} from "../packages/core/build/commands/gate-profile-core.mjs";
 import {
   commandSpawnOptions,
   gateEnvironment,
   prepareGateExecutionFiles,
   windowsBatchInvocation,
-} from "../scripts/shifu-gate-profile.mjs";
+} from "../packages/core/build/commands/shifu-gate-profile.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const DIGESTS = Object.freeze({
@@ -111,7 +111,7 @@ test("Gate execution survives output above the bounded JSON capture limit", () =
     const result = spawnSync(
       process.execPath,
       [
-        path.join(import.meta.dirname, "../scripts/shifu-gate-profile.mjs"),
+        path.join(import.meta.dirname, "../packages/core/build/commands/shifu-gate-profile.mjs"),
         "--mode",
         "run",
       ],

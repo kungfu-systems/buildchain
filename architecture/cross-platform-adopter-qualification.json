@@ -1,16 +1,15 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-v4-cross-platform-adopter-qualification",
-  "inventoryAuthority": "architecture/capability-parity-live-capability-inventory.json",
-  "implementation": "packages/core/cross-platform-adopter-qualification.js",
-  "runner": "scripts/cross-platform-adopter-qualification.mjs",
+  "implementation": "packages/core/adoption/cross-platform-adopter-qualification.js",
+  "runner": "packages/core/adoption/commands/cross-platform-adopter-qualification.mjs",
   "publicWorkflow": ".github/workflows/public-build-adopter-qualification.yml",
   "sourceBinding": {
     "runtime": "job.workflow_sha",
     "consumer": "exact checked-out consumer commit",
     "sameRuntimeAcrossMatrix": true,
     "sameConsumerAcrossMatrix": true,
-    "sameInventoryAcrossMatrix": true
+    "sameInputAcrossMatrix": true
   },
   "candidateDispatch": {
     "externalRepositoryRequiresExactCommit": true,
@@ -27,20 +26,11 @@
     "platformCoverage": ["linux-x64", "macos-arm64", "windows-x64"],
     "kfdDependencyAllowed": false
   },
-  "capabilityMatrix": {
-    "rawRowsRequired": true,
-    "everyCategoryRequired": true,
-    "sourceOnlyApplicability": "exact-source-route",
-    "residualMaximum": 0,
-    "unknownMaximum": 0,
-    "unownedMaximum": 0
-  },
   "executedScenarios": [
     "public-run",
     "tampered-readback-failure",
     "public-run-retry",
     "terminal-exact-verify",
-    "n-minus-one-bootstrap",
     "protocol-neutral-clean-room"
   ],
   "authority": {

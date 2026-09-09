@@ -4,22 +4,22 @@ import test from "node:test";
 
 test("governance audit keeps fork pull requests on a bounded read-only token fallback", () => {
   const auditWorkflow = fs.readFileSync(
-    new URL("../.github/workflows/self-ops-governance-audit.yml", import.meta.url),
+    new URL("../actions/governance/audit/action.yml", import.meta.url),
     "utf8",
   );
   assert.match(auditWorkflow, /actions\/create-github-app-token@v3/);
   assert.match(
     auditWorkflow,
-    /name: Mint bounded governance auditor token[\s\S]+KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''[\s\S]+continue-on-error: true/,
+    /name: Mint bounded governance auditor token[\s\S]+inputs\.auditor-private-key != ''[\s\S]+continue-on-error: true/,
   );
   assert.match(
     auditWorkflow,
-    /app-id: \$\{\{ vars\.KUNGFU_GOVERNANCE_AUDITOR_APP_ID \}\}/,
+    /app-id: \$\{\{ inputs\.auditor-app-id \}\}/,
   );
   assert.match(
     auditWorkflow,
-    /GH_TOKEN: \$\{\{ steps\.auditor\.outputs\.token \|\| secrets\.BUILDCHAIN_GOVERNANCE_READ_TOKEN \|\| github\.token \}\}/,
+    /GH_TOKEN: \$\{\{ steps\.auditor\.outputs\.token \|\| inputs\.governance-read-token \|\| github\.token \}\}/,
   );
   assert.match(auditWorkflow, /FORK_PULL_REQUEST:/);
-  assert.match(auditWorkflow, /credential-limited/);
+  assert.match(fs.readFileSync(new URL("../packages/core/governance/audit/enforce.mjs", import.meta.url), "utf8"), /credential-limited/);
 });

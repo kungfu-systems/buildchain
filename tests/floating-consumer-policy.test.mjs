@@ -10,15 +10,15 @@ import {
   consumerPolicyScannerRoot,
   floatingConsumerDocumentRoot,
   verifyFloatingConsumerPolicyReceipt,
-} from "../packages/core/floating-consumer-policy.js";
+} from "../packages/core/consumer/floating-consumer-policy.js";
 import {
   createReleaseCandidatePassport,
   validateReleaseCandidatePassport,
-} from "../packages/core/release-candidate.js";
-import { createReleasePassport } from "../packages/core/release-passport.js";
-import { resolveConsumerPolicyCertificationIdentity } from "../packages/core/floating-consumer-release-passport.js";
-import { parseYamlUses } from "../packages/core/workflow-yaml-contract.js";
-import { certifyCommand } from "../scripts/consumer-policy.mjs";
+} from "../packages/core/release/release-candidate.js";
+import { createReleasePassport } from "../packages/core/release/passport/assembly.js";
+import { resolveConsumerPolicyCertificationIdentity } from "../packages/core/consumer/floating-consumer-release-passport.js";
+import { parseYamlUses } from "../packages/core/contracts/workflow-yaml-contract.js";
+import { certifyCommand } from "../packages/core/consumer/commands/consumer-policy.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const policy = JSON.parse(
@@ -91,7 +91,7 @@ function workspace(fixture) {
     fs.mkdirSync(path.dirname(actionPath), { recursive: true });
     fs.writeFileSync(
       actionPath,
-      `name: wrapper\nruns:\n  using: composite\n  steps:\n    - uses: kungfu-systems/buildchain/actions/run-lifecycle@${"a".repeat(40)}\n`,
+      `name: wrapper\nruns:\n  using: composite\n  steps:\n    - uses: kungfu-systems/buildchain/actions/build/run-lifecycle@${"a".repeat(40)}\n`,
     );
   } else {
     fs.writeFileSync(
@@ -178,7 +178,7 @@ test("source scan treats materialized Buildchain runtime actions as transient", 
   const callerRoot = workspace(fixtures.cases[0]);
   fs.writeFileSync(
     path.join(callerRoot, ".github/workflows/runtime-action.yml"),
-    "jobs:\n  report:\n    steps:\n      - uses: ./.buildchain/runtime/actions/report-buildchain-issue\n",
+    "jobs:\n  report:\n    steps:\n      - uses: ./.buildchain/runtime/actions/governance/report-issue\n",
   );
   const result = scanFloatingConsumerPolicy({
     root: callerRoot,
@@ -193,7 +193,7 @@ test("source scan treats materialized Buildchain runtime actions as transient", 
   assert.ok(
     result.invocations.every(
       (entry) =>
-        entry.uses !== "./.buildchain/runtime/actions/report-buildchain-issue",
+        entry.uses !== "./.buildchain/runtime/actions/governance/report-issue",
     ),
   );
 });

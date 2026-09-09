@@ -6,13 +6,13 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import test from "node:test";
 
-import { BUILDCHAIN_COMMAND_REGISTRY } from "../bin/internal/command-registry.mjs";
-import { BUILDCHAIN_USAGE } from "../scripts/buildchain-cli-help.mjs";
+import { BUILDCHAIN_COMMAND_REGISTRY } from "../packages/core/contracts/command-registry.mjs";
+import { BUILDCHAIN_USAGE } from "../packages/core/workflow/commands/buildchain-cli-help.mjs";
+import { createNodeApiReference } from "../scripts/public-reference.mjs";
 import {
   createCliReference,
-  createNodeApiReference,
   formatCliHelp,
-} from "../scripts/public-reference.mjs";
+} from "../packages/core/contracts/cli-reference.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");

@@ -1,0 +1,71 @@
+name: Native delivery seal
+description: Own the seal adapter inside its isolated caller job.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  needs-json:
+    description: Exact dependency job results and admitted output coordinates.
+    required: false
+    default: '{}'
+outputs:
+  transfer-root:
+    description: transfer-root.
+    value: ${{ steps.transfer.outputs.root }}
+  transfer-native-outcome:
+    description: transfer-native-outcome.
+    value: ${{ steps.transfer.outputs.native-outcome }}
+runs:
+  using: composite
+  steps:
+  - name: Checkout exact admitted Buildchain seal runtime
+    if: ${{ success() }}
+    uses: actions/checkout@v7.0.0
+    with:
+      repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+      ref: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+      path: .buildchain/runtime
+      persist-credentials: false
+  - name: Verify exact admitted Buildchain seal runtime
+    if: ${{ success() }}
+    shell: bash
+    run: 'set -euo pipefail
+
+      test "$(git -C .buildchain/runtime rev-parse --verify ''HEAD^{commit}'')" = "${ADMITTED_RUNTIME_SHA}"
+
+      '
+    env:
+      ADMITTED_RUNTIME_SHA: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+  - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+    with:
+      directory: .buildchain/runtime
+    if: ${{ success() }}
+  - name: Download raw native execution output
+    if: ${{ success() }}
+    uses: actions/download-artifact@v7.0.0
+    with:
+      name: buildchain-dev-delivery-native-raw-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+        }}
+      path: .buildchain/native-raw
+  - name: Independently validate and seal exact native transfer
+    if: ${{ success() }}
+    id: transfer
+    shell: bash
+    run: "set -euo pipefail\nunset GH_TOKEN GITHUB_TOKEN\nnode .buildchain/runtime/packages/core/dev-delivery/commands/dev-delivery-process-boundary.mjs\
+      \ seal \\\n  --directory .buildchain/native-raw \\\n  --staging-directory .buildchain/native-transfer-staging \\\n \
+      \ --seal-job seal-native-execution \\\n  --runtime-selection-root \"${ADMITTED_RUNTIME_ROOT}\" \\\n  --output execution-transfer.json\n\
+      {\n  echo \"root=$(jq -er '.transferRoot' .buildchain/native-transfer-staging/execution-transfer.json)\"\n  echo \"\
+      native-outcome=$(jq -er '.outcome' .buildchain/native-transfer-staging/execution-transfer.json)\"\n} >> \"${GITHUB_OUTPUT}\"\
+      \n"
+    env:
+      BUILDCHAIN_RUNNER_ENVIRONMENT: ${{ runner.environment }}
+      ADMITTED_RUNTIME_ROOT: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-selection-root }}
+  - name: Upload canonical closed native execution transfer
+    if: ${{ success() }}
+    uses: actions/upload-artifact@v7.0.1
+    with:
+      name: buildchain-dev-delivery-native-sealed-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+        }}
+      path: .buildchain/native-transfer-staging/
+      if-no-files-found: error
+      retention-days: 30

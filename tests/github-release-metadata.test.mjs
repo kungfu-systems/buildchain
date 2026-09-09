@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   classifyReleaseTag,
   ensureGitHubRelease,
-} from "../scripts/ensure-github-release.mjs";
+} from "../packages/core/release/commands/ensure-github-release.mjs";
 
 function jsonResponse(body, { status = 200 } = {}) {
   return new Response(JSON.stringify(body), {

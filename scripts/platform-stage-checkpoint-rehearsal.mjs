@@ -5,14 +5,14 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { domainCanonicalBytes } from "../packages/core/canonical-contracts.js";
-import { StageCapsuleLocalStore } from "../packages/core/stage-capsule-local-store.js";
-import { stageCapsuleBlobRoot } from "../packages/core/stage-capsule-store.js";
+import { domainCanonicalBytes } from "../packages/core/contracts/canonical-contracts.js";
+import { StageCapsuleLocalStore } from "../packages/core/build/stage-capsule-local-store.js";
+import { stageCapsuleBlobRoot } from "../packages/core/build/stage-capsule-store.js";
 import {
   emitPlatformStageCheckpoint,
   restorePlatformStageCheckpoint,
   validatePlatformStageCheckpointDeclaration,
-} from "../packages/core/platform-stage-checkpoints.js";
+} from "../packages/core/build/platform-stage-checkpoints.js";
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

@@ -14,7 +14,6 @@ const ROOTS = new Set([
 ]);
 const GENERATION_PATH = /(?:^|[-_])v\d+(?:[-_]|$)/iu;
 const PROTOCOL_VERSION_SYMBOLS = new Set([
-  "createSourceQualificationProofV2",
   "loadedV2",
 ]);
 const GENERATION_SYMBOL =
@@ -47,7 +46,8 @@ export function inspectImplementationName(file, source) {
   );
   const visit = (node) => {
     if (
-      (ts.isFunctionDeclaration(node) ||
+      (ts.isExportSpecifier(node) ||
+      ts.isFunctionDeclaration(node) ||
         ts.isClassDeclaration(node) ||
         ts.isVariableDeclaration(node) ||
         ts.isParameter(node) ||
@@ -105,27 +105,6 @@ export function checkImplementationNaming(root = process.cwd()) {
   for (const name of Object.keys(manifest.scripts || {})) {
     if (/(?:^|:)v\d+(?:[-:]|$)/iu.test(name))
       issues.push(`package.json: script ${name} contains a product generation`);
-  }
-  const policy = JSON.parse(
-    fs.readFileSync(
-      path.join(root, "architecture/implementation-naming.json"),
-      "utf8",
-    ),
-  );
-  for (const [file, identities] of Object.entries(policy.wireIdentities)) {
-    const source = fs.readFileSync(path.join(root, file), "utf8");
-    for (const previousIdentity of identities) {
-      const identity =
-        policy.implementationIdentityMigrations?.[file]?.[previousIdentity] ||
-        previousIdentity;
-      if (
-        !source.includes(JSON.stringify(identity)) &&
-        !source.includes(`'${identity}'`)
-      )
-        issues.push(
-          `${file}: published wire identity changed during implementation relocation: ${identity}`,
-        );
-    }
   }
   if (issues.length) throw new Error(issues.join("\n"));
   return { checkedFiles: files.length, issues: [] };

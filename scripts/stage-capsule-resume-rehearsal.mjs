@@ -4,8 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { domainCanonicalBytes } from "../packages/core/canonical-contracts.js";
-import { planStageCapsuleResume } from "../packages/core/stage-capsule-resume-planner.js";
+import { domainCanonicalBytes } from "../packages/core/contracts/canonical-contracts.js";
+import { planStageCapsuleResume } from "../packages/core/build/stage-capsule-resume-planner.js";
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

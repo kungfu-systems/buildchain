@@ -11,8 +11,8 @@ import {
   createReleaseCandidatePassport,
   sha256Json,
   validateReleaseCandidatePassport,
-} from "../packages/core/release-candidate.js";
-import { generateReleaseCandidatePassportCli } from "../scripts/generate-release-candidate-passport.mjs";
+} from "../packages/core/release/release-candidate.js";
+import { generateReleaseCandidatePassportCli } from "../packages/core/publication/commands/generate-release-candidate-passport.mjs";
 import {
   generatePublishRequiredArtifacts,
   githubDownload,
@@ -27,13 +27,13 @@ import {
   selectReleaseCandidateRun,
   selectReleaseCandidateRuns,
   verifyArtifactArchive,
-} from "../scripts/release-candidate-resolver.mjs";
-import { createResolvedPublicationSealedBundle } from "../scripts/publication-candidate-sealer.mjs";
+} from "../packages/core/release/commands/release-candidate-resolver.mjs";
+import { createResolvedPublicationSealedBundle } from "../packages/core/publication/commands/publication-candidate-sealer.mjs";
 import {
   buildWorkflowFrictionBody,
   classifyWorkflowFriction,
   selectFrictionClass,
-} from "../scripts/workflow-friction-report.mjs";
+} from "../packages/core/governance/commands/workflow-friction-report.mjs";
 
 const SOURCE_SHA = "1111111111111111111111111111111111111111";
 

@@ -1,0 +1,147 @@
+name: binary-distribution-passport
+description: Execute the binary-distribution passport capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - name: Resolve exact binary source
+      shell: bash
+      run: |
+        source_sha="$(git rev-parse HEAD)"
+        if [[ "$source_sha" != "$GITHUB_SHA" ]]; then
+          echo "::error::Dispatch Binary Distribution at the exact release tag so workflow, runtime and source identities agree."
+          exit 1
+        fi
+        echo "SOURCE_SHA=$source_sha" >> "$GITHUB_ENV"
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Enable pnpm
+      run: |
+        corepack prepare pnpm@11.7.0 --activate
+        corepack enable
+        pnpm --version
+      shell: bash -e {0}
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      shell: bash -e {0}
+    - name: Resolve binary distribution contract digest
+      id: contract
+      shell: bash
+      run: |
+        node --input-type=module <<'NODE'
+        import fs from "node:fs";
+        const contract = JSON.parse(fs.readFileSync("dist/site/buildchain-contract.json", "utf8"));
+        fs.appendFileSync(process.env.GITHUB_OUTPUT, `json=${JSON.stringify({ contractDigest: contract.contractDigest })}\n`);
+        NODE
+    - name: Plan binary distribution controller evidence
+      id: controller-plan
+      env:
+        BUILDCHAIN_CONTROLLER_REGISTRY: dist/site/controller-registry.json
+        BUILDCHAIN_CONTROLLER_ID: binary-distribution
+        BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+        BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ env.SOURCE_SHA }}
+        BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ github.sha }}
+        BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ github.sha }}
+        BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ fromJSON(steps.contract.outputs.json).contractDigest }}
+        BUILDCHAIN_CONTROLLER_INPUTS_JSON: "{}"
+        BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+      run: node packages/core/observability/commands/controller-evidence.mjs --mode plan
+      shell: bash -e {0}
+    - name: Download binary artifacts
+      uses: actions/download-artifact@v6.0.0
+      with:
+        pattern: buildchain-binary-*
+        path: dist/binary
+        merge-multiple: true
+    - name: Write checksums
+      shell: bash
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/binary-distribution.mjs" checksums
+    - name: Read exact publication settlement
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: node packages/core/publication/commands/binary-publication-evidence.mjs read
+      shell: bash -e {0}
+    - name: Collect release passport
+      env:
+        BUILDCHAIN_RUNNER_KIND: github-hosted
+      shell: bash
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/binary-distribution.mjs" collect
+    - name: Verify release passport
+      run: node bin/buildchain.mjs span --event release-passport.verify --phase passport --component workflow --source buildchain -- node bin/buildchain.mjs verify release-passport .buildchain/release-passport/buildchain.release.json
+      shell: bash -e {0}
+    - name: Verify release artifacts through passport discovery
+      shell: bash
+      run: |
+        for artifact in dist/binary/*; do
+          test -f "${artifact}" || continue
+          node bin/buildchain.mjs span \
+            --event release-passport.verify-artifact \
+            --phase passport \
+            --component workflow \
+            --source buildchain \
+            -- \
+            node bin/buildchain.mjs verify artifact "${artifact}" \
+              --passport .buildchain/release-passport/buildchain.release.json
+        done
+    - name: Summarize passport observability
+      run: |
+        node bin/buildchain.mjs mark --event release-passport.complete --phase evidence --component workflow --source buildchain
+        node bin/buildchain.mjs verify observability-log "${BUILDCHAIN_LOG_PATH}" --min-events 7 --require-phase passport --require-phase evidence --require-component workflow --require-event release-passport.checksums.start --require-event release-passport.checksums.end --require-event release-passport.collect.start --require-event release-passport.collect.end --require-event release-passport.verify.start --require-event release-passport.verify.end --require-event release-passport.complete
+        node bin/buildchain.mjs log summary --path "${BUILDCHAIN_LOG_PATH}" --json > .buildchain/release-passport/buildchain-log-summary-passport.json
+        cp "${BUILDCHAIN_LOG_PATH}" .buildchain/release-passport/buildchain-log-events-passport.jsonl
+      shell: bash -e {0}
+    - name: Create release evidence bundle
+      run: |
+        node packages/core/publication/commands/create-release-bundle.mjs \
+          --assets-dir dist/binary \
+          --passport-dir .buildchain/release-passport \
+          --output-dir .buildchain/release-passport \
+          --tag "${{ env.RELEASE_TAG }}" \
+          --source-sha "${{ env.SOURCE_SHA }}"
+        test -f .buildchain/release-passport/buildchain-release-bundle.tar.gz
+        test -f .buildchain/release-passport/buildchain-release-bundle.json
+      shell: bash -e {0}
+    - name: Seal binary distribution controller receipt
+      id: controller-receipt
+      env:
+        BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+        BUILDCHAIN_CONTROLLER_STAGES_JSON: '[{"id":"resolve-runtime","status":"passed"},{"id":"build","status":"passed"},{"id":"verify","status":"passed"},{"id":"bundle","status":"passed"},{"id":"aggregate","status":"passed"}]'
+        BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"release-evidence-bundle","path":".buildchain/release-passport/buildchain-release-bundle.json","artifact":"buildchain-release-passport"},{"kind":"release-passport","path":".buildchain/release-passport/buildchain.release.json","artifact":"buildchain-release-passport"}]'
+        BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-controller-binary-distribution
+        BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+      run: node packages/core/observability/commands/controller-evidence.mjs --mode receipt
+      shell: bash -e {0}
+    - name: Upload binary distribution controller receipt
+      uses: actions/upload-artifact@v6.0.0
+      with:
+        name: buildchain-controller-binary-distribution
+        path: |
+          .buildchain/controller/plan.json
+          .buildchain/controller/receipt.json
+        if-no-files-found: error
+    - name: Enforce qualifying binary distribution receipt
+      if: ${{ steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+      run: |
+        echo "::error::binary distribution controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+        exit 1
+      shell: bash -e {0}
+    - name: Upload release passport artifact
+      uses: actions/upload-artifact@v6.0.0
+      with:
+        name: buildchain-release-passport
+        path: .buildchain/release-passport/*
+        if-no-files-found: error

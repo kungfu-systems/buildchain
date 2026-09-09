@@ -118,7 +118,7 @@ Other optional project sections are:
 | `build.evidence` | Repository files containing gate and candidate-family evidence |
 
 Declarative signing targets continue to belong to `[signing.artifacts]`.
-The formal signing authority remains `authority/v3/v3.0/artifact-signing`
+The 4.1 formal signing contract requires `authority/v4/v4.1/artifact-signing`
 with the protected `buildchain-artifact-signing` environment.
 Credentials, authority profiles and signer identities cannot be supplied through
 that declaration. See [Release Candidate](release-candidate.md)

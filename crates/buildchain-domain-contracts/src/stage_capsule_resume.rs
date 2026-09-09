@@ -403,7 +403,7 @@ pub fn plan_stage_capsule_resume(
     let mut plan = StageCapsuleResumePlan {
         schema: STAGE_CAPSULE_RESUME_PLAN_CONTRACT.to_owned(),
         mode: "shadow-only".to_owned(),
-        production_authority: "v3".to_owned(),
+        production_authority: "v4-native".to_owned(),
         evaluated_at: request.evaluated_at.clone(),
         decisions,
         required_restores,

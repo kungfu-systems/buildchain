@@ -885,14 +885,14 @@ throw new Error("validated durable evidence must prevent a second registry publi
 test("release recovery bootstrap scope stays exact outside the promotion action directory", () => {
   for (const file of [
     ".github/workflows/self-release-promote.yml",
-    "packages/core/self-dogfood-version.js",
+    "packages/core/release/self-dogfood-version.js",
     "scripts/check-inventory.mjs",
     "tests/build-surface.test.mjs",
   ]) {
     assert.equal(isAllowedReleaseLineRecoveryPath(file), true);
   }
   for (const file of [
-    "packages/core/buildchain-contract.js",
+    "packages/core/contracts/buildchain-contract.js",
     "scripts/generate-site-bundle.mjs",
     "tests/buildchain-contract.test.mjs",
   ]) {
@@ -993,7 +993,7 @@ test("strict release promotion binds a generated version commit to the exact rec
                 mode: "100644",
               },
               {
-                path: "actions/promote-buildchain-ref/lib.js",
+                path: "packages/core/release/promote-ref/lib.js",
                 type: "blob",
                 sha: "shared-lib-blob",
                 mode: "100644",
@@ -1029,8 +1029,8 @@ test("strict release promotion binds a generated version commit to the exact rec
             return {
               data: {
                 files: [
-                  { filename: "actions/promote-buildchain-ref/lib.js" },
-                  { filename: "actions/promote-buildchain-ref/dist/index.js" },
+                  { filename: "packages/core/release/promote-ref/lib.js" },
+                  { filename: "actions/release/promote-ref/dist/index.js" },
                   { filename: "tests/promote-buildchain-ref.test.mjs" },
                 ],
               },
@@ -1189,7 +1189,7 @@ test("strict release promotion accepts a generated version commit whose parent i
                 mode: "100644",
               },
               {
-                path: "actions/promote-buildchain-ref/lib.js",
+                path: "packages/core/release/promote-ref/lib.js",
                 type: "blob",
                 sha: "shared-lib-blob",
                 mode: "100644",
@@ -1325,8 +1325,8 @@ test("strict release promotion accepts recovery from floating alpha material aft
         return {
           data: {
             files: [
-              { filename: "actions/promote-buildchain-ref/lib.js" },
-              { filename: "actions/promote-buildchain-ref/dist/index.js" },
+              { filename: "packages/core/release/promote-ref/lib.js" },
+              { filename: "actions/release/promote-ref/dist/index.js" },
               { filename: "tests/promote-buildchain-ref.test.mjs" },
             ],
           },

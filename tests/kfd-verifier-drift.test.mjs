@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { collectGitHubReleasePassport } from "../packages/core/release-passport.js";
+import { collectGitHubReleasePassport } from "../packages/core/release/passport/collection.js";
 
 const kfdPackageRoot = path.dirname(
   fileURLToPath(import.meta.resolve("@kungfu-tech/kfd/package.json")),

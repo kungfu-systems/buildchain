@@ -4,10 +4,10 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 114,
-    "actionCount": 15,
-    "sitePageCount": 89,
-    "docCommandRefCount": 1048,
+    "workflowCount": 68,
+    "actionCount": 131,
+    "sitePageCount": 92,
+    "docCommandRefCount": 1036,
     "failureCount": 0
   },
   "enumerated": {
@@ -600,72 +600,6 @@
     ],
     "workflowInputs": [
       {
-        "id": ".auditable-demo",
-        "path": ".github/workflows/.auditable-demo.yml",
-        "reusable": true,
-        "inputs": [
-          "adapter-arguments-json",
-          "adapter-path",
-          "artifact-retention-days",
-          "buildchain-repository",
-          "media-profile",
-          "render-media",
-          "renderer-image",
-          "require-trusted-event",
-          "source-artifact-digest",
-          "source-artifact-name",
-          "source-ref",
-          "universal-request-json"
-        ],
-        "inputCount": 12,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "gate-artifact-digest",
-          "gate-artifact-id",
-          "gate-artifact-name",
-          "gate-artifact-url",
-          "gate-root",
-          "media-artifact-digest",
-          "media-artifact-id",
-          "media-artifact-name",
-          "media-artifact-url",
-          "media-profile",
-          "media-qualification-root",
-          "media-root",
-          "source-sha"
-        ],
-        "outputCount": 13
-      },
-      {
-        "id": ".binary-release-assets",
-        "path": ".github/workflows/.binary-release-assets.yml",
-        "reusable": true,
-        "inputs": [
-          "auto-admission",
-          "buildchain-ref",
-          "buildchain-repository",
-          "evidence-run-id",
-          "github-governance-receipt-json",
-          "publication-admission-json",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-runner-provenance-json",
-          "publication-used-nonces-json",
-          "publication-version",
-          "release-tag",
-          "source-sha",
-          "target-ref",
-          "universal-request-json"
-        ],
-        "inputCount": 16,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
         "id": ".build-demo-adapter",
         "path": ".github/workflows/.build-demo-adapter.yml",
         "reusable": true,
@@ -680,10 +614,9 @@
           "require-trusted-event",
           "source-artifact-digest",
           "source-artifact-name",
-          "source-ref",
-          "universal-request-json"
+          "source-ref"
         ],
-        "inputCount": 12,
+        "inputCount": 11,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -736,11 +669,10 @@
           "shifu-cache-profile-digest",
           "shifu-cache-profile-ref",
           "source-ref",
-          "universal-request-json",
           "untrusted-policy",
           "working-directory"
         ],
-        "inputCount": 31,
+        "inputCount": 30,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -760,114 +692,6 @@
           "source-sha"
         ],
         "outputCount": 14
-      },
-      {
-        "id": ".build-release-verify-compat",
-        "path": ".github/workflows/.build-release-verify-compat.yml",
-        "reusable": true,
-        "inputs": [
-          "auto-approve-enabled",
-          "aws-ci-region",
-          "aws-user-region",
-          "bucket-staging-ci",
-          "bucket-staging-user",
-          "build-container-enabled",
-          "build-runner-linux",
-          "build-runner-linux-labels",
-          "build-runner-macos",
-          "build-runner-macos-labels",
-          "build-runner-windows",
-          "build-runner-windows-labels",
-          "build-timeout-minutes",
-          "buildchain-ref",
-          "buildchain-repository",
-          "builder-container",
-          "code-signing-macos",
-          "code-signing-windows",
-          "collaborator-automation-enabled",
-          "enable-linux",
-          "enable-macos",
-          "enable-windows",
-          "find-dependencies",
-          "java-version",
-          "manager",
-          "max-build-attempts",
-          "max-preview-links",
-          "node-version",
-          "pipenv-version",
-          "poetry-version",
-          "prebuild",
-          "preview-files",
-          "publish-aws-ci",
-          "publish-aws-user",
-          "publish-github-npm",
-          "publish-versioning",
-          "python-version",
-          "setup-env-timeout-minutes",
-          "setup-python-enabled",
-          "universal-request-json",
-          "use-pipenv",
-          "use-poetry"
-        ],
-        "inputCount": 42,
-        "secrets": [
-          "APPLE_CSC_KEY",
-          "APPLE_CSC_KEY_PASSWORD",
-          "APPLE_ID",
-          "APPLE_ID_PASSWORD",
-          "AWS_CI_ACCESS_KEY_ID",
-          "AWS_CI_SECRET_ACCESS_KEY",
-          "AWS_USER_ACCESS_KEY_ID",
-          "AWS_USER_SECRET_ACCESS_KEY",
-          "GITHUB_PUSH_TOKEN",
-          "NODE_AUTH_TOKEN",
-          "WINDOWS_CSC_KEY"
-        ],
-        "secretCount": 11,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".build-sam-verify-compat",
-        "path": ".github/workflows/.build-sam-verify-compat.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-region",
-          "aws-role",
-          "aws-root",
-          "manager",
-          "universal-request-json"
-        ],
-        "inputCount": 5,
-        "secrets": [
-          "AWS_ACCOUNT_ID",
-          "NODE_AUTH_TOKEN"
-        ],
-        "secretCount": 2,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".build-wheel-verify-compat",
-        "path": ".github/workflows/.build-wheel-verify-compat.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-user-region",
-          "bucket-release",
-          "max-preview-links",
-          "node-version",
-          "preview-files",
-          "universal-request-json"
-        ],
-        "inputCount": 6,
-        "secrets": [
-          "AWS_USER_ACCESS_KEY_ID",
-          "AWS_USER_SECRET_ACCESS_KEY",
-          "NODE_AUTH_TOKEN"
-        ],
-        "secretCount": 3,
-        "outputs": [],
-        "outputCount": 0
       },
       {
         "id": ".build",
@@ -892,114 +716,6 @@
         "outputCount": 1
       },
       {
-        "id": ".bump-minor-version",
-        "path": ".github/workflows/.bump-minor-version.yml",
-        "reusable": true,
-        "inputs": [
-          "universal-request-json"
-        ],
-        "inputCount": 1,
-        "secrets": [
-          "GITHUB_PUSH_TOKEN"
-        ],
-        "secretCount": 1,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".declarative-auditable-demo",
-        "path": ".github/workflows/.declarative-auditable-demo.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-retention-days",
-          "binary-artifact-digest",
-          "binary-artifact-name",
-          "buildchain-repository",
-          "materialize",
-          "materialize-base-ref",
-          "media-profile",
-          "render-failure-advisory",
-          "render-media",
-          "renderer-image",
-          "scenario-path",
-          "source-ref",
-          "universal-request-json"
-        ],
-        "inputCount": 13,
-        "secrets": [
-          "DEMO_UPDATE_TOKEN"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "capture-artifact-digest",
-          "capture-artifact-name",
-          "evidence-artifact-digest",
-          "evidence-artifact-name",
-          "publication-pr-url",
-          "render-result",
-          "source-sha"
-        ],
-        "outputCount": 7
-      },
-      {
-        "id": ".gate-profile",
-        "path": ".github/workflows/.gate-profile.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-name",
-          "artifact-retention-days",
-          "buildchain-ref",
-          "buildchain-repository",
-          "cargo-registry-index",
-          "checkout-cache-fallback",
-          "checkout-cache-fetch-attempts",
-          "checkout-cache-github-timeout-seconds",
-          "checkout-cache-mirror-url-template",
-          "checkout-cache-mode",
-          "checkout-cache-reference-repository-template",
-          "checkout-cache-timeout-seconds",
-          "gate-command-json",
-          "gate-environment-json",
-          "gate-plan-command-json",
-          "gate-profile",
-          "gate-registry",
-          "include-advisory",
-          "node-version",
-          "platforms-json",
-          "require-trusted-event",
-          "runner-preset",
-          "rust-toolchain",
-          "rustup-dist-server",
-          "rustup-update-root",
-          "shifu-cache-profile-digest",
-          "shifu-cache-profile-ref",
-          "source-ref",
-          "universal-request-json",
-          "untrusted-policy",
-          "working-directory"
-        ],
-        "inputCount": 31,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "buildchain-runtime-sha",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "gate-aggregate-artifact",
-          "gate-aggregate-digest",
-          "gate-aggregate-json",
-          "gate-aggregate-status",
-          "gate-matrix-digest",
-          "source-sha"
-        ],
-        "outputCount": 14
-      },
-      {
         "id": ".ops-git-sync",
         "path": ".github/workflows/.ops-git-sync.yml",
         "reusable": true,
@@ -1007,10 +723,9 @@
           "force",
           "remote-host",
           "remote-path",
-          "remote-repo",
-          "universal-request-json"
+          "remote-repo"
         ],
-        "inputCount": 5,
+        "inputCount": 4,
         "secrets": [
           "REMOTE_CREDENTIAL",
           "REMOTE_USER"
@@ -1018,65 +733,6 @@
         "secretCount": 2,
         "outputs": [],
         "outputCount": 0
-      },
-      {
-        "id": ".publication-authority",
-        "path": ".github/workflows/.publication-authority.yml",
-        "reusable": true,
-        "inputs": [
-          "admission-json",
-          "authority-workflow-path",
-          "auto-admission",
-          "auto-admission-kind",
-          "auto-no-gate",
-          "buildchain-ref",
-          "buildchain-repository",
-          "consumer-gate-command",
-          "consumer-gate-controller-sha",
-          "consumer-gate-evidence-source-sha",
-          "consumer-gate-evidence-source-tree",
-          "consumer-predicate-digest",
-          "consumer-predicate-id",
-          "consumer-qualification-required",
-          "control-plane-audit-json",
-          "dry-run",
-          "evidence-controller-artifact",
-          "evidence-manifest-pattern",
-          "evidence-passport-artifact",
-          "evidence-payload-pattern",
-          "evidence-publication-artifact",
-          "evidence-repository",
-          "evidence-run-id",
-          "evidence-summary-artifact",
-          "expected-json",
-          "gate-aggregate-json",
-          "github-governance-receipt-json",
-          "package-name",
-          "product",
-          "publication-target",
-          "publication-version",
-          "publisher-workflow-path",
-          "required-status-check",
-          "runner-provenance-json",
-          "source-sha",
-          "target-ref",
-          "universal-request-json",
-          "used-nonces-json"
-        ],
-        "inputCount": 38,
-        "secrets": [
-          "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
-          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
-        ],
-        "secretCount": 2,
-        "outputs": [
-          "capability-artifact",
-          "capability-digest",
-          "capability-json",
-          "gate-aggregate-digest",
-          "gate-aggregate-json"
-        ],
-        "outputCount": 5
       },
       {
         "id": ".release-authority",
@@ -1119,10 +775,9 @@
           "runner-provenance-json",
           "source-sha",
           "target-ref",
-          "universal-request-json",
           "used-nonces-json"
         ],
-        "inputCount": 38,
+        "inputCount": 37,
         "secrets": [
           "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
@@ -1156,233 +811,11 @@
           "publication-version",
           "release-tag",
           "source-sha",
-          "target-ref",
-          "universal-request-json"
+          "target-ref"
         ],
-        "inputCount": 16,
+        "inputCount": 15,
         "secrets": [],
         "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".release-candidate-promote",
-        "path": ".github/workflows/.release-candidate-promote.yml",
-        "reusable": true,
-        "inputs": [
-          "allow-repository",
-          "artifact-name",
-          "artifact-patterns",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "buildchain-alpha-contract-lock-path",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-expected-channel",
-          "buildchain-expected-major",
-          "buildchain-ref",
-          "buildchain-repository",
-          "buildchain-stable-contract-lock-path",
-          "channel",
-          "declarative-release-tail",
-          "dry-run",
-          "github-artifact-attestation-environment",
-          "github-artifact-attestation-policy-json",
-          "github-artifact-attestation-retention-days",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-payload-patterns",
-          "github-release-title",
-          "package-manager",
-          "promotion-contract-lock-digest",
-          "promotion-contract-lock-path",
-          "promotion-override-used",
-          "promotion-publication-channel",
-          "promotion-router-ref",
-          "promotion-router-sha",
-          "promotion-runtime-authorization-json",
-          "promotion-runtime-authorization-root",
-          "promotion-runtime-ref",
-          "promotion-runtime-sha",
-          "promotion-shell-ref",
-          "promotion-shell-sha",
-          "promotion-target-ref",
-          "provider-failure-after-capability",
-          "publication-admission-json",
-          "publication-authority-workflow-path",
-          "publication-auto-admission",
-          "publication-auto-no-gate",
-          "publication-commit-command",
-          "publication-commit-evidence-path",
-          "publication-consumer-predicate-id",
-          "publication-consumer-qualification-command",
-          "publication-consumer-qualification-controller-sha",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-gate-command",
-          "publication-gate-controller-sha",
-          "publication-package-name",
-          "publication-product",
-          "publication-publisher-workflow-path",
-          "publication-runner-provenance-json",
-          "publication-target",
-          "publication-used-nonces-json",
-          "publication-used-qualification-nonces-json",
-          "publish-artifact-kind",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-required-artifacts-json",
-          "publish-target",
-          "publish-transaction-override",
-          "release-activation-command",
-          "release-activation-receipt-set-path",
-          "release-candidate-family-assignment-id",
-          "release-candidate-family-evidence-required",
-          "release-candidate-family-evidence-root",
-          "release-candidate-family-initiative-id",
-          "release-candidate-wait-seconds",
-          "release-candidate-workflow-file",
-          "release-candidate-workflow-name",
-          "release-passport",
-          "release-passport-adopter-delivery-json",
-          "release-passport-attachment-command",
-          "release-passport-buildchain-self-kfd",
-          "release-passport-evidence-command",
-          "release-passport-evidence-jsons",
-          "release-passport-evidence-path",
-          "release-passport-impact-json",
-          "release-passport-invariant-passport-command",
-          "release-passport-invariant-passport-jsons",
-          "release-passport-kfd-1-witness-jsons",
-          "release-passport-kfd-2-claim-jsons",
-          "release-passport-kfd-3-artifact-verify-command",
-          "release-passport-kfd-3-artifact-witness-jsons",
-          "release-passport-kfd-3-prebuild-witness-jsons",
-          "release-passport-kfd-adopter-manifest-gate-json",
-          "release-passport-kfd-adopter-manifest-json",
-          "release-passport-kfd-product-gate-jsons",
-          "release-passport-kfd-support-matrix-json",
-          "release-passport-output-dir",
-          "release-passport-platform-manifest-paths",
-          "release-passport-product-name",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "release-propagation-config-path",
-          "required-artifact-count",
-          "required-status-check",
-          "resume-buildchain-runtime-sha",
-          "resume-candidate-repository",
-          "resume-candidate-run-id",
-          "resume-expected-candidate-root",
-          "resume-expected-candidate-runtime-sha",
-          "resume-expected-source-tree",
-          "resume-expected-workflow-file",
-          "resume-expected-workflow-name",
-          "resume-transaction-id",
-          "runner-preset",
-          "standalone-binary-distribution",
-          "target-ref",
-          "target-sha",
-          "trusted-publishing",
-          "universal-request-json"
-        ],
-        "inputCount": 122,
-        "secrets": [
-          "BUILDCHAIN_ISSUE_APP_ID",
-          "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
-          "BUILDCHAIN_ISSUE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN",
-          "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
-          "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
-          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
-          "buildchain-issue-app-id",
-          "buildchain-issue-app-private-key",
-          "buildchain-issue-token"
-        ],
-        "secretCount": 10,
-        "outputs": [
-          "built-source-sha",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "github-artifact-attestation-evidence-root",
-          "github-artifact-attestation-id",
-          "github-artifact-attestation-publication-receipt-digest",
-          "github-artifact-attestation-url",
-          "promoted-sha",
-          "publication-capability-digest",
-          "publication-commit-evidence-digest",
-          "publication-commit-evidence-path",
-          "publication-commit-payload-root",
-          "publication-commit-url",
-          "release-candidate-action",
-          "release-candidate-artifact",
-          "release-candidate-recovery-receipt-artifact",
-          "release-candidate-recovery-root",
-          "release-invocation-root",
-          "release-propagation-work-artifact",
-          "release-receipt-root",
-          "release-tail-declaration-root",
-          "release-tail-receipt-roots-json",
-          "release-tail-state-root",
-          "release-tail-transaction-root",
-          "release-tail-transaction-state",
-          "release-transaction-root"
-        ],
-        "outputCount": 31
-      },
-      {
-        "id": ".release-minor-bump-compat",
-        "path": ".github/workflows/.release-minor-bump-compat.yml",
-        "reusable": true,
-        "inputs": [
-          "universal-request-json"
-        ],
-        "inputCount": 1,
-        "secrets": [
-          "GITHUB_PUSH_TOKEN"
-        ],
-        "secretCount": 1,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".release-page-sync-retired",
-        "path": ".github/workflows/.release-page-sync-retired.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-region",
-          "aws-role-arn",
-          "base-id",
-          "bucket-release",
-          "cloudfront-id",
-          "exclude",
-          "lower-edge",
-          "product",
-          "product-name",
-          "release-path",
-          "release-url",
-          "repo",
-          "universal-request-json",
-          "upper-edge"
-        ],
-        "inputCount": 14,
-        "secrets": [
-          "AIRTABLE_API_KEY",
-          "GITHUB_PUSH_TOKEN"
-        ],
-        "secretCount": 2,
         "outputs": [],
         "outputCount": 0
       },
@@ -1391,130 +824,9 @@
         "path": ".github/workflows/.release-promote.yml",
         "reusable": true,
         "inputs": [
-          "allow-repository",
-          "artifact-name",
-          "artifact-patterns",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "buildchain-alpha-contract-lock-path",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-expected-channel",
-          "buildchain-expected-major",
-          "buildchain-ref",
-          "buildchain-repository",
-          "buildchain-stable-contract-lock-path",
-          "channel",
-          "declarative-release-tail",
-          "dry-run",
-          "github-artifact-attestation-environment",
-          "github-artifact-attestation-policy-json",
-          "github-artifact-attestation-retention-days",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-payload-patterns",
-          "github-release-title",
-          "package-manager",
-          "promotion-contract-lock-digest",
-          "promotion-contract-lock-path",
-          "promotion-override-used",
-          "promotion-publication-channel",
-          "promotion-router-ref",
-          "promotion-router-sha",
-          "promotion-runtime-authorization-json",
-          "promotion-runtime-authorization-root",
-          "promotion-runtime-ref",
-          "promotion-runtime-sha",
-          "promotion-shell-ref",
-          "promotion-shell-sha",
-          "promotion-target-ref",
-          "provider-failure-after-capability",
-          "publication-admission-json",
-          "publication-authority-workflow-path",
-          "publication-auto-admission",
-          "publication-auto-no-gate",
-          "publication-commit-command",
-          "publication-commit-evidence-path",
-          "publication-consumer-predicate-id",
-          "publication-consumer-qualification-command",
-          "publication-consumer-qualification-controller-sha",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-gate-command",
-          "publication-gate-controller-sha",
-          "publication-package-name",
-          "publication-product",
-          "publication-publisher-workflow-path",
-          "publication-runner-provenance-json",
-          "publication-target",
-          "publication-used-nonces-json",
-          "publication-used-qualification-nonces-json",
-          "publish-artifact-kind",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-required-artifacts-json",
-          "publish-target",
-          "publish-transaction-override",
-          "release-activation-command",
-          "release-activation-receipt-set-path",
-          "release-candidate-family-assignment-id",
-          "release-candidate-family-evidence-required",
-          "release-candidate-family-evidence-root",
-          "release-candidate-family-initiative-id",
-          "release-candidate-wait-seconds",
-          "release-candidate-workflow-file",
-          "release-candidate-workflow-name",
-          "release-passport",
-          "release-passport-adopter-delivery-json",
-          "release-passport-attachment-command",
-          "release-passport-buildchain-self-kfd",
-          "release-passport-evidence-command",
-          "release-passport-evidence-jsons",
-          "release-passport-evidence-path",
-          "release-passport-impact-json",
-          "release-passport-invariant-passport-command",
-          "release-passport-invariant-passport-jsons",
-          "release-passport-kfd-1-witness-jsons",
-          "release-passport-kfd-2-claim-jsons",
-          "release-passport-kfd-3-artifact-verify-command",
-          "release-passport-kfd-3-artifact-witness-jsons",
-          "release-passport-kfd-3-prebuild-witness-jsons",
-          "release-passport-kfd-adopter-manifest-gate-json",
-          "release-passport-kfd-adopter-manifest-json",
-          "release-passport-kfd-product-gate-jsons",
-          "release-passport-kfd-support-matrix-json",
-          "release-passport-output-dir",
-          "release-passport-platform-manifest-paths",
-          "release-passport-product-name",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "release-propagation-config-path",
-          "required-artifact-count",
-          "required-status-check",
-          "resume-buildchain-runtime-sha",
-          "resume-candidate-repository",
-          "resume-candidate-run-id",
-          "resume-expected-candidate-root",
-          "resume-expected-candidate-runtime-sha",
-          "resume-expected-source-tree",
-          "resume-expected-workflow-file",
-          "resume-expected-workflow-name",
-          "resume-transaction-id",
-          "runner-preset",
-          "standalone-binary-distribution",
-          "target-ref",
-          "target-sha",
-          "trusted-publishing",
-          "universal-request-json"
+          "request-json"
         ],
-        "inputCount": 122,
+        "inputCount": 1,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -1562,278 +874,6 @@
           "release-transaction-root"
         ],
         "outputCount": 31
-      },
-      {
-        "id": ".release-verify",
-        "path": ".github/workflows/.release-verify.yml",
-        "reusable": true,
-        "inputs": [
-          "auto-approve-enabled",
-          "aws-ci-region",
-          "aws-user-region",
-          "bucket-staging-ci",
-          "bucket-staging-user",
-          "build-container-enabled",
-          "build-runner-linux",
-          "build-runner-linux-labels",
-          "build-runner-macos",
-          "build-runner-macos-labels",
-          "build-runner-windows",
-          "build-runner-windows-labels",
-          "build-timeout-minutes",
-          "buildchain-ref",
-          "buildchain-repository",
-          "builder-container",
-          "code-signing-macos",
-          "code-signing-windows",
-          "collaborator-automation-enabled",
-          "enable-linux",
-          "enable-macos",
-          "enable-windows",
-          "find-dependencies",
-          "java-version",
-          "manager",
-          "max-build-attempts",
-          "max-preview-links",
-          "node-version",
-          "pipenv-version",
-          "poetry-version",
-          "prebuild",
-          "preview-files",
-          "publish-aws-ci",
-          "publish-aws-user",
-          "publish-github-npm",
-          "publish-versioning",
-          "python-version",
-          "setup-env-timeout-minutes",
-          "setup-python-enabled",
-          "universal-request-json",
-          "use-pipenv",
-          "use-poetry"
-        ],
-        "inputCount": 42,
-        "secrets": [
-          "APPLE_CSC_KEY",
-          "APPLE_CSC_KEY_PASSWORD",
-          "APPLE_ID",
-          "APPLE_ID_PASSWORD",
-          "AWS_CI_ACCESS_KEY_ID",
-          "AWS_CI_SECRET_ACCESS_KEY",
-          "AWS_USER_ACCESS_KEY_ID",
-          "AWS_USER_SECRET_ACCESS_KEY",
-          "GITHUB_PUSH_TOKEN",
-          "NODE_AUTH_TOKEN",
-          "WINDOWS_CSC_KEY"
-        ],
-        "secretCount": 11,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".sam-verify",
-        "path": ".github/workflows/.sam-verify.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-region",
-          "aws-role",
-          "aws-root",
-          "manager",
-          "universal-request-json"
-        ],
-        "inputCount": 5,
-        "secrets": [
-          "AWS_ACCOUNT_ID",
-          "NODE_AUTH_TOKEN"
-        ],
-        "secretCount": 2,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".sync-release-page",
-        "path": ".github/workflows/.sync-release-page.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-region",
-          "aws-role-arn",
-          "base-id",
-          "bucket-release",
-          "cloudfront-id",
-          "exclude",
-          "lower-edge",
-          "product",
-          "product-name",
-          "release-path",
-          "release-url",
-          "repo",
-          "universal-request-json",
-          "upper-edge"
-        ],
-        "inputCount": 14,
-        "secrets": [
-          "AIRTABLE_API_KEY",
-          "GITHUB_PUSH_TOKEN"
-        ],
-        "secretCount": 2,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".sync-remote-git",
-        "path": ".github/workflows/.sync-remote-git.yml",
-        "reusable": true,
-        "inputs": [
-          "force",
-          "remote-host",
-          "remote-path",
-          "remote-repo",
-          "universal-request-json"
-        ],
-        "inputCount": 5,
-        "secrets": [
-          "REMOTE_CREDENTIAL",
-          "REMOTE_USER"
-        ],
-        "secretCount": 2,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": ".web-surface",
-        "path": ".github/workflows/.web-surface.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-path",
-          "aws-region",
-          "build-command",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-expected-channel",
-          "buildchain-contract-expected-major",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "fail-on-release-pr-error",
-          "github-governance-receipt-json",
-          "node-version",
-          "preview-apply",
-          "preview-aws-role-arn",
-          "preview-cleanup-apply",
-          "preview-comment",
-          "preview-environment",
-          "production-apply",
-          "production-approved",
-          "production-aws-role-arn",
-          "production-environment",
-          "production-release-app-client-id",
-          "production-release-app-id",
-          "production-release-branch-channel",
-          "production-release-head-prefix",
-          "production-release-label",
-          "production-release-on-main",
-          "production-release-pr-mode",
-          "production-release-pr-token",
-          "production-source-sha",
-          "publication-admission-json",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-runner-provenance-json",
-          "publication-used-nonces-json",
-          "release-feedback-actor-privacy",
-          "staging-apply",
-          "staging-aws-role-arn",
-          "staging-environment",
-          "universal-request-json",
-          "verify-command",
-          "working-directory"
-        ],
-        "inputCount": 44,
-        "secrets": [
-          "production-release-app-private-key"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "buildchain-runtime-class",
-          "buildchain-runtime-override",
-          "buildchain-runtime-ref",
-          "buildchain-runtime-sha",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "preview-apply-result-json",
-          "preview-cleanup-result-json",
-          "production-apply-result-json",
-          "production-release-pr-url",
-          "release-pr-status",
-          "staging-apply-result-json",
-          "web-surface-alias",
-          "web-surface-channel",
-          "web-surface-cleanup-plan-json",
-          "web-surface-manifest-json",
-          "web-surface-url",
-          "web-surface-urls-json"
-        ],
-        "outputCount": 23
-      },
-      {
-        "id": ".wheel-verify",
-        "path": ".github/workflows/.wheel-verify.yml",
-        "reusable": true,
-        "inputs": [
-          "aws-user-region",
-          "bucket-release",
-          "max-preview-links",
-          "node-version",
-          "preview-files",
-          "universal-request-json"
-        ],
-        "inputCount": 6,
-        "secrets": [
-          "AWS_USER_ACCESS_KEY_ID",
-          "AWS_USER_SECRET_ACCESS_KEY",
-          "NODE_AUTH_TOKEN"
-        ],
-        "secretCount": 3,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "artifact-signing-authority",
-        "path": ".github/workflows/artifact-signing-authority.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "bootstrap",
-        "path": ".github/workflows/bootstrap.yml",
-        "reusable": true,
-        "inputs": [
-          "request-json"
-        ],
-        "inputCount": 1,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "admission-root",
-          "backflow-root",
-          "request-root",
-          "result-json",
-          "result-root",
-          "runtime-sha",
-          "terminal-receipt-json",
-          "terminal-receipt-root"
-        ],
-        "outputCount": 8
       },
       {
         "id": "build",
@@ -1860,621 +900,17 @@
         "outputCount": 3
       },
       {
-        "id": "buildchain-patrol",
-        "path": ".github/workflows/buildchain-patrol.yml",
-        "reusable": true,
-        "inputs": [
-          "allowed-head-prefixes",
-          "block-labels",
-          "buildchain-ref",
-          "buildchain-repository",
-          "cadence",
-          "capabilities",
-          "dry-run",
-          "landing-mode",
-          "max-actions",
-          "merge-method",
-          "mode",
-          "ready-label",
-          "require-approval",
-          "required-status-checks",
-          "same-repository-only",
-          "target-branch",
-          "universal-request-json"
-        ],
-        "inputCount": 17,
-        "secrets": [
-          "github-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "action-count",
-          "evaluated-count",
-          "planned-count",
-          "result-path",
-          "skipped-count"
-        ],
-        "outputCount": 5
-      },
-      {
-        "id": "check",
-        "path": ".github/workflows/check.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "buildchain-repository",
-          "mode",
-          "node-version",
-          "require-version-state",
-          "source-proof-closure-paths-json",
-          "source-proof-dependency-paths-json",
-          "source-proof-policy-paths-json",
-          "source-proof-required-contexts-json",
-          "source-proof-reuse",
-          "universal-request-json",
-          "upload-artifacts",
-          "working-directory"
-        ],
-        "inputCount": 13,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "source-proof-decision-root",
-          "source-proof-producer-run-id",
-          "source-proof-reuse-reason",
-          "source-proof-reused",
-          "source-proof-root"
-        ],
-        "outputCount": 12
-      },
-      {
-        "id": "dev-alpha-candidate-patrol",
-        "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
-        "reusable": true,
-        "inputs": [
-          "alpha-workflow-path",
-          "auto-merge",
-          "buildchain-ref",
-          "buildchain-repository",
-          "create-pull-request",
-          "dev-workflow-path",
-          "dry-run",
-          "max-age-seconds",
-          "merge-method",
-          "pull-request-body-prefix",
-          "pull-request-body-prefix-renderer",
-          "reactivation-authorized",
-          "settlement-authorized",
-          "source-branch",
-          "target-branch",
-          "universal-request-json"
-        ],
-        "inputCount": 16,
-        "secrets": [
-          "promotion-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "active-candidate-pr",
-          "candidate-generation",
-          "candidate-tree-sha",
-          "controller-state",
-          "cut-root",
-          "drift-root",
-          "eligible",
-          "hold-root",
-          "next-candidate-sha",
-          "prior-state-root",
-          "promotion-pr",
-          "result-path",
-          "runtime-sha",
-          "selected-sha",
-          "settlement-action",
-          "source-lock-ref",
-          "train-root"
-        ],
-        "outputCount": 17
-      },
-      {
-        "id": "dev-delivery-warrant-cancel",
-        "path": ".github/workflows/dev-delivery-warrant-cancel.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "buildchain-repository",
-          "event-action",
-          "expected-candidate-id",
-          "expected-old-state-root",
-          "expected-pr-number",
-          "expected-source-head-sha",
-          "observed-source-head-sha",
-          "outcome",
-          "reason",
-          "target-branch",
-          "terminal-evidence-root",
-          "universal-request-json"
-        ],
-        "inputCount": 13,
-        "secrets": [
-          "github-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "cancellation-action",
-          "cancellation-receipt-root",
-          "final-state-root"
-        ],
-        "outputCount": 3
-      },
-      {
-        "id": "dev-delivery-warrant-close",
-        "path": ".github/workflows/dev-delivery-warrant-close.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "buildchain-repository",
-          "current-base-sha",
-          "expected-head-sha",
-          "expected-pr-number",
-          "merge-group-head-sha",
-          "merge-group-tree-sha",
-          "outcome",
-          "reason",
-          "replay-tree-sha",
-          "required-context-roots-json",
-          "target-branch",
-          "terminal-evidence-root",
-          "universal-request-json"
-        ],
-        "inputCount": 14,
-        "secrets": [
-          "github-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "close-receipt-root",
-          "final-state-root",
-          "integration-proof-root",
-          "successor-wake-json"
-        ],
-        "outputCount": 4
-      },
-      {
-        "id": "dev-pr-auto-merge",
-        "path": ".github/workflows/dev-pr-auto-merge.yml",
-        "reusable": true,
-        "inputs": [
-          "active-lease-context",
-          "affected-paths-json",
-          "allowed-head-prefixes",
-          "assignment-root",
-          "block-labels",
-          "buildchain-ref",
-          "buildchain-repository",
-          "closure-root",
-          "defer-landing",
-          "delivery-class",
-          "delivery-priority",
-          "delivery-warrant-mode",
-          "dependency-root",
-          "diagnostic-context",
-          "dry-run",
-          "environment-root",
-          "expected-head-sha",
-          "expected-pr-number",
-          "handoff-workflow-id",
-          "initiative-root",
-          "landing-mode",
-          "legacy-active-owner-binding-json",
-          "max-merges",
-          "merge-method",
-          "native-command",
-          "native-command-root",
-          "native-heartbeat-seconds",
-          "native-proof-json",
-          "plan-root",
-          "project-cut-proof-json",
-          "queue-admission-context",
-          "ready-label",
-          "release-blocker-priority-json",
-          "require-approval",
-          "required-status-checks",
-          "same-repository-only",
-          "shard-evidence-roots-json",
-          "source-identity-root",
-          "source-patch-root",
-          "source-workflow-id",
-          "source-workflow-run-id",
-          "target-branch",
-          "toolchain-root",
-          "universal-request-json",
-          "warrant-lease-seconds"
-        ],
-        "inputCount": 45,
-        "secrets": [
-          "github-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "action-count",
-          "admission-receipt-root",
-          "admission-state",
-          "enqueued-count",
-          "evaluated-count",
-          "final-base-sha",
-          "merged-count",
-          "native-execution-transfer-root",
-          "native-proof-root",
-          "native-reuse-decision-root",
-          "project-cut-proof-root",
-          "provider-finalizer-boundary-root",
-          "provider-heartbeat-receipt-root",
-          "qualified-warrant-receipt-root",
-          "skipped-count",
-          "source-proof-root",
-          "warrant-receipt-root",
-          "warrant-state-commit",
-          "warrant-state-root"
-        ],
-        "outputCount": 19
-      },
-      {
-        "id": "dev-qualification-patrol",
-        "path": ".github/workflows/dev-qualification-patrol.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "buildchain-repository",
-          "dev-workflow-path",
-          "dispatch-inputs-json",
-          "dry-run",
-          "max-attempts",
-          "mutation-authorized",
-          "preflight-workflow-path",
-          "priority-workflows-json",
-          "source-branch",
-          "universal-request-json"
-        ],
-        "inputCount": 11,
-        "secrets": [
-          "qualification-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "action",
-          "active-run-id",
-          "decision-root",
-          "pending-sha",
-          "reason",
-          "source-sha",
-          "state"
-        ],
-        "outputCount": 7
-      },
-      {
-        "id": "engineering-housekeeper",
-        "path": ".github/workflows/engineering-housekeeper.yml",
-        "reusable": true,
-        "inputs": [
-          "apply-enabled",
-          "artifact-prefix",
-          "artifact-retention-days",
-          "buildchain-ref",
-          "buildchain-repository",
-          "max-actions",
-          "mode",
-          "protected-patterns",
-          "repository",
-          "retained-patterns",
-          "stale-days",
-          "stale-pull-request-label",
-          "target-branch",
-          "temporary-branch-patterns",
-          "universal-request-json"
-        ],
-        "inputCount": 15,
-        "secrets": [
-          "housekeeper_app_id",
-          "housekeeper_app_private_key",
-          "housekeeper_token"
-        ],
-        "secretCount": 3,
-        "outputs": [
-          "action-count",
-          "branch-receipt-root",
-          "outcome",
-          "plan-artifact",
-          "plan-root",
-          "pull-request-receipt-root",
-          "receipt-artifact",
-          "report-artifact",
-          "report-receipt-root"
-        ],
-        "outputCount": 9
-      },
-      {
-        "id": "github-artifact-attestation",
-        "path": ".github/workflows/github-artifact-attestation.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "environment",
-          "evidence-artifact-name",
-          "evidence-run-id",
-          "platform-manifest-artifact-name",
-          "platform-manifest-relative-path",
-          "policy-json",
-          "release-passport-artifact-name",
-          "release-passport-relative-path",
-          "retention-days",
-          "source-sha",
-          "subject-artifact-name",
-          "subject-relative-path",
-          "universal-request-json"
-        ],
-        "inputCount": 14,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "attestation-id",
-          "attestation-url",
-          "bundle-digest",
-          "evidence-artifact-name",
-          "evidence-root"
-        ],
-        "outputCount": 5
-      },
-      {
-        "id": "paper-release-sealed",
-        "path": ".github/workflows/paper-release-sealed.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-name",
-          "artifact-paths",
-          "artifact-retention-days",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-title",
-          "package-name",
-          "publish-dist-tag",
-          "publisher-workflow-path",
-          "release-passport-impact-json",
-          "release-passport-output-dir",
-          "release-passport-product-name",
-          "required-status-check",
-          "target-ref",
-          "target-sha",
-          "toolchain-type",
-          "universal-request-json",
-          "verify-command",
-          "working-directory"
-        ],
-        "inputCount": 27,
-        "secrets": [
-          "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
-          "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
-          "BUILDCHAIN_GENERATED_WRITE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN",
-          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
-        ],
-        "secretCount": 5,
-        "outputs": [
-          "github-release-url",
-          "package-name",
-          "package-version",
-          "propagation-work-artifact",
-          "public-release-tag",
-          "release-passport-path",
-          "upstream-release-json"
-        ],
-        "outputCount": 7
-      },
-      {
-        "id": "paper-release",
-        "path": ".github/workflows/paper-release.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-name",
-          "artifact-retention-days",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "build-command",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-title",
-          "node-version",
-          "package-name",
-          "publication-admission-json",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-runner-provenance-json",
-          "publication-used-nonces-json",
-          "publish-dist-tag",
-          "publish-package-set-order",
-          "release-passport-impact-json",
-          "release-passport-output-dir",
-          "release-passport-product-name",
-          "required-status-check",
-          "setup-node",
-          "target-ref",
-          "target-sha",
-          "toolchain-command",
-          "toolchain-digest",
-          "toolchain-image",
-          "toolchain-type",
-          "universal-request-json",
-          "verify-command",
-          "working-directory"
-        ],
-        "inputCount": 39,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "github-release-url",
-          "package-name",
-          "package-version",
-          "public-release-tag",
-          "release-passport-path"
-        ],
-        "outputCount": 12
-      },
-      {
-        "id": "patrol-daily",
-        "path": ".github/workflows/patrol-daily.yml",
-        "reusable": true,
-        "inputs": [
-          "allowed-head-prefixes",
-          "block-labels",
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "landing-mode",
-          "max-actions",
-          "merge-method",
-          "ready-label",
-          "require-approval",
-          "required-status-checks",
-          "same-repository-only",
-          "target-branch",
-          "universal-request-json"
-        ],
-        "inputCount": 14,
-        "secrets": [
-          "github-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "action-count",
-          "evaluated-count",
-          "planned-count",
-          "result-path",
-          "skipped-count"
-        ],
-        "outputCount": 5
-      },
-      {
-        "id": "patrol-monthly",
-        "path": ".github/workflows/patrol-monthly.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "target-branch",
-          "universal-request-json"
-        ],
-        "inputCount": 5,
-        "secrets": [
-          "github-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "action-count",
-          "evaluated-count",
-          "planned-count",
-          "result-path",
-          "skipped-count"
-        ],
-        "outputCount": 5
-      },
-      {
-        "id": "patrol-observed-evidence",
-        "path": ".github/workflows/patrol-observed-evidence.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-path",
-          "build-command",
-          "buildchain-ref",
-          "cloudfront-distribution",
-          "evidence-source-path",
-          "evidence-source-ref",
-          "evidence-source-repository",
-          "manifest-path",
-          "production-aws-role-arn",
-          "production-bucket",
-          "production-environment",
-          "universal-request-json",
-          "verify-command"
-        ],
-        "inputCount": 13,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "receipt-path"
-        ],
-        "outputCount": 1
-      },
-      {
-        "id": "patrol-weekly",
-        "path": ".github/workflows/patrol-weekly.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "target-branch",
-          "universal-request-json"
-        ],
-        "inputCount": 5,
-        "secrets": [
-          "github-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "action-count",
-          "evaluated-count",
-          "planned-count",
-          "result-path",
-          "skipped-count"
-        ],
-        "outputCount": 5
-      },
-      {
         "id": "public-build-adopter-qualification",
         "path": ".github/workflows/public-build-adopter-qualification.yml",
         "reusable": true,
         "inputs": [
-          "archive-path",
-          "bootstrap-path",
           "consumer",
           "consumer-ref",
           "consumer-repository",
           "input-path",
-          "invocation-source-path",
-          "node-version",
-          "universal-request-json"
+          "invocation-source-path"
         ],
-        "inputCount": 9,
+        "inputCount": 5,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -2495,11 +931,10 @@
           "source-proof-policy-paths-json",
           "source-proof-required-contexts-json",
           "source-proof-reuse",
-          "universal-request-json",
           "upload-artifacts",
           "working-directory"
         ],
-        "inputCount": 13,
+        "inputCount": 12,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -2534,10 +969,9 @@
           "render-media",
           "renderer-image",
           "scenario-path",
-          "source-ref",
-          "universal-request-json"
+          "source-ref"
         ],
-        "inputCount": 13,
+        "inputCount": 12,
         "secrets": [
           "DEMO_UPDATE_TOKEN"
         ],
@@ -2579,11 +1013,10 @@
           "toolchain-digest",
           "toolchain-image",
           "toolchain-type",
-          "universal-request-json",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 24,
+        "inputCount": 23,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -2616,10 +1049,9 @@
           "go-version",
           "install-artifact-path",
           "node-version",
-          "universal-request-json",
           "verify-artifact-path"
         ],
-        "inputCount": 7,
+        "inputCount": 6,
         "secrets": [],
         "secretCount": 0,
         "outputs": [],
@@ -2644,10 +1076,9 @@
           "reactivation-authorized",
           "settlement-authorized",
           "source-branch",
-          "target-branch",
-          "universal-request-json"
+          "target-branch"
         ],
-        "inputCount": 16,
+        "inputCount": 15,
         "secrets": [
           "promotion-token"
         ],
@@ -2722,7 +1153,6 @@
           "active-lease-context",
           "affected-paths-json",
           "allowed-head-prefixes",
-          "assignment-root",
           "block-labels",
           "buildchain-ref",
           "buildchain-repository",
@@ -2738,9 +1168,7 @@
           "expected-head-sha",
           "expected-pr-number",
           "handoff-workflow-id",
-          "initiative-root",
           "landing-mode",
-          "legacy-active-owner-binding-json",
           "max-merges",
           "merge-method",
           "native-command",
@@ -2758,14 +1186,13 @@
           "shard-evidence-roots-json",
           "source-identity-root",
           "source-patch-root",
-          "source-workflow-id",
+          "source-root",
           "source-workflow-run-id",
           "target-branch",
           "toolchain-root",
-          "universal-request-json",
           "warrant-lease-seconds"
         ],
-        "inputCount": 45,
+        "inputCount": 41,
         "secrets": [
           "github-token"
         ],
@@ -2807,10 +1234,9 @@
           "mutation-authorized",
           "preflight-workflow-path",
           "priority-workflows-json",
-          "source-branch",
-          "universal-request-json"
+          "source-branch"
         ],
-        "inputCount": 11,
+        "inputCount": 10,
         "secrets": [
           "qualification-token"
         ],
@@ -2844,10 +1270,9 @@
           "stale-days",
           "stale-pull-request-label",
           "target-branch",
-          "temporary-branch-patterns",
-          "universal-request-json"
+          "temporary-branch-patterns"
         ],
-        "inputCount": 15,
+        "inputCount": 14,
         "secrets": [
           "housekeeper_app_id",
           "housekeeper_app_private_key",
@@ -2883,10 +1308,9 @@
           "production-aws-role-arn",
           "production-bucket",
           "production-environment",
-          "universal-request-json",
           "verify-command"
         ],
-        "inputCount": 13,
+        "inputCount": 12,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -2911,10 +1335,9 @@
           "require-approval",
           "required-status-checks",
           "same-repository-only",
-          "target-branch",
-          "universal-request-json"
+          "target-branch"
         ],
-        "inputCount": 14,
+        "inputCount": 13,
         "secrets": [
           "github-token"
         ],
@@ -2936,10 +1359,9 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
-          "target-branch",
-          "universal-request-json"
+          "target-branch"
         ],
-        "inputCount": 5,
+        "inputCount": 4,
         "secrets": [
           "github-token"
         ],
@@ -2961,10 +1383,9 @@
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
-          "target-branch",
-          "universal-request-json"
+          "target-branch"
         ],
-        "inputCount": 5,
+        "inputCount": 4,
         "secrets": [
           "github-token"
         ],
@@ -2998,10 +1419,9 @@
           "require-approval",
           "required-status-checks",
           "same-repository-only",
-          "target-branch",
-          "universal-request-json"
+          "target-branch"
         ],
-        "inputCount": 17,
+        "inputCount": 16,
         "secrets": [
           "github-token"
         ],
@@ -3023,10 +1443,9 @@
           "apply",
           "branch",
           "buildchain-ref",
-          "candidate-sha",
-          "universal-request-json"
+          "candidate-sha"
         ],
-        "inputCount": 5,
+        "inputCount": 4,
         "secrets": [
           "BUILDCHAIN_PROMOTION_TOKEN",
           "governance-token"
@@ -3055,10 +1474,9 @@
           "required-checks",
           "revoke-reason",
           "revoked-versions",
-          "target-branch",
-          "universal-request-json"
+          "target-branch"
         ],
-        "inputCount": 17,
+        "inputCount": 16,
         "secrets": [
           "approval-token",
           "promotion-token"
@@ -3082,10 +1500,9 @@
           "artifact-retention-days",
           "consumer-policy-receipt-json",
           "macos-finalization-command",
-          "request-json",
-          "universal-request-json"
+          "request-json"
         ],
-        "inputCount": 5,
+        "inputCount": 4,
         "secrets": [
           "BUILDCHAIN_EVIDENCE_READ_TOKEN",
           "BUILDCHAIN_SIGNING_TOKEN"
@@ -3113,10 +1530,9 @@
           "outcome",
           "reason",
           "target-branch",
-          "terminal-evidence-root",
-          "universal-request-json"
+          "terminal-evidence-root"
         ],
-        "inputCount": 13,
+        "inputCount": 12,
         "secrets": [
           "github-token"
         ],
@@ -3145,10 +1561,9 @@
           "replay-tree-sha",
           "required-context-roots-json",
           "target-branch",
-          "terminal-evidence-root",
-          "universal-request-json"
+          "terminal-evidence-root"
         ],
-        "inputCount": 14,
+        "inputCount": 13,
         "secrets": [
           "github-token"
         ],
@@ -3178,10 +1593,9 @@
           "retention-days",
           "source-sha",
           "subject-artifact-name",
-          "subject-relative-path",
-          "universal-request-json"
+          "subject-relative-path"
         ],
-        "inputCount": 14,
+        "inputCount": 13,
         "secrets": [],
         "secretCount": 0,
         "outputs": [
@@ -3197,10 +1611,8 @@
         "id": "public-release-oci-compose-preview",
         "path": ".github/workflows/public-release-oci-compose-preview.yml",
         "reusable": true,
-        "inputs": [
-          "universal-request-json"
-        ],
-        "inputCount": 1,
+        "inputs": [],
+        "inputCount": 0,
         "secrets": [
           "BUILDCHAIN_PROMOTION_TOKEN"
         ],
@@ -3209,24 +1621,20 @@
         "outputCount": 0
       },
       {
-        "id": "public-release-paper-sealed",
-        "path": ".github/workflows/public-release-paper-sealed.yml",
+        "id": "public-release-paper",
+        "path": ".github/workflows/public-release-paper.yml",
         "reusable": true,
         "inputs": [
           "artifact-name",
           "artifact-paths",
           "artifact-retention-days",
           "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
           "buildchain-contract-lock-path",
           "buildchain-ref",
           "buildchain-repository",
           "dry-run",
           "github-governance-receipt-json",
           "github-release",
-          "github-release-notes",
-          "github-release-title",
           "package-name",
           "publish-dist-tag",
           "publisher-workflow-path",
@@ -3237,78 +1645,17 @@
           "target-ref",
           "target-sha",
           "toolchain-type",
-          "universal-request-json",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 27,
+        "inputCount": 22,
         "secrets": [
           "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
           "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
           "BUILDCHAIN_GENERATED_WRITE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN",
           "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
         ],
-        "secretCount": 5,
-        "outputs": [
-          "github-release-url",
-          "package-name",
-          "package-version",
-          "propagation-work-artifact",
-          "public-release-tag",
-          "release-passport-path",
-          "upstream-release-json"
-        ],
-        "outputCount": 7
-      },
-      {
-        "id": "public-release-paper",
-        "path": ".github/workflows/public-release-paper.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-name",
-          "artifact-retention-days",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "build-command",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-title",
-          "node-version",
-          "package-name",
-          "publication-admission-json",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-runner-provenance-json",
-          "publication-used-nonces-json",
-          "publish-dist-tag",
-          "publish-package-set-order",
-          "release-passport-impact-json",
-          "release-passport-output-dir",
-          "release-passport-product-name",
-          "required-status-check",
-          "setup-node",
-          "target-ref",
-          "target-sha",
-          "toolchain-command",
-          "toolchain-digest",
-          "toolchain-image",
-          "toolchain-type",
-          "universal-request-json",
-          "verify-command",
-          "working-directory"
-        ],
-        "inputCount": 39,
-        "secrets": [],
-        "secretCount": 0,
+        "secretCount": 4,
         "outputs": [
           "controller-plan-artifact",
           "controller-plan-digest",
@@ -3320,125 +1667,21 @@
           "github-release-url",
           "package-name",
           "package-version",
+          "propagation-work-artifact",
           "public-release-tag",
-          "release-passport-path"
+          "release-passport-path",
+          "upstream-release-json"
         ],
-        "outputCount": 12
+        "outputCount": 14
       },
       {
         "id": "public-release-promote",
         "path": ".github/workflows/public-release-promote.yml",
         "reusable": true,
         "inputs": [
-          "allow-repository",
-          "artifact-name",
-          "artifact-patterns",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "buildchain-alpha-contract-lock-path",
-          "buildchain-channel",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "buildchain-stable-contract-lock-path",
-          "channel",
-          "declarative-release-tail",
-          "dry-run",
-          "github-artifact-attestation-environment",
-          "github-artifact-attestation-policy-json",
-          "github-artifact-attestation-retention-days",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-payload-patterns",
-          "github-release-title",
-          "package-manager",
-          "provider-failure-after-capability",
-          "publication-admission-json",
-          "publication-auto-admission",
-          "publication-auto-no-gate",
-          "publication-commit-command",
-          "publication-commit-evidence-path",
-          "publication-consumer-predicate-id",
-          "publication-consumer-qualification-command",
-          "publication-consumer-qualification-controller-sha",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-gate-command",
-          "publication-gate-controller-sha",
-          "publication-package-name",
-          "publication-product",
-          "publication-publisher-workflow-path",
-          "publication-runner-provenance-json",
-          "publication-target",
-          "publication-used-nonces-json",
-          "publication-used-qualification-nonces-json",
-          "publish-artifact-kind",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-required-artifacts-json",
-          "publish-target",
-          "publish-transaction-override",
-          "release-activation-command",
-          "release-activation-receipt-set-path",
-          "release-candidate-family-assignment-id",
-          "release-candidate-family-evidence-required",
-          "release-candidate-family-evidence-root",
-          "release-candidate-family-initiative-id",
-          "release-candidate-wait-seconds",
-          "release-candidate-workflow-file",
-          "release-candidate-workflow-name",
-          "release-passport",
-          "release-passport-adopter-delivery-json",
-          "release-passport-attachment-command",
-          "release-passport-buildchain-self-kfd",
-          "release-passport-evidence-command",
-          "release-passport-evidence-jsons",
-          "release-passport-evidence-path",
-          "release-passport-impact-json",
-          "release-passport-invariant-passport-command",
-          "release-passport-invariant-passport-jsons",
-          "release-passport-kfd-1-witness-jsons",
-          "release-passport-kfd-2-claim-jsons",
-          "release-passport-kfd-3-artifact-verify-command",
-          "release-passport-kfd-3-artifact-witness-jsons",
-          "release-passport-kfd-3-prebuild-witness-jsons",
-          "release-passport-kfd-adopter-manifest-gate-json",
-          "release-passport-kfd-adopter-manifest-json",
-          "release-passport-kfd-product-gate-jsons",
-          "release-passport-kfd-support-matrix-json",
-          "release-passport-output-dir",
-          "release-passport-platform-manifest-paths",
-          "release-passport-product-name",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "release-propagation-config-path",
-          "required-artifact-count",
-          "required-status-check",
-          "resume-buildchain-runtime-sha",
-          "resume-candidate-repository",
-          "resume-candidate-run-id",
-          "resume-expected-candidate-root",
-          "resume-expected-candidate-runtime-sha",
-          "resume-expected-source-tree",
-          "resume-expected-workflow-file",
-          "resume-expected-workflow-name",
-          "resume-transaction-id",
-          "runner-preset",
-          "standalone-binary-distribution",
-          "target-ref",
-          "target-sha",
-          "trusted-publishing",
-          "universal-request-json"
+          "request-json"
         ],
-        "inputCount": 107,
+        "inputCount": 1,
         "secrets": [
           "BUILDCHAIN_ISSUE_APP_ID",
           "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
@@ -3522,10 +1765,9 @@
           "pr-title",
           "refresh-managed-readme-badges",
           "source-node",
-          "universal-request-json",
           "upstream-release-json"
         ],
-        "inputCount": 20,
+        "inputCount": 19,
         "secrets": [
           "propagation-token"
         ],
@@ -3565,34 +1807,27 @@
         "inputs": [
           "buildchain-ref",
           "candidate-root",
-          "capsule-contract",
-          "capsule-path",
-          "capsule-root",
           "declaration-path",
-          "evidence-path",
           "execute",
           "provider-bindings-path",
           "rehearsal-authority-path",
           "rehearsal-capsule-path",
           "rehearsal-evidence-path",
           "rehearsal-mode",
-          "state-path",
-          "universal-request-json"
+          "state-path"
         ],
-        "inputCount": 15,
+        "inputCount": 10,
         "secrets": [
           "http-token"
         ],
         "secretCount": 1,
         "outputs": [
-          "binding-root",
-          "evidence-root",
           "rehearsal-evidence-root",
           "state-root",
           "transaction-root",
           "transaction-state"
         ],
-        "outputCount": 6
+        "outputCount": 4
       },
       {
         "id": "public-release-web",
@@ -3622,13 +1857,11 @@
           "production-aws-role-arn",
           "production-environment",
           "production-release-app-client-id",
-          "production-release-app-id",
           "production-release-branch-channel",
           "production-release-head-prefix",
           "production-release-label",
           "production-release-on-main",
           "production-release-pr-mode",
-          "production-release-pr-token",
           "production-source-sha",
           "publication-admission-json",
           "publication-control-plane-audit-json",
@@ -3640,15 +1873,15 @@
           "staging-apply",
           "staging-aws-role-arn",
           "staging-environment",
-          "universal-request-json",
           "verify-command",
           "working-directory"
         ],
-        "inputCount": 44,
+        "inputCount": 41,
         "secrets": [
-          "production-release-app-private-key"
+          "production-release-app-private-key",
+          "production-release-pr-token"
         ],
-        "secretCount": 1,
+        "secretCount": 2,
         "outputs": [
           "buildchain-runtime-class",
           "buildchain-runtime-override",
@@ -3675,337 +1908,6 @@
           "web-surface-urls-json"
         ],
         "outputCount": 23
-      },
-      {
-        "id": "publication-artifact",
-        "path": ".github/workflows/publication-artifact.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-name",
-          "artifact-paths",
-          "artifact-retention-days",
-          "build-command",
-          "buildchain-alpha-contract-lock-path",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "buildchain-stable-contract-lock-path",
-          "node-version",
-          "package-name",
-          "prepare-paper-package",
-          "publish-dist-tag",
-          "setup-node",
-          "target-ref",
-          "toolchain-command",
-          "toolchain-digest",
-          "toolchain-image",
-          "toolchain-type",
-          "universal-request-json",
-          "verify-command",
-          "working-directory"
-        ],
-        "inputCount": 24,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "package-name",
-          "package-version",
-          "publication-artifact-name",
-          "publication-manifest-json",
-          "publication-manifest-path",
-          "publication-passport-path",
-          "publication-registry-path",
-          "publish-dist-tag",
-          "runtime-sha"
-        ],
-        "outputCount": 16
-      },
-      {
-        "id": "release-candidate-promote",
-        "path": ".github/workflows/release-candidate-promote.yml",
-        "reusable": true,
-        "inputs": [
-          "allow-repository",
-          "artifact-name",
-          "artifact-patterns",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "buildchain-alpha-contract-lock-path",
-          "buildchain-channel",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "buildchain-stable-contract-lock-path",
-          "channel",
-          "declarative-release-tail",
-          "dry-run",
-          "github-artifact-attestation-environment",
-          "github-artifact-attestation-policy-json",
-          "github-artifact-attestation-retention-days",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-payload-patterns",
-          "github-release-title",
-          "package-manager",
-          "provider-failure-after-capability",
-          "publication-admission-json",
-          "publication-auto-admission",
-          "publication-auto-no-gate",
-          "publication-commit-command",
-          "publication-commit-evidence-path",
-          "publication-consumer-predicate-id",
-          "publication-consumer-qualification-command",
-          "publication-consumer-qualification-controller-sha",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-gate-command",
-          "publication-gate-controller-sha",
-          "publication-package-name",
-          "publication-product",
-          "publication-publisher-workflow-path",
-          "publication-runner-provenance-json",
-          "publication-target",
-          "publication-used-nonces-json",
-          "publication-used-qualification-nonces-json",
-          "publish-artifact-kind",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-required-artifacts-json",
-          "publish-target",
-          "publish-transaction-override",
-          "release-activation-command",
-          "release-activation-receipt-set-path",
-          "release-candidate-family-assignment-id",
-          "release-candidate-family-evidence-required",
-          "release-candidate-family-evidence-root",
-          "release-candidate-family-initiative-id",
-          "release-candidate-wait-seconds",
-          "release-candidate-workflow-file",
-          "release-candidate-workflow-name",
-          "release-passport",
-          "release-passport-adopter-delivery-json",
-          "release-passport-attachment-command",
-          "release-passport-buildchain-self-kfd",
-          "release-passport-evidence-command",
-          "release-passport-evidence-jsons",
-          "release-passport-evidence-path",
-          "release-passport-impact-json",
-          "release-passport-invariant-passport-command",
-          "release-passport-invariant-passport-jsons",
-          "release-passport-kfd-1-witness-jsons",
-          "release-passport-kfd-2-claim-jsons",
-          "release-passport-kfd-3-artifact-verify-command",
-          "release-passport-kfd-3-artifact-witness-jsons",
-          "release-passport-kfd-3-prebuild-witness-jsons",
-          "release-passport-kfd-adopter-manifest-gate-json",
-          "release-passport-kfd-adopter-manifest-json",
-          "release-passport-kfd-product-gate-jsons",
-          "release-passport-kfd-support-matrix-json",
-          "release-passport-output-dir",
-          "release-passport-platform-manifest-paths",
-          "release-passport-product-name",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "release-propagation-config-path",
-          "required-artifact-count",
-          "required-status-check",
-          "resume-buildchain-runtime-sha",
-          "resume-candidate-repository",
-          "resume-candidate-run-id",
-          "resume-expected-candidate-root",
-          "resume-expected-candidate-runtime-sha",
-          "resume-expected-source-tree",
-          "resume-expected-workflow-file",
-          "resume-expected-workflow-name",
-          "resume-transaction-id",
-          "runner-preset",
-          "standalone-binary-distribution",
-          "target-ref",
-          "target-sha",
-          "trusted-publishing",
-          "universal-request-json"
-        ],
-        "inputCount": 107,
-        "secrets": [
-          "BUILDCHAIN_ISSUE_APP_ID",
-          "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
-          "BUILDCHAIN_ISSUE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN",
-          "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
-          "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
-          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
-          "buildchain-issue-app-id",
-          "buildchain-issue-app-private-key",
-          "buildchain-issue-token"
-        ],
-        "secretCount": 10,
-        "outputs": [
-          "buildchain-channel",
-          "built-source-sha",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "github-artifact-attestation-evidence-root",
-          "github-artifact-attestation-id",
-          "github-artifact-attestation-publication-receipt-digest",
-          "github-artifact-attestation-url",
-          "promoted-sha",
-          "promotion-contract-lock-digest",
-          "promotion-contract-lock-path",
-          "promotion-override-used",
-          "promotion-publication-channel",
-          "promotion-router-ref",
-          "promotion-router-sha",
-          "promotion-runtime-ref",
-          "promotion-runtime-sha",
-          "promotion-shell-ref",
-          "promotion-shell-sha",
-          "promotion-target-ref",
-          "publication-capability-digest",
-          "publication-commit-evidence-digest",
-          "publication-commit-evidence-path",
-          "publication-commit-payload-root",
-          "publication-commit-url",
-          "release-candidate-action",
-          "release-candidate-artifact",
-          "release-candidate-recovery-receipt-artifact",
-          "release-candidate-recovery-root",
-          "release-invocation-root",
-          "release-propagation-work-artifact",
-          "release-receipt-root",
-          "release-tail-declaration-root",
-          "release-tail-receipt-roots-json",
-          "release-tail-state-root",
-          "release-tail-transaction-root",
-          "release-tail-transaction-state",
-          "release-transaction-root"
-        ],
-        "outputCount": 43
-      },
-      {
-        "id": "release-governance-reconcile",
-        "path": ".github/workflows/release-governance-reconcile.yml",
-        "reusable": true,
-        "inputs": [
-          "apply",
-          "branch",
-          "buildchain-ref",
-          "candidate-sha",
-          "universal-request-json"
-        ],
-        "inputCount": 5,
-        "secrets": [
-          "BUILDCHAIN_PROMOTION_TOKEN",
-          "governance-token"
-        ],
-        "secretCount": 2,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "release-propagation",
-        "path": ".github/workflows/release-propagation.yml",
-        "reusable": true,
-        "inputs": [
-          "agent-work-context-json",
-          "agent-work-mode",
-          "buildchain-ref",
-          "buildchain-repository",
-          "downstream-base-ref",
-          "downstream-branch",
-          "downstream-prepare-command",
-          "downstream-repository",
-          "downstream-target",
-          "downstream-update-command",
-          "downstream-verify-command",
-          "dry-run",
-          "graph-json",
-          "lock-path",
-          "pr-body",
-          "pr-title",
-          "refresh-managed-readme-badges",
-          "source-node",
-          "universal-request-json",
-          "upstream-release-json"
-        ],
-        "inputCount": 20,
-        "secrets": [
-          "propagation-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "propagation-receipt-digest",
-          "propagation-receipt-json",
-          "propagation-work-artifact",
-          "propagation-work-json",
-          "propagation-work-next-action",
-          "propagation-work-root"
-        ],
-        "outputCount": 13
-      },
-      {
-        "id": "release-tail",
-        "path": ".github/workflows/release-tail.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "candidate-root",
-          "capsule-contract",
-          "capsule-path",
-          "capsule-root",
-          "declaration-path",
-          "evidence-path",
-          "execute",
-          "provider-bindings-path",
-          "rehearsal-authority-path",
-          "rehearsal-capsule-path",
-          "rehearsal-evidence-path",
-          "rehearsal-mode",
-          "state-path",
-          "universal-request-json"
-        ],
-        "inputCount": 15,
-        "secrets": [
-          "http-token"
-        ],
-        "secretCount": 1,
-        "outputs": [
-          "binding-root",
-          "evidence-root",
-          "rehearsal-evidence-root",
-          "state-root",
-          "transaction-root",
-          "transaction-state"
-        ],
-        "outputCount": 6
       },
       {
         "id": "self-build-adopter-dogfood",
@@ -4041,8 +1943,8 @@
         "outputCount": 0
       },
       {
-        "id": "self-build-candidate-lab",
-        "path": ".github/workflows/self-build-candidate-lab.yml",
+        "id": "self-build-channel-verify",
+        "path": ".github/workflows/self-build-channel-verify.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -4087,17 +1989,6 @@
       {
         "id": "self-build-public-consumer-dogfood",
         "path": ".github/workflows/self-build-public-consumer-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-build-release-verify-compat",
-        "path": ".github/workflows/self-build-release-verify-compat.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -4261,17 +2152,6 @@
         "outputCount": 0
       },
       {
-        "id": "self-ops-recovery-failure-dogfood",
-        "path": ".github/workflows/self-ops-recovery-failure-dogfood.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
         "id": "self-ops-runner-smoke",
         "path": ".github/workflows/self-ops-runner-smoke.yml",
         "reusable": false,
@@ -4307,17 +2187,6 @@
       {
         "id": "self-release-line-open",
         "path": ".github/workflows/self-release-line-open.yml",
-        "reusable": false,
-        "inputs": [],
-        "inputCount": 0,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [],
-        "outputCount": 0
-      },
-      {
-        "id": "self-release-new-version-compat",
-        "path": ".github/workflows/self-release-new-version-compat.yml",
         "reusable": false,
         "inputs": [],
         "inputCount": 0,
@@ -4380,78 +2249,163 @@
         "secretCount": 0,
         "outputs": [],
         "outputCount": 0
-      },
-      {
-        "id": "stable-candidate-patrol",
-        "path": ".github/workflows/stable-candidate-patrol.yml",
-        "reusable": true,
-        "inputs": [
-          "auto-approve",
-          "auto-merge",
-          "auto-promote",
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "hold",
-          "hold-reason",
-          "ledger-ref",
-          "merge-method",
-          "minimum-soak-seconds",
-          "release-now",
-          "required-checks",
-          "revoke-reason",
-          "revoked-versions",
-          "target-branch",
-          "universal-request-json"
-        ],
-        "inputCount": 17,
-        "secrets": [
-          "approval-token",
-          "promotion-token"
-        ],
-        "secretCount": 2,
-        "outputs": [
-          "promotion-pr",
-          "result-path",
-          "selected",
-          "selected-sha",
-          "selected-version",
-          "stable-version"
-        ],
-        "outputCount": 6
-      },
-      {
-        "id": "universal-bootstrap-recovery",
-        "path": ".github/workflows/universal-bootstrap-recovery.yml",
-        "reusable": true,
-        "inputs": [
-          "request-json"
-        ],
-        "inputCount": 1,
-        "secrets": [],
-        "secretCount": 0,
-        "outputs": [
-          "backflow-root",
-          "result-json",
-          "runtime-sha",
-          "terminal-receipt-json",
-          "terminal-receipt-root"
-        ],
-        "outputCount": 5
       }
     ],
     "actionInputs": [
       {
-        "id": "attest-build-artifact",
-        "path": "actions/attest-build-artifact/action.yml",
+        "id": "adoption/admit-adopter",
+        "path": "actions/adoption/admit-adopter/action.yml",
+        "inputs": [
+          "request-json",
+          "workflow-sha"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "adoption/qualify-adopter",
+        "path": "actions/adoption/qualify-adopter/action.yml",
+        "inputs": [
+          "consumer-sha",
+          "platform",
+          "request-json",
+          "workflow-sha"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "adoption/reconcile-adopters",
+        "path": "actions/adoption/reconcile-adopters/action.yml",
+        "inputs": [
+          "request-json",
+          "workflow-sha"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/attest-artifact",
+        "path": "actions/build/attest-artifact/action.yml",
         "inputs": [
           "plan"
         ],
         "inputCount": 1
       },
       {
-        "id": "finalize-build-result",
-        "path": "actions/finalize-build-result/action.yml",
+        "id": "build/binary-distribution-binary",
+        "path": "actions/build/binary-distribution-binary/action.yml",
+        "inputs": [
+          "matrix-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/binary-distribution-dispatch-publication",
+        "path": "actions/build/binary-distribution-dispatch-publication/action.yml",
+        "inputs": [],
+        "inputCount": 0
+      },
+      {
+        "id": "build/binary-distribution-passport",
+        "path": "actions/build/binary-distribution-passport/action.yml",
+        "inputs": [
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/binary-distribution-preflight",
+        "path": "actions/build/binary-distribution-preflight/action.yml",
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "build/check-lifecycle",
+        "path": "actions/build/check-lifecycle/action.yml",
+        "inputs": [
+          "core-node",
+          "request-json",
+          "runtime-ref"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "build/demo-adapter-gate",
+        "path": "actions/build/demo-adapter-gate/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/demo-adapter-render",
+        "path": "actions/build/demo-adapter-render/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "needs-gate-outputs-gate-artifact-name",
+          "needs-gate-outputs-gate-root",
+          "needs-gate-outputs-source-sha",
+          "request-json"
+        ],
+        "inputCount": 5
+      },
+      {
+        "id": "build/demo-capture",
+        "path": "actions/build/demo-capture/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/demo-dogfood-exact-binary",
+        "path": "actions/build/demo-dogfood-exact-binary/action.yml",
+        "inputs": [
+          "source-checkout-outcome"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "build/demo-media-qualification-qualify",
+        "path": "actions/build/demo-media-qualification-qualify/action.yml",
+        "inputs": [
+          "matrix-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/demo-publish",
+        "path": "actions/build/demo-publish/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "needs-capture-outputs-capture-artifact-name",
+          "needs-capture-outputs-source-sha",
+          "needs-qualify-outputs-evidence-artifact-name",
+          "request-json",
+          "secrets-demo-update-token"
+        ],
+        "inputCount": 6
+      },
+      {
+        "id": "build/demo-qualify",
+        "path": "actions/build/demo-qualify/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "needs-capture-outputs-capture-artifact-digest",
+          "needs-capture-outputs-capture-artifact-name",
+          "needs-capture-outputs-source-sha",
+          "request-json"
+        ],
+        "inputCount": 5
+      },
+      {
+        "id": "build/finalize-result",
+        "path": "actions/build/finalize-result/action.yml",
         "inputs": [
           "jobs",
           "plan"
@@ -4459,8 +2413,45 @@
         "inputCount": 2
       },
       {
-        "id": "github-artifact-attestation",
-        "path": "actions/github-artifact-attestation/action.yml",
+        "id": "build/gate-profile-aggregate",
+        "path": "actions/build/gate-profile-aggregate/action.yml",
+        "inputs": [
+          "needs-plan-outputs-buildchain-runtime-sha",
+          "needs-plan-outputs-controller-plan-artifact",
+          "needs-plan-outputs-gate-matrix-artifact",
+          "needs-plan-outputs-source-sha",
+          "needs-plan-result",
+          "needs-run-gates-result",
+          "request-json"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "build/gate-profile-plan",
+        "path": "actions/build/gate-profile-plan/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "matrix-json",
+          "request-json"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "build/gate-profile-run-gates",
+        "path": "actions/build/gate-profile-run-gates/action.yml",
+        "inputs": [
+          "matrix-json",
+          "needs-plan-outputs-buildchain-runtime-ref",
+          "needs-plan-outputs-buildchain-runtime-sha",
+          "needs-plan-outputs-gate-matrix-artifact",
+          "needs-plan-outputs-source-sha",
+          "request-json"
+        ],
+        "inputCount": 6
+      },
+      {
+        "id": "build/github-attestation",
+        "path": "actions/build/github-attestation/action.yml",
         "inputs": [
           "attestation-id",
           "attestation-url",
@@ -4479,8 +2470,8 @@
         "inputCount": 13
       },
       {
-        "id": "macos-credential-island",
-        "path": "actions/macos-credential-island/action.yml",
+        "id": "build/macos-credential-island",
+        "path": "actions/build/macos-credential-island/action.yml",
         "inputs": [
           "artifact-id",
           "artifact-name",
@@ -4507,8 +2498,17 @@
         "inputCount": 21
       },
       {
-        "id": "prepare-build-environment",
-        "path": "actions/prepare-build-environment/action.yml",
+        "id": "build/package-candidate",
+        "path": "actions/build/package-candidate/action.yml",
+        "inputs": [
+          "needs-libnode-shaped-outputs-release-candidate-artifact",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/prepare-environment",
+        "path": "actions/build/prepare-environment/action.yml",
         "inputs": [
           "checkout-source",
           "plan",
@@ -4518,162 +2518,412 @@
         "inputCount": 4
       },
       {
-        "id": "promote-buildchain-ref",
-        "path": "actions/promote-buildchain-ref/action.yml",
+        "id": "build/resolve-plan",
+        "path": "actions/build/resolve-plan/action.yml",
         "inputs": [
-          "allow-repository",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "declarative-release-tail",
-          "dry-run",
-          "expected-publication-version",
-          "generated-pull-request-token",
-          "generated-ref-update-token",
-          "generated-status-check-token",
-          "github-release",
-          "github-release-artifact-paths",
-          "github-release-notes",
-          "github-release-title",
-          "plan-before-target-advance",
-          "promote-only-release-candidate",
-          "publication-capability-json",
-          "publication-gate-aggregate-json",
-          "publication-qualification-receipt-json",
-          "publication-used-qualification-nonces-json",
-          "publish-auth",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-evidence-path",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-required-artifacts-json",
-          "publish-required-artifacts-path",
-          "publish-sealed-bundle-manifest",
-          "publish-sealed-bundle-root",
-          "publish-source-locked",
-          "publish-source-ref",
-          "publish-source-sha",
-          "publish-tooling-sha",
-          "publish-transaction",
-          "publish-transaction-override",
-          "reconciliation-workspace",
-          "release-candidate-build-summary-path",
-          "release-candidate-family-assignment-id",
-          "release-candidate-family-evidence-required",
-          "release-candidate-family-evidence-root",
-          "release-candidate-family-initiative-id",
-          "release-candidate-passport-path",
-          "release-candidate-version",
-          "release-material-sha",
-          "release-passport",
-          "release-passport-adopter-delivery-json",
-          "release-passport-attachment-command",
-          "release-passport-build-summary-path",
-          "release-passport-buildchain-self-kfd",
-          "release-passport-evidence-command",
-          "release-passport-evidence-jsons",
-          "release-passport-github-artifact-attestation-policy-jsons",
-          "release-passport-impact-json",
-          "release-passport-invariant-passport-command",
-          "release-passport-invariant-passport-jsons",
-          "release-passport-kfd-1-witness-jsons",
-          "release-passport-kfd-2-claim-jsons",
-          "release-passport-kfd-3-artifact-verify-command",
-          "release-passport-kfd-3-artifact-witness-jsons",
-          "release-passport-kfd-3-prebuild-witness-jsons",
-          "release-passport-kfd-adopter-manifest-gate-json",
-          "release-passport-kfd-adopter-manifest-json",
-          "release-passport-kfd-product-gate-jsons",
-          "release-passport-kfd-support-matrix-json",
-          "release-passport-output-dir",
-          "release-passport-platform-manifest-paths",
-          "release-passport-product-name",
-          "release-passport-promotion-routing-json",
-          "release-passport-v4-consumer-policy-certification-json",
-          "release-passport-v4-consumer-policy-certification-root",
-          "release-passport-v4-runtime-resume-evidence-command",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "release-tail-state-path",
-          "require-governance",
-          "require-publication-qualification",
-          "require-publish-source-lock",
-          "require-version-state",
-          "required-status-check",
-          "sha",
-          "tags",
-          "target-ref",
-          "token",
-          "transaction-state-path",
-          "verification-command"
+          "config-path",
+          "control-token",
+          "workflow-ref",
+          "workflow-sha"
         ],
-        "inputCount": 87
+        "inputCount": 4
       },
       {
-        "id": "release-candidate-promote",
-        "path": "actions/release-candidate-promote/action.yml",
+        "id": "build/run-lifecycle",
+        "path": "actions/build/run-lifecycle/action.yml",
         "inputs": [
+          "artifact-name",
           "artifact-paths",
-          "candidate-build-summary-path",
-          "candidate-passport-path",
-          "failure-after-capability",
-          "mutation-token",
-          "product-publication-intent-path",
-          "publication-qualification-path",
-          "publish-artifact-kind",
-          "publish-auth",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-transaction-override",
-          "publisher-workflow-sha",
-          "repository",
-          "required-artifacts-path",
-          "required-status-check",
-          "resume-transaction-id",
-          "runtime-commit",
-          "runtime-tree",
-          "sealed-bundle-manifest",
-          "sealed-bundle-root",
-          "source-sha",
-          "stage-capsules-path",
-          "state-path",
-          "target-ref",
-          "target-sha",
-          "token"
+          "command",
+          "cwd",
+          "diagnostics-artifact-name",
+          "diagnostics-path",
+          "expected-artifacts-json",
+          "manifest-artifact-name",
+          "manifest-path",
+          "platform-id",
+          "platform-name",
+          "process-sample-interval-ms",
+          "process-samples-path",
+          "process-summary-path",
+          "process-summary-required",
+          "requested-parallelism",
+          "required",
+          "sample-process-tree",
+          "stage",
+          "substage-evidence-path",
+          "summary-path",
+          "timeout-minutes"
         ],
-        "inputCount": 31
+        "inputCount": 22
       },
       {
-        "id": "release-tail",
-        "path": "actions/release-tail/action.yml",
+        "id": "build/run-stage",
+        "path": "actions/build/run-stage/action.yml",
         "inputs": [
-          "candidate-root",
-          "capsule",
-          "capsule-contract",
-          "capsule-root",
-          "declaration",
-          "evidence-path",
-          "execute",
-          "github-token",
-          "http-token",
-          "provider-bindings",
-          "rehearsal-authority",
-          "rehearsal-capsule",
-          "rehearsal-evidence-path",
-          "rehearsal-mode",
-          "state-path"
+          "plan",
+          "platform",
+          "stage"
         ],
-        "inputCount": 15
+        "inputCount": 3
       },
       {
-        "id": "report-buildchain-issue",
-        "path": "actions/report-buildchain-issue/action.yml",
+        "id": "build/sign-artifact",
+        "path": "actions/build/sign-artifact/action.yml",
+        "inputs": [
+          "certificate-p12-base64",
+          "certificate-password",
+          "certificate-sha1",
+          "control-token",
+          "expected-team-id",
+          "kind",
+          "notary-api-issuer",
+          "notary-api-key-id",
+          "notary-api-key-p8-base64",
+          "plan",
+          "platform"
+        ],
+        "inputCount": 11
+      },
+      {
+        "id": "build/source-check",
+        "path": "actions/build/source-check/action.yml",
+        "inputs": [
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "source-checkout-outcome",
+          "steps-source-outcome"
+        ],
+        "inputCount": 5
+      },
+      {
+        "id": "build/source-proof",
+        "path": "actions/build/source-proof/action.yml",
+        "inputs": [
+          "core-node",
+          "identities-json",
+          "request-json",
+          "runtime-ref"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "build/stage-capsule-canary-consumer-admission",
+        "path": "actions/build/stage-capsule-canary-consumer-admission/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/stage-capsule-canary-qualify",
+        "path": "actions/build/stage-capsule-canary-qualify/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "matrix-json",
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "build/stage-capsule-canary-reconcile",
+        "path": "actions/build/stage-capsule-canary-reconcile/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/transfer-artifact",
+        "path": "actions/build/transfer-artifact/action.yml",
+        "inputs": [
+          "plan",
+          "platform"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "build/validate-config",
+        "path": "actions/build/validate-config/action.yml",
+        "inputs": [
+          "config-required",
+          "require-lifecycle-stages",
+          "require-version-state"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "build/verify-build-backbone",
+        "path": "actions/build/verify-build-backbone/action.yml",
+        "inputs": [
+          "source-checkout-outcome"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "build/verify-check",
+        "path": "actions/build/verify-check/action.yml",
+        "inputs": [
+          "source-checkout-outcome"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "build/verify-stage-capsule-checkpoints",
+        "path": "actions/build/verify-stage-capsule-checkpoints/action.yml",
+        "inputs": [
+          "matrix-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "dev-delivery/land",
+        "path": "actions/dev-delivery/land/action.yml",
+        "inputs": [
+          "boundary-native-outcome",
+          "boundary-outcome",
+          "failure-final-outcome",
+          "github-token",
+          "native-final-outcome",
+          "needs-json",
+          "predecessors-ok",
+          "request-json"
+        ],
+        "inputCount": 8
+      },
+      {
+        "id": "dev-delivery/merge-queue-reconcile",
+        "path": "actions/dev-delivery/merge-queue-reconcile/action.yml",
+        "inputs": [
+          "source-checkout-outcome"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "dev-delivery/native",
+        "path": "actions/dev-delivery/native/action.yml",
+        "inputs": [
+          "github-token",
+          "needs-json",
+          "phase",
+          "request-json"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "dev-delivery/native-execute",
+        "path": "actions/dev-delivery/native-execute/action.yml",
+        "inputs": [
+          "needs-json",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "dev-delivery/native-heartbeat",
+        "path": "actions/dev-delivery/native-heartbeat/action.yml",
+        "inputs": [
+          "github-token",
+          "needs-json",
+          "request-json"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "dev-delivery/native-seal",
+        "path": "actions/dev-delivery/native-seal/action.yml",
+        "inputs": [
+          "needs-json",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "dev-delivery/qualify",
+        "path": "actions/dev-delivery/qualify/action.yml",
+        "inputs": [
+          "github-token",
+          "needs-json",
+          "request-json"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "dev-delivery/reserve",
+        "path": "actions/dev-delivery/reserve/action.yml",
+        "inputs": [
+          "github-token",
+          "predecessors-ok",
+          "proof-outcome",
+          "proof-source-proof-root",
+          "qualify-outcome",
+          "request-json",
+          "target-branch"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "dev-delivery/settle",
+        "path": "actions/dev-delivery/settle/action.yml",
+        "inputs": [
+          "boundary-native-outcome",
+          "boundary-outcome",
+          "github-token",
+          "needs-json",
+          "phase",
+          "request-json",
+          "runtime-ref"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "dev-delivery/source",
+        "path": "actions/dev-delivery/source/action.yml",
+        "inputs": [
+          "github-token",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "dev-delivery/warrant-cancel",
+        "path": "actions/dev-delivery/warrant-cancel/action.yml",
+        "inputs": [
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "secrets-github-token"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "governance/alpha-candidate-patrol-observe",
+        "path": "actions/governance/alpha-candidate-patrol-observe/action.yml",
+        "inputs": [
+          "request-json",
+          "runtime-ref",
+          "runtime-repository"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "governance/alpha-candidate-patrol-settle",
+        "path": "actions/governance/alpha-candidate-patrol-settle/action.yml",
+        "inputs": [
+          "needs-observe-outputs-cut-created-at",
+          "needs-observe-outputs-cut-root",
+          "needs-observe-outputs-observed-at",
+          "needs-observe-outputs-prior-state-root",
+          "needs-observe-outputs-pull-request-body-prefix",
+          "needs-observe-outputs-runtime-sha",
+          "needs-observe-outputs-selected-sha",
+          "request-json",
+          "secrets-promotion-token"
+        ],
+        "inputCount": 9
+      },
+      {
+        "id": "governance/audit",
+        "path": "actions/governance/audit/action.yml",
+        "inputs": [
+          "auditor-app-id",
+          "auditor-private-key",
+          "governance-read-token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "governance/dev-qualification-patrol-mutate",
+        "path": "actions/governance/dev-qualification-patrol-mutate/action.yml",
+        "inputs": [
+          "needs-observe-outputs-action",
+          "needs-observe-outputs-source-sha",
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "secrets-qualification-token"
+        ],
+        "inputCount": 6
+      },
+      {
+        "id": "governance/dev-qualification-patrol-observe",
+        "path": "actions/governance/dev-qualification-patrol-observe/action.yml",
+        "inputs": [
+          "request-json",
+          "runtime-ref",
+          "runtime-repository"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "governance/housekeeping-delete-branches",
+        "path": "actions/governance/housekeeping-delete-branches/action.yml",
+        "inputs": [
+          "needs-plan-outputs-plan-artifact",
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "secrets-housekeeper-app-id",
+          "secrets-housekeeper-app-private-key",
+          "secrets-housekeeper-token"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "governance/housekeeping-label-pull-requests",
+        "path": "actions/governance/housekeeping-label-pull-requests/action.yml",
+        "inputs": [
+          "needs-plan-outputs-plan-artifact",
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "secrets-housekeeper-app-id",
+          "secrets-housekeeper-app-private-key",
+          "secrets-housekeeper-token"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "governance/housekeeping-plan",
+        "path": "actions/governance/housekeeping-plan/action.yml",
+        "inputs": [
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "secrets-housekeeper-app-id",
+          "secrets-housekeeper-app-private-key",
+          "secrets-housekeeper-token"
+        ],
+        "inputCount": 6
+      },
+      {
+        "id": "governance/patrol",
+        "path": "actions/governance/patrol/action.yml",
+        "inputs": [
+          "github-token",
+          "request-json",
+          "runtime-ref",
+          "runtime-repository"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "governance/release-governance-reconcile",
+        "path": "actions/governance/release-governance-reconcile/action.yml",
+        "inputs": [
+          "request-json",
+          "runtime-ref"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "governance/report-issue",
+        "path": "actions/governance/report-issue/action.yml",
         "inputs": [
           "artifact-url",
           "body",
@@ -4722,124 +2972,1031 @@
         "inputCount": 43
       },
       {
-        "id": "resolve-build-plan",
-        "path": "actions/resolve-build-plan/action.yml",
+        "id": "governance/runner-smoke",
+        "path": "actions/governance/runner-smoke/action.yml",
         "inputs": [
-          "config-path",
-          "control-token",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "governance/stable-candidate-patrol",
+        "path": "actions/governance/stable-candidate-patrol/action.yml",
+        "inputs": [
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "secrets-approval-token",
+          "secrets-promotion-token"
+        ],
+        "inputCount": 5
+      },
+      {
+        "id": "observability/admit-evidence-publisher",
+        "path": "actions/observability/admit-evidence-publisher/action.yml",
+        "inputs": [],
+        "inputCount": 0
+      },
+      {
+        "id": "observability/publish-evidence",
+        "path": "actions/observability/publish-evidence/action.yml",
+        "inputs": [
+          "request-json",
+          "runtime-ref",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "paper/admit-candidate",
+        "path": "actions/paper/admit-candidate/action.yml",
+        "inputs": [
+          "needs-publication-authority-outputs-capability-json",
+          "needs-publication-candidate-outputs-controller-receipt-artifact",
+          "needs-publication-candidate-outputs-package-name",
+          "needs-publication-candidate-outputs-package-version",
+          "needs-publication-candidate-outputs-publication-artifact-name",
+          "needs-publication-candidate-outputs-publish-dist-tag",
+          "needs-publication-candidate-outputs-runtime-sha",
+          "request-json",
+          "secrets-buildchain-generated-write-app-client-id",
+          "secrets-buildchain-generated-write-app-private-key",
+          "secrets-buildchain-generated-write-token",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 12
+      },
+      {
+        "id": "paper/publish-candidate",
+        "path": "actions/paper/publish-candidate/action.yml",
+        "inputs": [
+          "candidate-outputs-build-summary-path",
+          "candidate-outputs-dist-tag",
+          "candidate-outputs-exact-tag",
+          "candidate-outputs-github-release-artifact-paths",
+          "candidate-outputs-manifest-path",
+          "candidate-outputs-package-dir",
+          "candidate-outputs-package-name",
+          "candidate-outputs-package-version",
+          "candidate-outputs-required-artifacts-json",
+          "candidate-outputs-sealed-bundle-manifest",
+          "candidate-outputs-sealed-bundle-root",
+          "core-node-outputs-node-path",
+          "generated-write-app-token-outputs-token",
+          "request-json",
+          "secrets-buildchain-generated-write-token"
+        ],
+        "inputCount": 15
+      },
+      {
+        "id": "paper/settle-publication",
+        "path": "actions/paper/settle-publication/action.yml",
+        "inputs": [
+          "candidate-outputs-manifest-path",
+          "candidate-outputs-package-name",
+          "candidate-outputs-package-version",
+          "controller-plan-outcome",
+          "core-node-outputs-node-path",
+          "promote-outcome",
+          "promote-outputs-public-release-tag",
+          "promote-outputs-release-passport-path",
+          "publish-outcome",
+          "request-json",
+          "secrets-buildchain-generated-write-token",
+          "target-outputs-channel",
+          "target-outputs-sha"
+        ],
+        "inputCount": 13
+      },
+      {
+        "id": "providers/sync-git",
+        "path": "actions/providers/sync-git/action.yml",
+        "inputs": [
+          "force",
+          "remote-credential",
+          "remote-host",
+          "remote-path",
+          "remote-repo",
+          "remote-user",
+          "source-ref"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "publication/admit-runtime",
+        "path": "actions/publication/admit-runtime/action.yml",
+        "inputs": [
+          "ref",
+          "repository",
           "workflow-ref",
           "workflow-sha"
         ],
         "inputCount": 4
       },
       {
-        "id": "run-build-stage",
-        "path": "actions/run-build-stage/action.yml",
+        "id": "publication/authority-admit",
+        "path": "actions/publication/authority-admit/action.yml",
         "inputs": [
-          "plan",
-          "platform",
-          "stage"
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "secrets-buildchain-governance-read-token",
+          "secrets-kungfu-governance-auditor-app-private-key"
         ],
-        "inputCount": 3
+        "inputCount": 5
       },
       {
-        "id": "run-lifecycle",
-        "path": "actions/run-lifecycle/action.yml",
+        "id": "publication/authority-artifact-evidence",
+        "path": "actions/publication/authority-artifact-evidence/action.yml",
         "inputs": [
-          "artifact-name",
-          "artifact-paths",
-          "command",
-          "cwd",
-          "diagnostics-artifact-name",
-          "diagnostics-path",
-          "expected-artifacts-json",
-          "manifest-artifact-name",
-          "manifest-path",
-          "platform-id",
-          "platform-name",
-          "process-sample-interval-ms",
-          "process-samples-path",
-          "process-summary-path",
-          "process-summary-required",
-          "requested-parallelism",
-          "required",
-          "sample-process-tree",
-          "stage",
-          "substage-evidence-path",
-          "summary-path",
-          "timeout-minutes"
+          "request-json"
         ],
-        "inputCount": 22
+        "inputCount": 1
       },
       {
-        "id": "sign-build-artifact",
-        "path": "actions/sign-build-artifact/action.yml",
+        "id": "publication/authority-assemble",
+        "path": "actions/publication/authority-assemble/action.yml",
         "inputs": [
-          "certificate-p12-base64",
-          "certificate-password",
-          "certificate-sha1",
-          "control-token",
-          "expected-team-id",
-          "kind",
-          "notary-api-issuer",
-          "notary-api-key-id",
-          "notary-api-key-p8-base64",
-          "plan",
-          "platform"
+          "consumer-gate-gate-aggregate-json",
+          "governance-auditor-token",
+          "node-path",
+          "request-json",
+          "secrets-buildchain-governance-read-token"
         ],
-        "inputCount": 11
+        "inputCount": 5
       },
       {
-        "id": "transfer-build-artifact",
-        "path": "actions/transfer-build-artifact/action.yml",
+        "id": "publication/authority-candidate-evidence",
+        "path": "actions/publication/authority-candidate-evidence/action.yml",
         "inputs": [
-          "plan",
-          "platform"
+          "node-path",
+          "request-json"
         ],
         "inputCount": 2
       },
       {
-        "id": "validate-config",
-        "path": "actions/validate-config/action.yml",
+        "id": "publication/authority-verify",
+        "path": "actions/publication/authority-verify/action.yml",
         "inputs": [
-          "config-required",
-          "require-lifecycle-stages",
-          "require-version-state"
+          "auto-evidence-admission-json",
+          "auto-evidence-control-plane-audit-json",
+          "auto-evidence-expected-json",
+          "auto-evidence-gate-aggregate-json",
+          "auto-evidence-runner-provenance-json",
+          "binary-auto-evidence-admission-json",
+          "binary-auto-evidence-control-plane-audit-json",
+          "binary-auto-evidence-expected-json",
+          "binary-auto-evidence-gate-aggregate-json",
+          "binary-auto-evidence-runner-provenance-json",
+          "consumer-gate-gate-aggregate-json",
+          "node-path",
+          "paper-auto-evidence-admission-json",
+          "paper-auto-evidence-control-plane-audit-json",
+          "paper-auto-evidence-expected-json",
+          "paper-auto-evidence-gate-aggregate-json",
+          "paper-auto-evidence-runner-provenance-json",
+          "request-json"
+        ],
+        "inputCount": 18
+      },
+      {
+        "id": "publication/build-candidate",
+        "path": "actions/publication/build-candidate/action.yml",
+        "inputs": [
+          "core-node-outputs-node-path",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/collect-candidate",
+        "path": "actions/publication/collect-candidate/action.yml",
+        "inputs": [
+          "build-outcome",
+          "controller-identities-outcome",
+          "controller-identities-outputs-source-sha",
+          "controller-plan-outcome",
+          "core-node-outputs-node-path",
+          "manifest-outcome",
+          "manifest-outputs-manifest-path",
+          "manifest-outputs-passport-path",
+          "package-outcome",
+          "predecessors-ok",
+          "request-json",
+          "runtime-checkout-outcome",
+          "runtime-outcome",
+          "verify-outcome"
+        ],
+        "inputCount": 14
+      },
+      {
+        "id": "publication/npm-dry-run",
+        "path": "actions/publication/npm-dry-run/action.yml",
+        "inputs": [
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/oci-compose-preview-promote",
+        "path": "actions/publication/oci-compose-preview-promote/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "secrets-buildchain-promotion-token"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "publication/plan-candidate",
+        "path": "actions/publication/plan-candidate/action.yml",
+        "inputs": [
+          "job-workflow-ref",
+          "job-workflow-sha",
+          "request-json",
+          "runtime-class",
+          "runtime-override",
+          "runtime-ref",
+          "runtime-sha",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 8
+      },
+      {
+        "id": "release/admit-promotion",
+        "path": "actions/release/admit-promotion/action.yml",
+        "inputs": [
+          "request-json",
+          "selection-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "release/artifact-attestation-attest",
+        "path": "actions/release/artifact-attestation-attest/action.yml",
+        "inputs": [
+          "definition-sha",
+          "request-json",
+          "runtime-ref"
         ],
         "inputCount": 3
+      },
+      {
+        "id": "release/binary-assets-publish",
+        "path": "actions/release/binary-assets-publish/action.yml",
+        "inputs": [
+          "needs-publication-authority-outputs-capability-json",
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "release/binary-publication-coordinates",
+        "path": "actions/release/binary-publication-coordinates/action.yml",
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "release/line-open",
+        "path": "actions/release/line-open/action.yml",
+        "inputs": [
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "release/next-development-review",
+        "path": "actions/release/next-development-review/action.yml",
+        "inputs": [
+          "secrets-buildchain-approval-token",
+          "secrets-buildchain-promotion-token",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "release/promote-apply",
+        "path": "actions/release/promote-apply/action.yml",
+        "inputs": [
+          "needs-qualify-outputs-candidate-artifact",
+          "needs-qualify-outputs-candidate-build-summary-path",
+          "needs-qualify-outputs-candidate-passport-path",
+          "needs-qualify-outputs-candidate-source-sha",
+          "needs-qualify-outputs-channel",
+          "needs-qualify-outputs-exact-tag",
+          "needs-qualify-outputs-product-publication-intent-path",
+          "needs-qualify-outputs-publication-qualification-path",
+          "needs-qualify-outputs-publisher-sha",
+          "needs-qualify-outputs-release-artifact-paths",
+          "needs-qualify-outputs-requested-sha",
+          "needs-qualify-outputs-required-artifacts-path",
+          "needs-qualify-outputs-runtime-sha",
+          "needs-qualify-outputs-runtime-tree",
+          "needs-qualify-outputs-sealed-bundle-manifest",
+          "needs-qualify-outputs-sealed-bundle-root",
+          "needs-qualify-outputs-stage-capsules-path",
+          "needs-qualify-outputs-target-ref",
+          "needs-qualify-outputs-version",
+          "request-json",
+          "secrets-buildchain-promotion-token",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 22
+      },
+      {
+        "id": "release/promote-candidate",
+        "path": "actions/release/promote-candidate/action.yml",
+        "inputs": [
+          "artifact-paths",
+          "candidate-build-summary-path",
+          "candidate-passport-path",
+          "failure-after-capability",
+          "mutation-token",
+          "product-publication-intent-path",
+          "publication-qualification-path",
+          "publish-artifact-kind",
+          "publish-auth",
+          "publish-command",
+          "publish-dist-tag",
+          "publish-mode",
+          "publish-package-main",
+          "publish-package-set-order",
+          "publish-rematerialize-on-resume",
+          "publish-transaction-override",
+          "publisher-workflow-sha",
+          "repository",
+          "required-artifacts-path",
+          "required-status-check",
+          "resume-transaction-id",
+          "runtime-commit",
+          "runtime-tree",
+          "sealed-bundle-manifest",
+          "sealed-bundle-root",
+          "source-sha",
+          "stage-capsules-path",
+          "state-path",
+          "target-ref",
+          "target-sha",
+          "token"
+        ],
+        "inputCount": 31
+      },
+      {
+        "id": "release/promote-classify-workflow-run",
+        "path": "actions/release/promote-classify-workflow-run/action.yml",
+        "inputs": [
+          "source-checkout-outcome"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "release/promote-qualify",
+        "path": "actions/release/promote-qualify/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "request-json",
+          "runtime-ref",
+          "runtime-repository"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "release/promote-ref",
+        "path": "actions/release/promote-ref/action.yml",
+        "inputs": [
+          "allow-repository",
+          "branch-protection-bypass-apps",
+          "dry-run",
+          "expected-publication-version",
+          "generated-pull-request-token",
+          "generated-ref-update-token",
+          "generated-status-check-token",
+          "github-release",
+          "github-release-artifact-paths",
+          "promote-only-release-candidate",
+          "publication-capability-json",
+          "publication-gate-aggregate-json",
+          "publication-qualification-receipt-json",
+          "publication-used-qualification-nonces-json",
+          "publish-auth",
+          "publish-command",
+          "publish-dist-tag",
+          "publish-evidence-path",
+          "publish-mode",
+          "publish-package-main",
+          "publish-package-set-order",
+          "publish-rematerialize-on-resume",
+          "publish-required-artifacts-json",
+          "publish-required-artifacts-path",
+          "publish-sealed-bundle-manifest",
+          "publish-sealed-bundle-root",
+          "publish-source-locked",
+          "publish-source-ref",
+          "publish-source-sha",
+          "publish-tooling-sha",
+          "publish-transaction",
+          "publish-transaction-override",
+          "reconciliation-workspace",
+          "release-candidate-build-summary-path",
+          "release-candidate-family-assignment-id",
+          "release-candidate-family-evidence-required",
+          "release-candidate-family-evidence-root",
+          "release-candidate-family-initiative-id",
+          "release-candidate-passport-path",
+          "release-candidate-version",
+          "release-material-sha",
+          "release-passport",
+          "release-passport-attachment-command",
+          "release-passport-build-summary-path",
+          "release-passport-buildchain-self-kfd",
+          "release-passport-evidence-jsons",
+          "release-passport-github-artifact-attestation-policy-jsons",
+          "release-passport-impact-json",
+          "release-passport-invariant-passport-command",
+          "release-passport-invariant-passport-jsons",
+          "release-passport-kfd-1-witness-jsons",
+          "release-passport-kfd-2-claim-jsons",
+          "release-passport-kfd-3-artifact-verify-command",
+          "release-passport-kfd-3-artifact-witness-jsons",
+          "release-passport-kfd-3-prebuild-witness-jsons",
+          "release-passport-kfd-adopter-manifest-json",
+          "release-passport-kfd-product-gate-jsons",
+          "release-passport-kfd-support-matrix-json",
+          "release-passport-output-dir",
+          "release-passport-platform-manifest-paths",
+          "release-passport-product-name",
+          "release-passport-promotion-routing-json",
+          "release-passport-v4-consumer-policy-certification-json",
+          "release-passport-v4-consumer-policy-certification-root",
+          "release-passport-v4-runtime-resume-evidence-command",
+          "release-passport-v4-runtime-resume-evidence-json",
+          "release-tail-state-path",
+          "require-governance",
+          "require-publication-qualification",
+          "require-publish-source-lock",
+          "require-version-state",
+          "required-status-check",
+          "sha",
+          "tags",
+          "target-ref",
+          "token",
+          "transaction-state-path",
+          "verification-command"
+        ],
+        "inputCount": 78
+      },
+      {
+        "id": "release/promote-settle",
+        "path": "actions/release/promote-settle/action.yml",
+        "inputs": [
+          "needs-qualify-outputs-action",
+          "needs-qualify-outputs-requested-sha",
+          "needs-qualify-outputs-runtime-sha",
+          "request-json"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "release/propagation-deliver",
+        "path": "actions/release/propagation-deliver/action.yml",
+        "inputs": [
+          "badges-outcome",
+          "branch-outputs",
+          "controller-identities-outcome",
+          "controller-plan-outcome",
+          "core-node-outputs-node-path",
+          "downstream-update-outcome",
+          "lock-outcome",
+          "lock-outputs",
+          "plan-outcome",
+          "plan-outputs",
+          "plan-outputs-branch",
+          "plan-outputs-lock_path",
+          "plan-outputs-propagation_key",
+          "predecessors-ok",
+          "prepare-outcome",
+          "propagation-work-outcome",
+          "propagation-work-outputs-execute",
+          "request-json",
+          "runtime-outcome",
+          "secrets-propagation-token",
+          "summarize-outcome",
+          "verify-outcome"
+        ],
+        "inputCount": 22
+      },
+      {
+        "id": "release/propagation-materialize",
+        "path": "actions/release/propagation-materialize/action.yml",
+        "inputs": [
+          "branch-outputs",
+          "core-node-outputs-node-path",
+          "plan-outputs",
+          "plan-outputs-branch",
+          "plan-outputs-lock_path",
+          "plan-outputs-package_name",
+          "plan-outputs-package_version",
+          "plan-outputs-prepare_command",
+          "plan-outputs-propagation_key",
+          "plan-outputs-update_command",
+          "plan-outputs-verify_command",
+          "propagation-work-outputs-execute",
+          "request-json"
+        ],
+        "inputCount": 13
+      },
+      {
+        "id": "release/propagation-plan",
+        "path": "actions/release/propagation-plan/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "request-json",
+          "runtime-ref",
+          "runtime-repository",
+          "secrets-propagation-token"
+        ],
+        "inputCount": 5
+      },
+      {
+        "id": "release/resolve-promotion",
+        "path": "actions/release/resolve-promotion/action.yml",
+        "inputs": [
+          "request-json",
+          "workflow-ref",
+          "workflow-repository",
+          "workflow-sha"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "release/settle",
+        "path": "actions/release/settle/action.yml",
+        "inputs": [
+          "candidate-root",
+          "declaration",
+          "execute",
+          "github-token",
+          "http-token",
+          "provider-bindings",
+          "rehearsal-authority",
+          "rehearsal-capsule",
+          "rehearsal-evidence-path",
+          "rehearsal-mode",
+          "state-path"
+        ],
+        "inputCount": 11
+      },
+      {
+        "id": "release/signing-authority-deliver",
+        "path": "actions/release/signing-authority-deliver/action.yml",
+        "inputs": [
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "release/signing-authority-detached",
+        "path": "actions/release/signing-authority-detached/action.yml",
+        "inputs": [
+          "matrix-json",
+          "request-json",
+          "secrets-buildchain-detached-private-key-pkcs8-base64",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "release/signing-authority-intake",
+        "path": "actions/release/signing-authority-intake/action.yml",
+        "inputs": [
+          "matrix-json",
+          "request-json",
+          "secrets-buildchain-authority-token",
+          "secrets-buildchain-promotion-token",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 5
+      },
+      {
+        "id": "release/signing-authority-macos",
+        "path": "actions/release/signing-authority-macos/action.yml",
+        "inputs": [
+          "matrix-json",
+          "request-json",
+          "secrets-buildchain-macos-certificate-p12-base64",
+          "secrets-buildchain-macos-certificate-password",
+          "secrets-buildchain-macos-notary-api-issuer",
+          "secrets-buildchain-macos-notary-api-key-id",
+          "secrets-buildchain-macos-notary-api-key-p8-base64",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 8
+      },
+      {
+        "id": "release/signing-authority-windows",
+        "path": "actions/release/signing-authority-windows/action.yml",
+        "inputs": [
+          "matrix-json",
+          "request-json",
+          "secrets-buildchain-windows-certificate-password",
+          "secrets-buildchain-windows-certificate-pfx-base64",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 5
+      },
+      {
+        "id": "release/stable-candidate-qualification-qualify",
+        "path": "actions/release/stable-candidate-qualification-qualify/action.yml",
+        "inputs": [
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "release/tail-reseal-plan",
+        "path": "actions/release/tail-reseal-plan/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "request-json",
+          "secrets-buildchain-evidence-read-token"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "release/tail-reseal-platforms",
+        "path": "actions/release/tail-reseal-platforms/action.yml",
+        "inputs": [
+          "matrix-json",
+          "needs-plan-outputs-release-tail-provider-readback-root",
+          "needs-plan-outputs-request-artifact",
+          "needs-plan-outputs-runtime-sha",
+          "needs-plan-outputs-signing-authority-repository",
+          "needs-plan-outputs-signing-authority-run-id",
+          "needs-plan-outputs-signing-provider-readback-root",
+          "needs-plan-outputs-signing-result-artifact",
+          "needs-plan-outputs-source-run-id",
+          "request-json",
+          "secrets-buildchain-evidence-read-token",
+          "secrets-buildchain-signing-token",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 13
+      },
+      {
+        "id": "release/tail-reseal-seal",
+        "path": "actions/release/tail-reseal-seal/action.yml",
+        "inputs": [
+          "needs-plan-outputs-consumer-policy-receipt-root",
+          "needs-plan-outputs-platforms-json",
+          "needs-plan-outputs-request-artifact",
+          "needs-plan-outputs-runtime-sha",
+          "needs-plan-outputs-source-sha",
+          "needs-plan-outputs-source-tree-sha",
+          "needs-plan-outputs-target-version",
+          "needs-plan-outputs-warrant-readback-root",
+          "request-json"
+        ],
+        "inputCount": 9
+      },
+      {
+        "id": "release/verify-lineage",
+        "path": "actions/release/verify-lineage/action.yml",
+        "inputs": [],
+        "inputCount": 0
+      },
+      {
+        "id": "runtime/prepare",
+        "path": "actions/runtime/prepare/action.yml",
+        "inputs": [
+          "directory"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "runtime/provider-closure",
+        "path": "actions/runtime/provider-closure/action.yml",
+        "inputs": [
+          "repository",
+          "sha",
+          "tree"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "web/check-runtime-contract",
+        "path": "actions/web/check-runtime-contract/action.yml",
+        "inputs": [
+          "core-node",
+          "request-json",
+          "runtime-class",
+          "runtime-override",
+          "runtime-ref",
+          "runtime-sha",
+          "source-sha",
+          "workflow-ref"
+        ],
+        "inputCount": 8
+      },
+      {
+        "id": "web/web-apply-input-gate",
+        "path": "actions/web/web-apply-input-gate/action.yml",
+        "inputs": [
+          "needs-publication-decision-outputs-approved",
+          "needs-release-intent-outputs-production-release-approved",
+          "request-json"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "web/web-controller-plan",
+        "path": "actions/web/web-controller-plan/action.yml",
+        "inputs": [
+          "needs-release-intent-outputs-production-source-sha",
+          "needs-runtime-outputs-runtime-ref",
+          "needs-runtime-outputs-runtime-sha",
+          "request-json"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "web/web-controller-receipt",
+        "path": "actions/web/web-controller-receipt/action.yml",
+        "inputs": [
+          "needs-controller-plan-outputs-controller-plan-artifact",
+          "needs-external-publication-authority-result",
+          "needs-plan-outputs-build-outcome",
+          "needs-plan-outputs-verify-outcome",
+          "needs-plan-outputs-web-surface-channel",
+          "needs-plan-outputs-web-surface-cleanup-plan-json",
+          "needs-plan-result",
+          "needs-preview-apply-result",
+          "needs-preview-cleanup-result",
+          "needs-production-apply-result",
+          "needs-publication-authority-result",
+          "needs-release-intent-outputs-production-source-sha",
+          "needs-runtime-outputs-runtime-sha",
+          "needs-runtime-result",
+          "needs-staging-apply-result",
+          "request-json"
+        ],
+        "inputCount": 16
+      },
+      {
+        "id": "web/web-open-production-release-pr",
+        "path": "actions/web/web-open-production-release-pr/action.yml",
+        "inputs": [
+          "needs-runtime-outputs-runtime-sha",
+          "request-json",
+          "secrets-production-release-app-private-key",
+          "secrets-production-release-pr-token"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "web/web-plan",
+        "path": "actions/web/web-plan/action.yml",
+        "inputs": [
+          "job-workflow-ref",
+          "needs-apply-input-gate-outputs-web-surface-alias",
+          "needs-apply-input-gate-outputs-web-surface-channel",
+          "needs-release-intent-outputs-production-release-approved",
+          "needs-release-intent-outputs-production-source-sha",
+          "needs-runtime-outputs-rollback-ref",
+          "needs-runtime-outputs-runtime-class",
+          "needs-runtime-outputs-runtime-override",
+          "needs-runtime-outputs-runtime-ref",
+          "needs-runtime-outputs-runtime-sha",
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 12
+      },
+      {
+        "id": "web/web-preview-apply",
+        "path": "actions/web/web-preview-apply/action.yml",
+        "inputs": [
+          "needs-runtime-outputs-runtime-sha",
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "web/web-preview-cleanup",
+        "path": "actions/web/web-preview-cleanup/action.yml",
+        "inputs": [
+          "needs-runtime-outputs-runtime-sha",
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "web/web-production-apply",
+        "path": "actions/web/web-production-apply/action.yml",
+        "inputs": [
+          "needs-external-publication-authority-outputs-capability-json",
+          "needs-publication-authority-outputs-candidate-json",
+          "needs-publication-authority-outputs-capability-json",
+          "needs-release-intent-outputs-production-release-pr",
+          "needs-release-intent-outputs-production-release-source",
+          "needs-release-intent-outputs-production-source-sha",
+          "needs-runtime-outputs-rollback-ref",
+          "needs-runtime-outputs-runtime-sha",
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 10
+      },
+      {
+        "id": "web/web-publication-authority",
+        "path": "actions/web/web-publication-authority/action.yml",
+        "inputs": [
+          "needs-controller-plan-outputs-controller-plan-artifact",
+          "needs-plan-outputs-build-outcome",
+          "needs-plan-outputs-verify-outcome",
+          "needs-plan-result",
+          "needs-publication-decision-outputs-decision-json",
+          "needs-release-intent-outputs-production-source-sha",
+          "needs-runtime-outputs-runtime-sha",
+          "needs-runtime-result",
+          "request-json"
+        ],
+        "inputCount": 9
+      },
+      {
+        "id": "web/web-publication-decision",
+        "path": "actions/web/web-publication-decision/action.yml",
+        "inputs": [
+          "needs-release-intent-outputs-production-release-approved",
+          "needs-release-intent-outputs-production-release-pr",
+          "needs-release-intent-outputs-production-release-source",
+          "needs-release-intent-outputs-production-source-sha",
+          "needs-runtime-outputs-runtime-sha",
+          "request-json"
+        ],
+        "inputCount": 6
+      },
+      {
+        "id": "web/web-release-intent",
+        "path": "actions/web/web-release-intent/action.yml",
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "web/web-runtime",
+        "path": "actions/web/web-runtime/action.yml",
+        "inputs": [
+          "job-workflow-ref",
+          "job-workflow-sha",
+          "request-json"
+        ],
+        "inputCount": 3
+      },
+      {
+        "id": "web/web-staging-apply",
+        "path": "actions/web/web-staging-apply/action.yml",
+        "inputs": [
+          "needs-runtime-outputs-rollback-ref",
+          "needs-runtime-outputs-runtime-sha",
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "workflow/bootstrap-admit",
+        "path": "actions/workflow/bootstrap-admit/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "request-json"
+        ],
+        "inputCount": 2
+      },
+      {
+        "id": "workflow/bootstrap-dogfood-prepare",
+        "path": "actions/workflow/bootstrap-dogfood-prepare/action.yml",
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "workflow/bootstrap-dogfood-reconcile",
+        "path": "actions/workflow/bootstrap-dogfood-reconcile/action.yml",
+        "inputs": [
+          "needs-prepare-outputs-candidate-sha",
+          "needs-primary-alpha-outputs-result-json",
+          "needs-primary-conformance-outputs-result-json",
+          "needs-primary-stable-outputs-result-json",
+          "needs-recovery-alpha-outputs-result-json",
+          "needs-recovery-conformance-outputs-result-json",
+          "needs-recovery-stable-outputs-result-json"
+        ],
+        "inputCount": 7
+      },
+      {
+        "id": "workflow/bootstrap-execute",
+        "path": "actions/workflow/bootstrap-execute/action.yml",
+        "inputs": [
+          "needs-admit-outputs-admission-json",
+          "needs-admit-outputs-capability-id",
+          "needs-admit-outputs-runtime-sha",
+          "request-json",
+          "secrets-buildchain-promotion-token",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 6
+      },
+      {
+        "id": "workflow/bootstrap-recovery-admit",
+        "path": "actions/workflow/bootstrap-recovery-admit/action.yml",
+        "inputs": [
+          "request-json"
+        ],
+        "inputCount": 1
+      },
+      {
+        "id": "workflow/bootstrap-recovery-execute",
+        "path": "actions/workflow/bootstrap-recovery-execute/action.yml",
+        "inputs": [
+          "needs-recovery-admit-outputs-admission-json",
+          "needs-recovery-admit-outputs-runtime-sha",
+          "request-json",
+          "source-checkout-outcome"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "workflow/bootstrap-recovery-settle",
+        "path": "actions/workflow/bootstrap-recovery-settle/action.yml",
+        "inputs": [
+          "needs-recovery-admit-outputs-admission-json",
+          "needs-recovery-admit-outputs-runtime-sha",
+          "needs-recovery-execute-outputs-result-json",
+          "request-json"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "workflow/bootstrap-settle",
+        "path": "actions/workflow/bootstrap-settle/action.yml",
+        "inputs": [
+          "job-workflow-sha",
+          "needs-admit-outputs-admission-json",
+          "needs-execute-outputs-result-json",
+          "request-json"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "workflow/reject-request",
+        "path": "actions/workflow/reject-request/action.yml",
+        "inputs": [
+          "reason"
+        ],
+        "inputCount": 1
       }
     ],
     "sitePages": [
       {
-        "id": "action:github-artifact-attestation",
+        "id": "action:build/github-attestation",
         "category": "action"
       },
       {
-        "id": "action:macos-credential-island",
+        "id": "action:build/macos-credential-island",
         "category": "action"
       },
       {
-        "id": "action:promote-buildchain-ref",
+        "id": "action:build/run-lifecycle",
         "category": "action"
       },
       {
-        "id": "action:release-candidate-promote",
+        "id": "action:build/validate-config",
         "category": "action"
       },
       {
-        "id": "action:release-tail",
+        "id": "action:governance/report-issue",
         "category": "action"
       },
       {
-        "id": "action:report-buildchain-issue",
+        "id": "action:release/promote-candidate",
         "category": "action"
       },
       {
-        "id": "action:run-lifecycle",
+        "id": "action:release/promote-ref",
         "category": "action"
       },
       {
-        "id": "action:validate-config",
+        "id": "action:release/settle",
         "category": "action"
       },
       {
@@ -4911,6 +4068,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:bootstrap-recovery",
+        "category": "manual"
+      },
+      {
         "id": "manual:build-facts",
         "category": "manual"
       },
@@ -4920,6 +4081,10 @@
       },
       {
         "id": "manual:cli-reference",
+        "category": "manual"
+      },
+      {
+        "id": "manual:code-organization",
         "category": "manual"
       },
       {
@@ -5059,6 +4224,10 @@
         "category": "manual"
       },
       {
+        "id": "manual:release-promotion-request",
+        "category": "manual"
+      },
+      {
         "id": "manual:release-propagation",
         "category": "manual"
       },
@@ -5176,16 +4345,6 @@
       {
         "id": "adopter-delivery",
         "path": "docs/cli-reference.md",
-        "command": "buildchain adopter-delivery archive --input"
-      },
-      {
-        "id": "adopter-delivery",
-        "path": "docs/cli-reference.md",
-        "command": "buildchain adopter-delivery bootstrap --input"
-      },
-      {
-        "id": "adopter-delivery",
-        "path": "docs/cli-reference.md",
         "command": "buildchain adopter-delivery run --input"
       },
       {
@@ -5202,26 +4361,6 @@
         "id": "adopter-delivery",
         "path": "docs/cli-reference.md",
         "command": "buildchain adopter-delivery --help"
-      },
-      {
-        "id": "adopter-delivery",
-        "path": "docs/cli-reference.md",
-        "command": "buildchain adopter-delivery archive"
-      },
-      {
-        "id": "adopter-delivery",
-        "path": "docs/cli-reference.md",
-        "command": "buildchain adopter-delivery archive --help"
-      },
-      {
-        "id": "adopter-delivery",
-        "path": "docs/cli-reference.md",
-        "command": "buildchain adopter-delivery bootstrap"
-      },
-      {
-        "id": "adopter-delivery",
-        "path": "docs/cli-reference.md",
-        "command": "buildchain adopter-delivery bootstrap --help"
       },
       {
         "id": "adopter-delivery",
@@ -5257,16 +4396,6 @@
         "id": "adopter-delivery",
         "path": "docs/v4-adopter-delivery.md",
         "command": "buildchain adopter-delivery verify"
-      },
-      {
-        "id": "adopter-delivery",
-        "path": "docs/v4-adopter-delivery.md",
-        "command": "buildchain adopter-delivery bootstrap"
-      },
-      {
-        "id": "adopter-delivery",
-        "path": "docs/v4-adopter-delivery.md",
-        "command": "buildchain adopter-delivery archive"
       },
       {
         "id": "architecture",
@@ -9260,11 +8389,6 @@
       },
       {
         "id": "release-dry-run",
-        "path": "actions/promote-buildchain-ref/README.md",
-        "command": "buildchain release --dry-run"
-      },
-      {
-        "id": "release-dry-run",
         "path": "docs/cli-reference.md",
         "command": "buildchain release --dry-run --target-ref"
       },
@@ -9576,11 +8700,6 @@
       {
         "id": "release-tail",
         "path": "docs/cli-reference.md",
-        "command": "buildchain release-tail compat --hooks-json"
-      },
-      {
-        "id": "release-tail",
-        "path": "docs/cli-reference.md",
         "command": "buildchain release-tail init --declaration"
       },
       {
@@ -9612,16 +8731,6 @@
         "id": "release-tail",
         "path": "docs/cli-reference.md",
         "command": "buildchain release-tail --help"
-      },
-      {
-        "id": "release-tail",
-        "path": "docs/cli-reference.md",
-        "command": "buildchain release-tail compat"
-      },
-      {
-        "id": "release-tail",
-        "path": "docs/cli-reference.md",
-        "command": "buildchain release-tail compat --help"
       },
       {
         "id": "release-tail",
@@ -9780,7 +8889,7 @@
       },
       {
         "id": "sample-process-tree",
-        "path": "actions/run-lifecycle/README.md",
+        "path": "actions/build/run-lifecycle/README.md",
         "command": "buildchain sample process-tree"
       },
       {
@@ -10414,9 +9523,9 @@
     "cliRegistryPath": "dist/site/cli-registry.json",
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
-    "cliRegistryDigest": "547dde42a349a047f2aadcfc3ee9e3e31b6a7f6bfc75b7d37e5dcff7abd15308",
-    "workflowRegistryDigest": "6f33eb83557ec6d9f49c7d96745743adeed08eb27ae23a521cc8e616d111ee6a",
-    "pageRegistryDigest": "d098a2cbb1538f10a9e2f889acf1cf84ea00669ee88e4652984cbf2aa924775e"
+    "cliRegistryDigest": "064977352dff4ecf6696c7b91e7bb6cc647a2e87aa89c5dddd8127340f6d949c",
+    "workflowRegistryDigest": "751868bbcb576cafdb501f4f397959d285dfda7a54faadc9e48d8193418f6c7a",
+    "pageRegistryDigest": "26c549367d940db039ec58f7620ed66b2183a779740eff1902fa2a95ebbbc69f"
   },
   "comparison": {
     "missingCliRegistry": [],

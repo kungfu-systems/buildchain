@@ -9,7 +9,7 @@ import {
   parseFamilyQueueLeaseMarker,
   qualifyProjectCut,
   releaseFamilyQueueLease,
-} from "../scripts/project-cut-merge-queue-admission.mjs";
+} from "../packages/core/dev-delivery/commands/project-cut-merge-queue-admission.mjs";
 
 const ROOT = `sha256:${"a".repeat(64)}`;
 

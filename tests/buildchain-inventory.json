@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "release": "buildchain-v2",
+  "release": "buildchain-v4.1",
   "workflowSources": [
     {
       "repo": "workflows",
@@ -11,60 +11,60 @@
   "migratedActions": [],
   "internalActions": [
     {
-      "path": "actions/promote-buildchain-ref",
+      "path": "actions/release/promote-ref",
       "disposition": "buildchain-self-promotion",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/promote-buildchain-ref/dist/index.js"
+      "bundle": "actions/release/promote-ref/dist/index.js"
     },
     {
-      "path": "actions/macos-credential-island",
+      "path": "actions/build/macos-credential-island",
       "disposition": "isolated-macos-signing-and-notarization",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/macos-credential-island/dist/index.js"
+      "bundle": "actions/build/macos-credential-island/dist/index.js"
     },
     {
-      "path": "actions/report-buildchain-issue",
+      "path": "actions/governance/report-issue",
       "disposition": "consumer-feedback-issue-reporting",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/report-buildchain-issue/dist/index.js"
+      "bundle": "actions/governance/report-issue/dist/index.js"
     },
     {
-      "path": "actions/run-lifecycle",
+      "path": "actions/build/run-lifecycle",
       "disposition": "buildchain-reusable-build-surface",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/run-lifecycle/dist/index.js"
+      "bundle": "actions/build/run-lifecycle/dist/index.js"
     },
     {
-      "path": "actions/validate-config",
+      "path": "actions/build/validate-config",
       "disposition": "buildchain-config-preflight",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/validate-config/dist/index.js"
+      "bundle": "actions/build/validate-config/dist/index.js"
     },
     {
-      "path": "actions/github-artifact-attestation",
+      "path": "actions/build/github-attestation",
       "disposition": "github-keyless-linux-artifact-attestation",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/github-artifact-attestation/dist/index.js"
+      "bundle": "actions/build/github-attestation/dist/index.js"
     },
     {
-      "path": "actions/release-tail",
+      "path": "actions/release/settle",
       "disposition": "declarative-release-provider-transaction",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/release-tail/dist/index.js"
+      "bundle": "actions/release/settle/dist/index.js"
     },
     {
-      "path": "actions/release-candidate-promote",
+      "path": "actions/release/promote-candidate",
       "disposition": "v4-declarative-release-candidate-provider-plane",
       "runtime": "node24",
       "build": "tsup",
-      "bundle": "actions/release-candidate-promote/dist/index.js"
+      "bundle": "actions/release/promote-candidate/dist/index.js"
     }
   ],
   "retiredActionsExcluded": [
@@ -92,7 +92,7 @@
     ".github/workflows/.batch-pull-request.yml"
   ],
   "stableRefs": {
-    "actions": "kungfu-systems/buildchain/actions/<name>@v4",
+    "actions": "kungfu-systems/buildchain/actions/<capability>/<node>@v4",
     "workflows": "kungfu-systems/buildchain/.github/workflows/<workflow>.yml@v4"
   },
   "verification": [
@@ -173,8 +173,8 @@
         "heavyPackageManagersDeferred": true
       },
       "githubArtifactAttestation": {
-        "workflow": "github-artifact-attestation.yml",
-        "action": "actions/github-artifact-attestation",
+        "workflow": "public-release-artifact-attestation.yml",
+        "action": "actions/build/github-attestation",
         "signerRunner": "ubuntu-24.04",
         "compilerIdentityPreserved": true,
         "consumerSourceExecutedBySigner": false,
@@ -183,5 +183,5 @@
       }
     }
   },
-  "compositeActionOwnership": "architecture/build-orchestration.json#owners"
+  "compositeActionOwnership": "architecture/code-layout.json"
 }

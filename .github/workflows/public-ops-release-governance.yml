@@ -3,11 +3,6 @@ name: Release Governance Reconcile
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       branch:
         description: "Managed dev/alpha/release branch whose required checks will be inspected"
         required: true
@@ -22,8 +17,8 @@ on:
         required: false
         type: boolean
       buildchain-ref:
-        description: "Buildchain runtime ref containing the reconciliation command"
-        default: "v3"
+        description: "Optional explicit runtime ref. Empty binds the defining workflow SHA."
+        default: ""
         required: false
         type: string
     secrets:
@@ -50,7 +45,7 @@ on:
         type: boolean
       buildchain-ref:
         description: "Buildchain runtime ref containing the reconciliation command"
-        default: "v3"
+        default: ""
         required: false
         type: string
 
@@ -61,52 +56,22 @@ permissions:
   pull-requests: read
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   reconcile:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Reconcile required build aggregate
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ secrets['governance-token'] || secrets.BUILDCHAIN_PROMOTION_TOKEN || github.token }}
     steps:
-      - name: Checkout Buildchain runtime
+      - name: Check out workflow implementation
         uses: actions/checkout@v7.0.0
         with:
-          repository: kungfu-systems/buildchain
-          ref: ${{ inputs.buildchain-ref }}
-          path: .buildchain/runtime
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
           persist-credentials: false
-
-      - name: Reconcile release governance
-        shell: bash
-        env:
-          BUILDCHAIN_APPLY: ${{ inputs.apply }}
-          BUILDCHAIN_BRANCH: ${{ inputs.branch }}
-          BUILDCHAIN_CANDIDATE_SHA: ${{ inputs.candidate-sha }}
-        run: |
-          set -euo pipefail
-          args=(
-            reconcile
-            --repository "${GITHUB_REPOSITORY}"
-            --branch "${BUILDCHAIN_BRANCH}"
-            --candidate-sha "${BUILDCHAIN_CANDIDATE_SHA}"
-            --json
-          )
-          if [[ "${BUILDCHAIN_APPLY}" = "true" ]]; then
-            args+=(--apply)
-          fi
-          node .buildchain/runtime/scripts/reconcile-release-governance.mjs "${args[@]}" |
-            tee .buildchain-release-governance-reconciliation.json
-
-      - name: Upload reconciliation evidence
-        uses: actions/upload-artifact@v7.0.1
+      - name: Reconcile required build aggregate
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/governance/release-governance-reconcile
         with:
-          name: buildchain-release-governance-${{ inputs.candidate-sha }}
-          path: .buildchain-release-governance-reconciliation.json
-          if-no-files-found: error
+          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
+          request-json: ${{ toJSON(inputs) }}

@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   createComposePreviewRegistry,
   promoteComposePreview,
-} from "../scripts/oci-compose-preview.mjs";
+} from "../packages/core/publication/commands/oci-compose-preview.mjs";
 
 test("preview registry uses explicit package identity and never falls back to governance identity", async () => {
   const environment = {

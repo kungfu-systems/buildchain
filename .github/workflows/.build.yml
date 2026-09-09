@@ -50,7 +50,7 @@ jobs:
         path: source
         fetch-depth: 0
         persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/resolve-build-plan
+    - uses: ./.buildchain/runtime/actions/build/resolve-plan
       with:
         config-path: ${{ inputs.config-path }}
         workflow-ref: ${{ job.workflow_ref }}
@@ -79,28 +79,28 @@ jobs:
         ref: ${{ job.workflow_sha }}
         path: .buildchain/runtime
         persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+    - uses: ./.buildchain/runtime/actions/build/prepare-environment
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         checkout-source: 'true'
         tools: 'true'
-    - uses: ./.buildchain/runtime/actions/run-build-stage
+    - uses: ./.buildchain/runtime/actions/build/run-stage
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         stage: install
-    - uses: ./.buildchain/runtime/actions/run-build-stage
+    - uses: ./.buildchain/runtime/actions/build/run-stage
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         stage: build
-    - uses: ./.buildchain/runtime/actions/run-build-stage
+    - uses: ./.buildchain/runtime/actions/build/run-stage
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         stage: verify
-    - uses: ./.buildchain/runtime/actions/transfer-build-artifact
+    - uses: ./.buildchain/runtime/actions/build/transfer-artifact
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
@@ -127,28 +127,28 @@ jobs:
         ref: ${{ job.workflow_sha }}
         path: .buildchain/runtime
         persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+    - uses: ./.buildchain/runtime/actions/build/prepare-environment
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         checkout-source: 'true'
         tools: 'true'
-    - uses: ./.buildchain/runtime/actions/run-build-stage
+    - uses: ./.buildchain/runtime/actions/build/run-stage
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         stage: install
-    - uses: ./.buildchain/runtime/actions/run-build-stage
+    - uses: ./.buildchain/runtime/actions/build/run-stage
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         stage: build
-    - uses: ./.buildchain/runtime/actions/run-build-stage
+    - uses: ./.buildchain/runtime/actions/build/run-stage
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         stage: verify
-    - uses: ./.buildchain/runtime/actions/transfer-build-artifact
+    - uses: ./.buildchain/runtime/actions/build/transfer-artifact
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
@@ -182,13 +182,13 @@ jobs:
         ref: ${{ job.workflow_sha }}
         path: .buildchain/runtime
         persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+    - uses: ./.buildchain/runtime/actions/build/prepare-environment
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
         checkout-source: ${{ matrix.platform.kind == 'artifact' }}
         tools: 'false'
-    - uses: ./.buildchain/runtime/actions/sign-build-artifact
+    - uses: ./.buildchain/runtime/actions/build/sign-artifact
       with:
         plan: ${{ needs.plan.outputs.plan }}
         platform: ${{ toJSON(matrix.platform) }}
@@ -222,10 +222,10 @@ jobs:
         ref: ${{ job.workflow_sha }}
         path: .buildchain/runtime
         persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+    - uses: ./.buildchain/runtime/actions/build/prepare-environment
       with:
         plan: ${{ needs.plan.outputs.plan }}
-    - uses: ./.buildchain/runtime/actions/attest-build-artifact
+    - uses: ./.buildchain/runtime/actions/build/attest-artifact
       with:
         plan: ${{ needs.plan.outputs.plan }}
       id: attest
@@ -251,10 +251,10 @@ jobs:
         ref: ${{ job.workflow_sha }}
         path: .buildchain/runtime
         persist-credentials: false
-    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+    - uses: ./.buildchain/runtime/actions/build/prepare-environment
       with:
         plan: ${{ needs.plan.outputs.plan }}
-    - uses: ./.buildchain/runtime/actions/finalize-build-result
+    - uses: ./.buildchain/runtime/actions/build/finalize-result
       with:
         plan: ${{ needs.plan.outputs.plan }}
         jobs: ${{ toJSON(needs) }}

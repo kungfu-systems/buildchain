@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { projectRenamedMetrics } from "./source-metric-lineage.mjs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -19,7 +20,6 @@ import {
   evaluateTestBudgets,
   evaluateWorkflowBudgets,
 } from "./maintainability-governance.mjs";
-import { governUniversalFacadeWorkflowMetrics } from "./universal-facade-maintainability.mjs";
 import { evaluatePublicSurface } from "./maintainability-public-surface.mjs";
 
 function collectHotspots(
@@ -127,13 +127,6 @@ function ensureMaintainabilityRevisionsAvailable(
   );
 }
 
-function implementationPathAtPresent(root, historicalPath) {
-  const policyPath = path.join(root, "architecture/implementation-naming.json");
-  if (!fs.existsSync(policyPath)) return historicalPath;
-  const policy = readJson(root, "architecture/implementation-naming.json");
-  return policy.pathMigrations[historicalPath] || historicalPath;
-}
-
 function sourceMetricsAtRevision(root, revision) {
   const files = gitOutput(root, ["ls-tree", "-r", "--name-only", revision])
     .split("\n")
@@ -141,7 +134,7 @@ function sourceMetricsAtRevision(root, revision) {
     .sort();
   return Object.fromEntries(
     files.map((file) => [
-      implementationPathAtPresent(root, file),
+      file,
       analyzeSource(file, gitOutput(root, ["show", `${revision}:${file}`])),
     ]),
   );
@@ -156,7 +149,7 @@ function testMetricsAtRevision(root, revision) {
     .sort();
   return Object.fromEntries(
     files.map((file) => [
-      implementationPathAtPresent(root, file),
+      file,
       analyzeSource(file, gitOutput(root, ["show", `${revision}:${file}`])),
     ]),
   );
@@ -251,6 +244,17 @@ function evaluateRepositoryBudgets({ current, policy }) {
     ],
     ["workflowFiles", "maxWorkflowFiles", "workflow files"],
     ["workflowLines", "maxWorkflowLines", "workflow lines"],
+    ["actionDefinitions", "maxActionDefinitions", "action definitions"],
+    [
+      "actionDefinitionLines",
+      "maxActionDefinitionLines",
+      "action definition lines",
+    ],
+    [
+      "automationImplementationLines",
+      "maxAutomationImplementationLines",
+      "total automation implementation lines",
+    ],
   ];
   for (const [metric, ceiling, label] of checks) {
     if (!Number.isInteger(budgets[ceiling]) || budgets[ceiling] < 0) {
@@ -398,7 +402,13 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     root,
     "architecture/internal-capabilities.json",
   );
-  const baselineFiles = sourceMetricsAtRevision(root, enforcementRevision);
+  const lineage = projectRenamedMetrics({
+    root,
+    revision: enforcementRevision,
+    metrics: sourceMetricsAtRevision(root, enforcementRevision),
+    currentPaths: new Set(Object.keys(current.files)),
+  });
+  const baselineFiles = lineage.metrics;
   const extendedSourceFiles = sourceMetricsAtRevision(
     root,
     extendedCoverageRevision,
@@ -411,18 +421,12 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     root,
     extendedCoverageRevision,
   );
-  const { governed: governedCurrent, migration: facadeMigration } =
-    governUniversalFacadeWorkflowMetrics({
-      root,
-      current,
-      workflowMetricsAtRevision,
-    });
   const issues = evaluateExceptionGovernance({ policy });
   issues.push(...evaluateExceptionBudget({ policy }));
   const hotspots = collectHotspots(root, current, 20, debt.hotspots || []);
   issues.push(
     ...evaluateDebtAuthority({
-      current: governedCurrent,
+      current,
       policy,
       debt,
       capabilityIds: new Set(
@@ -438,7 +442,7 @@ function checkMaintainability({ root = process.cwd() } = {}) {
   );
   issues.push(
     ...evaluateWorkflowBudgets({
-      current: governedCurrent,
+      current,
       baselineFiles: baselineWorkflows,
       policy,
     }),
@@ -449,7 +453,6 @@ function checkMaintainability({ root = process.cwd() } = {}) {
       root,
       revision: enforcementRevision,
       policy,
-      migration: facadeMigration,
     }),
   );
   if (issues.length > 0) {
@@ -465,6 +468,7 @@ function checkMaintainability({ root = process.cwd() } = {}) {
     hydratedExtendedCoverageRevision,
     trackedFiles: current.repository.trackedFiles,
     sourceFiles: current.repository.handMaintainedSourceFiles,
+    measurementRenames: lineage.renames,
     publicSurface: current.publicSurface,
     hotspots: current.hotspots,
     governedDebtSurfaces: Object.values(debt.surfaces).reduce(

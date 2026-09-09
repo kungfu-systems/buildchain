@@ -44,7 +44,7 @@ test("v4 parity fixtures and public patrol use only v4 release coordinates", () 
     "tests/release-train.test.mjs",
     "tests/release-blocker-priority.test.mjs",
     "tests/release-train-self-dogfood.test.mjs",
-    ".github/workflows/dev-alpha-candidate-patrol.yml",
+    ".github/workflows/public-ops-alpha-candidate-patrol.yml",
   ];
   for (const relativePath of paths) {
     const source = fs.readFileSync(path.join(root, relativePath), "utf8");

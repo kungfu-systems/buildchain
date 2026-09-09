@@ -3,7 +3,7 @@
   "contract": "kungfu-buildchain-v4-runtime-ref-resume-authority/v1",
   "schemaAuthority": "contracts/v4-runtime-ref-resume-authority-v1.schema.json",
   "fixtureAuthority": "contracts/fixtures/v4-runtime-ref-resume-authority-v1/scenario.json",
-  "runtimeAuthority": "packages/core/runtime-ref-resume-authority.js",
+  "runtimeAuthority": "packages/core/consumer/runtime-ref-resume-authority.js",
   "mode": "v4-only",
   "transientSelection": {
     "trustedEvent": "workflow_dispatch",

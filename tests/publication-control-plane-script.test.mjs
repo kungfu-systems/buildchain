@@ -18,7 +18,7 @@ function fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCom
     ? `permissions:\n  contents: read\njobs:\n  promote:\n    # buildchain-publication-authority-job: legacy-promote\n    runs-on: ubuntu-24.04\n    permissions: {}\n  legacy-promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: write\n      id-token: write\n`
     : `permissions:\n  contents: read\njobs:\n  promote:\n    runs-on: ubuntu-24.04\n    permissions:\n      contents: read\n      id-token: write\n`;
   const responses = {
-    "repos/kungfu-systems/buildchain/contents/.github/workflows/release-candidate-promote.yml": {
+    "repos/kungfu-systems/buildchain/contents/.github/workflows/public-release-promote.yml": {
       content: Buffer.from(workflow).toString("base64"),
     },
     "repos/kungfu-systems/buildchain": { default_branch: "dev/v2/v2.14" },
@@ -113,7 +113,7 @@ function runAudit({ requiredCheckConclusion = "success", historicalSource = fals
   const gh = path.join(bin, "gh");
   materializeCommandShim(gh, fakeGithubCli(requiredCheckConclusion, historicalSource, largeSourceCommit, delegatedAuthority));
   const result = spawnSync(process.execPath, [
-    path.join(root, "scripts/audit-publication-control-plane.mjs"),
+    path.join(root, "packages/core/governance/commands/audit-publication-control-plane.mjs"),
     "--repository", "kungfu-systems/buildchain",
     "--branch", "alpha/v2/v2.14",
     "--source-sha", SOURCE_SHA,

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
-import { createGithubProductAdapters } from "../actions/release-candidate-promote/product-provider-github-adapters.js";
-import { selectRecoveredProductPublicationVersion } from "../packages/core/universal-workflow-bootstrap.js";
+import { createGithubProductAdapters } from "../packages/core/release/promote-candidate/product-provider-github-adapters.js";
+import { selectRecoveredProductPublicationVersion } from "../packages/core/workflow/universal-workflow-bootstrap.js";
 
 const sourceSha = "4".repeat(40);
 const stateSha = "5".repeat(40);
@@ -85,7 +85,7 @@ test("stable recovery uses the published stable version of an exact alpha candid
     "4.0.2",
   );
   const engine = fs.readFileSync(
-    new URL("../scripts/universal-workflow-engine.mjs", import.meta.url),
+    new URL("../packages/core/workflow/commands/universal-workflow-engine.mjs", import.meta.url),
     "utf8",
   );
   assert.match(

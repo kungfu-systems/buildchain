@@ -9,7 +9,7 @@ import {
   createManualUpstreamPickupPlan,
   resolveNpmRegistryRelease,
 } from "@kungfu-tech/buildchain/release-propagation";
-import { normalizeUpstreamRelease } from "../packages/core/release-propagation-release.js";
+import { normalizeUpstreamRelease } from "../packages/core/release/release-propagation-release.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const bin = path.join(root, "bin", "buildchain.mjs");

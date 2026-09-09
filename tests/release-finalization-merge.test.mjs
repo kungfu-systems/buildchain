@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-const script = fileURLToPath(new URL("../scripts/next-development-review.mjs", import.meta.url));
+const script = fileURLToPath(new URL("../packages/core/release/commands/next-development-review.mjs", import.meta.url));
 const repository = "kungfu-systems/buildchain", headSha = "a".repeat(40), baseSha = "b".repeat(40);
 const branch = `chore/v4-product-pr/release-v4-v4.0/cccccccccccc-${baseSha.slice(0, 12)}-${headSha.slice(0, 12)}`;
 

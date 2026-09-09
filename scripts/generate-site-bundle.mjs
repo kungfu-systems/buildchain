@@ -1,48 +1,47 @@
 #!/usr/bin/env node
-import { readWorkflowTaxonomy, workflowPath } from "./workflow-taxonomy.mjs";
+import { actionSurfaceAudit } from "./site-action-audit.mjs";
+import { actionInventory } from "../packages/core/contracts/action-inventory.js";
+import { readWorkflowTaxonomy, workflowPath } from "../packages/core/workflow/workflow-taxonomy.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
-import { createBuildchainContractWorld } from "../packages/core/buildchain-contract.js";
-import { createControllerRegistry } from "../packages/core/controller-evidence.js";
-import { createBuildchainPublicationAuthorityRegistry } from "../packages/core/buildchain-publication-authority.js";
+import { createBuildchainContractWorld } from "../packages/core/contracts/buildchain-contract.js";
+import { createControllerRegistry } from "../packages/core/observability/controller-evidence.js";
+import { createBuildchainPublicationAuthorityRegistry } from "../packages/core/governance/buildchain-publication-authority.js";
 import {
   BUILDCHAIN_AGENT_MANUALS,
   createBuildchainKfdClaimRegistry,
-} from "../packages/core/buildchain-kfd-claims.js";
+} from "../packages/core/adoption/buildchain-kfd-claims.js";
 import {
   collectKfdUpstreamFacts,
-} from "../packages/core/kfd.js";
-import { KFD_AGENT_HUB_ADOPTION_SCHEMA } from "../packages/core/kfd-agent-hub.js";
-import { KFD_PRODUCT_GATE_INPUT_SCHEMA } from "../packages/core/kfd-product-gates.js";
+} from "../packages/core/adoption/kfd.js";
+import { KFD_AGENT_HUB_ADOPTION_SCHEMA } from "../packages/core/adoption/kfd-agent-hub.js";
+import { KFD_PRODUCT_GATE_INPUT_SCHEMA } from "../packages/core/adoption/kfd-product-gates.js";
 import {
   createReadmeBadgeEndpointRegistry,
-} from "../packages/core/readme-badges.js";
+} from "../packages/core/web/readme-badges.js";
 import {
   RELEASE_PASSPORT_SCHEMA,
   createReleasePassportCheckManifest,
-} from "../packages/core/release-passport-contract.js";
+} from "../packages/core/release/release-passport-contract.js";
 import {
   collectPublicSurfaceReverseAudit,
   enumerateActionInputs,
   enumerateCliCommandsFromBin,
   enumerateWorkflowInputs,
-} from "../packages/core/public-surface-audit.js";
-import { createSurfaceTimestampPolicy } from "../packages/core/surface-manifest.js";
+} from "../packages/core/contracts/public-surface-audit.js";
+import { createSurfaceTimestampPolicy } from "../packages/core/contracts/surface-manifest.js";
 import { cliCommandMeta, nodeApiMeta } from "./site-capability-metadata.mjs";
 import { projectHomepageIntro } from "./site-bundle-homepage.mjs";
-import { BUILDCHAIN_USAGE } from "./buildchain-cli-help.mjs";
-import {
-  cliReferenceById,
-  createCliReference,
-} from "./public-reference.mjs";
+import { BUILDCHAIN_USAGE } from "../packages/core/workflow/commands/buildchain-cli-help.mjs";
+import { cliReferenceById, createCliReference } from "../packages/core/contracts/cli-reference.js";
 import { createSiteNodeApiRegistry } from "./site-reference-registry.mjs";
 import {
   BUILDCHAIN_COMMAND_REGISTRY,
   resolveBuildchainCommand,
-} from "../bin/internal/command-registry.mjs";
+} from "../packages/core/contracts/command-registry.mjs";
 
 const SITE_BUNDLE_CONTRACT = "kungfu-buildchain-site-bundle";
 const PUBLICATION_RELEASE_REGISTRY_CONTRACT = "kungfu-buildchain-publication-release-registry";
@@ -380,15 +379,15 @@ function publicSurfaceLifecycle({
   owner,
   maturity,
   nonDuplicationRationale,
-  introducedVersion = "pre-3.0.2-alpha.4",
+  introducedVersion = "4.1.0-alpha.0",
 }) {
   return {
     owner,
     maturity,
     introducedVersion,
-    compatibilityPromise: "preserved-through-the-v3-major-line",
+    compatibilityPromise: "current-contract-only",
     deprecationReplacement: "",
-    sunsetCondition: "explicit-breaking-change-review-in-a-future-major-line",
+    sunsetCondition: "explicit-contract-change-review",
     nonDuplicationRationale,
   };
 }
@@ -500,7 +499,7 @@ function createCliRegistry(packageJson) {
     contract: "kungfu-buildchain-cli-registry",
     binary: "buildchain",
     npmPackage: packageJson.name,
-    commandSource: "bin/internal/command-registry.mjs plus bin/buildchain.mjs help enumeration",
+    commandSource: "packages/core/contracts/command-registry.mjs plus bin/buildchain.mjs help enumeration",
     commands: commands.map((entry) => {
       const meta = cliCommandMeta(entry.id);
       return {
@@ -585,17 +584,27 @@ function workflowCapabilityGroup(entry) {
 }
 
 function actionCapabilityGroup(id) {
-  if (id === "github-artifact-attestation") return capabilityGroup("release-passport-trust");
-  if (id === "release-tail") return capabilityGroup("release-passport-trust");
-  if (id === "promote-buildchain-ref") return capabilityGroup("release-passport-trust");
-  if (id.startsWith("build-") || id === "run-lifecycle" || id === "validate-config") return capabilityGroup("reusable-build");
-  if (id === "report-buildchain-issue") return capabilityGroup("observability-diagnostics");
-  return capabilityGroup("api-cli-reference");
+  const owner = id.split("/")[0];
+  const groups = {
+    build: "reusable-build", release: "release-passport-trust",
+    publication: "release-passport-trust", governance: "observability-diagnostics",
+    "dev-delivery": "release-passport-trust", runtime: "api-cli-reference",
+    providers: "api-cli-reference", workflow: "api-cli-reference",
+    adoption: "reusable-build", paper: "reusable-build", web: "site-and-propagation",
+    observability: "observability-diagnostics", consumer: "governance-versioning", contracts: "api-cli-reference",
+  };
+  if (!groups[owner]) throw new Error(`action capability has no site group: ${owner}`);
+  return capabilityGroup(groups[owner]);
 }
 
 function buildSitePages() {
   const docsPages = listMarkdownFiles("docs").map((relPath) => sitePage(relPath, "manual", "/docs"));
-  const actionPages = immediateReadmes("actions").map((relPath) => sitePage(relPath, "action", "/actions"));
+  const actionPages = actionInventory(root)
+    .map(({ directory, capability, node }) => ({ file: `${directory}/README.md`, capability, node }))
+    .filter(({ file }) => fs.existsSync(path.join(root, file)))
+    .map(({ file, capability, node }) => sitePage(file, "action", "/actions", {
+      id: `action:${capability}/${node}`, slug: `${capability}/${node}`, route: `/actions/${capability}/${node}`,
+    }));
   const fixturePages = immediateReadmes("fixtures").map((relPath) => sitePage(relPath, "fixture", "/fixtures"));
   const apiPages = [
     sitePage("packages/core/README.md", "api", "/api", {
@@ -747,7 +756,7 @@ function buildSiteBundle() {
     deterministicInputs: [
       "README.md",
       "docs/*.md",
-      "actions/*/README.md",
+      "actions/*/*/README.md",
       "fixtures/*/README.md",
       "packages/core/README.md",
       "package.json#exports",
@@ -893,22 +902,12 @@ function buildSiteBundle() {
           introducedVersion: engineeringHousekeeper ? packageJson.version : undefined,
           nonDuplicationRationale: engineeringHousekeeper
             ? "One reusable policy and evidence boundary owns Engineering Housekeeper execution; scheduled callers contain cadence values only."
-            : "Existing workflow identity retained for caller compatibility and repository orchestration.",
+            : "Canonical workflow owns one declared API or orchestration responsibility.",
         }),
       };
     }),
-    actionSource: "actions/*/action.yml reverse input enumeration",
-    actions: enumerateActionInputs({ root }).map((entry) => ({
-      ...entry,
-      capabilityGroup: actionCapabilityGroup(entry.id),
-      status: "active",
-      ...publicSurfaceLifecycle({
-        owner: "buildchain-actions",
-        maturity: "stable",
-        introducedVersion: entry.id.startsWith("build-") ? "4.0.9-alpha.0" : undefined,
-        nonDuplicationRationale: "Existing action identity retained as the canonical composite or JavaScript action boundary.",
-      }),
-    })),
+    actionSource: "actions/*/*/action.yml reverse input enumeration",
+    actions: actionSurfaceAudit({ root, actionCapabilityGroup, publicSurfaceLifecycle }),
   };
   const controllerRegistry = createControllerRegistry({ workflows: workflowRegistry.workflows });
   const publicationAuthorityRegistry = createBuildchainPublicationAuthorityRegistry({ root });

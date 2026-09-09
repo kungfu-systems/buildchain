@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   patrol:
-    uses: ./.github/workflows/patrol-monthly.yml
+    uses: ./.github/workflows/public-ops-patrol-monthly.yml
     with:
       buildchain-ref: ${{ inputs.buildchain-ref || 'v4-alpha' }}
       dry-run: ${{ inputs.dry-run || true }}

@@ -60,7 +60,7 @@ commands = [
 command = "node scripts/generate-site-bundle.mjs"
 
 [lifecycle.publish]
-command = "node scripts/npm-publish-transaction.mjs"
+command = "node packages/core/publication/commands/npm-publish-transaction.mjs"
 
 [publish]
 shared_alpha_authority_major = 4
@@ -77,8 +77,6 @@ effect_default = "disabled"
 contract = "kungfu-buildchain-v4-adopter-delivery/v1"
 input_path = "contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json"
 readback_path = ".buildchain/adopter-delivery/readback.json"
-bootstrap_path = "contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json"
-archive_path = "contracts/fixtures/v4-adopter-delivery-v1/archive-template.json"
 result_path = ".buildchain/adopter-delivery/result.json"
 driver_selector = "json-assertion"
 artifact_profile_selector = "git-commit"
@@ -164,7 +162,7 @@ go = "1.25.x"
 
 [build.artifacts]
 name = "buildchain"
-paths = ["dist/site", "actions/run-lifecycle/dist"]
+paths = ["dist/site", "actions/build/run-lifecycle/dist"]
 min_files = 1
 retention_days = 7
 

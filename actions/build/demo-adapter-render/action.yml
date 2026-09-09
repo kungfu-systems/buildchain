@@ -1,0 +1,119 @@
+name: demo-adapter-render
+description: Execute the demo-adapter render capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  job-workflow-sha:
+    description: Caller job.workflow_sha value.
+    required: true
+  needs-gate-outputs-gate-artifact-name:
+    description: Caller needs.gate.outputs.gate-artifact-name value.
+    required: true
+  needs-gate-outputs-gate-root:
+    description: Caller needs.gate.outputs.gate-root value.
+    required: true
+  needs-gate-outputs-source-sha:
+    description: Caller needs.gate.outputs.source-sha value.
+    required: true
+outputs:
+  media-artifact-name:
+    description: media-artifact-name node result.
+    value: ${{ steps.finalize.outputs.media-artifact-name }}
+  media-artifact-id:
+    description: media-artifact-id node result.
+    value: ${{ steps.upload.outputs.artifact-id }}
+  media-artifact-digest:
+    description: media-artifact-digest node result.
+    value: ${{ steps.upload.outputs.artifact-digest }}
+  media-artifact-url:
+    description: media-artifact-url node result.
+    value: ${{ steps.upload.outputs.artifact-url }}
+  media-root:
+    description: media-root node result.
+    value: ${{ steps.finalize.outputs.media-root }}
+  media-profile:
+    description: media-profile node result.
+    value: ${{ steps.finalize.outputs.media-profile }}
+  media-qualification-root:
+    description: media-qualification-root node result.
+    value: ${{ steps.finalize.outputs.media-qualification-root }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout exact Buildchain workflow runtime
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.job-workflow-sha) }}
+        path: .buildchain/runtime
+        clean: true
+        persist-credentials: false
+    - name: Prepare exact workflow runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Download exact passing Gate bundle
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: ${{ fromJSON(inputs.needs-gate-outputs-gate-artifact-name) }}
+        path: gate-bundle
+    - name: Verify exact Gate bundle
+      shell: bash
+      env:
+        GATE_ROOT: ${{ fromJSON(inputs.needs-gate-outputs-gate-root) }}
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+        SOURCE_SHA: ${{ fromJSON(inputs.needs-gate-outputs-source-sha) }}
+        MEDIA_PROFILE: ${{ fromJSON(inputs.request-json).media-profile }}
+      run: |
+        set -euo pipefail
+        mkdir -p render-diagnostics
+        node .buildchain/runtime/packages/core/build/commands/auditable-demo.mjs verify-gate \
+          --bundle "${GITHUB_WORKSPACE}/gate-bundle" \
+          --expected-root "${GATE_ROOT}" \
+          --renderer-image "${RENDERER_IMAGE}" \
+          --source-sha "${SOURCE_SHA}" \
+          --media-profile "${MEDIA_PROFILE}"
+    - name: Render qualified media with immutable network-disabled renderer
+      shell: bash
+      env:
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-adapter.mjs" render
+    - name: Independently inspect web-delivery media
+      if: ${{ fromJSON(inputs.request-json).media-profile != 'archive-v1' }}
+      shell: bash
+      env:
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-adapter.mjs" inspect-render
+    - name: Finalize content-addressed media bundle
+      id: finalize
+      shell: bash
+      env:
+        GATE_ROOT: ${{ fromJSON(inputs.needs-gate-outputs-gate-root) }}
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+        SOURCE_SHA: ${{ fromJSON(inputs.needs-gate-outputs-source-sha) }}
+        MEDIA_PROFILE: ${{ fromJSON(inputs.request-json).media-profile }}
+      run: |
+        node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-adapter.mjs" finalize-media
+    - name: Upload content-addressed media bundle
+      id: upload
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: ${{ steps.finalize.outputs.media-artifact-name }}
+        path: media-bundle
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false
+    - name: Upload render diagnostics
+      if: ${{ always() }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: auditable-demo-render-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+        path: render-diagnostics
+        if-no-files-found: warn
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false

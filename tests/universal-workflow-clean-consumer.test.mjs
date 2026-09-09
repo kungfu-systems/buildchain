@@ -1,29 +1,23 @@
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 test("the Bootstrap shell prepares a clean release consumer before candidate execution", () => {
-  const workflow = fs.readFileSync(
-    new URL("../.github/workflows/bootstrap.yml", import.meta.url),
-    "utf8",
-  );
-  const setup = workflow.indexOf("name: Set up release-promotion Node.js");
-  const install = workflow.indexOf(
-    "name: Install release-promotion consumer dependencies",
-  );
-  const execute = workflow.indexOf("name: Execute candidate engine");
-  assert.ok(setup >= 0 && install > setup && execute > install);
-  assert.match(
-    workflow,
-    /capability-id: \$\{\{ steps\.inspect\.outputs\.capability-id \}\}[\s\S]*echo "capability-id=\$\(jq -r '\.capability\.id'/u,
-  );
-  assert.match(
-    workflow,
-    /if: \$\{\{ needs\.admit\.outputs\.capability-id == 'release-candidate-promote' \}\}[\s\S]*corepack pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts/u,
-  );
+  const graph = inspectWorkflowJob(".github/workflows/public-ops-bootstrap.yml", "execute");
+  const names = graph.steps.map(step => step.name);
+  const setup = names.indexOf("Set up release-promotion Node.js"), install = names.indexOf("Install release-promotion consumer dependencies");
+  assert.ok(setup >= 0 && install > setup && names.indexOf("Execute candidate engine") > install);
+  const step = graph.steps[install];
+  assert.match(step.if, /release-candidate-promote/);
+  assert.match(step.run, /corepack pnpm@11\.7\.0 install --frozen-lockfile --ignore-scripts/);
+  const admit = inspectWorkflowJob(".github/workflows/public-ops-bootstrap.yml", "admit");
+  assert.ok(admit.job.outputs["capability-id"]);
+  assert.ok(admit.steps.some(step => step.id === "inspect"));
 });
+
 test("the exact candidate runtime can prepare an older clean Bootstrap consumer", () => {
   const engine = fs.readFileSync(
-    new URL("../scripts/universal-workflow-engine.mjs", import.meta.url),
+    new URL("../packages/core/workflow/commands/universal-workflow-engine.mjs", import.meta.url),
     "utf8",
   );
   const execute = engine.indexOf("async function executeReleasePromotion");

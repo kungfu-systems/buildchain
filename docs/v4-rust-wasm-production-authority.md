@@ -26,9 +26,9 @@ workflow 输入输出等副作用边界。权威契约见
 
 ## 分发与调用
 
-`packages/core/buildchain-domain.wasm` 与 JavaScript 一起提交和发布。三个生产 Action
+`packages/core/runtime/buildchain-domain.wasm` 与 JavaScript 一起提交和发布。三个生产 Action
 在构建时把完全相同的字节复制到各自 `dist/`；运行时不进入调用方仓库寻找 Rust
-源码，也不要求安装 Rust。`packages/core/domain-wasm.js` 从自身相邻路径同步读取
+源码，也不要求安装 Rust。`packages/core/runtime/domain-wasm.js` 从自身相邻路径同步读取
 artifact，先核验生成元数据中的 SHA-256，再实例化 WebAssembly 并通过封闭 JSON/bytes
 ABI 调用领域操作。
 

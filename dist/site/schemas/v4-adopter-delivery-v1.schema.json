@@ -16,7 +16,7 @@
     "schemaVersion": { "const": 1 },
     "contract": { "const": "kungfu-buildchain-v4-adopter-delivery/v1" },
     "driverSelector": {
-      "enum": ["json-assertion", "kfd-category", "legacy-kfd"]
+      "enum": ["json-assertion", "kfd-category"]
     },
     "artifactProfileSelector": { "enum": ["git-commit", "package"] },
     "request": { "$ref": "#/$defs/request" },

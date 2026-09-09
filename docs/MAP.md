@@ -46,6 +46,8 @@ These entrypoints keep common destinations within three meaningful hops:
 README or this map, the role entry, and the normative contract or generated
 reference.
 
+The current repository layout is defined in [Code organization](code-organization.md).
+
 ## Capability Coverage
 
 This package should be usable by an agent from the npm artifact alone. The
@@ -95,7 +97,7 @@ workflow, action, and Node API export also carries a `capabilityGroup`,
 | Node API / package exports | `dist/site/node-api-registry.json`, `dist/site/release-provenance.json` | [`cli.md`](cli.md#node-api-and-package-exports) |
 
 `dist/site/kfd-claims.json` is generated from
-`packages/core/buildchain-kfd-claims.js`. Treat that module and JSON file as the
+`packages/core/adoption/buildchain-kfd-claims.js`. Treat that module and JSON file as the
 source claim registry; this map and the manuals explain those claims but do not
 replace them.
 
@@ -173,9 +175,9 @@ replace them.
 | How do I deploy a site/app preview, staging, or production surface? | [`web-surface-deployments.md`](web-surface-deployments.md) | use | stable |
 | How do I publish observed infrastructure contracts for downstream consumers? | [`infra-contract.md`](infra-contract.md) | use | preview |
 | How do I operate a repeatable, disabled-by-default, budget-fail-closed AWS Windows JIT campaign? | [`aws-us-elastic-runner-burst-plane.md`](aws-us-elastic-runner-burst-plane.md#phase-2-operator-workflow) | use/verify | preview |
-| How do I use the active actions directly? | [`../actions/validate-config/README.md`](../actions/validate-config/README.md), [`../actions/run-lifecycle/README.md`](../actions/run-lifecycle/README.md), [`../actions/promote-buildchain-ref/README.md`](../actions/promote-buildchain-ref/README.md), [`../actions/release-candidate-promote/README.md`](../actions/release-candidate-promote/README.md), [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md), [`../actions/github-artifact-attestation/README.md`](../actions/github-artifact-attestation/README.md), [`../actions/macos-credential-island/README.md`](../actions/macos-credential-island/README.md), [`../actions/release-tail/README.md`](../actions/release-tail/README.md); `dist/site/workflow-registry.json#actions` is authoritative for the action inventory. | use | stable |
-| Where are shared build stages maintained? | [resolve-build-plan](../actions/resolve-build-plan/action.yml), [prepare-build-environment](../actions/prepare-build-environment/action.yml), [run-build-stage](../actions/run-build-stage/action.yml), [transfer-build-artifact](../actions/transfer-build-artifact/action.yml), [sign-build-artifact](../actions/sign-build-artifact/action.yml), [attest-build-artifact](../actions/attest-build-artifact/action.yml), [finalize-build-result](../actions/finalize-build-result/action.yml); [ownership](../architecture/build-orchestration.json) | contribute | active |
-| How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/report-buildchain-issue/README.md`](../actions/report-buildchain-issue/README.md) | use | stable |
+| How do I use the active actions directly? | [`../actions/build/validate-config/README.md`](../actions/build/validate-config/README.md), [`../actions/build/run-lifecycle/README.md`](../actions/build/run-lifecycle/README.md), [`../actions/release/promote-ref/README.md`](../actions/release/promote-ref/README.md), [`../actions/release/promote-candidate/README.md`](../actions/release/promote-candidate/README.md), [`../actions/governance/report-issue/README.md`](../actions/governance/report-issue/README.md), [`../actions/build/github-attestation/README.md`](../actions/build/github-attestation/README.md), [`../actions/build/macos-credential-island/README.md`](../actions/build/macos-credential-island/README.md), [`../actions/release/settle/README.md`](../actions/release/settle/README.md); `dist/site/workflow-registry.json#actions` is authoritative for the action inventory. | use | stable |
+| Where are shared build stages maintained? | [resolve-build-plan](../actions/build/resolve-plan/action.yml), [prepare-build-environment](../actions/build/prepare-environment/action.yml), [run-build-stage](../actions/build/run-stage/action.yml), [transfer-build-artifact](../actions/build/transfer-artifact/action.yml), [sign-build-artifact](../actions/build/sign-artifact/action.yml), [attest-build-artifact](../actions/build/attest-artifact/action.yml), [finalize-build-result](../actions/build/finalize-result/action.yml); [ownership](../architecture/build-orchestration.json) | contribute | active |
+| How can a consumer workflow report a Buildchain-owned failure back to Buildchain? | [`consumer-issue-reporting.md`](consumer-issue-reporting.md) + [`../actions/governance/report-issue/README.md`](../actions/governance/report-issue/README.md) | use | stable |
 | What do the fixture repositories demonstrate? | [`../fixtures/libnode-shaped/README.md`](../fixtures/libnode-shaped/README.md), [`../fixtures/publish-transaction-shaped/README.md`](../fixtures/publish-transaction-shaped/README.md), [`../fixtures/web-surface-shaped/README.md`](../fixtures/web-surface-shaped/README.md), [`../fixtures/publication-artifact-shaped/README.md`](../fixtures/publication-artifact-shaped/README.md) | verify | stable |
 | What license and contribution terms apply? | [`../LICENSE`](../LICENSE) + [`../LICENSE-POLICY.md`](../LICENSE-POLICY.md) | use | stable |
 | What trademark, official-service, and provider-compliance boundaries apply? | [`../TRADEMARK.md`](../TRADEMARK.md) + [`../ACCEPTABLE_USE.md`](../ACCEPTABLE_USE.md) + [`../PROVIDER_COMPLIANCE.md`](../PROVIDER_COMPLIANCE.md) | use | stable |

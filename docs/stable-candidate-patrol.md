@@ -125,7 +125,7 @@ permissions:
 
 jobs:
   stable:
-    uses: kungfu-systems/buildchain/.github/workflows/stable-candidate-patrol.yml@v4
+    uses: kungfu-systems/buildchain/.github/workflows/public-ops-stable-candidate-patrol.yml@v4
     with:
       release-now: ${{ inputs.release-now }}
       dry-run: false

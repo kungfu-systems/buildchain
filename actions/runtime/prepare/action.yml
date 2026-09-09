@@ -1,0 +1,27 @@
+name: Prepare the exact Buildchain runtime
+description: Install the runtime's locked production dependencies on Node 24.
+inputs:
+  directory:
+    description: Checked-out Buildchain runtime directory.
+    default: .buildchain/workflow-shell
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Retain the Buildchain Node executable
+      id: node
+      shell: bash
+      run: node -e 'require("node:fs").appendFileSync(process.env.GITHUB_OUTPUT, "path=" + process.execPath.replaceAll("\\", "/") + "\n")'
+    - name: Install locked runtime dependencies
+      shell: bash
+      env:
+        BUILDCHAIN_RUNTIME_DIRECTORY: ${{ inputs.directory }}
+      run: |
+        corepack enable
+        corepack pnpm --dir "$BUILDCHAIN_RUNTIME_DIRECTORY" install --frozen-lockfile --prod --ignore-scripts
+outputs:
+  node-path:
+    description: Exact Node 24 executable for Buildchain after the caller selects its own toolchain.
+    value: ${{ steps.node.outputs.path }}

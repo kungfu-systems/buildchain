@@ -1,5 +1,4 @@
 name: Dev Merge Queue Governance
-
 on:
   push:
     branches:
@@ -8,23 +7,21 @@ on:
       - .buildchain/buildchain.toml
       - .github/workflows/**
       - bin/buildchain.mjs
-      - packages/core/buildchain-config.js
-      - scripts/dev-merge-queue.mjs
+      - packages/core/consumer/buildchain-config.js
+      - packages/core/dev-delivery/commands/dev-merge-queue.mjs
   workflow_dispatch:
     inputs:
       branch:
-        description: "Protected Buildchain dev branch"
+        description: Protected Buildchain dev branch
         required: true
         type: string
       apply:
-        description: "Apply the reconciled policy after emitting the plan"
+        description: Apply the reconciled policy after emitting the plan
         required: false
         default: false
         type: boolean
-
 permissions:
   contents: read
-
 jobs:
   reconcile:
     name: Reconcile declared dev merge queue
@@ -39,40 +36,18 @@ jobs:
         with:
           ref: ${{ env.BUILDCHAIN_TARGET_BRANCH }}
           persist-credentials: false
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+        id: source-checkout
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          node-version: "24"
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Reconcile declared policy
-        shell: bash
-        run: |
-          set -euo pipefail
-          args=(
-            dev merge-queue
-            --cwd .
-            --repository "$GITHUB_REPOSITORY"
-            --branch "$BUILDCHAIN_TARGET_BRANCH"
-            --from-config
-          )
-          if [[ "$BUILDCHAIN_APPLY" == "true" ]]; then
-            args+=(--apply)
-          fi
-          node bin/buildchain.mjs "${args[@]}" | tee .buildchain-dev-merge-queue.json
-          {
-            echo "## Dev merge queue governance"
-            echo
-            echo "- branch: $BUILDCHAIN_TARGET_BRANCH"
-            echo "- mode: $(jq -r '.policyResolution.mode' .buildchain-dev-merge-queue.json)"
-            echo "- action: $(jq -r '.action' .buildchain-dev-merge-queue.json)"
-            echo "- applied: $(jq -r '.applied' .buildchain-dev-merge-queue.json)"
-            echo "- source branch: $(jq -r '.policyResolution.sourceBranch // "none"' .buildchain-dev-merge-queue.json)"
-          } >> "$GITHUB_STEP_SUMMARY"
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+        if: ${{ always() }}
+      - name: Reconcile declared dev merge queue
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/merge-queue-reconcile
+        if: ${{ always() }}
+        with:
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}

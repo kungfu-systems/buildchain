@@ -1,0 +1,134 @@
+name: Admit exact source
+description: Owned source node of protected dev delivery.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  github-token:
+    description: Provider token; supplied only in a credentialed job.
+    required: false
+    default: ''
+outputs:
+  runtime-sha:
+    description: runtime-sha.
+    value: ${{ steps.runtime.outputs.sha }}
+  runtime-root:
+    description: runtime-root.
+    value: ${{ steps.runtime.outputs.root }}
+  target-branch:
+    description: target-branch.
+    value: ${{ steps.target.outputs.branch }}
+  target-branch-artifact:
+    description: target-branch-artifact.
+    value: ${{ steps.target.outputs.branch-artifact }}
+  proof-source-proof-root:
+    description: proof-source-proof-root.
+    value: ${{ steps.proof.outputs.source-proof-root }}
+  project-cut-proof-root:
+    description: project-cut-proof-root.
+    value: ${{ steps.project-cut.outputs.proof-root }}
+  proof-outcome:
+    description: proof-outcome.
+    value: ${{ steps.proof.outcome }}
+  qualify-outcome:
+    description: qualify-outcome.
+    value: ${{ steps.qualify.outcome }}
+runs:
+  using: composite
+  steps:
+  - uses: actions/setup-node@v6.4.0
+    with:
+      node-version: '24'
+  - name: Resolve target branch
+    id: target
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" target
+    env:
+      INPUT_TARGET_BRANCH: ${{ fromJSON(inputs.request-json).target-branch }}
+      WARRANT_MODE: ${{ fromJSON(inputs.request-json).delivery-warrant-mode }}
+      EXPECTED_PR: ${{ fromJSON(inputs.request-json).expected-pr-number }}
+      EXPECTED_HEAD: ${{ fromJSON(inputs.request-json).expected-head-sha }}
+      DRY_RUN: ${{ fromJSON(inputs.request-json).dry-run }}
+  - name: Validate native qualification contract before Warrant admission
+    if: fromJSON(inputs.request-json).delivery-warrant-mode == 'required'
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" contract
+    env:
+      DELIVERY_CLASS: ${{ fromJSON(inputs.request-json).delivery-class }}
+      ENVIRONMENT_ROOT: ${{ fromJSON(inputs.request-json).environment-root }}
+  - name: Require explicit v4 delivery runtime authority
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" selector
+    env:
+      BUILDCHAIN_REF: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+  - name: Checkout Buildchain runtime
+    uses: actions/checkout@v7.0.0
+    with:
+      repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+      ref: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+      path: .buildchain/runtime
+      persist-credentials: false
+  - name: Root the once-resolved Buildchain runtime
+    id: runtime
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" runtime
+    env:
+      BUILDCHAIN_REPOSITORY: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+      BUILDCHAIN_REF: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+  - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+    with:
+      directory: .buildchain/runtime
+  - name: Reject a locked protected branch before Warrant selection
+    if: fromJSON(inputs.request-json).delivery-warrant-mode == 'required'
+    shell: bash
+    env:
+      GH_TOKEN: ${{ inputs.github-token || github.token }}
+      TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" unlocked
+  - name: Verify optional exact Project Cut replay proof
+    id: project-cut
+    if: fromJSON(inputs.request-json).project-cut-proof-json != ''
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" project-cut
+    env:
+      PROJECT_CUT_PROOF_JSON: ${{ fromJSON(inputs.request-json).project-cut-proof-json }}
+  - name: Qualify exact source before scheduling
+    id: qualify
+    if: fromJSON(inputs.request-json).delivery-warrant-mode != 'off'
+    continue-on-error: true
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" qualify
+    env:
+      GITHUB_TOKEN: ${{ inputs.github-token || github.token }}
+      TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+      EXPECTED_PR: ${{ fromJSON(inputs.request-json).expected-pr-number }}
+      EXPECTED_HEAD: ${{ fromJSON(inputs.request-json).expected-head-sha }}
+      WARRANT_MODE: ${{ fromJSON(inputs.request-json).delivery-warrant-mode }}
+      BUILDCHAIN_DEV_PR_WARRANT_MODE: ${{ fromJSON(inputs.request-json).delivery-warrant-mode == 'required' && 'required'
+        || 'off' }}
+      DRY_RUN: ${{ fromJSON(inputs.request-json).dry-run }}
+      SOURCE_PATCH_ROOT: ${{ fromJSON(inputs.request-json).source-patch-root }}
+      PROJECT_CUT_PROOF_PATH: ${{ steps.project-cut.outputs.path }}
+      BUILDCHAIN_DEV_PR_DIAGNOSTIC_CONTEXT: ${{ fromJSON(inputs.request-json).diagnostic-context }}
+      BUILDCHAIN_DEV_PR_REQUIRED_CHECKS: ${{ fromJSON(inputs.request-json).required-status-checks }}
+      BUILDCHAIN_DEV_PR_READY_LABEL: ${{ fromJSON(inputs.request-json).ready-label }}
+      BUILDCHAIN_DEV_PR_BLOCK_LABELS: ${{ fromJSON(inputs.request-json).block-labels }}
+      BUILDCHAIN_DEV_PR_ALLOWED_HEAD_PREFIXES: ${{ fromJSON(inputs.request-json).allowed-head-prefixes }}
+      BUILDCHAIN_DEV_PR_REQUIRE_APPROVAL: ${{ fromJSON(inputs.request-json).require-approval }}
+      BUILDCHAIN_DEV_PR_SAME_REPOSITORY_ONLY: ${{ fromJSON(inputs.request-json).same-repository-only }}
+      BUILDCHAIN_DEV_PR_QUEUE_ADMISSION_CONTEXT: ${{ fromJSON(inputs.request-json).queue-admission-context }}
+  - name: Seal Source Qualification Proof
+    id: proof
+    if: fromJSON(inputs.request-json).delivery-warrant-mode != 'off' && steps.qualify.outcome == 'success'
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" proof
+    env:
+      TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+      EXPECTED_HEAD: ${{ fromJSON(inputs.request-json).expected-head-sha }}
+      SOURCE_IDENTITY_ROOT: ${{ fromJSON(inputs.request-json).source-identity-root }}
+      SOURCE_PATCH_ROOT: ${{ fromJSON(inputs.request-json).source-patch-root }}
+      PLAN_ROOT: ${{ fromJSON(inputs.request-json).plan-root }}
+      CLOSURE_ROOT: ${{ fromJSON(inputs.request-json).closure-root }}
+      DEPENDENCY_ROOT: ${{ fromJSON(inputs.request-json).dependency-root }}
+      TOOLCHAIN_ROOT: ${{ fromJSON(inputs.request-json).toolchain-root }}
+      AFFECTED_PATHS: ${{ fromJSON(inputs.request-json).affected-paths-json }}

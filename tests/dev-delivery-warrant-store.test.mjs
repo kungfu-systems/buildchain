@@ -3,8 +3,8 @@ import test from "node:test";
 import {
   GitHubDevDeliveryStore,
   defaultDevDeliveryStateRef,
-} from "../scripts/dev-delivery-warrant.mjs";
-import { createDevDeliveryQueue } from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/commands/dev-delivery-warrant.mjs";
+import { createDevDeliveryQueue } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {

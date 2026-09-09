@@ -8,13 +8,13 @@ import {
   rankDevDeliveryCandidates,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import {
   createReleaseBlockerRepair,
   createReleaseTrain,
   settleReleaseBlockerDevLanding,
   transitionReleaseTrain,
-} from "../packages/core/release-train.js";
+} from "../packages/core/release/release-train.js";
 
 const ROOTS = Object.fromEntries(
   [
@@ -85,8 +85,7 @@ function settledReleaseBlockerRepair() {
 
 function releaseBlockerPriorityClaim(repair = settledReleaseBlockerRepair()) {
   return createReleaseBlockerPriorityClaim(repair, {
-    assignmentRoot: ROOTS.assignment,
-    initiativeRoot: ROOTS.initiative,
+    sourceRoot: ROOTS.assignment,
     issuedAt: "2026-08-10T00:03:00.000Z",
   });
 }
@@ -104,8 +103,7 @@ function candidate(number, overrides = {}) {
   return {
     pullRequestNumber: number,
     sourceHead: ((number % 9) + 1).toString(16).repeat(40),
-    assignmentRoot: ROOTS.assignment,
-    initiativeRoot: ROOTS.initiative,
+    sourceRoot: ROOTS.assignment,
     sourceIdentityRoot: ROOTS.source,
     sourcePatchRoot: ROOTS.patch,
     sourceProofRoot: ROOTS.proof,

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
-import { createGithubProductAdapters } from "../actions/release-candidate-promote/product-provider-github-adapters.js";
+import { createGithubProductAdapters } from "../packages/core/release/promote-candidate/product-provider-github-adapters.js";
 import { githubProvider, SOURCE, VERSION_STATE, REBASED_VERSION_STATE } from "./helpers/product-provider-fixtures.mjs";
 
 function scenario({ mergedAt = 48, verifiedAt = 52, mutate = () => {} } = {}) {

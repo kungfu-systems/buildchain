@@ -8,7 +8,7 @@ import {
   createGitHubIssueRequest,
   reportBuildchainIssue,
   reportWorkflowFrictionIssue,
-} from "../packages/core/issue-reporting.js";
+} from "../packages/core/governance/issue-reporting.js";
 
 function createMockRequest(responses = []) {
   const calls = [];

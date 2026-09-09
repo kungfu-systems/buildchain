@@ -13,7 +13,11 @@ import {
 const root = path.resolve(import.meta.dirname, "..");
 const protectedDogfoodRef = PUBLIC_DOGFOOD_ALPHA_REF;
 const fixturePaths = [
+  "actions/build/verify-check",
   "architecture/workflow-taxonomy.json",
+  ...["consumer-admission", "qualify", "reconcile"].map(
+    (phase) => `actions/build/stage-capsule-canary-${phase}`,
+  ),
   ".buildchain/buildchain.toml",
   ".gitattributes",
   ".github/workflows",
@@ -21,9 +25,9 @@ const fixturePaths = [
   "architecture/stage-capsule-qualification.json",
   "docs/v4-stage-capsule.md",
   "package.json",
-  "packages/core/stage-capsule-qualification-campaign.js",
-  "packages/core/stage-capsule-qualification.js",
-  "scripts/stage-capsule-qualification.mjs",
+  "packages/core/build/stage-capsule-qualification-campaign.js",
+  "packages/core/build/stage-capsule-qualification.js",
+  "packages/core/build/commands/stage-capsule-qualification.mjs",
 ];
 
 function fixture() {
@@ -53,7 +57,7 @@ test("the tracked v4 dogfood path is one thin public consumer caller", () => {
     caller: ".github/workflows/self-build-public-consumer-dogfood.yml",
     reusable: ".github/workflows/public-build-stage-capsule-canary.yml",
     validationRef: protectedDogfoodRef,
-    productionAuthority: "v3",
+    productionAuthority: "v4-native",
   });
 });
 
@@ -85,7 +89,7 @@ test("the gate rejects a second private workflow or direct qualification job", (
   const targetRoot = fixture();
   fs.writeFileSync(
     path.join(targetRoot, ".github/workflows/v4-private-candidate.yml"),
-    "jobs:\n  bypass:\n    steps:\n      - run: node scripts/stage-capsule-qualification.mjs\n",
+    "jobs:\n  bypass:\n    steps:\n      - run: node packages/core/build/commands/stage-capsule-qualification.mjs\n",
   );
   assert.throws(
     () => checkPublicDogfoodContract(targetRoot),
@@ -106,7 +110,7 @@ test("the gate permits only the floating v4-alpha source selector", () => {
 
 test("the gate rejects legacy profiles and removal from protected Verify", () => {
   const legacy = mutate(
-    "packages/core/stage-capsule-qualification-campaign.js",
+    "packages/core/build/stage-capsule-qualification-campaign.js",
     (text) => `${text}\n// ${["buildchain", "self", "dogfood"].join("-")}\n`,
   );
   assert.throws(
@@ -114,13 +118,11 @@ test("the gate rejects legacy profiles and removal from protected Verify", () =>
     /retains private marker/u,
   );
 
-  const unprotected = mutate(
-    ".github/workflows/self-build-verify.yml",
-    (text) =>
-      text.replace(
-        "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
-        "run: true",
-      ),
+  const unprotected = mutate("actions/build/verify-check/action.yml", (text) =>
+    text.replace(
+      "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
+      "run: true",
+    ),
   );
   assert.throws(
     () => checkPublicDogfoodContract(unprotected),
@@ -160,5 +162,27 @@ test("the gate requires deterministic text checkout on every platform", () => {
   assert.throws(
     () => checkPublicDogfoodContract(platformDrift),
     /cross-platform LF contract/u,
+  );
+});
+
+test("the gate rejects private composite qualification and consumer-Node execution of the Buildchain runtime", () => {
+  const targetRoot = fixture();
+  const directory = path.join(targetRoot, "actions/build/private");
+  fs.mkdirSync(directory, { recursive: true });
+  fs.writeFileSync(
+    path.join(directory, "action.yml"),
+    "runs:\n  using: composite\n  steps:\n    - uses: ./.buildchain/workflow-shell/actions/build/stage-capsule-canary-qualify\n",
+  );
+  assert.throws(
+    () => checkPublicDogfoodContract(targetRoot),
+    /outside the public Canary nodes/,
+  );
+  const unbound = mutate(
+    "actions/build/stage-capsule-canary-qualify/action.yml",
+    (text) => text.replaceAll('"$BUILDCHAIN_NODE" ', "node "),
+  );
+  assert.throws(
+    () => checkPublicDogfoodContract(unbound),
+    /bound runtime and consumer source/,
   );
 });

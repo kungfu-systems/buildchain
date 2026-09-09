@@ -1,8 +1,0 @@
-{
-  "sourceCommit": "0c1e79e58a84fdb961f6538e83f85f5e5582887a",
-  "normalization": "Ignore YAML separator blank lines, explicit default bash and optional if expression delimiters. Preserve scalar body bytes including internal blank lines and trailing spaces.",
-  "workflows": {
-    ".github/workflows/public-ops-dev-auto-merge.yml": "1cf0883be96730ba7ff41da346359d389456fb102196d3b2db7f533847427146",
-    ".github/workflows/public-ops-warrant-close.yml": "38a791b86dd619ebf680ba30b1d86735775489862bc73c7908792aa73dc743df"
-  }
-}

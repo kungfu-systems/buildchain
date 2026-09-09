@@ -131,7 +131,7 @@ pub fn adapt_release_invocation(value: &Value) -> ContractResult<Value> {
     let surface = field(route, "surface", "$adapter/route")?.as_str();
     if !matches!(
         surface,
-        Some("alpha" | "stable" | "public" | "private" | "declarative" | "legacy-compatible")
+        Some("alpha" | "stable" | "public" | "private" | "declarative")
     ) {
         return Err(fault(
             "invalid-release-adapter",

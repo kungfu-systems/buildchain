@@ -1,0 +1,21 @@
+name: verify-build-backbone
+description: Execute the verify build-backbone capability within its caller job boundary.
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - name: Prepare candidate test dependencies
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .
+    - name: Exercise candidate lifecycle and artifact boundaries
+      run: node --test tests/build-orchestration.test.mjs tests/build-artifact-pipeline.test.mjs
+      shell: bash -e {0}
+inputs:
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true

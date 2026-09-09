@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runDevPrAdmission } from "../scripts/dev-pr-auto-merge.mjs";
+import { runDevPrAdmission } from "../packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs";
 
 const exactHead = "a".repeat(40);
 const options = {

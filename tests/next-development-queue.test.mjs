@@ -4,7 +4,7 @@ import {
   assertNextDevelopmentPull,
   enqueueNextDevelopmentPullRequest,
   nextDevelopmentQueueFailure,
-} from "../actions/release-candidate-promote/next-development-queue.js";
+} from "../packages/core/release/promote-candidate/next-development-queue.js";
 
 const headSha = "a".repeat(40);
 async function queue(errors, options = {}) {

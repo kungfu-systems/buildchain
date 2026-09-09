@@ -1,3 +1,22 @@
+---
+status: active
+period: ongoing
+theme: buildchain-layered-architecture
+doc_type: implementation-guide
+source_level: local-files
+confidence: high
+sensitivity: public
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-10
+ai_provenance:
+  model_family: GPT-6
+  product: Codex
+  generated_at: 2026-09-10
+  visible_context: Buildchain 4.1 source, architecture registries and local validation.
+  invisible_context_boundary: No unpublished release or external consumer qualification is claimed.
+---
+
 # AGENTS.md
 
 This file orients coding agents and people working with Buildchain. It is a
@@ -38,7 +57,7 @@ For new repositories, prefer the CLI:
 ```sh
 npx @kungfu-tech/buildchain init --type package
 npx @kungfu-tech/buildchain validate --require-version-state
-npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v3/v3.0
+npx @kungfu-tech/buildchain release --dry-run --target-ref alpha/v4/v4.1
 ```
 
 For governed Paper repositories, scaffold or migrate the repository once, then
@@ -63,6 +82,10 @@ contracts retain their bounded, non-persistent validation mechanisms; see
 [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
 
 ## Building this repo
+
+Read [Code organization](docs/code-organization.md) before changing implementation
+layout. Keep workflows, action adapters, JavaScript modules and Rust domains in
+their declared responsibility layers. No historical compatibility entry is retained.
 
 Buildchain is a pnpm workspace running on Node 24:
 
@@ -111,15 +134,22 @@ called only by the public reusable workflow and tests. `version-state`,
 `publish`, provider, signing, release, credential, AWS, and production-reuse
 effects remain excluded.
 
-Buildchain v4 workflow calls persisted in tracked source use only `@v4` or
+External Buildchain v4 workflow calls persisted in tracked source use only `@v4` or
 `@v4-alpha` and retain matching stable and alpha contract locks.
 A source-persisted exact commit SHA, exact default, repository-variable indirection, nested
 composite indirection, missing lock, or stale selected lock fails consumer
 admission. Exact resolved SHAs remain evidence and runtime data, never a durable
 selector.
 
-If public workflow recursion prevents candidate validation, publish the exact
-candidate at `train/v4/v4.0/<capability>`, keep the thin caller on `@v4-alpha`,
+Buildchain's own promotion callers invoke the same public promotion workflow by
+repository-relative path, binding the caller and public API to the same commit.
+Admission verifies the defining repository, exact Git commit, committed invocation
+files, and both channel contract locks. This source-owned composition is confined
+to `public-release-promote.yml`; it does not change the Stage Capsule public
+floating-channel dogfood rule above. See `docs/release-promotion-request.md`.
+
+If public Stage Capsule workflow recursion prevents candidate validation, publish the exact
+candidate at `train/v4/v4.1/<capability>`, keep the thin caller on `@v4-alpha`,
 and pass the train only through the trusted non-persistent runtime input. Fix
 failures in the train/public contract; never solve recursion with an internal exception.
 Never use a persisted train/SHA selector. After qualification and protected
@@ -140,7 +170,7 @@ handoff in
 
 - Open pull requests against the relevant `dev/*` channel branch.
 - If a Buildchain change needs downstream validation before stable refs move,
-  publish a `train/v3/v3.0/<capability>` ref and include the validation request
+  publish a `train/v4/v4.1/<capability>` ref and include the validation request
   described in [`docs/runtime-train-validation.md`](docs/runtime-train-validation.md).
   After validation succeeds, do not leave the train as a pending merge item:
   merge the pull request into the active `dev/*` mainline and run the requested

@@ -1,0 +1,547 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buildchain.kungfu.tech/schemas/promotion-invocation-v1.schema.json",
+  "title": "Buildchain promotion invocation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema"
+  ],
+  "properties": {
+    "schema": {
+      "const": "buildchain.promotion-invocation/v1",
+      "type": "string"
+    },
+    "buildchain-repository": {
+      "type": "string",
+      "default": "kungfu-systems/buildchain"
+    },
+    "buildchain-ref": {
+      "type": "string",
+      "description": "Optional explicit runtime ref. Empty binds the defining workflow SHA.",
+      "default": ""
+    },
+    "buildchain-expected-channel": {
+      "type": "string",
+      "description": "Explicit stable or alpha lane expected when a bootstrap workflow shell ref is opaque",
+      "default": ""
+    },
+    "buildchain-expected-major": {
+      "type": "string",
+      "description": "Explicit Buildchain major expected when a bootstrap workflow shell ref is opaque",
+      "default": ""
+    },
+    "promotion-router-ref": {
+      "type": "string",
+      "description": "Router workflow ref bound by the generated public wrapper",
+      "default": ""
+    },
+    "promotion-router-sha": {
+      "type": "string",
+      "description": "Resolved router workflow SHA bound by the generated public wrapper",
+      "default": ""
+    },
+    "promotion-shell-ref": {
+      "type": "string",
+      "description": "Selected advanced promotion workflow-shell ref",
+      "default": ""
+    },
+    "promotion-shell-sha": {
+      "type": "string",
+      "description": "Resolved advanced promotion workflow-shell SHA",
+      "default": ""
+    },
+    "promotion-runtime-ref": {
+      "type": "string",
+      "description": "Requested Buildchain runtime ref selected by the router",
+      "default": ""
+    },
+    "promotion-runtime-sha": {
+      "type": "string",
+      "description": "Resolved Buildchain runtime SHA selected by the router",
+      "default": ""
+    },
+    "promotion-contract-lock-path": {
+      "type": "string",
+      "description": "Selected consumer contract-lock path bound by the router",
+      "default": ""
+    },
+    "promotion-contract-lock-digest": {
+      "type": "string",
+      "description": "Selected consumer contract-lock sha256 digest bound by the router",
+      "default": ""
+    },
+    "promotion-publication-channel": {
+      "type": "string",
+      "description": "Publication channel derived by the router",
+      "default": ""
+    },
+    "promotion-target-ref": {
+      "type": "string",
+      "description": "Promotion target ref derived by the router",
+      "default": ""
+    },
+    "promotion-override-used": {
+      "type": "boolean",
+      "description": "Whether a trusted train or exact-SHA runtime override was selected",
+      "default": false
+    },
+    "promotion-runtime-authorization-json": {
+      "type": "string",
+      "description": "Rooted transient runtime authorization receipt supplied by the public router",
+      "default": ""
+    },
+    "promotion-runtime-authorization-root": {
+      "type": "string",
+      "description": "sha256 root of the transient runtime authorization receipt",
+      "default": ""
+    },
+    "buildchain-contract-lock-path": {
+      "type": "string",
+      "description": "Consumer-owned Buildchain contract lock path",
+      "default": ".buildchain/contract-lock.json"
+    },
+    "buildchain-alpha-contract-lock-path": {
+      "type": "string",
+      "description": "Consumer-owned alpha contract lock path",
+      "default": ".buildchain/alpha-contract-lock.json"
+    },
+    "buildchain-stable-contract-lock-path": {
+      "type": "string",
+      "description": "Consumer-owned stable contract lock path",
+      "default": ".buildchain/contract-lock.json"
+    },
+    "buildchain-contract-compatibility-policy": {
+      "type": "string",
+      "description": "Contract compatibility policy: major-compatible, allow-additive, or exact",
+      "default": "major-compatible"
+    },
+    "buildchain-contract-drift-issue-mode": {
+      "type": "string",
+      "description": "Consumer issue behavior for Buildchain floating-ref contract drift: off, breaking-only, or compatible-and-breaking",
+      "default": "compatible-and-breaking"
+    },
+    "allow-repository": {
+      "type": "string",
+      "description": "Repository allowed to promote. Empty defaults to the caller repository.",
+      "default": ""
+    },
+    "channel": {
+      "type": "string",
+      "description": "Promotion channel: alpha, release, or major. Empty derives from target-ref.",
+      "default": ""
+    },
+    "target-ref": {
+      "type": "string",
+      "description": "Channel ref to promote. Defaults to the current ref name.",
+      "default": ""
+    },
+    "target-sha": {
+      "type": "string",
+      "description": "Channel commit SHA to promote. Defaults to the current workflow SHA.",
+      "default": ""
+    },
+    "package-manager": {
+      "type": "string",
+      "description": "Package manager recorded for audit: npm, pnpm, yarn, or custom",
+      "default": "npm"
+    },
+    "artifact-name": {
+      "type": "string",
+      "description": "Base artifact name used by the PR-stage reusable build",
+      "default": "buildchain-artifact"
+    },
+    "release-candidate-workflow-file": {
+      "type": "string",
+      "description": "PR-stage release-candidate workflow file name",
+      "default": "build.yml"
+    },
+    "release-candidate-workflow-name": {
+      "type": "string",
+      "description": "PR-stage release-candidate workflow display name",
+      "default": "Build"
+    },
+    "release-candidate-wait-seconds": {
+      "type": "number",
+      "description": "Bounded wait for the complete PR-stage release-candidate workflow, including post-required-check evidence tails",
+      "default": 10800
+    },
+    "resume-candidate-repository": {
+      "type": "string",
+      "description": "Repository that owns the sealed candidate run; empty selects normal candidate discovery",
+      "default": ""
+    },
+    "resume-candidate-run-id": {
+      "type": "string",
+      "description": "Exact successful candidate workflow run ID to recover through this fresh workflow event",
+      "default": ""
+    },
+    "resume-expected-workflow-file": {
+      "type": "string",
+      "description": "Exact trusted Build workflow file that produced the candidate",
+      "default": ""
+    },
+    "resume-expected-workflow-name": {
+      "type": "string",
+      "description": "Exact trusted Build workflow display name that produced the candidate",
+      "default": ""
+    },
+    "resume-expected-source-tree": {
+      "type": "string",
+      "description": "Optional exact candidate Git tree; required when expected candidate root is empty",
+      "default": ""
+    },
+    "resume-expected-candidate-root": {
+      "type": "string",
+      "description": "Optional exact sha256 Release Candidate root; required when expected source tree is empty",
+      "default": ""
+    },
+    "resume-expected-candidate-runtime-sha": {
+      "type": "string",
+      "description": "Exact Buildchain runtime SHA recorded by the original candidate",
+      "default": ""
+    },
+    "resume-buildchain-runtime-sha": {
+      "type": "string",
+      "description": "Exact current Buildchain tooling SHA authorized to perform recovery",
+      "default": ""
+    },
+    "resume-transaction-id": {
+      "type": "string",
+      "description": "Optional exact durable publication transaction identity to resume",
+      "default": ""
+    },
+    "release-candidate-family-evidence-required": {
+      "type": "boolean",
+      "description": "Require exact Initiative-family evidence before protected promotion",
+      "default": false
+    },
+    "release-candidate-family-evidence-root": {
+      "type": "string",
+      "description": "Optional expected Initiative-family evidence content root",
+      "default": ""
+    },
+    "release-candidate-family-initiative-id": {
+      "type": "string",
+      "description": "Optional expected Initiative identity",
+      "default": ""
+    },
+    "release-candidate-family-assignment-id": {
+      "type": "string",
+      "description": "Optional expected child Assignment identity",
+      "default": ""
+    },
+    "artifact-patterns": {
+      "type": "string",
+      "description": "Newline-separated payload artifact patterns expected from the RC bundle",
+      "default": ""
+    },
+    "required-status-check": {
+      "type": "string",
+      "description": "Exact required protected-branch status check context",
+      "default": "check / check"
+    },
+    "branch-protection-bypass-apps": {
+      "type": "string",
+      "description": "GitHub App slugs allowed to bypass pull-request review for Buildchain-managed generated channel ref updates",
+      "default": "github-actions"
+    },
+    "publish-target": {
+      "type": "string",
+      "description": "Publish target recorded for audit: npm, github-release, custom",
+      "default": "npm"
+    },
+    "github-release": {
+      "type": "boolean",
+      "description": "Create/update the public GitHub Release and upload Buildchain release passport/evidence assets after a complete release transaction",
+      "default": true
+    },
+    "provider-failure-after-capability": {
+      "type": "string",
+      "description": "Dogfood-only deterministic failure injection after one checkpointed provider capability",
+      "default": ""
+    },
+    "github-release-payload-patterns": {
+      "type": "string",
+      "description": "Newline-separated basename patterns selecting PR-stage payload files for the immutable public GitHub Release",
+      "default": ""
+    },
+    "publication-commit-evidence-path": {
+      "type": "string",
+      "description": "Consumer evidence JSON written by publication-commit-command under .buildchain/",
+      "default": ".buildchain/publication-commit/evidence.json"
+    },
+    "release-activation-receipt-set-path": {
+      "type": "string",
+      "description": "Consumer activation receipt set written under .buildchain/",
+      "default": ".buildchain/release-activation/receipt-set.json"
+    },
+    "release-passport-evidence-path": {
+      "type": "string",
+      "description": "Released evidence JSON written by release-passport-evidence-command under .buildchain/",
+      "default": ".buildchain/release-evidence/product-released-evidence.json"
+    },
+    "standalone-binary-distribution": {
+      "type": "boolean",
+      "description": "Dispatch binary-distribution.yml after promotion; enable only when the caller repository provides that workflow",
+      "default": false
+    },
+    "runner-preset": {
+      "type": "string",
+      "description": "Runner preset recorded for audit",
+      "default": "github-hosted"
+    },
+    "trusted-publishing": {
+      "type": "boolean",
+      "description": "Whether the publish target uses GitHub OIDC trusted publishing",
+      "default": true
+    },
+    "publish-rematerialize-on-resume": {
+      "type": "boolean",
+      "description": "Replay the consumer publish materialization step after valid durable evidence is restored; use only when the command is idempotent and recreates ephemeral Passport inputs or release assets",
+      "default": false
+    },
+    "publish-transaction-override": {
+      "type": "boolean",
+      "description": "Explicitly allow ancestry-bound finalization recovery for an already published durable transaction",
+      "default": false
+    },
+    "publish-required-artifacts-json": {
+      "type": "string",
+      "description": "Required publish artifacts JSON passed to the promotion action; ref_template may contain one {version} placeholder",
+      "default": ""
+    },
+    "publish-artifact-kind": {
+      "type": "string",
+      "description": "Artifact kind used when generating publish-required-artifacts-json from downloaded payloads",
+      "default": "npm"
+    },
+    "publish-mode": {
+      "type": "string",
+      "description": "Publish mode passed to promote-buildchain-ref",
+      "default": ""
+    },
+    "publish-dist-tag": {
+      "type": "string",
+      "description": "Expected dist-tag passed to promote-buildchain-ref",
+      "default": ""
+    },
+    "publish-package-set-order": {
+      "type": "string",
+      "description": "Package-set ordering passed to promote-buildchain-ref",
+      "default": "as-provided"
+    },
+    "publish-package-main": {
+      "type": "string",
+      "description": "Main package name for package-set ordering",
+      "default": ""
+    },
+    "release-passport": {
+      "type": "boolean",
+      "description": "Generate and persist the release passport after publish finalization",
+      "default": true
+    },
+    "release-propagation-config-path": {
+      "type": "string",
+      "description": "Optional source-controlled package propagation capture config read from the exact finalized release SHA",
+      "default": ""
+    },
+    "release-passport-output-dir": {
+      "type": "string",
+      "description": "Release passport output directory",
+      "default": ".buildchain/release-passport"
+    },
+    "release-passport-product-name": {
+      "type": "string",
+      "description": "Product name recorded in buildchain.release.json",
+      "default": ""
+    },
+    "release-passport-impact-json": {
+      "type": "string",
+      "description": "Surface-aware release impact JSON or path passed to the release passport collector",
+      "default": ""
+    },
+    "release-passport-v4-runtime-resume-evidence-json": {
+      "type": "string",
+      "description": "Rooted v4 transient runtime authorization and fresh-attempt Stage Capsule resume lineage JSON or path",
+      "default": ""
+    },
+    "release-passport-kfd-1-witness-jsons": {
+      "type": "string",
+      "description": "Newline- or comma-separated KFD-1 contract-world witness JSON paths passed to the release passport collector",
+      "default": ""
+    },
+    "release-passport-kfd-2-claim-jsons": {
+      "type": "string",
+      "description": "Newline- or comma-separated KFD-2 public release trust claim JSON paths passed to the release passport collector",
+      "default": ""
+    },
+    "release-passport-kfd-3-prebuild-witness-jsons": {
+      "type": "string",
+      "description": "Newline- or comma-separated KFD-3 collaboration-interface pre-build witness JSON paths passed to the release passport collector",
+      "default": ""
+    },
+    "release-passport-kfd-3-artifact-witness-jsons": {
+      "type": "string",
+      "description": "Newline- or comma-separated KFD-3 artifact-side collaboration-interface witness JSON paths passed to the release passport collector",
+      "default": ""
+    },
+    "release-passport-adopter-delivery-json": {
+      "type": "string",
+      "description": "Compatibility-only v3 adopter delivery input; v4 requires adopter manifest plus product gates",
+      "default": ""
+    },
+    "release-passport-kfd-adopter-manifest-gate-json": {
+      "type": "string",
+      "description": "Compatibility-only v3 producer gate input; v4 derives the gate from source-bound evidence",
+      "default": ""
+    },
+    "release-passport-kfd-adopter-manifest-json": {
+      "type": "string",
+      "description": "Standard full-cut adopter conformance manifest JSON path",
+      "default": ""
+    },
+    "release-passport-kfd-support-matrix-json": {
+      "type": "string",
+      "description": "Legacy KFD support projection JSON path accepted only for exact manifest comparison",
+      "default": ""
+    },
+    "release-passport-kfd-product-gate-jsons": {
+      "type": "string",
+      "description": "Newline- or comma-separated KFD-4/5/7 product gate result JSON paths",
+      "default": ""
+    },
+    "release-passport-invariant-passport-jsons": {
+      "type": "string",
+      "description": "Newline- or comma-separated invariant Passport JSON paths passed to the release gate",
+      "default": ""
+    },
+    "release-passport-evidence-jsons": {
+      "type": "string",
+      "description": "Newline- or comma-separated product-owned release evidence attachment paths bound to the exact release coordinates",
+      "default": ""
+    },
+    "release-passport-buildchain-self-kfd": {
+      "type": "boolean",
+      "description": "Generate Buildchain-owned KFD-1/2/3 self witnesses and claims from the checked-out package source before release passport finalization",
+      "default": false
+    },
+    "github-artifact-attestation-policy-json": {
+      "type": "string",
+      "description": "One GitHub artifact attestation policy JSON path from the sealed release candidate; empty disables attestation",
+      "default": ""
+    },
+    "github-artifact-attestation-environment": {
+      "type": "string",
+      "description": "Caller-repository protected environment governing the keyless attestation",
+      "default": "buildchain-artifact-attestation"
+    },
+    "github-artifact-attestation-retention-days": {
+      "type": "number",
+      "description": "Retention for offline GitHub/Sigstore evidence artifacts",
+      "default": 90
+    },
+    "release-passport-platform-manifest-paths": {
+      "type": "string",
+      "description": "Optional platform manifest paths for release passport; defaults to downloaded PR-stage payload manifests",
+      "default": ""
+    },
+    "required-artifact-count": {
+      "type": "number",
+      "description": "Minimum downloaded payload count required before publish; npm counts package tarballs",
+      "default": 3
+    },
+    "publication-admission-json": {
+      "type": "string",
+      "description": "Fresh sealed publication admission JSON; required for non-dry-run publication",
+      "default": ""
+    },
+    "publication-runner-provenance-json": {
+      "type": "string",
+      "description": "Runner provenance receipt bound by the admission",
+      "default": ""
+    },
+    "publication-control-plane-audit-json": {
+      "type": "string",
+      "description": "Fresh external control-plane audit receipt bound by the admission",
+      "default": ""
+    },
+    "github-governance-receipt-json": {
+      "type": "string",
+      "description": "Fresh qualifying governance receipt for the exact publication repository and target ref",
+      "default": ""
+    },
+    "publication-gate-aggregate-json": {
+      "type": "string",
+      "description": "Qualifying Shifu Gate aggregate or explicit consumer-owned no-Gate decision",
+      "default": ""
+    },
+    "publication-gate-controller-sha": {
+      "type": "string",
+      "description": "Exact caller-repository commit that owns the consumer Gate command; empty uses the publication source SHA",
+      "default": ""
+    },
+    "publication-expected-json": {
+      "type": "string",
+      "description": "Independent exact source/runtime/product/channel/artifact bindings",
+      "default": ""
+    },
+    "publication-used-nonces-json": {
+      "type": "string",
+      "description": "JSON array of already consumed admission nonces",
+      "default": "[]"
+    },
+    "publication-consumer-qualification-controller-sha": {
+      "type": "string",
+      "description": "Exact caller-repository commit that owns the consumer qualification command; empty uses the Gate controller SHA, then the publication source SHA",
+      "default": ""
+    },
+    "publication-consumer-predicate-id": {
+      "type": "string",
+      "description": "Stable identifier for the opt-in consumer-owned publication predicate",
+      "default": ""
+    },
+    "publication-used-qualification-nonces-json": {
+      "type": "string",
+      "description": "JSON array of already consumed qualification nonces",
+      "default": "[]"
+    },
+    "publication-auto-admission": {
+      "type": "boolean",
+      "description": "Assemble sealed evidence from the caller repository's exact managed release candidate",
+      "default": false
+    },
+    "publication-auto-no-gate": {
+      "type": "boolean",
+      "description": "Explicitly declare that this managed publication has no consumer-owned Shifu Gate registry",
+      "default": false
+    },
+    "publication-publisher-workflow-path": {
+      "type": "string",
+      "description": "Caller workflow path bound by the provider trusted-publisher policy",
+      "default": ""
+    },
+    "publication-authority-workflow-path": {
+      "type": "string",
+      "description": "Buildchain workflow path exposed as the publication authority; empty uses the internal promotion shell path",
+      "default": ".github/workflows/.release-promote.yml"
+    },
+    "publication-product": {
+      "type": "string",
+      "default": "Buildchain"
+    },
+    "publication-target": {
+      "type": "string",
+      "default": "npm:@kungfu-tech/buildchain"
+    },
+    "publication-package-name": {
+      "type": "string",
+      "default": "@kungfu-tech/buildchain"
+    },
+    "dry-run": {
+      "type": "boolean",
+      "description": "Plan only; do not publish or move refs",
+      "default": false
+    }
+  }
+}

@@ -97,7 +97,7 @@ Cut authority for an already-open legacy PR.
 
 ## Reusable workflow
 
-Call `.github/workflows/dev-alpha-candidate-patrol.yml` from a thin repository
+Call `.github/workflows/public-ops-alpha-candidate-patrol.yml` from a thin repository
 workflow. Start with `dry-run: true`. The reusable workflow always runs an
 `observe` job with only Actions/content/pull-request read permissions. Once the
 repository has proven that its two workflow names and branch topology produce

@@ -14,7 +14,7 @@ import {
   macosAllocateHostsArgs,
   macosReleaseHostsArgs,
   macosRunInstancesArgs,
-} from "../scripts/aws-macos-jit-controller-core.mjs";
+} from "../packages/core/providers/commands/aws-macos-jit-controller-core.mjs";
 import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 const values = {
@@ -279,7 +279,7 @@ test("macOS controller launches only after exact-source preflight and both AWS D
     const result = spawnSync(
       process.execPath,
       [
-        "scripts/aws-macos-jit-controller.mjs",
+        "packages/core/providers/commands/aws-macos-jit-controller.mjs",
         "launch-campaign",
         "--execute",
         "--confirm-source-sha",
@@ -333,7 +333,7 @@ function runJobWithFakes({ sendFailure = false } = {}) {
   const result = spawnSync(
     process.execPath,
     [
-      "scripts/aws-macos-jit-controller.mjs",
+      "packages/core/providers/commands/aws-macos-jit-controller.mjs",
       "run-job",
       "--execute",
       "--confirm-source-sha",
@@ -428,7 +428,7 @@ test("macOS controller terminates the exact instance before releasing the 24-hou
     const result = spawnSync(
       process.execPath,
       [
-        "scripts/aws-macos-jit-controller.mjs",
+        "packages/core/providers/commands/aws-macos-jit-controller.mjs",
         "close-campaign",
         "--execute",
         "--confirm-source-sha",

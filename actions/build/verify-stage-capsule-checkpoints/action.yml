@@ -1,0 +1,42 @@
+name: verify-stage-capsule-checkpoints
+description: Execute the verify stage-capsule-checkpoints capability within its caller job boundary.
+inputs:
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - name: Prepare candidate test dependencies
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .
+    - name: Load the committed Rust/WASM production authority
+      run: node --test tests/domain-wasm.test.mjs
+      shell: bash -e {0}
+    - name: Rehearse declared Stage Capsule checkpoint in clean processes
+      run: node scripts/platform-stage-checkpoint-rehearsal.mjs rehearse --work-root .buildchain/stage-checkpoint --platform ${{ fromJSON(inputs.matrix-json).platform }} --stage build --recorded-at 2026-08-08T00:00:00.000Z
+      shell: bash -e {0}
+    - name: Rehearse deterministic Stage Capsule resume planning
+      run: node scripts/stage-capsule-resume-rehearsal.mjs --platform ${{ fromJSON(inputs.matrix-json).platform }}
+      shell: bash -e {0}
+    - name: Rehearse bounded v4 macOS tail reseal
+      if: fromJSON(inputs.matrix-json).platform == 'macos-arm64'
+      run: node scripts/tail-reseal-macos-rehearsal.mjs --output .buildchain/stage-checkpoint/tail-reseal-macos.json
+      shell: bash -e {0}
+    - name: Upload exact Stage Capsule checkpoint evidence
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-stage-checkpoint-${{ fromJSON(inputs.matrix-json).platform }}-${{ github.sha }}
+        path: |
+          .buildchain/stage-checkpoint/evidence.json
+          .buildchain/stage-checkpoint/tail-reseal-macos.json
+        if-no-files-found: error

@@ -14,7 +14,7 @@ import {
   createInfraContractPropagationPlan,
   validateInfraContractProject,
   verifyInfraContractEvidenceBundle,
-} from "../scripts/infra-contract-core.mjs";
+} from "../packages/core/providers/commands/infra-contract-core.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

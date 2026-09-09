@@ -11,7 +11,7 @@ const files = execFileSync(
 )
   .split("\n")
   .filter((file) => [".js", ".mjs", ".cjs"].includes(path.extname(file)))
-  .filter((file) => !/^actions\/[^/]+\/dist\//u.test(file))
+  .filter((file) => !/^actions\/[^/]+\/[^/]+\/dist\//u.test(file))
   .sort();
 
 const failures = [];

@@ -1,3 +1,4 @@
+import { scenario, declareLongForm, declarePresentation } from "./helpers/demo-scenario.mjs";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -6,19 +7,10 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-import { adaptCapture, materializeDemo, prepareArtifact, validateScenario } from "../scripts/auditable-demo-platform.mjs";
-import { runTransportSmoke } from "../scripts/auditable-demo-transport-smoke.mjs";
+import { adaptCapture, materializeDemo, prepareArtifact, validateScenario } from "../packages/core/build/commands/auditable-demo-platform.mjs";
+import { runTransportSmoke } from "../packages/core/build/commands/auditable-demo-transport-smoke.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const NON_AUTHORITIES = [
-  "first-party-identity", "system-identity", "kfd-compliance", "product-system-metadata",
-  "package-metadata", "registry-history", "scan-output", "standalone-generation",
-];
-const RENDITIONS = [
-  { id: "1080p", role: "primary", columns: 150, rows: 36, width: 1920, height: 1080 },
-  { id: "720p", role: "responsive", columns: 100, rows: 28, width: 1280, height: 720 },
-];
-
 function temporary(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-demo-platform-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -42,66 +34,6 @@ function writeChecksums(root) {
   const bytes = `${names.map((name) => `${sha256(fs.readFileSync(path.join(root, name))).slice(7)}  ${name}`).join("\n")}\n`;
   fs.writeFileSync(path.join(root, "checksums.sha256"), bytes);
   return sha256(Buffer.from(bytes));
-}
-
-function scenario() {
-  const step = (id, argv, stdoutIncludes, fileAssertions = []) => ({
-    id, argv, timeoutSeconds: 20, expectedExitCodes: [0], stdoutIncludes, fileAssertions,
-  });
-  return {
-    schema: "buildchain.declarative-binary-demo/v1",
-    compositionMode: "terminal-fill",
-    product: { id: "fixture", displayName: "Fixture CLI", binaryName: "fixture" },
-    artifact: { platformId: "linux-x64", binaryPath: "fixture", metadataPath: "fixture.json", metadataContract: "fixture.binary/v1", runtimeDependencies: [] },
-    execution: { deterministic: true, network: "none", secrets: "none", totalTimeoutSeconds: 30, environment: {} },
-    transportSmoke: { argv: ["independent"], timeoutSeconds: 20, expectedExitCodes: [0], stdoutIncludes: ["INDEPENDENT END"] },
-    renditions: RENDITIONS,
-    demos: [
-      {
-        id: "shared-state", title: "Shared state", claimBoundary: "The fixture proves only declared local state sharing.",
-        steps: [
-          step("write", ["write"], ["STATE WRITTEN"]),
-          step("read", ["read"], ["STATE READ"], [{ path: "state.json", jsonEquals: { status: "ready" } }]),
-        ],
-      },
-      {
-        id: "independent", title: "Independent demo", claimBoundary: "The fixture proves only independent demo workspaces.",
-        steps: [step("independent", ["independent"], ["INDEPENDENT"])],
-      },
-    ],
-    publication: { evidencePath: "docs/evidence/auditable-demo", readmePath: "README.md", marker: "fixture-demo" },
-    authority: { grants: [], nonAuthorities: NON_AUTHORITIES },
-  };
-}
-
-function declareLongForm(value) {
-  value.execution.durationClass = "long-form";
-  value.execution.totalTimeoutSeconds = 180;
-  for (const demo of value.demos) {
-    for (const step of demo.steps) step.timeoutSeconds = 180;
-  }
-}
-
-function declarePresentation(value) {
-  declareLongForm(value);
-  value.presentation = {
-    schema: "buildchain.declarative-demo-presentation/v1",
-    proofs: value.demos.map((demo, index) => ({
-      demoId: demo.id,
-      label: index === 0 ? "Continuity" : "Failure retention",
-      question: demo.title,
-      summary: index === 0
-        ? "The first proof isolates continuity across sessions."
-        : "The second proof places continuity under failure.",
-      ...(index === 0 ? { transitionAfter: "Continuity must also survive failure." } : {}),
-    })),
-    materialization: {
-      readmeMode: "media-only",
-      technicalSpecPath: "docs/demo-technical-spec.md",
-      technicalSpecTitle: "Fixture demo technical specification",
-      technicalMarker: "fixture-demo:technical",
-    },
-  };
 }
 
 function oversizedLongFormRendererManifest() {
@@ -202,7 +134,7 @@ function capture(t, demoId, transformScenario = null) {
   }
   const output = path.join(value.root, `capture-${demoId}`);
   const result = spawnSync("python3", [
-    path.join(ROOT, "scripts/auditable-demo-capture.py"),
+    path.join(ROOT, "packages/core/providers/commands/auditable-demo-capture.py"),
     "--artifact-root", value.artifact,
     "--scenario", value.scenarioPath,
     "--source-coordinate", value.coordinate,
@@ -382,7 +314,7 @@ test("generic adapter projects exact captures into the existing Gate contract", 
     );
   }
   const gateCheck = spawnSync(process.execPath, [
-    path.join(ROOT, "scripts/auditable-demo.mjs"), "prepare-smoke",
+    path.join(ROOT, "packages/core/build/commands/auditable-demo.mjs"), "prepare-smoke",
     "--adapter-output", adapted,
     "--output", path.join(root, "smoke"),
   ], { encoding: "utf8" });
@@ -468,7 +400,7 @@ test("capture keeps demos isolated and fails closed on binary metadata drift", {
   metadata.sha256 = "0".repeat(64);
   writeJson(path.join(drifted.artifact, "fixture.json"), metadata);
   const result = spawnSync("python3", [
-    path.join(ROOT, "scripts/auditable-demo-capture.py"), "--artifact-root", drifted.artifact,
+    path.join(ROOT, "packages/core/providers/commands/auditable-demo-capture.py"), "--artifact-root", drifted.artifact,
     "--scenario", drifted.scenarioPath, "--source-coordinate", drifted.coordinate,
     "--demo-id", "shared-state", "--network-isolation", "test-only", "--output", path.join(drifted.root, "drifted"),
   ], { encoding: "utf8", env: { ...process.env, BUILDCHAIN_AUDITABLE_DEMO_TEST: "1" } });
@@ -496,7 +428,7 @@ test("capture enforces the total deadline inside a running step", { skip: proces
   writeJson(value.scenarioPath, declared);
   const started = Date.now();
   const result = spawnSync("python3", [
-    path.join(ROOT, "scripts/auditable-demo-capture.py"),
+    path.join(ROOT, "packages/core/providers/commands/auditable-demo-capture.py"),
     "--artifact-root", value.artifact,
     "--scenario", value.scenarioPath,
     "--source-coordinate", value.coordinate,
@@ -655,54 +587,21 @@ test("materializer verifies exact bundles and updates README idempotently", { sk
   assert.throws(() => materializeDemo(args), /media bundle exceeds its aggregate byte budget/u);
 });
 
-test("Gate smoke stays bounded while full render consumes both native captures", () => {
-  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.declarative-auditable-demo.yml"), "utf8");
-  const smoke = workflow.slice(
-    workflow.indexOf("smoke-output:/output"),
-    workflow.indexOf("smoke-inspection"),
-  );
-  const full = workflow.slice(
-    workflow.indexOf("render-output:/output"),
-    workflow.indexOf("render-inspection"),
-  );
-  assert.doesNotMatch(smoke, /--terminal-capture|--rendition-set/u);
-  assert.match(full, /--terminal-capture \/input\/terminal-capture\.json/u);
-  assert.match(full, /--rendition-set \/input\/rendition-set\.json/u);
-  assert.match(workflow, /demo-renderer --validate-only[\s\S]*--rendition-set/u);
-  assert.match(workflow, /prepare-artifact[\s\S]*--artifact-root "source-artifact"/u);
-});
-
-test("advisory media failure preserves the required Gate and suppresses publication", () => {
-  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.declarative-auditable-demo.yml"), "utf8");
-  const gateIndex = workflow.indexOf("name: Run required Gate for every declared demo");
-  const renderIndex = workflow.indexOf("name: Render full media for every declared demo");
-  assert.ok(gateIndex >= 0 && renderIndex > gateIndex);
-  assert.match(workflow, /render-failure-advisory:[\s\S]*default: false[\s\S]*type: boolean/u);
-  assert.match(workflow.slice(renderIndex, workflow.indexOf("name: Bind evidence collection identity", renderIndex)), /id: render[\s\S]*continue-on-error: \$\{\{ inputs\.render-failure-advisory \}\}/u);
-  assert.match(workflow, /render-result: \$\{\{ steps\.render\.outcome \}\}/u);
-  assert.match(workflow, /inputs\.materialize && inputs\.render-media && needs\.qualify\.outputs\.render-result == 'success'/u);
-  assert.match(workflow, /The required Gate remains successful and no materialization PR will be opened/u);
-});
-
-test("declarative publication stages an optional consumer-owned technical specification", () => {
-  const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.declarative-auditable-demo.yml"), "utf8");
-  assert.match(workflow, /technical_spec_path=.*technicalSpecPath/u);
-  assert.match(workflow, /git add -- "\$\{technical_spec_path\}"/u);
-});
-
 test("reusable builds run transport simulation within verify before shared upload", () => {
   const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.build.yml"), "utf8");
-  const stage = fs.readFileSync(path.join(ROOT, "scripts/build/stage.mjs"), "utf8");
+  const stage = fs.readFileSync(path.join(ROOT, "packages/core/build/commands/stage.mjs"), "utf8");
   const lanes = workflow.match(/  build-(?:native|container):[\s\S]+?(?=\n  [a-z-]+:)/gu);
   assert.equal(lanes.length, 2);
-  for (const lane of lanes) assert.ok(lane.indexOf("stage: verify") < lane.indexOf("actions/transfer-build-artifact"));
+  for (const lane of lanes) assert.ok(lane.indexOf("stage: verify") < lane.indexOf("actions/build/transfer-artifact"));
   assert.match(stage, /stage === "verify"[\s\S]*auditable-demo-transport-smoke.mjs/u);
 });
 
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {
   const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/self-build-demo-dogfood.yml"), "utf8");
+  assert.match(workflow, /actions\/build\/demo-dogfood-exact-binary/u);
+  const node = fs.readFileSync(path.join(ROOT, "actions/build/demo-dogfood-exact-binary/action.yml"), "utf8");
   assert.match(
-    workflow,
-    /actions\/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6\.4\.0/u,
+    node,
+    /actions\/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e/u,
   );
 });

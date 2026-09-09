@@ -4,7 +4,7 @@ import {
   normalizePatrolOptions,
   renderPatrolMarkdownSummary,
   runBuildchainPatrol,
-} from "../scripts/buildchain-patrol.mjs";
+} from "../packages/core/governance/commands/buildchain-patrol.mjs";
 
 function pr(overrides = {}) {
   return {
