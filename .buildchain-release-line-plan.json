@@ -3,19 +3,19 @@
   "contract": "kungfu-buildchain-release-line-bootstrap",
   "dryRun": true,
   "cwd": "/home/runner/work/buildchain/buildchain",
-  "line": "v4.0",
+  "line": "v4.1",
   "major": 4,
-  "minor": 0,
-  "initialVersion": "4.0.0-alpha.0",
+  "minor": 1,
+  "initialVersion": "4.1.0-alpha.0",
   "source": {
-    "ref": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1",
-    "sha": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1"
+    "ref": "7e1b00ab0c33b0ec5262cb3b44a1016f707b5079",
+    "sha": "7e1b00ab0c33b0ec5262cb3b44a1016f707b5079"
   },
   "refs": {
-    "dev": "dev/v4/v4.0",
-    "alpha": "alpha/v4/v4.0",
-    "release": "release/v4/v4.0",
-    "bootstrap": "buildchain/release-line/v4.0"
+    "dev": "dev/v4/v4.1",
+    "alpha": "alpha/v4/v4.1",
+    "release": "release/v4/v4.1",
+    "bootstrap": "buildchain/release-line/v4.1"
   },
   "versionState": {
     "files": [
@@ -41,9 +41,9 @@
     "requiredConversationResolution": true,
     "enforceAdmins": true,
     "protectedRefs": [
-      "dev/v4/v4.0",
-      "alpha/v4/v4.0",
-      "release/v4/v4.0"
+      "dev/v4/v4.1",
+      "alpha/v4/v4.1",
+      "release/v4/v4.1"
     ]
   },
   "governance": {
@@ -52,7 +52,7 @@
       "mode": "enabled",
       "source": "buildchain-config",
       "requiredWorkflows": [
-        ".github/workflows/verify.yml"
+        ".github/workflows/self-build-verify.yml"
       ],
       "reconcileBeforeDefaultBranchSwitch": true
     }
@@ -60,44 +60,48 @@
   "repositoryActions": [
     {
       "action": "create-or-verify-source-ref",
-      "ref": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1"
+      "ref": "7e1b00ab0c33b0ec5262cb3b44a1016f707b5079"
     },
     {
       "action": "commit-initial-version-state",
-      "ref": "buildchain/release-line/v4.0",
-      "version": "4.0.0-alpha.0"
+      "ref": "buildchain/release-line/v4.1",
+      "version": "4.1.0-alpha.0"
     },
     {
       "action": "create-dev-branch",
-      "ref": "dev/v4/v4.0",
-      "from": "buildchain/release-line/v4.0"
+      "ref": "dev/v4/v4.1",
+      "from": "buildchain/release-line/v4.1"
     },
     {
       "action": "create-alpha-branch",
-      "ref": "alpha/v4/v4.0",
-      "from": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1"
+      "ref": "alpha/v4/v4.1",
+      "from": "7e1b00ab0c33b0ec5262cb3b44a1016f707b5079"
     },
     {
       "action": "create-release-branch",
-      "ref": "release/v4/v4.0",
-      "from": "b9fbfd9d6ee909ee3a8c4bd6116e7ddafd7b05e1"
+      "ref": "release/v4/v4.1",
+      "from": "7e1b00ab0c33b0ec5262cb3b44a1016f707b5079"
     },
     {
       "action": "protect-branch",
-      "ref": "dev/v4/v4.0"
+      "ref": "dev/v4/v4.1"
     },
     {
       "action": "protect-branch",
-      "ref": "alpha/v4/v4.0"
+      "ref": "alpha/v4/v4.1"
     },
     {
       "action": "protect-branch",
-      "ref": "release/v4/v4.0"
+      "ref": "release/v4/v4.1"
     },
     {
       "action": "reconcile-dev-merge-queue",
-      "ref": "dev/v4/v4.0",
+      "ref": "dev/v4/v4.1",
       "mode": "enabled"
+    },
+    {
+      "action": "set-default-branch",
+      "ref": "dev/v4/v4.1"
     }
   ],
   "notes": [

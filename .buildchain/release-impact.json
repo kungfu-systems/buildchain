@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-impact",
   "release": {
-    "version": "4.0.10-alpha.1",
-    "line": "v4.0"
+    "version": "4.1.0-alpha.0",
+    "line": "v4.1"
   },
   "versionImpact": {
     "final": "major",
     "source": "buildchain-version-state",
-    "rationale": "Buildchain v4.0 retires v3 publication authority and establishes the protected v4 line, v4 provider journal, activation planner, recovery planner, and stable publication fence as the sole production release authority."
+    "rationale": "Buildchain v4.1 retires v3 publication authority and establishes the protected v4 line, v4 provider journal, activation planner, recovery planner, and stable publication fence as the sole production release authority."
   },
   "surfaceImpacts": [
     {
@@ -499,5 +499,5 @@
   "breaking": true,
   "security": false,
   "migrationRequired": true,
-  "summary": "Buildchain v4.0 centralizes project build configuration in TOML, derives exact runtime identity, and shares owned build stages across native and Linux container orchestration."
+  "summary": "Buildchain v4.1 centralizes project build configuration in TOML, derives exact runtime identity, and shares owned build stages across native and Linux container orchestration."
 }
