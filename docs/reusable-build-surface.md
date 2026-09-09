@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-09
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-08
+  generated_at: 2026-09-09
   invisible_context_boundary: No private credentials or unrelated repositories inspected.
 ---
 
@@ -133,9 +133,16 @@ relay settings and credential-island environments there. Adding a runner label
 or provider role requires reviewing that profile; project TOML cannot redefine
 it. Secrets still cross explicit workflow secret/environment boundaries.
 
-The initial profiles are `github-hosted`, `github-hosted-container`,
-`kungfu-v4-native` and `kungfu-v4-self-hosted`. The container profile uses the
-existing digest-pinned `kungfu-verify` image. Native and container jobs remain
+The profiles are `github-hosted`, `github-hosted-container`, `kungfu-hosted`,
+`kungfu-v4-native` and `kungfu-v4-self-hosted`. `kungfu-hosted` preserves the
+Kungfu release matrix on GitHub-hosted Ubuntu 24.04 x64 and ARM64, macOS 15
+ARM64 and Windows 2022 x64. It selects GCC 14 for Linux x64, full Git history
+and the required Windows sccache profile at
+`docs/shifu/windows-alpha-sccache.cache-profile.json`, bound to its reviewed
+digest in the environment registry. All four lanes transfer artifacts directly
+through GitHub; the profile adds no provider roles or signing authority.
+Existing profiles retain their runner and cache policies. The container profile
+uses the existing digest-pinned `kungfu-verify` image. Native and container jobs remain
 separate because GitHub selects `runs-on` and `container` before executing
 steps. Their shared behavior is owned by these composite actions:
 
