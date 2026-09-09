@@ -137,7 +137,7 @@ pass, a substituted readback must fail, retry must reproduce the original root,
 terminal verification and N-1 bootstrap must pass, and the independent
 `ledger-specification-driver` clean-room test must pass without a KFD package.
 The workflow then reconciles one exact report from each platform. Final family
-qualification combines the Buildchain self-dogfood and `agent-hub-demo`
+qualification uses Buildchain self-dogfood and generic test fixtures for
 matrices through the exported
 `@kungfu-tech/buildchain/cross-platform-adopter-qualification` aggregator.
 The report and aggregate explicitly grant no production, provider, release, or

@@ -120,9 +120,9 @@ test("authority descriptor freezes the TCB, baseline, plan boundary, and non-cla
   assert.equal(descriptor.organization, "kungfu-systems");
   assert.equal(descriptor.repositoryAdmission.baseline.repositoryCount, 17);
   assert.deepEqual(descriptor.repositoryAdmission.managedVisibilities, ["public"]);
-  assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 17);
+  assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 16);
   assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 0);
-  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 52);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 49);
   assert.deepEqual(descriptor.planCapability.privateRepositories, []);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(

@@ -13,6 +13,7 @@ permissions:
   contents: read
   issues: write
   id-token: write
+  attestations: write
 
 concurrency:
   group: buildchain-stable-self-dogfood-${{ github.repository }}-${{ github.ref }}

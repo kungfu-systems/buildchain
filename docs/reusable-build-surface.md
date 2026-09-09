@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: B
 review_state: unreviewed
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-09
 ai_provenance:
   model_family: GPT-6
   product: Codex
-  generated_at: 2026-09-08
+  generated_at: 2026-09-09
   invisible_context_boundary: No private credentials or unrelated repositories inspected.
 ---
 
@@ -24,10 +24,11 @@ single-project calls have no inputs:
 
 ```yaml
 permissions:
+  issues: write
   actions: read
   contents: read
-  issues: write
   id-token: write
+  attestations: write
 jobs:
   build:
     uses: kungfu-systems/buildchain/.github/workflows/build.yml@v4
@@ -141,14 +142,16 @@ steps. Their shared behavior is owned by these composite actions:
 
 | Action | Owner responsibility |
 | --- | --- |
-| `build-lifecycle-stage` | Lifecycle manifests, sampling and diagnostics |
-| `build-signing-request` | Unsigned requests and detached signing control inputs |
-| `build-verification-evidence` | Independent substage verification and failure evidence |
-| `build-attestation-policy` | Source-bound artifact attestation policy |
-| `build-agent-hub-evidence` | Agent Hub conformance evidence |
-| `build-artifact-transfer` | GitHub and S3 transport plus payload manifests |
+| `resolve-build-plan` | Admission and complete plan |
+| `prepare-build-environment` | Source and toolchains |
+| `run-build-stage` | Ordered lifecycle and diagnostics |
+| `transfer-build-artifact` | Exact artifact coordinates and transport |
+| `sign-build-artifact` | Isolated signing and final bytes |
+| `attest-build-artifact` | Provider identity and final-byte attestation |
+| `finalize-build-result` | Complete coverage and final result |
 
-The backbone still owns install → build → verify order, job dependencies,
+The backbone has six jobs: `plan`, `build-native`, `build-container`, `sign`,
+`attest` and `deliver`. It owns install → build → verify order, job dependencies,
 permissions, signing control, credential-island placement and final aggregation.
 A composite's internal receipt inputs transport already resolved facts; they
 are not additional reusable-workflow configuration inputs.
@@ -174,22 +177,25 @@ must verify the source, artifacts and receipts independently.
 
 ## Evidence and failure behavior
 
-The workflow retains runtime/source identity, build and diagnostics summaries,
-Release Candidate Passport, signing/finalization and controller receipt outputs.
-The public facade forwards those outputs from the single backbone execution.
+The backbone returns one rooted `result` containing source/runtime identity and
+exact provider references for payloads, diagnostics, summary, signing, attestation
+and candidate evidence. The public facade exposes that result plus the candidate
+and controller artifact names for direct `download-artifact` calls.
 Platform manifests include deterministic payload hashes; transport preserves
 hidden artifacts and provenance. Substage failure evidence is collected even
 when verify fails. Untrusted events cannot reach build runners.
 
-Signing authority and credential-island jobs remain separate from ordinary
-build execution. Imported signed bytes undergo consumer verification before
+The `sign` matrix uses separate ordinary artifact and protected macOS credential
+instances. The credential instance never checks out or executes consumer source.
+A hosted artifact instance may use its platform when final-byte verification
+requires that operating system; it receives no certificate or notary inputs. Imported signed bytes undergo consumer verification before
 manifests are recomputed. Release builds produce candidates; registry publishing
 belongs to the protected release path.
 
 ## Maintaining the contract
 
 Update the TOML parser and plan resolver, owner contracts, affected consumers
-and tests together. Run `node scripts/generate-channel-build-workflow.mjs`,
+and tests together. Run
 `pnpm run generate:workflows`, generated reference/site checks and the full
 `pnpm run check`. Breaking input removal is intentional: migrate old `with`
 settings to TOML and remove them from calls; no compatibility forwarding exists.

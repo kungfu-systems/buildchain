@@ -67,8 +67,8 @@ all related declarations. Run `pnpm run generate:workflows` and
 
 | Canonical workflow | Category | Invocation | Status | Purpose | Compatibility path |
 | --- | --- | --- | --- | --- | --- |
+| [build.yml](../.github/workflows/build.yml) | build | reusable | active | Buildchain Channel Build | — |
 | [public-build-adopter-qualification.yml](../.github/workflows/public-build-adopter-qualification.yml) | build | reusable | active | V4 Adopter Delivery | — |
-| [public-build-candidate.yml](../.github/workflows/public-build-candidate.yml) | build | reusable | active | Buildchain Channel Build | `build.yml` |
 | [public-build-check.yml](../.github/workflows/public-build-check.yml) | build | reusable | active | Buildchain Check | `check.yml` |
 | [public-build-demo.yml](../.github/workflows/public-build-demo.yml) | build | reusable | active | Buildchain Declarative Binary Auditable Demo | `.declarative-auditable-demo.yml` |
 | [public-build-publication.yml](../.github/workflows/public-build-publication.yml) | build | reusable | active | Buildchain Publication Artifact | `publication-artifact.yml` |
@@ -104,11 +104,11 @@ all related declarations. Run `pnpm run generate:workflows` and
 | Canonical workflow | Category | Invocation | Status | Purpose | Compatibility path |
 | --- | --- | --- | --- | --- | --- |
 | [.build-demo-adapter.yml](../.github/workflows/.build-demo-adapter.yml) | build | reusable | active | Buildchain Auditable Demo | `.auditable-demo.yml` |
-| [.build-engine.yml](../.github/workflows/.build-engine.yml) | build | reusable | active | Buildchain Build | `.build.yml` |
 | [.build-gate-profile.yml](../.github/workflows/.build-gate-profile.yml) | build | reusable | active | Buildchain Shifu Gate Profile | `.gate-profile.yml` |
 | [.build-release-verify-compat.yml](../.github/workflows/.build-release-verify-compat.yml) | build | reusable | compatibility | release verify | `.release-verify.yml` |
 | [.build-sam-verify-compat.yml](../.github/workflows/.build-sam-verify-compat.yml) | build | reusable | compatibility | sam verify | `.sam-verify.yml` |
 | [.build-wheel-verify-compat.yml](../.github/workflows/.build-wheel-verify-compat.yml) | build | reusable | compatibility | wheel verify | `.wheel-verify.yml` |
+| [.build.yml](../.github/workflows/.build.yml) | build | reusable | active | Buildchain Build | — |
 | [.ops-git-sync.yml](../.github/workflows/.ops-git-sync.yml) | ops | reusable | active | sync remote git | `.sync-remote-git.yml` |
 | [.release-authority.yml](../.github/workflows/.release-authority.yml) | release | reusable | active | Buildchain Sealed Publication Authority | `.publication-authority.yml` |
 | [.release-binary-assets.yml](../.github/workflows/.release-binary-assets.yml) | release | reusable | active | Buildchain Binary Release Assets | `.binary-release-assets.yml` |

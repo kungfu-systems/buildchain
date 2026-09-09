@@ -11,7 +11,6 @@ import {
   hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
 } from "../packages/core/self-dogfood-version.js";
-import { generateChannelBuildWorkflow } from "./generate-channel-build-workflow.mjs";
 import {
   generateChannelPromotionWorkflow,
   parsePromotionShellRouting,
@@ -104,7 +103,6 @@ const requiredPaths = [
   "scripts/generate-next-development-guidance.mjs",
   "scripts/reconcile-release-governance.mjs",
   "scripts/buildchain-channel-router.mjs",
-  "scripts/generate-channel-build-workflow.mjs",
   "scripts/promotion-channel-router.mjs",
   "scripts/promotion-identity-resolver.mjs",
   "scripts/generate-channel-promotion-workflow.mjs",
@@ -287,9 +285,9 @@ const reusableBuildWorkflow = fs.readFileSync(
   "utf8",
 );
 for (const requiredSnippet of [
-  "BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}",
-  "BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}",
-  "Resolve rooted build plan from TOML",
+  "workflow-ref: ${{ job.workflow_ref }}",
+  "workflow-sha: ${{ job.workflow_sha }}",
+  "actions/resolve-build-plan",
 ]) {
   if (!reusableBuildWorkflow.includes(requiredSnippet)) {
     throw new Error(`reusable build workflow missing called-workflow identity: ${requiredSnippet}`);
@@ -299,9 +297,6 @@ const channelBuildWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/build.yml"),
   "utf8",
 );
-if (channelBuildWorkflow !== generateChannelBuildWorkflow(reusableBuildWorkflow)) {
-  throw new Error("generated channel build workflow is stale");
-}
 const advancedPromotionWorkflow = fs.readFileSync(
   path.join(root, ".github/workflows/.release-candidate-promote.yml"),
   "utf8",
@@ -942,8 +937,8 @@ for (const requiredSnippet of [
   "build.contract",
   "cache roots",
   "exact consumer source",
-  "build-lifecycle-stage",
-  "build-artifact-transfer",
+  "run-build-stage",
+  "transfer-build-artifact",
 ]) {
   if (!reusableBuildSurfaceDoc.includes(requiredSnippet)) {
     throw new Error(`reusable build surface doc missing contract lock snippet: ${requiredSnippet}`);

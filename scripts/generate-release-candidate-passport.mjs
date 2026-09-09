@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { createReleaseCandidatePassport, validateReleaseCandidatePassport } from "../packages/core/release-candidate.js";
-import { scanFloatingConsumerPolicy, consumerPolicyScannerRoot } from "../packages/core/floating-consumer-policy.js";
 import { domainContentRoot } from "../packages/core/canonical-contracts.js";
 import { STAGE_CAPSULE_CONTRACT, STAGE_CAPSULE_IDENTITY_CONTRACT, stageCapsuleIdentityRoot, stageCapsuleRoot, validateStageCapsule } from "../packages/core/stage-capsule.js";
 import { runtimeResumeDocumentRoot } from "../packages/core/runtime-ref-resume-authority.js";
@@ -182,23 +180,6 @@ function writeReleaseCandidateStageCapsules({
   };
 }
 
-export function resolveLegacyConsumerPolicyReceipt(options = {}) {
-  if (options.json) return { receipt: JSON.parse(options.json), receiptRoot: options.receiptRoot };
-  if (options.repository !== "kungfu-systems/buildchain" || options.targetChannel !== "alpha" || options.workflowShellRef !== "v4-alpha" || options.runtimeOverride !== true) return undefined;
-  if (!/^[0-9a-f]{40}$/u.test(options.runtimeRef || "") || options.runtimeRef !== options.runtimeSha || options.sourceTreeHash !== options.runtimeTreeHash()) return undefined;
-  const root = path.resolve(options.root || ".buildchain/runtime");
-  const alphaLock = readJsonFile(path.join(root, ".buildchain/alpha-contract-lock.json"));
-  const result = scanFloatingConsumerPolicy({
-    root, repository: options.repository, sourceSha: options.sourceSha,
-    invokedWorkflow: options.invokedWorkflow || ".github/workflows/build.yml", invocationSourcePath: options.invocationSourcePath,
-    expectedInvocationChannel: "alpha", resolvedWorkflowSha: alphaLock.buildchain?.resolvedSha,
-    resolvedRuntimeSha: options.runtimeSha, scannerRoot: consumerPolicyScannerRoot(),
-    policy: readJsonFile(path.resolve(import.meta.dirname, "../architecture/floating-consumer-policy.json")),
-  });
-  if (!result.ok) throw new Error(`legacy floating-shell policy receipt invalid: ${result.failures.map(({ code }) => code).join(", ")}`);
-  return { receipt: result.receipt, receiptRoot: result.receiptRoot };
-}
-
 export function generateReleaseCandidatePassportCli() {
   const buildSummaryPath = path.resolve(env("BUILDCHAIN_BUILD_SUMMARY_PATH", ".buildchain/artifacts/build-summary.json"));
   const outputPath = path.resolve(env("BUILDCHAIN_RC_PASSPORT_PATH", ".buildchain/artifacts/release-candidate-passport.json"));
@@ -212,15 +193,7 @@ export function generateReleaseCandidatePassportCli() {
   const familyEvidenceJson = env("BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON");
   const familyEvidence = familyEvidenceJson ? JSON.parse(familyEvidenceJson) : undefined;
   const consumerPolicyJson = env("BUILDCHAIN_V4_POLICY_RECEIPT_JSON");
-  const consumerPolicyReceipt = resolveLegacyConsumerPolicyReceipt({
-    json: consumerPolicyJson, receiptRoot: env("BUILDCHAIN_V4_POLICY_RECEIPT_ROOT"),
-    repository: env("GITHUB_REPOSITORY", buildSummary.git?.repository || ""), sourceSha,
-    targetChannel: env("BUILDCHAIN_RC_TARGET_CHANNEL", buildSummary.publishSource?.channel || buildSummary.publishGate?.channel || ""),
-    runtimeRef: env("BUILDCHAIN_RUNTIME_REF", buildSummary.runtime?.ref || ""), runtimeSha: env("BUILDCHAIN_RUNTIME_SHA", buildSummary.runtime?.sha || ""),
-    workflowShellRef: env("BUILDCHAIN_WORKFLOW_SHELL_REF", buildSummary.runtime?.workflowShellRef || ""), runtimeOverride: buildSummary.runtime?.override === true,
-    root: ".buildchain/runtime", invocationSourcePath: env("GITHUB_WORKFLOW_REF"), sourceTreeHash: env("BUILDCHAIN_RC_SOURCE_TREE_HASH"),
-    runtimeTreeHash: () => execFileSync("git", ["-C", ".buildchain/runtime", "rev-parse", "HEAD^{tree}"], { encoding: "utf8" }).trim(),
-  });
+  const consumerPolicyReceipt = consumerPolicyJson ? { receipt: JSON.parse(consumerPolicyJson), receiptRoot: env("BUILDCHAIN_V4_POLICY_RECEIPT_ROOT") } : undefined;
   const passport = createReleaseCandidatePassport({
     repository: env("GITHUB_REPOSITORY", buildSummary.git?.repository || ""),
     pullRequest: {

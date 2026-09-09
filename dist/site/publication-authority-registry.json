@@ -45,19 +45,6 @@
       "notes": ""
     },
     {
-      "workflowPath": ".github/workflows/.build-engine.yml",
-      "authorityClass": "non-publication-oidc",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/.build-engine.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
       "workflowPath": ".github/workflows/.build-release-verify-compat.yml",
       "authorityClass": "governance-write",
       "publicationCapable": false,
@@ -505,19 +492,6 @@
       "credentialMode": "none",
       "publisherWorkflowMode": "fixed",
       "publisherWorkflowPath": ".github/workflows/patrol-weekly.yml",
-      "environment": "",
-      "environmentMode": "fixed",
-      "runnerPolicy": "unqualified",
-      "notes": ""
-    },
-    {
-      "workflowPath": ".github/workflows/public-build-candidate.yml",
-      "authorityClass": "non-publication-oidc",
-      "publicationCapable": false,
-      "capabilityIds": [],
-      "credentialMode": "none",
-      "publisherWorkflowMode": "fixed",
-      "publisherWorkflowPath": ".github/workflows/public-build-candidate.yml",
       "environment": "",
       "environmentMode": "fixed",
       "runnerPolicy": "unqualified",
@@ -1292,16 +1266,6 @@
       "classified": true
     },
     {
-      "path": ".github/workflows/.build-engine.yml",
-      "signals": [
-        "write-permission",
-        "oidc",
-        "environment",
-        "cloud-credential"
-      ],
-      "classified": true
-    },
-    {
       "path": ".github/workflows/.build-gate-profile.yml",
       "signals": [],
       "classified": false
@@ -1333,8 +1297,7 @@
       "signals": [
         "write-permission",
         "oidc",
-        "environment",
-        "cloud-credential"
+        "environment"
       ],
       "classified": true
     },
@@ -1577,14 +1540,6 @@
       "path": ".github/workflows/public-build-adopter-qualification.yml",
       "signals": [],
       "classified": false
-    },
-    {
-      "path": ".github/workflows/public-build-candidate.yml",
-      "signals": [
-        "write-permission",
-        "oidc"
-      ],
-      "classified": true
     },
     {
       "path": ".github/workflows/public-build-check.yml",
@@ -2052,5 +2007,5 @@
       "classified": true
     }
   ],
-  "registryDigest": "40ae53e5bf87b44395bd7bf04b19effb2cae1ada5f9864c02dbef4220fc92106"
+  "registryDigest": "be00795530dcfd70c0d11b2461eb712d0185246533921e4c8c95b565d37ec5d4"
 }

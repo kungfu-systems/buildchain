@@ -79,7 +79,7 @@ test("raw v3 inventory produces the complete exact-source matrix", () => {
 });
 
 test("two public adopters and the neutral driver reconcile across all platforms", () => {
-  const consumers = ["buildchain", "agent-hub-demo"];
+  const consumers = ["buildchain", "sample-consumer"];
   const reports = consumers.flatMap((consumer) =>
     CROSS_PLATFORM_ADOPTER_PLATFORMS.map((platform) =>
       report(platform, consumer),

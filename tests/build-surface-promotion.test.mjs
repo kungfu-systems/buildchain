@@ -189,42 +189,24 @@ test("SETTLE consumes APPLY evidence and emits the sole terminal receipt project
   assert.match(settleBlock, /controller-receipt-digest: \$\{\{ steps\.verify\.outputs\.receipt-root \}\}/);
   assert.doesNotMatch(settleBlock, /contents: write|id-token: write/);
 });
-test("reusable build exposes release-candidate passport outputs", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-
-  assert.match(workflow, /build.artifacts.release_candidate/);
-  assert.match(workflow, /build-attestation-policy/);
-  assert.match(workflow, /publish-source-tree-sha:/);
-  assert.match(workflow, /Resolve source tree SHA/);
-  assert.match(workflow, /Generate release candidate passport/);
-  assert.match(workflow, /BUILDCHAIN_RC_SOURCE_TREE_HASH/);
-  assert.match(workflow, /release-candidate-passport-artifact/);
-  assert.match(workflow, /release-candidate-passport-json/);
-  assert.match(workflow, /BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON/);
-  assert.match(workflow, /BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON/);
-  assert.match(workflow, /<artifact-name>-release-candidate-|release-candidate-/);
+test("reusable build seals release-candidate passport in its final result", () => {
+  const final = fs.readFileSync(path.join(root, "scripts/build/finalize.mjs"), "utf8");
+  assert.match(final, /build.artifacts.release_candidate/u);
+  assert.match(final, /generate-release-candidate-passport.mjs/u);
+  assert.match(final, /BUILDCHAIN_RC_SOURCE_TREE_HASH: plan.source.tree_sha/u);
+  assert.match(final, /BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON/u);
+  assert.match(final, /BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON/u);
+  assert.match(final, /artifacts.release_candidate = await upload/u);
 });
 
-test("reusable build exposes runner-local tools before lifecycle execution", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-
-  assert.match(workflow, /name: Expose Windows runner user toolchain/);
-  assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
-  assert.match(workflow, /Join-Path \$HOME "\.cargo\\bin"/);
-  assert.match(workflow, /name: Expose POSIX runner user toolchain/);
-  assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
-  assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
-  const nativeBuild = workflow.slice(workflow.indexOf("  build-native:"));
-  assert.ok(
-    nativeBuild.indexOf("name: Expose Windows runner user toolchain") <
-      nativeBuild.indexOf("name: Install Buildchain runtime dependencies"),
-  );
+test("environment preparation exposes runner-local tools before lifecycle execution", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const prepare = fs.readFileSync(path.join(root, "scripts/build/prepare.mjs"), "utf8");
+  assert.match(prepare, /os.homedir\(\), ".local\/bin"/u);
+  assert.match(prepare, /os.homedir\(\), ".cargo\/bin"/u);
+  assert.match(prepare, /fs.appendFileSync\(process.env.GITHUB_PATH/u);
+  const native = workflow.slice(workflow.indexOf("  build-native:"));
+  assert.ok(native.indexOf("prepare-build-environment") < native.indexOf("run-build-stage"));
 });
 
 test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () => {
@@ -1838,39 +1820,17 @@ test("runLifecycle applies a clear fallback timeout to commands and configured s
   }
 });
 
-test("TOML build timeout bounds both matrix jobs and the shared lifecycle action", () => {
+test("TOML timeout bounds both build jobs and the lifecycle implementation", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const action = fs.readFileSync(path.join(root, "actions/build-lifecycle-stage/action.yml"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "scripts/build/stage.mjs"), "utf8");
   assert.equal((workflow.match(/timeout-minutes: .*build\.timeout_minutes/g) || []).length, 2);
-  assert.match(action, /timeout-minutes: .*build\.timeout_minutes/u);
+  assert.match(stage, /timeoutMinutes: plan.build.timeout_minutes/u);
 });
 
-test("signed platform metadata artifacts exclude imported payload trees", () => {
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const stepBlock = (name) => {
-    const start = workflow.indexOf(`      - name: ${name}`);
-    assert.notEqual(start, -1, `missing workflow step: ${name}`);
-    const next = workflow.indexOf("\n      - name:", start + 1);
-    return workflow.slice(start, next === -1 ? workflow.length : next);
-  };
-
-  assert.doesNotMatch(
-    stepBlock("Publish final signed artifact manifest"),
-    /\.buildchain\/artifacts\/signing/,
-  );
-  assert.doesNotMatch(
-    stepBlock("Publish final signed diagnostics"),
-    /\.buildchain\/artifacts\/signing/,
-  );
-  assert.match(
-    workflow,
-    /\$\{\{ fromJSON\(needs\.configure\.outputs\.plan-json\)\.artifacts\.name \}\}-credential-manifest-macos-\$\{\{ needs\.resolve-source\.outputs\.publish-source-sha \}\}/,
-  );
-  assert.match(
-    workflow,
-    /\$\{BUILDCHAIN_ARTIFACT_NAME\}-credential-manifest-macos-\$\{BUILDCHAIN_SOURCE_SHA\}/,
-  );
-  assert.doesNotMatch(workflow, /-manifest-macos-credential-/);
+test("aggregate diagnostics read only diagnostics documents from final artifacts", () => {
+  const final = fs.readFileSync(path.join(root, "scripts/build/finalize.mjs"), "utf8");
+  assert.match(final, /writeJson\(`.buildchain\/downloaded-diagnostics\/\$\{platform.id\}\/diagnostics.json`, readJson\(diagnostics\)\)/u);
+  assert.match(final, /\["diagnostics-summary.json"\]/u);
 });
 
 test("runLifecycle samples a configured lifecycle stage", () => {

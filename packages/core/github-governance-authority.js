@@ -42,11 +42,6 @@ const PUBLIC_REPOSITORY_TARGETS = Object.freeze({
   ".github": [
     target("main", [check("governance")], false),
   ],
-  "agent-hub-demo": [
-    target("dev/v0/v0.2", [check("check / check")], true),
-    target("alpha/v0/v0.2", [check("check / check")], false),
-    target("release/v0/v0.2", [check("check / check")], false),
-  ],
   "build-images": [
     target("dev/v1/v1.1", [check("check")], true),
     target("alpha/v1/v1.1", [check("check")], true),

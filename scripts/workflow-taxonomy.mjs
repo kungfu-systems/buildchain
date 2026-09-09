@@ -26,6 +26,7 @@ const PROTECTED = [
 ];
 
 export function workflowPath(entry) {
+  if (entry.path) return entry.path;
   const prefix = entry.role === "component" ? "." : `${entry.role}-`;
   return `.github/workflows/${prefix}${entry.category}-${entry.purpose}.yml`;
 }
@@ -36,6 +37,9 @@ export function readWorkflowTaxonomy(root) {
 }
 
 function validateEntryRole(entry, errors) {
+  if (entry.path && !((entry.id === ".build" || entry.id === "build") && entry.path === `.github/workflows/${entry.id}.yml`)) {
+    errors.push(`${entry.id}: explicit path is reserved for the build facade and backbone`);
+  }
   if (!ROLES.includes(entry.role)) errors.push(`${entry.id}: invalid role`);
   if (!CATEGORIES.includes(entry.category))
     errors.push(`${entry.id}: invalid category`);

@@ -734,6 +734,8 @@ function createLifecycleManifest(context, artifacts) {
       git: {
         repository: process.env.GITHUB_REPOSITORY || "",
         sha: process.env.BUILDCHAIN_SOURCE_SHA || process.env.GITHUB_SHA || "",
+        treeSha: process.env.BUILDCHAIN_SOURCE_TREE_SHA || "",
+        runtimeSha: process.env.BUILDCHAIN_RUNTIME_SHA || "",
         ref: process.env.BUILDCHAIN_SOURCE_REF || process.env.GITHUB_REF || "",
         runId: process.env.GITHUB_RUN_ID || "",
         runAttempt: process.env.GITHUB_RUN_ATTEMPT || "",

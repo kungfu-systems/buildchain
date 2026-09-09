@@ -129,7 +129,7 @@ test("custom product publication preserves the sealed candidate version and omit
     targetRef: "alpha/v0/v0.2",
     sourceSha: "a".repeat(40),
     sourceTimestamp: "2026-09-03T00:00:00.000Z",
-    repository: "kungfu-systems/agent-hub-demo",
+    repository: "kungfu-systems/sample-consumer",
     artifactKind: "custom",
     requiredArtifactsRoot: domainContentRoot(
       "v4-product-required-artifacts",
@@ -169,7 +169,7 @@ test("custom product publication preserves the sealed candidate version and omit
   );
   fs.writeFileSync(
     path.join(temporaryRoot, "package.json"),
-    JSON.stringify({ name: "agent-hub-demo", version: intent.version }),
+    JSON.stringify({ name: "sample-consumer", version: intent.version }),
   );
   fs.writeFileSync(requiredArtifactsPath, JSON.stringify(requiredArtifacts));
   const runtime = createProductPublicationAdapters({

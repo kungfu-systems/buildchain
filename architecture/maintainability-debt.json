@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 62190,
-    "current": 54129
+    "measuredExcess": 60195,
+    "current": 52134
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -536,17 +536,24 @@
             },
             "createGithubRulesetGovernanceRolloutPlan@1192": {
               "complexity": 36
+            },
+            "evaluateGithubGovernanceSnapshot@692": {
+              "lines": 189,
+              "complexity": 41
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1187": {
+              "complexity": 36
             }
           }
         },
         "current": {
-          "lines": 1369,
+          "lines": 1364,
           "functions": {
-            "evaluateGithubGovernanceSnapshot@697": {
+            "evaluateGithubGovernanceSnapshot@692": {
               "lines": 189,
               "complexity": 41
             },
-            "createGithubRulesetGovernanceRolloutPlan@1192": {
+            "createGithubRulesetGovernanceRolloutPlan@1187": {
               "complexity": 36
             }
           }
@@ -559,6 +566,13 @@
               "complexity": 25
             },
             "createGithubRulesetGovernanceRolloutPlan@1192": {
+              "complexity": 25
+            },
+            "evaluateGithubGovernanceSnapshot@692": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1187": {
               "complexity": 25
             }
           }
@@ -1214,7 +1228,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1489
+          "lines": 1484
         },
         "target": {
           "lines": 600
@@ -1696,7 +1710,7 @@
           "lines": 885
         },
         "current": {
-          "lines": 850
+          "lines": 852
         },
         "target": {
           "lines": 600
@@ -2194,7 +2208,7 @@
           "lines": 714
         },
         "current": {
-          "lines": 712
+          "lines": 708
         },
         "target": {
           "lines": 600
@@ -2243,13 +2257,16 @@
           "functions": {
             "<anonymous@1494>@1494": {
               "lines": 206
+            },
+            "<anonymous@1476>@1476": {
+              "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2668,
+          "lines": 2628,
           "functions": {
-            "<anonymous@1494>@1494": {
+            "<anonymous@1476>@1476": {
               "lines": 206
             }
           }
@@ -2259,6 +2276,9 @@
           "functions": {
             "<anonymous@1494>@1494": {
               "lines": 180
+            },
+            "<anonymous@1476>@1476": {
+              "lines": 180
             }
           }
         }
@@ -2267,27 +2287,27 @@
         "baseline": {
           "lines": 4639,
           "functions": {
-            "<anonymous@445>@445": {
+            "<anonymous@446>@446": {
               "lines": 183
             },
-            "<anonymous@1554>@1554": {
+            "<anonymous@1555>@1555": {
               "lines": 249
             },
-            "<anonymous@2560>@2560": {
+            "<anonymous@2561>@2561": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 2884,
+          "lines": 2885,
           "functions": {
-            "<anonymous@445>@445": {
+            "<anonymous@446>@446": {
               "lines": 183
             },
-            "<anonymous@1554>@1554": {
+            "<anonymous@1555>@1555": {
               "lines": 249
             },
-            "<anonymous@2560>@2560": {
+            "<anonymous@2561>@2561": {
               "lines": 188
             }
           }
@@ -2295,13 +2315,13 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@445>@445": {
+            "<anonymous@446>@446": {
               "lines": 180
             },
-            "<anonymous@1554>@1554": {
+            "<anonymous@1555>@1555": {
               "lines": 180
             },
-            "<anonymous@2560>@2560": {
+            "<anonymous@2561>@2561": {
               "lines": 180
             }
           }
@@ -2476,7 +2496,7 @@
           "lines": 916
         },
         "current": {
-          "lines": 899
+          "lines": 831
         },
         "target": {
           "lines": 600
@@ -2719,7 +2739,7 @@
           "lines": 714
         },
         "current": {
-          "lines": 710
+          "lines": 679
         },
         "target": {
           "lines": 600
@@ -2841,29 +2861,6 @@
       }
     },
     "workflows": {
-      ".github/workflows/.build.yml": {
-        "baseline": {
-          "lines": 3370,
-          "jobs": 15,
-          "steps": 194,
-          "maxStepsPerJob": 44,
-          "decisions": 113
-        },
-        "current": {
-          "lines": 2244,
-          "jobs": 15,
-          "steps": 170,
-          "maxStepsPerJob": 32,
-          "decisions": 87
-        },
-        "target": {
-          "lines": 600,
-          "jobs": 8,
-          "steps": 50,
-          "maxStepsPerJob": 20,
-          "decisions": 25
-        }
-      },
       ".github/workflows/.gate-profile.yml": {
         "baseline": {
           "lines": 701,
@@ -3103,7 +3100,7 @@
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 2884
+      "current": 2885
     },
     {
       "domain": "workflows",
