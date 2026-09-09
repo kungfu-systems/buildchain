@@ -3,16 +3,16 @@
   "contract": "kungfu-buildchain-contract-lock",
   "buildchain": {
     "ref": "v4-alpha",
-    "resolvedSha": "e3953ea3bc23bef9c85e1c459d4ea0998753e4ef",
+    "resolvedSha": "316cea90576de816ede38d96cf08b924ee41a15a",
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "contractDigest": "sha256:9f8057f4cb25b751b2430064ea47a68496ada30ebe91e055f5af065656d668cf",
+    "contractDigest": "sha256:9020e79400bb4540e27298d4a035a61328a5e54306ce8a0ee3199bab76a02bd3",
     "compatibilityDigest": "sha256:e398528e54509c05569630ffcc98a04d41e831479ab921df65943b49bf077719",
     "compatibilityFactRegistryRoot": "sha256:232fd556a2372b29db586bbc2acbdfce6464a68c93902797ff527f75f7816c42",
     "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
     "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
     "majorLine": "v4",
     "compatibilityPolicy": "major-compatible",
-    "acceptedAt": "2026-09-08T15:04:50.052Z",
+    "acceptedAt": "2026-09-08T16:48:40.291Z",
     "surfaces": [
       {
         "id": "reusable-build",

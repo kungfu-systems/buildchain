@@ -3087,7 +3087,8 @@
     "scripts/dev-delivery-warrant.mjs",
     "scripts/generate-channel-promotion-workflow.mjs",
     ".github/workflows/v4-stage-capsule-canary.yml",
-    "packages/core/release-tail-provider-plane.js"
+    "packages/core/release-tail-provider-plane.js",
+    "packages/core/buildchain-publication-authority.js"
   ],
   "burnDownSlices": [
     {
