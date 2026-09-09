@@ -10643,7 +10643,7 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "547dde42a349a047f2aadcfc3ee9e3e31b6a7f6bfc75b7d37e5dcff7abd15308",
-    "workflowRegistryDigest": "5c2a53c099e5e5164bd7dcf33a0020af3f46d1037b697b7ea2195f8c8c333b37",
+    "workflowRegistryDigest": "308368b26e7ea0ea77bdcd0e4f5099123a67b3215e82585d9201c2f5d3028284",
     "pageRegistryDigest": "a9f106b8e58f4ceaaca17a1e3a0c39c7bc1653c503bd386d86bbbf019a83ddf5"
   },
   "comparison": {
