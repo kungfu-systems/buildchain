@@ -55,8 +55,8 @@ test("release promotion creates source version commits and points refs at them",
       version: "0.0.0-alpha.0",
       packageManager: "pnpm@11.7.0",
     },
-    "pnpm-workspace.yaml": 'packages:\n  - "actions/*"\n',
-    "actions/promote-buildchain-ref/package.json": {
+    "pnpm-workspace.yaml": 'packages:\n  - "actions/*/*"\n',
+    "actions/release/promote-ref/package.json": {
       name: "@kungfu-systems/buildchain-promote-buildchain-ref",
       version: "1.0.0-alpha.0",
       private: true,

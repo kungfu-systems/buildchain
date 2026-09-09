@@ -9,7 +9,7 @@ import {
   evaluateStableReleaseGate,
   loadStableReleasePolicy,
   STABLE_RELEASE_GATE_CONTRACT,
-} from "../packages/core/stable-release-gate.js";
+} from "../packages/core/release/stable-release-gate.js";
 
 const CANDIDATE_SHA = "a".repeat(40);
 const PREVIOUS_SHA = "b".repeat(40);
@@ -57,7 +57,7 @@ function facts(overrides = {}) {
       sha: PREVIOUS_SHA,
       publishedAt: "2026-07-08T00:00:00.000Z",
     },
-    changedPaths: ["actions/promote-buildchain-ref/lib.js", "package.json"],
+    changedPaths: ["packages/core/release/promote-ref/lib.js", "package.json"],
     impact: {
       summary: "Gate stable promotion on canary evidence.",
       surfaceImpacts: [{ id: "stable-release-canary", class: "release-governance", impact: "minor" }],

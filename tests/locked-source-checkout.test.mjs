@@ -10,7 +10,7 @@ import {
   fetchSourceCommit,
   runBoundedFetch,
   lockedSourceCheckout,
-} from "../scripts/locked-source-checkout.mjs";
+} from "../packages/core/providers/commands/locked-source-checkout.mjs";
 
 function git(args, cwd) {
   return execFileSync("git", args, {
@@ -77,7 +77,7 @@ test("locked source checkout uses a mirror cache and verifies head and tree", ()
 test("locked checkout CLI can bootstrap a nested Buildchain runtime from the mirror", () => {
   const origin = createRepository();
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-runtime-checkout-work-"));
-  const scriptPath = path.resolve(import.meta.dirname, "..", "scripts", "locked-source-checkout.mjs");
+  const scriptPath = path.resolve(import.meta.dirname, "..", "packages", "core", "providers", "commands", "locked-source-checkout.mjs");
 
   execFileSync(process.execPath, [scriptPath], {
     cwd: workspace,

@@ -352,11 +352,11 @@ test("strict release promotion accepts line-scoped buildchain recovery PRs", asy
             data: {
               files: [
                 { filename: "package.json" },
-                { filename: "actions/promote-buildchain-ref/lib.js" },
-                { filename: "actions/promote-buildchain-ref/dist/index.js" },
-                { filename: "packages/core/self-dogfood-version.js" },
+                { filename: "packages/core/release/promote-ref/lib.js" },
+                { filename: "actions/release/promote-ref/dist/index.js" },
+                { filename: "packages/core/release/self-dogfood-version.js" },
                 { filename: "scripts/check-inventory.mjs" },
-                { filename: "scripts/release-line-policy.mjs" },
+                { filename: "packages/core/release/commands/release-line-policy.mjs" },
                 { filename: "tests/build-surface.test.mjs" },
                 { filename: "tests/promote-buildchain-ref.test.mjs" },
                 { filename: "tests/release-line-policy.test.mjs" },

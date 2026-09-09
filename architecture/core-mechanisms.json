@@ -1,0 +1,1148 @@
+{
+  "schemaVersion": 1,
+  "contract": "buildchain.core-mechanisms/v1",
+  "maintainability": {
+    "dependencyCycles": 0
+  },
+  "reverseScan": {
+    "registries": [
+      "dist/site/cli-registry.json",
+      "dist/site/node-api-registry.json",
+      "dist/site/workflow-registry.json",
+      "dist/site/public-surface-audit.json"
+    ],
+    "commandRegistry": "packages/core/contracts/command-registry.mjs",
+    "packageExports": "package.json#exports",
+    "generatedReferences": [
+      "docs/cli-reference.md",
+      "docs/node-api-reference.md"
+    ],
+    "authoritySourceRules": [
+      {
+        "mechanismId": "dev-delivery-warrant",
+        "root": "packages/core/dev-delivery",
+        "pattern": "^dev-delivery-(?:warrant(?:-[a-z-]+)?|proof)\\.js$"
+      },
+      {
+        "mechanismId": "release-candidate-passport",
+        "root": "packages/core/release",
+        "pattern": "^release-(?:candidate|train)\\.js$"
+      },
+      {
+        "mechanismId": "release-candidate-recovery",
+        "root": "packages/core/release",
+        "pattern": "^release-candidate-recovery\\.js$"
+      },
+      {
+        "mechanismId": "stable-candidate-ledger",
+        "root": "packages/core/release",
+        "pattern": "^stable-candidate-ledger\\.js$"
+      },
+      {
+        "mechanismId": "publish-transaction",
+        "root": "packages/core/release",
+        "pattern": "^publish-transaction\\.js$"
+      },
+      {
+        "mechanismId": "publish-transaction",
+        "root": "packages/core/release/promote-ref/internal",
+        "pattern": "^durable-transaction-[a-z-]+\\.js$"
+      },
+      {
+        "mechanismId": "publish-transaction",
+        "root": "packages/core/release",
+        "pattern": "^reuse-complete-release\\.js$"
+      },
+      {
+        "mechanismId": "release-activation-transaction",
+        "root": "packages/core/release",
+        "pattern": "^release-activation-transaction\\.js$"
+      },
+      {
+        "mechanismId": "next-development-controller",
+        "root": "packages/core/release",
+        "pattern": "^next-development-(?:transition|controller|candidate-reservation)\\.js$"
+      },
+      {
+        "mechanismId": "publication-authority",
+        "root": "packages/core/governance",
+        "pattern": "^(?:(?:buildchain-)?publication-authority|publication-control-plane-audit)\\.js$"
+      },
+      {
+        "mechanismId": "publication-authority",
+        "root": "packages/core/publication",
+        "pattern": "^(?:(?:buildchain-)?publication-authority|publication-control-plane-audit)\\.js$"
+      },
+      {
+        "mechanismId": "publication-authority",
+        "root": "packages/core/publication/commands",
+        "pattern": "^publication-candidate-sealer\\.mjs$"
+      },
+      {
+        "mechanismId": "github-governance-authority",
+        "root": "packages/core/governance",
+        "pattern": "^github-governance-authority\\.js$"
+      },
+      {
+        "mechanismId": "engineering-housekeeper",
+        "root": "packages/core/governance",
+        "pattern": "^engineering-housekeeper(?:-github(?:-client)?)?\\.js$"
+      },
+      {
+        "mechanismId": "engineering-housekeeper",
+        "root": "packages/core/governance/commands",
+        "pattern": "^engineering-housekeeper-workflow\\.mjs$"
+      },
+      {
+        "mechanismId": "release-passport-and-artifact-proof",
+        "root": "packages/core/build",
+        "pattern": "^(?:release-passport(?:-contract)?|artifact-passport|github-artifact-attestation|publication-artifact|publication-sealed-bundle)\\.js$"
+      },
+      {
+        "mechanismId": "release-passport-and-artifact-proof",
+        "root": "packages/core/publication",
+        "pattern": "^(?:release-passport(?:-contract)?|artifact-passport|github-artifact-attestation|publication-artifact|publication-sealed-bundle)\\.js$"
+      },
+      {
+        "mechanismId": "release-passport-and-artifact-proof",
+        "root": "packages/core/release",
+        "pattern": "^(?:release-passport(?:-contract)?|artifact-passport|github-artifact-attestation|publication-artifact|publication-sealed-bundle)\\.js$"
+      },
+      {
+        "mechanismId": "release-propagation-work-control",
+        "root": "packages/core/release",
+        "pattern": "^release-propagation(?:-[a-z-]+)?\\.js$"
+      },
+      {
+        "mechanismId": "release-tail-provider-plane",
+        "root": "packages/core/release",
+        "pattern": "^release-tail-(?:provider-plane|provider-adapters|compatibility)\\.js$"
+      }
+    ],
+    "gitRefStores": [
+      {
+        "mechanismId": "dev-delivery-warrant",
+        "sourcePath": "packages/core/dev-delivery/commands/dev-delivery-warrant.mjs",
+        "marker": "buildchain/dev-delivery-warrant/"
+      },
+      {
+        "mechanismId": "stable-candidate-ledger",
+        "sourcePath": "packages/core/release/commands/stable-candidate-patrol.mjs",
+        "marker": "ledgerRef"
+      },
+      {
+        "mechanismId": "publish-transaction",
+        "sourcePath": "packages/core/release/publish-transaction.js",
+        "marker": "buildchain/release-state/"
+      }
+    ],
+    "orphanPolicy": "Every current state-bearing mechanism owns its implementations, tests, public surfaces, stores, recovery and effect boundary. Missing or ambiguous ownership fails validation."
+  },
+  "mechanisms": [
+    {
+      "id": "next-development-controller",
+      "owner": "Buildchain protected development version plane",
+      "writers": [
+        "completed Alpha terminal-success schedulers",
+        "packages/core/release/next-development-controller.js"
+      ],
+      "schemas": [
+        "kungfu-buildchain-next-development-transition/v1",
+        "kungfu-buildchain-next-development-controller/v1"
+      ],
+      "stores": [
+        "atomic child store keyed by repository and completed-Alpha root",
+        "compare-and-swap rooted controller checkpoints"
+      ],
+      "states": [
+        "planned",
+        "waiting-anchor",
+        "materialized",
+        "pr-pending",
+        "merged",
+        "verified"
+      ],
+      "events": [
+        "schedule",
+        "bind-reviewed-anchor",
+        "materialize-current-dev",
+        "open-protected-version-pr",
+        "record-merge",
+        "verify-protected-dev-readback"
+      ],
+      "transitions": [
+        "one completed Alpha creates or reuses one deterministic durable child",
+        "stale Dev material is superseded before protected delivery",
+        "merged reaches verified only after exact source and derived root readback"
+      ],
+      "recovery": [
+        "fresh runners load the durable child and resume the last rooted checkpoint",
+        "idempotent materialization operation keys reuse effects after lost responses"
+      ],
+      "effects": [
+        "declared source and derived version material",
+        "protected Dev version pull request"
+      ],
+      "retry": [
+        "Dev movement supersedes only the stale materialization attempt",
+        "readback mismatch remains merged and retries observation without rebuilding"
+      ],
+      "invalidation": [
+        "completed Alpha identity drift",
+        "undeclared changed path",
+        "durable compare-and-swap conflict",
+        "protected Dev version or root disagreement"
+      ],
+      "providerReadback": [
+        "latest protected Dev SHA",
+        "protected version PR status",
+        "protected Dev ancestry, target version, source roots, and derived roots"
+      ],
+      "publicSurfaces": [
+        "cli:next-development",
+        "export:./next-development-transition",
+        "export:./next-development-controller",
+        "export:./next-development-projection"
+      ],
+      "sourcePaths": [
+        "packages/core/release/next-development-transition.js",
+        "packages/core/release/next-development-controller.js",
+        "packages/core/release/next-development-candidate-reservation.js"
+      ],
+      "testPaths": [
+        "tests/next-development-transition.test.mjs",
+        "tests/next-development-controller.test.mjs",
+        "tests/dev-alpha-candidate-patrol.test.mjs",
+        "tests/next-development-self-dogfood.test.mjs"
+      ],
+      "callers": [
+        "v4 completed-Alpha schedulers through the atomic store and executor interfaces"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "provider-specific durable-store retention and workflow wake policy remain caller-owned integration choices"
+      ]
+    },
+    {
+      "id": "dev-delivery-warrant",
+      "owner": "Buildchain Dev delivery control plane",
+      "writers": [
+        "packages/core/dev-delivery/commands/dev-delivery-warrant.mjs",
+        "packages/core/dev-delivery/commands/dev-pr-delivery-warrant.mjs",
+        "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs"
+      ],
+      "schemas": [
+        "kungfu-buildchain-dev-delivery-warrant-queue",
+        "kungfu.buildchain.dev-delivery-warrant/v1",
+        "kungfu.buildchain.release-blocker-priority-claim/v1"
+      ],
+      "stores": [
+        "Git ref selected by --warrant-state-ref",
+        "rooted queue JSON and immutable transition receipts"
+      ],
+      "states": [
+        "queued",
+        "selected",
+        "proving",
+        "waiting",
+        "blocked",
+        "merged",
+        "terminal-failure",
+        "dequeued",
+        "cancelled"
+      ],
+      "events": [
+        "submit",
+        "select",
+        "lease",
+        "renew",
+        "recover-expired",
+        "settle",
+        "cancel"
+      ],
+      "transitions": [
+        "root-checked compare-and-set queue successors",
+        "one active leased candidate per protected base",
+        "rooted release blocker ahead of only not-yet-leased ordinary work"
+      ],
+      "recovery": [
+        "expired lease returns eligible candidate to the queue",
+        "head/proof refresh preserves age when safe"
+      ],
+      "effects": [
+        "Git ref state commit",
+        "GitHub PR admission and merge-queue intent"
+      ],
+      "retry": [
+        "lease expiry and expected-old mismatch are bounded retry points"
+      ],
+      "invalidation": [
+        "head SHA drift",
+        "proof-root drift",
+        "lease expiry",
+        "terminal PR state"
+      ],
+      "providerReadback": ["GitHub PR head and checks", "Git ref state root"],
+      "publicSurfaces": [
+        "export:./dev-delivery-warrant",
+        "cli:dev",
+        "workflow:public-ops-dev-auto-merge",
+        "workflow:public-ops-warrant-cancel",
+        "workflow:public-ops-warrant-close"
+      ],
+      "sourcePaths": [
+        "packages/core/dev-delivery/dev-delivery-proof.js",
+        "packages/core/dev-delivery/dev-delivery-warrant-cancellation.js",
+        "packages/core/dev-delivery/dev-delivery-warrant-qualification.js",
+        "packages/core/dev-delivery/dev-delivery-warrant-settlement.js",
+        "packages/core/dev-delivery/dev-delivery-warrant-state.js",
+        "packages/core/dev-delivery/dev-delivery-warrant.js",
+        "packages/core/release/release-blocker-priority.js",
+        "packages/core/dev-delivery/commands/dev-delivery-proof.mjs",
+        "packages/core/dev-delivery/commands/dev-delivery-warrant.mjs",
+        "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs",
+        "packages/core/dev-delivery/commands/dev-pr-delivery-warrant.mjs",
+        "packages/core/dev-delivery/dev-delivery-warrant-native-requirements.js"
+      ],
+      "testPaths": [
+        "tests/dev-delivery-warrant.test.mjs",
+        "tests/dev-delivery-warrant-command.test.mjs",
+        "tests/release-blocker-priority.test.mjs",
+        "tests/dev-delivery-node-boundaries.test.mjs",
+        "tests/dev-delivery-minimal-request.test.mjs"
+      ],
+      "callers": [
+        "packages/core/dev-delivery/commands/dev-merge-queue.mjs",
+        ".github/workflows/dev-pr-auto-merge.yml"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "v4 durable store and lease authority are not yet selected"
+      ]
+    },
+    {
+      "id": "release-candidate-passport",
+      "owner": "Buildchain candidate evidence plane",
+      "writers": [
+        "packages/core/release/dev-alpha-active-release-train.js",
+        "packages/core/release/release-train.js",
+        "packages/core/release/commands/dev-alpha-candidate-patrol.mjs",
+        "packages/core/publication/commands/generate-release-candidate-passport.mjs",
+        "packages/core/release/promote-ref/lib.js"
+      ],
+      "schemas": [
+        "kungfu-buildchain-release-candidate-passport",
+        "kungfu-buildchain-initiative-family-release-evidence/v1",
+        "kungfu-buildchain-release-cut/v1",
+        "kungfu-buildchain-release-blocker-repair/v1",
+        "kungfu-buildchain-release-train-hold/v1",
+        "kungfu-buildchain-release-train/v1",
+        "kungfu-buildchain-release-train-transition/v1"
+      ],
+      "stores": [
+        "candidate workflow artifacts",
+        "Passport JSON bound by sha256 root",
+        "rooted Release Cut and append-only Release Train projection"
+      ],
+      "states": [
+        "assembled",
+        "validated",
+        "qualified",
+        "invalidated",
+        "preparing",
+        "building",
+        "held",
+        "repair-required",
+        "publication-blocked",
+        "publishable",
+        "superseded",
+        "terminal"
+      ],
+      "events": [
+        "build-summary-complete",
+        "gate-pass",
+        "controller-receipts-attached",
+        "promotion-read",
+        "release-cut-created",
+        "release-train-held",
+        "release-train-transitioned",
+        "dev-head-observed"
+      ],
+      "transitions": [
+        "evidence assembly to immutable validated Passport",
+        "rooted compare-and-swap Release Train state transition",
+        "active-train resolution before new candidate selection",
+        "rooted cut-first release-blocker repair with exact Dev patch settlement",
+        "enumerated-cause supersession to a new Release Cut generation"
+      ],
+      "recovery": [
+        "never rebuild from recovery; delegate to candidate-run recovery",
+        "replay the exact rooted transition chain from the frozen Release Cut"
+      ],
+      "effects": [
+        "candidate artifact upload",
+        "promotion admission",
+        "rooted candidate hold projection",
+        "Release Train state projection"
+      ],
+      "retry": [
+        "regenerate only from the same immutable build evidence",
+        "repeat an identical transition request idempotently"
+      ],
+      "invalidation": [
+        "source/runtime/root mismatch",
+        "candidate tree, Alpha base, runtime or route readback mismatch",
+        "failed gate",
+        "invalidated family evidence",
+        "invalid state-chain root or unenumerated supersession cause"
+      ],
+      "providerReadback": [
+        "GitHub Actions run and artifact metadata",
+        "candidate PR ancestry",
+        "exact dev, alpha and runtime Git refs"
+      ],
+      "publicSurfaces": [
+        "export:./release-candidate",
+        "export:./release-train",
+        "cli:candidate",
+        "workflow:public-release-promote",
+        "workflow:self-build-stable-candidate-qualification"
+      ],
+      "sourcePaths": [
+        "packages/core/release/release-candidate.js",
+        "packages/core/release/dev-alpha-active-release-train.js",
+        "packages/core/release/dev-alpha-candidate-selection.js",
+        "packages/core/release/release-train.js",
+        "packages/core/release/commands/dev-alpha-candidate-patrol.mjs",
+        "packages/core/publication/commands/generate-release-candidate-passport.mjs"
+      ],
+      "testPaths": [
+        "tests/release-candidate.test.mjs",
+        "tests/dev-alpha-candidate-patrol.test.mjs",
+        "tests/release-train.test.mjs",
+        "tests/build-surface-promotion.test.mjs"
+      ],
+      "callers": [
+        "packages/core/release/promote-ref/lib.js",
+        "packages/core/release/commands/stable-candidate-qualification.mjs",
+        "packages/core/release/commands/dev-alpha-candidate-patrol.mjs"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "v4 canonical serialization boundary is not yet selected",
+        "v4 Release Train authority remains deferred to the parity wave"
+      ]
+    },
+    {
+      "id": "release-candidate-recovery",
+      "owner": "Buildchain promotion recovery plane",
+      "writers": [
+        "packages/core/release/commands/resume-from-candidate-run.mjs",
+        "packages/core/release/promote-ref/lib.js"
+      ],
+      "schemas": ["kungfu-buildchain-release-candidate-recovery/v1"],
+      "stores": [
+        "immutable recovery receipt",
+        "original candidate artifacts and transaction record"
+      ],
+      "states": [
+        "discovering",
+        "verified",
+        "recoverable",
+        "rejected",
+        "resumed"
+      ],
+      "events": [
+        "artifact-discovery",
+        "provenance-check",
+        "payload-check",
+        "transaction-check",
+        "resume"
+      ],
+      "transitions": [
+        "complete byte-identical artifact set to verified recovery receipt"
+      ],
+      "recovery": [
+        "resume exact candidate bytes",
+        "fail closed instead of rebuilding or retargeting"
+      ],
+      "effects": ["GitHub artifact download", "promotion resume"],
+      "retry": [
+        "transient provider reads may retry; identity conflicts enter repair_required"
+      ],
+      "invalidation": [
+        "expired/missing artifact",
+        "fork or ancestry mismatch",
+        "runtime/payload/transaction drift"
+      ],
+      "providerReadback": [
+        "GitHub run, workflow, PR, artifact and ancestry APIs"
+      ],
+      "publicSurfaces": [
+        "export:./release-candidate-recovery",
+        "cli:release-transaction",
+        "workflow:self-ops-promotion-recovery"
+      ],
+      "sourcePaths": [
+        "packages/core/release/release-candidate-recovery.js",
+        "packages/core/release/commands/resume-from-candidate-run.mjs"
+      ],
+      "testPaths": [
+        "tests/release-candidate-recovery.test.mjs",
+        "tests/release-candidate-recovery-selection.test.mjs",
+        "tests/promote-buildchain-ref-recovery.test.mjs"
+      ],
+      "callers": ["packages/core/release/promote-ref/lib.js"],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": ["v4 provider adapter boundary is not yet selected"]
+    },
+    {
+      "id": "stable-candidate-ledger",
+      "owner": "Buildchain stable release selection plane",
+      "writers": [
+        "packages/core/release/commands/stable-candidate-patrol.mjs",
+        "packages/core/release/commands/stable-candidate-qualification.mjs"
+      ],
+      "schemas": ["kungfu-buildchain-stable-candidate-ledger"],
+      "stores": ["Git ref selected by ledger-ref", "rooted ledger JSON"],
+      "states": ["soaking", "qualified", "revoked", "promoted"],
+      "events": ["register", "qualify", "hold", "revoke", "select", "promote"],
+      "transitions": [
+        "soaking to qualified",
+        "qualified to promoted",
+        "non-promoted to revoked"
+      ],
+      "recovery": [
+        "idempotent registration and qualification",
+        "explicit release-now selection"
+      ],
+      "effects": ["Git ref ledger commit", "stable promotion dispatch"],
+      "retry": ["provider/check delay retains candidate in soaking"],
+      "invalidation": [
+        "revocation",
+        "hold",
+        "failed or incomplete qualification",
+        "competing stable version promotion"
+      ],
+      "providerReadback": [
+        "qualification workflow results",
+        "remote ledger ref",
+        "promotion refs"
+      ],
+      "publicSurfaces": [
+        "export:./stable-candidate-ledger",
+        "workflow:public-ops-stable-candidate-patrol",
+        "workflow:self-ops-stable-candidate-patrol"
+      ],
+      "sourcePaths": [
+        "packages/core/release/stable-candidate-ledger.js",
+        "packages/core/release/commands/stable-candidate-patrol.mjs",
+        "packages/core/release/commands/stable-release-gate.mjs"
+      ],
+      "testPaths": [
+        "tests/stable-candidate-ledger.test.mjs",
+        "tests/stable-candidate-patrol.test.mjs"
+      ],
+      "callers": [
+        "packages/core/release/commands/stable-candidate-patrol.mjs",
+        "packages/core/release/commands/stable-release-gate.mjs"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "v4 scheduler and ledger store ownership are not yet selected"
+      ]
+    },
+    {
+      "id": "publish-transaction",
+      "owner": "Buildchain package and release publication plane",
+      "writers": [
+        "packages/core/release/commands/release-transaction.mjs",
+        "packages/core/release/promote-ref/lib.js"
+      ],
+      "schemas": [
+        "release transaction record",
+        "publish evidence",
+        "sealed publication bundle"
+      ],
+      "stores": [
+        "refs/heads/buildchain/release-state/<version>",
+        ".buildchain/release-state/<version>.json",
+        ".buildchain/release-evidence/<version>"
+      ],
+      "states": [
+        "prepared",
+        "sealed",
+        "publishing",
+        "publish_failed",
+        "published",
+        "finalizing",
+        "complete",
+        "repair_required",
+        "abandoned",
+        "failed_permanently"
+      ],
+      "events": [
+        "seal",
+        "publish",
+        "publish-fail",
+        "finalize",
+        "complete",
+        "recover",
+        "abort"
+      ],
+      "transitions": [
+        "explicit ALLOWED_TRANSITIONS compare-and-set successors"
+      ],
+      "recovery": [
+        "published registry readback resumes finalization",
+        "terminal records require explicit recovery intent"
+      ],
+      "effects": [
+        "npm publish/dist-tag",
+        "GitHub Release",
+        "Git tag/ref update",
+        "evidence commit"
+      ],
+      "retry": [
+        "publish_failed may retry publishing",
+        "repair_required requires bounded repair"
+      ],
+      "invalidation": [
+        "artifact coordinate drift",
+        "state-root conflict",
+        "registry/provider disagreement"
+      ],
+      "providerReadback": [
+        "npm package and dist-tags",
+        "GitHub release/tag/ref",
+        "durable state ref"
+      ],
+      "publicSurfaces": [
+        "action:release/promote-ref",
+        "cli:release-transaction",
+        "workflow:public-release-promote",
+        "workflow:public-release-paper"
+      ],
+      "sourcePaths": [
+        "packages/core/release/publish-transaction.js",
+        "packages/core/release/commands/release-transaction.mjs",
+        "packages/core/release/promote-ref/internal/durable-transaction-operations.js",
+        "packages/core/release/promote-ref/internal/durable-transaction-store.js",
+        "packages/core/release/promote-ref/internal/version-state-operations.js",
+        "packages/core/release/reuse-complete-release.js"
+      ],
+      "testPaths": [
+        "tests/publish-transaction.test.mjs",
+        "tests/promote-buildchain-ref.test.mjs",
+        "tests/promote-buildchain-ref-facade-contracts.test.mjs"
+      ],
+      "callers": [
+        "packages/core/release/promote-ref/lib.js",
+        "packages/core/release/commands/ensure-github-release.mjs"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "v4 transaction journal store and npm effect executor are not yet selected"
+      ]
+    },
+    {
+      "id": "release-activation-transaction",
+      "owner": "Buildchain release activation plane",
+      "writers": ["release orchestration callers"],
+      "schemas": [
+        "kungfu-buildchain-release-activation-transaction/v1",
+        "kungfu-buildchain-release-activation-receipt-set/v1"
+      ],
+      "stores": ["rooted transaction and immutable receipt set"],
+      "states": ["open", "complete", "aborted", "rolled-back"],
+      "events": ["record-phase", "abort", "rollback", "seal-receipts"],
+      "transitions": [
+        "ordered six-phase pass",
+        "open to aborted",
+        "complete or aborted to rolled-back"
+      ],
+      "recovery": ["explicit abort reason and rollback receipt bindings"],
+      "effects": [
+        "phase-specific publication effects are external and receipt-bound"
+      ],
+      "retry": [
+        "failed phase can be retried only while transaction remains open"
+      ],
+      "invalidation": [
+        "out-of-order phase",
+        "binding drift",
+        "receipt mismatch"
+      ],
+      "providerReadback": ["public readback phase", "effect receipt roots"],
+      "publicSurfaces": ["export:./release-activation-transaction"],
+      "sourcePaths": [
+        "packages/core/release/release-activation-transaction.js"
+      ],
+      "testPaths": ["tests/release-activation-transaction.test.mjs"],
+      "callers": ["packages/core/index.js"],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": ["v4 phase executor ownership is not yet selected"]
+    },
+    {
+      "id": "publication-authority",
+      "owner": "Buildchain publication admission and qualification plane",
+      "writers": ["publication admission assemblers", "publication workflows"],
+      "schemas": [
+        "kungfu-buildchain-publication-authority-registry",
+        "publication admission",
+        "publication gate decision",
+        "publication qualification receipt"
+      ],
+      "stores": [
+        "publication authority registry",
+        "admission and qualification artifacts"
+      ],
+      "states": [
+        "detected",
+        "admitted",
+        "qualified",
+        "rejected",
+        "published",
+        "read-back"
+      ],
+      "events": [
+        "detect-authority",
+        "admit",
+        "gate",
+        "qualify",
+        "publish",
+        "verify-readback"
+      ],
+      "transitions": [
+        "exact workflow/runner/control-plane binding to qualified capability"
+      ],
+      "recovery": [
+        "re-run qualification against immutable admission; never infer success from local files"
+      ],
+      "effects": [
+        "npm/GitHub/site publication delegated through declared capability"
+      ],
+      "retry": [
+        "provider delay may retry readback; binding failures require new admission"
+      ],
+      "invalidation": [
+        "workflow/runtime/runner/nonce/artifact/control-plane drift"
+      ],
+      "providerReadback": [
+        "provider publication coordinates",
+        "runner provenance",
+        "control-plane audit facts"
+      ],
+      "publicSurfaces": [
+        "export:./publication-authority",
+        "export:./buildchain-publication-authority",
+        "cli:audit",
+        "cli:create",
+        "cli:verify-publication-admission",
+        "workflow:public-build-publication"
+      ],
+      "sourcePaths": [
+        "packages/core/publication/publication-authority.js",
+        "packages/core/governance/buildchain-publication-authority.js",
+        "packages/core/publication/publication-control-plane-audit.js",
+        "packages/core/governance/commands/audit-publication-control-plane.mjs",
+        "packages/core/publication/commands/publication-candidate-sealer.mjs"
+      ],
+      "testPaths": [
+        "tests/publication-authority.test.mjs",
+        "tests/publication-control-plane-script.test.mjs"
+      ],
+      "callers": [
+        "packages/core/release/commands/assemble-self-publication-admission.mjs",
+        "packages/core/web/commands/assemble-web-surface-publication-admission.mjs"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "v4 capability registry and provider-effect interface are not yet selected"
+      ]
+    },
+    {
+      "id": "github-governance-authority",
+      "owner": "Buildchain GitHub governance plane",
+      "writers": [
+        "packages/core/governance/commands/reconcile-release-governance.mjs",
+        "packages/core/governance/commands/audit-github-governance.mjs"
+      ],
+      "schemas": [
+        "kungfu-buildchain-github-governance-authority/v1",
+        "kungfu-buildchain-github-governance-receipt/v1"
+      ],
+      "stores": [
+        "GitHub rulesets, branch protection and CODEOWNERS",
+        "governance audit receipt"
+      ],
+      "states": ["observed", "compliant", "drifted", "planned", "reconciled"],
+      "events": [
+        "snapshot",
+        "compile-effective-policy",
+        "audit",
+        "plan",
+        "reconcile",
+        "readback"
+      ],
+      "transitions": ["provider snapshot to fail-closed governance receipt"],
+      "recovery": [
+        "reconcile from explicit rollout plan and audit provider state again"
+      ],
+      "effects": ["GitHub ruleset and branch-protection mutation"],
+      "retry": ["provider conflicts require fresh snapshot before retry"],
+      "invalidation": [
+        "CODEOWNERS drift",
+        "required-check drift",
+        "bypass actor drift",
+        "target-ref drift"
+      ],
+      "providerReadback": [
+        "GitHub rulesets",
+        "branch protection",
+        "CODEOWNERS",
+        "repository metadata"
+      ],
+      "publicSurfaces": [
+        "export:./github-governance-authority",
+        "cli:release-governance",
+        "workflow:public-ops-release-governance"
+      ],
+      "sourcePaths": [
+        "packages/core/governance/github-governance-authority.js",
+        "packages/core/governance/commands/reconcile-release-governance.mjs",
+        "packages/core/governance/commands/audit-github-governance.mjs"
+      ],
+      "testPaths": [
+        "tests/github-governance-authority.test.mjs",
+        "tests/release-governance-reconciliation.test.mjs"
+      ],
+      "callers": ["packages/core/release/promote-ref/lib.js"],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "v4 policy ownership boundary between core and GitHub adapter is not yet selected"
+      ]
+    },
+    {
+      "id": "engineering-housekeeper",
+      "owner": "Buildchain engineering hygiene plane",
+      "writers": [
+        "Engineering Housekeeper reusable workflow under an explicit bounded apply gate"
+      ],
+      "schemas": ["kungfu-buildchain-engineering-housekeeper/v1"],
+      "stores": ["immutable rooted plan, report, and apply receipts"],
+      "states": [
+        "observed",
+        "report-only",
+        "apply-eligible",
+        "applied",
+        "retained"
+      ],
+      "events": [
+        "inventory",
+        "classify",
+        "plan",
+        "revalidate",
+        "delete-branch",
+        "label-stale-pull-request"
+      ],
+      "transitions": [
+        "exact provider inventory to deterministic plan and rooted receipt"
+      ],
+      "recovery": [
+        "re-read provider state and fail closed on any OID, ancestry, protection, or active-PR drift"
+      ],
+      "effects": [
+        "delete an exact merged allowlisted temporary branch",
+        "optionally label but never close a stale pull request"
+      ],
+      "retry": ["provider failure or drift requires a fresh plan"],
+      "invalidation": [
+        "source or target OID drift",
+        "active pull request",
+        "unknown branch family",
+        "protection or ancestry ambiguity"
+      ],
+      "providerReadback": [
+        "GitHub refs, protected branches, pull requests, and commit ancestry"
+      ],
+      "publicSurfaces": [
+        "export:./engineering-housekeeper",
+        "export:./engineering-housekeeper-github",
+        "workflow:public-ops-housekeeping"
+      ],
+      "sourcePaths": [
+        "packages/core/governance/engineering-housekeeper.js",
+        "packages/core/governance/engineering-housekeeper-github-client.js",
+        "packages/core/governance/engineering-housekeeper-github.js",
+        "packages/core/governance/commands/engineering-housekeeper-workflow.mjs"
+      ],
+      "testPaths": [
+        "tests/engineering-housekeeper.test.mjs",
+        "tests/engineering-housekeeper-github.test.mjs",
+        "tests/engineering-housekeeper-workflow.test.mjs"
+      ],
+      "callers": [
+        "engineering-housekeeper-daily",
+        "engineering-housekeeper-weekly",
+        "engineering-housekeeper-monthly"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "A future Rust migration would require a separately qualified writer cutover; v4 intentionally retains the TypeScript production authority."
+      ]
+    },
+    {
+      "id": "release-passport-and-artifact-proof",
+      "owner": "Buildchain release trust plane",
+      "writers": [
+        "release passport generators",
+        "artifact verification commands"
+      ],
+      "schemas": [
+        "kungfu-buildchain-release-passport",
+        "kungfu-buildchain-artifact-evidence",
+        "kungfu-buildchain-artifact-verification"
+      ],
+      "stores": [
+        "buildchain.release.json",
+        "impact and agent index projections",
+        "artifact sidecars and provider locators",
+        "release-state Git ref readback"
+      ],
+      "states": [
+        "collected",
+        "sealed",
+        "discoverable",
+        "verified",
+        "unverifiable",
+        "invalid"
+      ],
+      "events": ["collect", "seal", "publish", "discover", "verify", "explain"],
+      "transitions": [
+        "rooted evidence set to Passport",
+        "subject locator to verification report"
+      ],
+      "recovery": [
+        "discover alternate authoritative locator; never replace failed evidence with narrative"
+      ],
+      "effects": [
+        "Passport and sidecar publication",
+        "human/agent explanation"
+      ],
+      "retry": [
+        "remote lookup may retry; digest mismatch is terminal for that artifact"
+      ],
+      "invalidation": [
+        "digest/version/source mismatch",
+        "missing required gate",
+        "stale locator"
+      ],
+      "providerReadback": [
+        "npm metadata",
+        "GitHub Release assets",
+        "local package/sidecar"
+      ],
+      "publicSurfaces": [
+        "action:build/github-attestation",
+        "export:./release-passport",
+        "export:./artifact-passport",
+        "cli:verify-release-passport",
+        "cli:verify-artifact",
+        "cli:inspect-release",
+        "cli:inspect-artifact"
+      ],
+      "sourcePaths": [
+        "packages/core/build/artifact-passport.js",
+        "packages/core/build/github-artifact-attestation.js",
+        "packages/core/publication/publication-artifact.js",
+        "packages/core/publication/publication-sealed-bundle.js",
+        "packages/core/release/release-passport-contract.js",
+        "packages/core/release/release-passport.js"
+      ],
+      "testPaths": [
+        "tests/release-passport.test.mjs",
+        "tests/artifact-verification-envelope.test.mjs",
+        "tests/release-passport-contract.test.mjs"
+      ],
+      "callers": [
+        "binary distribution",
+        "Homebrew",
+        "site and package publication consumers"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "v4 proof graph storage and compatibility projection boundary are not yet selected"
+      ]
+    },
+    {
+      "id": "release-propagation-work-control",
+      "owner": "Buildchain downstream release propagation plane",
+      "writers": ["release-propagation CLI and reusable workflow"],
+      "schemas": [
+        "kungfu-buildchain-release-propagation-work",
+        "kungfu-buildchain-release-propagation-stage-receipt"
+      ],
+      "stores": [
+        "rooted Work document",
+        "ordered immutable stage receipts",
+        "family-state and authority references"
+      ],
+      "states": [
+        "paused",
+        "ready",
+        "retryable-failure",
+        "needs-decision",
+        "hard-safety-gate",
+        "complete"
+      ],
+      "events": ["claim", "record-stage", "repair", "complete"],
+      "transitions": [
+        "twelve ordered stages from materialize through online-readback and complete"
+      ],
+      "recovery": [
+        "recovery cursor retries only typed transient failures at the exact stage"
+      ],
+      "effects": [
+        "downstream branch push",
+        "PR",
+        "preview/staging/production deployment",
+        "online readback"
+      ],
+      "retry": [
+        "stale branch, expected-old mismatch, lock drift, check delay and interrupted execution"
+      ],
+      "invalidation": [
+        "work-root drift",
+        "authority/family-state drift",
+        "receipt chain mismatch"
+      ],
+      "providerReadback": [
+        "Git refs and PR",
+        "deployment workflows",
+        "production release and online endpoint"
+      ],
+      "publicSurfaces": [
+        "export:./release-propagation",
+        "cli:release-propagation",
+        "workflow:public-release-propagation"
+      ],
+      "sourcePaths": [
+        "packages/core/release/release-propagation-agent-entry.js",
+        "packages/core/release/release-propagation-capture.js",
+        "packages/core/release/release-propagation-common.js",
+        "packages/core/release/release-propagation-execution-profile.js",
+        "packages/core/release/release-propagation-pickup.js",
+        "packages/core/release/release-propagation-push.js",
+        "packages/core/release/release-propagation-release.js",
+        "packages/core/release/release-propagation-stage-evidence.js",
+        "packages/core/release/release-propagation-work-capture.js",
+        "packages/core/release/release-propagation-work-control.js",
+        "packages/core/release/release-propagation-work.js",
+        "packages/core/release/release-propagation-work-transitions.js",
+        "packages/core/release/release-propagation-work-constants.js",
+        "packages/core/release/release-propagation.js"
+      ],
+      "testPaths": [
+        "tests/release-propagation.test.mjs",
+        "tests/release-propagation-pickup.test.mjs"
+      ],
+      "callers": ["Paper/KFD/Buildchain/Core Site agent entry"],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "v4 Work persistence and external executor protocol are not yet selected"
+      ]
+    },
+    {
+      "id": "release-tail-provider-plane",
+      "owner": "Buildchain declarative release provider plane",
+      "writers": [
+        "Buildchain release-tail transaction executor",
+        "release-tail Action and reusable workflow"
+      ],
+      "schemas": [
+        "kungfu-buildchain-release-tail-capabilities",
+        "kungfu.buildchain.release-tail.provider-bindings/v1",
+        "kungfu.buildchain.release-tail.transaction/v1",
+        "kungfu.buildchain.release-tail.effect/v1",
+        "kungfu.buildchain.release-tail.observation/v1",
+        "kungfu.buildchain.release-tail.receipt/v1"
+      ],
+      "stores": [
+        "atomic local transaction checkpoint",
+        "rooted provider observations",
+        "ordered immutable receipts"
+      ],
+      "states": [
+        "preparing",
+        "prepared",
+        "publishing",
+        "committing",
+        "activating",
+        "reading-back",
+        "settling",
+        "complete",
+        "blocked",
+        "repair-required",
+        "terminal-failure"
+      ],
+      "events": ["plan", "readback", "apply", "retry", "settle"],
+      "transitions": [
+        "four fixed capability effects execute in registry order through one transaction"
+      ],
+      "recovery": [
+        "atomic checkpoint resume with readback before every local retry",
+        "lost responses resolve only from rooted provider observation"
+      ],
+      "effects": [
+        "GitHub Release artifact publication",
+        "signed channel commit",
+        "site release activation",
+        "released-evidence synthesis"
+      ],
+      "retry": [
+        "never, readback, or provider-transient with at most three local retries"
+      ],
+      "invalidation": [
+        "declaration or plan root drift",
+        "subject or target identity drift",
+        "stale provider state",
+        "immutable provider conflict"
+      ],
+      "providerReadback": [
+        "GitHub Release asset digests",
+        "HTTPS rooted JSON documents",
+        "local rooted released-evidence document"
+      ],
+      "publicSurfaces": [
+        "export:./release-tail-provider-plane",
+        "export:./release-tail-provider-adapters",
+        "cli:release-tail",
+        "workflow:public-release-tail",
+        "action:release/settle"
+      ],
+      "sourcePaths": [
+        "packages/core/release/release-tail-provider-plane.js",
+        "packages/core/release/release-tail-provider-adapters.js",
+        "packages/core/release/commands/release-tail.mjs",
+        "actions/release/settle/index.js"
+      ],
+      "testPaths": [
+        "tests/release-tail-provider-plane.test.mjs",
+        "tests/release-tail-contract.test.mjs"
+      ],
+      "callers": [
+        ".github/workflows/public-release-tail.yml",
+        "packages/core/release/cli/release-handlers.mjs"
+      ],
+      "implementationDisposition": "current-owned-module-graph; authority is declared in architecture/capability-state-machine-manifest.json; no legacy runtime fallback",
+      "closedRequirements": [
+        "consumer cutovers and production provider credentials remain separate reviewed changes"
+      ]
+    }
+  ],
+  "sourceCut": {
+    "protectedDevelopmentSeed": "1bb6333b97ad94e94a81178e956a703dff2b5f84",
+    "implementation": "working-tree"
+  }
+}

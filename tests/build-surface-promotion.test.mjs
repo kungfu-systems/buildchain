@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import {
   DEFAULT_ARTIFACT_NAME_TEMPLATE,
   LINUX_CONTAINER_PRESETS,
@@ -20,19 +21,19 @@ import {
   resolveRunnerMatrix,
   verifyPublishChannelRef,
   verifyPublishSourceLock,
-} from "../scripts/build-contract-core.mjs";
-import { aggregateBuildSummaryCli } from "../scripts/aggregate-build-summary.mjs";
-import { aggregateDiagnosticsSummaryCli } from "../scripts/aggregate-diagnostics-summary.mjs";
+} from "../packages/core/build/commands/build-contract-core.mjs";
+import { aggregateBuildSummaryCli } from "../packages/core/build/commands/aggregate-build-summary.mjs";
+import { aggregateDiagnosticsSummaryCli } from "../packages/core/observability/commands/aggregate-diagnostics-summary.mjs";
 import {
   cleanupRelayArtifacts,
   downloadRelayArtifacts,
   uploadRelayArtifacts,
-} from "../scripts/artifact-relay-s3.mjs";
+} from "../packages/core/providers/commands/artifact-relay-s3.mjs";
 import {
   RELEASE_REVIEW_MARKER,
   renderReleaseReviewComment,
   resolveReleaseReviewState,
-} from "../scripts/web-surface-release-pr-review.mjs";
+} from "../packages/core/web/commands/web-surface-release-pr-review.mjs";
 import {
   compactProductionReleasePrSummary,
   createProductionReleasePrHandoff,
@@ -42,57 +43,57 @@ import {
   readStagingReleasePrSummary,
   renderProductionReleasePrBody,
   webSurfaceProductionReleasePrCli,
-} from "../scripts/web-surface-production-release-pr.mjs";
-import { compactWebSurfaceApplyResult } from "../scripts/web-surface.mjs";
+} from "../packages/core/web/commands/web-surface-production-release-pr.mjs";
+import { compactWebSurfaceApplyResult } from "../packages/core/web/commands/web-surface.mjs";
 import {
   RELEASE_FEEDBACK_MARKERS,
   createWebSurfaceReleasePassport,
   normalizeActorIdentity,
   renderWebSurfaceReleaseFeedbackComment,
-} from "../scripts/web-surface-release-feedback.mjs";
+} from "../packages/core/web/commands/web-surface-release-feedback.mjs";
 import {
   currentGitHubRefSha,
   resolvePublishSourceRefSha,
-} from "../scripts/publish-source-ref-resolver.mjs";
+} from "../packages/core/release/commands/publish-source-ref-resolver.mjs";
 import {
   RELEASE_CANDIDATE_PASSPORT_CONTRACT,
   createReleaseCandidatePassport,
-} from "../packages/core/release-candidate.js";
-import { validatePromotionReleaseCandidate } from "../actions/promote-buildchain-ref/lib.js";
-import { resolveReleaseCandidateArtifacts } from "../scripts/release-candidate-resolver.mjs";
+} from "../packages/core/release/release-candidate.js";
+import { validatePromotionReleaseCandidate } from "../packages/core/release/promote-ref/internal/candidate-admission.js";
+import { resolveReleaseCandidateArtifacts } from "../packages/core/release/commands/release-candidate-resolver.mjs";
 import {
   classifyBuildchainRuntimeRef,
   normalizeRequestedRuntimeRef,
   resolveRuntimeSelection,
   validateRuntimeOverrideTrust,
-} from "../scripts/runtime-ref-core.mjs";
-import { resolvePublishSourceCli } from "../scripts/resolve-publish-source.mjs";
-import { evaluateBuildchainContractLock } from "../packages/core/buildchain-contract.js";
+} from "../packages/core/runtime/commands/runtime-ref-core.mjs";
+import { resolvePublishSourceCli } from "../packages/core/release/commands/resolve-publish-source.mjs";
+import { evaluateBuildchainContractLock } from "../packages/core/contracts/buildchain-contract.js";
 import {
   canAdmitSelfDogfoodLockEvaluation,
   contractForSelfDogfoodEvaluation,
   hasQualifiedSelfDogfoodBootstrapAuthority,
   resolveSelfDogfoodMajor,
-} from "../packages/core/self-dogfood-version.js";
+} from "../packages/core/release/self-dogfood-version.js";
 import {
   runLifecycle,
   verifyBuildLifecycleCompilerCacheActivity,
-} from "../scripts/run-lifecycle-core.mjs";
-import { verifyPublishChannelRefCli } from "../scripts/verify-publish-channel-ref.mjs";
-import { verifyPublishSourceLockCli } from "../scripts/verify-publish-source-lock.mjs";
+} from "../packages/core/build/commands/run-lifecycle-core.mjs";
+import { verifyPublishChannelRefCli } from "../packages/core/release/commands/verify-publish-channel-ref.mjs";
+import { verifyPublishSourceLockCli } from "../packages/core/release/commands/verify-publish-source-lock.mjs";
 import {
   discoverConfiguredVersionStateFiles,
   loadBuildchainConfig,
   updateConfiguredVersionStateContents,
   validateBuildchainConfig,
-} from "../packages/core/buildchain-config.js";
+} from "../packages/core/consumer/buildchain-config.js";
 import {
   BUILDCHAIN_DIAGNOSTICS_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_MANIFEST_CONTRACT,
   BUILDCHAIN_DIAGNOSTICS_SUMMARY_CONTRACT,
   BUILDCHAIN_PROCESS_SAMPLE_REPORT_CONTRACT,
   BUILDCHAIN_PROCESS_SAMPLE_SUMMARY_CONTRACT,
-} from "../packages/core/diagnostics.js";
+} from "../packages/core/observability/diagnostics.js";
 
 const root = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -101,13 +102,15 @@ const root = path.resolve(
 
 test("promote action exposes generic publish source-lock gate", () => {
   const action = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    path.join(root, "actions/release/promote-ref/action.yml"),
     "utf8",
   );
-  const implementation = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/index.js"),
-    "utf8",
-  );
+  const graph = inspectWorkflowJob(".github/workflows/public-release-paper.yml", "publish");
+  const implementation = ["action-inputs.js", "action-outputs.js", "source-lock.js"].map(file => {
+    const source = graph.modules.get(`packages/core/release/promote-ref/${file}`);
+    assert.ok(source, file);
+    return source;
+  }).join("\n");
 
   assert.match(action, /require-publish-source-lock:/);
   assert.match(action, /publish-source-ref:/);
@@ -126,7 +129,7 @@ test("promote action exposes generic publish source-lock gate", () => {
 
 test("promote action path-backed artifact input imports its runtime dependencies", () => {
   const implementation = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    path.join(root, "packages/core/release/promote-ref/action-inputs.js"),
     "utf8",
   );
 
@@ -138,59 +141,44 @@ test("promote action path-backed artifact input imports its runtime dependencies
   );
 });
 
-test("canonical publisher contains legacy bypass inputs outside APPLY authority", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /branch-protection-bypass-apps:/);
-  const apply = workflow.slice(workflow.indexOf("  apply:"), workflow.indexOf("  settle:"));
-  assert.doesNotMatch(apply, /^    permissions:/mu);
-  assert.match(apply, /uses:.*actions\/release-candidate-promote/u);
-  assert.doesNotMatch(apply, /branch-protection-bypass-(apps|users|teams)/);
+test("canonical publisher keeps governance declarations outside provider execution", () => {
+  const schema = JSON.parse(fs.readFileSync(path.join(root, "contracts/promotion-request-v1.schema.json")));
+  assert.ok(schema.properties["branch-protection-bypass-apps"]);
+  for (const field of ["branch-protection-bypass-users", "branch-protection-bypass-teams", "publish-command"]) {
+    assert.equal(schema.properties[field], undefined);
+  }
+  const apply = inspectWorkflowJob(".github/workflows/.release-promote.yml", "apply");
+  assert.ok(apply.actions.has("actions/release/promote-candidate"));
+  assert.ok(![...apply.modules.keys()].some(file => file.includes("/promote-ref/")));
 });
-test("qualification installs the exact runtime before legacy input admission", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  const install = workflow.indexOf("Install exact qualification runtime dependencies");
-  const admission = workflow.indexOf("Translate and admit legacy-compatible inputs");
-  assert.ok(install >= 0 && install < admission);
-  assert.match(workflow, /corepack pnpm@11\.7\.0 install --dir \.buildchain\/runtime/);
+test("qualification verifies the invocation before checkout and admits the contract before candidate resolution", () => {
+  const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify");
+  const names = ["Validate the complete invocation before runtime checkout", "Checkout the selected runtime for read-only qualification", "Root publisher and runtime identities", "Install locked runtime dependencies", "Admit the declared publication contract", "Resolve and qualify the sealed release candidate"];
+  const positions = names.map(name => graph.steps.findIndex(step => step.name === name));
+  assert.ok(positions.every((position, index) => position >= 0 && (!index || positions[index - 1] < position)), JSON.stringify({ names, positions }));
 });
-test("v4 branch promotion excludes the stable publisher rollout", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-release-promote.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /^  promote:/m);
-  assert.match(
-    workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
-  );
-  assert.doesNotMatch(workflow, /^  promote-stable:/m);
-  assert.doesNotMatch(
-    workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4(?:\n|$)/,
-  );
+test("self promotion enters the public API at the same source commit", () => {
+  const workflow = readWorkflow(".github/workflows/self-release-promote.yml");
+  assert.equal(workflow.jobs.promote.uses, "./.github/workflows/public-release-promote.yml");
+  assert.equal(workflow.jobs["promote-stable"], undefined);
+  assert.deepEqual(Object.keys(workflow.jobs.promote.with), ["request-json"]);
 });
 test("SETTLE consumes APPLY evidence and emits the sole terminal receipt projection", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  const apply = workflow.indexOf("  apply:");
-  const settle = workflow.indexOf("  settle:");
-  assert.ok(apply >= 0 && apply < settle);
-  const settleBlock = workflow.slice(settle);
-  assert.match(settleBlock, /needs: \[qualify, apply\]/);
-  assert.match(settleBlock, /release-receipt\.json/);
-  assert.match(settleBlock, /controller-receipt-digest: \$\{\{ steps\.verify\.outputs\.receipt-root \}\}/);
-  assert.doesNotMatch(settleBlock, /contents: write|id-token: write/);
+  const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "settle");
+  assert.deepEqual(graph.job.needs, ["qualify", "apply"]);
+  assert.equal(graph.job.permissions.contents, "read");
+  assert.notEqual(graph.job.permissions["id-token"], "write");
+  const restore = graph.steps.findIndex(step => step.name === "Restore canonical APPLY evidence");
+  const verify = graph.steps.findIndex(step => step.name === "Verify the single terminal receipt");
+  assert.ok(restore >= 0 && restore < verify);
+  assert.match(graph.steps[restore].with.name, /release-apply/);
+  const node = graph.actions.get("actions/release/promote-settle");
+  assert.equal(node.outputs["controller-receipt-digest"].value, "${{ steps.verify.outputs.receipt-root }}");
+  assert.match(graph.steps.find(step => step.name === "Retain SETTLE projection").with.path, /release-receipt\.json/);
+  assert.match(graph.modules.get("packages/core/release/nodes/promotion-settlement.mjs"), /verifyPublicationSettlement\(documents/);
 });
 test("reusable build seals release-candidate passport in its final result", () => {
-  const final = fs.readFileSync(path.join(root, "scripts/build/finalize.mjs"), "utf8");
+  const final = fs.readFileSync(path.join(root, "packages/core/build/commands/finalize.mjs"), "utf8");
   assert.match(final, /build.artifacts.release_candidate/u);
   assert.match(final, /generate-release-candidate-passport.mjs/u);
   assert.match(final, /BUILDCHAIN_RC_SOURCE_TREE_HASH: plan.source.tree_sha/u);
@@ -201,67 +189,33 @@ test("reusable build seals release-candidate passport in its final result", () =
 
 test("environment preparation exposes runner-local tools before lifecycle execution", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const prepare = fs.readFileSync(path.join(root, "scripts/build/prepare.mjs"), "utf8");
+  const prepare = fs.readFileSync(path.join(root, "packages/core/build/commands/prepare.mjs"), "utf8");
   assert.match(prepare, /os.homedir\(\), ".local\/bin"/u);
   assert.match(prepare, /os.homedir\(\), ".cargo\/bin"/u);
   assert.match(prepare, /fs.appendFileSync\(process.env.GITHUB_PATH/u);
-  const native = workflow.slice(workflow.indexOf("  build-native:"));
-  assert.ok(native.indexOf("prepare-build-environment") < native.indexOf("run-build-stage"));
+  for (const jobId of ["build-native", "build-container"]) {
+    const steps = readWorkflow(".github/workflows/.build.yml").jobs[jobId].steps;
+    const prepared = steps.findIndex(step => step.uses?.endsWith("/actions/build/prepare-environment"));
+    const stages = steps.flatMap((step, index) => step.uses?.endsWith("/actions/build/run-stage") ? [index] : []);
+    assert.equal(stages.length, 3);
+    assert.ok(prepared >= 0 && stages.every(index => index > prepared));
+  }
 });
 
 test("reusable Shifu Gate workflow keeps project policy outside Buildchain", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.gate-profile.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /gate-profile:/);
-  assert.match(workflow, /gate-command-json:/);
-  assert.match(workflow, /gate-plan-command-json:/);
-  assert.match(workflow, /BUILDCHAIN_GATE_PLAN_COMMAND_JSON/);
-  assert.match(workflow, /gate-environment-json:/);
-  assert.match(workflow, /shifu-cache-profile-ref:/);
-  assert.match(workflow, /platforms-json:/);
-  assert.match(workflow, /checkout-cache-mode:/);
-  assert.match(workflow, /checkout-cache-fallback:/);
-  assert.match(workflow, /checkout-cache-fetch-attempts:/);
-  assert.match(workflow, /rust-toolchain:/);
-  assert.match(workflow, /rustup-dist-server:/);
-  assert.match(workflow, /rustup-update-root:/);
-  assert.match(workflow, /cargo-registry-index:/);
-  assert.match(workflow, /shifu-gate-profile\.mjs --mode plan/);
-  assert.match(workflow, /shifu-gate-profile\.mjs --mode run/);
-  assert.match(workflow, /shifu-gate-profile\.mjs --mode aggregate/);
-  assert.match(workflow, /name: Gate profile \/ aggregate/);
-  assert.match(workflow, /gate-aggregate-json:/);
-  assert.match(workflow, /Reset prior Windows Gate source workspace/);
-  assert.match(workflow, /runner\.os == 'Windows'/);
-  assert.match(workflow, /rd \/s \/q/);
-  assert.match(workflow, /windows-gate-source-git/);
-  assert.match(workflow, /Move-Item -LiteralPath \$sourceGit/);
-  assert.match(workflow, /refusing to clean Gate source outside GITHUB_WORKSPACE/);
-  assert.match(workflow, /name: Expose Windows runner user toolchain/);
-  assert.match(workflow, /Join-Path \$HOME "\.local\\bin"/);
-  assert.match(workflow, /Join-Path \$HOME "\.cargo\\bin"/);
-  assert.match(workflow, /name: Expose POSIX runner user toolchain/);
-  assert.match(workflow, /\$\{HOME\}\/\.local\/bin/);
-  assert.match(workflow, /\$\{HOME\}\/\.cargo\/bin/);
-  assert.match(workflow, /name: Setup Rust toolchain on Windows/);
-  assert.match(workflow, /contains\(matrix\.gate\.capabilities, 'rust'\)/);
-  assert.match(workflow, /buildchain-gate-cargo-/);
-  assert.match(workflow, /name: Setup Rust toolchain/);
-  assert.match(workflow, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
-  assert.match(workflow, /name: Upload Buildchain runtime checkout bootstrap/);
-  assert.match(workflow, /name: Download Buildchain runtime checkout bootstrap/);
-  assert.equal(
-    (workflow.match(/node \.buildchain\/runtime-bootstrap\/locked-source-checkout\.mjs/g) || []).length,
-    2,
-  );
-  assert.equal(
-    (workflow.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH:/g) || []).length,
-    2,
-  );
-  assert.match(workflow, /name: Upload locked checkout diagnostics/);
-  assert.doesNotMatch(workflow, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build-gate-profile.yml"), "utf8");
+  const nodes = ["plan", "run-gates", "aggregate"].map(stage =>
+    fs.readFileSync(path.join(root, `actions/build/gate-profile-${stage}/action.yml`), "utf8")).join("\n");
+  for (const input of ["gate-command-json", "gate-plan-command-json", "gate-environment-json", "shifu-cache-profile-ref",
+    "platforms-json", "checkout-cache-mode", "checkout-cache-fallback", "checkout-cache-fetch-attempts",
+    "rust-toolchain", "rustup-dist-server", "rustup-update-root", "cargo-registry-index"]) assert.ok(workflow.includes(`${input}:`));
+  for (const mode of ["plan", "run", "aggregate"]) assert.ok(nodes.includes(`shifu-gate-profile.mjs --mode ${mode}`));
+  assert.match(nodes, /BUILDCHAIN_GATE_PLAN_COMMAND_JSON/);
+  assert.match(nodes, /dtolnay\/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30/);
+  assert.match(nodes, /gate-toolchain.mjs" windows-rust/);
+  assert.equal((nodes.match(/BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH:/g) || []).length, 2);
+  assert.doesNotMatch(nodes, /runtime-bootstrap\/locked-source-checkout|Download Buildchain runtime checkout bootstrap/);
+  assert.doesNotMatch(workflow + nodes, /product\.verify|gate\.catalog|dev-patrol|alpha-pr|release-pr/);
 });
 
 test("build fixture keeps project settings in TOML and seals exact candidate bytes", () => {
@@ -273,13 +227,18 @@ test("build fixture keeps project settings in TOML and seals exact candidate byt
   assert.match(config, /release_candidate = true/u);
   assert.match(workflow, /uses: kungfu-systems\/buildchain\/.github\/workflows\/build.yml@v4-alpha/u);
   assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/u);
-  assert.match(workflow, /name: \$\{\{ needs\.libnode-shaped\.outputs\.release-candidate-artifact \}\}/u);
-  assert.match(workflow, /\["show", "-s", "--format=%T", "HEAD"\]/u);
-  assert.match(workflow, /tree !== passport.source.treeHash/u);
+  const graph = inspectWorkflowJob(".github/workflows/self-build-fixture.yml", "buildchain-package-candidate");
+  assert.match(graph.job.steps.find(step => step.id === "node").with["needs-libnode-shaped-outputs-release-candidate-artifact"], /needs\.libnode-shaped\.outputs\.release-candidate-artifact/u);
+  const download = graph.steps.findIndex(step => step.name === "Download exact Release Candidate Passport");
+  const pack = graph.steps.findIndex(step => step.id === "package");
+  assert.ok(download >= 0 && download < pack);
+  const source = graph.modules.get("packages/core/build/nodes/package-candidate.mjs");
+  assert.match(source, /\["show", "-s", "--format=%T", "HEAD"\]/u);
+  assert.match(source, /tree === passport.source.treeHash/u);
 });
 test("canonical publisher carries no issue-reporting mutation authority", () => {
   const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
+    path.join(root, ".github/workflows/.release-promote.yml"),
     "utf8",
   );
   assert.doesNotMatch(workflow, /issues: write/);
@@ -287,15 +246,15 @@ test("canonical publisher carries no issue-reporting mutation authority", () => 
 });
 test("promote action exposes promote-only release candidate inputs", () => {
   const action = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    path.join(root, "actions/release/promote-ref/action.yml"),
     "utf8",
   );
   const implementation = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    path.join(root, "packages/core/release/promote-ref/action-inputs.js"),
     "utf8",
   );
   const docs = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/README.md"),
+    path.join(root, "actions/release/promote-ref/README.md"),
     "utf8",
   );
 
@@ -319,7 +278,7 @@ test("promote action exposes promote-only release candidate inputs", () => {
   assert.match(action, /release-passport-invariant-passport-command:/);
   assert.match(action, /release-passport-evidence-jsons:/);
   assert.match(action, /release-passport-attachment-command:/);
-  assert.match(action, /release-passport-evidence-command:/);
+  assert.doesNotMatch(action + implementation, /release-passport-evidence-command/);
   assert.match(action, /release-passport-buildchain-self-kfd:/);
   assert.match(action, /publish-rematerialize-on-resume:/);
   assert.match(action, /release-passport-github-artifact-attestation-policy-jsons:/);
@@ -359,57 +318,40 @@ test("promote action exposes promote-only release candidate inputs", () => {
 });
 
 test("buildchain ref promotion delegates alpha evidence to the canonical publisher", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/self-release-promote.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /^  promote:/m);
-  assert.match(
-    workflow,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/,
-  );
-  assert.match(workflow, /release-candidate-workflow-file: self-build-fixture\.yml/);
-  assert.match(workflow, /resume-candidate-run-id:/);
-  assert.match(workflow, /declarative-release-tail: true/);
-  assert.match(workflow, /release-passport-impact-json: \.buildchain\/release-impact\.json/);
-  assert.doesNotMatch(workflow, /promote-stable:|uses: \.\/actions\/promote-buildchain-ref/);
+  const workflow = readWorkflow(".github/workflows/self-release-promote.yml");
+  assert.equal(workflow.jobs.promote.uses, "./.github/workflows/public-release-promote.yml");
+  const request = workflow.jobs.promote.with["request-json"];
+  assert.match(request, /"release-candidate-workflow-file": "self-build-fixture\.yml"/);
+  assert.match(request, /"resume-candidate-run-id":/);
+  assert.doesNotMatch(request, /declarative-release-tail/);
+  assert.match(request, /"release-passport-impact-json": "\.buildchain\/release-impact\.json"/);
 });
 test("QUALIFY receives the rooted transient runtime authorization and publication channel", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.release-candidate-promote.yml"),
-    "utf8",
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: \$\{\{ inputs\.promotion-runtime-authorization-json \}\}/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_RESUME_CHANNEL: \$\{\{ inputs\.promotion-publication-channel \|\| steps\.intent\.outputs\.channel \}\}[\s\S]*BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: \$\{\{ inputs\.promotion-runtime-authorization-root \}\}/,
-  );
-  const qualify = workflow.slice(workflow.indexOf("  qualify:"), workflow.indexOf("  apply:"));
-  assert.match(qualify, /Translate and admit legacy-compatible inputs/);
-  assert.match(qualify, /Resolve and qualify the sealed release candidate/);
+  const graph = inspectWorkflowJob(".github/workflows/.release-promote.yml", "qualify");
+  const candidate = graph.steps.find(step => step.name === "Resolve and qualify the sealed release candidate");
+  assert.equal(candidate.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON, "${{ fromJSON(inputs.request-json).promotion-runtime-authorization-json }}");
+  assert.equal(candidate.env.BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT, "${{ fromJSON(inputs.request-json).promotion-runtime-authorization-root }}");
+  assert.equal(candidate.env.BUILDCHAIN_RESUME_CHANNEL, "${{ fromJSON(inputs.request-json).promotion-publication-channel || steps.intent.outputs.channel }}");
 });
 test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   const action = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/action.yml"),
+    path.join(root, "actions/release/promote-ref/action.yml"),
     "utf8",
   );
   const source = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/index.js"),
+    path.join(root, "packages/core/release/promote-ref/release-tail.js"),
     "utf8",
   );
   const githubReleaseSource = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/github-release.js"),
+    path.join(root, "packages/core/release/github-release.js"),
     "utf8",
   );
   const implementation = `${source}\n${githubReleaseSource}`;
 
   assert.match(action, /github-release:/);
   assert.match(action, /github-release-artifact-paths:/);
-  assert.match(action, /github-release-title:/);
-  assert.match(action, /github-release-notes:/);
+  assert.doesNotMatch(action, /github-release-title:/);
+  assert.doesNotMatch(action, /github-release-notes:/);
   assert.match(action, /public-release-tag:/);
   assert.match(action, /github-release-url:/);
   assert.match(action, /github-release-action:/);
@@ -417,7 +359,7 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
   assert.match(implementation, /publishGitHubReleaseEvidence/);
   assert.match(implementation, /collectGitHubReleaseEvidenceAssets/);
   assert.match(implementation, /duplicate asset basename/);
-  assert.match(implementation, /uploadReleaseAsset/);
+  assert.match(fs.readFileSync(path.join(root, "packages/core/release/release-tail-provider-adapters.js"), "utf8"), /uploadReleaseAsset/);
   assert.match(source, /publishTransaction\?\.state === "complete"/);
   assert.match(source, /transaction-state=/);
   assert.match(source, /finalizationNeeded !== true/);
@@ -425,11 +367,11 @@ test("promote-buildchain-ref owns semver GitHub Release publication", () => {
 
 test("stable recovery keeps candidate bytes immutable while preparing the next alpha", () => {
   const versionState = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/internal/version-state-operations.js"),
+    path.join(root, "packages/core/release/promote-ref/internal/version-state-operations.js"),
     "utf8",
   );
   const releaseChannel = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/internal/promote-release-channel.js"),
+    path.join(root, "packages/core/release/promote-ref/internal/promote-release-channel.js"),
     "utf8",
   );
   assert.match(
@@ -451,7 +393,7 @@ test("build docs keep ordinary source identity separate from release promotion",
 
 test("promote action docs describe publish source-lock inputs", () => {
   const docs = fs.readFileSync(
-    path.join(root, "actions/promote-buildchain-ref/README.md"),
+    path.join(root, "actions/release/promote-ref/README.md"),
     "utf8",
   );
 
@@ -786,7 +728,6 @@ test("publish source refs parse gate channel, line, and consumer version", () =>
       line: "v22/v22.22",
       consumerVersion: "22.22.3-kf.0",
       anchor: false,
-      legacyAlias: false,
     },
   );
   assert.equal(
@@ -795,8 +736,8 @@ test("publish source refs parse gate channel, line, and consumer version", () =>
     "release",
   );
   assert.equal(parsePublishSourceRef("publish-gate/anchor").anchor, true);
-  assert.equal(parsePublishSourceRef("publish-gate/major").legacyAlias, false);
-  assert.equal(parsePublishSourceRef("major-gate").legacyAlias, true);
+  assert.equal(parsePublishSourceRef("publish-gate/major").channel, "major");
+  assert.throws(() => parsePublishSourceRef("major-gate"), /unsupported publish source ref/);
   assert.throws(
     () => parsePublishSourceRef("publish-gate/alpha/v22/22.22.3-kf.0"),
     /line must include/,
@@ -867,7 +808,6 @@ test("publish source lock fails closed when branch moved", () => {
       line: "",
       consumerVersion: "",
       anchor: false,
-      legacyAlias: false,
       fallbackRef: "refs/pull/103/merge",
       fallbackFullRef: "refs/pull/103/merge",
       sourceSha: "1".repeat(40),
@@ -888,7 +828,6 @@ test("publish source lock fails closed when branch moved", () => {
       line: "v22/v22.22",
       consumerVersion: "22.22.3-kf.0",
       anchor: false,
-      legacyAlias: false,
       sourceSha: "c".repeat(40),
       sourceLocked: true,
       sourceReason: `locked publish-gate/alpha/v22/v22.22/22.22.3-kf.0 at ${"c".repeat(40)}`,
@@ -1822,13 +1761,13 @@ test("runLifecycle applies a clear fallback timeout to commands and configured s
 
 test("TOML timeout bounds both build jobs and the lifecycle implementation", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const stage = fs.readFileSync(path.join(root, "scripts/build/stage.mjs"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "packages/core/build/commands/stage.mjs"), "utf8");
   assert.equal((workflow.match(/timeout-minutes: .*build\.timeout_minutes/g) || []).length, 2);
   assert.match(stage, /timeoutMinutes: plan.build.timeout_minutes/u);
 });
 
 test("aggregate diagnostics read only diagnostics documents from final artifacts", () => {
-  const final = fs.readFileSync(path.join(root, "scripts/build/finalize.mjs"), "utf8");
+  const final = fs.readFileSync(path.join(root, "packages/core/build/commands/finalize.mjs"), "utf8");
   assert.match(final, /writeJson\(`.buildchain\/downloaded-diagnostics\/\$\{platform.id\}\/diagnostics.json`, readJson\(diagnostics\)\)/u);
   assert.match(final, /\["diagnostics-summary.json"\]/u);
 });
@@ -2484,7 +2423,7 @@ test("run-lifecycle action accepts hyphenated GitHub Action inputs", () => {
     const outputPath = path.join(workspace, "github-output.txt");
     const result = spawnSync(
       process.execPath,
-      [path.join(root, "actions/run-lifecycle/dist/index.js")],
+      [path.join(root, "actions/build/run-lifecycle/dist/index.js")],
       {
         cwd: workspace,
         env: {
@@ -2568,7 +2507,7 @@ test("run-lifecycle action samples a configured lifecycle stage from the bundled
     const outputPath = path.join(workspace, "github-output-sampled.txt");
     const result = spawnSync(
       process.execPath,
-      [path.join(root, "actions/run-lifecycle/dist/index.js")],
+      [path.join(root, "actions/build/run-lifecycle/dist/index.js")],
       {
         cwd: workspace,
         env: {
@@ -2622,7 +2561,8 @@ test("self promotion classifies finalization from rooted state instead of displa
     "utf8",
   );
   assert.match(workflow, /^  classify-workflow-run:/m);
-  assert.match(workflow, /selectFinalizedProductPublicationVersion/u);
+  const graph = inspectWorkflowJob(".github/workflows/self-release-promote.yml", "classify-workflow-run");
+  assert.match([...graph.modules.values()].join("\n"), /selectFinalizedProductPublicationVersion/u);
   assert.match(workflow, /needs\.classify-workflow-run\.outputs\.action == 'promote'/u);
   assert.doesNotMatch(workflow, /workflow_run\.display_title/u);
 });

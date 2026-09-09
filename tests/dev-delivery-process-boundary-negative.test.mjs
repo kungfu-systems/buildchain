@@ -5,13 +5,13 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { devDeliveryContentRoot } from "../packages/core/dev-delivery-common.js";
+import { devDeliveryContentRoot } from "../packages/core/dev-delivery/dev-delivery-common.js";
 import {
   createNativeExecutionTransfer,
   createProviderFinalizerBoundary,
   verifyNativeExecutionTransfer,
   verifyProviderFailureSettlementBinding,
-} from "../packages/core/dev-delivery-process-boundary.js";
+} from "../packages/core/dev-delivery/dev-delivery-process-boundary.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const RUNTIME_SHA = "f".repeat(40);

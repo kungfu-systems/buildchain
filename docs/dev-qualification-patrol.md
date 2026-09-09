@@ -45,7 +45,7 @@ without consuming the shared native runners.
 
 ## Exact-source and priority contract
 
-Call `.github/workflows/dev-qualification-patrol.yml` from a thin consumer
+Call `.github/workflows/public-ops-dev-qualification-patrol.yml` from a thin consumer
 workflow after the lightweight preflight, Dev Patrol, and declared priority
 workflows complete. Add an offset schedule as recovery for delayed or missed
 GitHub events. Repeated wakeups are idempotent.

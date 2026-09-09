@@ -231,7 +231,7 @@ skipped, nonterminal, or cross-PR predecessors.
 - Generated references: [`cli-reference.md`](cli-reference.md) and
   [`node-api-reference.md`](node-api-reference.md).
 
-The existing public `dev-pr-auto-merge.yml` reusable workflow remains the
+The existing public `public-ops-dev-auto-merge.yml` reusable workflow remains the
 single-flight v1 controller and does not advertise v2 Landing guarantees.
 Bounded v2 is a separate opt-in controller contract built from the public CLI,
 Node API, and schema; merely calling the v1 reusable workflow never enables or

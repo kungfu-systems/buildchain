@@ -4,14 +4,14 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import test from "node:test";
-import { resolveBuildConfiguration } from "../scripts/resolve-build-configuration.mjs";
-import { resolveRunnerMatrix } from "../scripts/build-contract-core.mjs";
-import { buildMatrices } from "../scripts/build/plan.mjs";
-import { assertPlan, rootOf, parseOutputs } from "../scripts/build/context.mjs";
-import { assertStageOrder } from "../scripts/build/stage.mjs";
-import { assertJobResults } from "../scripts/build/finalize.mjs";
-import { artifactNames, executionResult, verifyExecution, verifyManifest } from "../scripts/build/artifact-contract.mjs";
-import { validateReference } from "../scripts/build/artifact-store.mjs";
+import { resolveBuildConfiguration } from "../packages/core/build/commands/resolve-build-configuration.mjs";
+import { resolveRunnerMatrix } from "../packages/core/build/commands/build-contract-core.mjs";
+import { buildMatrices } from "../packages/core/build/commands/plan.mjs";
+import { assertPlan, rootOf, parseOutputs } from "../packages/core/build/commands/context.mjs";
+import { assertStageOrder } from "../packages/core/build/commands/stage.mjs";
+import { assertJobResults } from "../packages/core/build/commands/finalize.mjs";
+import { artifactNames, executionResult, verifyExecution, verifyManifest } from "../packages/core/build/commands/artifact-contract.mjs";
+import { validateReference } from "../packages/core/build/commands/artifact-store.mjs";
 
 const repo = path.resolve(import.meta.dirname, "..");
 function fixture(t, nested = false) {
@@ -74,7 +74,7 @@ for (const nested of [false, true]) test(`real ordered lifecycle and digest vali
   fs.appendFileSync(path.join(directory, "scripts/install.mjs"), '\nif (process.env.BUILDCHAIN_FIXTURE_ENV !== "governed-value") throw new Error("Governed runner environment was lost");\n');
   delete plan.root;
   plan.root = rootOf(plan);
-  const run = (stage) => spawnSync(process.execPath, [path.join(repo, "scripts/build/stage.mjs")], { cwd: workspace, encoding: "utf8",
+  const run = (stage) => spawnSync(process.execPath, [path.join(repo, "packages/core/build/commands/stage.mjs")], { cwd: workspace, encoding: "utf8",
     env: { ...process.env, GITHUB_WORKSPACE: workspace, GITHUB_REPOSITORY: plan.run.repository, GITHUB_RUN_ID: plan.run.id, GITHUB_RUN_ATTEMPT: plan.run.attempt,
       GITHUB_OUTPUT: path.join(workspace, "outputs"), BUILDCHAIN_PLAN: JSON.stringify(plan), BUILDCHAIN_PLATFORM: JSON.stringify(platform), BUILDCHAIN_STAGE: stage } });
   for (const stage of ["install", "build", "verify"]) {

@@ -11,7 +11,7 @@ import {
   rollbackReleaseActivationTransaction,
   validateReleaseActivationReceiptSet,
   validateReleaseActivationTransaction,
-} from "../packages/core/release-activation-transaction.js";
+} from "../packages/core/release/release-activation-transaction.js";
 
 const root = (character) => `sha256:${character.repeat(64)}`;
 const binding = {

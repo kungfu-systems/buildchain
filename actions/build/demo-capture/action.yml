@@ -1,0 +1,101 @@
+name: demo-capture
+description: Execute the demo capture capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  job-workflow-sha:
+    description: Caller job.workflow_sha value.
+    required: true
+outputs:
+  source-sha:
+    description: source-sha node result.
+    value: ${{ steps.source.outputs.sha }}
+  capture-artifact-name:
+    description: capture-artifact-name node result.
+    value: ${{ steps.identity.outputs.name }}
+  capture-artifact-digest:
+    description: capture-artifact-digest node result.
+    value: ${{ steps.digest.outputs.digest }}
+runs:
+  using: composite
+  steps:
+    - name: Check out exact consumer source
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        ref: ${{ fromJSON(inputs.request-json).source-ref || github.sha }}
+        path: source
+        clean: true
+        persist-credentials: false
+    - name: Check out exact Buildchain runtime
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.job-workflow-sha) }}
+        path: .buildchain/runtime
+        clean: true
+        persist-credentials: false
+    - name: Prepare exact Buildchain runtime
+      id: core-node
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Record exact source
+      id: source
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/build/nodes/demo-workflow.mjs" source
+      env:
+        BUILDCHAIN_NODE_PATH: ${{ steps.core-node.outputs.node-path }}
+    - name: Resolve exact same-run binary artifact
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      env:
+        EXPECTED_NAME: ${{ fromJSON(inputs.request-json).binary-artifact-name }}
+        EXPECTED_DIGEST: ${{ fromJSON(inputs.request-json).binary-artifact-digest }}
+        SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        BUILDCHAIN_ACTION_PATH: ${{ github.action_path }}
+        COORDINATE_PATH: binary-coordinate.json
+      with:
+        script: |
+          const { pathToFileURL } = require("node:url");
+          const entry = new URL("../../../packages/core/build/nodes/demo-collection-io.mjs", pathToFileURL(process.env.BUILDCHAIN_ACTION_PATH + "/"));
+          await (await import(entry.href)).default({ github, context });
+    - name: Download exact binary artifact
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: ${{ fromJSON(inputs.request-json).binary-artifact-name }}
+        path: source-artifact
+    - name: Validate declaration and capture every demo in network isolation
+      shell: bash
+      env:
+        SCENARIO_PATH: ${{ fromJSON(inputs.request-json).scenario-path }}
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+        BUILDCHAIN_NODE_PATH: ${{ steps.core-node.outputs.node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/build/nodes/demo-workflow.mjs" capture
+    - name: Bind capture collection identity
+      id: identity
+      shell: bash
+      env:
+        SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        BUILDCHAIN_NODE_PATH: ${{ steps.core-node.outputs.node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/build/nodes/demo-workflow.mjs" capture-identity
+    - name: Upload exact capture collection
+      id: upload
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: ${{ steps.identity.outputs.name }}
+        path: capture-collection
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false
+    - name: Normalize capture digest
+      id: digest
+      shell: bash
+      env:
+        RAW: ${{ steps.upload.outputs.artifact-digest }}
+        BUILDCHAIN_NODE_PATH: ${{ steps.core-node.outputs.node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/build/nodes/demo-workflow.mjs" digest

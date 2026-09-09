@@ -5,14 +5,14 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { ContractFault } from "../packages/core/canonical-contracts.js";
+import { ContractFault } from "../packages/core/contracts/canonical-contracts.js";
 import {
   STAGE_CAPSULE_QUALIFICATION_FAULTS,
   STAGE_CAPSULE_WAVE_CHILDREN,
   qualifyStageCapsuleCampaign,
   reconcileStageCapsuleWave,
   validateStageCapsulePlatformQualification,
-} from "../packages/core/stage-capsule-qualification.js";
+} from "../packages/core/build/stage-capsule-qualification.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const runtimeRef = "8ccd88c43fa2f5d78a641b66c8e7fecccdb7b49f";
@@ -102,7 +102,7 @@ function externalCampaign(platform, consumerRoot = externalConsumer()) {
     "verify",
   ]);
   const args = [
-    "scripts/stage-capsule-qualification.mjs",
+    "packages/core/build/commands/stage-capsule-qualification.mjs",
     "campaign",
     "--work-root",
     workRoot,
@@ -148,7 +148,7 @@ function campaign(platform, consumer) {
   const result = spawnSync(
     process.execPath,
     [
-      "scripts/stage-capsule-qualification.mjs",
+      "packages/core/build/commands/stage-capsule-qualification.mjs",
       "campaign",
       "--work-root",
       workRoot,
@@ -224,7 +224,7 @@ test("public consumer qualification requires exact real lifecycle evidence", () 
   const result = spawnSync(
     process.execPath,
     [
-      "scripts/stage-capsule-qualification.mjs",
+      "packages/core/build/commands/stage-capsule-qualification.mjs",
       "campaign",
       "--work-root",
       workRoot,
@@ -247,7 +247,7 @@ test("three reports qualify Buildchain through the public consumer identity", ()
   const reports = allCampaigns().map(({ report }) => report);
   const result = qualifyStageCapsuleCampaign(reports);
   assert.equal(result.qualified, true);
-  assert.equal(result.productionAuthority, "v3");
+  assert.equal(result.productionAuthority, "v4-native");
   assert.equal(result.productionWrites, false);
   assert.equal(result.falseReuseCount, 0);
   assert.equal(result.falseRebuildCount, 0);
@@ -274,7 +274,7 @@ test("a generic external consumer qualifies its real three-stage lifecycle", () 
   ]);
   assert.equal(qualification.qualified, true);
   assert.deepEqual(qualification.consumers, ["sample-consumer"]);
-  assert.equal(qualification.productionAuthority, "v3");
+  assert.equal(qualification.productionAuthority, "v4-native");
   assert.equal(qualification.productionWrites, false);
 });
 
@@ -310,7 +310,7 @@ test("external lifecycle and clean-process binding drift fail closed with typed 
     const result = spawnSync(
       process.execPath,
       [
-        "scripts/stage-capsule-qualification.mjs",
+        "packages/core/build/commands/stage-capsule-qualification.mjs",
         "campaign",
         "--work-root",
         temp("external-drift"),
@@ -363,7 +363,7 @@ test("aggregate CLI reads clean-run reports and emits the same qualification roo
   const result = spawnSync(
     process.execPath,
     [
-      "scripts/stage-capsule-qualification.mjs",
+      "packages/core/build/commands/stage-capsule-qualification.mjs",
       "aggregate",
       "--input-dir",
       input,
@@ -408,7 +408,7 @@ test("one explicit v3 switch rolls back without destroying retained state", () =
   const result = spawnSync(
     process.execPath,
     [
-      "scripts/stage-capsule-qualification.mjs",
+      "packages/core/build/commands/stage-capsule-qualification.mjs",
       "campaign",
       "--work-root",
       workRoot,
@@ -421,15 +421,15 @@ test("one explicit v3 switch rolls back without destroying retained state", () =
       "--consumer-source-revision",
       runtimeRef,
       "--stage-capsule-mode",
-      "v3",
+      "disabled",
     ],
     { cwd: root, encoding: "utf8" },
   );
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.deepEqual(JSON.parse(result.stdout), {
     schema: "buildchain-v4-stage-capsule-rollback/v1",
-    switch: "stage-capsule-mode=v3",
-    productionAuthority: "v3",
+    switch: "stage-capsule-mode=disabled",
+    productionAuthority: "v4-native",
     migrationRequired: false,
     retainedStateDestroyed: false,
     productionWrites: false,
@@ -461,7 +461,7 @@ test("Wave reconciliation requires five native-terminal protected deliveries", (
   const request = reconciliationRequest(qualification.qualificationRoot);
   const result = reconcileStageCapsuleWave(request);
   assert.equal(result.terminal, true);
-  assert.equal(result.productionAuthority, "v3");
+  assert.equal(result.productionAuthority, "v4-native");
   assert.equal(result.productionReuseEnabled, false);
   assert.equal(result.children.length, 5);
   for (const mutate of [
@@ -483,7 +483,7 @@ test("architecture freezes the public consumer path, rollback, and authority cei
     ),
   );
   assert.equal(architecture.mode, "shadow-only");
-  assert.equal(architecture.productionAuthority, "v3");
+  assert.equal(architecture.productionAuthority, "v4-native");
   assert.deepEqual(architecture.campaign.platforms, platforms);
   assert.deepEqual(architecture.campaign.consumers, consumers);
   assert.deepEqual(architecture.publicConsumerDogfood.executableStages, [
@@ -539,7 +539,13 @@ test("architecture freezes the public consumer path, rollback, and authority cei
   assert.doesNotMatch(workflow, /stage-capsule-qualification:/u);
   assert.doesNotMatch(workflow, /stage-capsule-qualification\.mjs/u);
   assert.match(workflow, /needs: stage-capsule-checkpoints/u);
-  assert.match(workflow, /lifecycle run verify/u);
+  assert.match(
+    fs.readFileSync(
+      path.join(root, "actions/build/verify-check/action.yml"),
+      "utf8",
+    ),
+    /lifecycle run verify/u,
+  );
   const packageScripts = JSON.parse(
     fs.readFileSync(path.join(root, "package.json")),
   ).scripts;
@@ -552,29 +558,39 @@ test("architecture freezes the public consumer path, rollback, and authority cei
     path.join(root, ".github/workflows/public-build-stage-capsule-canary.yml"),
     "utf8",
   );
+  const canaryNodes = ["consumer-admission", "qualify", "reconcile"]
+    .map((phase) =>
+      fs.readFileSync(
+        path.join(
+          root,
+          `actions/build/stage-capsule-canary-${phase}/action.yml`,
+        ),
+        "utf8",
+      ),
+    )
+    .join("\n");
   assert.match(canaryWorkflow, /workflow_call:/u);
   assert.match(
     canaryWorkflow,
-    /BUILDCHAIN_WORKFLOW_SHA: \$\{\{ job\.workflow_sha \}\}/u,
+    /job-workflow-sha: \$\{\{ toJSON\(job\.workflow_sha\) \}\}/u,
   );
-  assert.doesNotMatch(canaryWorkflow, /\$\{BUILDCHAIN_WORKFLOW_SHA,,\}/u);
+  assert.doesNotMatch(canaryNodes, /\$\{BUILDCHAIN_WORKFLOW_SHA,,\}/u);
   assert.equal(
-    canaryWorkflow.match(/tr '\[:upper:\]' '\[:lower:\]'/gu)?.length,
+    canaryNodes.match(/tr '\[:upper:\]' '\[:lower:\]'/gu)?.length,
     3,
   );
   assert.match(
-    canaryWorkflow,
+    canaryNodes,
     /BUILDCHAIN_RUNTIME_SHA: \$\{\{ steps\.runtime\.outputs\.sha \}\}/u,
   );
-  assert.match(canaryWorkflow, /CONSUMER_SOURCE_SHA: \$\{\{ github\.sha \}\}/u);
-  assert.match(canaryWorkflow, /--runtime-ref "\$\{BUILDCHAIN_RUNTIME_SHA\}"/u);
+  assert.match(canaryNodes, /CONSUMER_SOURCE_SHA: \$\{\{ github\.sha \}\}/u);
+  assert.match(canaryNodes, /--runtime-ref "\$\{BUILDCHAIN_RUNTIME_SHA\}"/u);
   assert.match(
-    canaryWorkflow,
+    canaryNodes,
     /--consumer-source-revision "\$\{CONSUMER_SOURCE_SHA\}"/u,
   );
   assert.match(canaryWorkflow, /defaults:\n      run:\n        shell: bash/u);
   for (const stage of ["install", "build", "verify"])
-    assert.match(canaryWorkflow, new RegExp(`lifecycle run ${stage}`, "u"));
-  assert.doesNotMatch(canaryWorkflow, /lifecycle run publish/u);
-  assert.doesNotMatch(canaryWorkflow, /self-hosted|aws/i);
+    assert.match(canaryNodes, new RegExp(`lifecycle run ${stage}`, "u"));
+  assert.doesNotMatch(canaryNodes, /lifecycle run publish|self-hosted|aws/iu);
 });

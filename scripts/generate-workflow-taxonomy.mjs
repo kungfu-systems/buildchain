@@ -7,7 +7,7 @@ import {
   TAXONOMY_DOC,
   workflowPath,
   writeWorkflowSource,
-} from "./workflow-taxonomy.mjs";
+} from "../packages/core/workflow/workflow-taxonomy.mjs";
 
 const root = process.cwd();
 const policy = readWorkflowTaxonomy(root);
@@ -21,5 +21,5 @@ for (const entry of policy.entries) {
 }
 fs.writeFileSync(path.join(root, TAXONOMY_DOC), renderWorkflowCatalog(policy));
 process.stdout.write(
-  `Generated ${policy.entries.length} canonical workflow declarations and their exact compatibility projections.\n`,
+  `Generated ${policy.entries.length} canonical workflow declarations.\n`,
 );

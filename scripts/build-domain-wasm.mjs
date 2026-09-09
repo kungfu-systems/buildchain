@@ -4,12 +4,24 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { spawnSyncCommand } from "../packages/core/spawn-command.js";
+import { spawnSyncCommand } from "../packages/core/runtime/spawn-command.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const crate = path.join(root, "crates", "buildchain-domain-contracts");
-const artifact = path.join(root, "packages", "core", "buildchain-domain.wasm");
-const metadata = path.join(root, "packages", "core", "domain-wasm-artifact.js");
+const artifact = path.join(
+  root,
+  "packages",
+  "core",
+  "runtime",
+  "buildchain-domain.wasm",
+);
+const metadata = path.join(
+  root,
+  "packages",
+  "core",
+  "runtime",
+  "domain-wasm-artifact.js",
+);
 const check = process.argv.includes("--check");
 const toolchain = process.env.BUILDCHAIN_RUST_WASM_TOOLCHAIN || "1.96.0";
 const expectedRustc = "rustc 1.96.0 (ac68faa20 2026-05-25)";

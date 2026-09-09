@@ -9,6 +9,6 @@ if (!process.argv[2] || path.basename(destination) !== "dist") {
 }
 fs.mkdirSync(destination, { recursive: true });
 fs.copyFileSync(
-  path.join(root, "packages", "core", "buildchain-domain.wasm"),
+  path.join(root, "packages", "core", "runtime", "buildchain-domain.wasm"),
   path.join(destination, "buildchain-domain.wasm"),
 );

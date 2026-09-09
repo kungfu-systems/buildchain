@@ -211,7 +211,7 @@ The safety and authority boundary is explicit:
   coordinates, and the repository Actions/generated-write policy under one
   digest. A floating Buildchain ref cannot change release policy after that
   authority is accepted.
-- The reusable `check.yml` detects publication-artifact repositories and runs
+- The reusable `public-build-check.yml` detects publication-artifact repositories and runs
   `paper preflight --offline --ci` inside the existing required check context.
   Skipping the local CLI therefore cannot admit a missing entry contract,
   drifted Buildchain-owned surface, unsafe source branch, or wrong PR target.
@@ -226,7 +226,7 @@ The safety and authority boundary is explicit:
   fixes the bootstrap version at `0.0.0-bootstrap.0`, and returns only npm URLs
   observed from command output. Success requires public package readback and
   the exact repository/workflow/environment trusted-publisher binding. For
-  GitHub, the npm coordinate is the workflow filename (`paper-release.yml`),
+  GitHub, the npm coordinate is the workflow filename (`public-release-paper.yml`),
   not its `.github/workflows/` repository path.
 - `build` plans the two-clean-build reproducibility proof. Add `--execute` to
   create and verify the sealed publication bundle.
@@ -712,7 +712,7 @@ buildchain publication-artifact npm-package --json
 This command reads `project.type = "publication-artifact"`,
 `publication.version`, and `[publish] kind = "npm-paper-package"` plus
 `publish.package`; it writes `.buildchain/publication/npm-package` by default.
-The `paper-release.yml@v3` reusable workflow uses the same command before
+The `public-release-paper.yml@v3` reusable workflow uses the same command before
 running the standard npm publish transaction.
 
 The command writes `.buildchain/publication/publication-artifact.json`,
@@ -1030,7 +1030,7 @@ buildchain transaction inspect --version v4.0.1-alpha.2
 
 It reads or locally initializes the durable transaction record and validates
 available publish evidence. Remote durable refs and public Git ref finalization
-remain owned by `actions/promote-buildchain-ref`; the CLI inspection surface is
+remain owned by `actions/release/promote-ref`; the CLI inspection surface is
 for preflight and recovery reasoning before a maintainer reruns or resumes a
 promotion.
 
@@ -1068,7 +1068,7 @@ transaction that promotes release refs:
 The promotion workflow uses npm Trusted Publishing through GitHub Actions OIDC.
 It runs on a GitHub-hosted runner with `id-token: write`, but it does not
 manually run the release-candidate resolver or promote action. Buildchain's own
-dogfood path calls the declarative `release-candidate-promote.yml` wrapper with
+dogfood path calls the declarative `public-release-promote.yml` wrapper with
 channel, target ref/SHA, PR-stage workflow, artifact, status-check, and passport
 inputs. The wrapper generates the version-state commit, runs
 `lifecycle.verify`, runs `lifecycle.publish`, writes Buildchain publish
@@ -1076,7 +1076,7 @@ evidence, validates that evidence, and only then moves exact tags and floating
 refs.
 
 ```bash
-node scripts/npm-publish-transaction.mjs
+node packages/core/publication/commands/npm-publish-transaction.mjs
 ```
 
 Before the first real release, configure npm Trusted Publishing for:

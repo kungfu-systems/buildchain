@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "contract": "kungfu-buildchain-maintainability-policy",
   "baseline": "architecture/maintainability-baseline.json",
-  "enforcementRevision": "5308189b09bcb5a1314195412f2807a40d678838",
+  "enforcementRevision": "1bb6333b97ad94e94a81178e956a703dff2b5f84",
   "debtBudget": {
     "metric": "calibrated-full-dimensional-excess-v1",
     "baselineProtectedHead": "2381db294325a367b6d2bfe7ee72c246f8469a51",
@@ -13,27 +13,30 @@
     "rationale": "Preserve the accepted 66,712 governance ledger at the exact protected Wave 4 cut while charging every subsequent source, Rust, test, and workflow line, function, job, step, and decision excess one-for-one. The fixed calibration offset cannot hide new debt because both the measured ledger and calibrated total are recomputed from the complete exact debt map."
   },
   "exceptionBudget": {
-    "maxTotal": 95,
+    "maxTotal": 76,
     "maxByCollection": {
       "approvedExistingDebtTransitions": 19,
       "approvedNewFileTransitions": 22,
       "approvedExtractedDebt": 20,
-      "approvedPublicSurfaceTransitions": 19,
       "approvedTestDebtTransitions": 9,
-      "approvedWorkflowDebtTransitions": 6
+      "approvedWorkflowDebtTransitions": 6,
+      "approvedPublicSurfaceTransitions": 0
     },
     "rationale": "Wave 4 freezes both the aggregate exception inventory and every exception class at the exact protected baseline; reductions may ratchet these ceilings downward, but entries cannot be moved between classes to create hidden headroom."
   },
   "repositoryBudgets": {
     "baselineRevision": "9569f69c2cb609372b8a3d65ce5dec8fb7b34a84",
-    "maxHandMaintainedSourceFiles": 523,
-    "maxHandMaintainedSourceLines": 176461,
-    "maxWorkflowFiles": 80,
-    "maxWorkflowLines": 26791,
-    "latestTransition": "Extract six dev-delivery nodes while preserving hosted authority domains and public contracts.",
-    "latestTransitionRationale": "Charge the two bounded audit modules that expand reachable node calls and validate composite bodies, plus existing topology/facade verifier wiring, at the exact measured source total. Keep all per-file, function, exception, aggregate debt and workflow ceilings unchanged. Independently cap the six composites at 360 lines each and 1600 total; no added runner jobs or hidden authority reduction. Require independent governance review.",
+    "maxHandMaintainedSourceFiles": 760,
+    "maxHandMaintainedSourceLines": 187037,
+    "maxWorkflowFiles": 68,
+    "maxWorkflowLines": 8715,
+    "latestTransition": "Buildchain 4.1 responsibility layers and capability modules.",
+    "latestTransitionRationale": "The authorized breaking 4.1 restructuring replaces workflow implementation and historical forwarders with semantic actions and bounded capability modules. Ratchet repository totals at the measured cut; retain frozen per-file, function, exception and calibrated debt limits. Composite implementation and inline shell remain independently bounded by the code-layout gate. Require independent governance review.",
     "rationale": "Bounded modules separate candidate, evidence, native proof and execution, canonical failure verification, closed-set execution transfer, process-boundary verification, Warrant state and qualification, authority state, qualification, Landing acquisition, verified-attempt admission, Landing settlement and fence validation, provider attempt and heartbeat readback, sealed terminal evidence, hosted heartbeat, resume, store, options, command-specific adapters, and CLI orchestration responsibilities. The protected delivery workflow gives candidate and seal jobs no provider write credential, recursively rejects transfer drift, scopes every transfer artifact to the exact provider run attempt, chains every durable heartbeat state and receipt root on a distinct hosted runner domain, and permits qualification or exact failure settlement only after the finalizer verifies live jobs and the latest durable authority state. Public Landing admission and heartbeat always perform non-injectable fresh exact-attempt provider readback, tolerate only a not-yet-materialized seal job while retaining exact native and duplicate-job rejection, and heartbeat-loss coordination never invokes GitHub's run-scoped cancellation API where a successor rerun could race. The hosted process boundary anchors trust in the kernel-resolved versioned Runner.Worker path while accepting an equivalent argv-zero spelling with the same basename; its public boundary marker is allowed only at the one exact non-secret value, so a forged value under the same credential-like name still fails closed. The credentialless transfer seal validates the rooted native reuse decision against the Warrant-bound source, closure, dependency, toolchain, environment and command inputs; qualifiedBase stays in the proof and decision where it is rooted and later independently rechecked, rather than being assumed on the Warrant schema. V2 mutation cannot initialize a second empty authority beside a legacy ref: migration reads and roots the canonical live v1 ref, rechecks it, applies the explicit configured v2 policy, and atomically replaces its bytes through one expected-old non-force update, so old v1 controllers fail closed while the prior commit remains immutable history. Candidate ancestry classifies the GitHub artifact runtime token as credential authority. Every Landing settlement, including an unexpired fence, requires product-owned terminal readback. Terminal cleanup reads the immutable historical attempt, derives workflow and hosted Landing job identity from live run data, reads the exact protected ref head and compares containment against that immutable SHA, and seals merged only when the admitted merge-group head is contained by that protected base; a later different-head merge settles the old attempt as dequeued. Terminal normalization preserves transfer, finalizer boundary, native and seal job, admitted provider attempt, protected-base head, containment result, and terminal readback coordinates. The public reusable workflow truthfully retains its single-flight v1 authority without advertising v2 migration, while bounded v2 remains a separate opt-in CLI, Node API, and schema contract; the tracked self-caller stays on public v4-alpha with matching stable and alpha locks, and transient train selection is dispatch-only. Next-development parity adds one versioned transition authority, one durable controller, one bounded reservation adapter, and pure public-contract recovery evidence while retaining the existing thin floating-channel callers byte-for-byte. The floating-consumer gate reuses the existing contract-world evaluator so SHA drift passes only under the selected lock's compatibility policy, breaking surface drift still fails closed, and external certification reconstructs the receipt from the observed workflow SHA rather than the lock's historical evidence SHA. Tail reseal adds no Stage Capsule effect or general rebuild authority: it verifies the exact retained four-platform bytes, admits one known macOS tail failure through live provider readback, fences signing and finalization to explicit credentials and Warrant identity, and requires standard candidate Passport plus provider and protected readback. Compatibility Facts parity isolates canonical encoding, temporal verification, lifecycle validation, fixture projection, public authority projection, and CLI adaptation into bounded modules; legacy digest and proof arrays are derived only from exact current Fact lineage. Publication Rehearsal adds no production release authority: the content-addressed capsule contract binds source, candidate, manifest, config, canonical data-only provider bindings, provider policy, observations and core version separately from filesystem, runtime and rehearsal-only provider authority; simulate, replay and explicitly authorized provider rehearsal all reuse the release-tail planner, while same-commit local dogfood resolves the new reusable contract and exact current runtime before external callers remain on floating v4-alpha. Cross-runtime candidate recovery preserves original runtime and provider roots and creates resume lineage only after exact public ref, tag, ancestry, npm version and integrity readback. Adopter Delivery restores the reviewed public v3 gate, drivers, Passport binding, N-1 bootstrap and exact archive loader through one public v4 surface while keeping provider and release authority explicit non-claims. Floating Alpha bootstrap uses only the existing exact resolver and protected Alpha private shell to move an otherwise stale floating shell, retains public v4 stable promotion, and removes itself after protected readback. CI lane change-budget enforcement adds a bounded parser, evaluator, guard, and tests without creating another merge authority.",
-    "governance": "legacy-debt-sunset-2026q4"
+    "governance": "legacy-debt-sunset-2026q4",
+    "maxActionDefinitions": 135,
+    "maxActionDefinitionLines": 12177,
+    "maxAutomationImplementationLines": 207929
   },
   "sourceBudgets": {
     "newFileLines": 600,
@@ -42,44 +45,24 @@
     "existingDebtPolicy": "no-widening"
   },
   "approvedNewFileTransitions": {
-    "actions/promote-buildchain-ref/internal/promotion-operations.js": {
+    "packages/core/release/promote-ref/internal/promotion-operations.js": {
       "maxLines": 1320,
       "rationale": "The exact ref-mutation and reconciliation factories move intact behind one injected internal boundary. Consolidating the one-consumer existing-version-state helper keeps repository file and source-line totals flat while the public facade falls by 1317 lines.",
       "governance": "stage3-promotion-facade-reduction"
     },
-    "packages/core/next-development-transition.js": {
+    "packages/core/release/next-development-transition.js": {
       "maxLines": 738,
       "rationale": "The single versioned authority keeps completed-Alpha identity, legal successor models, role-separated adapter bounds, materialization roots, compare-and-swap transitions and deterministic replay validation together. Anchored and manual initial state persists as waiting-anchor after reviewed input and exposes rooted anchor binding plus controller materialization recording; this exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/next-development-controller.js": {
+    "packages/core/release/next-development-controller.js": {
       "maxLines": 728,
       "rationale": "The durable controller keeps atomic child identity, rooted checkpoints, idempotent materialization operations, latest protected Dev revalidation, PR settlement and exact source and derived root readback in one provider-neutral authority. It exposes no Alpha publication effect and resumes only through injected atomic store and executor boundaries; this exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "actions/promote-buildchain-ref/internal/promote-alpha-channel.js": {
-      "maxLines": 599,
-      "rationale": "The extracted Alpha promotion stage replaces the former non-fast-forward skip with the existing exact-current-Dev regeneration contract, protected PR fallback, and fail-closed workspace binding; this exact reviewed ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "scripts/dev-delivery-source-proof-reuse.mjs": {
-      "maxLines": 631,
-      "rationale": "The bounded source-proof driver seals one exact PR qualification and delegates merge-group graph verification to the isolated exact-patch replay module. Unknown, nonlinear, extra-commit, patch-drift or base-divergent compositions still fail closed to the full lifecycle, and this exact file ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "scripts/dev-pr-prequeue-guard.mjs": {
-      "maxLines": 399,
-      "rationale": "The bounded guard keeps latest-base delta attribution, rooted source-proof reuse classification, synthetic merge composition readback, stable pre-enqueue failures, and the final base, head, queue, and Warrant compare-and-swap outside the legacy Dev PR controller; it cannot mutate the frozen source head or authorize landing by itself, and this exact file ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "scripts/dev-delivery-authority.mjs": {
+    "packages/core/dev-delivery/commands/dev-delivery-authority.mjs": {
       "maxLines": 635,
       "rationale": "The explicit authority CLI keeps plan-only and execute transitions, provider-attempt coordinates, expected-old durable state writes, terminal provider readback, and machine-readable output in one compatibility entrypoint while the state-machine implementations remain extracted; this exact file ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "scripts/architecture.mjs": {
-      "maxLines": 610,
-      "rationale": "The v4 architecture validator adds only the bounded production-authority, fallback, rollback, writer-runtime, and legacy-retirement checks required for the final release cutover. This exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/warrant-shadow-plan.mjs": {
@@ -87,42 +70,12 @@
       "rationale": "The historical v3 comparison plan now separately verifies that the live manifest is v4-authoritative and legacy-retired, preventing comparison evidence from being mistaken for production authority. This exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/buildchain-channel-identity.js": {
-      "maxLines": 119,
-      "rationale": "The single major-independent classifier and triad evaluator keep shell, runtime, and contract-lock lane identity in one bounded fail-closed authority shared by stable and alpha consumers. This exact reviewed ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/dev-delivery-warrant.js": {
-      "maxLines": 605,
-      "rationale": "The v4 parity port preserves the reviewed v3 release-blocker claim handoff, root-preserving candidate refresh, deterministic queued ranking and receipt propagation while retaining all prior fencing, lease and terminal semantics; this exact reviewed ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/dev-delivery-authority-landing.js": {
-      "maxLines": 615,
-      "rationale": "The bounded Landing authority module keeps exclusive acquisition, fenced heartbeat, exact merge-group provider-attempt admission, independent expired-provider readback, terminal settlement, and deterministic wake transitions in one audited state-machine seam; this exact file ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/dev-delivery-landing-admission-core.js": {
-      "maxLines": 119,
-      "rationale": "The internal transition persists only a provider attempt already derived by the public live GitHub readback boundary, keeping caller-supplied evidence outside the package export graph while preserving deterministic duplicate admission; this exact file ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/release-blocker-priority.js": {
-      "maxLines": 193,
-      "rationale": "The v4 parity adapter preserves the reviewed v3 exact dual-landing priority claim, repair-contract parsing and unrelated-work rejection outside the durable Warrant state machine; this exact reviewed ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/kfd-adopter-manifest.js": {
-      "maxLines": 390,
-      "rationale": "The package-only adapter keeps published KFD verification, Buildchain-specific evidence constraints, decision and gate roots, and the one-way legacy projection in one bounded public authority seam. This exact reviewed ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/release-train.js": {
+    "packages/core/release/release-train.js": {
       "maxLines": 740,
       "rationale": "The v4 Release Train parity contract preserves the reviewed v3 rooted successor-repair lifecycle, compare-and-swap, frozen origin provenance, exact cut and Dev patch identity, independent candidate-build eligibility, publication gating and deterministic validation; this exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/engineering-housekeeper-github.js": {
+    "packages/core/governance/engineering-housekeeper-github.js": {
       "maxLines": 707,
       "rationale": "The bounded GitHub engine keeps complete pagination, repository-wide protected-mainline discovery, one batched closed-PR inventory, exact association-only target selection, and fixed eight-way ancestry concurrency. Unassociated heads are retained without fallback comparisons; exact source and target revalidation, stale-PR labeling, provider receipts, and replay behavior remain in one public provider surface. This exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
@@ -132,22 +85,17 @@
       "rationale": "The single provider-neutral Rust release-tail authority replaces the retired 1,228-line JavaScript state machine and keeps strict declaration normalization, deterministic effect planning, rooted observations and receipts, and bounded retry/readback transitions behind the checked WASM ABI. Node retains only provider effects; this exact Rust ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/runtime-ref-resume-authority.js": {
+    "packages/core/consumer/runtime-ref-resume-authority.js": {
       "maxLines": 625,
       "rationale": "The reviewed v4 authority keeps exact-runtime authorization, source and lock binding, fresh-attempt Stage Capsule reuse, floating-ref movement, final readback, and Passport lineage verification in one bounded public module; persistence scanning is separately owned and this exact ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/runtime-selector-persistence.js": {
-      "maxLines": 228,
-      "rationale": "The isolated source scanner rejects persisted exact, train, authority, variable, secret, and environment selector authority while inventorying OIDC, IAM, and external authority metadata without reading credentials; this exact ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "scripts/universal-workflow-engine.mjs": {
+    "packages/core/workflow/commands/universal-workflow-engine.mjs": {
       "maxLines": 620,
       "rationale": "The exact candidate engine adds only a fail-closed OIDC preflight and a fixed npm 11.13.0 trusted-publishing shim under the already admitted ephemeral runtime path. This lets a reviewed Train candidate execute through an older floating Alpha Bootstrap shell without broadening capability, permission, provider, or mutation authority; this exact live-repair ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/resume-from-candidate-run.mjs": {
+    "packages/core/release/commands/resume-from-candidate-run.mjs": {
       "maxLines": 1125,
       "rationale": "The candidate recovery adapter retains the existing artifact normalization and immutable recovery receipt boundary while adding fresh authorized cross-runtime Stage Capsule resume material, post-publication ref, tag, ancestry, and npm readback, and rooted Release Passport lineage. Its main orchestration remains below the default function length and complexity limits, and this exact file ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
@@ -159,47 +107,21 @@
       "rationale": "The public facade exposes both the bounded CI lane change-budget and v4 publication qualification contracts beside the existing v4 governance APIs without adding provider effects, a second implementation, or merge authority; this exact post-integration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "actions/promote-buildchain-ref/index.js": {
-      "maxFunctionLines": 280,
-      "rationale": "The existing action entrypoint forwards the optional rooted v4 runtime-resume material and its trusted post-publication finalizer into the audited durable Passport operation. The exact readable four-line input widening cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "actions/promote-buildchain-ref/lib.js": {
-      "maxLines": 3471,
-      "rationale": "The stable facade injects exact ref-mutation and reconciliation dependencies into one internal module while retaining its exported factory, option defaults, operation order, public contracts and authority boundaries. The exact file ceiling falls from 4788 to 3471 and cannot grow implicitly.",
-      "governance": "stage3-promotion-facade-reduction"
-    },
-    "bin/buildchain.mjs": {
-      "maxLines": 1946,
-      "rationale": "The runtime entrypoint now binds every compatibility command and alias, including the upstream paper command, through the tested command registry; this exact post-integration wiring ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/release-passport.js": {
-      "maxLines": 2987,
-      "maxFunctionLines": 304,
-      "rationale": "Responsibility-owned validators preserve issue ordering, byte-stable reports, upstream release evidence, consumer-policy certification, and rooted runtime A+B resume lineage. Tree-equivalent promotion keeps the original built source identity while the optional attachment is normalized and independently reverified before inclusion. The historical adopter source selector is a two-line re-export of the bounded adopter-delivery implementation rather than duplicate Passport logic; these exact post-integration ceilings cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/buildchain-contract.js": {
+    "packages/core/contracts/buildchain-contract.js": {
       "maxLines": 1096,
       "maxFunctionLines": 681,
       "maxFunctionComplexity": 30,
       "rationale": "The existing v4 contract evaluator invokes the shared shell-runtime-lock binding before every compatibility or early-success path while preserving the prior contract-world, Release Train, and drift behavior. Its public projection now includes the bounded dev-delivery workflow surface and declares the optional expected lane inputs consumed by the unchanged evaluator. This exact public-contract wiring ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/github-governance-authority.js": {
+    "packages/core/governance/github-governance-authority.js": {
       "maxLines": 1369,
       "rationale": "The publication authority declares the alpha/v4/v4.0 and release/v4/v4.0 protected channels and the dispatch-only Alpha recovery workflow as protected authority. This exact reviewed ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/buildchain-config.js": {
+    "packages/core/consumer/buildchain-config.js": {
       "maxLines": 1887,
       "rationale": "Artifact signing configuration admits only the Buildchain-owned JIT profile with exact safe archive-relative target paths while rejecting credentials, entitlement files, wildcard paths, incompatible artifact kinds, and incomplete declarations. Publication rehearsal remains effect-disabled. Adopter delivery adds only a closed public contract, exact selectors and repository-relative input, readback, bootstrap, archive and result paths; this exact wiring ceiling cannot grow implicitly. TOML build configuration delegates to a strict normalizer through one import and one call; this exact two-line increase accompanies removal of duplicate workflow and router implementations.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "scripts/check-internal-architecture.mjs": {
-      "maxFunctionComplexity": 37,
-      "rationale": "Ownership coverage and zero-cycle enforcement were added to the pre-existing architecture traversal; this exact guard complexity ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
     "scripts/check-inventory.mjs": {
@@ -207,29 +129,24 @@
       "rationale": "Inventory retains the complete recovery and publication authority set and additionally locks the bounded protected-Alpha private-shell bootstrap, declarative built-in tail, and absence of a new public recovery input; this exact post-integration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/generate-channel-promotion-workflow.mjs": {
-      "maxFunctionLines": 290,
-      "rationale": "The generated promotion router keeps the exact candidate recovery interface and the latest bounded shell-routing implementation in one deterministic generator. It now derives the advanced contract gate's expected lane and major from the selected route without exposing them as caller-controlled public inputs. This exact combined train ceiling cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "scripts/release-candidate-resolver.mjs": {
+    "packages/core/release/commands/release-candidate-resolver.mjs": {
       "maxLines": 853,
       "maxFunctionLines": 308,
       "maxFunctionComplexity": 61,
       "rationale": "The shared candidate resolver retains bounded archive streaming, payload size and sha256 validation while locating and validating candidate-bound Stage Capsule and publication qualification evidence. Exact publication version selection now prefers the sealed npm bundle without widening the orchestration function, and these lower exact ceilings cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/auditable-demo.mjs": {
+    "packages/core/build/commands/auditable-demo.mjs": {
       "maxLines": 1330,
       "rationale": "The existing Gate validator admits an explicit bounded long-form duration class while preserving the standard 60-second default and exact capture-to-scene binding; this exact post-integration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/dev-alpha-candidate-patrol.mjs": {
+    "packages/core/release/commands/dev-alpha-candidate-patrol.mjs": {
       "maxLines": 1197,
       "rationale": "The existing single-flight exact-source Alpha controller delegates next-development reservation validation to the bounded core reader, carries the rooted result into selection, and retains the no-publication boundary; this exact ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/build-contract-core.mjs": {
+    "packages/core/build/commands/build-contract-core.mjs": {
       "maxLines": 1229,
       "rationale": "Runner matrix resolution now binds one explicit GitHub-hosted identity and exact hosted versus relay projections so artifact transport cannot cross regions unnecessarily; this exact post-integration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
@@ -239,14 +156,14 @@
       "rationale": "Lifecycle metadata and CLI registry parity are generated centrally across the latest upstream public surface while the largest generator function remains at or below its prior size and complexity ceilings.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/run-lifecycle-core.mjs": {
+    "packages/core/build/commands/run-lifecycle-core.mjs": {
       "maxLines": 886,
       "maxFunctionLines": 472,
       "maxFunctionComplexity": 74,
       "rationale": "The runtime action now enforces the audited compiler-cache activity gate immediately after a successful build, so consumers receive fail-closed verification before their reusable workflow shell advances; exact existing function complexity does not increase.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/dev-pr-auto-merge.mjs": {
+    "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs": {
       "maxLines": 1224,
       "maxFunctionComplexity": 53,
       "rationale": "The existing Dev PR controller now supports one targeted exact-head Agent admission path with typed receipts and PR-visible diagnostics while preserving independent approval, required-check, same-repository, readiness, and merge-queue gates; this exact post-integration ceiling cannot grow implicitly.",
@@ -258,1102 +175,30 @@
       "governance": "legacy-debt-sunset-2026q4"
     }
   },
-  "approvedPublicSurfaceTransitions": {
-    "workflow:check": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "check",
-        "path": ".github/workflows/check.yml",
-        "reusable": true,
-        "inputs": [
-          "buildchain-ref",
-          "buildchain-repository",
-          "mode",
-          "node-version",
-          "require-version-state",
-          "source-proof-closure-paths-json",
-          "source-proof-dependency-paths-json",
-          "source-proof-policy-paths-json",
-          "source-proof-required-contexts-json",
-          "source-proof-reuse",
-          "upload-artifacts",
-          "working-directory"
-        ],
-        "secrets": [],
-        "outputs": [
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "source-proof-decision-root",
-          "source-proof-producer-run-id",
-          "source-proof-reuse-reason",
-          "source-proof-reused",
-          "source-proof-root"
-        ]
-      },
-      "rationale": "Add an opt-in merge-group fast path that accepts only an unexpired artifact from a successful same-workflow pull-request run and recomputes exact source, base, patch, runtime, plan, policy, closure, dependency, required-context, controller-receipt, and two-parent merge-group bindings. Existing callers remain on the full lifecycle by default, while any missing evidence, API failure, mismatch, grouped composition, or malformed proof also runs the full lifecycle.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "action:promote-buildchain-ref": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "promote-buildchain-ref",
-        "path": "actions/promote-buildchain-ref/action.yml",
-        "inputs": [
-          "allow-repository",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "declarative-release-tail",
-          "dry-run",
-          "expected-publication-version",
-          "generated-pull-request-token",
-          "generated-ref-update-token",
-          "generated-status-check-token",
-          "github-release",
-          "github-release-artifact-paths",
-          "github-release-notes",
-          "github-release-title",
-          "plan-before-target-advance",
-          "promote-only-release-candidate",
-          "publication-capability-json",
-          "publication-gate-aggregate-json",
-          "publication-qualification-receipt-json",
-          "publication-used-qualification-nonces-json",
-          "publish-auth",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-evidence-path",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-required-artifacts-json",
-          "publish-required-artifacts-path",
-          "publish-sealed-bundle-manifest",
-          "publish-sealed-bundle-root",
-          "publish-source-locked",
-          "publish-source-ref",
-          "publish-source-sha",
-          "publish-tooling-sha",
-          "publish-transaction",
-          "publish-transaction-override",
-          "reconciliation-workspace",
-          "release-candidate-build-summary-path",
-          "release-candidate-family-assignment-id",
-          "release-candidate-family-evidence-required",
-          "release-candidate-family-evidence-root",
-          "release-candidate-family-initiative-id",
-          "release-candidate-passport-path",
-          "release-candidate-version",
-          "release-material-sha",
-          "release-passport",
-          "release-passport-adopter-delivery-json",
-          "release-passport-attachment-command",
-          "release-passport-build-summary-path",
-          "release-passport-buildchain-self-kfd",
-          "release-passport-evidence-command",
-          "release-passport-evidence-jsons",
-          "release-passport-github-artifact-attestation-policy-jsons",
-          "release-passport-impact-json",
-          "release-passport-invariant-passport-command",
-          "release-passport-invariant-passport-jsons",
-          "release-passport-kfd-1-witness-jsons",
-          "release-passport-kfd-2-claim-jsons",
-          "release-passport-kfd-3-artifact-verify-command",
-          "release-passport-kfd-3-artifact-witness-jsons",
-          "release-passport-kfd-3-prebuild-witness-jsons",
-          "release-passport-kfd-adopter-manifest-gate-json",
-          "release-passport-kfd-adopter-manifest-json",
-          "release-passport-kfd-product-gate-jsons",
-          "release-passport-kfd-support-matrix-json",
-          "release-passport-output-dir",
-          "release-passport-platform-manifest-paths",
-          "release-passport-product-name",
-          "release-passport-promotion-routing-json",
-          "release-passport-v4-consumer-policy-certification-json",
-          "release-passport-v4-consumer-policy-certification-root",
-          "release-passport-v4-runtime-resume-evidence-command",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "release-tail-state-path",
-          "require-governance",
-          "require-publication-qualification",
-          "require-publish-source-lock",
-          "require-version-state",
-          "required-status-check",
-          "sha",
-          "tags",
-          "target-ref",
-          "token",
-          "transaction-state-path",
-          "verification-command"
-        ],
-        "secrets": [],
-        "outputs": []
-      },
-      "rationale": "The promote action preserves the independently rooted v4 consumer-policy certification and accepts one optional verified runtime-resume evidence document plus one trusted post-publication finalizer command. The command runs only inside the existing durable Passport finalization boundary after provider effects and public readback; v3 behavior remains unchanged.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "cli:architecture": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "architecture",
-        "usage": "buildchain architecture validate [--cwd <dir>] [--json]"
-      },
-      "rationale": "Add a read-only generated list/show/validate surface plus exact Git N-1 qualification; the manifest remains the single authority and the commands do not migrate or write production state.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "cli:kfd-support": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "kfd-support",
-        "usage": "buildchain kfd support project --manifest-json <file-or-json> --manifest-gate-json <file-or-json>"
-      },
-      "rationale": "Replace the product-owned support-matrix declaration authority with a read-only compatibility projection derived from one exact standard adopter manifest and its passing gate; verification now requires the same authority closure and cannot widen adopter claims.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "cli:dev": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "dev",
-        "usage": "buildchain dev pr-admit --repository <owner/repo> --branch <dev/vN/vN.M>"
-      },
-      "rationale": "The existing Dev command family adds one targeted exact-head admission entry that emits a typed receipt and PR-visible diagnostic status while preserving the merge-queue command and keeping approval and merge authority external.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "action:run-lifecycle": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "run-lifecycle",
-        "path": "actions/run-lifecycle/action.yml",
-        "inputs": [
-          "artifact-name",
-          "artifact-paths",
-          "command",
-          "cwd",
-          "diagnostics-artifact-name",
-          "diagnostics-path",
-          "expected-artifacts-json",
-          "manifest-artifact-name",
-          "manifest-path",
-          "platform-id",
-          "platform-name",
-          "process-sample-interval-ms",
-          "process-samples-path",
-          "process-summary-path",
-          "process-summary-required",
-          "requested-parallelism",
-          "required",
-          "sample-process-tree",
-          "stage",
-          "substage-evidence-path",
-          "summary-path",
-          "timeout-minutes"
-        ],
-        "secrets": [],
-        "outputs": []
-      },
-      "rationale": "The action accepts one optional consumer-produced substage evidence file, independently verifies its exact source and platform roots, and embeds it in diagnostics without changing behavior for existing callers.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:dev-alpha-candidate-patrol": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "dev-alpha-candidate-patrol",
-        "path": ".github/workflows/dev-alpha-candidate-patrol.yml",
-        "reusable": true,
-        "inputs": [
-          "alpha-workflow-path",
-          "auto-merge",
-          "buildchain-ref",
-          "buildchain-repository",
-          "create-pull-request",
-          "dev-workflow-path",
-          "dry-run",
-          "max-age-seconds",
-          "merge-method",
-          "pull-request-body-prefix",
-          "pull-request-body-prefix-renderer",
-          "reactivation-authorized",
-          "settlement-authorized",
-          "source-branch",
-          "target-branch"
-        ],
-        "secrets": ["promotion-token"],
-        "outputs": [
-          "active-candidate-pr",
-          "candidate-generation",
-          "candidate-tree-sha",
-          "controller-state",
-          "cut-root",
-          "drift-root",
-          "eligible",
-          "hold-root",
-          "next-candidate-sha",
-          "prior-state-root",
-          "promotion-pr",
-          "result-path",
-          "runtime-sha",
-          "selected-sha",
-          "settlement-action",
-          "source-lock-ref",
-          "train-root"
-        ]
-      },
-      "rationale": "Expose the frozen Release Cut, generation, candidate tree, exact runtime, Dev-drift observation and fail-closed hold roots for v4 Build inputs while preserving the existing no-publication and protected-settlement boundary.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:.web-surface": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": ".web-surface",
-        "path": ".github/workflows/.web-surface.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-path",
-          "aws-region",
-          "build-command",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-expected-channel",
-          "buildchain-contract-expected-major",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "fail-on-release-pr-error",
-          "github-governance-receipt-json",
-          "node-version",
-          "preview-apply",
-          "preview-aws-role-arn",
-          "preview-cleanup-apply",
-          "preview-comment",
-          "preview-environment",
-          "production-apply",
-          "production-approved",
-          "production-aws-role-arn",
-          "production-environment",
-          "production-release-app-client-id",
-          "production-release-app-id",
-          "production-release-branch-channel",
-          "production-release-head-prefix",
-          "production-release-label",
-          "production-release-on-main",
-          "production-release-pr-mode",
-          "production-release-pr-token",
-          "production-source-sha",
-          "publication-admission-json",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-runner-provenance-json",
-          "publication-used-nonces-json",
-          "release-feedback-actor-privacy",
-          "staging-apply",
-          "staging-aws-role-arn",
-          "staging-environment",
-          "verify-command",
-          "working-directory"
-        ],
-        "secrets": ["production-release-app-private-key"],
-        "outputs": [
-          "buildchain-runtime-class",
-          "buildchain-runtime-override",
-          "buildchain-runtime-ref",
-          "buildchain-runtime-sha",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "preview-apply-result-json",
-          "preview-cleanup-result-json",
-          "production-apply-result-json",
-          "production-release-pr-url",
-          "release-pr-status",
-          "staging-apply-result-json",
-          "web-surface-alias",
-          "web-surface-channel",
-          "web-surface-cleanup-plan-json",
-          "web-surface-manifest-json",
-          "web-surface-url",
-          "web-surface-urls-json"
-        ]
-      },
-      "rationale": "The reusable web-surface workflow exposes only the historical contract-channel aliases needed to bind the same v4 contract lock. Conflicting legacy and current identities fail before build or deployment, and no preview, staging, production, credential, or release authority changes.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:dev-pr-auto-merge": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "dev-pr-auto-merge",
-        "path": ".github/workflows/dev-pr-auto-merge.yml",
-        "reusable": true,
-        "inputs": [
-          "active-lease-context",
-          "affected-paths-json",
-          "allowed-head-prefixes",
-          "assignment-root",
-          "block-labels",
-          "buildchain-ref",
-          "buildchain-repository",
-          "closure-root",
-          "defer-landing",
-          "delivery-class",
-          "delivery-priority",
-          "delivery-warrant-mode",
-          "dependency-root",
-          "diagnostic-context",
-          "dry-run",
-          "environment-root",
-          "expected-head-sha",
-          "expected-pr-number",
-          "handoff-workflow-id",
-          "initiative-root",
-          "landing-mode",
-          "legacy-active-owner-binding-json",
-          "max-merges",
-          "merge-method",
-          "native-command",
-          "native-command-root",
-          "native-heartbeat-seconds",
-          "native-proof-json",
-          "plan-root",
-          "project-cut-proof-json",
-          "queue-admission-context",
-          "ready-label",
-          "release-blocker-priority-json",
-          "require-approval",
-          "required-status-checks",
-          "same-repository-only",
-          "shard-evidence-roots-json",
-          "source-identity-root",
-          "source-patch-root",
-          "source-workflow-id",
-          "source-workflow-run-id",
-          "target-branch",
-          "toolchain-root",
-          "warrant-lease-seconds"
-        ],
-        "secrets": ["github-token"],
-        "outputs": [
-          "action-count",
-          "admission-receipt-root",
-          "admission-state",
-          "enqueued-count",
-          "evaluated-count",
-          "final-base-sha",
-          "merged-count",
-          "native-execution-transfer-root",
-          "native-proof-root",
-          "native-reuse-decision-root",
-          "project-cut-proof-root",
-          "provider-finalizer-boundary-root",
-          "provider-heartbeat-receipt-root",
-          "qualified-warrant-receipt-root",
-          "skipped-count",
-          "source-proof-root",
-          "warrant-receipt-root",
-          "warrant-state-commit",
-          "warrant-state-root"
-        ]
-      },
-      "rationale": "Add required-mode two-phase native qualification under one provisional fence, exact environment and heartbeat receipt binding, deterministic proof reuse, qualified-Warrant readback, and bounded successor handoff. The execution-transfer and provider-finalizer boundary outputs expose the exact content root and live distinct-job runner readback without exposing credential bytes. The additive legacy-active-owner binding carries exact phase-less state, fence, and generation without requiring a native command contract. Existing off and shadow modes remain explicit, and GitHub merge_group plus the exact Project Cut remain final landing authority.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:stable-candidate-patrol": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "stable-candidate-patrol",
-        "path": ".github/workflows/stable-candidate-patrol.yml",
-        "reusable": true,
-        "inputs": [
-          "auto-approve",
-          "auto-merge",
-          "auto-promote",
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "hold",
-          "hold-reason",
-          "ledger-ref",
-          "merge-method",
-          "minimum-soak-seconds",
-          "release-now",
-          "required-checks",
-          "revoke-reason",
-          "revoked-versions",
-          "target-branch"
-        ],
-        "secrets": ["approval-token", "promotion-token"],
-        "outputs": [
-          "promotion-pr",
-          "result-path",
-          "selected",
-          "selected-sha",
-          "selected-version",
-          "stable-version"
-        ]
-      },
-      "rationale": "Let protected stable callers select the repository-supported GitHub auto-merge method while preserving the existing opt-in and exact-source gates.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "cli:release-propagation": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "release-propagation",
-        "usage": "buildchain release-propagation <plan|write-lock|work|entry|pickup> ..."
-      },
-      "rationale": "The existing release-propagation command adds one policy-reporting Site upstream entry and exact non-force Work branch executor while preserving plan, lock, pickup, and Work Control compatibility.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:publication-artifact": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "publication-artifact",
-        "path": ".github/workflows/publication-artifact.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-name",
-          "artifact-paths",
-          "artifact-retention-days",
-          "build-command",
-          "buildchain-alpha-contract-lock-path",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "buildchain-stable-contract-lock-path",
-          "node-version",
-          "package-name",
-          "prepare-paper-package",
-          "publish-dist-tag",
-          "setup-node",
-          "target-ref",
-          "toolchain-command",
-          "toolchain-digest",
-          "toolchain-image",
-          "toolchain-type",
-          "verify-command",
-          "working-directory"
-        ],
-        "secrets": [],
-        "outputs": [
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "package-name",
-          "package-version",
-          "publication-artifact-name",
-          "publication-manifest-json",
-          "publication-manifest-path",
-          "publication-passport-path",
-          "publication-registry-path",
-          "publish-dist-tag",
-          "runtime-sha"
-        ]
-      },
-      "rationale": "The publication workflow adds consumer-owned stable and alpha lock inputs so its earliest semantic v4 admission gate can bind the persisted floating selector before controller or package execution; its outputs and v3 behavior remain unchanged.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:.build": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": ".build",
-        "path": ".github/workflows/.build.yml",
-        "reusable": true,
-        "inputs": ["config-path"],
-        "secrets": [
-          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
-          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
-          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
-          "BUILDCHAIN_PROMOTION_TOKEN"
-        ],
-        "outputs": ["result"]
-      },
-      "rationale": "The build backbone has six jobs and seven owned composites. A rooted result replaces flattened handoffs; TOML remains the project authority. No compatibility adapter is retained. Independent protected review approves this successor.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:build": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "build",
-        "path": ".github/workflows/build.yml",
-        "reusable": true,
-        "inputs": ["config-path"],
-        "secrets": [
-          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
-          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
-          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
-          "BUILDCHAIN_PROMOTION_TOKEN"
-        ],
-        "outputs": [
-          "controller-receipt-artifact",
-          "release-candidate-artifact",
-          "result"
-        ]
-      },
-      "rationale": "The build backbone has six jobs and seven owned composites. A rooted result replaces flattened handoffs; TOML remains the project authority. No compatibility adapter is retained. Independent protected review approves this successor.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:paper-release-sealed": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "paper-release-sealed",
-        "path": ".github/workflows/paper-release-sealed.yml",
-        "reusable": true,
-        "inputs": [
-          "artifact-name",
-          "artifact-paths",
-          "artifact-retention-days",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "dry-run",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-title",
-          "package-name",
-          "publish-dist-tag",
-          "publisher-workflow-path",
-          "release-passport-impact-json",
-          "release-passport-output-dir",
-          "release-passport-product-name",
-          "required-status-check",
-          "target-ref",
-          "target-sha",
-          "toolchain-type",
-          "verify-command",
-          "working-directory"
-        ],
-        "secrets": [
-          "BUILDCHAIN_GENERATED_WRITE_APP_CLIENT_ID",
-          "BUILDCHAIN_GENERATED_WRITE_APP_PRIVATE_KEY",
-          "BUILDCHAIN_GENERATED_WRITE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN",
-          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
-        ],
-        "outputs": [
-          "github-release-url",
-          "package-name",
-          "package-version",
-          "propagation-work-artifact",
-          "public-release-tag",
-          "release-passport-path",
-          "upstream-release-json"
-        ]
-      },
-      "rationale": "The sealed Paper release adds one exact upstream release envelope output after npm integrity, gitHead, tag target, Passport, and publication artifacts agree; all prior inputs, secrets, outputs, and behavior remain intact.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:release-propagation": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "release-propagation",
-        "path": ".github/workflows/release-propagation.yml",
-        "reusable": true,
-        "inputs": [
-          "agent-work-context-json",
-          "agent-work-mode",
-          "buildchain-ref",
-          "buildchain-repository",
-          "downstream-base-ref",
-          "downstream-branch",
-          "downstream-prepare-command",
-          "downstream-repository",
-          "downstream-target",
-          "downstream-update-command",
-          "downstream-verify-command",
-          "dry-run",
-          "graph-json",
-          "lock-path",
-          "pr-body",
-          "pr-title",
-          "refresh-managed-readme-badges",
-          "source-node",
-          "upstream-release-json"
-        ],
-        "secrets": ["propagation-token"],
-        "outputs": [
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "propagation-receipt-digest",
-          "propagation-receipt-json",
-          "propagation-work-artifact",
-          "propagation-work-json",
-          "propagation-work-next-action",
-          "propagation-work-root"
-        ]
-      },
-      "rationale": "The agent-native extension adds one optional typed Work Control context input and exact work-state outputs while preserving every existing input, secret, output, path, and reusable-workflow behavior. The complete successor contract is pinned here so later drift remains fail-closed.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:.publication-authority": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": ".publication-authority",
-        "path": ".github/workflows/.publication-authority.yml",
-        "reusable": true,
-        "inputs": [
-          "admission-json",
-          "authority-workflow-path",
-          "auto-admission",
-          "auto-admission-kind",
-          "auto-no-gate",
-          "buildchain-ref",
-          "buildchain-repository",
-          "consumer-gate-command",
-          "consumer-gate-controller-sha",
-          "consumer-gate-evidence-source-sha",
-          "consumer-gate-evidence-source-tree",
-          "consumer-predicate-digest",
-          "consumer-predicate-id",
-          "consumer-qualification-required",
-          "control-plane-audit-json",
-          "dry-run",
-          "evidence-controller-artifact",
-          "evidence-manifest-pattern",
-          "evidence-passport-artifact",
-          "evidence-payload-pattern",
-          "evidence-publication-artifact",
-          "evidence-repository",
-          "evidence-run-id",
-          "evidence-summary-artifact",
-          "expected-json",
-          "gate-aggregate-json",
-          "github-governance-receipt-json",
-          "package-name",
-          "product",
-          "publication-target",
-          "publication-version",
-          "publisher-workflow-path",
-          "required-status-check",
-          "runner-provenance-json",
-          "source-sha",
-          "target-ref",
-          "used-nonces-json"
-        ],
-        "secrets": [
-          "BUILDCHAIN_GOVERNANCE_READ_TOKEN",
-          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY"
-        ],
-        "outputs": [
-          "capability-artifact",
-          "capability-digest",
-          "capability-json",
-          "gate-aggregate-digest",
-          "gate-aggregate-json"
-        ]
-      },
-      "rationale": "The sealed read-only authority preserves the dedicated auditor App while adding an isolated governance-read token mapped from the existing caller credential only at the authority boundary. It independently checks out the immutable publication subject and controller, verifies both SHAs and the subject tree, and binds controller repository, SHA, and command digest into the qualifying aggregate without granting new provider write permission.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:.release-candidate-promote": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": ".release-candidate-promote",
-        "path": ".github/workflows/.release-candidate-promote.yml",
-        "reusable": true,
-        "inputs": [
-          "allow-repository",
-          "artifact-name",
-          "artifact-patterns",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "buildchain-alpha-contract-lock-path",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-expected-channel",
-          "buildchain-expected-major",
-          "buildchain-ref",
-          "buildchain-repository",
-          "buildchain-stable-contract-lock-path",
-          "channel",
-          "declarative-release-tail",
-          "dry-run",
-          "github-artifact-attestation-environment",
-          "github-artifact-attestation-policy-json",
-          "github-artifact-attestation-retention-days",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-payload-patterns",
-          "github-release-title",
-          "package-manager",
-          "promotion-contract-lock-digest",
-          "promotion-contract-lock-path",
-          "promotion-override-used",
-          "promotion-publication-channel",
-          "promotion-router-ref",
-          "promotion-router-sha",
-          "promotion-runtime-authorization-json",
-          "promotion-runtime-authorization-root",
-          "promotion-runtime-ref",
-          "promotion-runtime-sha",
-          "promotion-shell-ref",
-          "promotion-shell-sha",
-          "promotion-target-ref",
-          "provider-failure-after-capability",
-          "publication-admission-json",
-          "publication-authority-workflow-path",
-          "publication-auto-admission",
-          "publication-auto-no-gate",
-          "publication-commit-command",
-          "publication-commit-evidence-path",
-          "publication-consumer-predicate-id",
-          "publication-consumer-qualification-command",
-          "publication-consumer-qualification-controller-sha",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-gate-command",
-          "publication-gate-controller-sha",
-          "publication-package-name",
-          "publication-product",
-          "publication-publisher-workflow-path",
-          "publication-runner-provenance-json",
-          "publication-target",
-          "publication-used-nonces-json",
-          "publication-used-qualification-nonces-json",
-          "publish-artifact-kind",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-required-artifacts-json",
-          "publish-target",
-          "publish-transaction-override",
-          "release-activation-command",
-          "release-activation-receipt-set-path",
-          "release-candidate-family-assignment-id",
-          "release-candidate-family-evidence-required",
-          "release-candidate-family-evidence-root",
-          "release-candidate-family-initiative-id",
-          "release-candidate-wait-seconds",
-          "release-candidate-workflow-file",
-          "release-candidate-workflow-name",
-          "release-passport",
-          "release-passport-adopter-delivery-json",
-          "release-passport-attachment-command",
-          "release-passport-buildchain-self-kfd",
-          "release-passport-evidence-command",
-          "release-passport-evidence-jsons",
-          "release-passport-evidence-path",
-          "release-passport-impact-json",
-          "release-passport-invariant-passport-command",
-          "release-passport-invariant-passport-jsons",
-          "release-passport-kfd-1-witness-jsons",
-          "release-passport-kfd-2-claim-jsons",
-          "release-passport-kfd-3-artifact-verify-command",
-          "release-passport-kfd-3-artifact-witness-jsons",
-          "release-passport-kfd-3-prebuild-witness-jsons",
-          "release-passport-kfd-adopter-manifest-gate-json",
-          "release-passport-kfd-adopter-manifest-json",
-          "release-passport-kfd-product-gate-jsons",
-          "release-passport-kfd-support-matrix-json",
-          "release-passport-output-dir",
-          "release-passport-platform-manifest-paths",
-          "release-passport-product-name",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "release-propagation-config-path",
-          "required-artifact-count",
-          "required-status-check",
-          "resume-buildchain-runtime-sha",
-          "resume-candidate-repository",
-          "resume-candidate-run-id",
-          "resume-expected-candidate-root",
-          "resume-expected-candidate-runtime-sha",
-          "resume-expected-source-tree",
-          "resume-expected-workflow-file",
-          "resume-expected-workflow-name",
-          "resume-transaction-id",
-          "runner-preset",
-          "standalone-binary-distribution",
-          "target-ref",
-          "target-sha",
-          "trusted-publishing"
-        ],
-        "secrets": [
-          "BUILDCHAIN_ISSUE_APP_ID",
-          "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
-          "BUILDCHAIN_ISSUE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN",
-          "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
-          "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
-          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
-          "buildchain-issue-app-id",
-          "buildchain-issue-app-private-key",
-          "buildchain-issue-token"
-        ],
-        "outputs": [
-          "built-source-sha",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "github-artifact-attestation-evidence-root",
-          "github-artifact-attestation-id",
-          "github-artifact-attestation-publication-receipt-digest",
-          "github-artifact-attestation-url",
-          "promoted-sha",
-          "publication-capability-digest",
-          "publication-commit-evidence-digest",
-          "publication-commit-evidence-path",
-          "publication-commit-payload-root",
-          "publication-commit-url",
-          "release-candidate-action",
-          "release-candidate-artifact",
-          "release-candidate-recovery-receipt-artifact",
-          "release-candidate-recovery-root",
-          "release-invocation-root",
-          "release-propagation-work-artifact",
-          "release-receipt-root",
-          "release-tail-declaration-root",
-          "release-tail-receipt-roots-json",
-          "release-tail-state-root",
-          "release-tail-transaction-root",
-          "release-tail-transaction-state",
-          "release-transaction-root"
-        ]
-      },
-      "rationale": "The advanced workflow preserves exact contract-lock, channel, trusted transient runtime, candidate, target tree, policy, scanner, provider and fresh-attempt bindings while adding an isolated v4-only declarative provider lane and optional dogfood failure checkpoint. V4 admits only sealed candidate, Stage Capsule and qualification evidence; legacy command inputs fail closed before planning and the provider resumes only incomplete capabilities.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "workflow:release-candidate-promote": {
-      "fromRevision": "5308189b09bcb5a1314195412f2807a40d678838",
-      "contract": {
-        "id": "release-candidate-promote",
-        "path": ".github/workflows/release-candidate-promote.yml",
-        "reusable": true,
-        "inputs": [
-          "allow-repository",
-          "artifact-name",
-          "artifact-patterns",
-          "branch-protection-bypass-apps",
-          "branch-protection-bypass-teams",
-          "branch-protection-bypass-users",
-          "buildchain-alpha-contract-lock-path",
-          "buildchain-channel",
-          "buildchain-contract-compatibility-policy",
-          "buildchain-contract-drift-issue-mode",
-          "buildchain-contract-lock-path",
-          "buildchain-ref",
-          "buildchain-repository",
-          "buildchain-stable-contract-lock-path",
-          "channel",
-          "declarative-release-tail",
-          "dry-run",
-          "github-artifact-attestation-environment",
-          "github-artifact-attestation-policy-json",
-          "github-artifact-attestation-retention-days",
-          "github-governance-receipt-json",
-          "github-release",
-          "github-release-notes",
-          "github-release-payload-patterns",
-          "github-release-title",
-          "package-manager",
-          "provider-failure-after-capability",
-          "publication-admission-json",
-          "publication-auto-admission",
-          "publication-auto-no-gate",
-          "publication-commit-command",
-          "publication-commit-evidence-path",
-          "publication-consumer-predicate-id",
-          "publication-consumer-qualification-command",
-          "publication-consumer-qualification-controller-sha",
-          "publication-control-plane-audit-json",
-          "publication-expected-json",
-          "publication-gate-aggregate-json",
-          "publication-gate-command",
-          "publication-gate-controller-sha",
-          "publication-package-name",
-          "publication-product",
-          "publication-publisher-workflow-path",
-          "publication-runner-provenance-json",
-          "publication-target",
-          "publication-used-nonces-json",
-          "publication-used-qualification-nonces-json",
-          "publish-artifact-kind",
-          "publish-command",
-          "publish-dist-tag",
-          "publish-mode",
-          "publish-package-main",
-          "publish-package-set-order",
-          "publish-rematerialize-on-resume",
-          "publish-required-artifacts-json",
-          "publish-target",
-          "publish-transaction-override",
-          "release-activation-command",
-          "release-activation-receipt-set-path",
-          "release-candidate-family-assignment-id",
-          "release-candidate-family-evidence-required",
-          "release-candidate-family-evidence-root",
-          "release-candidate-family-initiative-id",
-          "release-candidate-wait-seconds",
-          "release-candidate-workflow-file",
-          "release-candidate-workflow-name",
-          "release-passport",
-          "release-passport-adopter-delivery-json",
-          "release-passport-attachment-command",
-          "release-passport-buildchain-self-kfd",
-          "release-passport-evidence-command",
-          "release-passport-evidence-jsons",
-          "release-passport-evidence-path",
-          "release-passport-impact-json",
-          "release-passport-invariant-passport-command",
-          "release-passport-invariant-passport-jsons",
-          "release-passport-kfd-1-witness-jsons",
-          "release-passport-kfd-2-claim-jsons",
-          "release-passport-kfd-3-artifact-verify-command",
-          "release-passport-kfd-3-artifact-witness-jsons",
-          "release-passport-kfd-3-prebuild-witness-jsons",
-          "release-passport-kfd-adopter-manifest-gate-json",
-          "release-passport-kfd-adopter-manifest-json",
-          "release-passport-kfd-product-gate-jsons",
-          "release-passport-kfd-support-matrix-json",
-          "release-passport-output-dir",
-          "release-passport-platform-manifest-paths",
-          "release-passport-product-name",
-          "release-passport-v4-runtime-resume-evidence-json",
-          "release-propagation-config-path",
-          "required-artifact-count",
-          "required-status-check",
-          "resume-buildchain-runtime-sha",
-          "resume-candidate-repository",
-          "resume-candidate-run-id",
-          "resume-expected-candidate-root",
-          "resume-expected-candidate-runtime-sha",
-          "resume-expected-source-tree",
-          "resume-expected-workflow-file",
-          "resume-expected-workflow-name",
-          "resume-transaction-id",
-          "runner-preset",
-          "standalone-binary-distribution",
-          "target-ref",
-          "target-sha",
-          "trusted-publishing"
-        ],
-        "secrets": [
-          "BUILDCHAIN_ISSUE_APP_ID",
-          "BUILDCHAIN_ISSUE_APP_PRIVATE_KEY",
-          "BUILDCHAIN_ISSUE_TOKEN",
-          "BUILDCHAIN_PROMOTION_TOKEN",
-          "BUILDCHAIN_PUBLICATION_COMMIT_SIGNING_KEY",
-          "BUILDCHAIN_PUBLICATION_COMMIT_TOKEN",
-          "KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY",
-          "buildchain-issue-app-id",
-          "buildchain-issue-app-private-key",
-          "buildchain-issue-token"
-        ],
-        "outputs": [
-          "buildchain-channel",
-          "built-source-sha",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "github-artifact-attestation-evidence-root",
-          "github-artifact-attestation-id",
-          "github-artifact-attestation-publication-receipt-digest",
-          "github-artifact-attestation-url",
-          "promoted-sha",
-          "promotion-contract-lock-digest",
-          "promotion-contract-lock-path",
-          "promotion-override-used",
-          "promotion-publication-channel",
-          "promotion-router-ref",
-          "promotion-router-sha",
-          "promotion-runtime-ref",
-          "promotion-runtime-sha",
-          "promotion-shell-ref",
-          "promotion-shell-sha",
-          "promotion-target-ref",
-          "publication-capability-digest",
-          "publication-commit-evidence-digest",
-          "publication-commit-evidence-path",
-          "publication-commit-payload-root",
-          "publication-commit-url",
-          "release-candidate-action",
-          "release-candidate-artifact",
-          "release-candidate-recovery-receipt-artifact",
-          "release-candidate-recovery-root",
-          "release-invocation-root",
-          "release-propagation-work-artifact",
-          "release-receipt-root",
-          "release-tail-declaration-root",
-          "release-tail-receipt-roots-json",
-          "release-tail-state-root",
-          "release-tail-transaction-root",
-          "release-tail-transaction-state",
-          "release-transaction-root"
-        ]
-      },
-      "rationale": "The generated v4 promotion router preserves the opt-in declarative release-tail contract, exact contract-lock routing, and optional verified runtime-resume attachment while forwarding one optional dogfood provider checkpoint into the v4-only declarative lane. Existing v3 callers retain the same defaults, public inputs and legacy implementation, while v4 rejects command-shaped tail authority before planning.",
-      "governance": "legacy-debt-sunset-2026q4"
-    }
-  },
   "approvedExtractedDebt": {
-    "packages/core/dev-delivery-native-proof.js#validateActiveDevDeliveryWarrant": {
-      "maxComplexity": 29,
-      "rationale": "The extracted active-Warrant validator preserves exact repository, branch, candidate, source, environment, fence, generation, lease, command, and qualification invariants in one auditable proof boundary; this exact bounded complexity cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "packages/core/dev-delivery-execution-transfer.js#verifyNativeExecutionTransfer": {
+    "packages/core/dev-delivery/dev-delivery-execution-transfer.js#verifyNativeExecutionTransfer": {
       "maxComplexity": 36,
       "rationale": "The transfer verifier keeps the closed success and failure manifests, normalized job and Warrant bindings, byte digests, proof declarations, and failed-settlement fence in one exact artifact boundary; this reviewed complexity ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/dev-delivery-process-boundary.js#createProviderFinalizerBoundary": {
+    "packages/core/dev-delivery/dev-delivery-process-boundary.js#createProviderFinalizerBoundary": {
       "maxLines": 191,
       "maxComplexity": 33,
       "rationale": "The provider boundary verifier keeps distinct job and runner identity, hosted labels, strict timestamps, live PR and protected-ref readback, and the rooted finalizer receipt in one fail-closed audit surface; this reviewed complexity ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/dev-delivery-authority.mjs#devDeliveryAuthorityCliOptions": {
+    "packages/core/dev-delivery/commands/dev-delivery-authority.mjs#devDeliveryAuthorityCliOptions": {
       "maxLines": 207,
       "rationale": "The authority CLI parser keeps the complete explicit flag-to-environment compatibility mapping, including exact provider run and job coordinates for independent expired-Landing readback, in one declarative function while execution remains separately owned; this exact extracted mapping ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/dev-delivery-two-phase.mjs#runTwoPhaseDelivery": {
+    "packages/core/dev-delivery/commands/dev-delivery-two-phase.mjs#runTwoPhaseDelivery": {
       "maxLines": 200,
       "maxComplexity": 35,
       "rationale": "The two-phase coordinator keeps provisional selection, credentialless native-only execution, post-exit credentialed proof reuse and qualification, heartbeat, landing handoff, and fail-closed cleanup under one fenced transaction; this exact bounded orchestration ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "scripts/dev-delivery-warrant-options.mjs#devDeliveryCliOptions": {
+    "packages/core/dev-delivery/commands/dev-delivery-warrant-options.mjs#devDeliveryCliOptions": {
       "maxLines": 247,
       "rationale": "The extracted compatibility parser preserves the complete Warrant flag and environment mapping byte-for-byte while storage and command execution remain separately owned; this exact mapping ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
@@ -1386,46 +231,41 @@
       "rationale": "The closed WASM ABI dispatcher maps a fixed operation vocabulary onto existing Rust domain functions and typed faults without adding provider, IO, credential, or fallback authority. This exact routing-only ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "actions/promote-buildchain-ref/internal/promotion-operations.js#updateBranch": {
+    "packages/core/release/promote-ref/internal/promotion-operations.js#updateBranch": {
       "maxLines": 378,
       "maxComplexity": 34,
       "rationale": "The nested protected-ref update transaction retains exact readback, status-check, merge, PR fallback and non-fast-forward behavior under the extracted factory; these inherited ceilings cannot grow.",
       "governance": "stage3-promotion-facade-reduction"
     },
-    "actions/promote-buildchain-ref/internal/promotion-operations.js#assertReleasePrOrVersionStateParent": {
+    "packages/core/release/promote-ref/internal/promotion-operations.js#assertReleasePrOrVersionStateParent": {
       "maxLines": 335,
       "maxComplexity": 42,
       "rationale": "The nested release-lineage verifier retains exact PR, recovery, tree-equivalence and allowed-path ordering under the extracted factory; these inherited ceilings cannot grow.",
       "governance": "stage3-promotion-facade-reduction"
     },
-    "actions/promote-buildchain-ref/internal/version-state-operations.js#createVersionStateOperations": {
+    "packages/core/release/promote-ref/internal/version-state-operations.js#createVersionStateOperations": {
       "maxLines": 415,
       "rationale": "Transplanted legacy version-state operations now live in an independently owned module; explicit dependency injection adds seams while this exact inherited ceiling cannot grow.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "actions/promote-buildchain-ref/internal/version-state-operations.js#createVersionStateCommit": {
+    "packages/core/release/promote-ref/internal/version-state-operations.js#createVersionStateCommit": {
       "maxLines": 286,
       "maxComplexity": 27,
       "rationale": "The existing version-state commit transaction remains nested under its extracted operation factory and is independently regression-tested; this exact inherited ceiling cannot grow.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "actions/promote-buildchain-ref/internal/durable-transaction-operations.js#createDurableTransactionOperations": {
+    "packages/core/release/promote-ref/internal/durable-transaction-operations.js#createDurableTransactionOperations": {
       "maxLines": 378,
       "rationale": "Transplanted legacy durable transaction and Passport operations remain in one independently owned module. The exact two-line readable widening forwards rooted runtime-resume material and its post-publication finalizer without accepting a transient rebuilt candidate or inconsistent per-field overrides; this ceiling cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/paper-npm-bootstrap.js#executePaperNpmBootstrap": {
+    "packages/core/paper/paper-npm-bootstrap.js#executePaperNpmBootstrap": {
       "maxLines": 490,
       "maxComplexity": 58,
       "rationale": "The existing externally guarded npm bootstrap transaction moved intact into an independently owned Paper module with an explicit runtime seam; this exact inherited debt ceiling cannot grow.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "packages/core/release-passport.js#validateReleaseEvidenceAttachments": {
-      "maxComplexity": 26,
-      "rationale": "Upstream release-evidence attachment validation was moved intact into a named validator during integration; its exact complexity ceiling cannot grow.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    "scripts/dev-pr-auto-merge.mjs#runDevPrAdmission": {
+    "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs#runDevPrAdmission": {
       "maxComplexity": 32,
       "rationale": "The targeted admission transaction keeps exact PR and head revalidation, explicit readiness mutation, independent approval and check observation, queue status, and typed receipt emission in one auditable function; this exact complexity ceiling cannot grow.",
       "governance": "legacy-debt-sunset-2026q4"
@@ -1438,53 +278,52 @@
   },
   "selectedFunctionBudgets": {
     "promoteBuildchainRefs": {
-      "file": "actions/promote-buildchain-ref/lib.js",
+      "file": "packages/core/release/promote-ref/lib.js",
       "lines": 3,
       "complexity": 1
     },
     "createReleaseCheckReport": {
-      "file": "packages/core/release-passport.js",
-      "lines": 180,
-      "complexity": 25
+      "file": "packages/core/release/passport/report.js",
+      "lines": 81,
+      "complexity": 5
     },
     "createReleasePassport": {
-      "file": "packages/core/release-passport.js",
-      "lines": 273,
-      "complexity": 44
+      "file": "packages/core/release/passport/assembly.js",
+      "lines": 6,
+      "complexity": 1
     },
     "promoteMajorChannel": {
-      "file": "actions/promote-buildchain-ref/internal/promote-major-channel.js",
+      "file": "packages/core/release/promote-ref/internal/promote-major-channel.js",
       "lines": 7,
       "complexity": 3
     },
     "promoteAlphaChannel": {
-      "file": "actions/promote-buildchain-ref/internal/promote-alpha-channel.js",
+      "file": "packages/core/release/promote-ref/internal/promote-alpha-channel.js",
       "lines": 15,
       "complexity": 3
     },
     "promoteReleaseChannel": {
-      "file": "actions/promote-buildchain-ref/internal/promote-release-channel.js",
+      "file": "packages/core/release/promote-ref/internal/promote-release-channel.js",
       "lines": 8,
       "complexity": 2
     },
     "runPublishTransaction": {
-      "file": "actions/promote-buildchain-ref/lib.js",
-      "lines": 259,
-      "complexity": 33
+      "file": "packages/core/release/promote-ref/internal/publish-transaction.js",
+      "lines": 109,
+      "complexity": 7
     },
     "collectPaperStatus": {
-      "file": "packages/core/paper.js",
-      "lines": 190,
-      "complexity": 47
+      "file": "packages/core/paper/operations/status.js",
+      "lines": 133,
+      "complexity": 13
     },
     "collectPaperPreflight": {
-      "file": "packages/core/paper.js",
-      "lines": 178,
-      "complexity": 18
+      "file": "packages/core/paper/paper.js",
+      "lines": 168,
+      "complexity": 14
     }
   },
   "publicSurfacePolicy": {
-    "newOnly": true,
     "requiredLifecycleFields": [
       "owner",
       "maturity",
@@ -1494,7 +333,8 @@
       "sunsetCondition",
       "capabilityGroup",
       "nonDuplicationRationale"
-    ]
+    ],
+    "contract": "current-4.1"
   },
   "architecturePolicy": {
     "requireCapabilityOwner": true,
@@ -1502,7 +342,7 @@
     "dependencyCycles": 0,
     "forbiddenDirectionChanges": 0
   },
-  "extendedCoverageRevision": "9b4500a78609d2b9e79f66bc8e8d738b4d63ccb9",
+  "extendedCoverageRevision": "1bb6333b97ad94e94a81178e956a703dff2b5f84",
   "rustBudgets": {
     "newFileLines": 600,
     "newFunctionLines": 140,
@@ -1571,24 +411,6 @@
       "rationale": "Exact command-store assertions cover raw GitHub media reads and JSON-envelope fallback for persisted Dev Delivery state. The test surface has reduced to an exact 624-line ceiling and cannot grow implicitly.",
       "governance": "legacy-debt-sunset-2026q4"
     },
-    "tests/build-surface-reusable-build.test.mjs": {
-      "maxFunctionLines": 342,
-      "maxFunctionComplexity": 16,
-      "rationale": "Extracted tests/build-surface-reusable-build.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
-      "governance": "stage1-test-split-net-reduction"
-    },
-    "tests/build-surface-reusable-build-signing.test.mjs": {
-      "maxFunctionLines": 266,
-      "maxFunctionComplexity": 16,
-      "rationale": "Extracted tests/build-surface-reusable-build-signing.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
-      "governance": "stage1-test-split-net-reduction"
-    },
-    "tests/build-surface-reusable-build-artifacts.test.mjs": {
-      "maxFunctionLines": 232,
-      "maxFunctionComplexity": 14,
-      "rationale": "Extracted tests/build-surface-reusable-build-artifacts.test.mjs is a bounded scenario surface behind shared fixtures; its exact function ceiling is locked while the combined targeted test and fixture family falls from 9560 to 9475 maintained lines.",
-      "governance": "stage1-test-split-net-reduction"
-    },
     "tests/promote-buildchain-ref-durable-recovery.test.mjs": {
       "maxFunctionLines": 219,
       "maxFunctionComplexity": 2,
@@ -1615,25 +437,7 @@
     }
   },
   "approvedWorkflowDebtTransitions": {
-    ".github/workflows/.build.yml": {
-      "maxLines": 2244,
-      "maxJobs": 15,
-      "maxSteps": 170,
-      "maxStepsPerJob": 32,
-      "maxDecisions": 87,
-      "rationale": "TOML-only ordinary build replaces 94 inputs with one locator and six shared owner-scoped composites. A read-only configuration job derives an exact rooted plan before admission. The public facade delegates once; this exact reduced surface cannot grow implicitly.",
-      "governance": "stage2-workflow-yaml-reduction"
-    },
-    ".github/workflows/.release-candidate-promote.yml": {
-      "maxLines": 2707,
-      "maxJobs": 13,
-      "maxSteps": 99,
-      "maxStepsPerJob": 47,
-      "maxDecisions": 75,
-      "rationale": "The advanced promotion workflow retains its v4-only declarative provider lane and historical adopter inputs. The qualification-plan Node heredoc uses the Ubuntu runner's existing Bash default instead of redeclaring the same shell, while consumer execution, sealed-handoff restoration, receipt sealing, jobs, permissions, credentials, outputs, and mutation boundaries remain unchanged; the exact workflow falls to 2707 lines.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    ".github/workflows/.web-surface.yml": {
+    ".github/workflows/public-release-web.yml": {
       "maxLines": 2020,
       "maxJobs": 14,
       "maxSteps": 112,
@@ -1641,33 +445,7 @@
       "maxDecisions": 35,
       "rationale": "The web-surface workflow declares only the two historical contract-channel aliases used by its existing v4 contract lock. Conflicts fail before build or deployment, and these exact ceilings contain no unrelated headroom.",
       "governance": "legacy-debt-sunset-2026q4"
-    },
-    ".github/workflows/dev-pr-auto-merge.yml": {
-      "maxLines": 1529,
-      "maxJobs": 5,
-      "maxSteps": 47,
-      "maxStepsPerJob": 14,
-      "maxDecisions": 28,
-      "rationale": "The Dev delivery workflow restores the historical defer-landing input as a qualification-only mode. It retains exact Warrant qualification while suppressing merge authority, and these exact ceilings contain no unrelated headroom.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    ".github/workflows/build.yml": {
-      "maxLines": 190,
-      "maxJobs": 1,
-      "maxSteps": 0,
-      "maxStepsPerJob": 0,
-      "maxDecisions": 0,
-      "rationale": "TOML-only ordinary build replaces 94 inputs with one locator and six shared owner-scoped composites. A read-only configuration job derives an exact rooted plan before admission. The public facade delegates once; this exact reduced surface cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
-    },
-    ".github/workflows/release-candidate-promote.yml": {
-      "maxLines": 1218,
-      "maxJobs": 4,
-      "maxSteps": 16,
-      "maxStepsPerJob": 10,
-      "maxDecisions": 5,
-      "rationale": "The generated public wrapper forwards the two historical adopter inputs only into the bounded v4 migration rejection while retaining its declarative provider routing. These exact generated ceilings cannot grow implicitly.",
-      "governance": "legacy-debt-sunset-2026q4"
     }
-  }
+  },
+  "enforcementRationale": "Measure implementation changes against the exact protected 4.1 alpha development seed before this restructuring. Git-observed relocation carries measurement identity only; new and expanded functions retain the default budgets. Historical public API preservation is not a 4.1 requirement."
 }

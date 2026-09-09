@@ -11,7 +11,7 @@ import {
   validateClock,
   validateEventEnvelope,
   validateReceiptEnvelope,
-} from "../packages/core/canonical-contracts.js";
+} from "../packages/core/contracts/canonical-contracts.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fixturePath = new URL(
@@ -179,7 +179,10 @@ test("Rust and JavaScript produce byte-identical fixture projections", () => {
 
 test("contract libraries contain no ambient clock or provider effects", () => {
   const javascript = fs.readFileSync(
-    new URL("../packages/core/canonical-contracts.js", import.meta.url),
+    new URL(
+      "../packages/core/contracts/canonical-contracts.js",
+      import.meta.url,
+    ),
     "utf8",
   );
   const rust = fs.readFileSync(

@@ -1,0 +1,152 @@
+name: gate-profile-run-gates
+description: Execute the gate-profile run-gates capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  needs-plan-outputs-buildchain-runtime-sha:
+    description: Caller needs.plan.outputs.buildchain-runtime-sha value.
+    required: true
+  needs-plan-outputs-source-sha:
+    description: Caller needs.plan.outputs.source-sha value.
+    required: true
+  needs-plan-outputs-buildchain-runtime-ref:
+    description: Caller needs.plan.outputs.buildchain-runtime-ref value.
+    required: true
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  needs-plan-outputs-gate-matrix-artifact:
+    description: Caller needs.plan.outputs.gate-matrix-artifact value.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Prepare defining workflow bootstrap
+      id: bootstrap-runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/workflow-shell
+    - name: Reset prior Windows Gate source workspace
+      if: ${{ runner.os == 'Windows' }}
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/providers/nodes/gate-toolchain.mjs" reset
+      env:
+        BUILDCHAIN_NODE: ${{ steps.bootstrap-runtime.outputs.node-path }}
+    - name: Checkout locked consumer source
+      run: '"$BUILDCHAIN_NODE" .buildchain/workflow-shell/packages/core/providers/commands/locked-source-checkout.mjs'
+      env:
+        BUILDCHAIN_SOURCE_SHA: ${{ fromJSON(inputs.needs-plan-outputs-source-sha) }}
+        BUILDCHAIN_SOURCE_REF: ${{ fromJSON(inputs.request-json).source-ref || github.ref }}
+        BUILDCHAIN_SOURCE_CHECKOUT_PATH: source
+        BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ fromJSON(inputs.request-json).checkout-cache-mode }}
+        BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ fromJSON(inputs.request-json).checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+        BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ fromJSON(inputs.request-json).checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+        BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ fromJSON(inputs.request-json).checkout-cache-fallback }}
+        BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ fromJSON(inputs.request-json).checkout-cache-timeout-seconds }}
+        BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ fromJSON(inputs.request-json).checkout-cache-github-timeout-seconds }}
+        BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ fromJSON(inputs.request-json).checkout-cache-fetch-attempts }}
+        BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
+        GITHUB_TOKEN: ${{ github.token }}
+        BUILDCHAIN_NODE: ${{ steps.bootstrap-runtime.outputs.node-path }}
+      shell: bash -e {0}
+    - name: Checkout Buildchain runtime
+      run: '"$BUILDCHAIN_NODE" .buildchain/workflow-shell/packages/core/providers/commands/locked-source-checkout.mjs'
+      env:
+        BUILDCHAIN_SOURCE_REPOSITORY: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        BUILDCHAIN_SOURCE_SHA: ${{ fromJSON(inputs.needs-plan-outputs-buildchain-runtime-sha) }}
+        BUILDCHAIN_SOURCE_REF: ${{ fromJSON(inputs.needs-plan-outputs-buildchain-runtime-ref) }}
+        BUILDCHAIN_SOURCE_CHECKOUT_PATH: .buildchain/runtime
+        BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ fromJSON(inputs.request-json).checkout-cache-mode }}
+        BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ fromJSON(inputs.request-json).checkout-cache-mirror-url-template || vars.BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE }}
+        BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ fromJSON(inputs.request-json).checkout-cache-reference-repository-template || vars.BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE }}
+        BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ fromJSON(inputs.request-json).checkout-cache-fallback }}
+        BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ fromJSON(inputs.request-json).checkout-cache-timeout-seconds }}
+        BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ fromJSON(inputs.request-json).checkout-cache-github-timeout-seconds }}
+        BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ fromJSON(inputs.request-json).checkout-cache-fetch-attempts }}
+        BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/runtime-checkout.json
+        GITHUB_TOKEN: ${{ github.token }}
+        BUILDCHAIN_NODE: ${{ steps.bootstrap-runtime.outputs.node-path }}
+      shell: bash -e {0}
+    - name: Prepare exact Buildchain Node runtime
+      id: core-runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Upload locked checkout diagnostics
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.request-json).artifact-name }}-checkout-${{ fromJSON(inputs.matrix-json).gate.id }}-${{ fromJSON(inputs.needs-plan-outputs-source-sha) }}
+        path: .buildchain/diagnostics/*-checkout.json
+        if-no-files-found: warn
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        overwrite: true
+    - name: Setup Node.js
+      uses: actions/setup-node@v6.4.0
+      with:
+        node-version: ${{ fromJSON(inputs.request-json).node-version }}
+    - name: Expose Windows runner user toolchain
+      if: ${{ runner.os == 'Windows' }}
+      shell: pwsh
+      run: |
+        Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
+        Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".cargo\bin")
+    - name: Expose POSIX runner user toolchain
+      if: ${{ runner.os != 'Windows' }}
+      shell: bash
+      run: |
+        echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+        echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
+    - name: Setup Rust toolchain on Windows
+      if: ${{ contains(fromJSON(inputs.matrix-json).gate.capabilities, 'rust') && runner.os == 'Windows' }}
+      shell: bash
+      env:
+        BUILDCHAIN_RUST_TOOLCHAIN: ${{ fromJSON(inputs.request-json).rust-toolchain }}
+        RUSTUP_DIST_SERVER: ${{ fromJSON(inputs.request-json).rustup-dist-server || 'https://static.rust-lang.org' }}
+        RUSTUP_UPDATE_ROOT: ${{ fromJSON(inputs.request-json).rustup-update-root || 'https://static.rust-lang.org/rustup' }}
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+      run: |
+        "$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/providers/nodes/gate-toolchain.mjs" windows-rust
+    - name: Setup Rust toolchain
+      if: ${{ contains(fromJSON(inputs.matrix-json).gate.capabilities, 'rust') && runner.os != 'Windows' }}
+      uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+      env:
+        RUSTUP_DIST_SERVER: ${{ fromJSON(inputs.request-json).rustup-dist-server || 'https://static.rust-lang.org' }}
+        RUSTUP_UPDATE_ROOT: ${{ fromJSON(inputs.request-json).rustup-update-root || 'https://static.rust-lang.org/rustup' }}
+      with:
+        toolchain: ${{ fromJSON(inputs.request-json).rust-toolchain }}
+    - name: Download locked Gate plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ fromJSON(inputs.needs-plan-outputs-gate-matrix-artifact) }}
+        path: .buildchain/gates/plan
+    - name: Run and validate Shifu Gate profile
+      id: gate
+      continue-on-error: true
+      run: '"$BUILDCHAIN_NODE" .buildchain/runtime/packages/core/build/commands/shifu-gate-profile.mjs --mode run'
+      env:
+        BUILDCHAIN_GATE_MATRIX_ENTRY_JSON: ${{ toJSON(fromJSON(inputs.matrix-json).gate) }}
+        BUILDCHAIN_GATE_COMMAND_JSON: ${{ fromJSON(inputs.request-json).gate-command-json }}
+        BUILDCHAIN_GATE_REGISTRY: ${{ fromJSON(inputs.request-json).gate-registry }}
+        BUILDCHAIN_GATE_ENVIRONMENT_JSON: ${{ fromJSON(inputs.request-json).gate-environment-json }}
+        BUILDCHAIN_SHIFU_CACHE_PROFILE_REF: ${{ fromJSON(inputs.request-json).shifu-cache-profile-ref }}
+        BUILDCHAIN_SHIFU_CACHE_PROFILE_DIGEST: ${{ fromJSON(inputs.request-json).shifu-cache-profile-digest }}
+        BUILDCHAIN_GATE_SOURCE_CWD: source/${{ fromJSON(inputs.request-json).working-directory }}
+        BUILDCHAIN_GATE_OUTPUT_ROOT: .buildchain/gates/executions/${{ fromJSON(inputs.matrix-json).gate.id }}
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+      shell: bash -e {0}
+    - name: Upload Shifu Gate receipt
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.request-json).artifact-name }}-receipt-${{ fromJSON(inputs.matrix-json).gate.id }}-${{ fromJSON(inputs.needs-plan-outputs-source-sha) }}
+        path: .buildchain/gates/executions/${{ fromJSON(inputs.matrix-json).gate.id }}
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        overwrite: true
+    - name: Enforce Shifu Gate qualification
+      if: ${{ steps.gate.outcome != 'success' }}
+      run: exit 1
+      shell: bash -e {0}

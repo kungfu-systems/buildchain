@@ -1,0 +1,41 @@
+name: Synchronize a Git repository
+description: Fetch and push the exact requested ref with process-scoped provider credentials.
+inputs:
+  remote-host:
+    description: Remote HTTPS Git host.
+    required: true
+  remote-path:
+    description: Remote repository path prefix.
+    required: true
+  remote-repo:
+    description: Remote repository name.
+    required: true
+  source-ref:
+    description: Exact source branch or tag name.
+    required: true
+  force:
+    description: Whether the caller authorizes a force push.
+    default: 'false'
+  remote-user:
+    description: Optional provider username.
+    required: false
+  remote-credential:
+    description: HTTPS credential URL bound to the remote host.
+    required: false
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: '24'
+    - name: Transfer the requested ref
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/providers/sync-git/action.mjs"
+      env:
+        REMOTE_HOST: ${{ inputs.remote-host }}
+        REMOTE_PATH: ${{ inputs.remote-path }}
+        REMOTE_REPOSITORY: ${{ inputs.remote-repo }}
+        SOURCE_REF: ${{ inputs.source-ref }}
+        FORCE_PUSH: ${{ inputs.force }}
+        REMOTE_USER: ${{ inputs.remote-user }}
+        REMOTE_CREDENTIAL: ${{ inputs.remote-credential }}

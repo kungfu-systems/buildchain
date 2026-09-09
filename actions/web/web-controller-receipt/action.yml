@@ -1,0 +1,127 @@
+name: web-controller-receipt
+description: Execute the web controller-receipt capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  needs-runtime-outputs-runtime-sha:
+    description: Caller needs.runtime.outputs.runtime-sha value.
+    required: true
+  needs-controller-plan-outputs-controller-plan-artifact:
+    description: Caller needs.controller-plan.outputs.controller-plan-artifact value.
+    required: true
+  needs-plan-result:
+    description: Caller needs.plan.result value.
+    required: true
+  needs-plan-outputs-web-surface-channel:
+    description: Caller needs.plan.outputs.web-surface-channel value.
+    required: true
+  needs-plan-outputs-web-surface-cleanup-plan-json:
+    description: Caller needs.plan.outputs.web-surface-cleanup-plan-json value.
+    required: true
+  needs-runtime-result:
+    description: Caller needs.runtime.result value.
+    required: true
+  needs-plan-outputs-build-outcome:
+    description: Caller needs.plan.outputs.build-outcome value.
+    required: true
+  needs-plan-outputs-verify-outcome:
+    description: Caller needs.plan.outputs.verify-outcome value.
+    required: true
+  needs-publication-authority-result:
+    description: Caller needs.publication-authority.result value.
+    required: true
+  needs-external-publication-authority-result:
+    description: Caller needs.external-publication-authority.result value.
+    required: true
+  needs-preview-apply-result:
+    description: Caller needs.preview-apply.result value.
+    required: true
+  needs-preview-cleanup-result:
+    description: Caller needs.preview-cleanup.result value.
+    required: true
+  needs-staging-apply-result:
+    description: Caller needs.staging-apply.result value.
+    required: true
+  needs-production-apply-result:
+    description: Caller needs.production-apply.result value.
+    required: true
+  needs-release-intent-outputs-production-source-sha:
+    description: Caller needs.release-intent.outputs.production-source-sha value.
+    required: true
+outputs:
+  controller-receipt-artifact:
+    description: controller-receipt-artifact node result.
+    value: buildchain-web-surface-controller-receipt-${{ fromJSON(inputs.needs-release-intent-outputs-production-source-sha) }}
+  controller-receipt-json:
+    description: controller-receipt-json node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-json }}
+  controller-receipt-digest:
+    description: controller-receipt-digest node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-digest }}
+  controller-receipt-status:
+    description: controller-receipt-status node result.
+    value: ${{ steps.controller-receipt.outputs.controller-receipt-status }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout Buildchain runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.needs-runtime-outputs-runtime-sha) }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact Buildchain runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Download web-surface controller plan
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ fromJSON(inputs.needs-controller-plan-outputs-controller-plan-artifact) }}
+        path: .buildchain/controller
+    - name: Download web-surface deployment plan
+      if: ${{ fromJSON(inputs.needs-plan-result) == 'success' && (fromJSON(inputs.needs-plan-outputs-web-surface-channel) != '' || fromJSON(inputs.needs-plan-outputs-web-surface-cleanup-plan-json) != '') }}
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: buildchain-web-surface-plans
+        path: .buildchain/controller/web-plans
+    - name: Select web-surface plan evidence
+      id: select-plan
+      if: ${{ fromJSON(inputs.needs-plan-result) == 'success' && (fromJSON(inputs.needs-plan-outputs-web-surface-channel) != '' || fromJSON(inputs.needs-plan-outputs-web-surface-cleanup-plan-json) != '') }}
+      shell: bash
+      run: |
+        node <<'NODE'
+        const fs = require("node:fs");
+        const path = require("node:path");
+        const root = ".buildchain/controller/web-plans";
+        const candidates = fs.readdirSync(root).filter((name) => name.endsWith("-plan.json")).sort();
+        if (candidates.length !== 1) throw new Error(`expected one web-surface plan, found ${candidates.length}`);
+        fs.copyFileSync(path.join(root, candidates[0]), ".buildchain/controller/web-surface-plan.json");
+        NODE
+    - name: Create web-surface controller receipt
+      id: controller-receipt
+      run: node .buildchain/runtime/packages/core/observability/commands/controller-evidence.mjs --mode receipt
+      env:
+        BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+        BUILDCHAIN_CONTROLLER_STAGES_JSON: "[{\"id\":\"resolve-runtime\",\"status\":\"${{ fromJSON(inputs.needs-runtime-result) }}\"},{\"id\":\"plan\",\"status\":\"${{ fromJSON(inputs.needs-plan-result) }}\"},{\"id\":\"build\",\"status\":\"${{ fromJSON(inputs.needs-plan-outputs-build-outcome) || fromJSON(inputs.needs-plan-result) }}\"},{\"id\":\"verify\",\"status\":\"${{ fromJSON(inputs.needs-plan-outputs-verify-outcome) || fromJSON(inputs.needs-plan-result) }}\"},{\"id\":\"publication-authority\",\"status\":\"${{ (fromJSON(inputs.needs-publication-authority-result) == 'success' || fromJSON(inputs.needs-external-publication-authority-result) == 'success') && 'success' || (fromJSON(inputs.needs-publication-authority-result) == 'failure' || fromJSON(inputs.needs-external-publication-authority-result) == 'failure') && 'failure' || 'skipped' }}\"},{\"id\":\"apply\",\"status\":\"${{ (fromJSON(inputs.needs-preview-apply-result) == 'failure' || fromJSON(inputs.needs-preview-cleanup-result) == 'failure' || fromJSON(inputs.needs-staging-apply-result) == 'failure' || fromJSON(inputs.needs-production-apply-result) == 'failure') && 'failure' || (fromJSON(inputs.needs-preview-apply-result) == 'cancelled' || fromJSON(inputs.needs-preview-cleanup-result) == 'cancelled' || fromJSON(inputs.needs-staging-apply-result) == 'cancelled' || fromJSON(inputs.needs-production-apply-result) == 'cancelled') && 'cancelled' || (fromJSON(inputs.needs-preview-apply-result) == 'success' || fromJSON(inputs.needs-preview-cleanup-result) == 'success' || fromJSON(inputs.needs-staging-apply-result) == 'success' || fromJSON(inputs.needs-production-apply-result) == 'success') && 'success' || 'skipped' }}\"},{\"id\":\"aggregate\",\"status\":\"${{ (fromJSON(inputs.needs-plan-result) == 'failure' || fromJSON(inputs.needs-preview-apply-result) == 'failure' || fromJSON(inputs.needs-preview-cleanup-result) == 'failure' || fromJSON(inputs.needs-staging-apply-result) == 'failure' || fromJSON(inputs.needs-production-apply-result) == 'failure') && 'failure' || (fromJSON(inputs.needs-plan-result) == 'cancelled' || fromJSON(inputs.needs-preview-apply-result) == 'cancelled' || fromJSON(inputs.needs-preview-cleanup-result) == 'cancelled' || fromJSON(inputs.needs-staging-apply-result) == 'cancelled' || fromJSON(inputs.needs-production-apply-result) == 'cancelled') && 'cancelled' || fromJSON(inputs.needs-plan-result) == 'success' && 'success' || 'skipped' }}\"}]"
+        BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.select-plan.outcome == 'success' && '[{"kind":"web-surface-plan","path":".buildchain/controller/web-surface-plan.json"}]' || '[]' }}
+        BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ fromJSON(inputs.needs-plan-result) != 'success' && 'web-surface-incomplete' || steps.select-plan.outcome != 'success' && 'no-applicable-web-surface-channel' || '' }}
+        BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Web-surface controller did not complete an applicable channel successfully
+        BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-web-surface-controller-receipt-${{ fromJSON(inputs.needs-release-intent-outputs-production-source-sha) }}
+        BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+      shell: bash -e {0}
+    - name: Upload web-surface controller receipt
+      if: ${{ always() && steps.controller-receipt.outcome == 'success' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-web-surface-controller-receipt-${{ fromJSON(inputs.needs-release-intent-outputs-production-source-sha) }}
+        path: .buildchain/controller/receipt.json
+        if-no-files-found: error
+    - name: Enforce qualifying web-surface controller receipt
+      if: ${{ always() && (fromJSON(inputs.needs-plan-result) != 'success' || steps.select-plan.outcome == 'success') && steps.controller-receipt.outputs.controller-receipt-qualifying != 'true' }}
+      run: |
+        echo "::error::web-surface controller receipt is not qualifying: ${{ steps.controller-receipt.outputs.controller-receipt-status }}"
+        exit 1
+      shell: bash -e {0}

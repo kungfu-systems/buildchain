@@ -1,0 +1,128 @@
+name: Qualify delivery evidence
+description: Owned qualify node of protected dev delivery.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  github-token:
+    description: Provider token; supplied only in a credentialed job.
+    required: false
+    default: ''
+  needs-json:
+    description: Exact dependency job results and admitted output coordinates.
+    required: false
+    default: '{}'
+outputs:
+  native-final-native-proof-root:
+    description: native-final-native-proof-root.
+    value: ${{ steps.native-final.outputs.native-proof-root }}
+  native-final-decision-root:
+    description: native-final-decision-root.
+    value: ${{ steps.native-final.outputs.decision-root }}
+  native-final-qualification-receipt-root:
+    description: native-final-qualification-receipt-root.
+    value: ${{ steps.native-final.outputs.qualification-receipt-root }}
+  boundary-transfer-root:
+    description: boundary-transfer-root.
+    value: ${{ steps.boundary.outputs.transfer-root }}
+  boundary-root:
+    description: boundary-root.
+    value: ${{ steps.boundary.outputs.boundary-root }}
+  boundary-outcome:
+    description: boundary-outcome.
+    value: ${{ steps.boundary.outcome }}
+  boundary-native-outcome:
+    description: boundary-native-outcome.
+    value: ${{ steps.boundary.outputs.native-outcome }}
+  native-final-outcome:
+    description: native-final-outcome.
+    value: ${{ steps.native-final.outcome }}
+runs:
+  using: composite
+  steps:
+  - name: Checkout trusted Buildchain finalizer runtime
+    uses: actions/checkout@v7.0.0
+    with:
+      repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+      ref: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+      path: .buildchain/runtime
+      persist-credentials: false
+  - name: Verify exact admitted Buildchain finalizer runtime
+    shell: bash
+    run: 'test "$(git -C .buildchain/runtime rev-parse --verify ''HEAD^{commit}'')" = "${ADMITTED_RUNTIME_SHA}"
+
+      '
+    env:
+      ADMITTED_RUNTIME_SHA: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+  - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+    with:
+      directory: .buildchain/runtime
+  - name: Download immutable admission state
+    if: fromJSON(inputs.request-json).delivery-warrant-mode == 'required' && fromJSON(inputs.needs-json).admission.outputs.handoff-required
+      != 'true'
+    uses: actions/download-artifact@v7.0.0
+    with:
+      name: buildchain-dev-delivery-control-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+        }}
+      path: .buildchain/dev-delivery
+  - name: Download native execution transfer
+    if: fromJSON(inputs.needs-json).admission.outputs.run-native == 'true'
+    uses: actions/download-artifact@v7.0.0
+    with:
+      name: buildchain-dev-delivery-native-sealed-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+        }}
+      path: .buildchain/native-transfer
+  - name: Download independent provider heartbeat receipt
+    if: fromJSON(inputs.needs-json).admission.outputs.run-native == 'true'
+    uses: actions/download-artifact@v7.0.0
+    with:
+      name: buildchain-dev-delivery-heartbeat-${{ github.run_id }}-${{ github.run_attempt }}-${{ fromJSON(inputs.request-json).expected-pr-number
+        }}
+      path: .buildchain
+  - name: Prove fresh provider finalizer job and runner boundary
+    id: boundary
+    if: fromJSON(inputs.needs-json).admission.outputs.run-native == 'true'
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/native.mjs" boundary
+    env:
+      GH_TOKEN: ${{ inputs.github-token || github.token }}
+      BUILDCHAIN_RUNNER_ENVIRONMENT: ${{ runner.environment }}
+      EXPECTED_PR: ${{ fromJSON(inputs.request-json).expected-pr-number }}
+      EXPECTED_HEAD: ${{ fromJSON(inputs.request-json).expected-head-sha }}
+      TARGET_BRANCH: ${{ fromJSON(inputs.needs-json).admission.outputs.target-branch }}
+      ADMITTED_RUNTIME_SHA: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-sha }}
+      ADMITTED_RUNTIME_ROOT: ${{ fromJSON(inputs.needs-json).admission.outputs.runtime-selection-root }}
+  - name: Verify transferred native proof before provider mutation
+    id: proof-verification
+    if: fromJSON(inputs.needs-json).admission.outputs.run-native == 'true' && steps.boundary.outcome == 'success' && steps.boundary.outputs.native-outcome
+      == 'success'
+    shell: bash
+    run: "set -euo pipefail\nnode .buildchain/runtime/packages/core/dev-delivery/commands/dev-delivery-proof.mjs verify-native\
+      \ \\\n  --source-proof .buildchain/native-transfer/native-proof.json \\\n  --output .buildchain/provider-native-proof-verification.json\n\
+      jq -e '.ok == true and .reason == \"exact-native-proof\"' \\\n  .buildchain/provider-native-proof-verification.json\
+      \ >/dev/null\n"
+  - name: Independently recheck and atomically qualify native proof
+    id: native-final
+    if: fromJSON(inputs.needs-json).admission.outputs.run-native == 'true' && steps.boundary.outcome == 'success' && steps.boundary.outputs.native-outcome
+      == 'success' && steps.proof-verification.outcome == 'success'
+    continue-on-error: true
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/native.mjs" finalize
+    env:
+      GITHUB_TOKEN: ${{ inputs.github-token || github.token }}
+      TARGET_BRANCH: ${{ fromJSON(inputs.needs-json).admission.outputs.target-branch }}
+      EXPECTED_PR: ${{ fromJSON(inputs.request-json).expected-pr-number }}
+      EXPECTED_HEAD: ${{ fromJSON(inputs.request-json).expected-head-sha }}
+      SOURCE_IDENTITY_ROOT: ${{ fromJSON(inputs.request-json).source-identity-root }}
+      SOURCE_PATCH_ROOT: ${{ fromJSON(inputs.request-json).source-patch-root }}
+      PLAN_ROOT: ${{ fromJSON(inputs.request-json).plan-root }}
+      CLOSURE_ROOT: ${{ fromJSON(inputs.request-json).closure-root }}
+      DEPENDENCY_ROOT: ${{ fromJSON(inputs.request-json).dependency-root }}
+      TOOLCHAIN_ROOT: ${{ fromJSON(inputs.request-json).toolchain-root }}
+      ENVIRONMENT_ROOT: ${{ fromJSON(inputs.request-json).environment-root }}
+      AFFECTED_PATHS: ${{ fromJSON(inputs.request-json).affected-paths-json }}
+      SOURCE_PROOF_ROOT: ${{ fromJSON(inputs.needs-json).admission.outputs.source-proof-root }}
+      SHARD_ROOTS: ${{ fromJSON(inputs.request-json).shard-evidence-roots-json }}
+      NATIVE_COMMAND: ${{ fromJSON(inputs.request-json).native-command }}
+      LEASE_SECONDS: ${{ fromJSON(inputs.request-json).warrant-lease-seconds }}
+      HEARTBEAT_SECONDS: ${{ fromJSON(inputs.request-json).native-heartbeat-seconds }}

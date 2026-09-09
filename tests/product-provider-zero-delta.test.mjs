@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { retryGithubMutation } from "../actions/release-candidate-promote/product-provider-adapters.js";
-import { createGithubProductAdapters } from "../actions/release-candidate-promote/product-provider-github-adapters.js";
+import { retryGithubMutation } from "../packages/core/release/promote-candidate/product-provider-adapters.js";
+import { createGithubProductAdapters } from "../packages/core/release/promote-candidate/product-provider-github-adapters.js";
 
 const SOURCE = "a".repeat(40);
 const STATE = "b".repeat(40);

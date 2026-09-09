@@ -23,7 +23,7 @@ import {
   transitionReleaseTransaction,
   validatePublishEvidence,
   writeReleaseTransaction,
-} from "../packages/core/publish-transaction.js";
+} from "../packages/core/release/publish-transaction.js";
 
 const SHA = "a".repeat(40);
 const RELEASE_SHA = "b".repeat(40);
@@ -482,7 +482,7 @@ test("release-transaction CLI can inspect, recover, and finalize a valid local t
   );
   writeReleaseTransaction(statePath, transitionReleaseTransaction(record, "published"));
 
-  const cli = path.join(process.cwd(), "scripts/release-transaction.mjs");
+  const cli = path.join(process.cwd(), "packages/core/release/commands/release-transaction.mjs");
   const recover = spawnSync(process.execPath, [
     cli,
     "recover",
@@ -576,7 +576,7 @@ test("npm publish transaction writes Buildchain evidence without real publish in
   fs.writeFileSync(path.join(cwd, "README.md"), "# fixture\n");
   const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.2.3-alpha.0/evidence.json");
   const run = spawnSync(process.execPath, [
-    path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
+    path.join(process.cwd(), "packages/core/publication/commands/npm-publish-transaction.mjs"),
     "--cwd",
     cwd,
     "--dry-run-publish",
@@ -662,7 +662,7 @@ process.exit(2);
   const run = spawnSync(
     process.execPath,
     [
-      path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
+      path.join(process.cwd(), "packages/core/publication/commands/npm-publish-transaction.mjs"),
       "--cwd",
       cwd,
     ],
@@ -709,7 +709,7 @@ test("npm publish transaction honors explicit dist tag for libnode-style final v
   fs.writeFileSync(path.join(cwd, "README.md"), "# fixture\n");
   const evidencePath = path.join(cwd, ".buildchain/release-evidence/22.22.3-kf.3/evidence.json");
   const run = spawnSync(process.execPath, [
-    path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
+    path.join(process.cwd(), "packages/core/publication/commands/npm-publish-transaction.mjs"),
     "--cwd",
     cwd,
     "--dry-run-publish",
@@ -768,7 +768,7 @@ process.exit(2);
 `);
   const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.2.3/evidence.json");
   const run = spawnSync(process.execPath, [
-    path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"), "--cwd", cwd, "--skip-registry-lookup",
+    path.join(process.cwd(), "packages/core/publication/commands/npm-publish-transaction.mjs"), "--cwd", cwd, "--skip-registry-lookup",
   ], { cwd, encoding: "utf8", env: {
     ...process.env, PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
     BUILDCHAIN_VERSION: "1.2.3", BUILDCHAIN_CHANNEL: "release", BUILDCHAIN_SOURCE_SHA: SHA,
@@ -821,7 +821,7 @@ process.exit(2);
 `);
   const evidencePath = path.join(cwd, ".buildchain/release-evidence/1.2.3/evidence.json");
   const run = spawnSync(process.execPath, [
-    path.join(process.cwd(), "scripts/npm-publish-transaction.mjs"),
+    path.join(process.cwd(), "packages/core/publication/commands/npm-publish-transaction.mjs"),
     "--cwd",
     cwd,
     "--dry-run-publish",

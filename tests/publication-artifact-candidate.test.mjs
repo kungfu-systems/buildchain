@@ -8,12 +8,12 @@ import test from "node:test";
 import {
   BUILDCHAIN_CONTROLLER_EVIDENCE_CONTRACT,
   controllerEvidenceDigest,
-} from "../packages/core/controller-evidence.js";
+} from "../packages/core/observability/controller-evidence.js";
 import {
   createPublicationArtifactCandidate,
   resolvePublicationCandidateFile,
-} from "../packages/core/publication-artifact-candidate.js";
-import { buildPublicationArtifactCandidate } from "../scripts/publication-artifact-candidate.mjs";
+} from "../packages/core/publication/publication-artifact-candidate.js";
+import { buildPublicationArtifactCandidate } from "../packages/core/publication/commands/publication-artifact-candidate.mjs";
 import {
   createPublicationAdmission,
   createPublicationAuthorityRegistry,
@@ -21,7 +21,7 @@ import {
   createPublicationGateDecision,
   createRunnerProvenance,
   verifyPublicationAdmission,
-} from "../packages/core/publication-authority.js";
+} from "../packages/core/publication/publication-authority.js";
 
 const sourceSha = "1".repeat(40);
 const sourceTreeSha = "2".repeat(40);
@@ -144,7 +144,7 @@ test("sealed authority accepts exact publication-artifact evidence and rejects b
   const { evidence, candidate } = fixture();
   const registry = createPublicationAuthorityRegistry({
     descriptors: [{
-      workflowPath: ".github/workflows/paper-release-sealed.yml",
+      workflowPath: ".github/workflows/public-release-paper.yml",
       authorityClass: "product-publication",
       publicationCapable: true,
       capabilityIds: ["npm-publish", "github-release"],
@@ -154,7 +154,7 @@ test("sealed authority accepts exact publication-artifact evidence and rejects b
       runnerPolicy: "ephemeral",
     }],
     workflows: [{
-      path: ".github/workflows/paper-release-sealed.yml",
+      path: ".github/workflows/public-release-paper.yml",
       text: "permissions:\n  contents: write\n  id-token: write\n",
     }],
   });
@@ -174,8 +174,8 @@ test("sealed authority accepts exact publication-artifact evidence and rejects b
   });
   const controlPlaneAudit = createPublicationControlPlaneAudit({
     repository: evidence.repository,
-    workflowPath: ".github/workflows/paper-release-sealed.yml",
-    publisherWorkflowPath: ".github/workflows/paper-release.yml",
+    workflowPath: ".github/workflows/public-release-paper.yml",
+    publisherWorkflowPath: ".github/workflows/public-release-paper.yml",
     environment: "none",
     facts: ["actions-policy", "branch-policy", "environment-policy", "oidc-policy", "publisher-policy", "runner-policy"]
       .map((id, index) => ({ id, status: "pass", digest: String(index + 1).repeat(64) })),
@@ -184,8 +184,8 @@ test("sealed authority accepts exact publication-artifact evidence and rejects b
   });
   const admission = createPublicationAdmission({
     registryDigest: registry.registryDigest,
-    workflowPath: ".github/workflows/paper-release-sealed.yml",
-    publisherWorkflowPath: ".github/workflows/paper-release.yml",
+    workflowPath: ".github/workflows/public-release-paper.yml",
+    publisherWorkflowPath: ".github/workflows/public-release-paper.yml",
     repository: evidence.repository,
     sourceSha,
     runtimeSha,

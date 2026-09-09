@@ -4,7 +4,7 @@ import fs from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { ContractFault } from "../packages/core/canonical-contracts.js";
+import { ContractFault } from "../packages/core/contracts/canonical-contracts.js";
 import {
   evaluateStageCapsuleReuse,
   stageCapsuleAvailabilityRoot,
@@ -13,7 +13,7 @@ import {
   validateStageCapsule,
   validateStageCapsuleAvailability,
   validateStageCapsuleIdentity,
-} from "../packages/core/stage-capsule.js";
+} from "../packages/core/build/stage-capsule.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fixturePath = new URL(
@@ -265,7 +265,7 @@ test("architecture manifest budgets one schema, one writer, and zero provider or
 
 test("Stage Capsule implementations contain no provider, filesystem, network, or ambient-clock authority", () => {
   const javascript = fs.readFileSync(
-    new URL("../packages/core/stage-capsule.js", import.meta.url),
+    new URL("../packages/core/build/stage-capsule.js", import.meta.url),
     "utf8",
   );
   const rust = fs.readFileSync(

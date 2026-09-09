@@ -5,12 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-const workflow = fs.readFileSync(".github/workflows/public-build-check.yml", "utf8");
-const policyStep = workflow.split("      - name: Enforce Paper agent-entry and acceptance policy")[1]
-  .split("      - name: Resolve check lifecycle mode")[0];
-const script = policyStep.split("node --input-type=module <<'NODE'\n")[1]
-  .split("          NODE")[0].replace(/^          /gm, "")
-  .replaceAll(".buildchain/runtime/", "");
+const repositoryRoot = path.resolve(import.meta.dirname, "..");
+const entry = path.join(repositoryRoot, "packages/core/build/nodes/source-check.mjs");
 function fixture(t, kind = "report", extra = "") {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "paper-policy-"));
   t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
@@ -26,11 +22,12 @@ version = "2026.8.0"
 primary_artifact = "report.pdf"
 ${extra}
 `);
+  fs.symlinkSync(repositoryRoot, path.join(cwd, ".buildchain/runtime"), "dir");
   return cwd;
 }
 function run(cwd) {
-  return spawnSync(process.execPath, ["--input-type=module", "--eval", script], {
-    encoding: "utf8", env: { ...process.env, BUILDCHAIN_WORKING_DIRECTORY: cwd },
+  return spawnSync(process.execPath, [entry, "paper-policy"], {
+    cwd, encoding: "utf8", env: { ...process.env, BUILDCHAIN_CHECK_REQUEST_JSON: JSON.stringify({"working-directory": "."}), BUILDCHAIN_RUNTIME_REF: "v4" },
   });
 }
 for (const kind of ["report", "specification", "article", "dataset-note"]) {
@@ -68,6 +65,12 @@ test("malformed configuration fails closed", (t) => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /parse failed/);
 });
-test("public and compatibility checks use the same policy entry", () => {
-  assert.equal(fs.readFileSync(".github/workflows/check.yml", "utf8"), workflow);
+test("the public check reaches the required owned Paper policy node", () => {
+  const workflow = fs.readFileSync(path.join(repositoryRoot, ".github/workflows/public-build-check.yml"), "utf8");
+  const action = fs.readFileSync(path.join(repositoryRoot, "actions/build/check-lifecycle/action.yml"), "utf8");
+  assert.match(workflow, /actions\/build\/source-check/);
+  const controller = fs.readFileSync(path.join(repositoryRoot, "actions/build/source-check/action.yml"), "utf8");
+  assert.match(controller, /actions\/build\/check-lifecycle/);
+  assert.match(action, /source-check\.mjs" paper-policy/);
+  assert.equal(fs.existsSync(path.join(repositoryRoot, ".github/workflows/check.yml")), false);
 });

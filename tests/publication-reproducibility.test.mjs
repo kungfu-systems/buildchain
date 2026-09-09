@@ -9,7 +9,7 @@ import test from "node:test";
 import {
   PUBLICATION_REPRODUCIBILITY_RECEIPT_CONTRACT,
   verifyPublicationReproducibility,
-} from "../packages/core/publication-reproducibility.js";
+} from "../packages/core/publication/publication-reproducibility.js";
 
 const fixtureRoot = path.resolve("fixtures/publication-artifact-shaped");
 const bin = path.resolve("bin/buildchain.mjs");

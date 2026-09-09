@@ -6,7 +6,7 @@ import test from "node:test";
 import {
   resolveArtifactTransferMode,
   writeArtifactTransferOutputs,
-} from "../scripts/resolve-artifact-transfer-mode.mjs";
+} from "../packages/core/build/commands/resolve-artifact-transfer-mode.mjs";
 
 test("artifact transfer resolver preserves GitHub artifact defaults", () => {
   assert.deepEqual(resolveArtifactTransferMode({}), {

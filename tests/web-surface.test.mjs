@@ -15,14 +15,14 @@ import {
   planWebSurfaceDeploy,
   preflightWebSurfaceProduction,
   validateWebSurfaceProject,
-} from "../scripts/web-surface-core.mjs";
+} from "../packages/core/web/commands/web-surface-core.mjs";
 import {
   cloudFrontInvalidationWaitTargets,
   compactWebSurfaceApplyResult,
   waitForCloudFrontInvalidations,
   webSurfaceCli,
-} from "../scripts/web-surface.mjs";
-import { runLifecycle } from "../scripts/run-lifecycle-core.mjs";
+} from "../packages/core/web/commands/web-surface.mjs";
+import { runLifecycle } from "../packages/core/build/commands/run-lifecycle-core.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

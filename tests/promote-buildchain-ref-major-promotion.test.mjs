@@ -134,15 +134,15 @@ key = "version"
 
 [[version.files]]
 type = "json"
-path = "actions/promote-buildchain-ref/package.json"
+path = "actions/release/promote-ref/package.json"
 key = "version"
 
 [lifecycle.verify]
 command = "node scripts/verify-major-bootstrap.mjs"
 `,
     "package.json": packageManifest("1.0.10"),
-    "pnpm-workspace.yaml": 'packages:\n  - "actions/*"\n',
-    "actions/promote-buildchain-ref/package.json": {
+    "pnpm-workspace.yaml": 'packages:\n  - "actions/*/*"\n',
+    "actions/release/promote-ref/package.json": {
       name: "@kungfu-systems/buildchain-promote-buildchain-ref",
       version: "1.0.10",
       private: true,

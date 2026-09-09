@@ -23,12 +23,24 @@
     "buildchain.build-result/v1"
   ],
   "owners": {
-    "actions/resolve-build-plan/action.yml": "Buildchain configuration maintainers",
-    "actions/prepare-build-environment/action.yml": "Buildchain infrastructure maintainers",
-    "actions/run-build-stage/action.yml": "Buildchain lifecycle maintainers",
-    "actions/transfer-build-artifact/action.yml": "Buildchain artifact transport maintainers",
-    "actions/sign-build-artifact/action.yml": "Buildchain signing maintainers",
-    "actions/attest-build-artifact/action.yml": "Buildchain attestation maintainers",
-    "actions/finalize-build-result/action.yml": "Buildchain evidence maintainers"
-  }
+    "actions/build/resolve-plan/action.yml": "Buildchain configuration maintainers",
+    "actions/build/prepare-environment/action.yml": "Buildchain infrastructure maintainers",
+    "actions/build/run-stage/action.yml": "Buildchain lifecycle maintainers",
+    "actions/build/transfer-artifact/action.yml": "Buildchain artifact transport maintainers",
+    "actions/build/sign-artifact/action.yml": "Buildchain signing maintainers",
+    "actions/build/attest-artifact/action.yml": "Buildchain attestation maintainers",
+    "actions/build/finalize-result/action.yml": "Buildchain evidence maintainers"
+  },
+  "modules": [
+    "packages/core/build/commands/artifact-contract.mjs",
+    "packages/core/build/commands/artifact-store.mjs",
+    "packages/core/build/commands/attest.mjs",
+    "packages/core/build/commands/context.mjs",
+    "packages/core/build/commands/finalize.mjs",
+    "packages/core/build/commands/plan.mjs",
+    "packages/core/build/commands/prepare.mjs",
+    "packages/core/build/commands/sign.mjs",
+    "packages/core/build/commands/stage.mjs",
+    "packages/core/build/commands/transfer.mjs"
+  ]
 }

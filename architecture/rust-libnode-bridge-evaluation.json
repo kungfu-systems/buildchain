@@ -68,7 +68,7 @@
       "evidence": [
         "tests/bridge.test.mjs",
         "crates/buildchain-host-bridge/src/main.rs",
-        "scripts/host-adapter.mjs"
+        "packages/core/runtime/commands/host-adapter.mjs"
       ]
     }
   ],

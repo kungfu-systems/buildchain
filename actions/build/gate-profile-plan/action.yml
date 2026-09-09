@@ -1,0 +1,183 @@
+name: gate-profile-plan
+description: Execute the gate-profile plan capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  job-workflow-sha:
+    description: Exact defining workflow commit.
+    required: true
+outputs:
+  trusted:
+    description: trusted node result.
+    value: ${{ steps.trust.outputs.trusted }}
+  source-sha:
+    description: source-sha node result.
+    value: ${{ steps.source.outputs.source-sha }}
+  buildchain-runtime-ref:
+    description: buildchain-runtime-ref node result.
+    value: ${{ steps.runtime.outputs.runtime-ref }}
+  buildchain-runtime-sha:
+    description: buildchain-runtime-sha node result.
+    value: ${{ steps.runtime.outputs.runtime-sha }}
+  gate-matrix-json:
+    description: gate-matrix-json node result.
+    value: ${{ steps.plan.outputs.gate-fromJSON(inputs.matrix-json)-json }}
+  gate-matrix-digest:
+    description: gate-matrix-digest node result.
+    value: ${{ steps.plan.outputs.gate-fromJSON(inputs.matrix-json)-digest }}
+  gate-matrix-artifact:
+    description: gate-matrix-artifact node result.
+    value: ${{ steps.names.outputs.gate-fromJSON(inputs.matrix-json)-artifact }}
+  controller-plan-artifact:
+    description: controller-plan-artifact node result.
+    value: ${{ steps.controller-names.outputs.controller-plan-artifact }}
+  controller-plan-json:
+    description: controller-plan-json node result.
+    value: ${{ steps.controller-plan.outputs.controller-plan-json }}
+  controller-plan-digest:
+    description: controller-plan-digest node result.
+    value: ${{ steps.controller-plan.outputs.controller-plan-digest }}
+runs:
+  using: composite
+  steps:
+    - name: Evaluate event trust
+      id: trust
+      shell: bash
+      env:
+        REQUIRE_TRUSTED_EVENT: ${{ fromJSON(inputs.request-json).require-trusted-event }}
+        PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        CALLER_REPOSITORY: ${{ github.repository }}
+      run: |
+        trusted=true
+        if [ "${REQUIRE_TRUSTED_EVENT}" = "true" ] && [ "${GITHUB_EVENT_NAME}" = "pull_request" ] && [ "${PR_HEAD_REPOSITORY}" != "${CALLER_REPOSITORY}" ]; then
+          trusted=false
+        fi
+        echo "trusted=${trusted}" >> "${GITHUB_OUTPUT}"
+    - name: Reject untrusted event
+      if: ${{ steps.trust.outputs.trusted != 'true' && fromJSON(inputs.request-json).untrusted-policy == 'fail' }}
+      run: exit 1
+      shell: bash -e {0}
+    - name: Resolve Buildchain runtime
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      id: runtime
+      uses: actions/github-script@v8
+      env:
+        BUILDCHAIN_REPOSITORY: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        BUILDCHAIN_REQUESTED_REF: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+        BUILDCHAIN_WORKFLOW_SHA: ${{ fromJSON(inputs.job-workflow-sha) }}
+        BUILDCHAIN_ACTION_ROOT: ${{ github.action_path }}
+      with:
+        script: |
+          const { pathToFileURL } = require("node:url");
+          const { resolveGateRuntime } = await import(pathToFileURL(`${process.env.BUILDCHAIN_ACTION_ROOT}/../../../packages/core/build/nodes/gate-runtime.mjs`).href);
+          await resolveGateRuntime({ github, context, core });
+    - name: Checkout locked consumer source
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      uses: actions/checkout@v7.0.0
+      with:
+        ref: ${{ fromJSON(inputs.request-json).source-ref || github.sha }}
+        path: source
+        clean: true
+        persist-credentials: false
+    - name: Record locked source SHA
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      id: source
+      shell: bash
+      run: echo "source-sha=$(git -C source rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+    - name: Checkout Buildchain runtime
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ steps.runtime.outputs.runtime-sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact Buildchain Node runtime
+      id: core-runtime
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Setup Node.js
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      uses: actions/setup-node@v6.4.0
+      with:
+        node-version: ${{ fromJSON(inputs.request-json).node-version }}
+    - name: Resolve controller runtime contract digest
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      id: controller-identities
+      run: "\"$BUILDCHAIN_NODE\" -e 'const fs=require(\"fs\"); const value=JSON.parse(fs.readFileSync(\".buildchain/runtime/dist/site/buildchain-contract.json\",\"utf8\")); fs.appendFileSync(process.env.GITHUB_OUTPUT, \"contract-digest=\"+value.contractDigest+\"\\n\")'"
+      shell: bash -e {0}
+      env:
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+    - name: Create Shifu profile envelope controller plan
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      id: controller-plan
+      run: '"$BUILDCHAIN_NODE" .buildchain/runtime/packages/core/observability/commands/controller-evidence.mjs --mode plan'
+      env:
+        BUILDCHAIN_CONTROLLER_ID: shifu-gate-profile-envelope
+        BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+        BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+        BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ steps.runtime.outputs.runtime-ref }}
+        BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.runtime.outputs.runtime-sha }}
+        BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.controller-identities.outputs.contract-digest }}
+        BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(fromJSON(inputs.request-json)) }}
+        BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+        BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+      shell: bash -e {0}
+    - name: Resolve Shifu profile envelope controller plan artifact
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      id: controller-names
+      run: echo "controller-plan-artifact=${ARTIFACT_NAME}-controller-plan-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+      env:
+        ARTIFACT_NAME: ${{ fromJSON(inputs.request-json).artifact-name }}
+        SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+      shell: bash -e {0}
+    - name: Upload Shifu profile envelope controller plan
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ steps.controller-names.outputs.controller-plan-artifact }}
+        path: .buildchain/controller/plan.json
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+    - name: Resolve Shifu Gate plans and runner matrix
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      id: plan
+      run: '"$BUILDCHAIN_NODE" .buildchain/runtime/packages/core/build/commands/shifu-gate-profile.mjs --mode plan'
+      env:
+        BUILDCHAIN_GATE_PROFILE: ${{ fromJSON(inputs.request-json).gate-profile }}
+        BUILDCHAIN_GATE_INCLUDE_ADVISORY: ${{ fromJSON(inputs.request-json).include-advisory }}
+        BUILDCHAIN_GATE_COMMAND_JSON: ${{ fromJSON(inputs.request-json).gate-command-json }}
+        BUILDCHAIN_GATE_PLAN_COMMAND_JSON: ${{ fromJSON(inputs.request-json).gate-plan-command-json }}
+        BUILDCHAIN_GATE_REGISTRY: ${{ fromJSON(inputs.request-json).gate-registry }}
+        BUILDCHAIN_GATE_ENVIRONMENT_JSON: ${{ fromJSON(inputs.request-json).gate-environment-json }}
+        BUILDCHAIN_SHIFU_CACHE_PROFILE_REF: ${{ fromJSON(inputs.request-json).shifu-cache-profile-ref }}
+        BUILDCHAIN_SHIFU_CACHE_PROFILE_DIGEST: ${{ fromJSON(inputs.request-json).shifu-cache-profile-digest }}
+        BUILDCHAIN_GATE_SOURCE_CWD: source/${{ fromJSON(inputs.request-json).working-directory }}
+        BUILDCHAIN_GATE_OUTPUT_ROOT: .buildchain/gates/plan
+        BUILDCHAIN_RUNNER_PRESET: ${{ fromJSON(inputs.request-json).runner-preset }}
+        BUILDCHAIN_PLATFORMS_JSON: ${{ fromJSON(inputs.request-json).platforms-json }}
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+      shell: bash -e {0}
+    - name: Resolve Gate matrix artifact name
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      id: names
+      shell: bash
+      run: echo "gate-matrix-artifact=${ARTIFACT_NAME}-matrix-${SOURCE_SHA}" >> "${GITHUB_OUTPUT}"
+      env:
+        ARTIFACT_NAME: ${{ fromJSON(inputs.request-json).artifact-name }}
+        SOURCE_SHA: ${{ steps.source.outputs.source-sha }}
+    - name: Upload Gate plans and matrix
+      if: ${{ steps.trust.outputs.trusted == 'true' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ steps.names.outputs.gate-fromJSON(inputs.matrix-json)-artifact }}
+        path: .buildchain/gates/plan
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}

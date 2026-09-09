@@ -22,11 +22,11 @@ import {
   verifyGate,
   verifyRendererOutput,
   writeChecksums,
-} from "../scripts/auditable-demo.mjs";
+} from "../packages/core/build/commands/auditable-demo.mjs";
 import {
   readRendererManifest,
   validateRendererComposition,
-} from "../scripts/auditable-demo-renditions.mjs";
+} from "../packages/core/build/commands/auditable-demo-renditions.mjs";
 
 const RENDERER_IMAGE = `ghcr.io/kungfu-systems/build-images/demo-renderer@sha256:${"a".repeat(64)}`;
 const SOURCE_SHA = "b".repeat(40);

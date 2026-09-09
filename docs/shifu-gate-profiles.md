@@ -21,7 +21,7 @@ ai_provenance:
 Buildchain can schedule and aggregate a project-owned Shifu Gate profile without
 owning that project's gate ids, commands, dependencies, or dev/alpha/release
 policy. The reusable workflow is
-`.github/workflows/.gate-profile.yml`.
+`.github/workflows/.build-gate-profile.yml`.
 
 ## Ownership boundary
 
@@ -30,7 +30,7 @@ policy. The reusable workflow is
 | Gate schema, profile planning, execution, receipt qualification                     | Shifu                                 | `shifu gate plan`, `shifu gate run --profile`, `shifu gate receipt validate` |
 | Concrete gate catalog and profile decisions                                         | Consumer project                      | project Gate registry and detailed Gate docs                                 |
 | Runner labels and declared capabilities                                             | Consumer workflow / Buildchain preset | `runner-preset` or `platforms-json`                                          |
-| Deterministic runner matrix, immutable checkout, receipt transport, aggregate check | Buildchain                            | `.gate-profile.yml` and `shifu-gate-profile.mjs`                             |
+| Deterministic runner matrix, immutable checkout, receipt transport, aggregate check | Buildchain                            | `.build-gate-profile.yml` and `shifu-gate-profile.mjs`                             |
 | Whether a profile aggregate is required for dev, alpha, or release                  | Consumer project                      | protected-branch required-check policy and caller workflow                   |
 
 Buildchain treats the Shifu plan and receipt as versioned input contracts. It
@@ -103,7 +103,7 @@ per-gate evidence pointers, omissions, and issues.
 ```yaml
 jobs:
   gates:
-    uses: kungfu-systems/buildchain/.github/workflows/.gate-profile.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/.build-gate-profile.yml@v3
     with:
       gate-profile: alpha-pr
       runner-preset: kungfu-v4-self-hosted
@@ -180,7 +180,7 @@ registry or its direct diagnostic commands.
 Unit fixtures prove deterministic matrix generation and required/advisory,
 capability, unsupported, missing, stale, failure, and definition-drift
 propagation. Because a train ref changes runtime scripts but not the outer
-reusable workflow topology, an unreleased `.gate-profile.yml` must also be
+reusable workflow topology, an unreleased `.build-gate-profile.yml` must also be
 validated through a trusted `workflow_dispatch` canary that references the
 temporary workflow ref or exact SHA. See
 [`runtime-train-validation.md`](runtime-train-validation.md).

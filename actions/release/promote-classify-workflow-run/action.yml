@@ -1,0 +1,36 @@
+name: promote-classify-workflow-run
+description: Execute the promote classify-workflow-run capability within its caller job boundary.
+outputs:
+  action:
+    description: action node result.
+    value: ${{ steps.classify.outputs.action }}
+  finalized-version:
+    description: finalized-version node result.
+    value: ${{ steps.classify.outputs.finalized-version }}
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .
+    - name: Classify generated product-state finalization
+      id: classify
+      uses: actions/github-script@v8
+      env:
+        BUILDCHAIN_TARGET_REF: ${{ github.event.workflow_run.head_branch }}
+        BUILDCHAIN_TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+        BUILDCHAIN_ACTION_ROOT: ${{ github.action_path }}
+      with:
+        script: |
+          const { pathToFileURL } = require('node:url');
+          const { run } = await import(pathToFileURL(process.env.BUILDCHAIN_ACTION_ROOT + '/../../../packages/core/release/nodes/publication-head.mjs').href);
+          await run({ github, context, core });
+inputs:
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true

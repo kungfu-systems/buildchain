@@ -1,0 +1,93 @@
+name: check-lifecycle
+description: Apply Paper admission and execute the declared consumer check lifecycle.
+inputs:
+  request-json:
+    description: request-json
+    required: true
+  core-node:
+    description: core-node
+    required: true
+  runtime-ref:
+    description: Exact selected runtime coordinate.
+    required: true
+outputs:
+  lifecycle-stage:
+    description: lifecycle-stage result.
+    value: ${{ steps.lifecycle.outputs.stage }}
+  validate-outcome:
+    description: validate-outcome result.
+    value: ${{ steps.validate.outcome }}
+  install-outcome:
+    description: install-outcome result.
+    value: ${{ steps.install.outcome }}
+  selected-check-outcome:
+    description: selected-check-outcome result.
+    value: ${{ steps.selected-check.outcome }}
+runs:
+  using: composite
+  steps:
+  - uses: actions/setup-node@v6.4.0
+    with:
+      node-version: ${{ fromJSON(inputs.request-json).node-version }}
+  - name: Enable package manager shims
+    run: 'corepack prepare pnpm@11.7.0 --activate
+
+      corepack enable
+
+      pnpm --version
+
+      '
+    shell: bash -e {0}
+  - name: Enforce Paper agent-entry and acceptance policy
+    id: paper-policy
+    shell: bash
+    env:
+      BUILDCHAIN_WORKING_DIRECTORY: ${{ fromJSON(inputs.request-json).working-directory }}
+      BUILDCHAIN_CHECK_REQUEST_JSON: ${{ inputs.request-json }}
+      BUILDCHAIN_NODE: ${{ inputs.core-node }}
+      BUILDCHAIN_RUNTIME_REF: ${{ inputs.runtime-ref }}
+    run: '"$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/source-check.mjs" paper-policy
+
+      '
+  - name: Resolve check lifecycle mode
+    id: lifecycle
+    shell: bash
+    env:
+      BUILDCHAIN_CHECK_MODE: ${{ fromJSON(inputs.request-json).mode }}
+      BUILDCHAIN_CHECK_REQUEST_JSON: ${{ inputs.request-json }}
+      BUILDCHAIN_NODE: ${{ inputs.core-node }}
+    run: '"$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/source-check.mjs" mode
+
+      '
+  - name: Validate declared check lifecycle
+    id: validate
+    run: '"$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/source-check.mjs" validate
+
+      '
+    shell: bash
+    env:
+      BUILDCHAIN_CHECK_REQUEST_JSON: ${{ inputs.request-json }}
+      BUILDCHAIN_LIFECYCLE_STAGE: ${{ steps.lifecycle.outputs.stage }}
+      BUILDCHAIN_NODE: ${{ inputs.core-node }}
+  - name: Run declared install lifecycle
+    id: install
+    env:
+      BUILDCHAIN_CHECK_MODE: ${{ fromJSON(inputs.request-json).mode }}
+      BUILDCHAIN_CHECK_REQUEST_JSON: ${{ inputs.request-json }}
+      BUILDCHAIN_LIFECYCLE_STAGE: ${{ steps.lifecycle.outputs.stage }}
+      BUILDCHAIN_NODE: ${{ inputs.core-node }}
+    run: '"$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/source-check.mjs" install
+
+      '
+    shell: bash
+  - name: Run selected check lifecycle
+    id: selected-check
+    env:
+      BUILDCHAIN_CHECK_MODE: ${{ fromJSON(inputs.request-json).mode }}
+      BUILDCHAIN_CHECK_REQUEST_JSON: ${{ inputs.request-json }}
+      BUILDCHAIN_LIFECYCLE_STAGE: ${{ steps.lifecycle.outputs.stage }}
+      BUILDCHAIN_NODE: ${{ inputs.core-node }}
+    run: '"$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/source-check.mjs" check
+
+      '
+    shell: bash

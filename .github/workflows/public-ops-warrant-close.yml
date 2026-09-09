@@ -3,11 +3,6 @@ name: Dev Delivery Warrant Close
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
         {
           description: "Buildchain runtime repository",
@@ -18,7 +13,7 @@ on:
       buildchain-ref:
         {
           description: "Buildchain runtime ref",
-          default: "v3",
+          default: "",
           type: string,
           required: false,
         }
@@ -105,15 +100,7 @@ permissions:
   contents: write
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   close:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Close exact fenced delivery attempt
     runs-on: ubuntu-24.04
     outputs:
@@ -131,9 +118,10 @@ jobs:
           persist-credentials: false
       - name: Settle terminal delivery
         id: settle
-        uses: ./.buildchain/workflow-shell/.github/actions/dev-delivery/settle
+        uses: ./.buildchain/workflow-shell/actions/dev-delivery/settle
         with:
           request-json: ${{ toJSON(inputs) }}
           needs-json: ${{ toJSON(needs) }}
           phase: terminal
+          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
           github-token: ${{ secrets.github-token || github.token }}

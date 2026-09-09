@@ -1,0 +1,16 @@
+name: binary-distribution-dispatch-publication
+description: Execute the binary-distribution dispatch-publication capability within its caller job boundary.
+runs:
+  using: composite
+  steps:
+    - name: Dispatch exact evidence run to Binary Release Assets
+      shell: bash
+      run: |
+        set -euo pipefail
+        gh workflow run self-release-binary-assets.yml \
+          --repo "${GITHUB_REPOSITORY}" \
+          --ref "${RELEASE_TAG}" \
+          -f buildchain-ref="${GITHUB_SHA}" \
+          -f evidence-run-id="${GITHUB_RUN_ID}" \
+          -f release-tag="${RELEASE_TAG}" \
+          -f publication-used-nonces-json='[]'

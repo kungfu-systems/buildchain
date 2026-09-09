@@ -9,12 +9,12 @@ import {
   rankDevDeliveryCandidates,
   selectDevDeliveryWarrant,
   submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import {
   runDevDeliveryProviderHeartbeat,
   verifyDevDeliveryProviderHeartbeat,
-} from "../packages/core/dev-delivery-provider-heartbeat.js";
-import { runDevDeliveryCommand } from "../scripts/dev-delivery-warrant.mjs";
+} from "../packages/core/dev-delivery/dev-delivery-provider-heartbeat.js";
+import { runDevDeliveryCommand } from "../packages/core/dev-delivery/commands/dev-delivery-warrant.mjs";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const REPOSITORY = "kungfu-systems/kungfu";
@@ -112,8 +112,7 @@ function selectedQueue() {
     {
       pullRequestNumber: 200,
       sourceHead: "a".repeat(40),
-      assignmentRoot: ROOT("1"),
-      initiativeRoot: ROOT("2"),
+      sourceRoot: ROOT("1"),
       sourceIdentityRoot: ROOT("3"),
       sourcePatchRoot: ROOT("4"),
       sourceProofRoot: ROOT("9"),
@@ -160,7 +159,7 @@ test("heartbeat command rebases stale shared state under the exact fence", async
   assert.equal(store.writes.length, 1);
 });
 
-test("heartbeat quarantines an incompatible legacy queued follower", () => {
+test("heartbeat rejects an incomplete native queued follower", () => {
   const selected = selectedQueue();
   const followerInput = structuredClone(selected.queue.candidates[0]);
   for (const field of ["candidateId", "status", "terminal", "enqueuedAt", "updatedAt", "attempts", "recoveries"])
@@ -179,18 +178,9 @@ test("heartbeat quarantines an incompatible legacy queued follower", () => {
   delete shared.stateRoot;
   shared.stateRoot = devDeliveryContentRoot(shared);
 
-  const heartbeat = heartbeatDevDeliveryWarrant(shared, selected.warrant, {
-    now: "2026-08-04T00:03:00Z",
-    leaseSeconds: 60,
-  });
-  assert.equal(heartbeat.queue.activeWarrant.candidateId, selected.warrant.candidateId);
-  assert.deepEqual(rankDevDeliveryCandidates(heartbeat.queue), []);
-
-  const repaired = submitDevDeliveryCandidate(heartbeat.queue, followerInput, {
-    now: "2026-08-04T00:03:01Z",
-  });
-  assert.equal(repaired.receipt.action, "safe-proof-refresh-retained-age");
-  assert.equal(rankDevDeliveryCandidates(repaired.queue).length, 1);
+  assert.throws(() => heartbeatDevDeliveryWarrant(shared, selected.warrant, {
+    now: "2026-08-04T00:03:00Z", leaseSeconds: 60,
+  }), /live native candidate requires exact native proof/u);
 });
 
 test("provider receipt preserves an unrelated shared-state rebase", async () => {

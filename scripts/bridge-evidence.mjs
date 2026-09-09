@@ -10,10 +10,17 @@ import {
   buildBridge,
   createHostRequest,
   runBridge,
-} from "./bridge-bootstrap.mjs";
+} from "../packages/core/runtime/commands/bridge-bootstrap.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const hostScript = path.join(root, "scripts", "host-adapter.mjs");
+const hostScript = path.join(
+  root,
+  "packages",
+  "core",
+  "runtime",
+  "commands",
+  "host-adapter.mjs",
+);
 
 function flag(args, name, fallback = "") {
   const index = args.indexOf(`--${name}`);

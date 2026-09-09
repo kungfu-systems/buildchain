@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   createDomainPublicationRehearsalCapsule,
   executeDomainPublicationRehearsal,
-} from "../packages/core/publication-rehearsal.js";
+} from "../packages/core/publication/publication-rehearsal.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const fixtureRoot = path.join(

@@ -1,0 +1,40 @@
+name: package-candidate
+description: Execute the fixture buildchain-package-candidate capability within its caller job boundary.
+inputs:
+  needs-libnode-shaped-outputs-release-candidate-artifact:
+    description: Caller needs.libnode-shaped.outputs.release-candidate-artifact value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+        registry-url: https://registry.npmjs.org/
+    - name: Download exact Release Candidate Passport
+      uses: actions/download-artifact@v7.0.0
+      with:
+        name: ${{ fromJSON(inputs.needs-libnode-shaped-outputs-release-candidate-artifact) }}
+        path: .buildchain/buildchain-package-candidate/passport
+    - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/workflow-shell
+    - name: Pack Buildchain product bytes once and bind them to the candidate
+      id: package
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/package-candidate.mjs" pack
+    - name: Upload sealed Buildchain product payload
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ steps.package.outputs.artifact-name }}
+        path: .buildchain/buildchain-package-candidate/payload/
+        if-no-files-found: error
+        retention-days: 30

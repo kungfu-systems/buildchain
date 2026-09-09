@@ -1,152 +1,81 @@
 ---
 status: preview
-period: 2026-08-27
-theme: buildchain-v4-adopter-delivery
+period: 2026-09-10
+theme: buildchain-adopter-delivery
 doc_type: product-manual
 source_level: local-files
 confidence: high
 sensitivity: public
-evidence_grade: A
-review_state: self-reviewed
-last_reviewed: 2026-08-27
+evidence_grade: B
+review_state: unreviewed
+last_reviewed: 2026-09-10
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-27
-  visible_context: Exact protected v3 adopter-delivery cut, v4 pure contract core, published npm archive bytes, public consumer policy, complete v3 capability inventory, and rooted cross-platform qualification reports.
-  invisible_context_boundary: No credentials, provider mutations, signing operations, publication operations, or release authority were used.
+  generated_at: 2026-09-10
+  visible_context: Current adopter runtime, public workflow, composite actions and local execution tests.
+  invisible_context_boundary: No hosted cross-platform execution or publication was performed for this documentation.
 ---
 
-# V4 Public Adopter Delivery
+# Public Adopter Delivery
 
-Buildchain v4 carries the v3 adopter-delivery capability through a public,
-protocol-neutral boundary. Consumers select an exact protocol driver and
-artifact profile, retain the rooted gate result, and independently recompute
-that readback. Buildchain does not interpret a protocol owned by another
-project and a passing result never grants runtime, provider, signing,
-publication, or release authority.
-
-The parity source is the read-only protected cut
-`dev/v3/v3.0@6b96bdad8d9f8ccf9275f27d9370a226a9c78465`. Work began from the
-minimal v4 absorption base
-`dev/v4/v4.0@e5611377efc03178f8687d99968cfdfa3ce2825b` and absorbed the
-verified protected-base advances through
-`dev/v4/v4.0@e0342713c7447960c13bd73377282b2e93f4853d` before delivery. These
-identities, the v3 vector-suite root, and the KFD package cut are committed in
-[`adopter-delivery-parity.json`](../architecture/adopter-delivery-parity.json)
-and exposed by the public Node API.
+The public entry is `kungfu-systems/buildchain/.github/workflows/public-build-adopter-qualification.yml`.
+Consumers call its floating `@v4` or `@v4-alpha` channel and retain matching dual
+contract locks. The workflow owns the Linux, macOS and Windows job matrix;
+`actions/adoption` owns admission, conformance and reconciliation;
+`packages/core/adoption` owns driver coordination and exact readback.
 
 ## Public contract
 
-The JSON input schema is
-[`v4-adopter-delivery-v1.schema.json`](../contracts/v4-adopter-delivery-v1.schema.json).
-An input names both selectors and the exact request identities. A selector
-whose implementation identity differs from the request fails closed. The
-public selectors are `json-assertion`, `kfd-category`, and `legacy-kfd`, with
-`git-commit` and `package` artifact profiles.
+The [input schema](../contracts/v4-adopter-delivery-v1.schema.json) requires an
+exact protocol driver and artifact profile. Built-in driver selectors are
+`json-assertion` and `kfd-category`; artifact profiles are `git-commit` and
+`package`. A selector must match the identity in the request.
 
-Applications can also import the lower-level driver interface from
-`@kungfu-tech/buildchain/adopter-delivery-gate` and define an isolated driver.
-The v4 convenience runtime, exact source declaration, readback verification,
-N-1 lineage check, and published archive loader are exported from
-`@kungfu-tech/buildchain/v4-adopter-delivery`.
-
-## CLI
-
-All four operations are offline after the declared archive bytes exist:
+Import the driver interface from `@kungfu-tech/buildchain/adopter-delivery-gate`
+and the current convenience runtime from `@kungfu-tech/buildchain/adopter-delivery`.
+The runtime evaluates declarations and independently recomputes readback. Its
+result grants no provider, signing, publication or release authority.
 
 ```sh
 buildchain adopter-delivery run \
-  --input contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json \
+  --input contracts/adopter-delivery/input.json \
   --output .buildchain/adopter-delivery/readback.json
 
 buildchain adopter-delivery verify \
-  --input contracts/fixtures/v4-adopter-delivery-v1/gate-positive.json \
+  --input contracts/adopter-delivery/input.json \
   --readback .buildchain/adopter-delivery/readback.json
-
-buildchain adopter-delivery bootstrap \
-  --input contracts/fixtures/v4-adopter-delivery-v1/bootstrap-positive.json
-
-buildchain adopter-delivery archive \
-  --input contracts/fixtures/v4-adopter-delivery-v1/archive-template.json
 ```
 
-`verify` requires the complete rooted readback and recomputes it. Missing or
-substituted readback, unknown selector, unknown driver, protocol-version
-mismatch, archive-byte or package-identity mismatch, and altered bootstrap
-lineage all fail closed.
+Unknown selectors, mismatched protocol versions, missing readback and changed
+rooted evidence fail. The API has two operations: `run` and `verify`.
 
-## N-1 and published archives
+## Configuration
 
-N-1 bootstrap is distinct from the candidate. The lineage wrapper requires
-the exact v3 authority commit, exact v4 absorption base, and exact public
-Buildchain archive root. The retained v3 bootstrap also requires protected and
-published N-1 authority, rejects self-authorization, binds the candidate gate
-artifact, and requires merged Warrant-shaped evidence. Protocol, profile, or
-gate changes require independently reviewed transition evidence.
+The closed JSON input owns `driverSelector`, `artifactProfileSelector`, `request`
+and `context`. The public workflow's `input-path` names that document; CLI
+`--input`, `--readback` and `--output` arguments locate the request and evidence.
+Build configuration contains no duplicate Adopter Delivery declaration.
 
-Published authority loading verifies compressed bytes before extraction,
-rejects unsafe paths and links, verifies extracted package identity, verifies
-KFD's semantic package root, and imports only declared public delivery modules.
-The caller must supply an independently retained authority readback root. The
-fixture binds `@kungfu-tech/buildchain@3.0.9-alpha.16` and
-`@kungfu-tech/kfd@1.0.0-alpha.65`; a package version is not treated as proof of
-the Git source cut.
+Paths must stay inside the consumer repository. Workflow inputs name `consumer`
+and `input-path`. External qualification additionally requires the complete
+`consumer-repository`, exact `consumer-ref` and `invocation-source-path` tuple.
+The admission node verifies the checked-out source and defining runtime before
+executing policy. Conformance jobs use the admitted source SHA.
 
-## Config and reusable workflow
+## Qualification evidence
 
-Consumer configuration is closed and repository-relative:
+Each platform runs the current public CLI, rejects a tampered readback, retries
+and verifies the final readback. It also runs the independent
+`ledger-specification-driver` clean-room test. A report binds the exact runtime
+commit, consumer commit and input root to these executed scenarios.
 
-```toml
-[adopter_delivery]
-contract = "kungfu-buildchain-v4-adopter-delivery/v1"
-input_path = "contracts/adopter-delivery/input.json"
-readback_path = ".buildchain/adopter-delivery/readback.json"
-bootstrap_path = "contracts/adopter-delivery/bootstrap.json"
-archive_path = "contracts/adopter-delivery/archives.json"
-result_path = ".buildchain/adopter-delivery/result.json"
-driver_selector = "kfd-category"
-artifact_profile_selector = "package"
-```
+Reconciliation requires exactly one report per declared platform. All reports
+use the same runtime; each consumer must use the same source and input across
+platforms. Missing, duplicate, inconsistent or modified reports fail.
+Qualification has no production, provider or release authority.
 
-The public reusable workflow is
-`kungfu-systems/buildchain/.github/workflows/public-build-adopter-qualification.yml@v4` for
-stable use and `@v4-alpha` during prerelease evaluation. It resolves the exact
-called-workflow SHA, enforces floating selector plus dual-lock consumer
-admission, and runs the same CLI on Linux, macOS, and Windows. Buildchain
-dogfoods it through the thin
-[`self-build-adopter-dogfood.yml`](../.github/workflows/self-build-adopter-dogfood.yml)
-caller, which contains no steps or local orchestration and persists only the
-floating `@v4-alpha` selector.
-
-The reusable workflow downloads exact public N-1 npm archives and uses the
-committed byte roots, semantic identity, and authority readback root. It has
-only `contents: read`; no provider credential or production writer is accepted
-or synthesized.
-
-## Cross-platform capability qualification
-
-The reusable workflow also produces a rooted report on `linux-x64`,
-`macos-arm64`, and `windows-x64`. Each report binds `job.workflow_sha`, the
-consumer source SHA, and the complete 4,648-row v3-to-v4 inventory. Source-only
-capabilities retain their raw category counts with an `exact-source-route`
-applicability; they are not mislabeled as operating-system executions.
-
-The executable boundary is exercised rather than inferred: a public run must
-pass, a substituted readback must fail, retry must reproduce the original root,
-terminal verification and N-1 bootstrap must pass, and the independent
-`ledger-specification-driver` clean-room test must pass without a KFD package.
-The workflow then reconciles one exact report from each platform. Final family
-qualification uses Buildchain self-dogfood and generic test fixtures for
-matrices through the exported
-`@kungfu-tech/buildchain/cross-platform-adopter-qualification` aggregator.
-The report and aggregate explicitly grant no production, provider, release, or
-stable-publication authority.
-
-## Offline vectors
-
-[`offline-vectors.json`](../contracts/fixtures/v4-adopter-delivery-v1/offline-vectors.json)
-indexes positive driver, N-1, and archive cases plus negative selector, driver,
-archive identity, bootstrap lineage, protocol version, and tampered readback
-cases. Tests synthesize archives locally so extraction and identity failures do
-not depend on the network.
+Buildchain's [thin dogfood caller](../.github/workflows/self-build-adopter-dogfood.yml)
+uses the same public entry. Historical parity research remains historical
+evidence; current qualification does not download old Buildchain packages or
+require an old release's bootstrap lineage.

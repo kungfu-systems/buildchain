@@ -1,3 +1,4 @@
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
@@ -19,34 +20,34 @@ import {
   resolveGithubGovernanceTargetPolicy,
   resolveGithubGovernanceTargetRefs,
   verifyGithubGovernanceReceipt,
-} from "../packages/core/github-governance-authority.js";
+} from "../packages/core/governance/github-governance-authority.js";
 import {
   resolveVerifierSourceRevision,
   selectGithubGovernanceRepositories,
-} from "../scripts/audit-github-governance.mjs";
+} from "../packages/core/governance/commands/audit-github-governance.mjs";
 import {
   githubApiFailureIsAbsence,
   resolveGithubProtectionTargetPolicy,
   resolveRequiredCheckBindings,
-} from "../scripts/reconcile-github-governance.mjs";
+} from "../packages/core/governance/commands/reconcile-github-governance.mjs";
 
 const CODEOWNERS = `* @kungfu-origin
 /.github/CODEOWNERS @kungfu-origin
-/.github/workflows/.publication-authority.yml @kungfu-origin
-/.github/workflows/.release-candidate-promote.yml @kungfu-origin
+/.github/workflows/.release-authority.yml @kungfu-origin
+/.github/workflows/.release-promote.yml @kungfu-origin
 /.github/workflows/self-release-promote.yml @kungfu-origin
-/.github/workflows/paper-release-sealed.yml @kungfu-origin
-/.github/workflows/paper-release.yml @kungfu-origin
+/.github/workflows/public-release-paper.yml @kungfu-origin
+/.github/workflows/public-release-paper.yml @kungfu-origin
 /.github/workflows/self-release-line-open.yml @kungfu-origin
-/.github/workflows/release-candidate-promote.yml @kungfu-origin
-/actions/promote-buildchain-ref/action.yml @kungfu-origin
-/actions/promote-buildchain-ref/dist/index.js @kungfu-origin
-/actions/promote-buildchain-ref/index.js @kungfu-origin
-/actions/promote-buildchain-ref/lib.js @kungfu-origin
-/packages/core/buildchain-publication-authority.js @kungfu-origin
-/packages/core/github-governance-authority.js @kungfu-origin
-/scripts/audit-github-governance.mjs @kungfu-origin
-/scripts/reconcile-github-governance.mjs @kungfu-origin
+/.github/workflows/public-release-promote.yml @kungfu-origin
+/actions/release/promote-ref/action.yml @kungfu-origin
+/actions/release/promote-ref/dist/index.js @kungfu-origin
+/actions/release/promote-ref/index.js @kungfu-origin
+/packages/core/release/promote-ref/lib.js @kungfu-origin
+/packages/core/governance/buildchain-publication-authority.js @kungfu-origin
+/packages/core/governance/github-governance-authority.js @kungfu-origin
+/packages/core/governance/commands/audit-github-governance.mjs @kungfu-origin
+/packages/core/governance/commands/reconcile-github-governance.mjs @kungfu-origin
 /.github/workflows/self-ops-governance-audit.yml @kungfu-origin
 `;
 
@@ -122,7 +123,7 @@ test("authority descriptor freezes the TCB, baseline, plan boundary, and non-cla
   assert.deepEqual(descriptor.repositoryAdmission.managedVisibilities, ["public"]);
   assert.equal(descriptor.repositoryAdmission.publicRepositories.length, 16);
   assert.equal(descriptor.repositoryAdmission.privateRepositoryIdentities.length, 0);
-  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 49);
+  assert.equal(descriptor.repositoryAdmission.baseline.authoritativePublicTargetCount, 53);
   assert.deepEqual(descriptor.planCapability.privateRepositories, []);
   assert.match(descriptor.trustedComputingBase.nonClaims.join("\n"), /GitHub platform compromise/);
   assert.equal(descriptor.policyRoot, githubGovernanceDigest(
@@ -1110,69 +1111,23 @@ test("auditor source identity must equal the exact verifier checkout", () => {
 });
 
 test("publication authority recollects live App-authenticated governance instead of trusting input JSON", () => {
-  const authorityWorkflow = fs.readFileSync(
-    new URL("../.github/workflows/.publication-authority.yml", import.meta.url),
-    "utf8",
-  );
-  assert.match(authorityWorkflow, /actions\/create-github-app-token@v3/);
-  assert.match(authorityWorkflow, /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY/);
-  assert.match(
-    authorityWorkflow,
-    /name: Mint bounded governance auditor token[\s\S]+KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''[\s\S]+continue-on-error: true/,
-  );
-  assert.match(
-    authorityWorkflow,
-    /GH_TOKEN: \$\{\{ steps\.governance-auditor\.outputs\.token \|\| secrets\.BUILDCHAIN_GOVERNANCE_READ_TOKEN \|\| github\.token \}\}/,
-  );
-  const releaseWorkflow = fs.readFileSync(
-    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
-    "utf8",
-  );
-  assert.doesNotMatch(
-    releaseWorkflow,
-    /BUILDCHAIN_GOVERNANCE_READ_TOKEN|\.publication-authority\.yml/,
-  );
-  assert.match(
-    authorityWorkflow,
-    /audit-github-governance\.mjs[\s\S]+--repository "\$repository"[\s\S]+--target-ref "\$target_ref"[\s\S]+--require-qualifying/,
-  );
-  assert.match(authorityWorkflow, /audit\.inventory\?\.targetCount !== 1/);
-  assert.doesNotMatch(
-    authorityWorkflow,
-    /const receipt = JSON\.parse\(serialized\)/,
-  );
-  assert.match(
-    authorityWorkflow,
-    /name: Independently verify publication admission[\s\S]+?permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read/,
-  );
-  for (const workflow of [
-    ".binary-release-assets.yml",
-    ".web-surface.yml",
-    "paper-release.yml",
-    "paper-release-sealed.yml",
-  ]) {
-    const source = fs.readFileSync(
-      new URL(`../.github/workflows/${workflow}`, import.meta.url),
-      "utf8",
-    );
-    assert.match(
-      source,
-      /permissions:\n      actions: read\n      checks: read\n      contents: read\n      pull-requests: read\n    uses: \.\/\.github\/workflows\/\.publication-authority\.yml/,
-      workflow,
-    );
-  }
-  for (const workflow of [
-    "paper-release.yml",
-    "paper-release-sealed.yml",
-  ]) {
-    const source = fs.readFileSync(
-      new URL(`../.github/workflows/${workflow}`, import.meta.url),
-      "utf8",
-    );
-    assert.match(
-      source,
-      /uses: \.\/\.github\/workflows\/\.publication-authority\.yml[\s\S]+?secrets: inherit/,
-      workflow,
-    );
+  const graph = inspectWorkflowJob(".github/workflows/.release-authority.yml", "verify");
+  const mint = graph.steps.find(step => step.id === "governance-auditor");
+  assert.match(mint.uses, /actions\/create-github-app-token@/);
+  assert.match(mint.if, /KUNGFU_GOVERNANCE_AUDITOR_APP_PRIVATE_KEY != ''/);
+  assert.equal(mint["continue-on-error"], true);
+  const audit = graph.steps.find(step => step.name === "Collect and verify exact live GitHub governance authority");
+  assert.match(audit.env.GH_TOKEN, /steps.governance-auditor.outputs.token.*inputs.secrets-buildchain-governance-read-token.*github.token/);
+  assert.deepEqual(graph.job.permissions, { actions: "read", checks: "read", contents: "read", "pull-requests": "read" });
+  const source = graph.modules.get("packages/core/publication/nodes/authority-governance.mjs");
+  assert.match(source, /auditGovernance\(env\)/);
+  assert.match(source, /audit.inventory\?\.targetCount !== 1/);
+  assert.match(source, /verifyGithubGovernanceReceipt/);
+  assert.doesNotMatch(source, /JSON.parse\(serialized\)/);
+  for (const name of [".release-binary-assets", "public-release-web", "public-release-paper"]) {
+    const workflow = readWorkflow(`.github/workflows/${name}.yml`);
+    const authorities = Object.values(workflow.jobs).filter(job => job.uses === "./.github/workflows/.release-authority.yml");
+    assert.ok(authorities.length, name);
+    for (const job of authorities) assert.deepEqual(job.permissions, graph.job.permissions);
   }
 });

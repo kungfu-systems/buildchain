@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import crypto from "node:crypto";
-import { projectWorkflowIdentities } from "./workflow-taxonomy.mjs";
+
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { execFileSync } from "node:child_process";
-import { evaluateCiLaneChangeBudget } from "../packages/core/ci-lane-change-budget.js";
+import { evaluateCiLaneChangeBudget } from "../packages/core/governance/ci-lane-change-budget.js";
 
 const root = process.cwd();
 const workflowRoot = path.join(root, ".github", "workflows");
@@ -27,7 +27,7 @@ const physicalWorkflows = fs
   })
   .sort((left, right) => left.path.localeCompare(right.path));
 
-const workflows = projectWorkflowIdentities(root, physicalWorkflows);
+const workflows = physicalWorkflows;
 
 const policy = JSON.parse(fs.readFileSync(policyPath, "utf8"));
 const baselineRevision = String(policy.baseline?.gitRevision || "").trim();

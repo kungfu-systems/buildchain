@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
-import { readWorkflowTaxonomy, workflowPath } from "./workflow-taxonomy.mjs";
+import YAML from "yaml";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -33,7 +33,7 @@ jobs:
       node-version: "24"
       go-version: "1.25.x"
       install-artifact-path: node_modules/.modules.yaml
-      build-artifact-path: actions/run-lifecycle/dist/index.js
+      build-artifact-path: actions/build/run-lifecycle/dist/index.js
       verify-artifact-path: dist/site
 `;
 }
@@ -67,49 +67,127 @@ function assertNoPrivateMarkers(relative, text) {
       fail(`${relative} retains private marker ${marker}`);
 }
 
+const CANARY_PHASES = ["consumer-admission", "qualify", "reconcile"];
+
 function assertReusableWorkflow(root) {
   const reusable = read(root, REUSABLE_PATH);
-  for (const binding of [
-    "workflow_call:",
-    "BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}",
-    "CONSUMER_SOURCE_SHA: ${{ github.sha }}",
-    "- uses: actions/setup-go@v6.5.0",
-    "if: inputs.go-version != ''",
-  ])
-    if (!reusable.includes(binding))
-      fail(`${REUSABLE_PATH} is missing exact binding ${binding}`);
-  for (const stage of ["install", "build", "verify"])
-    if (!reusable.includes(`lifecycle run ${stage}`))
-      fail(`${REUSABLE_PATH} does not execute lifecycle.${stage}`);
-  for (const forbidden of [
-    "lifecycle run publish",
-    "self-hosted",
-    "secrets: inherit",
-  ])
-    if (reusable.toLowerCase().includes(forbidden))
-      fail(`${REUSABLE_PATH} contains forbidden authority ${forbidden}`);
-  if (/\baws\b/iu.test(reusable))
-    fail(`${REUSABLE_PATH} contains forbidden AWS authority`);
+  const workflow = YAML.parse(reusable);
+  if (!Object.hasOwn(workflow.on || {}, "workflow_call"))
+    fail("Canary must expose workflow_call");
+  const nodes = CANARY_PHASES.map((phase) => {
+    const nodePath = `actions/build/stage-capsule-canary-${phase}`;
+    const call = workflow.jobs?.[phase]?.steps?.at(-1);
+    if (
+      call?.uses !== `./.buildchain/workflow-shell/${nodePath}` ||
+      call.with?.["job-workflow-sha"] !== "${{ toJSON(job.workflow_sha) }}" ||
+      call.with?.["request-json"] !== "${{ toJSON(inputs) }}"
+    )
+      fail(
+        `${REUSABLE_PATH} must bind ${phase} to its exact public node and workflow SHA`,
+      );
+    return read(root, `${nodePath}/action.yml`);
+  });
+  const qualification = YAML.parse(nodes[1]);
+  const steps = qualification.runs.steps;
+  const prepare = steps.findIndex((step) => step.id === "buildchain-runtime");
+  const consumerNode = steps.findIndex((step) =>
+    step.uses?.startsWith("actions/setup-node@"),
+  );
+  if (
+    prepare < 0 ||
+    prepare >= consumerNode ||
+    steps[prepare].uses !==
+      "./.buildchain/workflow-shell/actions/runtime/prepare"
+  )
+    fail(
+      "Canary must bind the Buildchain runtime before selecting the consumer Node version",
+    );
+  if (
+    steps[consumerNode].with?.["node-version"] !==
+    "${{ fromJSON(inputs.request-json).node-version }}"
+  )
+    fail("Canary must preserve the requested consumer Node version");
+  for (const stage of ["install", "build", "verify"]) {
+    const step = steps.find((step) =>
+      step.run?.includes(`lifecycle run ${stage}`),
+    );
+    if (
+      !step ||
+      !step.run.startsWith('"$BUILDCHAIN_NODE" ') ||
+      step.env?.BUILDCHAIN_NODE !==
+        "${{ steps.buildchain-runtime.outputs.node-path }}" ||
+      step.env?.BUILDCHAIN_SOURCE_SHA !== "${{ github.sha }}"
+    )
+      fail(
+        `${REUSABLE_PATH} must execute lifecycle.${stage} with the bound runtime and consumer source`,
+      );
+  }
+  const campaign = steps.find((step) =>
+    step.run?.includes("stage-capsule-qualification.mjs campaign"),
+  );
+  if (
+    campaign?.env?.CONSUMER_SOURCE_SHA !== "${{ github.sha }}" ||
+    campaign?.env?.BUILDCHAIN_RUNTIME_SHA !== "${{ steps.runtime.outputs.sha }}"
+  )
+    fail("Canary campaign lost its exact source/runtime bindings");
+  const go = steps.find((step) => step.uses?.startsWith("actions/setup-go@"));
+  if (go?.if !== "fromJSON(inputs.request-json).go-version != ''")
+    fail("Canary must retain its optional declared Go toolchain");
+  for (const source of [reusable, ...nodes]) {
+    for (const forbidden of [
+      "lifecycle run publish",
+      "self-hosted",
+      "secrets: inherit",
+    ])
+      if (source.toLowerCase().includes(forbidden))
+        fail(`${REUSABLE_PATH} contains forbidden authority ${forbidden}`);
+    if (/\baws\b/iu.test(source))
+      fail(`${REUSABLE_PATH} contains forbidden AWS authority`);
+  }
+}
+
+function assertActionInventory(root) {
+  const allowed = new Set(
+    CANARY_PHASES.map(
+      (phase) => `actions/build/stage-capsule-canary-${phase}/action.yml`,
+    ),
+  );
+  function visit(relative) {
+    for (const entry of fs.readdirSync(path.join(root, relative), {
+      withFileTypes: true,
+    })) {
+      if (entry.name === "node_modules" || entry.name === "dist") continue;
+      const child = `${relative}/${entry.name}`;
+      if (entry.isDirectory()) visit(child);
+      else if (/^action\.ya?ml$/u.test(entry.name) && !allowed.has(child)) {
+        const source = read(root, child);
+        if (
+          source.includes("actions/build/stage-capsule-canary-") ||
+          source.includes(
+            "packages/core/build/commands/stage-capsule-qualification.mjs",
+          )
+        )
+          fail(
+            `${child} invokes private qualification outside the public Canary nodes`,
+          );
+      }
+    }
+  }
+  visit("actions");
 }
 
 function assertWorkflowInventory(root) {
   const workflowRoot = path.join(root, ".github/workflows");
-  const taxonomy = readWorkflowTaxonomy(root);
   for (const entry of fs.readdirSync(workflowRoot, { withFileTypes: true })) {
     if (!entry.isFile() || !/\.ya?ml$/u.test(entry.name)) continue;
     let relative = `.github/workflows/${entry.name}`;
     const text = read(root, relative);
-    const canonical = taxonomy?.entries.find(
-      (item) => workflowPath(item) === relative && item.compatibility,
-    );
-    if (canonical) {
-      if (read(root, canonical.compatibility.path) !== text)
-        fail(`${relative} differs from its public compatibility identity`);
-      relative = canonical.compatibility.path;
-    }
     if (
       relative !== REUSABLE_PATH &&
-      text.includes("scripts/stage-capsule-qualification.mjs")
+      (text.includes(
+        "packages/core/build/commands/stage-capsule-qualification.mjs",
+      ) ||
+        text.includes("actions/build/stage-capsule-canary-"))
     )
       fail(`${relative} invokes the private qualification script directly`);
     if (
@@ -124,21 +202,31 @@ function assertWorkflowInventory(root) {
 
 function assertProtectedVerify(root) {
   const verify = read(root, ".github/workflows/self-build-verify.yml");
+  const parsed = YAML.parse(verify);
+  const nodePath = "actions/build/verify-check/action.yml";
+  if (
+    parsed.jobs.check.needs !== "stage-capsule-checkpoints" ||
+    parsed.jobs.check.steps.at(-1).uses !==
+      `./.buildchain/workflow-shell/${nodePath.replace(/\/action.yml$/, "")}`
+  )
+    fail(
+      "Verify must bind the protected check node after Stage Capsule checkpoints",
+    );
+  const implementation = read(root, nodePath);
   for (const required of [
-    "needs: stage-capsule-checkpoints",
     "name: Run declared verify lifecycle (full source tests and generated artifact checks)",
     "node .buildchain/runtime/bin/buildchain.mjs lifecycle run verify",
-    "run: node scripts/source-verification-evidence.mjs plan",
-    "run: node scripts/source-verification-evidence.mjs seal",
+    "run: node packages/core/build/commands/source-verification-evidence.mjs plan",
+    "run: node packages/core/build/commands/source-verification-evidence.mjs seal",
   ])
-    if (!verify.includes(required))
+    if (!implementation.includes(required))
       fail(`Verify is missing protected gate ${required}`);
   for (const forbidden of [
     "stage-capsule-qualification:",
     "stage-capsule-qualification-reconciliation:",
-    "scripts/stage-capsule-qualification.mjs",
+    "packages/core/build/commands/stage-capsule-qualification.mjs",
   ])
-    if (verify.includes(forbidden))
+    if ((verify + implementation).includes(forbidden))
       fail(`Verify retains private dogfood path ${forbidden}`);
 }
 
@@ -183,7 +271,7 @@ function assertArchitecture(root) {
       fail(`architecture retains duplicate ${key}`);
   if (
     architecture.mode !== "shadow-only" ||
-    architecture.productionAuthority !== "v3" ||
+    architecture.productionAuthority !== "v4-native" ||
     [
       "providerEffects",
       "productionWrites",
@@ -218,9 +306,9 @@ function assertConsumerLifecycle(root) {
 
 function assertPolicySources(root) {
   for (const relative of [
-    "packages/core/stage-capsule-qualification.js",
-    "packages/core/stage-capsule-qualification-campaign.js",
-    "scripts/stage-capsule-qualification.mjs",
+    "packages/core/build/stage-capsule-qualification.js",
+    "packages/core/build/stage-capsule-qualification-campaign.js",
+    "packages/core/build/commands/stage-capsule-qualification.mjs",
     "architecture/stage-capsule-qualification.json",
     "docs/v4-stage-capsule.md",
   ])
@@ -250,6 +338,7 @@ function assertPolicySources(root) {
 export function checkPublicDogfoodContract(root = DEFAULT_ROOT) {
   assertReusableWorkflow(root);
   assertWorkflowInventory(root);
+  assertActionInventory(root);
   assertProtectedVerify(root);
   const validationRef = assertArchitecture(root);
   assertConsumerLifecycle(root);
@@ -261,7 +350,7 @@ export function checkPublicDogfoodContract(root = DEFAULT_ROOT) {
     caller: CALLER_PATH,
     reusable: REUSABLE_PATH,
     validationRef,
-    productionAuthority: "v3",
+    productionAuthority: "v4-native",
   };
 }
 

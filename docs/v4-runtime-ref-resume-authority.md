@@ -62,8 +62,8 @@ Normative files:
 
 - `architecture/runtime-ref-resume-authority.json`
 - `contracts/v4-runtime-ref-resume-authority-v1.schema.json`
-- `packages/core/runtime-ref-resume-authority.js`
-- `scripts/authorize-promotion-runtime-override.cjs`
+- `packages/core/consumer/runtime-ref-resume-authority.js`
+- `packages/core/release/runtime-override-authorization.js`
 
 This contract changes no v3 behavior, grants no provider mutation authority,
 and stores no credential material.

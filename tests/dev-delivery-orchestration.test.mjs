@@ -1,72 +1,42 @@
 import assert from "node:assert/strict";
-import crypto from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { parseReusableWorkflowInterface } from "../packages/core/workflow-yaml-contract.js";
-import {
-  actionText,
-  expandDevDeliveryWorkflow,
-  nodeCalls,
-  normalizeWorkflowOperations,
-  repositoryRoot,
-  workflowJobs,
-} from "../scripts/dev-delivery-workflow-view.mjs";
-const contract = JSON.parse(
-  fs.readFileSync(
-    path.join(repositoryRoot, "architecture/dev-delivery-orchestration.json"),
-    "utf8",
-  ),
-);
-const baseline = JSON.parse(
-  fs.readFileSync(
-    path.join(
-      import.meta.dirname,
-      "fixtures/dev-delivery/orchestration-baseline.json",
-    ),
-    "utf8",
-  ),
-);
-const digest = (text) =>
-  crypto
-    .createHash("sha256")
-    .update(normalizeWorkflowOperations(text))
-    .digest("hex");
+import { inspectWorkflowJob, readWorkflow, repositoryRoot } from "../scripts/workflow-action-graph.mjs";
+import { actionText, nodeCalls, workflowJobs } from "../scripts/dev-delivery-workflow-view.mjs";
 const read = (file) => fs.readFileSync(path.join(repositoryRoot, file), "utf8");
+const contract = JSON.parse(read("architecture/dev-delivery-orchestration.json"));
 
-test("six owned delivery nodes conserve all pre-refactor operations, contracts and job boundaries", () => {
-  assert.deepEqual(contract.nodes.map((n) => n.id).sort(), [
-    "land",
-    "native",
-    "qualify",
-    "reserve",
-    "settle",
-    "source",
-  ]);
-  for (const [file, root] of Object.entries(baseline.workflows)) {
-    assert.equal(
-      digest(expandDevDeliveryWorkflow(file)),
-      root,
-      `${file}: command, condition, evidence, output or permission drift`,
-    );
+test("six semantic delivery nodes have exact owned input and output contracts", () => {
+  assert.deepEqual(contract.nodes.map(n => n.id).sort(), ["land", "native", "qualify", "reserve", "settle", "source"]);
+  for (const node of contract.nodes) {
+    const action = readWorkflow(node.action);
+    assert.deepEqual(Object.keys(action.inputs || {}).sort(), [...node.inputs].sort(), node.id);
+    assert.deepEqual(Object.keys(action.outputs || {}).sort(), [...node.outputs].sort(), node.id);
   }
+  for (const retired of ["dev-pr-auto-merge.yml", "dev-delivery-warrant-close.yml"])
+    assert.equal(fs.existsSync(path.join(repositoryRoot, ".github/workflows", retired)), false);
 });
 
-test("public compatibility entrypoints retain exactly the same interface and implementation", () => {
-  for (const [canonical, alias] of [
-    [contract.workflow, ".github/workflows/dev-pr-auto-merge.yml"],
-    [
-      contract.terminalWorkflow,
-      ".github/workflows/dev-delivery-warrant-close.yml",
-    ],
-  ]) {
-    assert.equal(read(canonical), read(alias));
-    assert.deepEqual(
-      parseReusableWorkflowInterface(read(canonical)),
-      parseReusableWorkflowInterface(expandDevDeliveryWorkflow(canonical)),
-    );
+test("native execution, sealing and provider heartbeat reach distinct adapter domains", () => {
+  for (const [jobId, phase] of [["native-execution", "execute"], ["seal-native-execution", "seal"], ["delivery-heartbeat", "heartbeat"]]) {
+    const graph = inspectWorkflowJob(contract.workflow, jobId);
+    assert.equal(graph.job.steps.at(-1).with.phase, phase);
+    const nativeActions = [...graph.actions.keys()].filter(id => id.startsWith("actions/dev-delivery/native-"));
+    assert.deepEqual(nativeActions, [`actions/dev-delivery/native-${phase}`]);
+    if (phase !== "heartbeat") {
+      assert.equal(graph.job.steps.at(-1).with["github-token"], undefined);
+      assert.deepEqual(graph.job.permissions, phase === "seal" ? {actions: "read", contents: "read"} : {contents: "read"});
+      for (const step of graph.steps) for (const name of Object.keys(step.env || {}))
+        assert.ok(!["GH_TOKEN", "GITHUB_TOKEN"].includes(name), `${jobId}: credential leak at ${step.name}`);
+    }
+    const node = readWorkflow(`actions/dev-delivery/native-${phase}/action.yml`);
+    const command = phase === "heartbeat" ? "provider-heartbeat.mjs" : phase === "seal" ? "dev-delivery-process-boundary.mjs" : 'native.mjs" execute';
+    assert.ok(node.runs.steps.some(step => step.run?.includes(command)));
   }
+  const finalizer = inspectWorkflowJob(contract.workflow, "merge-dev-prs");
+  assert.equal(finalizer.job.permissions.contents, "write");
+  assert.ok(finalizer.steps.some(step => step.run?.includes('native.mjs" finalize')));
 });
 
 test("orchestration contains only exact implementation checkout and six node calls", () => {
@@ -107,42 +77,6 @@ test("orchestration contains only exact implementation checkout and six node cal
   }
 });
 
-test("each native authority domain selects only its own operations", () => {
-  const expanded = workflowJobs(expandDevDeliveryWorkflow(contract.workflow));
-  const jobs = Object.fromEntries(expanded.map((j) => [j.id, j.text]));
-  assert.match(jobs["native-execution"], /--native-only/);
-  assert.doesNotMatch(
-    jobs["native-execution"],
-    /GITHUB_TOKEN:|GH_TOKEN:|--finalize-only|\.mjs seal|provider-heartbeat\.mjs run/,
-  );
-  assert.match(jobs["seal-native-execution"], /\.mjs seal/);
-  assert.doesNotMatch(
-    jobs["seal-native-execution"],
-    /GITHUB_TOKEN:|GH_TOKEN:|--native-only|--finalize-only/,
-  );
-  assert.match(jobs["delivery-heartbeat"], /provider-heartbeat\.mjs run/);
-  assert.doesNotMatch(
-    jobs["delivery-heartbeat"],
-    /--native-only|--finalize-only/,
-  );
-  assert.match(jobs["merge-dev-prs"], /--finalize-only/);
-  const rawJobs = workflowJobs(read(contract.workflow));
-  assert.equal(
-    nodeCalls(rawJobs.find((j) => j.id === "native-execution"))[0].inputs.phase,
-    "execute",
-  );
-  assert.equal(
-    nodeCalls(rawJobs.find((j) => j.id === "seal-native-execution"))[0].inputs
-      .phase,
-    "seal",
-  );
-  assert.equal(
-    nodeCalls(rawJobs.find((j) => j.id === "delivery-heartbeat"))[0].inputs
-      .phase,
-    "heartbeat",
-  );
-});
-
 test("failure reporting remains unconditional and cannot turn an earlier node failure into a merge", () => {
   const job = workflowJobs(read(contract.workflow)).find(
     (j) => j.id === "merge-dev-prs",
@@ -181,74 +115,11 @@ test("failure reporting remains unconditional and cannot turn an earlier node fa
   assert.equal(terminal[0].inputs.phase, "terminal");
 });
 
-test("conservation check rejects changed provider effects and missing evidence guards", () => {
-  const temp = fs.mkdtempSync(
-    path.join(os.tmpdir(), "dev-delivery-orchestration-"),
-  );
-  try {
-    fs.cpSync(
-      path.join(repositoryRoot, ".github/actions/dev-delivery"),
-      path.join(temp, ".github/actions/dev-delivery"),
-      { recursive: true },
-    );
-    fs.mkdirSync(path.join(temp, ".github/workflows"), { recursive: true });
-    fs.copyFileSync(
-      path.join(repositoryRoot, contract.workflow),
-      path.join(temp, contract.workflow),
-    );
-    const file = path.join(
-      temp,
-      ".github/actions/dev-delivery/qualify/action.yml",
-    );
-    const original = fs.readFileSync(file, "utf8");
-    fs.writeFileSync(
-      file,
-      original.replace("--finalize-only", "--native-only"),
-    );
-    assert.notEqual(
-      digest(expandDevDeliveryWorkflow(contract.workflow, temp)),
-      baseline.workflows[contract.workflow],
-    );
-    fs.writeFileSync(
-      file,
-      original.replace("steps.proof-verification.outcome == 'success'", "true"),
-    );
-    assert.notEqual(
-      digest(expandDevDeliveryWorkflow(contract.workflow, temp)),
-      baseline.workflows[contract.workflow],
-    );
-  } finally {
-    fs.rmSync(temp, { recursive: true, force: true });
+test("dev delivery has one canonical execution graph", () => {
+  for (const workflow of [contract.workflow, contract.terminalWorkflow]) {
+    assert.doesNotMatch(read(workflow), /universal-request-json|universal-bootstrap:/u);
   }
-});
-
-test("fresh facade regeneration preserves the owned nodes and exact universal branch", async () => {
-  const { facadeGenerationSource, migrateUniversalWorkflowFacade } =
-    await import("../scripts/generate-universal-workflow-facades.mjs");
-  for (const [canonical, alias] of [
-    [contract.workflow, ".github/workflows/dev-pr-auto-merge.yml"],
-    [
-      contract.terminalWorkflow,
-      ".github/workflows/dev-delivery-warrant-close.yml",
-    ],
-  ]) {
-    const source = read(canonical);
-    assert.equal(facadeGenerationSource(source, alias, true), source);
-    assert.equal(migrateUniversalWorkflowFacade(source, alias), source);
-  }
-});
-
-test("operation conservation preserves shell whitespace and literal body blank lines", () => {
-  const source =
-    "    - run: |\n        printf '%s\\n' \\\n          value\n\n        echo done\n      shell: bash\n";
-  assert.notEqual(
-    normalizeWorkflowOperations(source),
-    normalizeWorkflowOperations(source.replace("\\\n", "\\ \n")),
-  );
-  assert.notEqual(
-    normalizeWorkflowOperations(source),
-    normalizeWorkflowOperations(source.replace("\n\n", "\n")),
-  );
+  assert.equal(fs.existsSync(path.join(repositoryRoot, "scripts/generate-universal-workflow-facades.mjs")), false);
 });
 
 test("node implementations stay bounded independently of the thin facade budget", () => {

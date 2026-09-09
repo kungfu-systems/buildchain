@@ -11,7 +11,7 @@ import {
   INSTALLER_EVIDENCE_SCHEMA,
   validateInstallerPublication,
   verifyInstallerPublicReadback,
-} from "../scripts/installer-publication.mjs";
+} from "../packages/core/publication/commands/installer-publication.mjs";
 
 function digest(bytes) {
   return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;

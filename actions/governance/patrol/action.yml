@@ -1,0 +1,78 @@
+name: Patrol protected development
+description: Resolve the target, execute bounded maintenance, and retain its result.
+inputs:
+  request-json:
+    description: Typed public patrol request.
+    required: true
+  runtime-repository:
+    description: Resolved Buildchain runtime repository.
+    required: true
+  runtime-ref:
+    description: Resolved runtime ref; defaults to the defining workflow SHA.
+    required: true
+  github-token:
+    description: Bounded repository maintenance credential.
+    required: false
+outputs:
+  result-path:
+    description: result-path
+    value: ${{ steps.execute.outputs.result-path }}
+  evaluated-count:
+    description: evaluated-count
+    value: ${{ steps.execute.outputs.evaluated-count }}
+  action-count:
+    description: action-count
+    value: ${{ steps.execute.outputs.action-count }}
+  skipped-count:
+    description: skipped-count
+    value: ${{ steps.execute.outputs.skipped-count }}
+  planned-count:
+    description: planned-count
+    value: ${{ steps.execute.outputs.planned-count }}
+runs:
+  using: composite
+  steps:
+  - name: Resolve target branch
+    id: target
+    shell: bash
+    run: node "$GITHUB_ACTION_PATH/../../../packages/core/governance/patrol/target.mjs"
+    env:
+      INPUT_TARGET_BRANCH: ${{ fromJSON(inputs.request-json).target-branch }}
+  - name: Checkout Buildchain runtime
+    uses: actions/checkout@v7.0.0
+    with:
+      repository: ${{ inputs.runtime-repository }}
+      ref: ${{ inputs.runtime-ref }}
+      path: .buildchain/runtime
+      persist-credentials: false
+  - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+    with:
+      directory: .buildchain/runtime
+  - name: Run Buildchain patrol
+    id: execute
+    run: node .buildchain/runtime/packages/core/governance/commands/buildchain-patrol.mjs
+    env:
+      GITHUB_TOKEN: ${{ inputs.github-token || github.token }}
+      BUILDCHAIN_PATROL_REPOSITORY: ${{ github.repository }}
+      BUILDCHAIN_PATROL_TARGET_BRANCH: ${{ steps.target.outputs.branch }}
+      BUILDCHAIN_PATROL_CADENCE: ${{ fromJSON(inputs.request-json).cadence }}
+      BUILDCHAIN_PATROL_MODE: ${{ fromJSON(inputs.request-json).mode }}
+      BUILDCHAIN_PATROL_CAPABILITIES: ${{ fromJSON(inputs.request-json).capabilities }}
+      BUILDCHAIN_PATROL_REQUIRED_CHECKS: ${{ fromJSON(inputs.request-json).required-status-checks }}
+      BUILDCHAIN_PATROL_READY_LABEL: ${{ fromJSON(inputs.request-json).ready-label }}
+      BUILDCHAIN_PATROL_BLOCK_LABELS: ${{ fromJSON(inputs.request-json).block-labels }}
+      BUILDCHAIN_PATROL_ALLOWED_HEAD_PREFIXES: ${{ fromJSON(inputs.request-json).allowed-head-prefixes }}
+      BUILDCHAIN_PATROL_REQUIRE_APPROVAL: ${{ fromJSON(inputs.request-json).require-approval }}
+      BUILDCHAIN_PATROL_SAME_REPOSITORY_ONLY: ${{ fromJSON(inputs.request-json).same-repository-only }}
+      BUILDCHAIN_PATROL_MAX_ACTIONS: ${{ fromJSON(inputs.request-json).max-actions }}
+      BUILDCHAIN_PATROL_MERGE_METHOD: ${{ fromJSON(inputs.request-json).merge-method }}
+      BUILDCHAIN_PATROL_LANDING_MODE: ${{ fromJSON(inputs.request-json).landing-mode }}
+      BUILDCHAIN_PATROL_DRY_RUN: ${{ fromJSON(inputs.request-json).dry-run }}
+      BUILDCHAIN_PATROL_OUTPUT_PATH: .buildchain/patrol/result.json
+    shell: bash
+  - name: Upload Buildchain patrol result
+    uses: actions/upload-artifact@v7.0.1
+    with:
+      name: buildchain-patrol-${{ fromJSON(inputs.request-json).cadence }}-${{ steps.target.outputs.branch-artifact }}
+      path: ${{ steps.execute.outputs.result-path }}
+      if-no-files-found: error

@@ -9,29 +9,28 @@ import test from "node:test";
 import {
   createReleaseCandidatePassport,
   sha256Json,
-} from "../packages/core/release-candidate.js";
-import { releaseTransactionId } from "../packages/core/publish-transaction.js";
+} from "../packages/core/release/release-candidate.js";
+import { releaseTransactionId } from "../packages/core/release/publish-transaction.js";
 import {
   ReleaseCandidateRecoveryError,
   validateRecoveryTargetRef,
   validateReleaseCandidateRecoveryReceipt,
   verifyReleaseCandidateRecovery,
-} from "../packages/core/release-candidate-recovery.js";
+} from "../packages/core/release/release-candidate-recovery.js";
 import {
   candidateArtifactNames,
   createRecoveredPublication,
   createRecoveredPublicationCandidate,
   normalizePlatformManifests,
   resolveAnchorRecoveryRequest,
-  resolveRecoveryTransaction,
   resolveRecoveredCandidateVersion,
   resolveRecoveredPublicationVersion,
   resolveRuntimeResumePublicRuntimeSha,
   trackedRuntimePersistenceScan,
   validateRuntimeResumePublicReadback,
   verifyReleaseCandidateStageCapsules,
-} from "../scripts/resume-from-candidate-run.mjs";
-import { createReleaseCandidateStageCapsules } from "../scripts/generate-release-candidate-passport.mjs";
+} from "../packages/core/release/commands/resume-from-candidate-run.mjs";
+import { createReleaseCandidateStageCapsules } from "../packages/core/publication/commands/generate-release-candidate-passport.mjs";
 
 const SOURCE_SHA = "1".repeat(40);
 const TARGET_SHA = "2".repeat(40);
@@ -39,98 +38,6 @@ const TREE = "3".repeat(40);
 const RUNTIME_SHA = "4".repeat(40);
 const PAYLOAD_DIGEST = `sha256:${"5".repeat(64)}`;
 const ARCHIVE_DIGEST = `sha256:${"6".repeat(64)}`;
-
-test("recovery resolves an exact publication version without scanning historical state refs", async () => {
-  const transaction = {
-    id: "transaction-exact",
-    version: "4.0.1-alpha.18",
-  };
-  const calls = [];
-  const fetchImpl = async (url) => {
-    calls.push(url);
-    assert.doesNotMatch(url, /matching-refs/u);
-    return new Response(JSON.stringify({
-      type: "file",
-      encoding: "base64",
-      content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
-    }), { status: 200 });
-  };
-
-  const result = await resolveRecoveryTransaction({
-    repoInfo: {
-      owner: "kungfu-systems",
-      repo: "buildchain",
-    },
-    apiUrl: "https://api.github.test",
-    token: "test-token",
-    fetchImpl,
-    transactionId: transaction.id,
-    publicationVersion: transaction.version,
-  });
-
-  assert.deepEqual(result, { version: transaction.version, transaction });
-  assert.equal(calls.length, 1);
-  assert.match(calls[0], /contents\/state\.json\?ref=buildchain%2Frelease-state%2F4-0-1-alpha-18$/u);
-});
-
-test("recovery scans historical state refs only when the exact publication version is absent", async () => {
-  const transaction = {
-    id: "transaction-fallback",
-    version: "4.0.1-alpha.18",
-  };
-  const calls = [];
-  const fetchImpl = async (url) => {
-    calls.push(url);
-    if (url.includes("contents/state.json?ref=buildchain%2Frelease-state%2F4-0-1-alpha-19")) {
-      return new Response(JSON.stringify({ message: "Not Found" }), { status: 404 });
-    }
-    if (url.includes("git/matching-refs/heads/buildchain/release-state/")) {
-      return new Response(JSON.stringify([{
-        ref: "refs/heads/buildchain/release-state/4-0-1-alpha-18",
-      }]), { status: 200 });
-    }
-    return new Response(JSON.stringify({
-      type: "file",
-      encoding: "base64",
-      content: Buffer.from(JSON.stringify(transaction)).toString("base64"),
-    }), { status: 200 });
-  };
-
-  const result = await resolveRecoveryTransaction({
-    repoInfo: {
-      owner: "kungfu-systems",
-      repo: "buildchain",
-    },
-    apiUrl: "https://api.github.test",
-    token: "test-token",
-    fetchImpl,
-    transactionId: transaction.id,
-    publicationVersion: "4.0.1-alpha.19",
-  });
-
-  assert.deepEqual(result, { version: transaction.version, transaction });
-  assert.equal(calls.length, 3);
-  assert.match(calls[1], /git\/matching-refs\/heads\/buildchain\/release-state\/$/u);
-});
-
-test("recovery without a transaction id starts fresh instead of adopting the exact-version transaction", async () => {
-  const fetchImpl = async () => {
-    throw new Error("fresh recovery must not read durable transaction state");
-  };
-
-  const result = await resolveRecoveryTransaction({
-    repoInfo: {
-      owner: "kungfu-systems",
-      repo: "buildchain",
-    },
-    apiUrl: "https://api.github.test",
-    token: "test-token",
-    fetchImpl,
-    publicationVersion: "4.0.1",
-  });
-
-  assert.deepEqual(result, { version: "4.0.1", transaction: undefined });
-});
 
 function fixture(overrides = {}) {
   const platformFiles = [
@@ -1027,11 +934,11 @@ test("recovery binds an additional product payload manifest to candidate, summar
 test("workflow recovery resumes through the same canonical publisher transaction", async () => {
   const fs = await import("node:fs");
   const advanced = fs.readFileSync(
-    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
+    new URL("../.github/workflows/.release-promote.yml", import.meta.url),
     "utf8",
   );
   const publicWorkflow = fs.readFileSync(
-    new URL("../.github/workflows/release-candidate-promote.yml", import.meta.url),
+    new URL("../.github/workflows/public-release-promote.yml", import.meta.url),
     "utf8",
   );
   const recovery = fs.readFileSync(
@@ -1043,9 +950,11 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "utf8",
   );
   const candidateAdapter = fs.readFileSync(
-    new URL("../scripts/release-candidate-adapter.mjs", import.meta.url),
+    new URL("../packages/core/release/commands/release-candidate-adapter.mjs", import.meta.url),
     "utf8",
   );
+  const requestSchema = JSON.parse(fs.readFileSync(new URL("../contracts/promotion-request-v1.schema.json", import.meta.url), "utf8"));
+  const invocationSchema = JSON.parse(fs.readFileSync(new URL("../contracts/promotion-invocation-v1.schema.json", import.meta.url), "utf8"));
 
   for (const input of [
     "resume-candidate-repository",
@@ -1057,29 +966,33 @@ test("workflow recovery resumes through the same canonical publisher transaction
     "resume-buildchain-runtime-sha",
     "resume-transaction-id",
   ]) {
-    assert.match(advanced, new RegExp(`${input}:`));
-    assert.match(publicWorkflow, new RegExp(`${input}:`));
-    assert.match(recovery, new RegExp(`${input}:`));
+    assert.ok(requestSchema.properties[input], input);
+    assert.ok(invocationSchema.properties[input], input);
+    assert.match(recovery, new RegExp(`"${input}":`));
   }
 
   assert.match(recovery, /^  resume:/m);
   assert.match(
     recovery,
-    /uses: kungfu-systems\/buildchain\/\.github\/workflows\/release-candidate-promote\.yml@v4-alpha/,
+    /uses: \.\/\.github\/workflows\/public-release-promote\.yml/,
   );
   assert.doesNotMatch(recovery, /^  (?:alpha|stable|install|publish):/m);
+  assert.match(advanced, /actions\/release\/promote-qualify/);
+  const qualificationNode = fs.readFileSync(new URL("../actions/release/promote-qualify/action.yml", import.meta.url), "utf8");
+  const applyNode = fs.readFileSync(new URL("../actions/release/promote-apply/action.yml", import.meta.url), "utf8");
   assert.match(
-    advanced,
-    /node \.buildchain\/runtime\/scripts\/release-candidate-adapter\.mjs/,
+    qualificationNode,
+    /node \.buildchain\/runtime\/packages\/core\/release\/commands\/release-candidate-adapter\.mjs/,
   );
   assert.match(
     candidateAdapter,
-    /scripts\/resume-from-candidate-run\.mjs/,
+    /packages\/core\/release\/commands\/resume-from-candidate-run\.mjs/,
   );
-  assert.match(advanced, /Resume the same transaction journal/);
+  assert.match(advanced, /actions\/release\/promote-apply/);
+  assert.match(applyNode, /Resume the same transaction journal/);
   assert.match(
     refPromotion,
-    /^  promote:[\s\S]*uses: kungfu-systems\/buildchain\/\.github\/workflows\/\.release-candidate-promote\.yml@v4-alpha/m,
+    /^  promote:[\s\S]*uses: \.\/\.github\/workflows\/public-release-promote\.yml/m,
   );
   assert.doesNotMatch(refPromotion, /^  promote-stable:/m);
   assert.doesNotMatch(advanced, /gh run rerun/);

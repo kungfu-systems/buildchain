@@ -16,7 +16,7 @@ function manifest() {
   );
 }
 
-test("every reverse-scanned v3 runtime semantic has executable v4 evidence", () => {
+test("every current runtime mechanism has executable evidence for all five failure and success dimensions", () => {
   assert.deepEqual(validateRuntimeSemanticClosure({ root }), {
     capabilities: 13,
     evidenceDimensions: 65,

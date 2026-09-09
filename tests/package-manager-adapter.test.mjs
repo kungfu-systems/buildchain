@@ -14,7 +14,7 @@ import {
   getWorkspaceInfo,
   getYarnLockInfo,
   validatePackageManagerContract,
-} from "../packages/core/package-manager.js";
+} from "../packages/core/build/package-manager.js";
 
 function withTempRepo(files, fn) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-pm-"));
@@ -135,6 +135,24 @@ test("workspace info is parsed without yarn workspaces info", () => {
       });
     },
   );
+});
+
+test("workspace discovery expands every capability and node segment without admitting nearby files", () => {
+  withTempRepo({
+    "package.json": JSON.stringify({}),
+    "pnpm-workspace.yaml": 'packages:\n  - "actions/*/*"\n  - "missing/*/*"\n  - "actions/release/promote"\n',
+    "actions/build/check/package.json": JSON.stringify({ name: "@fixture/check" }),
+    "actions/release/promote/package.json": JSON.stringify({ name: "@fixture/promote" }),
+    "actions/release/notes.txt": "not a directory",
+    "actions/build/package.json": JSON.stringify({ name: "@fixture/capability-only" }),
+    "actions/build/composite/action.yml": "runs:\n  using: composite\n",
+    "actions/build/check/deep/package.json": JSON.stringify({ name: "@fixture/too-deep" }),
+  }, dir => {
+    assert.deepEqual(getWorkspaceInfo(dir), {
+      "@fixture/check": { location: "actions/build/check" },
+      "@fixture/promote": { location: "actions/release/promote" },
+    });
+  });
 });
 
 test("pnpm, yarn, and npm lockfiles expose kungfu package versions", () => {

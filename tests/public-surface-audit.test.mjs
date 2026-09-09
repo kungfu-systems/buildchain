@@ -47,12 +47,12 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   );
   assert.ok(
     enumerateActionInputs({ root }).some(
-      (entry) => entry.id === "promote-buildchain-ref" && entry.inputCount > 0,
+      (entry) => entry.id === "release/promote-ref" && entry.inputCount > 0,
     ),
   );
   assert.ok(
     enumerateActionInputs({ root }).some(
-      (entry) => entry.id === "release-tail" && entry.inputCount > 0,
+      (entry) => entry.id === "release/settle" && entry.inputCount > 0,
     ),
   );
 });

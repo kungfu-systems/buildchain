@@ -7,11 +7,11 @@ import {
   createRunnerEvidence,
   linuxCodeBuildPlan,
   verifyLinuxCodeBuildQualification,
-} from "../scripts/aws-runner-burst-core.mjs";
+} from "../packages/core/providers/commands/aws-runner-burst-core.mjs";
 import {
   AWS_CODEBUILD_TOOLCHAIN,
   selectAwsCodeBuildCompiler,
-} from "../scripts/aws-codebuild-toolchain.mjs";
+} from "../packages/core/providers/commands/aws-codebuild-toolchain.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -90,8 +90,8 @@ test("phase verification fails closed on stale telemetry or cloud residue", () =
 
 test("admitted planning precedes dynamic CodeBuild runner selection", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const planner = fs.readFileSync(path.join(root, "scripts/build/plan.mjs"), "utf8");
-  const prepare = fs.readFileSync(path.join(root, "scripts/build/prepare.mjs"), "utf8");
+  const planner = fs.readFileSync(path.join(root, "packages/core/build/commands/plan.mjs"), "utf8");
+  const prepare = fs.readFileSync(path.join(root, "packages/core/build/commands/prepare.mjs"), "utf8");
   assert.match(workflow, /build-native:\n\s+needs:\n\s+- plan/u);
   assert.match(planner, /codebuild-\$\{p.project\}-\$\{plan.run.id\}-\$\{plan.run.attempt\}/u);
   assert.ok(planner.indexOf('"consumer-policy.mjs"') < planner.indexOf('Object.assign(plan, buildMatrices'));
@@ -139,7 +139,7 @@ test("CodeBuild native toolchain rejects unsupported Linux images", () => {
 
 test("TOML timeout bounds both build jobs and the lifecycle implementation", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const stage = fs.readFileSync(path.join(root, "scripts/build/stage.mjs"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "packages/core/build/commands/stage.mjs"), "utf8");
   assert.equal((workflow.match(/timeout-minutes: .*build\.timeout_minutes/g) || []).length, 2);
   assert.match(stage, /timeoutMinutes: plan.build.timeout_minutes/u);
 });

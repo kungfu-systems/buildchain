@@ -1,11 +1,8 @@
 name: Self-hosted Runner Smoke
-
 on:
-  workflow_dispatch:
-
+  workflow_dispatch: null
 permissions:
   contents: read
-
 jobs:
   smoke:
     runs-on:
@@ -16,42 +13,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.0
-
-      - name: Show runner
-        run: |
-          echo "runner.name=${RUNNER_NAME}"
-          echo "runner.os=${RUNNER_OS}"
-          echo "runner.arch=${RUNNER_ARCH}"
-          node --version
-          corepack --version
-
-      - name: Setup Go
-        uses: actions/setup-go@v6.5.0
+        id: source-checkout
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
         with:
-          go-version: "1.25.x"
-
-      - name: Enable pnpm
-        run: |
-          corepack prepare pnpm@11.7.0 --activate
-          corepack enable
-          pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check buildchain
-        run: pnpm run check
-
-      - name: Verify release passport compatibility fixture
-        env:
-          BUILDCHAIN_RUNNER_KIND: self-hosted
-        run: |
-          mkdir -p dist/passport-fixture
-          printf 'self-hosted compatibility fixture\n' > dist/passport-fixture/buildchain-self-hosted-fixture.tar.gz
-          node bin/buildchain.mjs collect github-release \
-            --tag "v0.0.0-self-hosted-smoke" \
-            --repository "${GITHUB_REPOSITORY}" \
-            --source-sha "${GITHUB_SHA}" \
-            --assets-dir dist/passport-fixture \
-            --output-dir .buildchain/self-hosted-passport
-          node bin/buildchain.mjs verify release-passport .buildchain/self-hosted-passport/buildchain.release.json
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+        if: ${{ always() }}
+      - name: Execute runner-smoke
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/governance/runner-smoke
+        if: ${{ always() }}
+        with:
+          source-checkout-outcome: ${{ steps.source-checkout.outcome }}

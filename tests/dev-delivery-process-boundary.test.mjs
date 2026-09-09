@@ -14,14 +14,14 @@ import {
   stageNativeExecutionTransfer,
   verifyNativeExecutionTransfer,
   verifyProviderFailureSettlementBinding,
-} from "../packages/core/dev-delivery-process-boundary.js";
-import { devDeliveryContentRoot } from "../packages/core/dev-delivery-common.js";
+} from "../packages/core/dev-delivery/dev-delivery-process-boundary.js";
+import { devDeliveryContentRoot } from "../packages/core/dev-delivery/dev-delivery-common.js";
 import {
   createNativeCommandContract,
   createNativeExecutionReceipt,
   createNativeProofReuseDecision,
   createNativeQualificationProof,
-} from "../packages/core/dev-delivery-warrant.js";
+} from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 const RUNTIME_SHA = "f".repeat(40);

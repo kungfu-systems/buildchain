@@ -1,0 +1,466 @@
+import fs from "node:fs";
+import { defaultDevDeliveryStateRef, GitHubDevDeliveryStore } from "./dev-delivery-warrant.mjs";
+import { qualifyPreEnqueueReadback } from "./dev-pr-prequeue-guard.mjs";
+
+const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/;
+const SHA_PATTERN = /^[0-9a-f]{40}$/;
+const ADMISSION_SCHEMA = "kungfu.buildchain.dev-pr-admission/v1";
+
+function mismatch(code) {
+  const error = new Error(code);
+  error.code = code;
+  throw error;
+}
+
+function requireMatch(condition, code) {
+  if (!condition) mismatch(code);
+}
+
+function readWarrantResult(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch (cause) {
+    const error = new Error(`delivery Warrant result is unreadable: ${cause.message}`);
+    error.code = "invalid-delivery-warrant-result";
+    throw error;
+  }
+}
+
+function exactActiveReadback(result) {
+  requireMatch(result.schema === "kungfu.buildchain.dev-delivery-command-result/v1", "unsupported-delivery-warrant-result");
+  requireMatch(result.mode === "execute", "delivery-warrant-not-executed");
+  requireMatch(SHA_PATTERN.test(String(result.after?.commitSha || "")), "delivery-warrant-commit-readback-missing");
+  requireMatch(ROOT_PATTERN.test(String(result.after?.stateRoot || "")), "delivery-warrant-state-readback-missing");
+  requireMatch(result.observation?.schema === "kungfu.buildchain.dev-delivery-queue-observation/v1", "delivery-warrant-observation-missing");
+  requireMatch(result.observation.stateRoot === result.after.stateRoot, "delivery-warrant-observation-root-mismatch");
+  const warrant = result.observation.activeWarrant;
+  const candidate = result.observation.activeCandidate;
+  requireMatch(warrant?.schema === "kungfu.buildchain.dev-delivery-warrant/v1", "delivery-warrant-missing");
+  requireMatch(candidate?.candidateId === warrant.candidateId, "delivery-warrant-candidate-readback-missing");
+  requireMatch(!result.warrant || JSON.stringify(result.warrant) === JSON.stringify(warrant), "delivery-warrant-readback-mismatch");
+  return { warrant, candidate };
+}
+
+function exactWarrantBinding({ result, warrant, candidate, options, pullRequest }) {
+  requireMatch(warrant.repository === options.repository.fullName, "delivery-warrant-repository-mismatch");
+  requireMatch(warrant.protectedBase === options.targetBranch, "delivery-warrant-base-mismatch");
+  requireMatch(Number(warrant.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-pr-mismatch");
+  requireMatch(String(warrant.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-head-mismatch");
+  requireMatch(Number(candidate.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-candidate-pr-mismatch");
+  requireMatch(String(candidate.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-candidate-head-mismatch");
+  requireMatch(ROOT_PATTERN.test(String(warrant.fencingToken || "")), "delivery-warrant-fencing-missing");
+  requireMatch(Number.isInteger(Number(warrant.generation)) && Number(warrant.generation) >= 1, "delivery-warrant-generation-invalid");
+  requireMatch(Number.isFinite(Date.parse(warrant.expiresAt)) && Date.parse(warrant.expiresAt) > Date.now(), "delivery-warrant-expired");
+  requireMatch(ROOT_PATTERN.test(String(result.receiptRoot || "")), "delivery-warrant-receipt-root-missing");
+  requireMatch(["ready", "qualified"].includes(warrant.phase), "delivery-warrant-not-qualified");
+  if (warrant.phase === "qualified") {
+    requireMatch(ROOT_PATTERN.test(String(warrant.nativeProofRoot || "")), "delivery-warrant-native-proof-missing");
+    requireMatch(ROOT_PATTERN.test(String(warrant.nativeProofReuseRoot || "")), "delivery-warrant-native-reuse-missing");
+  }
+}
+
+export function createDevPrAdmissionReceipt({ options, pr = {}, state, reason, readiness, decision = {}, queue = null, warrant = null, labels = [], nextAction }) {
+  const observedHeadSha = String(pr.head?.sha || "").toLowerCase();
+  return {
+    schema: ADMISSION_SCHEMA,
+    repository: options.repository.fullName,
+    targetBranch: options.targetBranch,
+    pullRequestNumber: options.targetPullRequestNumber,
+    pullRequestUrl: pr.html_url || `https://github.com/${options.repository.fullName}/pull/${options.targetPullRequestNumber}`,
+    expectedHeadSha: options.expectedHeadSha,
+    observedHeadSha,
+    observedBaseBranch: pr.base?.ref || "",
+    headRepository: pr.head?.repo?.full_name || "",
+    headRef: pr.head?.ref || "",
+    observedLabels: [...labels].sort(),
+    policy: {
+      readyLabel: options.readyLabel,
+      blockLabels: options.blockLabels,
+      allowedHeadPrefixes: options.allowedHeadPrefixes,
+      requiredChecks: options.requiredChecks,
+      requireApproval: options.requireApproval,
+      sameRepositoryOnly: options.sameRepositoryOnly,
+      landingMode: options.landingMode,
+      queueAdmissionContext: options.queueAdmissionContext,
+      diagnosticContext: options.diagnosticContext,
+    },
+    readiness: {
+      label: options.readyLabel,
+      observed: readiness?.observed === true,
+      established: readiness?.established === true,
+      mutationAuthorized: !options.dryRun,
+    },
+    approval: decision.approval || { required: options.requireApproval, passed: false },
+    checks: decision.checks || { required: options.requiredChecks, entries: [], passed: false },
+    projectCut: decision.projectCut || null,
+    queue,
+    deliveryWarrant: warrant,
+    autoMergeEnabled: Boolean(pr.auto_merge || pr.autoMergeRequest),
+    state,
+    reason,
+    decision: state,
+    qualification: ["ready", "queued"].includes(state),
+    nextAction: nextAction({ options, state, reason, observedHeadSha }),
+  };
+}
+
+export function readDeliveryWarrantResult(options, pullRequest) {
+  if (options.warrantMode === "off") return null;
+  if (!options.warrantResultPath) mismatch("missing-delivery-warrant");
+  const result = readWarrantResult(options.warrantResultPath);
+  const { warrant, candidate } = exactActiveReadback(result);
+  exactWarrantBinding({ result, warrant, candidate, options, pullRequest });
+  return {
+    stateRef: result.stateRef || "",
+    stateCommit: result.after.commitSha,
+    stateRoot: result.after.stateRoot,
+    receiptRoot: result.receiptRoot,
+    candidateId: warrant.candidateId,
+    fencingToken: warrant.fencingToken,
+    generation: warrant.generation,
+    issuedAt: warrant.issuedAt,
+    expiresAt: warrant.expiresAt,
+    repository: warrant.repository,
+    protectedBase: warrant.protectedBase,
+    pullRequestNumber: warrant.pullRequestNumber,
+    sourceHead: warrant.sourceHead,
+    sourceProofRoot: warrant.sourceProofRoot,
+    nativeProofRoot: warrant.nativeProofRoot || "",
+    nativeProofReuseRoot: warrant.nativeProofReuseRoot || "",
+  };
+}
+
+export async function readCurrentDeliveryQueueState(client, repository, targetBranch) {
+  if (typeof client.getDevDeliveryQueueState === "function") {
+    return client.getDevDeliveryQueueState(targetBranch);
+  }
+  const store = new GitHubDevDeliveryStore({
+    repository: `${repository.owner}/${repository.repo}`,
+    token: client.token,
+    apiUrl: client.apiUrl,
+    fetchImpl: client.fetch,
+  });
+  const { queue } = await store.read({
+    stateRef: defaultDevDeliveryStateRef(targetBranch),
+    protectedBase: targetBranch,
+  });
+  return queue;
+}
+
+export async function verifyCurrentDeliveryWarrant(client, options, pullRequest, warrant) {
+  if (!warrant) return null;
+  let queue;
+  try {
+    queue = await readCurrentDeliveryQueueState(
+      client,
+      options.repository,
+      options.targetBranch,
+    );
+  } catch {
+    mismatch("delivery-warrant-current-readback-failed");
+  }
+  const active = queue?.activeWarrant;
+  const candidate = queue?.candidates?.find(
+    (entry) => entry.candidateId === active?.candidateId,
+  );
+  requireMatch(active?.candidateId === warrant.candidateId, "delivery-warrant-no-longer-active");
+  requireMatch(active?.fencingToken === warrant.fencingToken, "delivery-warrant-current-fencing-mismatch");
+  requireMatch(Number(active?.generation) === Number(warrant.generation), "delivery-warrant-current-generation-mismatch");
+  requireMatch(Number(active?.pullRequestNumber) === Number(pullRequest.number), "delivery-warrant-current-pr-mismatch");
+  requireMatch(String(active?.sourceHead || "").toLowerCase() === options.expectedHeadSha, "delivery-warrant-current-head-mismatch");
+  requireMatch(active?.sourceProofRoot === warrant.sourceProofRoot, "delivery-warrant-current-source-proof-mismatch");
+  requireMatch(["ready", "qualified"].includes(active?.phase), "delivery-warrant-current-not-qualified");
+  requireMatch((active?.nativeProofRoot || "") === (warrant.nativeProofRoot || ""), "delivery-warrant-current-native-proof-mismatch");
+  requireMatch((active?.nativeProofReuseRoot || "") === (warrant.nativeProofReuseRoot || ""), "delivery-warrant-current-native-reuse-mismatch");
+  requireMatch(Number.isFinite(Date.parse(active?.expiresAt)) && Date.parse(active.expiresAt) > Date.now(), "delivery-warrant-current-expired");
+  requireMatch(["selected", "proving", "waiting", "blocked", "qualified"].includes(candidate?.status), "delivery-warrant-current-candidate-not-selected");
+  requireMatch(candidate?.sourceHead === active.sourceHead, "delivery-warrant-current-candidate-head-mismatch");
+  return { activeWarrant: active, activeCandidate: candidate };
+}
+
+function latestStatusForContext(statuses, context) {
+  return (statuses || []).find(
+    (status) => String(status.context || "") === context,
+  ) || null;
+}
+
+function preEnqueueMismatch(code, details = {}) {
+  const error = new Error(code);
+  error.code = code;
+  Object.assign(error, details);
+  throw error;
+}
+
+export async function setActiveLeaseStatus(client, repository, sha, context, state) {
+  if (!context) return null;
+  await client.request("POST", `/repos/${repository.owner}/${repository.repo}/statuses/${sha}`, {
+    body: {
+      state,
+      context,
+      description: state === "pending"
+        ? "Buildchain reactivated this exact lease for merge-group qualification"
+        : "Buildchain released this exact lease after queue admission failed",
+    },
+  });
+  return { context, state, sha };
+}
+
+export async function setQueueAdmissionStatus(client, repository, sha, context, state) {
+  if (!context) return null;
+  const descriptions = {
+    pending: "Buildchain is awaiting a qualified Warrant for this exact PR head",
+    success: "Buildchain admitted this exact PR head to the merge queue",
+    failure: "Buildchain rejected merge queue admission for this exact PR head",
+  };
+  await client.request("POST", `/repos/${repository.owner}/${repository.repo}/statuses/${sha}`, {
+    body: { state, context, description: descriptions[state] || descriptions.failure },
+  });
+  return { context, state, sha };
+}
+
+export function createPreReadinessQueueFence({ client, options, sleep }) {
+  let status = null;
+  const write = async (state) => {
+    status = await setQueueAdmissionStatus(client, options.repository, options.expectedHeadSha, options.queueAdmissionContext, state);
+    return status;
+  };
+  return {
+    async establish() {
+      if (options.dryRun || options.warrantMode !== "required") return null;
+      if (!options.queueAdmissionContext) mismatch("queue-admission-context-required-before-readiness");
+      await write("pending");
+      for (let attempt = 1; attempt <= Math.max(1, options.pollMergeableAttempts); attempt += 1) {
+        const checks = await client.listCommitChecks(options.expectedHeadSha);
+        const readback = (checks?.statuses || []).find((entry) => entry.context === options.queueAdmissionContext);
+        if (readback?.state === "pending") return { ...status, readbackAttempts: attempt };
+        if (attempt < options.pollMergeableAttempts) await sleep(options.pollMergeableDelayMs);
+      }
+      await write("failure");
+      mismatch("pre-readiness-queue-fence-readback-mismatch");
+    },
+    async qualifyExisting(entry) {
+      if (entry && status?.state === "pending") await write("success");
+    },
+    async finish(result) {
+      const controllerFailed = result.controller?.evaluated?.some((entry) => entry.queueAdmissionStatus?.state === "failure");
+      if (!result.ok && status?.state === "pending" && !controllerFailed) await write("failure");
+      return result;
+    },
+  };
+}
+
+async function readBackAdmissionStatuses(client, options, expectedHeadSha, sleep) {
+  let last = { queueAdmission: null, activeLease: null };
+  const attempts = Math.max(1, options.pollMergeableAttempts);
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const checks = await client.listCommitChecks(expectedHeadSha);
+    last = {
+      queueAdmission: latestStatusForContext(
+        checks?.statuses,
+        options.queueAdmissionContext,
+      ),
+      activeLease: latestStatusForContext(
+        checks?.statuses,
+        options.activeLeaseContext,
+      ),
+    };
+    if (
+      (!options.queueAdmissionContext || last.queueAdmission?.state === "success") &&
+      (!options.activeLeaseContext || last.activeLease?.state === "pending")
+    ) {
+      return { ...last, attempts: attempt };
+    }
+    if (attempt < attempts) await sleep(options.pollMergeableDelayMs);
+  }
+  preEnqueueMismatch("queue-admission-lease-readback-mismatch", { readback: last });
+}
+
+export async function qualifyAtomicQueueAdmission({
+  client,
+  options,
+  pullRequest,
+  expectedBaseSha,
+  expectedHeadSha,
+  projectCut,
+  setActiveLeaseStatus,
+  setQueueAdmissionStatus,
+  sleep,
+  mergeableAccepted,
+  root,
+}) {
+  try {
+    if (options.warrantMode === "required") {
+      if (!options.verifiedDeliveryWarrant) {
+        preEnqueueMismatch("delivery-warrant-pre-enqueue-readback-missing");
+      }
+      if (!options.queueAdmissionContext) {
+        preEnqueueMismatch("queue-admission-context-required");
+      }
+      if (!options.activeLeaseContext) {
+        preEnqueueMismatch("active-lease-context-required");
+      }
+    }
+    const activeLeaseStatus = await setActiveLeaseStatus("pending");
+    const queueAdmissionStatus = await setQueueAdmissionStatus("success");
+    const statusReadback = await readBackAdmissionStatuses(
+      client,
+      options,
+      expectedHeadSha,
+      sleep,
+    );
+    const { observedBaseSha, observedQueueState, currentWarrant, preEnqueueProjectCut } = await qualifyPreEnqueueReadback({
+      client, options, pullRequest, expectedBaseSha, expectedHeadSha, projectCut, mergeableAccepted, root, verifyCurrentWarrant: verifyCurrentDeliveryWarrant,
+    });
+    const exactEntry = observedQueueState.entries.find(
+      (candidate) => candidate.pullRequestNumber === pullRequest.number &&
+        candidate.pullRequestHeadSha === expectedHeadSha,
+    );
+    const predecessor = observedQueueState.entries.find(
+      (candidate) => candidate !== exactEntry,
+    ) || null;
+    if (predecessor) {
+      preEnqueueMismatch("queue-predecessor-after-lease-readback", { predecessor });
+    }
+    const transaction = {
+      schema: "kungfu.buildchain.dev-queue-admission-transaction/v1",
+      repository: options.repository.fullName,
+      protectedBase: options.targetBranch,
+      pullRequestNumber: pullRequest.number,
+      sourceHead: expectedHeadSha,
+      frozenBase: expectedBaseSha,
+      admittedBase: observedBaseSha,
+      queueAdmission: {
+        context: options.queueAdmissionContext,
+        state: statusReadback.queueAdmission?.state || "",
+      },
+      activeLease: {
+        context: options.activeLeaseContext,
+        state: statusReadback.activeLease?.state || "",
+      },
+      warrant: options.verifiedDeliveryWarrant,
+      currentWarrant: currentWarrant ? {
+        candidateId: currentWarrant.activeWarrant.candidateId,
+        fencingToken: currentWarrant.activeWarrant.fencingToken,
+        generation: currentWarrant.activeWarrant.generation,
+        sourceHead: currentWarrant.activeWarrant.sourceHead,
+        expiresAt: currentWarrant.activeWarrant.expiresAt,
+      } : null,
+      projectCutProofRoot: projectCut?.proofRoot || "",
+      preEnqueueProjectCut: preEnqueueProjectCut?.receipt || null,
+      preEnqueueProjectCutRoot: preEnqueueProjectCut?.receiptRoot || "",
+      decision: exactEntry ? "already-enqueued" : "qualified",
+    };
+    return {
+      exactEntry,
+      entryFields: {
+        activeLeaseStatus,
+        queueAdmissionStatus,
+        atomicAdmissionReceipt: transaction,
+        atomicAdmissionReceiptRoot: root(transaction),
+        atomicAdmissionReadbackAttempts: statusReadback.attempts,
+      },
+    };
+  } catch (error) {
+    error.preEnqueue = true;
+    throw error;
+  }
+}
+
+export async function runSourceQualification({ options, pullRequest, readiness, client, evaluate, admissionState, createReceipt, root, publishDiagnostic, reject }) {
+  const decision = await evaluate(pullRequest, { ...options, landingMode: options.landingMode, dryRun: true }, client);
+  if (decision.observedHeadSha && String(decision.observedHeadSha).toLowerCase() !== options.expectedHeadSha) {
+    return reject("stale", "head-sha-drift-during-source-qualification", readiness);
+  }
+  const state = decision.action === "would-merge" ? "ready" : admissionState(decision);
+  const receipt = createReceipt({
+    options,
+    pr: pullRequest,
+    state,
+    reason: state === "ready" ? "source-qualified-exact-head" : decision.reason,
+    readiness,
+    decision,
+    queue: null,
+    warrant: null,
+  });
+  const result = {
+    schema: "kungfu.buildchain.dev-pr-admission-result/v1",
+    ok: state === "ready",
+    mode: options.dryRun ? "plan" : "execute",
+    outcome: state === "ready" ? "source-qualified" : "targeted-admission-failed",
+    receipt,
+    receiptRoot: root(receipt),
+    diagnostic: null,
+  };
+  if (!options.dryRun) result.diagnostic = await publishDiagnostic(client, options, receipt, result.receiptRoot);
+  return result;
+}
+
+export async function admitExistingQueueEntry({ options, pullRequest, readiness, client, entry, warrant, createReceipt, root, publishDiagnostic }) {
+  if (!entry) return null;
+  const activeLeaseStatus = options.dryRun ? null : await setActiveLeaseStatus(client, options.repository, options.expectedHeadSha, options.activeLeaseContext, "pending");
+  const receipt = createReceipt({
+    options,
+    pr: pullRequest,
+    state: "queued",
+    reason: "already-enqueued-exact-head",
+    readiness,
+    queue: { enabled: true, entry, activeLeaseStatus },
+    warrant,
+  });
+  const result = {
+    schema: "kungfu.buildchain.dev-pr-admission-result/v1",
+    ok: true,
+    mode: options.dryRun ? "plan" : "execute",
+    outcome: "admitted",
+    receipt,
+    receiptRoot: root(receipt),
+    diagnostic: null,
+  };
+  if (!options.dryRun) result.diagnostic = await publishDiagnostic(client, options, receipt, result.receiptRoot);
+  return result;
+}
+
+export async function runTargetedQueueAdmission({ options, pullRequest, readiness, client, warrant, runController, admissionState, createReceipt, root, publishDiagnostic }) {
+  const targetedClient = Object.create(client);
+  targetedClient.listPullRequests = async () => [pullRequest];
+  const controller = await runController({
+    ...options,
+    targetPullRequestNumber: 0,
+    verifiedDeliveryWarrant: warrant,
+  }, targetedClient);
+  controller.runKind = "targeted-admission-evaluation";
+  controller.outcome = controller.actions.length === 0 ? "target-not-admitted" : "target-action-selected";
+  controller.qualification = false;
+  controller.noOp = controller.actions.length === 0;
+  const entry = controller.evaluated.find((value) => value.number === pullRequest.number) || { action: "skip", reason: "target-not-selected" };
+  const state = admissionState(entry);
+  const receipt = createReceipt({
+    options,
+    pr: pullRequest,
+    state,
+    reason: entry.reason,
+    readiness,
+    decision: entry,
+    queue: {
+      enabled: controller.mergeQueue?.enabled === true,
+      predecessor: entry.admissionReceipt?.predecessor || null,
+      entry: entry.queueEntry || null,
+      admissionTransaction: entry.atomicAdmissionReceipt || null,
+      admissionTransactionRoot: entry.atomicAdmissionReceiptRoot || "",
+    },
+    warrant,
+  });
+  const admitted = ["ready", "queued"].includes(state);
+  const result = {
+    schema: "kungfu.buildchain.dev-pr-admission-result/v1",
+    ok: admitted,
+    mode: options.dryRun ? "plan" : "execute",
+    outcome: admitted ? "admitted" : "targeted-admission-failed",
+    receipt,
+    receiptRoot: root(receipt),
+    diagnostic: null,
+    controller,
+  };
+  if (!options.dryRun) result.diagnostic = await publishDiagnostic(client, options, receipt, result.receiptRoot);
+  return result;
+}

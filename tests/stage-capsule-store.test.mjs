@@ -9,8 +9,8 @@ import { fileURLToPath } from "node:url";
 import {
   ContractFault,
   domainCanonicalBytes,
-} from "../packages/core/canonical-contracts.js";
-import { StageCapsuleLocalStore } from "../packages/core/stage-capsule-local-store.js";
+} from "../packages/core/contracts/canonical-contracts.js";
+import { StageCapsuleLocalStore } from "../packages/core/build/stage-capsule-local-store.js";
 import {
   createStageCapsuleProviderAdapter,
   createStageCapsuleRetentionState,
@@ -22,7 +22,7 @@ import {
   validateStageCapsuleRetentionState,
   validateStageCapsuleStoreReceipt,
   validateStageCapsuleTransport,
-} from "../packages/core/stage-capsule-store.js";
+} from "../packages/core/build/stage-capsule-store.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fixturePath = new URL(
@@ -405,8 +405,8 @@ test("store architecture budgets three bounded sources and zero authority drift"
 
 test("store implementation has no provider SDK, credential, cache fallback, network, or ambient clock", () => {
   const files = [
-    "packages/core/stage-capsule-store.js",
-    "packages/core/stage-capsule-local-store.js",
+    "packages/core/build/stage-capsule-store.js",
+    "packages/core/build/stage-capsule-local-store.js",
     "crates/buildchain-domain-contracts/src/stage_capsule_store.rs",
   ].map((file) =>
     fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8"),

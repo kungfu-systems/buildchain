@@ -16,39 +16,39 @@
     },
     {
       "id": "typed-input-adapter",
-      "injectionTarget": "packages/core/universal-workflow-bootstrap.js",
+      "injectionTarget": "packages/core/workflow/universal-workflow-bootstrap.js",
       "recoveryRoute": "exact-train-candidate",
-      "recoveryTarget": "scripts/universal-workflow-engine.mjs"
+      "recoveryTarget": "packages/core/workflow/commands/universal-workflow-engine.mjs"
     },
     {
       "id": "route-selector",
-      "injectionTarget": ".github/workflows/bootstrap.yml",
+      "injectionTarget": ".github/workflows/public-ops-bootstrap.yml",
       "recoveryRoute": "pre-positioned-recovery-shell",
       "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
     },
     {
       "id": "ordinary-candidate-loader",
-      "injectionTarget": ".github/workflows/bootstrap.yml",
+      "injectionTarget": ".github/workflows/public-ops-bootstrap.yml",
       "recoveryRoute": "pre-positioned-recovery-shell",
       "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
     },
     {
       "id": "router",
-      "injectionTarget": "packages/core/release-invocation.js",
+      "injectionTarget": "packages/core/release/release-invocation.js",
       "recoveryRoute": "exact-train-candidate",
-      "recoveryTarget": "scripts/universal-workflow-engine.mjs"
+      "recoveryTarget": "packages/core/workflow/commands/universal-workflow-engine.mjs"
     },
     {
       "id": "action",
-      "injectionTarget": "actions/release-candidate-promote/action.yml",
+      "injectionTarget": "actions/release/promote-candidate/action.yml",
       "recoveryRoute": "exact-train-candidate",
-      "recoveryTarget": "actions/release-candidate-promote/dist/index.js"
+      "recoveryTarget": "actions/release/promote-candidate/dist/index.js"
     },
     {
       "id": "cli-runtime",
-      "injectionTarget": "scripts/universal-workflow-engine.mjs",
+      "injectionTarget": "packages/core/workflow/commands/universal-workflow-engine.mjs",
       "recoveryRoute": "exact-train-candidate",
-      "recoveryTarget": "scripts/universal-workflow-engine.mjs"
+      "recoveryTarget": "packages/core/workflow/commands/universal-workflow-engine.mjs"
     },
     {
       "id": "recovery-logic",
@@ -58,7 +58,7 @@
     },
     {
       "id": "result-projection",
-      "injectionTarget": ".github/workflows/bootstrap.yml",
+      "injectionTarget": ".github/workflows/public-ops-bootstrap.yml",
       "recoveryRoute": "pre-positioned-recovery-shell",
       "recoveryTarget": "templates/universal-buildchain-bootstrap-recovery.yml"
     },

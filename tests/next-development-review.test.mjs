@@ -5,7 +5,7 @@ import {
   assertReviewPull,
   verifyNextDevelopmentReview,
   approveNextDevelopment,
-} from "../scripts/next-development-review.mjs";
+} from "../packages/core/release/commands/next-development-review.mjs";
 
 const repository = "kungfu-systems/buildchain";
 const headSha = "a".repeat(40),

@@ -4,8 +4,8 @@ import {
   HOSTED_RUNNER_FALLBACKS,
   resolveOfflineRunnerFallback,
   routeOfflineRunners,
-} from "../scripts/route-offline-runners.mjs";
-import { resolveRunnerMatrix } from "../scripts/build-contract-core.mjs";
+} from "../packages/core/providers/commands/route-offline-runners.mjs";
+import { resolveRunnerMatrix } from "../packages/core/build/commands/build-contract-core.mjs";
 
 const labelObjects = (labels) => labels.map((name) => ({ name }));
 

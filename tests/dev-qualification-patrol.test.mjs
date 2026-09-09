@@ -7,7 +7,7 @@ import {
   classifyRetryableFailure,
   createGitHubDevQualificationClient,
   runDevQualificationPatrol,
-} from "../scripts/dev-qualification-patrol.mjs";
+} from "../packages/core/dev-delivery/commands/dev-qualification-patrol.mjs";
 
 const SHA = "a".repeat(40);
 const OLD_SHA = "b".repeat(40);

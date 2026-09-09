@@ -11,7 +11,7 @@ import {
   projectArtifactVerificationEnvelopeToKfx,
   sealArtifactVerificationReport,
   verifyArtifactVerificationEnvelope,
-} from "../packages/core/artifact-verification-envelope.js";
+} from "../packages/core/build/artifact-verification-envelope.js";
 
 const root = (value) => `sha256:${value.repeat(64)}`;
 

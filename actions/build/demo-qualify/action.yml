@@ -1,0 +1,114 @@
+name: demo-qualify
+description: Execute the demo qualify capability within its caller job boundary.
+inputs:
+  needs-capture-outputs-source-sha:
+    description: Caller needs.capture.outputs.source-sha value.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  job-workflow-sha:
+    description: Caller job.workflow_sha value.
+    required: true
+  needs-capture-outputs-capture-artifact-name:
+    description: Caller needs.capture.outputs.capture-artifact-name value.
+    required: true
+  needs-capture-outputs-capture-artifact-digest:
+    description: Caller needs.capture.outputs.capture-artifact-digest value.
+    required: true
+outputs:
+  evidence-artifact-name:
+    description: evidence-artifact-name node result.
+    value: ${{ steps.identity.outputs.name }}
+  evidence-artifact-digest:
+    description: evidence-artifact-digest node result.
+    value: ${{ steps.upload.outputs.artifact-digest }}
+  render-result:
+    description: render-result node result.
+    value: ${{ steps.render.outcome }}
+runs:
+  using: composite
+  steps:
+    - name: Check out exact consumer source
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        ref: ${{ fromJSON(inputs.needs-capture-outputs-source-sha) }}
+        path: source
+        persist-credentials: false
+    - name: Check out exact Buildchain runtime
+      uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.job-workflow-sha) }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact Buildchain runtime
+      id: core-node
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Download exact capture collection
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      with:
+        name: ${{ fromJSON(inputs.needs-capture-outputs-capture-artifact-name) }}
+        path: capture-collection
+    - name: Resolve exact capture artifact coordinate
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      env:
+        EXPECTED_NAME: ${{ fromJSON(inputs.needs-capture-outputs-capture-artifact-name) }}
+        EXPECTED_DIGEST: ${{ fromJSON(inputs.needs-capture-outputs-capture-artifact-digest) }}
+        SOURCE_SHA: ${{ fromJSON(inputs.needs-capture-outputs-source-sha) }}
+        BUILDCHAIN_ACTION_PATH: ${{ github.action_path }}
+        COORDINATE_PATH: capture-coordinate.json
+      with:
+        script: |
+          const { pathToFileURL } = require("node:url");
+          const entry = new URL("../../../packages/core/build/nodes/demo-collection-io.mjs", pathToFileURL(process.env.BUILDCHAIN_ACTION_PATH + "/"));
+          await (await import(entry.href)).default({ github, context });
+    - name: Run required Gate for every declared demo
+      shell: bash
+      env:
+        SCENARIO_PATH: ${{ fromJSON(inputs.request-json).scenario-path }}
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+        SOURCE_SHA: ${{ fromJSON(inputs.needs-capture-outputs-source-sha) }}
+        MEDIA_PROFILE: ${{ fromJSON(inputs.request-json).media-profile }}
+        BUILDCHAIN_NODE_PATH: ${{ steps.core-node.outputs.node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/build/nodes/demo-workflow.mjs" gate
+    - name: Render full media for every declared demo
+      id: render
+      if: ${{ fromJSON(inputs.request-json).render-media }}
+      continue-on-error: ${{ fromJSON(inputs.request-json).render-failure-advisory }}
+      shell: bash
+      env:
+        SCENARIO_PATH: ${{ fromJSON(inputs.request-json).scenario-path }}
+        RENDERER_IMAGE: ${{ fromJSON(inputs.request-json).renderer-image }}
+        SOURCE_SHA: ${{ fromJSON(inputs.needs-capture-outputs-source-sha) }}
+        MEDIA_PROFILE: ${{ fromJSON(inputs.request-json).media-profile }}
+        BUILDCHAIN_NODE_PATH: ${{ steps.core-node.outputs.node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/build/nodes/demo-workflow.mjs" render
+    - name: Record advisory render failure
+      if: ${{ steps.render.outcome == 'failure' && fromJSON(inputs.request-json).render-failure-advisory }}
+      shell: bash
+      run: |
+        echo "::warning title=Auditable demo media render failed::The required Gate passed, so the caller remains eligible while media publication is suppressed."
+        printf '%s\n' '### Auditable demo media' '' 'Full-media rendering failed in advisory mode. The required Gate remains successful and no materialization PR will be opened.' >> "${GITHUB_STEP_SUMMARY}"
+    - name: Bind evidence collection identity
+      id: identity
+      shell: bash
+      env:
+        SOURCE_SHA: ${{ fromJSON(inputs.needs-capture-outputs-source-sha) }}
+        BUILDCHAIN_NODE_PATH: ${{ steps.core-node.outputs.node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/build/nodes/demo-workflow.mjs" evidence-identity
+    - name: Upload qualified evidence collection
+      id: upload
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: ${{ steps.identity.outputs.name }}
+        path: qualified-collection
+        if-no-files-found: error
+        retention-days: ${{ fromJSON(inputs.request-json).artifact-retention-days }}
+        compression-level: 0
+        overwrite: false

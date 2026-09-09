@@ -6,8 +6,8 @@
   "fixtureAuthority": "contracts/fixtures/v4-stage-capsule-store-v1/shared.json",
   "implementations": {
     "rust": "crates/buildchain-domain-contracts/src/stage_capsule_store.rs",
-    "typescriptContract": "packages/core/stage-capsule-store.js",
-    "localReferenceStore": "packages/core/stage-capsule-local-store.js"
+    "typescriptContract": "packages/core/build/stage-capsule-store.js",
+    "localReferenceStore": "packages/core/build/stage-capsule-local-store.js"
   },
   "authority": {
     "writer": "typescript-v3",

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { currentWorkflowPath, projectWorkflowIdentities } from "./workflow-taxonomy.mjs";
+import YAML from "yaml";
+
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -26,9 +27,9 @@ const fileRoot = (relative) =>
     .digest("hex")}`;
 
 const workflowRoot = path.join(root, ".github/workflows");
-const discovered = projectWorkflowIdentities(root, fs.readdirSync(workflowRoot)
+const discovered = fs.readdirSync(workflowRoot)
   .filter((name) => /\.ya?ml$/u.test(name))
-  .map((name) => ({ path: `.github/workflows/${name}`, text: fs.readFileSync(path.join(workflowRoot, name), "utf8") })))
+  .map((name) => ({ path: `.github/workflows/${name}`, text: fs.readFileSync(path.join(workflowRoot, name), "utf8") }))
   .filter((entry) => /(?:^|\n)\s*workflow_call:\s*(?:\n|$)/u.test(entry.text))
   .map((entry) => entry.path).sort();
 
@@ -48,7 +49,7 @@ assert.deepEqual(
 );
 for (const relative of contract.inventoryWorkflows)
   assert.ok(
-    fs.statSync(path.join(root, currentWorkflowPath(root, relative))).isFile(),
+    fs.statSync(path.join(root, relative)).isFile(),
     `inventoried workflow is unavailable: ${relative}`,
   );
 assert.deepEqual(
@@ -56,33 +57,16 @@ assert.deepEqual(
   [...new Set(contract.bootstrapGovernedWorkflows)].sort(),
   "Bootstrap-governed workflows must be sorted and duplicate-free",
 );
-assert.deepEqual(
-  contract.retiredWorkflowSurfaces,
-  [...new Set(contract.retiredWorkflowSurfaces)].sort(),
-  "retired workflow surfaces must be sorted and duplicate-free",
-);
-for (const relative of contract.retiredWorkflowSurfaces) {
-  assert.ok(
-    contract.inventoryWorkflows.includes(relative),
-    `retired workflow is outside the inventory: ${relative}`,
-  );
-  assert.match(
-    fs.readFileSync(path.join(root, relative), "utf8"),
-    /retired/u,
-    `retired workflow does not fail closed explicitly: ${relative}`,
-  );
+assert.equal(Object.hasOwn(contract, "migration"), false, "no historical facade regeneration authority");
+assert.equal(Object.hasOwn(contract, "retiredWorkflowSurfaces"), false, "retired workflows must be absent");
+const activeWorkflows = contract.inventoryWorkflows;
+assert.deepEqual(contract.bootstrapGovernedWorkflows, [contract.bootstrap.publicWorkflow]);
+assert.deepEqual(contract.directCapabilityWorkflows, discovered.filter((relative) =>
+  relative !== contract.bootstrap.publicWorkflow && relative !== contract.bootstrap.consumerRecoveryWorkflow));
+for (const relative of contract.directCapabilityWorkflows) {
+  assert.doesNotMatch(fs.readFileSync(path.join(root, relative), "utf8"), /universal-request-json|universal-bootstrap:/u,
+    `${relative}: use the independent Bootstrap API instead of a dual execution path`);
 }
-const activeWorkflows = contract.inventoryWorkflows.filter(
-  (relative) =>
-    !contract.retiredWorkflowSurfaces.includes(relative) &&
-    !contract.configurationGovernedWorkflows.includes(relative) &&
-    relative !== contract.bootstrap.consumerRecoveryWorkflow,
-);
-assert.deepEqual(
-  contract.bootstrapGovernedWorkflows,
-  activeWorkflows,
-  "every active reusable workflow must have its declared configuration or Bootstrap authority",
-);
 assert.deepEqual(contract.configurationGovernedWorkflows, [
   ".github/workflows/.build.yml", ".github/workflows/build.yml",
 ]);
@@ -97,11 +81,11 @@ for (const relative of contract.bootstrapGovernedWorkflows) {
     contract.inventoryWorkflows.includes(relative),
     `Bootstrap-governed workflow is outside the inventory: ${relative}`,
   );
-  const source = fs.readFileSync(path.join(root, currentWorkflowPath(root, relative)), "utf8");
+  const source = fs.readFileSync(path.join(root, relative), "utf8");
   assert.ok(
     relative === contract.bootstrap.publicWorkflow ||
-      /uses:\s+(?:\.\/)?\.github\/workflows\/bootstrap\.yml/u.test(source) ||
-      /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@/u.test(
+      /uses:\s+(?:\.\/)?\.github\/workflows\/public-ops-bootstrap\.yml/u.test(source) ||
+      /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/public-ops-bootstrap\.yml@/u.test(
         source,
       ),
     `workflow is declared governed without a Bootstrap edge: ${relative}`,
@@ -140,15 +124,7 @@ for (const adapter of contract.capabilityAdapters) {
 assert.ok(!admissionPolicy.allowedCapabilities.includes("workflow-contract"));
 assert.deepEqual(
   admissionPolicy.contractRoots,
-  [
-    fileRoot("architecture/universal-workflow-bootstrap.json"),
-    fileRoot(contract.bootstrap.faultCampaign),
-    fileRoot("packages/core/universal-workflow-bootstrap.js"),
-    fileRoot("scripts/universal-workflow-backflow.mjs"),
-    fileRoot("scripts/universal-workflow-engine.mjs"),
-    fileRoot("scripts/universal-workflow-self-dogfood.mjs"),
-    fileRoot(contract.bootstrap.publicWorkflow),
-  ].sort(),
+  contract.bootstrap.admissionPolicySources.map(fileRoot).sort(),
 );
 assert.doesNotMatch(
   fs.readFileSync(
@@ -167,93 +143,42 @@ assert.doesNotMatch(
   /admission-policy-json:/u,
   "callers must not supply their own admission authority",
 );
-execFileSync(
-  process.execPath,
-  [path.join(root, contract.migration.compatibilityFacadeGenerator), "--check"],
-  { stdio: "inherit" },
-);
 assert.doesNotMatch(bootstrapSource, /^    permissions:/mu);
-assert.match(
-  bootstrapSource,
-  /execute:[\s\S]*BUILDCHAIN_PROMOTION_TOKEN: \$\{\{ secrets\.BUILDCHAIN_PROMOTION_TOKEN \}\}[\s\S]*GH_TOKEN: \$\{\{ github\.token \}\}/u,
-  "the privileged candidate executor must receive the protected-ref mutation token",
-);
-assert.match(bootstrapSource, /settle:[\s\S]*needs: \[admit, execute\]/u);
-assert.match(
-  bootstrapSource,
-  /ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*map\(select\(\.status == "completed" and \(\.conclusion \/\/ ""\) != ""\)\)[\s\S]*candidate\/architecture\/universal-workflow-train-admission\.json/u,
-);
-assert.match(
-  bootstrapSource,
-  /CANDIDATE_MODE:[\s\S]*\.merged == true[\s\S]*\.merge_commit_sha == \$expected[\s\S]*\.base\.ref == "alpha\/v4\/v4\.0"[\s\S]*commitSha: \$expected[\s\S]*runtimeBinding:/u,
-);
-const consumerTemplate = fs.readFileSync(
-  path.join(root, contract.bootstrap.consumerTemplate),
-  "utf8",
-);
-const consumerRecoveryTemplate = fs.readFileSync(
-  path.join(root, contract.bootstrap.consumerRecoveryTemplate),
-  "utf8",
-);
-const consumerRecoveryWorkflow = fs.readFileSync(
-  path.join(root, contract.bootstrap.consumerRecoveryWorkflow),
-  "utf8",
-);
-const selfDogfood = fs.readFileSync(
-  path.join(root, contract.bootstrap.selfDogfoodWorkflow),
-  "utf8",
-);
-assert.match(
-  consumerTemplate,
-  /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@v4/u,
-);
-assert.match(
-  consumerRecoveryTemplate,
-  /recovery-admit:[\s\S]*recovery-execute:/u,
-);
-assert.match(
-  consumerRecoveryTemplate,
-  /Parse exact recovery coordinates without Buildchain code[\s\S]*Prove exact independent review before candidate code runs[\s\S]*ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*Admit candidate policy and exact-head checks[\s\S]*map\(select\(\.status == "completed" and \(\.conclusion \/\/ ""\) != ""\)\)/u,
-);
-assert.match(
-  consumerRecoveryTemplate,
-  /recovery-execute:[\s\S]*needs: recovery-admit[\s\S]*contents: write/u,
-);
-assert.doesNotMatch(
-  consumerRecoveryTemplate,
-  /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\//u,
-  "consumer recovery must not parse any published Buildchain workflow",
-);
-assert.equal(
-  consumerRecoveryWorkflow,
-  consumerRecoveryTemplate,
-  "the Buildchain self-consumer must exercise the exact distributable recovery shell",
-);
-assert.match(
-  selfDogfood,
-  /uses:\s+kungfu-systems\/buildchain\/\.github\/workflows\/bootstrap\.yml@train\/v4\/v4\.0\/universal-reusable-workflow-bootstrap/u,
-);
-assert.match(
-  selfDogfood,
-  /uses:\s+\.\/\.github\/workflows\/universal-bootstrap-recovery\.yml/u,
-);
-assert.doesNotMatch(
-  selfDogfood,
-  /\.github\/workflows\/bootstrap\.yml@(?:v4|v4-alpha)(?:\s|$)/u,
-  "Train self-dogfood must not depend on an alpha or stable Bootstrap tag",
-);
-for (const channel of ["conformance", "alpha", "stable"]) {
-  assert.match(selfDogfood, new RegExp(`primary-${channel}:`, "u"));
-  assert.match(selfDogfood, new RegExp(`recovery-${channel}:`, "u"));
+const parse = (relative) => YAML.parse(fs.readFileSync(path.join(root, relative), "utf8"));
+const bootstrap = YAML.parse(bootstrapSource);
+assert.deepEqual(bootstrap.jobs.settle.needs, ["admit", "execute"]);
+const execute = parse("actions/workflow/bootstrap-execute/action.yml");
+const executor = execute.runs.steps.find((step) => step.id === "execute");
+assert.equal(executor.env.BUILDCHAIN_PROMOTION_TOKEN, "${{ inputs.secrets-buildchain-promotion-token }}");
+assert.equal(executor.env.GH_TOKEN, "${{ github.token }}");
+const recovery = parse(contract.bootstrap.consumerRecoveryTemplate);
+assert.deepEqual(Object.keys(recovery.jobs), ["recovery-admit", "recovery-execute", "recovery-settle"]);
+assert.equal(recovery.jobs["recovery-execute"].needs, "recovery-admit");
+assert.equal(recovery.jobs["recovery-execute"].permissions.contents, "write");
+assert.equal(recovery.on.workflow_call.outputs["result-json"].value, "${{ jobs.recovery-execute.outputs.result-json }}");
+for (const [id, job] of Object.entries(recovery.jobs)) {
+  assert.ok(job.steps.length <= 3, `${id}: recovery workflow contains implementation details`);
+  const node = job.steps.find((step) => step.id === "node");
+  assert.equal(node.uses, `./.buildchain/workflow-shell/.buildchain/bootstrap-recovery/actions/workflow/bootstrap-${id}`);
+  for (const step of job.steps) {
+    assert.equal(Object.hasOwn(step, "run"), false, "Recovery workflow must dispatch owned nodes");
+    assert.ok(!step.uses?.startsWith("kungfu-systems/buildchain/"), "Recovery cannot depend on published Buildchain");
+  }
 }
-assert.match(
-  selfDogfood,
-  /\.state == "APPROVED"[\s\S]*ascii_downcase\) == "kungfu-origin"[\s\S]*\.name == "check"[\s\S]*\.conclusion == "success"/u,
-);
-assert.match(
-  consumerRecoveryTemplate,
-  /result-json:[\s\S]*value:\s*\$\{\{ jobs\.recovery-execute\.outputs\.result-json \}\}/u,
-);
+const recoveryAdmit = parse("actions/workflow/bootstrap-recovery-admit/action.yml").runs.steps;
+const reviewIndex = recoveryAdmit.findIndex((step) => /independent review/.test(step.name || ""));
+const installationIndex = recoveryAdmit.findIndex((step) => step.uses?.endsWith("actions/runtime/prepare"));
+const admissionIndex = recoveryAdmit.findIndex((step) => step.id === "admit");
+assert.ok(reviewIndex >= 0 && installationIndex > reviewIndex && admissionIndex > installationIndex,
+  "No candidate dependency or code may execute before independent review");
+execFileSync(process.execPath, [path.join(root, "scripts/generate-bootstrap-recovery.mjs"), "--check"], { cwd: root, stdio: "pipe" });
+const primaryTemplate = parse(contract.bootstrap.consumerTemplate);
+assert.ok(Object.values(primaryTemplate.jobs).some((job) => job.uses === "kungfu-systems/buildchain/.github/workflows/public-ops-bootstrap.yml@v4"));
+const selfDogfood = parse(contract.bootstrap.selfDogfoodWorkflow);
+for (const channel of ["conformance", "alpha", "stable"]) {
+  assert.equal(selfDogfood.jobs[`primary-${channel}`].uses, "./.github/workflows/public-ops-bootstrap.yml");
+  assert.equal(selfDogfood.jobs[`recovery-${channel}`].uses, "./.github/workflows/public-ops-bootstrap-recovery.yml");
+}
 
 console.log(
   JSON.stringify({
@@ -261,7 +186,6 @@ console.log(
     schema: contract.schema,
     publicWorkflowCount: discovered.length,
     activePublicWorkflowCount: activeWorkflows.length,
-    retiredWorkflowCount: contract.retiredWorkflowSurfaces.length,
     inventoriedWorkflowCount: contract.inventoryWorkflows.length,
     inventoryCoveragePercent: 100,
     governedWorkflowCount: contract.bootstrapGovernedWorkflows.length,
@@ -271,6 +195,5 @@ console.log(
         100
       ).toFixed(2),
     ),
-    migration: contract.migration,
   }),
 );

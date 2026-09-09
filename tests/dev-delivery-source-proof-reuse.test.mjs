@@ -7,12 +7,12 @@ import test from "node:test";
 import {
   createControllerPlan,
   createControllerReceipt,
-} from "../packages/core/controller-evidence.js";
+} from "../packages/core/observability/controller-evidence.js";
 import {
   materializeReuseLifecycleEvidence,
   sealSourceQualificationProof,
   verifySourceQualificationReuse,
-} from "../scripts/dev-delivery-source-proof-reuse.mjs";
+} from "../packages/core/dev-delivery/commands/dev-delivery-source-proof-reuse.mjs";
 
 const RUNTIME_SHA = "b".repeat(40);
 const CONTRACT_DIGEST = `sha256:${"e".repeat(64)}`;

@@ -4,7 +4,7 @@ import {
   createGitHubStableCandidateClient,
   normalizeStableCandidatePatrolOptions,
   runStableCandidatePatrol,
-} from "../scripts/stable-candidate-patrol.mjs";
+} from "../packages/core/release/commands/stable-candidate-patrol.mjs";
 
 const SHA4 = "4".repeat(40);
 const SHA5 = "5".repeat(40);

@@ -7,11 +7,11 @@ import {
   runNextDevelopmentController,
   scheduleNextDevelopmentController,
   validateNextDevelopmentController,
-} from "../packages/core/next-development-controller.js";
+} from "../packages/core/release/next-development-controller.js";
 import {
   createNextDevelopmentTransition,
   nextDevelopmentRoot,
-} from "../packages/core/next-development-transition.js";
+} from "../packages/core/release/next-development-transition.js";
 
 const SHA = (digit) => digit.repeat(40);
 const ROOT = (label) => nextDevelopmentRoot({ label });

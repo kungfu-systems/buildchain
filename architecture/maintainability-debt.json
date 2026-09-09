@@ -7,8 +7,8 @@
   },
   "totalExcessLedger": {
     "metric": "calibrated-full-dimensional-excess-v1",
-    "measuredExcess": 60193,
-    "current": 52132
+    "measuredExcess": 44059,
+    "current": 35998
   },
   "defaults": {
     "owner": "Buildchain architecture maintainers",
@@ -22,335 +22,11 @@
       "tests/maintainability.test.mjs",
       "tests/maintainability-governance.test.mjs"
     ],
-    "safeChangeRoute": "Reduce one owned responsibility behind the stable facade, run focused differential tests, regenerate this map, and lower the exact ceiling."
+    "safeChangeRoute": "Reduce one declared responsibility in its owning module, run focused differential tests, regenerate this map, and lower the exact ceiling."
   },
   "surfaces": {
     "sources": {
-      "actions/macos-credential-island/index.js": {
-        "baseline": {
-          "lines": 710,
-          "functions": {
-            "main@309": {
-              "lines": 394
-            }
-          }
-        },
-        "current": {
-          "lines": 710,
-          "functions": {
-            "main@309": {
-              "lines": 394
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "main@309": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "actions/macos-credential-island/lib.js": {
-        "baseline": {
-          "lines": 816
-        },
-        "current": {
-          "lines": 816
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "actions/promote-buildchain-ref/index.js": {
-        "baseline": {
-          "functions": {
-            "main@224": {
-              "lines": 280,
-              "complexity": 52
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "main@224": {
-              "lines": 280,
-              "complexity": 52
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "main@224": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "actions/promote-buildchain-ref/internal/durable-transaction-operations.js": {
-        "baseline": {
-          "functions": {
-            "createDurableTransactionOperations@80": {
-              "lines": 378
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "createDurableTransactionOperations@80": {
-              "lines": 378
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "createDurableTransactionOperations@80": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "actions/promote-buildchain-ref/internal/durable-transaction-store.js": {
-        "baseline": {
-          "functions": {
-            "persistDurableReleaseTransaction@176": {
-              "lines": 213
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "persistDurableReleaseTransaction@176": {
-              "lines": 213
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "persistDurableReleaseTransaction@176": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "actions/promote-buildchain-ref/internal/version-state-operations.js": {
-        "baseline": {
-          "functions": {
-            "createVersionStateOperations@131": {
-              "lines": 415
-            },
-            "createVersionStateCommit@245": {
-              "lines": 286,
-              "complexity": 27
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "createVersionStateOperations@131": {
-              "lines": 415
-            },
-            "createVersionStateCommit@245": {
-              "lines": 286,
-              "complexity": 27
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "createVersionStateOperations@131": {
-              "lines": 180
-            },
-            "createVersionStateCommit@245": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "actions/promote-buildchain-ref/lib.js": {
-        "baseline": {
-          "lines": 5132,
-          "functions": {
-            "resolvePublishContract@259": {
-              "complexity": 30
-            },
-            "validatePromotionReleaseCandidate@529": {
-              "complexity": 27
-            },
-            "runPublishTransaction@1420": {
-              "lines": 247,
-              "complexity": 33
-            }
-          }
-        },
-        "current": {
-          "lines": 3423,
-          "functions": {
-            "resolvePublishContract@259": {
-              "complexity": 30
-            },
-            "validatePromotionReleaseCandidate@529": {
-              "complexity": 27
-            },
-            "runPublishTransaction@1420": {
-              "lines": 247,
-              "complexity": 33
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "resolvePublishContract@259": {
-              "complexity": 25
-            },
-            "validatePromotionReleaseCandidate@529": {
-              "complexity": 25
-            },
-            "runPublishTransaction@1420": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "bin/buildchain.mjs": {
-        "baseline": {
-          "lines": 1821,
-          "functions": {
-            "runKfd3Cli@359": {
-              "complexity": 30
-            },
-            "runKfd2Cli@544": {
-              "complexity": 41
-            },
-            "runKfdCli@794": {
-              "lines": 195,
-              "complexity": 60
-            }
-          }
-        },
-        "current": {
-          "lines": 1821,
-          "functions": {
-            "runKfd3Cli@359": {
-              "complexity": 30
-            },
-            "runKfd2Cli@544": {
-              "complexity": 41
-            },
-            "runKfdCli@794": {
-              "lines": 195,
-              "complexity": 60
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "runKfd3Cli@359": {
-              "complexity": 25
-            },
-            "runKfd2Cli@544": {
-              "complexity": 25
-            },
-            "runKfdCli@794": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/artifact-passport.js": {
-        "baseline": {
-          "lines": 847,
-          "functions": {
-            "resolveArtifactSubject@368": {
-              "complexity": 40
-            }
-          }
-        },
-        "current": {
-          "lines": 847,
-          "functions": {
-            "resolveArtifactSubject@368": {
-              "complexity": 40
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "resolveArtifactSubject@368": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/artifact-verification-envelope.js": {
-        "baseline": {
-          "functions": {
-            "verifyArtifactVerificationEnvelope@153": {
-              "complexity": 78
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "verifyArtifactVerificationEnvelope@153": {
-              "complexity": 78
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "verifyArtifactVerificationEnvelope@153": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/buildchain-config.js": {
-        "baseline": {
-          "lines": 1887
-        },
-        "current": {
-          "lines": 1887
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/buildchain-contract.js": {
-        "baseline": {
-          "lines": 1078,
-          "functions": {
-            "createBuildchainContractWorld@199": {
-              "lines": 681
-            }
-          }
-        },
-        "current": {
-          "lines": 1048,
-          "functions": {
-            "createBuildchainContractWorld@199": {
-              "lines": 651
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "createBuildchainContractWorld@199": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "packages/core/buildchain-kfd-claims.js": {
+      "packages/core/adoption/buildchain-kfd-claims.js": {
         "baseline": {
           "lines": 733,
           "functions": {
@@ -376,252 +52,7 @@
           }
         }
       },
-      "packages/core/dev-delivery-execution-transfer.js": {
-        "baseline": {
-          "functions": {
-            "verifyNativeExecutionTransfer@468": {
-              "complexity": 36
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "verifyNativeExecutionTransfer@468": {
-              "complexity": 36
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "verifyNativeExecutionTransfer@468": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/dev-delivery-native-proof.js": {
-        "baseline": {
-          "functions": {
-            "validateActiveDevDeliveryWarrant@79": {
-              "complexity": 29
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "validateActiveDevDeliveryWarrant@79": {
-              "complexity": 29
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "validateActiveDevDeliveryWarrant@79": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/dev-delivery-process-boundary.js": {
-        "baseline": {
-          "functions": {
-            "createProviderFinalizerBoundary@305": {
-              "lines": 191,
-              "complexity": 33
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "createProviderFinalizerBoundary@305": {
-              "lines": 191,
-              "complexity": 33
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "createProviderFinalizerBoundary@305": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/diagnostics.js": {
-        "baseline": {
-          "lines": 1904,
-          "functions": {
-            "validateAnchoredPackageRelease@325": {
-              "complexity": 43
-            },
-            "createStructuredCacheEvidence@722": {
-              "lines": 199,
-              "complexity": 42
-            },
-            "summarizeProcessSamples@1254": {
-              "complexity": 30
-            },
-            "<anonymous@1828>@1828": {
-              "complexity": 32
-            }
-          }
-        },
-        "current": {
-          "lines": 1904,
-          "functions": {
-            "validateAnchoredPackageRelease@325": {
-              "complexity": 43
-            },
-            "createStructuredCacheEvidence@722": {
-              "lines": 199,
-              "complexity": 42
-            },
-            "summarizeProcessSamples@1254": {
-              "complexity": 30
-            },
-            "<anonymous@1828>@1828": {
-              "complexity": 32
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "validateAnchoredPackageRelease@325": {
-              "complexity": 25
-            },
-            "createStructuredCacheEvidence@722": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "summarizeProcessSamples@1254": {
-              "complexity": 25
-            },
-            "<anonymous@1828>@1828": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/engineering-housekeeper-github.js": {
-        "baseline": {
-          "lines": 707
-        },
-        "current": {
-          "lines": 707
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/github-artifact-attestation.js": {
-        "baseline": {
-          "lines": 642
-        },
-        "current": {
-          "lines": 642
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/github-governance-authority.js": {
-        "baseline": {
-          "lines": 1369,
-          "functions": {
-            "evaluateGithubGovernanceSnapshot@697": {
-              "lines": 189,
-              "complexity": 41
-            },
-            "createGithubRulesetGovernanceRolloutPlan@1192": {
-              "complexity": 36
-            },
-            "evaluateGithubGovernanceSnapshot@692": {
-              "lines": 189,
-              "complexity": 41
-            },
-            "createGithubRulesetGovernanceRolloutPlan@1187": {
-              "complexity": 36
-            }
-          }
-        },
-        "current": {
-          "lines": 1364,
-          "functions": {
-            "evaluateGithubGovernanceSnapshot@692": {
-              "lines": 189,
-              "complexity": 41
-            },
-            "createGithubRulesetGovernanceRolloutPlan@1187": {
-              "complexity": 36
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "evaluateGithubGovernanceSnapshot@697": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "createGithubRulesetGovernanceRolloutPlan@1192": {
-              "complexity": 25
-            },
-            "evaluateGithubGovernanceSnapshot@692": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "createGithubRulesetGovernanceRolloutPlan@1187": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/index.js": {
-        "baseline": {
-          "lines": 705
-        },
-        "current": {
-          "lines": 701
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/issue-reporting.js": {
-        "baseline": {
-          "functions": {
-            "buildConsumerIssueReport@104": {
-              "complexity": 43
-            },
-            "buildWorkflowFrictionIssueReport@199": {
-              "complexity": 54
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "buildConsumerIssueReport@104": {
-              "complexity": 43
-            },
-            "buildWorkflowFrictionIssueReport@199": {
-              "complexity": 54
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "buildConsumerIssueReport@104": {
-              "complexity": 25
-            },
-            "buildWorkflowFrictionIssueReport@199": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/kfd-gate.js": {
+      "packages/core/adoption/kfd-gate.js": {
         "baseline": {
           "lines": 1672,
           "functions": {
@@ -713,7 +144,7 @@
           }
         }
       },
-      "packages/core/kfd-product-gates.js": {
+      "packages/core/adoption/kfd-product-gates.js": {
         "baseline": {
           "functions": {
             "evaluateKfdProductGate@419": {
@@ -736,7 +167,7 @@
           }
         }
       },
-      "packages/core/kfd.js": {
+      "packages/core/adoption/kfd.js": {
         "baseline": {
           "lines": 966,
           "functions": {
@@ -762,7 +193,7 @@
           }
         }
       },
-      "packages/core/kfd3-surface-register.js": {
+      "packages/core/adoption/kfd3-surface-register.js": {
         "baseline": {
           "lines": 924,
           "functions": {
@@ -788,357 +219,171 @@
           }
         }
       },
-      "packages/core/next-development-controller.js": {
+      "packages/core/build/artifact-passport.js": {
         "baseline": {
-          "lines": 728
-        },
-        "current": {
-          "lines": 728
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/next-development-transition.js": {
-        "baseline": {
-          "lines": 738
-        },
-        "current": {
-          "lines": 737
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "packages/core/paper-npm-bootstrap.js": {
-        "baseline": {
+          "lines": 847,
           "functions": {
-            "executePaperNpmBootstrap@1": {
-              "lines": 490,
-              "complexity": 58
+            "resolveArtifactSubject@363": {
+              "complexity": 40
             }
           }
         },
         "current": {
+          "lines": 842,
           "functions": {
-            "executePaperNpmBootstrap@1": {
-              "lines": 490,
-              "complexity": 58
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "executePaperNpmBootstrap@1": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/paper.js": {
-        "baseline": {
-          "lines": 2878,
-          "functions": {
-            "collectPaperStatus@1124": {
-              "lines": 190,
-              "complexity": 47
-            },
-            "validatePaperProvisioningAuthority@1315": {
-              "complexity": 45
-            }
-          }
-        },
-        "current": {
-          "lines": 2478,
-          "functions": {
-            "collectPaperStatus@1124": {
-              "lines": 190,
-              "complexity": 47
-            },
-            "validatePaperProvisioningAuthority@1315": {
-              "complexity": 36
+            "resolveArtifactSubject@363": {
+              "complexity": 40
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "collectPaperStatus@1124": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "validatePaperProvisioningAuthority@1315": {
+            "resolveArtifactSubject@363": {
               "complexity": 25
             }
           }
         }
       },
-      "packages/core/publication-artifact.js": {
+      "packages/core/build/artifact-verification-envelope.js": {
         "baseline": {
-          "lines": 641
+          "functions": {
+            "verifyArtifactVerificationEnvelope@153": {
+              "complexity": 78
+            }
+          }
         },
         "current": {
-          "lines": 641
+          "functions": {
+            "verifyArtifactVerificationEnvelope@153": {
+              "complexity": 78
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "verifyArtifactVerificationEnvelope@153": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/build/commands/auditable-demo.mjs": {
+        "baseline": {
+          "lines": 1324
+        },
+        "current": {
+          "lines": 1324
         },
         "target": {
           "lines": 600
         }
       },
-      "packages/core/publication-authority.js": {
+      "packages/core/build/commands/build-contract-core.mjs": {
         "baseline": {
-          "lines": 1163,
-          "functions": {
-            "validatePublicationEvidence@468": {
-              "lines": 262,
-              "complexity": 52
-            },
-            "verifyPublicationAdmission@791": {
-              "complexity": 35
-            }
-          }
+          "lines": 1229
         },
         "current": {
-          "lines": 1163,
-          "functions": {
-            "validatePublicationEvidence@468": {
-              "lines": 262,
-              "complexity": 52
-            },
-            "verifyPublicationAdmission@791": {
-              "complexity": 35
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "validatePublicationEvidence@468": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "verifyPublicationAdmission@791": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/publication-reproducibility.js": {
-        "baseline": {
-          "lines": 947
-        },
-        "current": {
-          "lines": 947
+          "lines": 1208
         },
         "target": {
           "lines": 600
         }
       },
-      "packages/core/publish-transaction.js": {
-        "baseline": {
-          "lines": 829,
-          "functions": {
-            "normalizePublishArtifact@407": {
-              "complexity": 37
-            }
-          }
-        },
-        "current": {
-          "lines": 829,
-          "functions": {
-            "normalizePublishArtifact@407": {
-              "complexity": 37
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "normalizePublishArtifact@407": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/readme-badges.js": {
-        "baseline": {
-          "lines": 893,
-          "functions": {
-            "summarizeKfdStandards@361": {
-              "complexity": 37
-            }
-          }
-        },
-        "current": {
-          "lines": 893,
-          "functions": {
-            "summarizeKfdStandards@361": {
-              "complexity": 37
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "summarizeKfdStandards@361": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/release-candidate.js": {
+      "packages/core/build/commands/finalize-native-artifact-signing-result.mjs": {
         "baseline": {
           "functions": {
-            "normalizeFamilyReleaseEvidence@233": {
-              "complexity": 26
-            },
-            "createReleaseCandidatePassport@369": {
-              "complexity": 37
-            },
-            "validateReleaseCandidatePassport@475": {
-              "complexity": 38
+            "finalizeNativeArtifactSigningResult@58": {
+              "lines": 201
             }
           }
         },
         "current": {
           "functions": {
-            "normalizeFamilyReleaseEvidence@233": {
-              "complexity": 26
-            },
-            "createReleaseCandidatePassport@369": {
-              "complexity": 37
-            },
-            "validateReleaseCandidatePassport@475": {
-              "complexity": 38
+            "finalizeNativeArtifactSigningResult@58": {
+              "lines": 201
             }
           }
         },
         "target": {
           "functions": {
-            "normalizeFamilyReleaseEvidence@233": {
-              "complexity": 25
-            },
-            "createReleaseCandidatePassport@369": {
-              "complexity": 25
-            },
-            "validateReleaseCandidatePassport@475": {
-              "complexity": 25
+            "finalizeNativeArtifactSigningResult@58": {
+              "lines": 180
             }
           }
         }
       },
-      "packages/core/release-passport.js": {
+      "packages/core/build/commands/run-lifecycle-core.mjs": {
         "baseline": {
-          "lines": 2987,
-          "functions": {
-            "mergeAuthoritativePassportBase@407": {
-              "complexity": 29
-            },
-            "normalizeKfd2Claim@832": {
-              "complexity": 59
-            },
-            "createReleasePassport@1165": {
-              "lines": 268,
-              "complexity": 30
-            },
-            "collectGitHubReleasePassport@1465": {
-              "lines": 304,
-              "complexity": 43
-            },
-            "validateKfd2ReleaseTrustPassportAudit@1786": {
-              "complexity": 65
-            },
-            "validateReleaseEvidenceAttachments@2106": {
-              "complexity": 26
-            }
-          }
+          "lines": 885
         },
         "current": {
-          "lines": 2884,
-          "functions": {
-            "mergeAuthoritativePassportBase@407": {
-              "complexity": 29
-            },
-            "normalizeKfd2Claim@832": {
-              "complexity": 59
-            },
-            "createReleasePassport@1165": {
-              "lines": 268,
-              "complexity": 30
-            },
-            "collectGitHubReleasePassport@1465": {
-              "lines": 304,
-              "complexity": 43
-            },
-            "validateKfd2ReleaseTrustPassportAudit@1786": {
-              "complexity": 65
-            },
-            "validateReleaseEvidenceAttachments@2106": {
-              "complexity": 26
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "mergeAuthoritativePassportBase@407": {
-              "complexity": 25
-            },
-            "normalizeKfd2Claim@832": {
-              "complexity": 25
-            },
-            "createReleasePassport@1165": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "collectGitHubReleasePassport@1465": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "validateKfd2ReleaseTrustPassportAudit@1786": {
-              "complexity": 25
-            },
-            "validateReleaseEvidenceAttachments@2106": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "packages/core/release-train.js": {
-        "baseline": {
-          "lines": 740
-        },
-        "current": {
-          "lines": 740
+          "lines": 848
         },
         "target": {
           "lines": 600
         }
       },
-      "packages/core/stable-release-gate.js": {
+      "packages/core/build/github-artifact-attestation.js": {
         "baseline": {
+          "lines": 642
+        },
+        "current": {
+          "lines": 642
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/build/macos-credential-island/action.js": {
+        "baseline": {
+          "lines": 710,
           "functions": {
-            "evaluateStableReleaseGate@121": {
-              "complexity": 26
+            "main@309": {
+              "lines": 394
             }
           }
         },
         "current": {
+          "lines": 704,
           "functions": {
-            "evaluateStableReleaseGate@121": {
-              "complexity": 26
+            "main@309": {
+              "lines": 386
             }
           }
         },
         "target": {
+          "lines": 600,
           "functions": {
-            "evaluateStableReleaseGate@121": {
-              "complexity": 25
+            "main@309": {
+              "lines": 180
             }
           }
         }
       },
-      "packages/core/runtime-ref-resume-authority.js": {
+      "packages/core/build/macos-credential-island/lib.js": {
+        "baseline": {
+          "lines": 816
+        },
+        "current": {
+          "lines": 816
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/consumer/buildchain-config.js": {
+        "baseline": {
+          "lines": 1887
+        },
+        "current": {
+          "lines": 1825
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/consumer/runtime-ref-resume-authority.js": {
         "baseline": {
           "lines": 625
         },
@@ -1149,7 +394,201 @@
           "lines": 600
         }
       },
-      "scripts/audit-github-governance.mjs": {
+      "packages/core/contracts/buildchain-contract.js": {
+        "baseline": {
+          "lines": 1078,
+          "functions": {
+            "createBuildchainContractWorld@193": {
+              "lines": 681
+            }
+          }
+        },
+        "current": {
+          "lines": 1038,
+          "functions": {
+            "createBuildchainContractWorld@193": {
+              "lines": 647
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "createBuildchainContractWorld@193": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery/commands/dev-delivery-authority.mjs": {
+        "baseline": {
+          "functions": {
+            "devDeliveryAuthorityCliOptions@206": {
+              "lines": 207
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "devDeliveryAuthorityCliOptions@206": {
+              "lines": 207
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "devDeliveryAuthorityCliOptions@206": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery/commands/dev-delivery-two-phase.mjs": {
+        "baseline": {
+          "functions": {
+            "runTwoPhaseDelivery@211": {
+              "lines": 200,
+              "complexity": 35
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "runTwoPhaseDelivery@211": {
+              "lines": 200,
+              "complexity": 35
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "runTwoPhaseDelivery@211": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery/commands/dev-delivery-warrant-options.mjs": {
+        "baseline": {
+          "functions": {
+            "devDeliveryCliOptions@56": {
+              "lines": 247
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "devDeliveryCliOptions@56": {
+              "lines": 223
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "devDeliveryCliOptions@56": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery/commands/dev-pr-auto-merge.mjs": {
+        "baseline": {
+          "lines": 1222,
+          "functions": {
+            "evaluatePullRequest@204": {
+              "complexity": 31
+            },
+            "runDevPrAdmission@767": {
+              "complexity": 32
+            },
+            "runDevPrAutoMerge@909": {
+              "lines": 186,
+              "complexity": 53
+            }
+          }
+        },
+        "current": {
+          "lines": 1222,
+          "functions": {
+            "evaluatePullRequest@204": {
+              "complexity": 31
+            },
+            "runDevPrAdmission@767": {
+              "complexity": 32
+            },
+            "runDevPrAutoMerge@909": {
+              "lines": 186,
+              "complexity": 53
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "evaluatePullRequest@204": {
+              "complexity": 25
+            },
+            "runDevPrAdmission@767": {
+              "complexity": 25
+            },
+            "runDevPrAutoMerge@909": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery/dev-delivery-execution-transfer.js": {
+        "baseline": {
+          "functions": {
+            "verifyNativeExecutionTransfer@468": {
+              "complexity": 36
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "verifyNativeExecutionTransfer@468": {
+              "complexity": 36
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "verifyNativeExecutionTransfer@468": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/dev-delivery/dev-delivery-process-boundary.js": {
+        "baseline": {
+          "functions": {
+            "createProviderFinalizerBoundary@305": {
+              "lines": 191,
+              "complexity": 33
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "createProviderFinalizerBoundary@305": {
+              "lines": 191,
+              "complexity": 33
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "createProviderFinalizerBoundary@305": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/governance/commands/audit-github-governance.mjs": {
         "baseline": {
           "functions": {
             "collectGithubGovernanceAudit@286": {
@@ -1175,7 +614,7 @@
           }
         }
       },
-      "scripts/audit-publication-control-plane.mjs": {
+      "packages/core/governance/commands/audit-publication-control-plane.mjs": {
         "baseline": {
           "functions": {
             "main@199": {
@@ -1201,23 +640,911 @@
           }
         }
       },
-      "scripts/auditable-demo.mjs": {
+      "packages/core/governance/commands/reconcile-github-governance.mjs": {
         "baseline": {
-          "lines": 1324
+          "lines": 689
         },
         "current": {
-          "lines": 1324
+          "lines": 689
         },
         "target": {
           "lines": 600
         }
       },
-      "scripts/build-contract-core.mjs": {
+      "packages/core/governance/engineering-housekeeper-github.js": {
         "baseline": {
-          "lines": 1229
+          "lines": 707
         },
         "current": {
-          "lines": 1216
+          "lines": 707
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/governance/github-governance-authority.js": {
+        "baseline": {
+          "lines": 1369,
+          "functions": {
+            "evaluateGithubGovernanceSnapshot@695": {
+              "lines": 189,
+              "complexity": 41
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1190": {
+              "complexity": 36
+            }
+          }
+        },
+        "current": {
+          "lines": 1367,
+          "functions": {
+            "evaluateGithubGovernanceSnapshot@695": {
+              "lines": 189,
+              "complexity": 41
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1190": {
+              "complexity": 36
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "evaluateGithubGovernanceSnapshot@695": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "createGithubRulesetGovernanceRolloutPlan@1190": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/governance/issue-reporting.js": {
+        "baseline": {
+          "functions": {
+            "buildConsumerIssueReport@104": {
+              "complexity": 43
+            },
+            "buildWorkflowFrictionIssueReport@199": {
+              "complexity": 54
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "buildConsumerIssueReport@104": {
+              "complexity": 43
+            },
+            "buildWorkflowFrictionIssueReport@199": {
+              "complexity": 54
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "buildConsumerIssueReport@104": {
+              "complexity": 25
+            },
+            "buildWorkflowFrictionIssueReport@199": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/index.js": {
+        "baseline": {
+          "lines": 705
+        },
+        "current": {
+          "lines": 669
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/observability/diagnostics.js": {
+        "baseline": {
+          "lines": 1904,
+          "functions": {
+            "validateAnchoredPackageRelease@325": {
+              "complexity": 43
+            },
+            "createStructuredCacheEvidence@722": {
+              "lines": 199,
+              "complexity": 42
+            },
+            "summarizeProcessSamples@1254": {
+              "complexity": 30
+            },
+            "<anonymous@1828>@1828": {
+              "complexity": 32
+            }
+          }
+        },
+        "current": {
+          "lines": 1904,
+          "functions": {
+            "validateAnchoredPackageRelease@325": {
+              "complexity": 43
+            },
+            "createStructuredCacheEvidence@722": {
+              "lines": 199,
+              "complexity": 42
+            },
+            "summarizeProcessSamples@1254": {
+              "complexity": 30
+            },
+            "<anonymous@1828>@1828": {
+              "complexity": 32
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "validateAnchoredPackageRelease@325": {
+              "complexity": 25
+            },
+            "createStructuredCacheEvidence@722": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "summarizeProcessSamples@1254": {
+              "complexity": 25
+            },
+            "<anonymous@1828>@1828": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/paper/commands/paper.mjs": {
+        "baseline": {
+          "lines": 644,
+          "functions": {
+            "humanSummary@91": {
+              "complexity": 28
+            }
+          }
+        },
+        "current": {
+          "lines": 632,
+          "functions": {
+            "humanSummary@91": {
+              "complexity": 28
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "humanSummary@91": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/paper/paper-npm-bootstrap.js": {
+        "baseline": {
+          "functions": {
+            "executePaperNpmBootstrap@1": {
+              "lines": 490,
+              "complexity": 58
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "executePaperNpmBootstrap@1": {
+              "lines": 490,
+              "complexity": 58
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "executePaperNpmBootstrap@1": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/providers/commands/infra-contract-core.mjs": {
+        "baseline": {
+          "lines": 1032,
+          "functions": {
+            "verifyInfraContractEvidenceBundle@698": {
+              "complexity": 50
+            }
+          }
+        },
+        "current": {
+          "lines": 1032,
+          "functions": {
+            "verifyInfraContractEvidenceBundle@698": {
+              "complexity": 50
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "verifyInfraContractEvidenceBundle@698": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/providers/commands/infra-contract.mjs": {
+        "baseline": {
+          "functions": {
+            "infraContractCli@110": {
+              "lines": 227,
+              "complexity": 31
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "infraContractCli@110": {
+              "lines": 227,
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "infraContractCli@110": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/providers/commands/locked-source-checkout.mjs": {
+        "baseline": {
+          "functions": {
+            "lockedSourceCheckout@386": {
+              "lines": 194,
+              "complexity": 31
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "lockedSourceCheckout@386": {
+              "lines": 194,
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "lockedSourceCheckout@386": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/publication/publication-artifact.js": {
+        "baseline": {
+          "lines": 641
+        },
+        "current": {
+          "lines": 641
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/publication/publication-authority.js": {
+        "baseline": {
+          "lines": 1163,
+          "functions": {
+            "validatePublicationEvidence@468": {
+              "lines": 262,
+              "complexity": 52
+            },
+            "verifyPublicationAdmission@791": {
+              "complexity": 35
+            }
+          }
+        },
+        "current": {
+          "lines": 1163,
+          "functions": {
+            "validatePublicationEvidence@468": {
+              "lines": 262,
+              "complexity": 52
+            },
+            "verifyPublicationAdmission@791": {
+              "complexity": 35
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "validatePublicationEvidence@468": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "verifyPublicationAdmission@791": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/publication/publication-reproducibility.js": {
+        "baseline": {
+          "lines": 947
+        },
+        "current": {
+          "lines": 947
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/release/commands/dev-alpha-candidate-patrol.mjs": {
+        "baseline": {
+          "lines": 1197,
+          "functions": {
+            "normalizeDevAlphaPatrolOptions@240": {
+              "complexity": 33
+            },
+            "runDevAlphaCandidatePatrol@582": {
+              "lines": 333,
+              "complexity": 53
+            },
+            "createGitHubChannelCandidateClient@920": {
+              "lines": 208
+            }
+          }
+        },
+        "current": {
+          "lines": 1197,
+          "functions": {
+            "normalizeDevAlphaPatrolOptions@240": {
+              "complexity": 33
+            },
+            "runDevAlphaCandidatePatrol@582": {
+              "lines": 333,
+              "complexity": 53
+            },
+            "createGitHubChannelCandidateClient@920": {
+              "lines": 208
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "normalizeDevAlphaPatrolOptions@240": {
+              "complexity": 25
+            },
+            "runDevAlphaCandidatePatrol@582": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "createGitHubChannelCandidateClient@920": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "packages/core/release/commands/release-candidate-resolver.mjs": {
+        "baseline": {
+          "lines": 854,
+          "functions": {
+            "resolveReleaseCandidateArtifacts@475": {
+              "lines": 309,
+              "complexity": 62
+            },
+            "resolveReleaseCandidateArtifactsCli@773": {
+              "complexity": 29
+            }
+          }
+        },
+        "current": {
+          "lines": 842,
+          "functions": {
+            "resolveReleaseCandidateArtifacts@475": {
+              "lines": 297,
+              "complexity": 60
+            },
+            "resolveReleaseCandidateArtifactsCli@773": {
+              "complexity": 29
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "resolveReleaseCandidateArtifacts@475": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "resolveReleaseCandidateArtifactsCli@773": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release/commands/release-line-policy.mjs": {
+        "baseline": {
+          "functions": {
+            "getBumpKeyword@126": {
+              "complexity": 35
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "getBumpKeyword@126": {
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "getBumpKeyword@126": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release/commands/resume-from-candidate-run.mjs": {
+        "baseline": {
+          "lines": 1125
+        },
+        "current": {
+          "lines": 1117
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/release/commands/stable-candidate-patrol.mjs": {
+        "baseline": {
+          "functions": {
+            "runStableCandidatePatrol@141": {
+              "complexity": 31
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "runStableCandidatePatrol@141": {
+              "complexity": 31
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "runStableCandidatePatrol@141": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release/commands/stable-release-gate.mjs": {
+        "baseline": {
+          "functions": {
+            "resolveCanaryEvidence@130": {
+              "complexity": 56
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "resolveCanaryEvidence@130": {
+              "complexity": 56
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "resolveCanaryEvidence@130": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release/next-development-controller.js": {
+        "baseline": {
+          "lines": 728
+        },
+        "current": {
+          "lines": 728
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/release/next-development-transition.js": {
+        "baseline": {
+          "lines": 738
+        },
+        "current": {
+          "lines": 737
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/release/promote-ref/internal/durable-transaction-operations.js": {
+        "baseline": {
+          "functions": {
+            "createDurableTransactionOperations@80": {
+              "lines": 378
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "createDurableTransactionOperations@80": {
+              "lines": 376
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "createDurableTransactionOperations@80": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "packages/core/release/promote-ref/internal/durable-transaction-store.js": {
+        "baseline": {
+          "functions": {
+            "persistDurableReleaseTransaction@176": {
+              "lines": 213
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "persistDurableReleaseTransaction@176": {
+              "lines": 213
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "persistDurableReleaseTransaction@176": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "packages/core/release/promote-ref/internal/promotion-operations.js": {
+        "baseline": {
+          "lines": 1320,
+          "functions": {
+            "updateBranch@158": {
+              "lines": 378,
+              "complexity": 34
+            },
+            "assertReleasePrOrVersionStateParent@794": {
+              "lines": 335,
+              "complexity": 42
+            }
+          }
+        },
+        "current": {
+          "lines": 1170,
+          "functions": {
+            "updateBranch@158": {
+              "lines": 377,
+              "complexity": 34
+            },
+            "assertReleasePrOrVersionStateParent@794": {
+              "lines": 335,
+              "complexity": 42
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "updateBranch@158": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "assertReleasePrOrVersionStateParent@794": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release/promote-ref/internal/version-state-operations.js": {
+        "baseline": {
+          "functions": {
+            "createVersionStateOperations@131": {
+              "lines": 415
+            },
+            "createVersionStateCommit@243": {
+              "lines": 286,
+              "complexity": 27
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "createVersionStateOperations@131": {
+              "lines": 412
+            },
+            "createVersionStateCommit@243": {
+              "lines": 285,
+              "complexity": 26
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "createVersionStateOperations@131": {
+              "lines": 180
+            },
+            "createVersionStateCommit@243": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release/publish-transaction.js": {
+        "baseline": {
+          "lines": 829,
+          "functions": {
+            "normalizePublishArtifact@407": {
+              "complexity": 37
+            }
+          }
+        },
+        "current": {
+          "lines": 829,
+          "functions": {
+            "normalizePublishArtifact@407": {
+              "complexity": 37
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "normalizePublishArtifact@407": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release/release-candidate.js": {
+        "baseline": {
+          "functions": {
+            "normalizeFamilyReleaseEvidence@233": {
+              "complexity": 26
+            },
+            "createReleaseCandidatePassport@369": {
+              "complexity": 37
+            },
+            "validateReleaseCandidatePassport@475": {
+              "complexity": 38
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "normalizeFamilyReleaseEvidence@233": {
+              "complexity": 26
+            },
+            "createReleaseCandidatePassport@369": {
+              "complexity": 37
+            },
+            "validateReleaseCandidatePassport@475": {
+              "complexity": 38
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "normalizeFamilyReleaseEvidence@233": {
+              "complexity": 25
+            },
+            "createReleaseCandidatePassport@369": {
+              "complexity": 25
+            },
+            "validateReleaseCandidatePassport@475": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/release/release-train.js": {
+        "baseline": {
+          "lines": 740
+        },
+        "current": {
+          "lines": 740
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "packages/core/release/stable-release-gate.js": {
+        "baseline": {
+          "functions": {
+            "evaluateStableReleaseGate@121": {
+              "complexity": 26
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "evaluateStableReleaseGate@121": {
+              "complexity": 26
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "evaluateStableReleaseGate@121": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/web/commands/web-surface-core.mjs": {
+        "baseline": {
+          "lines": 2603,
+          "functions": {
+            "preflightWebSurfaceProduction@1331": {
+              "lines": 243,
+              "complexity": 54
+            },
+            "checkWebSurfaceHealth@1757": {
+              "lines": 276,
+              "complexity": 56
+            },
+            "deployBindingOperations@2034": {
+              "lines": 205,
+              "complexity": 28
+            }
+          }
+        },
+        "current": {
+          "lines": 2603,
+          "functions": {
+            "preflightWebSurfaceProduction@1331": {
+              "lines": 243,
+              "complexity": 54
+            },
+            "checkWebSurfaceHealth@1757": {
+              "lines": 276,
+              "complexity": 56
+            },
+            "deployBindingOperations@2034": {
+              "lines": 205,
+              "complexity": 28
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "preflightWebSurfaceProduction@1331": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "checkWebSurfaceHealth@1757": {
+              "lines": 180,
+              "complexity": 25
+            },
+            "deployBindingOperations@2034": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/web/commands/web-surface-production-release-pr.mjs": {
+        "baseline": {
+          "lines": 712,
+          "functions": {
+            "webSurfaceProductionReleasePrCli@558": {
+              "complexity": 38
+            }
+          }
+        },
+        "current": {
+          "lines": 712,
+          "functions": {
+            "webSurfaceProductionReleasePrCli@558": {
+              "complexity": 38
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "webSurfaceProductionReleasePrCli@558": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/web/commands/web-surface.mjs": {
+        "baseline": {
+          "functions": {
+            "compactWebSurfaceApplyResult@188": {
+              "complexity": 27
+            },
+            "webSurfaceCli@229": {
+              "lines": 223,
+              "complexity": 58
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "compactWebSurfaceApplyResult@188": {
+              "complexity": 27
+            },
+            "webSurfaceCli@229": {
+              "lines": 223,
+              "complexity": 58
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "compactWebSurfaceApplyResult@188": {
+              "complexity": 25
+            },
+            "webSurfaceCli@229": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/web/readme-badges.js": {
+        "baseline": {
+          "lines": 893,
+          "functions": {
+            "summarizeKfdStandards@359": {
+              "complexity": 37
+            }
+          }
+        },
+        "current": {
+          "lines": 891,
+          "functions": {
+            "summarizeKfdStandards@359": {
+              "complexity": 37
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "summarizeKfdStandards@359": {
+              "complexity": 25
+            }
+          }
+        }
+      },
+      "packages/core/workflow/commands/universal-workflow-engine.mjs": {
+        "baseline": {
+          "lines": 620
+        },
+        "current": {
+          "lines": 606
         },
         "target": {
           "lines": 600
@@ -1228,7 +1555,7 @@
           "lines": 1515
         },
         "current": {
-          "lines": 1484
+          "lines": 1332
         },
         "target": {
           "lines": 600
@@ -1237,234 +1564,22 @@
       "scripts/check-maintainability.mjs": {
         "baseline": {
           "functions": {
-            "evaluateMaintainability@275": {
+            "evaluateMaintainability@279": {
               "complexity": 29
             }
           }
         },
         "current": {
           "functions": {
-            "evaluateMaintainability@275": {
+            "evaluateMaintainability@279": {
               "complexity": 29
             }
           }
         },
         "target": {
           "functions": {
-            "evaluateMaintainability@275": {
+            "evaluateMaintainability@279": {
               "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/dev-alpha-candidate-patrol.mjs": {
-        "baseline": {
-          "lines": 1197,
-          "functions": {
-            "normalizeDevAlphaPatrolOptions@240": {
-              "complexity": 33
-            },
-            "runDevAlphaCandidatePatrol@582": {
-              "lines": 333,
-              "complexity": 53
-            },
-            "createGitHubChannelCandidateClient@920": {
-              "lines": 208
-            }
-          }
-        },
-        "current": {
-          "lines": 1197,
-          "functions": {
-            "normalizeDevAlphaPatrolOptions@240": {
-              "complexity": 33
-            },
-            "runDevAlphaCandidatePatrol@582": {
-              "lines": 333,
-              "complexity": 53
-            },
-            "createGitHubChannelCandidateClient@920": {
-              "lines": 208
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "normalizeDevAlphaPatrolOptions@240": {
-              "complexity": 25
-            },
-            "runDevAlphaCandidatePatrol@582": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "createGitHubChannelCandidateClient@920": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "scripts/dev-delivery-authority.mjs": {
-        "baseline": {
-          "functions": {
-            "devDeliveryAuthorityCliOptions@241": {
-              "lines": 207
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "devDeliveryAuthorityCliOptions@241": {
-              "lines": 207
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "devDeliveryAuthorityCliOptions@241": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "scripts/dev-delivery-two-phase.mjs": {
-        "baseline": {
-          "functions": {
-            "runTwoPhaseDelivery@211": {
-              "lines": 200,
-              "complexity": 35
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "runTwoPhaseDelivery@211": {
-              "lines": 200,
-              "complexity": 35
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "runTwoPhaseDelivery@211": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/dev-delivery-warrant-options.mjs": {
-        "baseline": {
-          "functions": {
-            "devDeliveryCliOptions@61": {
-              "lines": 247
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "devDeliveryCliOptions@61": {
-              "lines": 233
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "devDeliveryCliOptions@61": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "scripts/dev-pr-auto-merge.mjs": {
-        "baseline": {
-          "lines": 1222,
-          "functions": {
-            "evaluatePullRequest@204": {
-              "complexity": 31
-            },
-            "runDevPrAdmission@767": {
-              "complexity": 32
-            },
-            "runDevPrAutoMerge@909": {
-              "lines": 186,
-              "complexity": 53
-            }
-          }
-        },
-        "current": {
-          "lines": 1222,
-          "functions": {
-            "evaluatePullRequest@204": {
-              "complexity": 31
-            },
-            "runDevPrAdmission@767": {
-              "complexity": 32
-            },
-            "runDevPrAutoMerge@909": {
-              "lines": 186,
-              "complexity": 53
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "evaluatePullRequest@204": {
-              "complexity": 25
-            },
-            "runDevPrAdmission@767": {
-              "complexity": 25
-            },
-            "runDevPrAutoMerge@909": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/finalize-native-artifact-signing-result.mjs": {
-        "baseline": {
-          "functions": {
-            "finalizeNativeArtifactSigningResult@58": {
-              "lines": 201
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "finalizeNativeArtifactSigningResult@58": {
-              "lines": 201
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "finalizeNativeArtifactSigningResult@58": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "scripts/generate-channel-promotion-workflow.mjs": {
-        "baseline": {
-          "functions": {
-            "generateChannelPromotionWorkflow@280": {
-              "lines": 282
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "generateChannelPromotionWorkflow@280": {
-              "lines": 223
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "generateChannelPromotionWorkflow@280": {
-              "lines": 180
             }
           }
         }
@@ -1473,102 +1588,24 @@
         "baseline": {
           "lines": 1411,
           "functions": {
-            "buildSiteBundle@720": {
+            "buildSiteBundle@729": {
               "lines": 637
             }
           }
         },
         "current": {
-          "lines": 1411,
+          "lines": 1410,
           "functions": {
-            "buildSiteBundle@720": {
-              "lines": 637
+            "buildSiteBundle@729": {
+              "lines": 627
             }
           }
         },
         "target": {
           "lines": 600,
           "functions": {
-            "buildSiteBundle@720": {
+            "buildSiteBundle@729": {
               "lines": 180
-            }
-          }
-        }
-      },
-      "scripts/infra-contract-core.mjs": {
-        "baseline": {
-          "lines": 1032,
-          "functions": {
-            "verifyInfraContractEvidenceBundle@698": {
-              "complexity": 50
-            }
-          }
-        },
-        "current": {
-          "lines": 1032,
-          "functions": {
-            "verifyInfraContractEvidenceBundle@698": {
-              "complexity": 50
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "verifyInfraContractEvidenceBundle@698": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/infra-contract.mjs": {
-        "baseline": {
-          "functions": {
-            "infraContractCli@110": {
-              "lines": 227,
-              "complexity": 31
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "infraContractCli@110": {
-              "lines": 227,
-              "complexity": 31
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "infraContractCli@110": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/locked-source-checkout.mjs": {
-        "baseline": {
-          "functions": {
-            "lockedSourceCheckout@386": {
-              "lines": 194,
-              "complexity": 31
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "lockedSourceCheckout@386": {
-              "lines": 194,
-              "complexity": 31
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "lockedSourceCheckout@386": {
-              "lines": 180,
-              "complexity": 25
             }
           }
         }
@@ -1596,372 +1633,26 @@
           }
         }
       },
-      "scripts/paper.mjs": {
-        "baseline": {
-          "lines": 644,
-          "functions": {
-            "humanSummary@102": {
-              "complexity": 28
-            }
-          }
-        },
-        "current": {
-          "lines": 644,
-          "functions": {
-            "humanSummary@102": {
-              "complexity": 28
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "humanSummary@102": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/reconcile-github-governance.mjs": {
-        "baseline": {
-          "lines": 689
-        },
-        "current": {
-          "lines": 689
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "scripts/release-candidate-resolver.mjs": {
-        "baseline": {
-          "lines": 854,
-          "functions": {
-            "resolveReleaseCandidateArtifacts@475": {
-              "lines": 309,
-              "complexity": 62
-            },
-            "resolveReleaseCandidateArtifactsCli@773": {
-              "complexity": 29
-            }
-          }
-        },
-        "current": {
-          "lines": 842,
-          "functions": {
-            "resolveReleaseCandidateArtifacts@475": {
-              "lines": 297,
-              "complexity": 61
-            },
-            "resolveReleaseCandidateArtifactsCli@773": {
-              "complexity": 29
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "resolveReleaseCandidateArtifacts@475": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "resolveReleaseCandidateArtifactsCli@773": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/release-line-policy.mjs": {
-        "baseline": {
-          "functions": {
-            "getBumpKeyword@135": {
-              "complexity": 35
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "getBumpKeyword@135": {
-              "complexity": 31
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "getBumpKeyword@135": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/resume-from-candidate-run.mjs": {
-        "baseline": {
-          "lines": 1125
-        },
-        "current": {
-          "lines": 1117
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "scripts/run-lifecycle-core.mjs": {
-        "baseline": {
-          "lines": 885
-        },
-        "current": {
-          "lines": 852
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "scripts/stable-candidate-patrol.mjs": {
-        "baseline": {
-          "functions": {
-            "runStableCandidatePatrol@141": {
-              "complexity": 31
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "runStableCandidatePatrol@141": {
-              "complexity": 31
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "runStableCandidatePatrol@141": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/stable-release-gate.mjs": {
-        "baseline": {
-          "functions": {
-            "resolveCanaryEvidence@130": {
-              "complexity": 56
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "resolveCanaryEvidence@130": {
-              "complexity": 56
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "resolveCanaryEvidence@130": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/universal-workflow-engine.mjs": {
-        "baseline": {
-          "lines": 620
-        },
-        "current": {
-          "lines": 620
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "scripts/architecture.mjs": {
-        "baseline": {
-          "lines": 610
-        },
-        "current": {
-          "lines": 610
-        },
-        "target": {
-          "lines": 600
-        }
-      },
       "scripts/warrant-shadow-plan.mjs": {
         "baseline": {
-          "lines": 601,
           "functions": {
-            "validatePlan@96": {
+            "validatePlan@88": {
               "lines": 182,
               "complexity": 26
             }
           }
         },
         "current": {
-          "lines": 601,
           "functions": {
-            "validatePlan@96": {
+            "validatePlan@88": {
               "lines": 182,
               "complexity": 26
             }
           }
         },
         "target": {
-          "lines": 600,
           "functions": {
-            "validatePlan@96": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/web-surface-core.mjs": {
-        "baseline": {
-          "lines": 2603,
-          "functions": {
-            "preflightWebSurfaceProduction@1331": {
-              "lines": 243,
-              "complexity": 54
-            },
-            "checkWebSurfaceHealth@1757": {
-              "lines": 276,
-              "complexity": 56
-            },
-            "deployBindingOperations@2034": {
-              "lines": 205,
-              "complexity": 28
-            }
-          }
-        },
-        "current": {
-          "lines": 2603,
-          "functions": {
-            "preflightWebSurfaceProduction@1331": {
-              "lines": 243,
-              "complexity": 54
-            },
-            "checkWebSurfaceHealth@1757": {
-              "lines": 276,
-              "complexity": 56
-            },
-            "deployBindingOperations@2034": {
-              "lines": 205,
-              "complexity": 28
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "preflightWebSurfaceProduction@1331": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "checkWebSurfaceHealth@1757": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "deployBindingOperations@2034": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/web-surface-production-release-pr.mjs": {
-        "baseline": {
-          "lines": 712,
-          "functions": {
-            "webSurfaceProductionReleasePrCli@558": {
-              "complexity": 38
-            }
-          }
-        },
-        "current": {
-          "lines": 712,
-          "functions": {
-            "webSurfaceProductionReleasePrCli@558": {
-              "complexity": 38
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "webSurfaceProductionReleasePrCli@558": {
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "scripts/web-surface.mjs": {
-        "baseline": {
-          "functions": {
-            "compactWebSurfaceApplyResult@188": {
-              "complexity": 27
-            },
-            "webSurfaceCli@229": {
-              "lines": 223,
-              "complexity": 58
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "compactWebSurfaceApplyResult@188": {
-              "complexity": 27
-            },
-            "webSurfaceCli@229": {
-              "lines": 223,
-              "complexity": 58
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "compactWebSurfaceApplyResult@188": {
-              "complexity": 25
-            },
-            "webSurfaceCli@229": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "actions/promote-buildchain-ref/internal/promotion-operations.js": {
-        "baseline": {
-          "lines": 1320,
-          "functions": {
-            "updateBranch@158": {
-              "lines": 378,
-              "complexity": 34
-            },
-            "assertReleasePrOrVersionStateParent@795": {
-              "lines": 335,
-              "complexity": 42
-            }
-          }
-        },
-        "current": {
-          "lines": 1171,
-          "functions": {
-            "updateBranch@158": {
-              "lines": 378,
-              "complexity": 34
-            },
-            "assertReleasePrOrVersionStateParent@795": {
-              "lines": 335,
-              "complexity": 42
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "updateBranch@158": {
-              "lines": 180,
-              "complexity": 25
-            },
-            "assertReleasePrOrVersionStateParent@795": {
+            "validatePlan@88": {
               "lines": 180,
               "complexity": 25
             }
@@ -1970,29 +1661,6 @@
       }
     },
     "rust": {
-      "crates/buildchain-host-bridge/src/main.rs": {
-        "baseline": {
-          "functions": {
-            "execute@222": {
-              "lines": 192
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "execute@222": {
-              "lines": 192
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "execute@222": {
-              "lines": 140
-            }
-          }
-        }
-      },
       "crates/buildchain-domain-contracts/src/main.rs": {
         "baseline": {
           "functions": {
@@ -2034,70 +1702,6 @@
         "target": {
           "functions": {
             "select_product_publication_intent@219": {
-              "complexity": 30
-            }
-          }
-        }
-      },
-      "crates/buildchain-domain-contracts/src/release_tail.rs": {
-        "baseline": {
-          "lines": 1399,
-          "functions": {
-            "normalize_capability@149": {
-              "lines": 245,
-              "complexity": 51
-            },
-            "advance_release_tail_execution@1115": {
-              "lines": 193
-            }
-          }
-        },
-        "current": {
-          "lines": 1307,
-          "functions": {
-            "normalize_capability@149": {
-              "lines": 245,
-              "complexity": 51
-            },
-            "advance_release_tail_execution@1115": {
-              "lines": 193
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "normalize_capability@149": {
-              "lines": 140,
-              "complexity": 30
-            },
-            "advance_release_tail_execution@1115": {
-              "lines": 140
-            }
-          }
-        }
-      },
-      "crates/buildchain-domain-contracts/src/wasm.rs": {
-        "baseline": {
-          "functions": {
-            "dispatch@61": {
-              "lines": 214,
-              "complexity": 64
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "dispatch@61": {
-              "lines": 207,
-              "complexity": 64
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "dispatch@61": {
-              "lines": 140,
               "complexity": 30
             }
           }
@@ -2152,6 +1756,44 @@
           }
         }
       },
+      "crates/buildchain-domain-contracts/src/release_tail.rs": {
+        "baseline": {
+          "lines": 1399,
+          "functions": {
+            "normalize_capability@149": {
+              "lines": 245,
+              "complexity": 51
+            },
+            "advance_release_tail_execution@1115": {
+              "lines": 193
+            }
+          }
+        },
+        "current": {
+          "lines": 1307,
+          "functions": {
+            "normalize_capability@149": {
+              "lines": 245,
+              "complexity": 51
+            },
+            "advance_release_tail_execution@1115": {
+              "lines": 193
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "normalize_capability@149": {
+              "lines": 140,
+              "complexity": 30
+            },
+            "advance_release_tail_execution@1115": {
+              "lines": 140
+            }
+          }
+        }
+      },
       "crates/buildchain-domain-contracts/src/warrant.rs": {
         "baseline": {
           "functions": {
@@ -2200,6 +1842,55 @@
             }
           }
         }
+      },
+      "crates/buildchain-domain-contracts/src/wasm.rs": {
+        "baseline": {
+          "functions": {
+            "dispatch@61": {
+              "lines": 214,
+              "complexity": 64
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "dispatch@61": {
+              "lines": 207,
+              "complexity": 64
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "dispatch@61": {
+              "lines": 140,
+              "complexity": 30
+            }
+          }
+        }
+      },
+      "crates/buildchain-host-bridge/src/main.rs": {
+        "baseline": {
+          "functions": {
+            "execute@222": {
+              "lines": 192
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "execute@222": {
+              "lines": 192
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "execute@222": {
+              "lines": 140
+            }
+          }
+        }
       }
     },
     "tests": {
@@ -2208,7 +1899,7 @@
           "lines": 714
         },
         "current": {
-          "lines": 708
+          "lines": 607
         },
         "target": {
           "lines": 600
@@ -2255,18 +1946,15 @@
         "baseline": {
           "lines": 3181,
           "functions": {
-            "<anonymous@1494>@1494": {
-              "lines": 206
-            },
-            "<anonymous@1476>@1476": {
+            "<anonymous@1415>@1415": {
               "lines": 206
             }
           }
         },
         "current": {
-          "lines": 2628,
+          "lines": 2568,
           "functions": {
-            "<anonymous@1476>@1476": {
+            "<anonymous@1415>@1415": {
               "lines": 206
             }
           }
@@ -2274,10 +1962,7 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@1494>@1494": {
-              "lines": 180
-            },
-            "<anonymous@1476>@1476": {
+            "<anonymous@1415>@1415": {
               "lines": 180
             }
           }
@@ -2287,27 +1972,21 @@
         "baseline": {
           "lines": 4639,
           "functions": {
-            "<anonymous@446>@446": {
+            "<anonymous@279>@279": {
               "lines": 183
             },
-            "<anonymous@1555>@1555": {
-              "lines": 249
-            },
-            "<anonymous@2561>@2561": {
+            "<anonymous@1512>@1512": {
               "lines": 188
             }
           }
         },
         "current": {
-          "lines": 2885,
+          "lines": 1766,
           "functions": {
-            "<anonymous@446>@446": {
+            "<anonymous@279>@279": {
               "lines": 183
             },
-            "<anonymous@1555>@1555": {
-              "lines": 249
-            },
-            "<anonymous@2561>@2561": {
+            "<anonymous@1512>@1512": {
               "lines": 188
             }
           }
@@ -2315,13 +1994,10 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@446>@446": {
+            "<anonymous@279>@279": {
               "lines": 180
             },
-            "<anonymous@1555>@1555": {
-              "lines": 180
-            },
-            "<anonymous@2561>@2561": {
+            "<anonymous@1512>@1512": {
               "lines": 180
             }
           }
@@ -2364,12 +2040,41 @@
           }
         }
       },
+      "tests/delivery-authority-parity.test.mjs": {
+        "baseline": {
+          "lines": 1038,
+          "functions": {
+            "<anonymous@426>@426": {
+              "lines": 612,
+              "complexity": 43
+            }
+          }
+        },
+        "current": {
+          "lines": 1010,
+          "functions": {
+            "<anonymous@426>@426": {
+              "lines": 585,
+              "complexity": 40
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "<anonymous@426>@426": {
+              "lines": 180,
+              "complexity": 25
+            }
+          }
+        }
+      },
       "tests/dev-alpha-candidate-patrol.test.mjs": {
         "baseline": {
           "lines": 1422
         },
         "current": {
-          "lines": 1422
+          "lines": 1384
         },
         "target": {
           "lines": 600
@@ -2379,21 +2084,21 @@
         "baseline": {
           "lines": 2458,
           "functions": {
-            "<anonymous@893>@893": {
+            "<anonymous@737>@737": {
               "lines": 253
             },
-            "<anonymous@1323>@1323": {
+            "<anonymous@1167>@1167": {
               "lines": 279
             }
           }
         },
         "current": {
-          "lines": 2458,
+          "lines": 2193,
           "functions": {
-            "<anonymous@893>@893": {
+            "<anonymous@737>@737": {
               "lines": 253
             },
-            "<anonymous@1323>@1323": {
+            "<anonymous@1167>@1167": {
               "lines": 279
             }
           }
@@ -2401,10 +2106,10 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@893>@893": {
+            "<anonymous@737>@737": {
               "lines": 180
             },
-            "<anonymous@1323>@1323": {
+            "<anonymous@1167>@1167": {
               "lines": 180
             }
           }
@@ -2426,7 +2131,7 @@
           "lines": 626
         },
         "current": {
-          "lines": 622
+          "lines": 602
         },
         "target": {
           "lines": 600
@@ -2437,7 +2142,7 @@
           "lines": 841
         },
         "current": {
-          "lines": 841
+          "lines": 750
         },
         "target": {
           "lines": 600
@@ -2448,7 +2153,18 @@
           "lines": 1415
         },
         "current": {
-          "lines": 1415
+          "lines": 1412
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/floating-consumer-policy.test.mjs": {
+        "baseline": {
+          "lines": 714
+        },
+        "current": {
+          "lines": 679
         },
         "target": {
           "lines": 600
@@ -2458,15 +2174,15 @@
         "baseline": {
           "lines": 1179,
           "functions": {
-            "<anonymous@817>@817": {
+            "<anonymous@818>@818": {
               "lines": 205
             }
           }
         },
         "current": {
-          "lines": 1178,
+          "lines": 1133,
           "functions": {
-            "<anonymous@817>@817": {
+            "<anonymous@818>@818": {
               "lines": 205
             }
           }
@@ -2474,7 +2190,7 @@
         "target": {
           "lines": 600,
           "functions": {
-            "<anonymous@817>@817": {
+            "<anonymous@818>@818": {
               "lines": 180
             }
           }
@@ -2512,7 +2228,7 @@
           }
         },
         "current": {
-          "lines": 744,
+          "lines": 719,
           "functions": {
             "<anonymous@233>@233": {
               "lines": 229
@@ -2533,10 +2249,33 @@
           "lines": 1202
         },
         "current": {
-          "lines": 1201
+          "lines": 1182
         },
         "target": {
           "lines": 600
+        }
+      },
+      "tests/promote-buildchain-ref-durable-recovery.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 219
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 219
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@350>@350": {
+              "lines": 180
+            }
+          }
         }
       },
       "tests/promote-buildchain-ref-governance.test.mjs": {
@@ -2596,195 +2335,6 @@
               "lines": 180
             },
             "<anonymous@904>@904": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "tests/promote-buildchain-ref.test.mjs": {
-        "baseline": {
-          "functions": {
-            "<anonymous@62>@62": {
-              "lines": 203
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "<anonymous@62>@62": {
-              "lines": 203
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "<anonymous@62>@62": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "tests/publication-authority.test.mjs": {
-        "baseline": {
-          "lines": 1034,
-          "functions": {
-            "fixture@94": {
-              "lines": 215
-            }
-          }
-        },
-        "current": {
-          "lines": 1034,
-          "functions": {
-            "fixture@94": {
-              "lines": 215
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "fixture@94": {
-              "lines": 180
-            }
-          }
-        }
-      },
-      "tests/publish-transaction.test.mjs": {
-        "baseline": {
-          "lines": 849
-        },
-        "current": {
-          "lines": 849
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "tests/release-candidate-recovery.test.mjs": {
-        "baseline": {
-          "lines": 1217
-        },
-        "current": {
-          "lines": 1132
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "tests/release-candidate.test.mjs": {
-        "baseline": {
-          "lines": 1327
-        },
-        "current": {
-          "lines": 1327
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "tests/release-passport.test.mjs": {
-        "baseline": {
-          "lines": 3135
-        },
-        "current": {
-          "lines": 3135
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "tests/release-propagation.test.mjs": {
-        "baseline": {
-          "lines": 1355
-        },
-        "current": {
-          "lines": 1270
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "tests/delivery-authority-parity.test.mjs": {
-        "baseline": {
-          "lines": 1038,
-          "functions": {
-            "<anonymous@427>@427": {
-              "lines": 612,
-              "complexity": 43
-            }
-          }
-        },
-        "current": {
-          "lines": 1038,
-          "functions": {
-            "<anonymous@427>@427": {
-              "lines": 612,
-              "complexity": 43
-            }
-          }
-        },
-        "target": {
-          "lines": 600,
-          "functions": {
-            "<anonymous@427>@427": {
-              "lines": 180,
-              "complexity": 25
-            }
-          }
-        }
-      },
-      "tests/floating-consumer-policy.test.mjs": {
-        "baseline": {
-          "lines": 714
-        },
-        "current": {
-          "lines": 679
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "tests/publication-rehearsal.test.mjs": {
-        "baseline": {
-          "lines": 773
-        },
-        "current": {
-          "lines": 773
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "tests/web-surface.test.mjs": {
-        "baseline": {
-          "lines": 2231
-        },
-        "current": {
-          "lines": 2231
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      "tests/promote-buildchain-ref-durable-recovery.test.mjs": {
-        "baseline": {
-          "functions": {
-            "<anonymous@350>@350": {
-              "lines": 219
-            }
-          }
-        },
-        "current": {
-          "functions": {
-            "<anonymous@350>@350": {
-              "lines": 219
-            }
-          }
-        },
-        "target": {
-          "functions": {
-            "<anonymous@350>@350": {
               "lines": 180
             }
           }
@@ -2858,271 +2408,180 @@
             }
           }
         }
+      },
+      "tests/promote-buildchain-ref.test.mjs": {
+        "baseline": {
+          "functions": {
+            "<anonymous@62>@62": {
+              "lines": 203
+            }
+          }
+        },
+        "current": {
+          "functions": {
+            "<anonymous@62>@62": {
+              "lines": 203
+            }
+          }
+        },
+        "target": {
+          "functions": {
+            "<anonymous@62>@62": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/publication-authority.test.mjs": {
+        "baseline": {
+          "lines": 1034,
+          "functions": {
+            "fixture@94": {
+              "lines": 215
+            }
+          }
+        },
+        "current": {
+          "lines": 1034,
+          "functions": {
+            "fixture@94": {
+              "lines": 215
+            }
+          }
+        },
+        "target": {
+          "lines": 600,
+          "functions": {
+            "fixture@94": {
+              "lines": 180
+            }
+          }
+        }
+      },
+      "tests/publication-rehearsal.test.mjs": {
+        "baseline": {
+          "lines": 773
+        },
+        "current": {
+          "lines": 773
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/publish-transaction.test.mjs": {
+        "baseline": {
+          "lines": 849
+        },
+        "current": {
+          "lines": 849
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/release-candidate-recovery.test.mjs": {
+        "baseline": {
+          "lines": 1217
+        },
+        "current": {
+          "lines": 1045
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/release-candidate.test.mjs": {
+        "baseline": {
+          "lines": 1327
+        },
+        "current": {
+          "lines": 1327
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/release-passport.test.mjs": {
+        "baseline": {
+          "lines": 3135
+        },
+        "current": {
+          "lines": 3132
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/release-propagation.test.mjs": {
+        "baseline": {
+          "lines": 1355
+        },
+        "current": {
+          "lines": 1086
+        },
+        "target": {
+          "lines": 600
+        }
+      },
+      "tests/web-surface.test.mjs": {
+        "baseline": {
+          "lines": 2231
+        },
+        "current": {
+          "lines": 2231
+        },
+        "target": {
+          "lines": 600
+        }
       }
     },
     "workflows": {
-      ".github/workflows/.gate-profile.yml": {
-        "baseline": {
-          "lines": 701,
-          "decisions": 30
-        },
-        "current": {
-          "lines": 701,
-          "decisions": 30
-        },
-        "target": {
-          "lines": 600,
-          "decisions": 25
-        }
-      },
-      ".github/workflows/.publication-authority.yml": {
-        "baseline": {
-          "lines": 1010,
-          "maxStepsPerJob": 30,
-          "decisions": 27
-        },
-        "current": {
-          "lines": 1006,
-          "maxStepsPerJob": 30,
-          "decisions": 27
-        },
-        "target": {
-          "lines": 600,
-          "maxStepsPerJob": 20,
-          "decisions": 25
-        }
-      },
-      ".github/workflows/.release-candidate-promote.yml": {
-        "baseline": {
-          "lines": 2736
-        },
-        "current": {
-          "lines": 1217
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      ".github/workflows/.release-verify.yml": {
-        "baseline": {
-          "lines": 806,
-          "steps": 58,
-          "decisions": 47
-        },
-        "current": {
-          "lines": 806,
-          "steps": 58,
-          "decisions": 47
-        },
-        "target": {
-          "lines": 600,
-          "steps": 50,
-          "decisions": 25
-        }
-      },
-      ".github/workflows/.web-surface.yml": {
+      ".github/workflows/public-release-web.yml": {
         "baseline": {
           "lines": 2020,
-          "jobs": 14,
-          "steps": 112,
-          "decisions": 35
+          "jobs": 14
         },
         "current": {
-          "lines": 2020,
-          "jobs": 14,
-          "steps": 112,
-          "decisions": 35
+          "lines": 792,
+          "jobs": 14
         },
         "target": {
           "lines": 600,
-          "jobs": 8,
-          "steps": 50,
-          "decisions": 25
-        }
-      },
-      ".github/workflows/check.yml": {
-        "baseline": {
-          "maxStepsPerJob": 22
-        },
-        "current": {
-          "maxStepsPerJob": 22
-        },
-        "target": {
-          "maxStepsPerJob": 20
-        }
-      },
-      ".github/workflows/dev-pr-auto-merge.yml": {
-        "baseline": {
-          "lines": 1529,
-          "decisions": 28
-        },
-        "current": {
-          "lines": 1528,
-          "decisions": 28
-        },
-        "target": {
-          "lines": 600,
-          "decisions": 25
-        }
-      },
-      ".github/workflows/paper-release-sealed.yml": {
-        "baseline": {
-          "lines": 688
-        },
-        "current": {
-          "lines": 688
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      ".github/workflows/paper-release.yml": {
-        "baseline": {
-          "lines": 858,
-          "maxStepsPerJob": 23
-        },
-        "current": {
-          "lines": 858,
-          "maxStepsPerJob": 23
-        },
-        "target": {
-          "lines": 600,
-          "maxStepsPerJob": 20
-        }
-      },
-      ".github/workflows/publication-artifact.yml": {
-        "baseline": {
-          "lines": 701,
-          "maxStepsPerJob": 23
-        },
-        "current": {
-          "lines": 701,
-          "maxStepsPerJob": 23
-        },
-        "target": {
-          "lines": 600,
-          "maxStepsPerJob": 20
-        }
-      },
-      ".github/workflows/release-candidate-promote.yml": {
-        "baseline": {
-          "lines": 1218
-        },
-        "current": {
-          "lines": 1095
-        },
-        "target": {
-          "lines": 600
-        }
-      },
-      ".github/workflows/release-propagation.yml": {
-        "baseline": {
-          "lines": 732,
-          "maxStepsPerJob": 29
-        },
-        "current": {
-          "lines": 732,
-          "maxStepsPerJob": 29
-        },
-        "target": {
-          "lines": 600,
-          "maxStepsPerJob": 20
+          "jobs": 8
         }
       }
     }
   },
   "hotspots": [
-    "tests/product-publication-topology.test.mjs",
-    ".github/workflows/.build.yml",
-    ".github/workflows/.publication-authority.yml",
-    ".github/workflows/bootstrap.yml",
-    "scripts/check-universal-workflow-bootstrap.mjs",
-    "scripts/universal-workflow-engine.mjs",
-    "tests/universal-workflow-bootstrap.test.mjs",
-    "tests/capability-parity-inventory.test.mjs",
-    "tests/floating-consumer-policy-contract.test.mjs",
-    "tests/publication-qualification.test.mjs",
-    ".github/workflows/v4-adopter-delivery.yml",
-    ".github/workflows/buildchain-ref-promotion.yml",
-    ".github/workflows/dev-pr-auto-merge.yml",
-    "tests/release-candidate-recovery.test.mjs",
-    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
-    ".github/workflows/.release-candidate-promote.yml",
-    "tests/build-surface-promotion.test.mjs",
-    ".github/workflows/buildchain-ref-promotion-recovery.yml",
-    "tests/build-surface.test.mjs",
     "tests/internal-architecture.test.mjs",
-    "scripts/resume-from-candidate-run.mjs",
-    "scripts/check-capability-parity-inventory.mjs",
-    ".github/workflows/release-candidate-promote.yml",
-    "actions/promote-buildchain-ref/lib.js",
-    "actions/release-candidate-promote/index.js",
-    "actions/release-candidate-promote/product-provider.js",
-    "actions/release-candidate-promote/product-provider-github-adapters.js",
-    "tests/release-candidate-promote.test.mjs",
+    "tests/build-surface-promotion.test.mjs",
+    "tests/build-surface.test.mjs",
+    "tests/buildchain-ref-promotion-recovery-entry.test.mjs",
     "scripts/check-inventory.mjs",
-    "tests/promote-buildchain-ref.test.mjs",
-    "tests/promotion-channel-router.test.mjs",
-    "tests/release-topology.test.mjs",
-    "scripts/site-capability-metadata.mjs",
-    "tests/floating-consumer-policy.test.mjs",
-    "tests/declarative-promotion-mode.test.mjs",
-    "scripts/buildchain-cli-help.mjs",
-    "scripts/check-floating-consumer-policy-contract.mjs",
-    "tests/dev-delivery-warrant.test.mjs",
-    "packages/core/dev-delivery-warrant-state.js",
-    "actions/promote-buildchain-ref/internal/version-state.js",
-    "packages/core/floating-consumer-release-passport.js",
-    "packages/core/release-passport.js",
-    "tests/promote-buildchain-ref-governance.test.mjs",
-    "scripts/check-maintainability.mjs",
-    "tests/maintainability.test.mjs",
-    "scripts/generate-universal-workflow-facades.mjs",
-    "scripts/check-release-topology.mjs",
-    "actions/release-candidate-promote/product-provider-adapters.js",
-    "scripts/release-candidate-resolver.mjs",
-    "scripts/dev-delivery-warrant.mjs",
+    ".github/workflows/.build.yml",
+    "tests/dev-delivery-minimal-request.test.mjs",
     "scripts/generate-channel-promotion-workflow.mjs",
-    ".github/workflows/v4-stage-capsule-canary.yml",
-    "packages/core/release-tail-provider-plane.js",
-    "packages/core/buildchain-publication-authority.js",
-    ".github/workflows/build.yml"
+    "tests/build-configuration.test.mjs",
+    ".github/workflows/build.yml",
+    "tests/release-candidate-recovery.test.mjs",
+    ".github/workflows/self-build-fixture.yml",
+    "scripts/check-maintainability.mjs",
+    "tests/github-governance-authority.test.mjs",
+    "tests/maintainability.test.mjs",
+    "tests/oci-publication.test.mjs",
+    "tests/release-tail-provider-plane.test.mjs",
+    ".github/workflows/.release-promote.yml",
+    ".github/workflows/public-build-adopter-qualification.yml",
+    ".github/workflows/public-build-stage-capsule-canary.yml"
   ],
   "burnDownSlices": [
-    {
-      "domain": "sources",
-      "path": "actions/promote-buildchain-ref/lib.js",
-      "metric": "lines",
-      "baseline": 5132,
-      "current": 3423
-    },
     {
       "domain": "tests",
       "path": "tests/build-surface.test.mjs",
       "metric": "lines",
       "baseline": 4639,
-      "current": 2885
-    },
-    {
-      "domain": "workflows",
-      "path": ".github/workflows/.release-candidate-promote.yml",
-      "metric": "lines",
-      "baseline": 2736,
-      "current": 1217
-    },
-    {
-      "domain": "sources",
-      "path": "packages/core/release-passport.js",
-      "metric": "lines",
-      "baseline": 2987,
-      "current": 2884
-    },
-    {
-      "domain": "sources",
-      "path": "packages/core/paper.js",
-      "metric": "lines",
-      "baseline": 2878,
-      "current": 2478
+      "current": 1766
     }
   ]
 }

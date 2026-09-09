@@ -41,7 +41,7 @@ Event, receipt, and typed-fault objects use closed versioned shapes in [`contrac
 
 ## Implementations and proof
 
-- JavaScript: [`packages/core/canonical-contracts.js`](../packages/core/canonical-contracts.js)
+- JavaScript: [`packages/core/contracts/canonical-contracts.js`](../packages/core/contracts/canonical-contracts.js)
 - Rust: [`crates/buildchain-domain-contracts`](../crates/buildchain-domain-contracts)
 - Shared golden and adversarial cases: [`architecture/canonical-contract-fixtures.json`](../architecture/canonical-contract-fixtures.json)
 
@@ -55,7 +55,7 @@ The check validates both implementations, compares exact UTF-8 bytes and SHA-256
 
 ## Shared Delivery Warrant fixture runner
 
-The versioned trace contract in [`contracts/v4-delivery-warrant-trace-v1.schema.json`](../contracts/v4-delivery-warrant-trace-v1.schema.json) is the language-neutral boundary for retained Delivery Warrant fixtures. The JavaScript runner in [`packages/core/delivery-warrant-fixture-runner.js`](../packages/core/delivery-warrant-fixture-runner.js) and the Rust runner in [`crates/buildchain-domain-contracts`](../crates/buildchain-domain-contracts) consume the same UTF-8 fixture bytes and emit the same deterministic semantic projection.
+The versioned trace contract in [`contracts/v4-delivery-warrant-trace-v1.schema.json`](../contracts/v4-delivery-warrant-trace-v1.schema.json) is the language-neutral boundary for retained Delivery Warrant fixtures. The JavaScript runner in [`packages/core/dev-delivery/delivery-warrant-fixture-runner.js`](../packages/core/dev-delivery/delivery-warrant-fixture-runner.js) and the Rust runner in [`crates/buildchain-domain-contracts`](../crates/buildchain-domain-contracts) consume the same UTF-8 fixture bytes and emit the same deterministic semantic projection.
 
 Each trace is closed and ordered. It binds the exact prior root, event, action or typed fault, canonical successor bytes and root, generation, fencing counter, ordered declarative effects, provider-neutral observations, and rooted receipt. The runner verifies the full root chain before returning a projection. Malformed JSON, missing or unknown fields, reordered sequences, stale roots, and unsupported contract versions fail closed.
 
@@ -68,7 +68,7 @@ The runner is not a state-machine implementation and does not sample time, execu
 
 ## TypeScript shadow adapter
 
-The adapter in [`packages/core/delivery-warrant-shadow-adapter.js`](../packages/core/delivery-warrant-shadow-adapter.js) runs the existing TypeScript v3 fixture projection first and preserves that exact result as the only authoritative output. When explicitly enabled, it sends the same canonical input bytes to the replaceable Rust host command, requires the effect-disabled host capability, and captures the returned semantic projection only as a non-authoritative observation. Rust never receives effect authority, and success, failure, timeout, cancellation, malformed output, or an unsupported host cannot change the v3 result.
+The adapter in [`packages/core/dev-delivery/delivery-warrant-shadow-adapter.js`](../packages/core/dev-delivery/delivery-warrant-shadow-adapter.js) runs the existing TypeScript v3 fixture projection first and preserves that exact result as the only authoritative output. When explicitly enabled, it sends the same canonical input bytes to the replaceable Rust host command, requires the effect-disabled host capability, and captures the returned semantic projection only as a non-authoritative observation. Rust never receives effect authority, and success, failure, timeout, cancellation, malformed output, or an unsupported host cannot change the v3 result.
 
 Shadow retention accepts only checked-in fixtures or captured replays explicitly marked public-safe. Each returned observation binds the input root, exact TypeScript and Rust source revisions, validator version, capture time, fixed retention deadline, both projections, and sanitized diagnostics. It contains no comparison verdict or cutover signal. The adapter is disabled unless the caller opts in or sets `BUILDCHAIN_V4_WARRANT_SHADOW=enabled`; even then, invalid source bindings or an unsafe retention class skip Rust invocation.
 

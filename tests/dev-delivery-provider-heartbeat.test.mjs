@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { devDeliveryContentRoot } from "../packages/core/dev-delivery-warrant.js";
+import { devDeliveryContentRoot } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 import {
   runDevDeliveryProviderHeartbeat,
   verifyDevDeliveryProviderHeartbeat,
-} from "../packages/core/dev-delivery-provider-heartbeat.js";
-import { coordinateExactProviderAttemptAfterHeartbeatLoss } from "../scripts/dev-delivery-provider-heartbeat.mjs";
+} from "../packages/core/dev-delivery/dev-delivery-provider-heartbeat.js";
+import { coordinateExactProviderAttemptAfterHeartbeatLoss } from "../packages/core/dev-delivery/commands/dev-delivery-provider-heartbeat.mjs";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;
 

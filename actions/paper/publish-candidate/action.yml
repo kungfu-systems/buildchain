@@ -1,0 +1,139 @@
+name: publish-candidate
+description: Paper publish candidate.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  secrets-buildchain-generated-write-token:
+    description: Explicit scoped provider credential.
+    required: true
+  core-node-outputs-node-path:
+    description: Exact preceding paper node result.
+    required: true
+  generated-write-app-token-outputs-token:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-package-version:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-exact-tag:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-package-dir:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-sealed-bundle-root:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-sealed-bundle-manifest:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-required-artifacts-json:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-dist-tag:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-package-name:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-build-summary-path:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-manifest-path:
+    description: Exact preceding paper node result.
+    required: true
+  candidate-outputs-github-release-artifact-paths:
+    description: Exact preceding paper node result.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Resolve protected publication target
+      id: target
+      env:
+        INPUT_TARGET_REF: ${{ fromJSON(inputs.request-json).target-ref }}
+        INPUT_TARGET_SHA: ${{ fromJSON(inputs.request-json).target-sha }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/paper/nodes/publish.mjs" target
+    - name: Ensure publish-gate ref locks admitted commit
+      id: publish-gate
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ inputs.generated-write-app-token-outputs-token || inputs.secrets-buildchain-generated-write-token }}
+        script: |
+          const { pathToFileURL } = require("node:url");
+          const entry = new URL("../../../packages/core/paper/nodes/publication-gate.mjs", pathToFileURL(process.env.BUILDCHAIN_ACTION_PATH + "/"));
+          await (await import(entry.href)).default({ github, context, core });
+      env:
+        CHANNEL: ${{ steps.target.outputs.channel }}
+        TARGET_REF: ${{ steps.target.outputs.ref }}
+        TARGET_SHA: ${{ steps.target.outputs.sha }}
+        VERSION: ${{ inputs.candidate-outputs-package-version }}
+        BUILDCHAIN_ACTION_PATH: ${{ github.action_path }}
+    - name: Publish admitted npm package and GitHub Release assets
+      id: promote
+      uses: ./.buildchain/runtime/actions/release/promote-ref
+      with:
+        token: ${{ inputs.generated-write-app-token-outputs-token || inputs.secrets-buildchain-generated-write-token }}
+        sha: ${{ steps.target.outputs.sha }}
+        target-ref: ${{ steps.target.outputs.ref }}
+        tags: ${{ inputs.candidate-outputs-exact-tag }}
+        dry-run: ${{ fromJSON(inputs.request-json).dry-run }}
+        require-governance: "true"
+        require-version-state: "false"
+        required-status-check: ${{ fromJSON(inputs.request-json).required-status-check }}
+        generated-status-check-token: ${{ inputs.generated-write-app-token-outputs-token || inputs.secrets-buildchain-generated-write-token }}
+        generated-ref-update-token: ${{ inputs.generated-write-app-token-outputs-token || inputs.secrets-buildchain-generated-write-token }}
+        branch-protection-bypass-apps: ${{ fromJSON(inputs.request-json).branch-protection-bypass-apps }}
+        allow-repository: ${{ github.repository }}
+        publish-transaction: "true"
+        publish-command: node "${{ github.workspace }}/.buildchain/runtime/packages/core/publication/commands/npm-publish-transaction.mjs" --cwd "${{ inputs.candidate-outputs-package-dir }}"
+        publish-sealed-bundle-root: ${{ inputs.candidate-outputs-sealed-bundle-root }}
+        publish-sealed-bundle-manifest: ${{ inputs.candidate-outputs-sealed-bundle-manifest }}
+        publish-required-artifacts-json: ${{ inputs.candidate-outputs-required-artifacts-json }}
+        publish-mode: publish-final-version
+        publish-auth: trusted-publishing
+        publish-dist-tag: ${{ inputs.candidate-outputs-dist-tag }}
+        publish-package-set-order: as-provided
+        publish-package-main: ${{ inputs.candidate-outputs-package-name }}
+        require-publish-source-lock: "true"
+        publish-source-ref: ${{ steps.publish-gate.outputs.ref }}
+        publish-source-sha: ${{ steps.publish-gate.outputs.sha }}
+        publish-source-locked: ${{ steps.publish-gate.outputs.locked }}
+        publish-transaction-override: "true"
+        release-passport: "true"
+        release-passport-output-dir: ${{ fromJSON(inputs.request-json).release-passport-output-dir }}
+        release-passport-product-name: ${{ fromJSON(inputs.request-json).release-passport-product-name || inputs.candidate-outputs-package-name }}
+        release-passport-build-summary-path: ${{ inputs.candidate-outputs-build-summary-path }}
+        release-passport-platform-manifest-paths: ${{ inputs.candidate-outputs-manifest-path }}
+        release-passport-impact-json: ${{ fromJSON(inputs.request-json).release-passport-impact-json }}
+        github-release: ${{ fromJSON(inputs.request-json).github-release }}
+        github-release-artifact-paths: ${{ inputs.candidate-outputs-github-release-artifact-paths }}
+outputs:
+  promote-outcome:
+    description: Exact paper step result.
+    value: ${{ steps.promote.outcome }}
+  promote-outputs-public-release-tag:
+    description: Exact paper step result.
+    value: ${{ steps.promote.outputs.public-release-tag }}
+  target-outputs-sha:
+    description: Exact paper step result.
+    value: ${{ steps.target.outputs.sha }}
+  target-outputs-channel:
+    description: Exact paper step result.
+    value: ${{ steps.target.outputs.channel }}
+  promote-outputs-release-passport-path:
+    description: Exact paper step result.
+    value: ${{ steps.promote.outputs.release-passport-path }}
+  public-release-tag:
+    description: public-release-tag node result.
+    value: ${{ steps.promote.outputs.public-release-tag }}
+  release-passport-path:
+    description: release-passport-path node result.
+    value: ${{ steps.promote.outputs.release-passport-path }}
+  github-release-url:
+    description: github-release-url node result.
+    value: ${{ steps.promote.outputs.github-release-url }}

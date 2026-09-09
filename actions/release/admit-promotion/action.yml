@@ -1,0 +1,97 @@
+name: admit-promotion
+description: Admit the consumer and issue an explicitly authorized transient runtime receipt.
+inputs:
+  request-json:
+    description: Promotion inputs.
+    required: true
+  selection-json:
+    description: Exact selection.
+    required: true
+outputs:
+  runtime-authorization-json:
+    description: runtime-authorization-json result.
+    value: ${{ steps.authority.outputs.runtime-authorization-json }}
+  runtime-authorization-root:
+    description: runtime-authorization-root result.
+    value: ${{ steps.authority.outputs.runtime-authorization-root }}
+  invocation-json:
+    description: Exact normalized component invocation after consumer admission.
+    value: ${{ steps.invocation.outputs.invocation-json }}
+runs:
+  using: composite
+  steps:
+    - name: Prepare exact core runtime
+      id: core
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/workflow-shell
+    - name: Check out exact consumer
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ github.repository }}
+        ref: ${{ fromJSON(inputs.request-json).target-sha || github.sha }}
+        path: .buildchain/consumer
+        persist-credentials: false
+    - name: Check out exact caller workflow definition
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ github.repository }}
+        ref: ${{ github.workflow_sha }}
+        path: .buildchain/invocation-source
+        persist-credentials: false
+    - name: Check out exact policy runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).buildchain-repository }}
+        ref: ${{ fromJSON(inputs.selection-json).router-sha }}
+        path: .buildchain/policy-runtime
+        persist-credentials: false
+    - name: Prepare selected policy runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/policy-runtime
+    - name: Enforce consumer policy
+      id: policy
+      shell: bash
+      env:
+        BUILDCHAIN_PROMOTION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_ACTION_PATH: ${{ github.action_path }}
+        BUILDCHAIN_PROMOTION_SELECTION_JSON: ${{ inputs.selection-json }}
+        BUILDCHAIN_NODE: ${{ steps.core.outputs.node-path }}
+      run: '"$BUILDCHAIN_NODE" "$BUILDCHAIN_ACTION_PATH/../../../packages/core/release/nodes/promotion-router.mjs" admit'
+    - name: Preserve rooted admission
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-consumer-policy-release-candidate-promote-${{ github.sha }}
+        path: .buildchain/consumer/.buildchain/evidence/consumer-policy-receipt.json
+        if-no-files-found: error
+    - name: Authorize transient selection
+      id: authority
+      if: ${{ fromJSON(inputs.selection-json).override-used == 'true' }}
+      uses: actions/github-script@v8
+      env:
+        BUILDCHAIN_PROMOTION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_ACTION_PATH: ${{ github.action_path }}
+        BUILDCHAIN_PROMOTION_SELECTION_JSON: ${{ inputs.selection-json }}
+        BUILDCHAIN_CONSUMER_POLICY_ROOT: ${{ steps.policy.outputs.v4-consumer-policy-receipt-root }}
+      with:
+        script: |
+          const { pathToFileURL } = require("node:url");
+          const entry = new URL("../../../packages/core/release/nodes/promotion-admission.mjs", pathToFileURL(process.env.BUILDCHAIN_ACTION_PATH + "/"));
+          await (await import(entry.href)).authorizePromotionSelection({github,context,core});
+    - name: Preserve runtime authorization
+      if: ${{ fromJSON(inputs.selection-json).override-used == 'true' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-runtime-authorization-release-candidate-promote-${{ github.run_id }}
+        path: .buildchain/consumer/.buildchain/evidence/runtime-authorization.json
+        if-no-files-found: error
+    - name: Bind the complete admitted invocation
+      id: invocation
+      shell: bash
+      env:
+        BUILDCHAIN_PROMOTION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_PROMOTION_SELECTION_JSON: ${{ inputs.selection-json }}
+        BUILDCHAIN_RUNTIME_AUTHORIZATION_JSON: ${{ steps.authority.outputs.runtime-authorization-json }}
+        BUILDCHAIN_RUNTIME_AUTHORIZATION_ROOT: ${{ steps.authority.outputs.runtime-authorization-root }}
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/release/nodes/promotion-router.mjs" invocation

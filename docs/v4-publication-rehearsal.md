@@ -105,7 +105,7 @@ effect_default = "disabled"
 ```
 
 The public reusable
-[`release-tail.yml`](../.github/workflows/release-tail.yml) accepts the same
+[`public-release-tail.yml`](../.github/workflows/public-release-tail.yml) accepts the same
 capsule, candidate root, mode, state and evidence paths. Before publication,
 Buildchain dogfoods that public surface through a thin same-commit local reusable
 call with the exact PR-head or dispatch SHA as its runtime. The reusable is

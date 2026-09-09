@@ -11,7 +11,7 @@ import {
   windowsJitCampaignId,
   windowsJitRunnerLabel,
   windowsJitRunnerLabels,
-} from "../scripts/aws-windows-jit-core.mjs";
+} from "../packages/core/providers/commands/aws-windows-jit-core.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 

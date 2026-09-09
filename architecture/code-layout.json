@@ -1,0 +1,54 @@
+{
+  "schema": "buildchain.code-layout/v1",
+  "layers": {
+    "workflows": ".github/workflows",
+    "actions": "actions",
+    "runtime": "packages/core",
+    "domain": "crates/buildchain-domain-contracts",
+    "host": "crates/buildchain-host-bridge",
+    "contracts": "contracts",
+    "cli": "bin",
+    "tooling": "scripts",
+    "tests": "tests"
+  },
+  "capabilities": [
+    "adoption",
+    "build",
+    "consumer",
+    "contracts",
+    "dev-delivery",
+    "governance",
+    "observability",
+    "paper",
+    "providers",
+    "publication",
+    "release",
+    "runtime",
+    "web",
+    "workflow"
+  ],
+  "runtimeRootFiles": ["README.md", "index.js"],
+  "budgets": {
+    "actionEntryLines": 12,
+    "workflowStepsPerJob": 8,
+    "workflowInlineScriptLines": 0,
+    "compositeImplementationLines": 160,
+    "compositeInlineScriptLines": 12,
+    "cliEntryLines": 12
+  },
+  "cliEntrypoints": ["bin/buildchain.mjs"],
+  "workflowRequestSchemas": {
+    ".github/workflows/public-release-promote.yml": "contracts/promotion-request-v1.schema.json",
+    ".github/workflows/.release-promote.yml": "contracts/promotion-invocation-v1.schema.json"
+  },
+  "publicActionNodes": [
+    "build/github-attestation",
+    "build/macos-credential-island",
+    "build/run-lifecycle",
+    "build/validate-config",
+    "governance/report-issue",
+    "release/promote-candidate",
+    "release/promote-ref",
+    "release/settle"
+  ]
+}

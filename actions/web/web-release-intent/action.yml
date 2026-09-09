@@ -1,0 +1,44 @@
+name: web-release-intent
+description: Execute the web release-intent capability within its caller job boundary.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+outputs:
+  production-release-approved:
+    description: production-release-approved node result.
+    value: ${{ steps.intent.outputs.production-release-approved }}
+  production-release-pr:
+    description: production-release-pr node result.
+    value: ${{ steps.intent.outputs.production-release-pr }}
+  production-release-source:
+    description: production-release-source node result.
+    value: ${{ steps.intent.outputs.production-release-source }}
+  production-release-reason:
+    description: production-release-reason node result.
+    value: ${{ steps.intent.outputs.production-release-reason }}
+  production-source-sha:
+    description: production-source-sha node result.
+    value: ${{ steps.intent.outputs.production-source-sha }}
+runs:
+  using: composite
+  steps:
+    - name: Resolve production release PR intent
+      id: intent
+      uses: actions/github-script@v8
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        EVENT_ACTION: ${{ github.event.action }}
+        REF_NAME: ${{ github.ref_name }}
+        PRODUCTION_RELEASE_ON_MAIN: ${{ fromJSON(inputs.request-json).production-release-on-main }}
+        PRODUCTION_RELEASE_LABEL: ${{ fromJSON(inputs.request-json).production-release-label }}
+        PRODUCTION_RELEASE_HEAD_PREFIX: ${{ fromJSON(inputs.request-json).production-release-head-prefix }}
+        PRODUCTION_APPROVED: ${{ fromJSON(inputs.request-json).production-approved }}
+        PRODUCTION_SOURCE_SHA: ${{ fromJSON(inputs.request-json).production-source-sha }}
+        PRODUCTION_ENVIRONMENT: ${{ fromJSON(inputs.request-json).production-environment }}
+        BUILDCHAIN_ACTION_ROOT: ${{ github.action_path }}
+      with:
+        script: |
+          const { pathToFileURL } = require("node:url");
+          const { resolveReleaseIntent } = await import(pathToFileURL(`${process.env.BUILDCHAIN_ACTION_ROOT}/../../../packages/core/web/nodes/release-intent.mjs`).href);
+          await resolveReleaseIntent({ github, context, core });

@@ -8,11 +8,11 @@ confidence: high
 sensitivity: public
 evidence_grade: A
 review_state: unreviewed
-last_reviewed: 2026-08-03
+last_reviewed: 2026-09-09
 ai_provenance:
-  model_family: GPT-5
+  model_family: GPT-6
   product: Codex
-  generated_at: 2026-08-03
+  generated_at: 2026-09-09
   invisible_context: not asserted
 ---
 
@@ -420,9 +420,11 @@ base and managed branch, lock path, consumer commands, production status URL,
 and production artifact readback URLs. The sealed workflow rejects extra config
 fields, unknown targets, or a target whose base revision cannot be resolved.
 
-The reusable workflow keeps its prior behavior when `agent-work-mode` is
-`legacy` (the default). Managed Paper callers set `capture-only`; an Agent later
-claims the emitted artifact and resumes from its machine-readable `next_action`.
+The reusable workflow defaults to `agent-work-mode: capture-only`. It emits a
+paused typed Work without writing a downstream release lock. To execute, supply
+`agent-work-mode: execute` and an exact `agent-work-context-json` whose authority
+also declares execution. The same native Work records materialization, verification,
+verified branch push, and the pull request; there is no separate unowned execution path.
 
 Agent entrypoints are machine-readable and restart-safe:
 
@@ -486,14 +488,14 @@ root.
 ## Reusable Workflow
 
 Upstream repositories can call
-`.github/workflows/release-propagation.yml@v3` after release finalization:
+`.github/workflows/public-release-propagation.yml@v4-alpha` after release finalization:
 
 ```yaml
 jobs:
   propagate-site:
-    uses: kungfu-systems/buildchain/.github/workflows/release-propagation.yml@v3
+    uses: kungfu-systems/buildchain/.github/workflows/public-release-propagation.yml@v4-alpha
     with:
-      buildchain-ref: v3
+      agent-work-mode: capture-only
       graph-json: ${{ needs.release.outputs.propagation-graph-json }}
       upstream-release-json: ${{ needs.release.outputs.upstream-release-json }}
       downstream-target: site-libkungfu-dev
@@ -505,19 +507,18 @@ jobs:
         && corepack pnpm install --lockfile-only --ignore-scripts
       downstream-prepare-command: pnpm install --frozen-lockfile --ignore-scripts
       downstream-verify-command: pnpm run check
-      dry-run: false
+      dry-run: true
     secrets:
       propagation-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
 ```
 
-The downstream branch name may be reused across upstream releases. Before
-replacing an existing managed branch, the workflow reads its exact remote SHA
-and pushes with an explicit `--force-with-lease=<ref>:<sha>`. A surviving branch
-from a merged PR is therefore reconciled without manual deletion, while a
-concurrent writer makes the lease fail closed. The controller receipt includes a
-`propagation-branch-reconciliation` evidence file recording the branch, observed
-remote SHA, pushed SHA, lease mode, and the deterministically created or updated
-open PR.
+Execution uses the native Work's exact downstream repository, base revision and
+branch. Push planning verifies that the base has not advanced and is an ancestor
+of the source commit. The provider uses a non-force refspec and reads the remote
+branch back before recording successful push evidence. A divergent surviving
+branch or a concurrent incompatible update fails; the workflow does not replace
+its history. The controller retains the exact branch reconciliation and PR
+coordinates.
 
 The workflow checks out the Buildchain runtime selected by
 `buildchain-repository` and `buildchain-ref` into `.buildchain/runtime`, invokes

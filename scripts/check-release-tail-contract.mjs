@@ -3,8 +3,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { inspectWorkflowJob, readWorkflow } from "./workflow-action-graph.mjs";
 
-const INVENTORY_PATH = "architecture/release-tail-contract-inventory.json";
+const INVENTORY_PATH = "architecture/release-tail-contract.json";
 const ROOT_PATTERN = /^sha256:[0-9a-f]{64}$/u;
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
 
@@ -52,10 +53,12 @@ function validateReverseScan(root, inventory, surfaces, issues) {
   const coordinates = [
     ...workflowCoordinates(root, inventory),
     ...actionCoordinates(root, inventory),
-    ...(inventory.reverseScan.configAndCliAliases || []),
+    ...(inventory.reverseScan.configAndCliCoordinates || []),
   ];
   const owned = new Map();
   for (const surface of surfaces) {
+    if (Object.hasOwn(surface, "aliases"))
+      issues.push(`${surface.id}: command aliases are forbidden`);
     for (const coordinate of surface.coordinates || []) {
       if (owned.has(coordinate))
         issues.push(
@@ -279,7 +282,7 @@ function validateContract(root, inventory, issues) {
 }
 
 function validateSurfaceInventory(inventory, issues) {
-  const surfaces = inventory.legacyExecutableSurfaces || [];
+  const surfaces = inventory.executableSurfaces || [];
   const surfaceIds = new Set();
   for (const surface of surfaces) {
     if (!surface.id || surfaceIds.has(surface.id))
@@ -287,13 +290,7 @@ function validateSurfaceInventory(inventory, issues) {
         `release-tail surface id is missing or duplicated: ${surface.id || "<empty>"}`,
       );
     surfaceIds.add(surface.id);
-    for (const field of [
-      "owner",
-      "classification",
-      "default",
-      "replacement",
-      "disposition",
-    ]) {
+    for (const field of ["owner", "classification", "default", "disposition"]) {
       if (!String(surface[field] || "").trim())
         issues.push(`${surface.id}: ${field} is empty`);
     }
@@ -305,22 +302,22 @@ function validateSurfaceInventory(inventory, issues) {
   return { surfaces, surfaceIds };
 }
 
-function validateManagedCallers(inventory, surfaceIds, issues) {
-  for (const caller of inventory.managedConsumerCallers || []) {
-    if (
-      !caller.id ||
-      !caller.repository ||
-      !caller.workflow ||
-      !caller.runtimeRef
-    )
+function validateOwnedCallers(root, inventory, surfaceIds, issues) {
+  for (const caller of inventory.ownedCallers || []) {
+    if (!caller.id || !caller.workflow || !caller.action) {
+      issues.push("owned release-tail caller is incomplete");
+      continue;
+    }
+    const workflow = readWorkflow(caller.workflow, root);
+    const reachable = Object.keys(workflow.jobs).some((jobId) =>
+      inspectWorkflowJob(caller.workflow, jobId, root).actions.has(
+        caller.action,
+      ),
+    );
+    if (!reachable)
       issues.push(
-        `managed consumer caller is incomplete: ${caller.id || "<empty>"}`,
+        `${caller.id}: owned action is not reachable from its workflow`,
       );
-    if (
-      !SHA_PATTERN.test(caller.sourceCommit || "") ||
-      !SHA_PATTERN.test(caller.sourceTree || "")
-    )
-      issues.push(`${caller.id}: managed consumer cut is not exact`);
     for (const surfaceId of caller.executableSurfaceIds || []) {
       if (!surfaceIds.has(surfaceId))
         issues.push(`${caller.id}: unknown executable surface ${surfaceId}`);
@@ -328,64 +325,58 @@ function validateManagedCallers(inventory, surfaceIds, issues) {
   }
 }
 
-function validateInventory(inventory, issues) {
+function validateInventory(root, inventory, issues) {
   if (
     inventory.schemaVersion !== 1 ||
-    inventory.contract !== "kungfu-buildchain-release-tail-contract-inventory"
+    inventory.contract !== "buildchain.release-tail-contract/v1"
   )
     issues.push("release-tail inventory identity is invalid");
   if (
-    !SHA_PATTERN.test(inventory.baseline?.commit || "") ||
-    !SHA_PATTERN.test(inventory.baseline?.tree || "")
+    !SHA_PATTERN.test(inventory.sourceCut?.protectedDevelopmentSeed || "") ||
+    inventory.sourceCut?.implementation !== "working-tree"
   )
-    issues.push("release-tail baseline must bind an exact commit and tree");
+    issues.push("release-tail inventory must identify its current source cut");
   const { surfaces, surfaceIds } = validateSurfaceInventory(inventory, issues);
-  validateManagedCallers(inventory, surfaceIds, issues);
+  validateOwnedCallers(root, inventory, surfaceIds, issues);
   return surfaces;
 }
 
-function validateMigration(inventory, issues) {
-  const migration = inventory.migration || {};
-  const window = migration.compatibilityWindow || {};
+function validateCurrentBoundary(root, inventory, issues) {
+  const boundary = inventory.currentBoundary || {};
   if (
-    window.maximumDurationDays !== 90 ||
-    window.maximumMinorLines !== 2 ||
-    window.permanentEscapeHatch !== false
+    Object.hasOwn(inventory, "migration") ||
+    Object.hasOwn(inventory, "legacyExecutableSurfaces")
   )
     issues.push(
-      "compatibility window is not bounded by time, minor lines, and no-escape policy",
+      "historical migration policy cannot authorize the current release-tail contract",
     );
-  if ((migration.publishedReleasePreservation || []).length < 3)
-    issues.push("published-release preservation rules are incomplete");
-  const codes = new Set(
-    (migration.rejectionRules || []).map((entry) => entry.code),
-  );
-  for (const code of [
-    "release-tail-command-forbidden",
-    "release-tail-alias-collision",
-    "release-tail-operation-id-missing",
-    "release-tail-readback-missing",
-    "release-tail-retry-unbounded",
-  ]) {
-    if (!codes.has(code)) issues.push(`migration rejection rules omit ${code}`);
+  if (
+    boundary.compatibilityFallback !== false ||
+    boundary.commandAliases !== false
+  )
+    issues.push(
+      "current release-tail boundary forbids compatibility fallbacks and command aliases",
+    );
+  for (const kind of ["request", "invocation"]) {
+    const schema = loadJson(root, `contracts/promotion-${kind}-v1.schema.json`);
+    for (const field of boundary.retiredRequestFields || []) {
+      if (Object.hasOwn(schema.properties, field))
+        issues.push(`retired promotion command field: ${field}`);
+    }
   }
-  const excepted = new Set(
-    (migration.exceptionLedger || []).flatMap(
-      (entry) => entry.surfaceIds || [],
-    ),
-  );
-  for (const surface of inventory.legacyExecutableSurfaces || []) {
-    if (
-      surface.classification !== "adjacent-non-tail" &&
-      !excepted.has(surface.id)
-    )
-      issues.push(
-        `${surface.id}: compatibility exception has no owner and sunset test`,
-      );
-  }
-  for (const exception of migration.exceptionLedger || []) {
-    if (!exception.owner || !exception.expires || !exception.removalTest)
-      issues.push(`${exception.id}: exception ledger entry is incomplete`);
+  const graph = inspectWorkflowJob(boundary.canonicalPublisher, "apply", root);
+  if (
+    !graph.actions.has("actions/release/promote-candidate") ||
+    [...graph.modules.keys()].some((file) => file.includes("/promote-ref/"))
+  )
+    issues.push(
+      "canonical publisher must reach only its current provider transaction",
+    );
+  for (const step of graph.steps) {
+    for (const field of boundary.retiredRequestFields || []) {
+      if (Object.hasOwn(step.with || {}, field))
+        issues.push(`canonical APPLY forwards a retired command: ${field}`);
+    }
   }
 }
 
@@ -395,7 +386,7 @@ function checkReleaseTailContract({
   fixtures,
 } = {}) {
   const issues = [];
-  const surfaces = validateInventory(inventory, issues);
+  const surfaces = validateInventory(root, inventory, issues);
   validateTransaction(inventory, issues);
   if (fixtures) {
     for (const [fixturePath, fixture] of Object.entries(fixtures))
@@ -404,14 +395,14 @@ function checkReleaseTailContract({
     validateContract(root, inventory, issues);
   }
   const reverseScan = validateReverseScan(root, inventory, surfaces, issues);
-  validateMigration(inventory, issues);
+  validateCurrentBoundary(root, inventory, issues);
   if (issues.length)
     throw new Error(
       `release-tail contract check failed:\n- ${issues.join("\n- ")}`,
     );
   return {
     surfaces: surfaces.length,
-    managedCallers: inventory.managedConsumerCallers.length,
+    ownedCallers: inventory.ownedCallers.length,
     capabilities: inventory.declarativeContract.requiredCapabilityIds.length,
     ...reverseScan,
   };
@@ -424,7 +415,7 @@ if (
   try {
     const report = checkReleaseTailContract();
     console.log(
-      `release-tail contract check passed: ${report.surfaces} classified surfaces, ${report.coordinates} reverse-discovered coordinates, ${report.executionSites} execution sites, ${report.capabilities} declarative capabilities, ${report.managedCallers} managed callers`,
+      `release-tail contract check passed: ${report.surfaces} classified surfaces, ${report.coordinates} reverse-discovered coordinates, ${report.executionSites} execution sites, ${report.capabilities} declarative capabilities, ${report.ownedCallers} owned callers`,
     );
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

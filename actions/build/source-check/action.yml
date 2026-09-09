@@ -1,0 +1,183 @@
+name: check
+description: Execute the check check capability within its caller job boundary.
+inputs:
+  runtime-ref:
+    description: Selected runtime ref with the caller precedence preserved.
+    required: true
+  runtime-repository:
+    description: Runtime repository.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  steps-source-outcome:
+    description: Source checkout result.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+outputs:
+  controller-plan-artifact:
+    description: controller-plan-artifact node result.
+    value: buildchain-check-controller-plan-${{ steps.identities.outputs.source-sha }}
+  controller-plan-json:
+    description: controller-plan-json node result.
+    value: ${{ steps.plan.outputs.controller-plan-json }}
+  controller-plan-digest:
+    description: controller-plan-digest node result.
+    value: ${{ steps.plan.outputs.controller-plan-digest }}
+  controller-receipt-artifact:
+    description: controller-receipt-artifact node result.
+    value: buildchain-check-controller-receipt-${{ steps.identities.outputs.source-sha }}
+  controller-receipt-json:
+    description: controller-receipt-json node result.
+    value: ${{ steps.receipt.outputs.controller-receipt-json }}
+  controller-receipt-digest:
+    description: controller-receipt-digest node result.
+    value: ${{ steps.receipt.outputs.controller-receipt-digest }}
+  controller-receipt-status:
+    description: controller-receipt-status node result.
+    value: ${{ steps.receipt.outputs.controller-receipt-status }}
+  source-proof-root:
+    description: source-proof-root node result.
+    value: ${{ steps.source-proof-seal.outputs.proof-root || steps.source-proof.outputs.verify-proof-root }}
+  source-proof-reused:
+    description: source-proof-reused node result.
+    value: ${{ steps.source-proof.outputs.verify-reuse || 'false' }}
+  source-proof-reuse-reason:
+    description: source-proof-reuse-reason node result.
+    value: ${{ steps.source-proof.outputs.verify-reason || steps.source-proof.outputs.lookup-reason }}
+  source-proof-producer-run-id:
+    description: source-proof-producer-run-id node result.
+    value: ${{ steps.source-proof.outputs.lookup-run-id }}
+  source-proof-decision-root:
+    description: source-proof-decision-root node result.
+    value: ${{ steps.source-proof.outputs.verify-decision-root }}
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - name: Checkout Buildchain runtime
+      id: runtime
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ inputs.runtime-repository }}
+        ref: ${{ inputs.runtime-ref }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Prepare exact Buildchain runtime
+      id: core-runtime
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+      with:
+        directory: .buildchain/runtime
+    - name: Resolve source and runtime identities
+      id: identities
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/source-check.mjs" identities
+      env:
+        BUILDCHAIN_CHECK_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+    - name: Create source-check controller plan
+      id: plan
+      run: '"$BUILDCHAIN_NODE" .buildchain/runtime/packages/core/observability/commands/controller-evidence.mjs --mode plan'
+      env:
+        BUILDCHAIN_CONTROLLER_ID: source-check
+        BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
+        BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ steps.identities.outputs.source-sha }}
+        BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ inputs.runtime-ref }}
+        BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
+        BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
+        BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ toJSON(fromJSON(inputs.request-json)) }}
+        BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: workflow-call
+        BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+      shell: bash -e {0}
+    - name: Upload source-check controller plan
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-check-controller-plan-${{ steps.identities.outputs.source-sha }}
+        path: .buildchain/controller/plan.json
+        if-no-files-found: error
+    - name: Evaluate accepted source proof
+      id: source-proof
+      uses: ./.buildchain/workflow-shell/actions/build/source-proof
+      with:
+        request-json: ${{ inputs.request-json }}
+        runtime-ref: ${{ inputs.runtime-ref }}
+        identities-json: ${{ toJSON(steps.identities.outputs) }}
+        core-node: ${{ steps.core-runtime.outputs.node-path }}
+    - name: Execute declared check lifecycle
+      id: lifecycle-check
+      if: ${{ steps.source-proof.outputs.verify-reuse != 'true' }}
+      uses: ./.buildchain/workflow-shell/actions/build/check-lifecycle
+      with:
+        request-json: ${{ inputs.request-json }}
+        core-node: ${{ steps.core-runtime.outputs.node-path }}
+        runtime-ref: ${{ inputs.runtime-ref }}
+    - name: Upload check evidence
+      id: evidence-upload
+      if: ${{ fromJSON(inputs.request-json).upload-artifacts }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-check
+        path: .buildchain/artifacts/
+        if-no-files-found: error
+    - name: Create source-check controller receipt
+      id: receipt
+      if: ${{ always() && steps.plan.outcome == 'success' }}
+      run: '"$BUILDCHAIN_NODE" .buildchain/runtime/packages/core/observability/commands/controller-evidence.mjs --mode receipt'
+      env:
+        BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
+        BUILDCHAIN_CONTROLLER_STAGES_JSON: "[{\"id\":\"resolve-runtime\",\"status\":\"${{ steps.runtime.outcome }}\"},{\"id\":\"checkout-source\",\"status\":\"${{ fromJSON(inputs.steps-source-outcome) }}\"},{\"id\":\"install\",\"status\":\"${{ steps.source-proof.outputs.verify-reuse == 'true' && 'success' || steps.lifecycle-check.outputs.install-outcome }}\"},{\"id\":\"check\",\"status\":\"${{ steps.source-proof.outputs.verify-reuse == 'true' && 'success' || (steps.lifecycle-check.outputs.validate-outcome == 'failure' || steps.lifecycle-check.outputs.selected-check-outcome == 'failure') && 'failure' || (steps.lifecycle-check.outputs.validate-outcome == 'cancelled' || steps.lifecycle-check.outputs.selected-check-outcome == 'cancelled') && 'cancelled' || (steps.lifecycle-check.outputs.validate-outcome == 'success' && steps.lifecycle-check.outputs.selected-check-outcome == 'success') && 'success' || 'skipped' }}\"},{\"id\":\"aggregate\",\"status\":\"${{ steps.source-proof.outputs.verify-reuse == 'true' && ((!fromJSON(inputs.request-json).upload-artifacts || steps.evidence-upload.outcome == 'success') && 'success' || 'failure') || (steps.lifecycle-check.outputs.selected-check-outcome == 'failure' || steps.evidence-upload.outcome == 'failure') && 'failure' || (steps.lifecycle-check.outputs.selected-check-outcome == 'cancelled' || steps.evidence-upload.outcome == 'cancelled') && 'cancelled' || (steps.lifecycle-check.outputs.selected-check-outcome == 'success' && (!fromJSON(inputs.request-json).upload-artifacts || steps.evidence-upload.outcome == 'success')) && 'success' || 'skipped' }}\"}]"
+        BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ steps.source-proof.outputs.verify-reuse == 'true' && '[{"kind":"lifecycle-manifest","path":".buildchain/artifacts/check-manifest.json"},{"kind":"lifecycle-summary","path":".buildchain/artifacts/check-summary.json"},{"kind":"source-qualification-proof","path":".buildchain/source-proof/source-proof.json"},{"kind":"source-proof-reuse-decision","path":".buildchain/source-proof/reuse-decision.json"}]' || steps.lifecycle-check.outputs.selected-check-outcome == 'success' && '[{"kind":"lifecycle-manifest","path":".buildchain/artifacts/check-manifest.json"},{"kind":"lifecycle-summary","path":".buildchain/artifacts/check-summary.json"}]' || '[]' }}
+        BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ ((steps.source-proof.outputs.verify-reuse == 'true' && (!fromJSON(inputs.request-json).upload-artifacts || steps.evidence-upload.outcome == 'success')) || steps.lifecycle-check.outputs.selected-check-outcome == 'success') && '' || 'check-incomplete' }}
+        BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Source check did not complete successfully
+        BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: buildchain-check-controller-receipt-${{ steps.identities.outputs.source-sha }}
+        BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+      shell: bash -e {0}
+    - name: Seal exact pull-request source qualification proof
+      id: source-proof-seal
+      if: ${{ fromJSON(inputs.request-json).mode == 'source' && fromJSON(inputs.request-json).source-proof-reuse && github.event_name == 'pull_request' && steps.receipt.outputs.controller-receipt-qualifying == 'true' }}
+      shell: bash
+      env:
+        QUALIFIED_BASE: ${{ github.event.pull_request.base.sha }}
+        PROTECTED_BASE: ${{ github.event.pull_request.base.ref }}
+        SOURCE_HEAD: ${{ steps.identities.outputs.source-sha }}
+        RUNTIME_REF: ${{ inputs.runtime-ref }}
+        RUNTIME_SHA: ${{ steps.identities.outputs.runtime-sha }}
+        CONTRACT_DIGEST: ${{ steps.identities.outputs.contract-digest }}
+        POLICY_PATHS_JSON: ${{ fromJSON(inputs.request-json).source-proof-policy-paths-json }}
+        CLOSURE_PATHS_JSON: ${{ fromJSON(inputs.request-json).source-proof-closure-paths-json }}
+        DEPENDENCY_PATHS_JSON: ${{ fromJSON(inputs.request-json).source-proof-dependency-paths-json }}
+        REQUIRED_CONTEXTS_JSON: ${{ fromJSON(inputs.request-json).source-proof-required-contexts-json }}
+        BUILDCHAIN_CHECK_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE: ${{ steps.core-runtime.outputs.node-path }}
+      run: |
+        "$BUILDCHAIN_NODE" "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/source-check.mjs" seal-proof
+    - name: Upload exact pull-request source qualification proof
+      if: ${{ steps.source-proof-seal.outcome == 'success' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-source-qualification-proof-${{ steps.identities.outputs.source-sha }}
+        path: .buildchain/source-proof/
+        if-no-files-found: error
+        retention-days: 14
+    - name: Upload source-check controller receipt
+      if: ${{ always() && steps.receipt.outcome == 'success' }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-check-controller-receipt-${{ steps.identities.outputs.source-sha }}
+        path: .buildchain/controller/receipt.json
+        if-no-files-found: error
+    - name: Enforce qualifying source-check controller receipt
+      if: ${{ always() && steps.plan.outcome == 'success' && steps.receipt.outputs.controller-receipt-qualifying != 'true' }}
+      run: |
+        echo "::error::source-check controller receipt is not qualifying: ${{ steps.receipt.outputs.controller-receipt-status }}"
+        exit 1
+      shell: bash -e {0}

@@ -3,11 +3,6 @@ name: Engineering Housekeeper
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       repository:
         description: "Repository to inspect as owner/repo. Empty uses the caller repository."
         required: false
@@ -74,10 +69,10 @@ on:
         type: string
         default: kungfu-systems/buildchain
       buildchain-ref:
-        description: "Exact or floating Buildchain runtime ref."
+        description: "Optional explicit runtime ref. Empty binds the defining workflow SHA."
         required: false
         type: string
-        default: v4
+        default: ""
     secrets:
       housekeeper_token:
         description: "Optional caller-owned token. Defaults to the caller-scoped github.token."
@@ -124,282 +119,104 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   plan:
-    if: ${{ inputs.universal-request-json == '' }}
     name: Inventory and plan
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: read
     outputs:
-      plan-root: ${{ steps.housekeeper.outputs.plan-root }}
-      report-receipt-root: ${{ steps.housekeeper.outputs.report-receipt-root }}
-      action-count: ${{ steps.housekeeper.outputs.action-count }}
-      branch-action-count: ${{ steps.housekeeper.outputs.branch-action-count }}
-      pull-request-action-count: ${{ steps.housekeeper.outputs.pull-request-action-count }}
-      outcome: ${{ steps.housekeeper.outputs.outcome }}
-      plan-artifact: ${{ inputs.artifact-prefix }}-plan-${{ github.run_id }}
-      report-artifact: ${{ inputs.artifact-prefix }}-report-${{ github.run_id }}
-      receipt-artifact: ${{ inputs.artifact-prefix }}-receipt-${{ github.run_id }}
+      plan-root: ${{ steps.node.outputs.plan-root }}
+      report-receipt-root: ${{ steps.node.outputs.report-receipt-root }}
+      action-count: ${{ steps.node.outputs.action-count }}
+      branch-action-count: ${{ steps.node.outputs.branch-action-count }}
+      pull-request-action-count: ${{ steps.node.outputs.pull-request-action-count }}
+      outcome: ${{ steps.node.outputs.outcome }}
+      plan-artifact: ${{ steps.node.outputs.plan-artifact }}
+      report-artifact: ${{ steps.node.outputs.report-artifact }}
+      receipt-artifact: ${{ steps.node.outputs.receipt-artifact }}
     env:
       HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
       HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
-      - name: Resolve target repository
-        id: target
-        shell: bash
-        env:
-          INPUT_REPOSITORY: ${{ inputs.repository }}
-        run: |
-          set -euo pipefail
-          repository="${INPUT_REPOSITORY:-${GITHUB_REPOSITORY}}"
-          owner="${repository%%/*}"
-          name="${repository#*/}"
-          if [[ -z "${owner}" || -z "${name}" || "${repository}" != "${owner}/${name}" ]]; then
-            echo "::error::repository must be owner/repo"
-            exit 1
-          fi
-          {
-            echo "repository=${repository}"
-            echo "owner=${owner}"
-            echo "name=${name}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Validate caller-owned GitHub App credential pair
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -n "${HOUSEKEEPER_APP_ID}" && -z "${HOUSEKEEPER_APP_PRIVATE_KEY}" ]] || \
-             [[ -z "${HOUSEKEEPER_APP_ID}" && -n "${HOUSEKEEPER_APP_PRIVATE_KEY}" ]]; then
-            echo "::error::housekeeper_app_id and housekeeper_app_private_key must be provided together"
-            exit 1
-          fi
-
-      - name: Mint caller-owned GitHub App token
-        if: ${{ env.HOUSEKEEPER_APP_ID != '' && env.HOUSEKEEPER_APP_PRIVATE_KEY != '' }}
-        id: app-token
-        uses: actions/create-github-app-token@v3.1.1
-        with:
-          app-id: ${{ secrets.housekeeper_app_id }}
-          private-key: ${{ secrets.housekeeper_app_private_key }}
-          owner: ${{ steps.target.outputs.owner }}
-          repositories: ${{ steps.target.outputs.name }}
-
-      - name: Checkout Buildchain runtime
+      - name: Check out workflow implementation
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
-          path: .buildchain/runtime
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
           persist-credentials: false
-
-      - uses: actions/setup-node@v6.4.0
+      - name: Inventory and plan
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/governance/housekeeping-plan
         with:
-          node-version: "24"
-
-      - name: Create exact housekeeper plan and report receipt
-        id: housekeeper
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
-          HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
-          HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
-          HOUSEKEEPER_MODE: ${{ inputs.mode }}
-          HOUSEKEEPER_APPLY_ENABLED: ${{ inputs.apply-enabled }}
-          HOUSEKEEPER_PROTECTED_PATTERNS: ${{ inputs.protected-patterns }}
-          HOUSEKEEPER_RETAINED_PATTERNS: ${{ inputs.retained-patterns }}
-          HOUSEKEEPER_TEMPORARY_BRANCH_PATTERNS: ${{ inputs.temporary-branch-patterns }}
-          HOUSEKEEPER_STALE_DAYS: ${{ inputs.stale-days }}
-          HOUSEKEEPER_STALE_PR_LABEL: ${{ inputs.stale-pull-request-label }}
-          HOUSEKEEPER_MAX_ACTIONS: ${{ inputs.max-actions }}
-          HOUSEKEEPER_OUTPUT_DIRECTORY: .buildchain/engineering-housekeeper
-        run: node .buildchain/runtime/scripts/engineering-housekeeper-workflow.mjs plan
-
-      - name: Upload exact plan
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ inputs.artifact-prefix }}-plan-${{ github.run_id }}
-          path: ${{ steps.housekeeper.outputs.plan-path }}
-          retention-days: ${{ inputs.artifact-retention-days }}
-          if-no-files-found: error
-
-      - name: Upload decision report
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ inputs.artifact-prefix }}-report-${{ github.run_id }}
-          path: ${{ steps.housekeeper.outputs.report-path }}
-          retention-days: ${{ inputs.artifact-retention-days }}
-          if-no-files-found: error
-
-      - name: Upload report receipt
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ inputs.artifact-prefix }}-receipt-${{ github.run_id }}
-          path: ${{ steps.housekeeper.outputs.report-receipt-path }}
-          retention-days: ${{ inputs.artifact-retention-days }}
-          if-no-files-found: error
+          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
+          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          request-json: ${{ toJSON(inputs) }}
+          secrets-housekeeper-app-id: ${{ secrets.housekeeper_app_id }}
+          secrets-housekeeper-app-private-key: ${{ secrets.housekeeper_app_private_key }}
+          secrets-housekeeper-token: ${{ secrets.housekeeper_token }}
 
   delete-branches:
     name: Apply exact branch deletions
-    if: ${{ inputs.universal-request-json == '' && (inputs.mode == 'apply' && inputs.apply-enabled && needs.plan.outputs.branch-action-count != '0') }}
+    if: ${{ (inputs.mode == 'apply' && inputs.apply-enabled && needs.plan.outputs.branch-action-count != '0') }}
     needs: plan
     runs-on: ubuntu-24.04
     # Mutation authority is inherited from the caller. A report caller passes
     # only read permissions, while apply callers explicitly pass the write ceiling.
     outputs:
-      receipt-root: ${{ steps.housekeeper.outputs.receipt-root }}
+      receipt-root: ${{ steps.node.outputs.receipt-root }}
     env:
       HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
       HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
-      - name: Resolve target repository
-        id: target
-        shell: bash
-        env:
-          INPUT_REPOSITORY: ${{ inputs.repository }}
-        run: |
-          set -euo pipefail
-          repository="${INPUT_REPOSITORY:-${GITHUB_REPOSITORY}}"
-          {
-            echo "repository=${repository}"
-            echo "owner=${repository%%/*}"
-            echo "name=${repository#*/}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Mint caller-owned GitHub App token
-        if: ${{ env.HOUSEKEEPER_APP_ID != '' && env.HOUSEKEEPER_APP_PRIVATE_KEY != '' }}
-        id: app-token
-        uses: actions/create-github-app-token@v3.1.1
-        with:
-          app-id: ${{ secrets.housekeeper_app_id }}
-          private-key: ${{ secrets.housekeeper_app_private_key }}
-          owner: ${{ steps.target.outputs.owner }}
-          repositories: ${{ steps.target.outputs.name }}
-
-      - name: Checkout Buildchain runtime
+      - name: Check out workflow implementation
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
-          path: .buildchain/runtime
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
           persist-credentials: false
-
-      - uses: actions/setup-node@v6.4.0
+      - name: Apply exact branch deletions
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/governance/housekeeping-delete-branches
         with:
-          node-version: "24"
-
-      - name: Download exact plan
-        uses: actions/download-artifact@v8.0.1
-        with:
-          name: ${{ needs.plan.outputs.plan-artifact }}
-          path: .buildchain/engineering-housekeeper-input
-
-      - name: Revalidate and apply branch actions
-        id: housekeeper
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
-          HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
-          HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
-          HOUSEKEEPER_MODE: apply
-          HOUSEKEEPER_APPLY_ENABLED: "true"
-          HOUSEKEEPER_STALE_DAYS: ${{ inputs.stale-days }}
-          HOUSEKEEPER_MAX_ACTIONS: ${{ inputs.max-actions }}
-          HOUSEKEEPER_PLAN_PATH: .buildchain/engineering-housekeeper-input/plan.json
-          HOUSEKEEPER_OUTPUT_DIRECTORY: .buildchain/engineering-housekeeper-branches
-        run: node .buildchain/runtime/scripts/engineering-housekeeper-workflow.mjs apply branches
-
-      - name: Upload branch receipt
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ inputs.artifact-prefix }}-branch-receipt-${{ github.run_id }}
-          path: |
-            ${{ steps.housekeeper.outputs.receipt-path }}
-            ${{ steps.housekeeper.outputs.report-path }}
-          retention-days: ${{ inputs.artifact-retention-days }}
-          if-no-files-found: error
+          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
+          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          request-json: ${{ toJSON(inputs) }}
+          secrets-housekeeper-app-id: ${{ secrets.housekeeper_app_id }}
+          secrets-housekeeper-app-private-key: ${{ secrets.housekeeper_app_private_key }}
+          needs-plan-outputs-plan-artifact: ${{ toJSON(needs.plan.outputs.plan-artifact) }}
+          secrets-housekeeper-token: ${{ secrets.housekeeper_token }}
 
   label-pull-requests:
     name: Apply stale pull-request labels
-    if: ${{ inputs.universal-request-json == '' && (inputs.mode == 'apply' && inputs.apply-enabled && inputs.stale-pull-request-label != '' && needs.plan.outputs.pull-request-action-count != '0') }}
+    if: ${{ (inputs.mode == 'apply' && inputs.apply-enabled && inputs.stale-pull-request-label != '' && needs.plan.outputs.pull-request-action-count != '0') }}
     needs: plan
     runs-on: ubuntu-24.04
     # See delete-branches: a reusable workflow cannot elevate the report
     # caller's read-only GITHUB_TOKEN during startup validation.
     outputs:
-      receipt-root: ${{ steps.housekeeper.outputs.receipt-root }}
+      receipt-root: ${{ steps.node.outputs.receipt-root }}
     env:
       HOUSEKEEPER_APP_ID: ${{ secrets.housekeeper_app_id }}
       HOUSEKEEPER_APP_PRIVATE_KEY: ${{ secrets.housekeeper_app_private_key }}
     steps:
-      - name: Resolve target repository
-        id: target
-        shell: bash
-        env:
-          INPUT_REPOSITORY: ${{ inputs.repository }}
-        run: |
-          set -euo pipefail
-          repository="${INPUT_REPOSITORY:-${GITHUB_REPOSITORY}}"
-          {
-            echo "repository=${repository}"
-            echo "owner=${repository%%/*}"
-            echo "name=${repository#*/}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Mint caller-owned GitHub App token
-        if: ${{ env.HOUSEKEEPER_APP_ID != '' && env.HOUSEKEEPER_APP_PRIVATE_KEY != '' }}
-        id: app-token
-        uses: actions/create-github-app-token@v3.1.1
-        with:
-          app-id: ${{ secrets.housekeeper_app_id }}
-          private-key: ${{ secrets.housekeeper_app_private_key }}
-          owner: ${{ steps.target.outputs.owner }}
-          repositories: ${{ steps.target.outputs.name }}
-
-      - name: Checkout Buildchain runtime
+      - name: Check out workflow implementation
         uses: actions/checkout@v7.0.0
         with:
-          repository: ${{ inputs.buildchain-repository }}
-          ref: ${{ inputs.buildchain-ref }}
-          path: .buildchain/runtime
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
           persist-credentials: false
-
-      - uses: actions/setup-node@v6.4.0
+      - name: Apply stale pull-request labels
+        id: node
+        uses: ./.buildchain/workflow-shell/actions/governance/housekeeping-label-pull-requests
         with:
-          node-version: "24"
-
-      - name: Download exact plan
-        uses: actions/download-artifact@v8.0.1
-        with:
-          name: ${{ needs.plan.outputs.plan-artifact }}
-          path: .buildchain/engineering-housekeeper-input
-
-      - name: Revalidate and apply pull-request actions
-        id: housekeeper
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.housekeeper_token || github.token }}
-          HOUSEKEEPER_REPOSITORY: ${{ steps.target.outputs.repository }}
-          HOUSEKEEPER_TARGET_BRANCH: ${{ inputs.target-branch }}
-          HOUSEKEEPER_MODE: apply
-          HOUSEKEEPER_APPLY_ENABLED: "true"
-          HOUSEKEEPER_STALE_DAYS: ${{ inputs.stale-days }}
-          HOUSEKEEPER_STALE_PR_LABEL: ${{ inputs.stale-pull-request-label }}
-          HOUSEKEEPER_MAX_ACTIONS: ${{ inputs.max-actions }}
-          HOUSEKEEPER_PLAN_PATH: .buildchain/engineering-housekeeper-input/plan.json
-          HOUSEKEEPER_OUTPUT_DIRECTORY: .buildchain/engineering-housekeeper-pull-requests
-        run: node .buildchain/runtime/scripts/engineering-housekeeper-workflow.mjs apply pull-requests
-
-      - name: Upload pull-request receipt
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ inputs.artifact-prefix }}-pull-request-receipt-${{ github.run_id }}
-          path: |
-            ${{ steps.housekeeper.outputs.receipt-path }}
-            ${{ steps.housekeeper.outputs.report-path }}
-          retention-days: ${{ inputs.artifact-retention-days }}
-          if-no-files-found: error
+          runtime-ref: ${{ inputs.buildchain-ref || job.workflow_sha }}
+          runtime-repository: ${{ inputs.buildchain-repository || job.workflow_repository }}
+          request-json: ${{ toJSON(inputs) }}
+          secrets-housekeeper-app-id: ${{ secrets.housekeeper_app_id }}
+          secrets-housekeeper-app-private-key: ${{ secrets.housekeeper_app_private_key }}
+          needs-plan-outputs-plan-artifact: ${{ toJSON(needs.plan.outputs.plan-artifact) }}
+          secrets-housekeeper-token: ${{ secrets.housekeeper_token }}

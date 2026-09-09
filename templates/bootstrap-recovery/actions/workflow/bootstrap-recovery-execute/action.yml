@@ -1,0 +1,49 @@
+name: bootstrap-recovery-execute
+description: Execute the bootstrap-recovery recovery-execute capability within its caller job boundary.
+inputs:
+  needs-recovery-admit-outputs-runtime-sha:
+    description: Caller needs.recovery-admit.outputs.runtime-sha value.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  needs-recovery-admit-outputs-admission-json:
+    description: Caller needs.recovery-admit.outputs.admission-json value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+outputs:
+  result-json:
+    description: result-json node result.
+    value: ${{ steps.execute.outputs.result-json }}
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "24"
+    - name: Checkout exact admitted candidate
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ fromJSON(inputs.needs-recovery-admit-outputs-runtime-sha) }}
+        path: .buildchain/candidate
+        persist-credentials: false
+    - uses: ./.buildchain/workflow-shell/.buildchain/bootstrap-recovery/actions/runtime/prepare
+      with:
+        directory: .buildchain/candidate
+    - name: Execute only the exact admitted engine
+      id: execute
+      shell: bash
+      env:
+        BUILDCHAIN_UNIVERSAL_REQUEST_JSON: ${{ fromJSON(inputs.request-json).request-json }}
+        BUILDCHAIN_UNIVERSAL_ADMISSION_JSON: ${{ fromJSON(inputs.needs-recovery-admit-outputs-admission-json) }}
+        BUILDCHAIN_UNIVERSAL_ENGINE_SHA: ${{ fromJSON(inputs.needs-recovery-admit-outputs-runtime-sha) }}
+        GH_TOKEN: ${{ github.token }}
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/workflow/nodes/bootstrap-recovery.mjs" execute

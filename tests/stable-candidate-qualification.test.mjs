@@ -8,7 +8,7 @@ import {
   runStableCandidateQualification,
   validatePublicBuildRun,
   qualifyPublicBuild,
-} from "../scripts/stable-candidate-qualification.mjs";
+} from "../packages/core/release/commands/stable-candidate-qualification.mjs";
 
 const SHA = "a".repeat(40);
 function publicBuild() {

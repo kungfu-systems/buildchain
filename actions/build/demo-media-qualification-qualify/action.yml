@@ -1,0 +1,40 @@
+name: demo-media-qualification-qualify
+description: Execute the demo-media-qualification qualify capability within its caller job boundary.
+inputs:
+  matrix-json:
+    description: Declared platform matrix value.
+    required: true
+  source-checkout-outcome:
+    description: Actual preceding source checkout outcome.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Require successful source checkout
+      id: source-boundary
+      if: ${{ inputs.source-checkout-outcome != 'success' }}
+      shell: bash
+      run: exit 1
+    - name: Render the fixed qualification fixture
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-media.mjs" render
+    - name: Inspect rendered bytes with the fixed Buildchain command
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-media.mjs" inspect
+    - name: Produce content-addressed fixture evidence
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-media.mjs" measure
+    - name: Verify the checked-in measurement baseline
+      run: node "$GITHUB_ACTION_PATH/../../../packages/core/build/nodes/demo-media.mjs" baseline
+      shell: bash -e {0}
+    - name: Upload qualification evidence
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: ${{ fromJSON(inputs.matrix-json).artifactName }}-${{ github.sha }}
+        path: |
+          .buildchain/media-profile/evidence.json
+          .buildchain/media-profile/inspection/media-inspection.json
+          .buildchain/media-profile/render/manifest.json
+        if-no-files-found: error
+        retention-days: 14

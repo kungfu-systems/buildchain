@@ -26,16 +26,16 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
     GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "1", GITHUB_JOB: "sign", RUNNER_OS: "Linux",
     GITHUB_OUTPUT: path.join(workspace, "outputs") });
   t.after(() => { for (const key of Object.keys(process.env)) if (!(key in previous)) delete process.env[key]; Object.assign(process.env, previous); });
-  const { resolveBuildConfiguration } = await import("../scripts/resolve-build-configuration.mjs");
-  const { resolveRunnerMatrix } = await import("../scripts/build-contract-core.mjs");
-  const { buildMatrices } = await import("../scripts/build/plan.mjs");
-  const { rootOf } = await import("../scripts/build/context.mjs");
-  const { transferBuild, downloadBuild } = await import("../scripts/build/transfer.mjs");
-  const { controlSigning, finalizeSigning } = await import("../scripts/build/sign.mjs");
-  const { loadFinalArtifact } = await import("../scripts/build/attest.mjs");
-  const { finalizeBuild } = await import("../scripts/build/finalize.mjs");
-  const { createControllerPlan } = await import("../packages/core/controller-evidence.js");
-  const { artifactNames } = await import("../scripts/build/artifact-contract.mjs");
+  const { resolveBuildConfiguration } = await import("../packages/core/build/commands/resolve-build-configuration.mjs");
+  const { resolveRunnerMatrix } = await import("../packages/core/build/commands/build-contract-core.mjs");
+  const { buildMatrices } = await import("../packages/core/build/commands/plan.mjs");
+  const { rootOf } = await import("../packages/core/build/commands/context.mjs");
+  const { transferBuild, downloadBuild } = await import("../packages/core/build/commands/transfer.mjs");
+  const { controlSigning, finalizeSigning } = await import("../packages/core/build/commands/sign.mjs");
+  const { loadFinalArtifact } = await import("../packages/core/build/commands/attest.mjs");
+  const { finalizeBuild } = await import("../packages/core/build/commands/finalize.mjs");
+  const { createControllerPlan } = await import("../packages/core/observability/controller-evidence.js");
+  const { artifactNames } = await import("../packages/core/build/commands/artifact-contract.mjs");
   const { plan } = resolveBuildConfiguration({ root: source, repository: "kungfu-systems/buildchain",
     workflowRef: "kungfu-systems/buildchain/.github/workflows/build.yml@v4-alpha", workflowSha: "a".repeat(40),
     sourceSha: git("rev-parse", "HEAD"), sourceRef: "refs/heads/dev/v4/v4.0" });
@@ -58,7 +58,7 @@ test("real lifecycle artifacts survive transfer and isolated finalization; provi
   plan.root = rootOf(plan);
   Object.assign(process.env, { BUILDCHAIN_PLAN: JSON.stringify(plan), BUILDCHAIN_PLATFORM: JSON.stringify(platform) });
   for (const stage of ["install", "build", "verify"]) {
-    const run = spawnSync(process.execPath, [path.join(repo, "scripts/build/stage.mjs")], {
+    const run = spawnSync(process.execPath, [path.join(repo, "packages/core/build/commands/stage.mjs")], {
       cwd: workspace, encoding: "utf8", env: { ...process.env, BUILDCHAIN_STAGE: stage },
     });
     assert.equal(run.status, 0, `${stage}\n${run.stdout}\n${run.stderr}`);

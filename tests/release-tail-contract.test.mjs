@@ -9,7 +9,7 @@ function load(file) {
 }
 
 function inventory() {
-  return load("architecture/release-tail-contract-inventory.json");
+  return load("architecture/release-tail-contract.json");
 }
 
 function fixture() {
@@ -21,19 +21,19 @@ function fixture() {
 test("release-tail inventory closes commands, callers, and declarative capabilities", () => {
   const report = checkReleaseTailContract();
   assert.deepEqual(report, {
-    surfaces: 7,
-    managedCallers: 7,
+    surfaces: 4,
+    ownedCallers: 2,
     capabilities: 4,
-    coordinates: 28,
-    executionSites: 9,
+    coordinates: 9,
+    executionSites: 5,
   });
 });
 
 test("reverse scan rejects an unclassified or multiply owned production hook", () => {
   const value = inventory();
-  value.legacyExecutableSurfaces[0].coordinates =
-    value.legacyExecutableSurfaces[0].coordinates.filter(
-      (entry) => !entry.endsWith("#publication-gate-command"),
+  value.executableSurfaces[0].coordinates =
+    value.executableSurfaces[0].coordinates.filter(
+      (entry) => !entry.endsWith("#consumer-gate-command"),
     );
   assert.throws(
     () => checkReleaseTailContract({ inventory: value }),
@@ -41,8 +41,8 @@ test("reverse scan rejects an unclassified or multiply owned production hook", (
   );
 
   const ambiguous = inventory();
-  ambiguous.legacyExecutableSurfaces[1].coordinates.push(
-    ambiguous.legacyExecutableSurfaces[0].coordinates[0],
+  ambiguous.executableSurfaces[1].coordinates.push(
+    ambiguous.executableSurfaces[0].coordinates[0],
   );
   assert.throws(
     () => checkReleaseTailContract({ inventory: ambiguous }),
@@ -98,12 +98,17 @@ test("declarations reject missing readback and unbounded local retry", () => {
   );
 });
 
-test("migration rejects permanent escape hatches and unowned exceptions", () => {
+test("current contract rejects compatibility fallbacks and command aliases", () => {
   const escape = inventory();
-  escape.migration.compatibilityWindow.permanentEscapeHatch = true;
-  escape.migration.exceptionLedger = [];
+  escape.currentBoundary.compatibilityFallback = true;
   assert.throws(
     () => checkReleaseTailContract({ inventory: escape }),
-    /compatibility window is not bounded|compatibility exception has no owner/u,
+    /forbids compatibility fallbacks and command aliases/u,
+  );
+  const alias = inventory();
+  alias.executableSurfaces[0].aliases = [{ name: "retired-command" }];
+  assert.throws(
+    () => checkReleaseTailContract({ inventory: alias }),
+    /command aliases are forbidden/u,
   );
 });

@@ -6,8 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { advanceAlphaNextDevelopment } from "../actions/release-candidate-promote/product-provider.js";
-import { nextDevelopmentRoot } from "../packages/core/next-development-transition.js";
+import { advanceAlphaNextDevelopment } from "../packages/core/release/promote-candidate/product-provider.js";
+import { nextDevelopmentRoot } from "../packages/core/release/next-development-transition.js";
 
 const SOURCE = "a".repeat(40);
 const ALPHA_RELEASE = "c".repeat(40);
@@ -358,7 +358,7 @@ test("anchored alpha publication preserves success and awaits the next manual an
 });
 
 test("stable publication advances divergent protected development and retries without another PR", async () => {
-  const { advanceStableNextDevelopment } = await import("../actions/release-candidate-promote/next-development-provider.js");
+  const { advanceStableNextDevelopment } = await import("../packages/core/release/promote-candidate/next-development-provider.js");
   const cwd = fixture();
   const github = githubProvider(cwd, { devTree: "9".repeat(40) });
   let disposed = 0;

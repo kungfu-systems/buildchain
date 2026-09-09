@@ -1,11 +1,6 @@
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       remote-host:
         default: "git-codecommit.cn-northwest-1.amazonaws.com.cn"
         type: string
@@ -25,39 +20,32 @@ on:
       REMOTE_USER:
         required: false
       REMOTE_CREDENTIAL:
-        # format: https://username:password@host
-        # run git locally with credential.helper=store and check ~/.git-credentials to get the value
+        # HTTPS credential URL, used only by the bounded transfer process.
         required: false
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   sync:
-    if: ${{ inputs.universal-request-json == '' }}
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout
+      - name: Check out source history
         uses: actions/checkout@v7.0.0
         with:
           fetch-depth: 0
-
-      - name: Fetch Remote Git Repo
-        run: |
-          echo ${{secrets.REMOTE_CREDENTIAL}} >> ~/.git-credentials
-          git config --global credential.https://${{inputs.remote-host}}.helper store
-          git config --global credential.https://${{inputs.remote-host}}.username ${{ secrets.REMOTE_USER }}
-          git remote add peer "https://${{inputs.remote-host}}/${{inputs.remote-path}}/${{inputs.remote-repo}}"
-          git fetch peer
-      
-      - name: Push Remote Git Repo
-        if: ${{ !inputs.force }}
-        run: git push peer ${{ github.ref_name }}
-      
-      - name: Push Remote Git Repo (Force)
-        if: ${{ inputs.force }}
-        run: git push --force peer ${{ github.ref_name }}
+          persist-credentials: false
+      - name: Check out workflow implementation
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .buildchain/workflow-shell
+          persist-credentials: false
+      - name: Synchronize requested ref
+        uses: ./.buildchain/workflow-shell/actions/providers/sync-git
+        with:
+          remote-host: ${{ inputs.remote-host }}
+          remote-path: ${{ inputs.remote-path }}
+          remote-repo: ${{ inputs.remote-repo }}
+          source-ref: ${{ github.ref_name }}
+          force: ${{ inputs.force }}
+          remote-user: ${{ secrets.REMOTE_USER }}
+          remote-credential: ${{ secrets.REMOTE_CREDENTIAL }}

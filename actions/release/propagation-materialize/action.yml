@@ -1,0 +1,153 @@
+name: propagation-materialize
+description: propagation materialize.
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  propagation-work-outputs-execute:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs:
+    description: Exact preceding propagation node result.
+    required: true
+  branch-outputs:
+    description: Exact preceding propagation node result.
+    required: true
+  core-node-outputs-node-path:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs-update_command:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs-lock_path:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs-propagation_key:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs-branch:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs-prepare_command:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs-package_name:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs-package_version:
+    description: Exact preceding propagation node result.
+    required: true
+  plan-outputs-verify_command:
+    description: Exact preceding propagation node result.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Write downstream release lock
+      id: lock
+      if: ${{ inputs.propagation-work-outputs-execute == 'true' }}
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/release/nodes/propagation.mjs" lock
+      env:
+        BUILDCHAIN_PROPAGATION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_PROPAGATION_PLAN_JSON: ${{ toJSON(fromJSON(inputs.plan-outputs)) }}
+        BUILDCHAIN_PROPAGATION_BRANCH_JSON: ${{ toJSON(fromJSON(inputs.branch-outputs)) }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+    - name: Apply consumer-owned downstream update
+      id: downstream-update
+      if: ${{ (inputs.propagation-work-outputs-execute == 'true') && (fromJSON(inputs.request-json).downstream-update-command != '' || inputs.plan-outputs-update_command != '') }}
+      shell: bash
+      working-directory: downstream
+      env:
+        BUILDCHAIN_PROPAGATION_LOCK_PATH: ${{ fromJSON(inputs.request-json).lock-path || inputs.plan-outputs-lock_path }}
+        BUILDCHAIN_PROPAGATION_LOCK_SHA256: ${{ steps.lock.outputs.lock_sha }}
+        BUILDCHAIN_PROPAGATION_KEY: ${{ inputs.plan-outputs-propagation_key }}
+        BUILDCHAIN_PROPAGATION_BRANCH: ${{ inputs.plan-outputs-branch }}
+        BUILDCHAIN_PROPAGATION_UPSTREAM_RELEASE_JSON: ${{ fromJSON(inputs.request-json).upstream-release-json }}
+        DOWNSTREAM_UPDATE_COMMAND: ${{ fromJSON(inputs.request-json).downstream-update-command || inputs.plan-outputs-update_command }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      run: bash --noprofile --norc -e -u -o pipefail -c "$DOWNSTREAM_UPDATE_COMMAND"
+    - name: Prepare downstream release update
+      id: prepare
+      if: ${{ (inputs.propagation-work-outputs-execute == 'true') && (fromJSON(inputs.request-json).downstream-prepare-command != '' || inputs.plan-outputs-prepare_command != '') }}
+      shell: bash
+      working-directory: downstream
+      env:
+        BUILDCHAIN_UPSTREAM_PACKAGE_NAME: ${{ inputs.plan-outputs-package_name }}
+        BUILDCHAIN_UPSTREAM_PACKAGE_VERSION: ${{ inputs.plan-outputs-package_version }}
+        BUILDCHAIN_UPSTREAM_RELEASE_LOCK: ${{ inputs.plan-outputs-lock_path }}
+        BUILDCHAIN_DOWNSTREAM_PREPARE_COMMAND: ${{ fromJSON(inputs.request-json).downstream-prepare-command || inputs.plan-outputs-prepare_command }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      run: bash -euo pipefail -c "$BUILDCHAIN_DOWNSTREAM_PREPARE_COMMAND"
+    - name: Refresh managed README badges
+      id: badges
+      if: ${{ (inputs.propagation-work-outputs-execute == 'true') && fromJSON(inputs.request-json).refresh-managed-readme-badges }}
+      shell: bash
+      working-directory: downstream
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/release/nodes/propagation.mjs" badges
+      env:
+        BUILDCHAIN_PROPAGATION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_PROPAGATION_PLAN_JSON: ${{ toJSON(fromJSON(inputs.plan-outputs)) }}
+        BUILDCHAIN_PROPAGATION_BRANCH_JSON: ${{ toJSON(fromJSON(inputs.branch-outputs)) }}
+        BUILDCHAIN_PROPAGATION_LOCK_JSON: ${{ toJSON(steps.lock.outputs) }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+    - name: Verify downstream release update
+      id: verify
+      if: ${{ (inputs.propagation-work-outputs-execute == 'true') && (fromJSON(inputs.request-json).downstream-verify-command != '' || inputs.plan-outputs-verify_command != '') }}
+      shell: bash
+      working-directory: downstream
+      env:
+        BUILDCHAIN_UPSTREAM_PACKAGE_NAME: ${{ inputs.plan-outputs-package_name }}
+        BUILDCHAIN_UPSTREAM_PACKAGE_VERSION: ${{ inputs.plan-outputs-package_version }}
+        BUILDCHAIN_UPSTREAM_RELEASE_LOCK: ${{ inputs.plan-outputs-lock_path }}
+        BUILDCHAIN_DOWNSTREAM_VERIFY_COMMAND: ${{ fromJSON(inputs.request-json).downstream-verify-command || inputs.plan-outputs-verify_command }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      run: bash -euo pipefail -c "$BUILDCHAIN_DOWNSTREAM_VERIFY_COMMAND"
+    - name: Record materialization and release verification
+      if: ${{ inputs.propagation-work-outputs-execute == 'true' && steps.lock.outcome == 'success' && steps.downstream-update.outcome != 'failure' && steps.prepare.outcome != 'failure' && steps.badges.outcome != 'failure' && steps.verify.outcome != 'failure' }}
+      shell: bash
+      env:
+        LOCK_SHA: ${{ steps.lock.outputs.lock_sha }}
+        BUILDCHAIN_PROPAGATION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_PROPAGATION_PLAN_JSON: ${{ toJSON(fromJSON(inputs.plan-outputs)) }}
+        BUILDCHAIN_PROPAGATION_BRANCH_JSON: ${{ toJSON(fromJSON(inputs.branch-outputs)) }}
+        BUILDCHAIN_PROPAGATION_LOCK_JSON: ${{ toJSON(steps.lock.outputs) }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/release/nodes/propagation.mjs" record-materialization
+    - name: Summarize release propagation
+      id: summarize
+      if: ${{ inputs.propagation-work-outputs-execute == 'true' }}
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/runtime/packages/core/release/nodes/propagation.mjs" summary
+      env:
+        BUILDCHAIN_PROPAGATION_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_PROPAGATION_PLAN_JSON: ${{ toJSON(fromJSON(inputs.plan-outputs)) }}
+        BUILDCHAIN_PROPAGATION_BRANCH_JSON: ${{ toJSON(fromJSON(inputs.branch-outputs)) }}
+        BUILDCHAIN_PROPAGATION_LOCK_JSON: ${{ toJSON(steps.lock.outputs) }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.core-node-outputs-node-path }}
+outputs:
+  lock-outputs:
+    description: Exact propagation step result.
+    value: ${{ toJSON(steps.lock.outputs) }}
+  lock-outcome:
+    description: Exact propagation step result.
+    value: ${{ steps.lock.outcome }}
+  downstream-update-outcome:
+    description: Exact propagation step result.
+    value: ${{ steps.downstream-update.outcome }}
+  prepare-outcome:
+    description: Exact propagation step result.
+    value: ${{ steps.prepare.outcome }}
+  badges-outcome:
+    description: Exact propagation step result.
+    value: ${{ steps.badges.outcome }}
+  verify-outcome:
+    description: Exact propagation step result.
+    value: ${{ steps.verify.outcome }}
+  summarize-outcome:
+    description: Exact propagation step result.
+    value: ${{ steps.summarize.outcome }}

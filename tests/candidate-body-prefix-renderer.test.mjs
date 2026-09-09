@@ -10,7 +10,7 @@ import { test } from "node:test";
 import {
   resolveRendererPath,
   runCandidateBodyPrefixRenderer,
-} from "../scripts/run-candidate-body-prefix-renderer.mjs";
+} from "../packages/core/build/commands/run-candidate-body-prefix-renderer.mjs";
 
 function fixture(rendererSource) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-prefix-"));

@@ -11,7 +11,7 @@ import {
   runLifecycleStage,
   updateConfiguredVersionStateContents,
   validateBuildchainConfig,
-} from "../packages/core/buildchain-config.js";
+} from "../packages/core/consumer/buildchain-config.js";
 
 function withTempRepo(files, fn) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-config-"));

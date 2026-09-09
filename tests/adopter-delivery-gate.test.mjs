@@ -11,7 +11,7 @@ import {
   createPackageArtifactProfile,
   defineAdopterArtifactProfile,
   defineAdopterProtocolDriver,
-} from "../packages/core/adopter-delivery-gate.js";
+} from "../packages/core/adoption/adopter-delivery-gate.js";
 
 const root = (value) => adopterDeliveryGateDigest(value);
 

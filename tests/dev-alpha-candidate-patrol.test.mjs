@@ -1,3 +1,4 @@
+import { inspectWorkflowJob, readWorkflow } from "../scripts/workflow-action-graph.mjs";
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from "node:assert/strict";
@@ -8,7 +9,7 @@ import { test } from "node:test";
 import {
   channelCandidateSourceLockRef,
   decideChannelCandidate,
-} from "../packages/core/channel-candidate.js";
+} from "../packages/core/release/channel-candidate.js";
 import {
   createGitHubChannelCandidateClient,
   managedCandidateFromPullRequest,
@@ -17,12 +18,12 @@ import {
   reconcileActiveReleaseTrain,
   runDevAlphaCandidatePatrol,
   selectLatestQualifiedSource,
-} from "../scripts/dev-alpha-candidate-patrol.mjs";
+} from "../packages/core/release/commands/dev-alpha-candidate-patrol.mjs";
 import {
   createReleaseTrain,
   transitionReleaseTrain,
-} from "../packages/core/release-train.js";
-import { readGitHubNextDevelopmentVersionReservation } from "../packages/core/next-development-candidate-reservation.js";
+} from "../packages/core/release/release-train.js";
+import { readGitHubNextDevelopmentVersionReservation } from "../packages/core/release/next-development-candidate-reservation.js";
 
 const SOURCE_SHA = "a".repeat(40);
 const TARGET_SHA = "b".repeat(40);
@@ -1362,61 +1363,22 @@ test("managed candidate parsing accepts the legacy PR and rejects a target misma
 });
 
 test("reusable workflow retains the no-publication boundary", () => {
-  const workflowText = fs.readFileSync(
-    path.join(
-      process.cwd(),
-      ".github/workflows/dev-alpha-candidate-patrol.yml",
-    ),
-    "utf8",
-  );
-  assert.match(workflowText, /actions: read/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_DRY_RUN/u);
-  assert.match(
-    workflowText,
-    /BUILDCHAIN_CHANNEL_PATROL_REQUIRE_ACTIVE_TRAIN: "true"/u,
-  );
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_RUNTIME_SHA/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_CUT_ROOT/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_CUT_CREATED_AT/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_NOW/u);
-  assert.match(
-    workflowText,
-    /ref: \$\{\{ needs\.observe\.outputs\.runtime-sha \}\}/u,
-  );
-  assert.match(workflowText, /candidate-generation:/u);
-  assert.match(workflowText, /candidate-tree-sha:/u);
-  assert.match(workflowText, /drift-root:/u);
-  assert.match(workflowText, /hold-root:/u);
-  assert.match(workflowText, /BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX/u);
-  assert.match(workflowText, /pull-request-body-prefix-renderer:/u);
-  assert.match(
-    workflowText,
-    /ref: \$\{\{ steps\.observe\.outputs\.selected-sha \}\}/u,
-  );
-  assert.match(workflowText, /persist-credentials: false/u);
-  assert.match(workflowText, /run-candidate-body-prefix-renderer\.mjs/u);
-  assert.match(
-    workflowText,
-    /BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX: \$\{\{ needs\.observe\.outputs\.pull-request-body-prefix \}\}/u,
-  );
-  assert.match(
-    workflowText,
-    /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_SELECTED_SHA: \$\{\{ needs\.observe\.outputs\.selected-sha \}\}/u,
-  );
-  assert.match(
-    workflowText,
-    /BUILDCHAIN_CHANNEL_PATROL_EXPECTED_PRIOR_STATE_ROOT: \$\{\{ needs\.observe\.outputs\.prior-state-root \}\}/u,
-  );
-  assert.match(workflowText, /reactivation-authorized:/u);
-  assert.match(workflowText, /auto-merge:/u);
-  assert.match(workflowText, /merge-method:/u);
-  const observeJob = workflowText.split("\n  settle:")[0];
-  assert.doesNotMatch(observeJob, /secrets\.promotion-token/u);
-  assert.doesNotMatch(observeJob, /BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE/u);
-  const settleJob = workflowText.split("\n  settle:")[1] || "";
-  assert.doesNotMatch(settleJob, /PR_BODY_PREFIX_RENDERER/u);
-  assert.match(settleJob, /BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE/u);
-  assert.match(settleJob, /BUILDCHAIN_CHANNEL_PATROL_MERGE_METHOD/u);
-  assert.match(workflowText, /scripts\/dev-alpha-candidate-patrol\.mjs/u);
-  assert.doesNotMatch(workflowText, /npm publish|gh release create|git tag/iu);
+  const file = ".github/workflows/public-ops-alpha-candidate-patrol.yml";
+  const observe = inspectWorkflowJob(file, "observe"), settle = inspectWorkflowJob(file, "settle");
+  assert.equal(observe.job.permissions.contents, "read");
+  assert.equal(settle.job.permissions.contents, "write");
+  assert.equal(settle.job.needs, "observe");
+  assert.doesNotMatch(JSON.stringify(observe.job), /secrets.promotion-token/);
+  const observation = observe.steps.find(step => step.id === "observe");
+  const settlement = settle.steps.find(step => step.id === "settle");
+  assert.equal(observation.env.BUILDCHAIN_CHANNEL_PATROL_REQUIRE_ACTIVE_TRAIN, "true");
+  assert.equal(observation.env.BUILDCHAIN_CHANNEL_PATROL_AUTO_MERGE, undefined);
+  assert.equal(settlement.env.BUILDCHAIN_CHANNEL_PATROL_PR_BODY_PREFIX_RENDERER, undefined);
+  for (const field of ["AUTO_MERGE", "MERGE_METHOD", "EXPECTED_SELECTED_SHA", "EXPECTED_PRIOR_STATE_ROOT", "EXPECTED_CUT_ROOT", "CUT_CREATED_AT", "NOW", "DRY_RUN"])
+    assert.ok(settlement.env[`BUILDCHAIN_CHANNEL_PATROL_${field}`], field);
+  assert.ok(observe.modules.has("packages/core/build/commands/run-candidate-body-prefix-renderer.mjs"));
+  assert.ok(settle.modules.has("packages/core/release/commands/dev-alpha-candidate-patrol.mjs"));
+  for (const graph of [observe, settle]) assert.doesNotMatch(JSON.stringify(graph.steps), /npm publish|gh release create|git tag/i);
+  for (const field of ["candidate-generation", "candidate-tree-sha", "drift-root", "hold-root"])
+    assert.ok(observe.workflow.on.workflow_call.outputs[field], field);
 });

@@ -91,7 +91,7 @@ assert.deepEqual(contract.capabilities, [feature.capability]);
       sha: originalPackageBlob,
     },
     {
-      path: "actions/promote-buildchain-ref/lib.js",
+      path: "packages/core/release/promote-ref/lib.js",
       mode: "100644",
       type: "blob",
       sha: sharedActionBlob,
@@ -105,7 +105,7 @@ assert.deepEqual(contract.capabilities, [feature.capability]);
       sha: originalPackageBlob,
     },
     {
-      path: "actions/promote-buildchain-ref/lib.js",
+      path: "packages/core/release/promote-ref/lib.js",
       mode: "100644",
       type: "blob",
       sha: sharedActionBlob,
@@ -168,7 +168,7 @@ assert.deepEqual(contract.capabilities, [feature.capability]);
         data: {
           files: [
             { filename: "package.json" },
-            { filename: "actions/promote-buildchain-ref/lib.js" },
+            { filename: "packages/core/release/promote-ref/lib.js" },
           ],
         },
       };
@@ -369,7 +369,7 @@ test("release finalization merges release ancestry into generated next-alpha", a
       sha: originalPackageBlob,
     },
     {
-      path: "actions/promote-buildchain-ref/lib.js",
+      path: "packages/core/release/promote-ref/lib.js",
       mode: "100644",
       type: "blob",
       sha: sharedActionBlob,
@@ -383,7 +383,7 @@ test("release finalization merges release ancestry into generated next-alpha", a
       sha: originalPackageBlob,
     },
     {
-      path: "actions/promote-buildchain-ref/lib.js",
+      path: "packages/core/release/promote-ref/lib.js",
       mode: "100644",
       type: "blob",
       sha: sharedActionBlob,
@@ -397,7 +397,7 @@ test("release finalization merges release ancestry into generated next-alpha", a
       sha: originalPackageBlob,
     },
     {
-      path: "actions/promote-buildchain-ref/lib.js",
+      path: "packages/core/release/promote-ref/lib.js",
       mode: "100644",
       type: "blob",
       sha: sharedActionBlob,
@@ -494,7 +494,7 @@ test("strict release promotion accepts a tree-equivalent release-line recovery t
   trees.set("alpha-tree", [
     { path: "package.json", mode: "100644", type: "blob", sha: packageBlob },
     {
-      path: "actions/promote-buildchain-ref/lib.js",
+      path: "packages/core/release/promote-ref/lib.js",
       mode: "100644",
       type: "blob",
       sha: actionBlob,

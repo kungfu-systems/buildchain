@@ -3,19 +3,14 @@ name: Buildchain Patrol Daily
 on:
   workflow_call:
     inputs:
-      universal-request-json:
-        description: "Versioned exact-candidate request envelope; empty preserves the compatibility path"
-        default: ""
-        required: false
-        type: string
       buildchain-repository:
         description: "Buildchain runtime repository"
         default: "kungfu-systems/buildchain"
         type: string
         required: false
       buildchain-ref:
-        description: "Optional Buildchain runtime ref. Empty uses v3."
-        default: "v3"
+        description: "Optional explicit runtime ref. Empty binds the defining workflow SHA."
+        default: ""
         type: string
         required: false
       target-branch:
@@ -101,16 +96,8 @@ permissions:
   statuses: read
 
 jobs:
-  universal-bootstrap:
-    name: Universal exact-candidate execution
-    if: ${{ inputs.universal-request-json != '' }}
-    uses: ./.github/workflows/bootstrap.yml
-    with:
-      request-json: ${{ inputs.universal-request-json }}
-
   patrol:
-    if: ${{ inputs.universal-request-json == '' }}
-    uses: ./.github/workflows/buildchain-patrol.yml
+    uses: ./.github/workflows/public-ops-patrol.yml
     with:
       buildchain-repository: ${{ inputs.buildchain-repository }}
       buildchain-ref: ${{ inputs.buildchain-ref }}

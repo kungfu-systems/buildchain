@@ -10,13 +10,13 @@ import {
   AWS_WINDOWS_JIT_CONTROLLER_CONTRACT,
   createWindowsJitLaunchPlan,
   windowsRunInstancesArgs,
-} from "../scripts/aws-windows-jit-controller-core.mjs";
+} from "../packages/core/providers/commands/aws-windows-jit-controller-core.mjs";
 import {
   createWindowsJitCampaignArmPlan,
   windowsCampaignArmItems,
   windowsCampaignKillArgs,
   windowsCampaignReservationItems,
-} from "../scripts/aws-windows-jit-campaign-core.mjs";
+} from "../packages/core/providers/commands/aws-windows-jit-campaign-core.mjs";
 import { materializeCommandShim } from "./helpers/command-shim.mjs";
 
 function launchPlan(overrides = {}) {
@@ -232,7 +232,7 @@ test("Windows campaign CLI plans without mutating AWS", () => {
   const result = spawnSync(
     process.execPath,
     [
-      "scripts/aws-windows-jit-campaign.mjs",
+      "packages/core/providers/commands/aws-windows-jit-campaign.mjs",
       "plan-arm",
       "--campaign-id",
       "win-20260802-ledger",
@@ -296,7 +296,7 @@ process.stdout.write(JSON.stringify(args.includes("publish") ? { MessageId: "mes
     ];
     const result = spawnSync(
       process.execPath,
-      ["scripts/aws-windows-jit-campaign.mjs", "kill-campaign", ...common],
+      ["packages/core/providers/commands/aws-windows-jit-campaign.mjs", "kill-campaign", ...common],
       {
         cwd: path.resolve(import.meta.dirname, ".."),
         encoding: "utf8",
@@ -458,7 +458,7 @@ if (joined.includes("sts get-caller-identity")) {
   );
   try {
     const args = [
-      "scripts/aws-windows-jit-controller.mjs",
+      "packages/core/providers/commands/aws-windows-jit-controller.mjs",
       "--execute",
       "--confirm-source-sha",
       "a".repeat(40),
@@ -624,7 +624,7 @@ if (joined.includes("sts get-caller-identity")) {
     const result = spawnSync(
       process.execPath,
       [
-        "scripts/aws-windows-jit-controller.mjs",
+        "packages/core/providers/commands/aws-windows-jit-controller.mjs",
         "--execute",
         "--confirm-source-sha",
         "a".repeat(40),

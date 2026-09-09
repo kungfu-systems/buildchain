@@ -1,0 +1,45 @@
+name: qualify-adopter
+description: Execute current failure, retry, exact readback and independent driver verification.
+inputs:
+  request-json:
+    description: Current adopter qualification request.
+    required: true
+  workflow-sha:
+    description: Exact defining runtime commit.
+    required: true
+  consumer-sha:
+    description: Exact admitted consumer commit.
+    required: true
+  platform:
+    description: Actual runner platform.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Prepare the defining runtime
+      id: core
+      uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+    - name: Check out admitted consumer
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: ${{ fromJSON(inputs.request-json).consumer-repository || github.repository }}
+        ref: ${{ inputs.consumer-sha }}
+        path: .buildchain/consumer
+        persist-credentials: false
+    - name: Exercise public delivery and readback
+      shell: bash
+      env:
+        BUILDCHAIN_ADOPTER_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_WORKFLOW_SHA: ${{ inputs.workflow-sha }}
+        BUILDCHAIN_ACTION_PATH: ${{ github.action_path }}
+        BUILDCHAIN_NODE: ${{ steps.core.outputs.node-path }}
+        BUILDCHAIN_CONSUMER_SHA: ${{ inputs.consumer-sha }}
+        BUILDCHAIN_ADOPTER_PLATFORM: ${{ inputs.platform }}
+      run: '"$BUILDCHAIN_NODE" "$BUILDCHAIN_ACTION_PATH/../../../packages/core/adoption/nodes/adopter.mjs" conformance'
+    - name: Preserve exact platform evidence
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: v4-adopter-delivery-${{ fromJSON(inputs.request-json).consumer }}-${{ inputs.platform }}-${{ github.sha }}
+        path: .buildchain/adopter-delivery/**/*.json
+        include-hidden-files: true
+        if-no-files-found: error

@@ -5,10 +5,10 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createArtifactSigningRequest } from "../packages/core/artifact-signing.js";
-import { verifyDetachedArtifactSignature } from "../packages/core/detached-artifact-signature.js";
-import { signDetachedArtifactRequests } from "../scripts/sign-detached-artifact-requests.mjs";
-import { verifyArtifactSigningResults } from "../scripts/verify-artifact-signing-results.mjs";
+import { createArtifactSigningRequest } from "../packages/core/build/artifact-signing.js";
+import { verifyDetachedArtifactSignature } from "../packages/core/build/detached-artifact-signature.js";
+import { signDetachedArtifactRequests } from "../packages/core/build/commands/sign-detached-artifact-requests.mjs";
+import { verifyArtifactSigningResults } from "../packages/core/build/commands/verify-artifact-signing-results.mjs";
 
 function digest(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;

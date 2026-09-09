@@ -4,17 +4,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import {
-  cancelQueuedDevDeliveryCandidate,
-  closeDevDeliveryWarrant,
-  createDevDeliveryQueue,
-  devDeliveryContentRoot,
-  heartbeatDevDeliveryWarrant,
-  recoverExpiredDevDeliveryWarrant,
-  selectDevDeliveryWarrant,
-  settleDevDeliveryTerminalEvent,
-  submitDevDeliveryCandidate,
-} from "../packages/core/dev-delivery-warrant.js";
+import { execFileSync } from "node:child_process";
+import crypto from "node:crypto";
+import { devDeliveryContentRoot } from "../packages/core/dev-delivery/dev-delivery-warrant.js";
 
 const PLAN_PATH = "architecture/delivery-warrant-shadow-bootstrap-plan.json";
 const PLAN_SCHEMA_PATH =
@@ -276,215 +268,32 @@ function validatePlan({ plan, manifest, bootstrap }) {
   };
 }
 
-const ROOTS = Object.fromEntries(
-  [
-    "assignment",
-    "initiative",
-    "patch",
-    "proof",
-    "plan",
-    "closure",
-    "dependency",
-    "toolchain",
-    "evidence",
-  ].map((name, index) => [
-    name,
-    `sha256:${(index + 1).toString(16).repeat(64)}`,
-  ]),
+const HISTORY_PATH = new URL(
+  "../architecture/history/warrant-shadow-observations.json",
+  import.meta.url,
 );
-
-function fixtureCandidate(number, overrides = {}) {
-  const digit = (number % 9) + 1;
-  return {
-    pullRequestNumber: number,
-    sourceHead: digit.toString(16).repeat(40),
-    assignmentRoot: ROOTS.assignment,
-    initiativeRoot: ROOTS.initiative,
-    sourceIdentityRoot: `sha256:${digit.toString(16).repeat(64)}`,
-    sourcePatchRoot: ROOTS.patch,
-    sourceProofRoot: ROOTS.proof,
-    planRoot: ROOTS.plan,
-    closureRoot: ROOTS.closure,
-    dependencyRoot: ROOTS.dependency,
-    toolchainRoot: ROOTS.toolchain,
-    deliveryClass: "native-proof-required",
-    priority: "ordinary",
-    ...overrides,
-  };
+const HISTORICAL_SOURCE = "1bb6333b97ad94e94a81178e956a703dff2b5f84";
+function readHistoricalObservations() {
+  const document = JSON.parse(fs.readFileSync(HISTORY_PATH, "utf8"));
+  if (
+    document.schema !== "buildchain.warrant-historical-observations/v1" ||
+    document.sourceCommit !== HISTORICAL_SOURCE
+  )
+    throw new Error("Warrant historical observation provenance drift");
+  const source = execFileSync(
+    "git",
+    ["show", `${HISTORICAL_SOURCE}:scripts/warrant-shadow-plan.mjs`],
+    { cwd: new URL("..", import.meta.url), maxBuffer: 1024 * 1024 },
+  );
+  if (
+    crypto.createHash("sha256").update(source).digest("hex") !==
+    document.producerSha256
+  )
+    throw new Error("Warrant historical producer digest drift");
+  return document.traces;
 }
 
-function classifyError(error) {
-  const message = error instanceof Error ? error.message : String(error);
-  if (/stale fencing token/u.test(message)) return "stale-fencing-token";
-  if (/lease expired/u.test(message)) return "lease-expired";
-  if (/stateRoot drift/u.test(message)) return "state-root-drift";
-  return "unclassified-error";
-}
-function projection(step, before, queue, result = {}) {
-  return {
-    id: step.id,
-    operation: step.operation,
-    action:
-      result.receipt?.action || result.receipt?.reason || result.action || null,
-    errorCode: result.errorCode || null,
-    expectedOldStateRoot:
-      result.receipt?.expectedOldStateRoot || before.stateRoot,
-    nextStateRoot: queue.stateRoot,
-    receiptRoot: result.receiptRoot || null,
-    generation: queue.generation,
-    fencingCounter: queue.fencingCounter,
-    activePullRequest: queue.activeWarrant?.pullRequestNumber || null,
-    candidateStates: queue.candidates.map((candidate) => ({
-      pullRequestNumber: candidate.pullRequestNumber,
-      status: candidate.status,
-      attempts: candidate.attempts,
-      recoveries: candidate.recoveries,
-    })),
-  };
-}
-
-function runTrace(trace) {
-  const initial = trace.create;
-  let queue = createDevDeliveryQueue({
-    repository: initial.repository,
-    protectedBase: initial.protectedBase,
-    policy: initial.policy,
-    now: initial.now,
-  });
-  const warrants = new Map();
-  const settlements = new Map();
-  const roots = new Map([["initial", queue.stateRoot]]);
-  const projections = [];
-  for (const step of trace.steps) {
-    const before = queue;
-    let result;
-    try {
-      if (step.operation === "submit") {
-        result = submitDevDeliveryCandidate(
-          queue,
-          fixtureCandidate(step.pullRequestNumber, step.overrides),
-          { now: step.now },
-        );
-        queue = result.queue;
-      } else if (step.operation === "select") {
-        result = selectDevDeliveryWarrant(queue, {
-          now: step.now,
-          leaseSeconds: step.leaseSeconds,
-        });
-        queue = result.queue;
-        if (step.saveWarrant) warrants.set(step.saveWarrant, result.warrant);
-      } else if (step.operation === "heartbeat") {
-        result = heartbeatDevDeliveryWarrant(
-          queue,
-          warrants.get(step.useWarrant),
-          { now: step.now, leaseSeconds: step.leaseSeconds },
-        );
-        queue = result.queue;
-      } else if (step.operation === "recover-expired") {
-        result = recoverExpiredDevDeliveryWarrant(queue, { now: step.now });
-        queue = result.queue;
-      } else if (step.operation === "close") {
-        result = closeDevDeliveryWarrant(queue, warrants.get(step.useWarrant), {
-          outcome: step.outcome,
-          evidenceRoot: ROOTS.evidence,
-          reason: step.reason,
-          now: step.now,
-        });
-        queue = result.queue;
-      } else if (step.operation === "settle-not-applicable") {
-        result = settleDevDeliveryTerminalEvent(
-          queue,
-          {
-            pullRequestNumber: step.pullRequestNumber,
-            sourceHead: step.sourceHead,
-            outcome: step.outcome,
-            reason: step.reason,
-          },
-          { now: step.now },
-        );
-        queue = result.queue;
-      } else if (step.operation === "settle-active") {
-        const warrant = warrants.get(step.useWarrant);
-        const input = {
-          pullRequestNumber: warrant.pullRequestNumber,
-          sourceHead: warrant.sourceHead,
-          fencingToken: warrant.fencingToken,
-          leaseGeneration: warrant.generation,
-          outcome: step.outcome,
-          evidenceRoot: ROOTS.evidence,
-          reason: step.reason,
-        };
-        result = settleDevDeliveryTerminalEvent(queue, input, {
-          now: step.now,
-        });
-        queue = result.queue;
-        settlements.set(step.saveSettlement, input);
-      } else if (step.operation === "settle-duplicate") {
-        result = settleDevDeliveryTerminalEvent(
-          queue,
-          settlements.get(step.useSettlement),
-          { now: step.now },
-        );
-        queue = result.queue;
-      } else if (step.operation === "cancel-queued") {
-        const candidate = queue.candidates.find(
-          (entry) => entry.pullRequestNumber === step.pullRequestNumber,
-        );
-        const input = {
-          candidateId: candidate.candidateId,
-          pullRequestNumber: candidate.pullRequestNumber,
-          expectedSourceHead: candidate.sourceHead,
-          observedSourceHead: step.observedSourceHead || candidate.sourceHead,
-          eventAction: "closed",
-          outcome: "cancelled",
-          evidenceRoot: ROOTS.evidence,
-          reason: step.reason,
-        };
-        result = cancelQueuedDevDeliveryCandidate(queue, input, {
-          now: step.now,
-        });
-        queue = result.queue;
-      } else if (step.operation === "expected-old") {
-        const expected = roots.get(step.expectedRoot);
-        result =
-          expected === queue.stateRoot
-            ? { action: "cas-accepted" }
-            : { action: "cas-rejected", errorCode: "stale-expected-old" };
-      } else if (step.operation === "response-loss-readback") {
-        result = {
-          action:
-            roots.get(step.committedRoot) === queue.stateRoot
-              ? "committed-readback"
-              : "indeterminate-stop",
-        };
-      } else if (step.operation === "provider-conflict") {
-        result = {
-          action: "provider-conflict-stop",
-          errorCode: "provider-conflict",
-        };
-      } else {
-        throw new Error(`unsupported fixture operation: ${step.operation}`);
-      }
-      if (step.expectError) {
-        throw new Error(`fixture step ${step.id} expected ${step.expectError}`);
-      }
-    } catch (error) {
-      const errorCode = classifyError(error);
-      if (!step.expectError || step.expectError !== errorCode) throw error;
-      result = { errorCode };
-      queue = before;
-    }
-    roots.set(step.id, queue.stateRoot);
-    projections.push(projection(step, before, queue, result));
-  }
-  return {
-    id: trace.id,
-    projectionRoot: devDeliveryContentRoot(projections),
-    projections,
-  };
-}
-
-function validateFixtures(fixtures, { verifyRoots = true } = {}) {
+function validateFixtures(fixtures) {
   const issues = [];
   required(
     fixtures?.schemaVersion === 1,
@@ -507,7 +316,25 @@ function validateFixtures(fixtures, { verifyRoots = true } = {}) {
     "fixtures must forbid ambient time",
     issues,
   );
-  const results = (fixtures.traces || []).map(runTrace);
+  const observations = readHistoricalObservations();
+  const results = (fixtures.traces || []).map((trace) => {
+    const observed = observations.find((entry) => entry.trace.id === trace.id);
+    if (
+      !observed ||
+      devDeliveryContentRoot(observed.trace) !== devDeliveryContentRoot(trace)
+    )
+      throw new Error(
+        `${trace.id} historical projection drift: input trace changed`,
+      );
+    if (
+      devDeliveryContentRoot(observed.result.projections) !==
+      observed.result.projectionRoot
+    )
+      throw new Error(
+        `${trace.id} historical projection drift: observation bytes changed`,
+      );
+    return observed.result;
+  });
   for (const [index, result] of results.entries()) {
     const expected = fixtures.traces[index].expectedLegacyProjectionRoot;
     required(
@@ -515,7 +342,7 @@ function validateFixtures(fixtures, { verifyRoots = true } = {}) {
       `${result.id} expected root is invalid`,
       issues,
     );
-    if (verifyRoots) {
+    {
       required(
         result.projectionRoot === expected,
         `${result.id} projection drift: ${result.projectionRoot} != ${expected}`,
@@ -531,10 +358,7 @@ function validateFixtures(fixtures, { verifyRoots = true } = {}) {
   return results;
 }
 
-function loadWarrantPlan(
-  root = process.cwd(),
-  { verifyFixtureRoots = true } = {},
-) {
+function loadWarrantPlan(root = process.cwd()) {
   const planSchema = readJson(root, PLAN_SCHEMA_PATH);
   const fixturesSchema = readJson(root, FIXTURES_SCHEMA_PATH);
   const schemaIssues = [];
@@ -552,31 +376,13 @@ function loadWarrantPlan(
     manifest: readJson(root, MANIFEST_PATH),
     bootstrap: readJson(root, BOOTSTRAP_PATH),
   });
-  const fixtureResults = validateFixtures(fixtures, {
-    verifyRoots: verifyFixtureRoots,
-  });
+  const fixtureResults = validateFixtures(fixtures);
   return { plan, fixtures, report, fixtureResults };
 }
 
 function runCli(args = []) {
   const [command = "validate"] = args;
   const root = process.cwd();
-  if (command === "roots") {
-    const { fixtureResults } = loadWarrantPlan(root, {
-      verifyFixtureRoots: false,
-    });
-    process.stdout.write(
-      `${JSON.stringify(
-        fixtureResults.map(({ id, projectionRoot }) => ({
-          id,
-          projectionRoot,
-        })),
-        null,
-        2,
-      )}\n`,
-    );
-    return;
-  }
   if (command !== "validate")
     throw new Error(`unsupported command: ${command}`);
   const { report, fixtureResults } = loadWarrantPlan(root);
@@ -598,4 +404,4 @@ if (
   }
 }
 
-export { loadWarrantPlan, runTrace, validateFixtures, validatePlan };
+export { loadWarrantPlan, validateFixtures, validatePlan };

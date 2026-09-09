@@ -19,7 +19,7 @@ import {
   validateReleaseBlockerRepair,
   validateReleaseCut,
   validateReleaseTrain,
-} from "../packages/core/release-train.js";
+} from "../packages/core/release/release-train.js";
 
 const SHA = {
   origin: "1".repeat(40),

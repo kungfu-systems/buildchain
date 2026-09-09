@@ -4,11 +4,11 @@ import fs from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { ContractFault } from "../packages/core/canonical-contracts.js";
+import { ContractFault } from "../packages/core/contracts/canonical-contracts.js";
 import {
   planStablePublication,
   projectStablePublication,
-} from "../packages/core/stable-publication-fence.js";
+} from "../packages/core/release/stable-publication-fence.js";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const fixture = JSON.parse(
@@ -190,7 +190,10 @@ test("the schema and architecture are closed, single-writer, and production-v4",
 
 test("production fence implementations contain no provider, network, filesystem, process, or ambient authority", () => {
   const javascript = fs.readFileSync(
-    new URL("../packages/core/stable-publication-fence.js", import.meta.url),
+    new URL(
+      "../packages/core/release/stable-publication-fence.js",
+      import.meta.url,
+    ),
     "utf8",
   );
   const rust = fs.readFileSync(

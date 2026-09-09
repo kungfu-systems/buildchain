@@ -1,0 +1,52 @@
+name: Verify native execution
+description: Owned native node of protected dev delivery.
+inputs:
+  request-json:
+    description: Typed public workflow inputs, serialized once by the caller.
+    required: true
+  github-token:
+    description: Provider token; supplied only in a credentialed job.
+    required: false
+    default: ''
+  needs-json:
+    description: Exact dependency job results and admitted output coordinates.
+    required: false
+    default: '{}'
+  phase:
+    description: Fixed execution domain selected by the owning workflow.
+    required: true
+outputs:
+  transfer-root:
+    description: transfer-root.
+    value: ${{ steps.seal.outputs.transfer-root }}
+  transfer-native-outcome:
+    description: transfer-native-outcome.
+    value: ${{ steps.seal.outputs.transfer-native-outcome }}
+  heartbeat-receipt-root:
+    description: heartbeat-receipt-root.
+    value: ${{ steps.heartbeat.outputs.heartbeat-receipt-root }}
+runs:
+  using: composite
+  steps:
+  - name: Native execute
+    id: execute
+    if: ${{ always() && inputs.phase == 'execute' }}
+    uses: ./.buildchain/workflow-shell/actions/dev-delivery/native-execute
+    with:
+      request-json: ${{ inputs.request-json }}
+      needs-json: ${{ inputs.needs-json }}
+  - name: Native seal
+    id: seal
+    if: ${{ always() && inputs.phase == 'seal' }}
+    uses: ./.buildchain/workflow-shell/actions/dev-delivery/native-seal
+    with:
+      request-json: ${{ inputs.request-json }}
+      needs-json: ${{ inputs.needs-json }}
+  - name: Native heartbeat
+    id: heartbeat
+    if: ${{ always() && inputs.phase == 'heartbeat' }}
+    uses: ./.buildchain/workflow-shell/actions/dev-delivery/native-heartbeat
+    with:
+      request-json: ${{ inputs.request-json }}
+      needs-json: ${{ inputs.needs-json }}
+      github-token: ${{ inputs.github-token }}

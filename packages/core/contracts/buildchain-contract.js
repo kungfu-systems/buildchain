@@ -1,0 +1,1038 @@
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import {
+  BUILDCHAIN_CHANNELS,
+  evaluateBuildchainChannelBinding,
+  normalizeBuildchainRef,
+  parseBuildchainRefIdentity,
+} from "../consumer/buildchain-channel-identity.js";
+import {
+  assertBuildchainCompatibilityProjection,
+  createBuildchainCompatibilityProofRegistry,
+} from "../governance/buildchain-compatibility-authority.js";
+import { evaluateBuildchainContractLock as evaluateFactBackedBuildchainContractLock } from "../governance/buildchain-compatibility-proof.js";
+import { createControllerRegistry } from "../observability/controller-evidence.js";
+import { enumerateWorkflowInputs } from "./public-surface-audit.js";
+import { devDeliveryWorkflowContractSurface } from "../dev-delivery/dev-delivery-contract-surface.js";
+
+export {
+  BUILDCHAIN_CHANNELS,
+  evaluateBuildchainChannelBinding,
+  normalizeBuildchainRef,
+  parseBuildchainRefIdentity,
+};
+
+export {
+  BUILDCHAIN_COMPATIBILITY_FACT_REGISTRY_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_FACT_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_PROOF_REGISTRY_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_PROOF_SCHEMA,
+  BUILDCHAIN_COMPATIBILITY_RELEASE_EVIDENCE_SCHEMA,
+  createBuildchainCompatibilityFact,
+  createBuildchainCompatibilityFactRegistry,
+  createBuildchainCompatibilityProof,
+  verifyBuildchainCompatibilityFact,
+  verifyBuildchainCompatibilityFactRegistry,
+  verifyBuildchainCompatibilityProof,
+} from "../governance/buildchain-compatibility-fact.js";
+export {
+  assertBuildchainCompatibilityProjection,
+  createBuildchainCompatibilityPathQuery,
+  createBuildchainCompatibilityProofRegistry,
+  createBuildchainCompatibilityReleaseEvidence,
+  resolveBuildchainCompatibilityProof,
+  verifyBuildchainCompatibilityPath,
+} from "../governance/buildchain-compatibility-authority.js";
+export {
+  BUILDCHAIN_COMPATIBILITY_VERIFICATION_RECEIPT_SCHEMA,
+  createBuildchainCompatibilityVerificationReceipt,
+  verifyBuildchainCompatibilityVerificationReceipt,
+} from "../governance/buildchain-compatibility-proof.js";
+
+export const BUILDCHAIN_RUNTIME_CONTRACT_WORLD = "kungfu-buildchain-runtime-contract-world";
+export const BUILDCHAIN_CONTRACT_LOCK = "kungfu-buildchain-contract-lock";
+
+const DEFAULT_POLICY = "major-compatible";
+
+function compatibilityAuthority() {
+  return {
+    compatibilityFacts: [],
+    compatibilityProofs: [],
+  };
+}
+
+function optionalString(value) {
+  return value === undefined || value === null ? "" : String(value);
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableJson).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+export function sha256Json(value) {
+  return crypto.createHash("sha256").update(stableJson(value)).digest("hex");
+}
+
+export function sha256File(filePath) {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function readJson(filePath, fallback = undefined) {
+  if (!filePath || !fs.existsSync(filePath)) {
+    return fallback;
+  }
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function maybeFileDigest(root, relPath) {
+  const filePath = path.join(root, relPath);
+  return fs.existsSync(filePath) && fs.statSync(filePath).isFile() ? `sha256:${sha256File(filePath)}` : "";
+}
+
+function surface(root, value) {
+  const breakingModel = {
+    id: value.id,
+    kind: value.kind,
+    contractVersion: value.contractVersion || 1,
+    requiredInputs: value.requiredInputs || [],
+    requiredOutputs: value.requiredOutputs || [],
+    breakingDefaults: value.breakingDefaults || {},
+    guarantees: value.guarantees || [],
+  };
+  return {
+    contractVersion: 1,
+    stability: "stable",
+    additiveChanges: "optional inputs, optional outputs, diagnostics, and documentation may be added within the same major line",
+    ...value,
+    breakingDigest: `sha256:${sha256Json(breakingModel)}`,
+    auditDigest: value.path ? maybeFileDigest(root, value.path) : "",
+  };
+}
+
+function majorLineFromPackageVersion(version = "") {
+  const match = String(version || "").match(/^(\d+)\./);
+  if (!match) throw new Error("Buildchain package version must declare a major line");
+  return `v${match[1]}`;
+}
+
+function declarativeAuditableDemoSurface(root, pkg, majorLine) {
+  return surface(root, {
+    id: "declarative-auditable-demo",
+    kind: "workflow",
+    path: ".github/workflows/public-build-demo.yml",
+    publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-build-demo.yml@${majorLine}`,
+    requiredInputs: ["binary-artifact-name", "binary-artifact-digest", "renderer-image"],
+    requiredOutputs: [
+      "source-sha", "capture-artifact-name", "capture-artifact-digest",
+      "evidence-artifact-name", "evidence-artifact-digest", "publication-pr-url",
+    ],
+    breakingDefaults: {
+      scenarioPathDefault: ".buildchain/auditable-demo.json",
+      renderMediaDefault: false,
+      materializeDefault: false,
+      mediaProfileDefault: "responsive-web-delivery-v1",
+      artifactRetentionDaysDefault: 14,
+      executionBoundary: "exact-binary-network-none-secret-free-60-seconds",
+    },
+    optionalInputs: [
+      "buildchain-repository", "source-ref", "scenario-path", "render-media",
+      "media-profile", "materialize", "materialize-base-ref", "artifact-retention-days",
+    ],
+    guarantees: [
+      "one versioned declaration can contain multiple demos with multiple ordered literal argv steps",
+      "every demo uses the exact same-run standalone binary admitted by producer-owned artifact name and digest",
+      "capture runs without network or inherited secrets and retains independent native 1080p and 720p terminal dimensions",
+      "the generic adapter feeds the required auditable demo Gate and immutable renderer without product-specific glue",
+      "full rendering emits a content-addressed Release Passport and idempotent protected README update pull request",
+      "manual, alpha, and release callers use the same capture, Gate, renderer, passport, and materializer implementation",
+      "identity, compliance, Product System metadata, package metadata, registry history, scans, and generation grant no authority",
+    ],
+  });
+}
+
+function releaseCandidatePromoteSurface(root, majorLine) {
+  return surface(root, {
+    id: "release-candidate-promote-action",
+    kind: "action",
+    path: "actions/release/promote-candidate/action.yml",
+    publicRef: `kungfu-systems/buildchain/actions/release/promote-candidate@${majorLine}`,
+    requiredInputs: [
+      "token", "repository", "source-sha", "version", "tag", "channel",
+      "candidate-passport-path", "stage-capsules-path",
+      "publication-qualification-path",
+    ],
+    requiredOutputs: [
+      "release-passport-path", "release-passport-root", "transaction-state",
+      "declaration-root", "transaction-root", "state-root",
+      "receipt-roots-json",
+    ],
+    breakingDefaults: {
+      statePath: ".buildchain/release-tail/state.json",
+      executionBoundary: "built-in-provider-plane-only",
+    },
+    optionalInputs: ["artifact-paths", "state-path", "failure-after-capability"],
+    guarantees: [
+      "v4 promotion consumes only sealed candidate, Stage Capsule, qualification, and artifact evidence",
+      "GitHub Release, signed-channel commit, activation, readback, and released-evidence synthesis use built-in provider adapters",
+      "durable provider checkpoints resume completed capabilities without replay",
+      "no consumer command, script, shell, checkout, or executable tail hook is accepted",
+    ],
+  });
+}
+
+export function createBuildchainContractWorld({
+  root = process.cwd(),
+  packageJson = undefined,
+  controllerRegistry = undefined,
+} = {}) {
+  const pkg = packageJson || readJson(path.join(root, "package.json"), {}), majorLine = majorLineFromPackageVersion(pkg.version);
+  const workflowDescriptors = controllerRegistry ? [] : enumerateWorkflowInputs({ root });
+  const controllerWorkflowIds = new Set([
+    "check",
+    ".build",
+    "build",
+    ".gate-profile",
+    ".web-surface",
+    "publication-artifact",
+    "paper-release",
+    "release-candidate-promote",
+    ".release-candidate-promote",
+    "release-propagation",
+    "binary-distribution",
+  ]);
+  const hasCompleteControllerSource = [...controllerWorkflowIds]
+    .every((id) => workflowDescriptors.some((workflow) => workflow.id === id));
+  const resolvedControllerRegistry = controllerRegistry
+    || (hasCompleteControllerSource
+      ? createControllerRegistry({ workflows: workflowDescriptors })
+      : readJson(path.join(root, "dist/site/controller-registry.json"), { controllers: [] }));
+  const surfaces = [
+    surface(root, {
+      id: "reusable-build",
+      kind: "workflow",
+      path: ".github/workflows/.build.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.build.yml@${majorLine}`,
+      requiredInputs: [],
+      requiredOutputs: [
+        "buildchain-runtime-sha",
+        "publish-source-sha",
+        "build-summary-artifact",
+        "release-candidate-artifact",
+      ],
+      breakingDefaults: {
+        configurationAuthority: "buildchain.toml",
+        runtimeIdentity: "exact-called-workflow",
+        projectDiscovery: "unambiguous-root-or-config-path",
+      },
+      optionalInputs: ["config-path"],
+      guarantees: [
+        "runtime floating refs are resolved to immutable SHAs before matrix jobs",
+        "publish source locks are verified before heavy build jobs",
+        "release-candidate builds do not publish registry artifacts",
+        "contract drift is checked before heavy build jobs for stable floating refs",
+        "retryable GitHub fallback fetches use a bounded attempt budget before exact source SHA and tree verification",
+      ],
+    }),
+    surface(root, {
+      id: "channel-build-router",
+      kind: "workflow",
+      path: ".github/workflows/build.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/build.yml@${majorLine}`,
+      requiredInputs: [],
+      requiredOutputs: ["buildchain-channel", "buildchain-runtime-sha", "build-summary-artifact"],
+      breakingDefaults: {
+        configurationAuthority: "buildchain.toml",
+        runtimeIdentity: "exact-called-workflow",
+        projectDiscovery: "unambiguous-root-or-config-path",
+      },
+      optionalInputs: ["config-path"],
+      guarantees: [
+        "single-project consumers require no workflow inputs",
+        "project settings have one TOML authority and environment profiles own infrastructure",
+        "the called floating ref determines channel and exact runtime SHA",
+        "stable and alpha select their matching repository contract locks",
+        "source, runtime and configuration roots are bound before the build matrix",
+      ],
+    }),
+    surface(root, devDeliveryWorkflowContractSurface(pkg, majorLine)),
+    surface(root, {
+      id: "release-candidate-promote",
+      kind: "workflow",
+      path: ".github/workflows/public-release-promote.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-release-promote.yml@${majorLine}`,
+      requiredInputs: ["channel"],
+      requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact", "release-candidate-action"],
+      breakingDefaults: {
+        channelDefault: "auto",
+        alphaShellDefault: `${majorLine}-alpha`,
+        stableShellDefault: majorLine,
+        promoteOnlyReleaseCandidate: true,
+        requiredStatusCheck: "check / check",
+      },
+      optionalInputs: [
+        "buildchain-channel",
+        "buildchain-ref",
+        "buildchain-alpha-contract-lock-path",
+        "buildchain-stable-contract-lock-path",
+        "release-candidate-workflow-file",
+        "release-candidate-workflow-name",
+        "resume-candidate-repository",
+        "resume-candidate-run-id",
+        "resume-expected-workflow-file",
+        "resume-expected-workflow-name",
+        "resume-expected-source-tree",
+        "resume-expected-candidate-root",
+        "resume-expected-candidate-runtime-sha",
+        "resume-buildchain-runtime-sha",
+        "resume-transaction-id",
+        "publish-required-artifacts-json",
+        "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
+        "release-passport-invariant-passport-jsons",
+        "release-passport-invariant-passport-command",
+        "release-passport-evidence-jsons",
+        "release-passport-attachment-command",
+        "github-artifact-attestation-policy-json",
+        "github-artifact-attestation-environment",
+        "github-artifact-attestation-retention-days",
+        "buildchain-contract-lock-path",
+        "buildchain-contract-drift-issue-mode",
+        "github-release",
+      ],
+      publishArtifactSchema: {
+        requirementDigest: "optional-before-publish-required-after-publish",
+        exactRefResolution: "missing requirement refs resolve to the promoted exact version",
+        exactRefTemplate: "optional ref_template expands one {version} after exact version selection",
+        provenanceActions: ["built", "reused"],
+        provenanceCoordinates: ["content", "release"],
+        verificationFields: [
+          "public_manifest",
+          "ref",
+          "digest",
+          "platform",
+          "contract_major",
+          "parent_digest",
+          "smoke",
+          "evidence",
+        ],
+      },
+      guarantees: [
+        "one declarative promotion job selects matching alpha or stable workflow shell, runtime, and contract lock",
+        "router, shell, runtime, lock, publication channel, target ref, and override identities are bound before candidate download",
+        "train and exact-SHA runtime overrides remain limited to trusted workflow_dispatch actors",
+        "promotion reuses PR-stage release-candidate artifacts",
+        "promotion does not run the heavy native build matrix",
+        "a fresh workflow event can recover an exact successful candidate run after startup or router failure",
+        "recovery validates repository, workflow, PR, ancestry, tree, candidate roots, controller evidence, manifests, archive digests, and payload bytes before mutation",
+        "recovery emits action reused and never silently falls back to a full build",
+        "built source and promotion channel SHA are recorded separately",
+        "contract drift is checked before release-candidate resolution and publish",
+        "publish-gate source locks are created by the wrapper and enforced by promote-buildchain-ref before publish side effects",
+        "GitHub Release passport and evidence publication is delegated to promote-buildchain-ref after the semver release transaction completes",
+      ],
+      compatibleBreakingDigests: [
+        "sha256:acd401cfc46450115a3763fd4b679d85f185e8757ebd52510d6262e1533df4cf",
+      ],
+    }),
+    surface(root, {
+      id: "advanced-release-candidate-promote",
+      kind: "workflow",
+      path: ".github/workflows/.release-promote.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.release-promote.yml@${majorLine}`,
+      requiredInputs: ["channel"],
+      requiredOutputs: ["promoted-sha", "built-source-sha", "release-candidate-artifact", "release-candidate-action"],
+      breakingDefaults: {
+        promoteOnlyReleaseCandidate: true,
+        requiredStatusCheck: "check / check",
+      },
+      optionalInputs: [
+        "buildchain-ref",
+        "buildchain-expected-channel",
+        "buildchain-expected-major",
+        "buildchain-contract-lock-path",
+        "promotion-router-ref",
+        "promotion-router-sha",
+        "promotion-shell-ref",
+        "promotion-shell-sha",
+        "promotion-runtime-ref",
+        "promotion-runtime-sha",
+        "promotion-contract-lock-path",
+        "promotion-contract-lock-digest",
+        "promotion-publication-channel",
+        "promotion-target-ref",
+        "promotion-override-used",
+        "resume-candidate-repository",
+        "resume-candidate-run-id",
+        "resume-expected-workflow-file",
+        "resume-expected-workflow-name",
+        "resume-expected-source-tree",
+        "resume-expected-candidate-root",
+        "resume-expected-candidate-runtime-sha",
+        "resume-buildchain-runtime-sha",
+        "resume-transaction-id",
+      ],
+      guarantees: [
+        "advanced promotion verifies routed shell, runtime, lock, publication channel, and target bindings before candidate resolution",
+        "promotion reuses PR-stage release-candidate artifacts and does not run the heavy native build matrix",
+        "resume-from-candidate-run is fail-closed and uses a fresh caller event instead of rerunning a frozen startup graph",
+      ],
+      compatibleBreakingDigests: [
+        "sha256:aa30f22e3af0a89841310bdbdc900844dd95a66974db173fa140a71bbd7e82c0",
+      ],
+    }),
+    surface(root, {
+      id: "web-surface",
+      kind: "workflow",
+      path: ".github/workflows/public-release-web.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/public-release-web.yml@${majorLine}`,
+      requiredInputs: [],
+      requiredOutputs: [
+        "buildchain-runtime-sha",
+        "web-surface-channel",
+        "web-surface-url",
+        "web-surface-manifest-json",
+      ],
+      breakingDefaults: {
+        buildchainRefDefault: "workflow-shell-ref-or-v4",
+        contractCompatibilityPolicy: "major-compatible",
+        breakingDriftPolicy: "fail-closed-before-build",
+      },
+      optionalInputs: [
+        "buildchain-ref",
+        "buildchain-contract-lock-path",
+        "buildchain-contract-compatibility-policy",
+        "buildchain-contract-drift-issue-mode",
+        "build-command",
+        "verify-command",
+        "artifact-path",
+        "preview-apply",
+        "staging-apply",
+        "production-apply",
+        "production-release-on-main",
+      ],
+      guarantees: [
+        "runtime floating refs are resolved to immutable SHAs before caller build and deploy work",
+        "contract drift is checked before caller build, web-surface render, deploy planning, and apply side effects",
+        "compatible contract drift continues and produces a consumer issue or summary",
+        "breaking contract drift fails closed before rendering, deployment, or release publication",
+        "effective channel and preview alias are injected before caller build and verify commands",
+        "channel-aware artifact host facts are checked against the deploy plan before adapter side effects",
+      ],
+    }),
+    surface(root, {
+      id: "auditable-demo",
+      kind: "workflow",
+      path: ".github/workflows/.build-demo-adapter.yml",
+      publicRef: `${pkg.repository ? "kungfu-systems/buildchain" : "buildchain"}/.github/workflows/.build-demo-adapter.yml@${majorLine}`,
+      requiredInputs: [
+        "source-artifact-name",
+        "source-artifact-digest",
+        "adapter-path",
+        "renderer-image",
+      ],
+      requiredOutputs: [
+        "source-sha",
+        "gate-artifact-name",
+        "gate-artifact-id",
+        "gate-artifact-digest",
+        "gate-artifact-url",
+        "gate-root",
+        "media-artifact-name",
+        "media-artifact-id",
+        "media-artifact-digest",
+        "media-artifact-url",
+        "media-root",
+        "media-profile",
+        "media-qualification-root",
+      ],
+      breakingDefaults: {
+        trustedEventRequired: true,
+        renderMediaDefault: false,
+        mediaProfileDefault: "archive-v1",
+        artifactRetentionDaysDefault: 14,
+        gatePolicy: "required-before-selective-render",
+      },
+      optionalInputs: [
+        "buildchain-repository",
+        "source-ref",
+        "render-media",
+        "media-profile",
+        "artifact-retention-days",
+        "require-trusted-event",
+      ],
+      guarantees: [
+        "the source GitHub Artifact is admitted by exact same-run name and archive digest",
+        "the checked-in consumer adapter runs from the exact consumer source with a disposable home and reduced environment",
+        "every invocation runs an immutable network-disabled renderer smoke before emitting a qualified Gate bundle",
+        "complete media rendering is optional and consumes only an exact passing Gate bundle",
+        "Gate and media bundles expose both GitHub Artifact archive coordinates and deterministic member roots",
+        "explicit web-delivery profiles independently verify codec, container, audio, dimensions, duration, byte budgets, rendition roles, and MP4 fast-start evidence",
+        "media receipts expose content-addressed rendition facts without requiring consumers to infer roles from filenames",
+        "Build Images owns encoding, Buildchain owns qualification and receipts, and site repositories own browser loading and accessibility behavior",
+        "media qualification does not claim browser playback, responsive layout, reduced-motion behavior, accessibility, or production deployment",
+      ],
+    }), declarativeAuditableDemoSurface(root, pkg, majorLine), releaseCandidatePromoteSurface(root, majorLine),
+    surface(root, {
+      id: "promote-buildchain-ref-action",
+      kind: "action",
+      path: "actions/release/promote-ref/action.yml",
+      publicRef: `kungfu-systems/buildchain/actions/release/promote-ref@${majorLine}`,
+      requiredInputs: ["token", "sha", "target-ref"],
+      requiredOutputs: ["sha"],
+      breakingDefaults: {
+        requireGovernance: false,
+        releasePassport: true,
+        requiredStatusCheck: "check / check",
+      },
+      optionalInputs: [
+        "publish-transaction",
+        "publish-required-artifacts-json",
+        "promote-only-release-candidate",
+        "release-passport-kfd-1-witness-jsons",
+        "release-passport-kfd-2-claim-jsons",
+        "release-passport-kfd-3-prebuild-witness-jsons",
+        "release-passport-kfd-3-artifact-witness-jsons",
+        "release-passport-kfd-3-artifact-verify-command",
+        "release-passport-invariant-passport-jsons",
+        "release-passport-invariant-passport-command",
+        "release-passport-evidence-jsons",
+        "release-passport-attachment-command",
+        "release-passport-github-artifact-attestation-policy-jsons",
+        "github-release",
+      ],
+      publishArtifactSchema: {
+        requirementDigest: "optional-before-publish-required-after-publish",
+        exactRefResolution: "missing requirement refs resolve to the promoted exact version",
+        exactRefTemplate: "optional ref_template expands one {version} after exact version selection",
+        provenanceActions: ["built", "reused"],
+        provenanceCoordinates: ["content", "release"],
+        verificationFields: [
+          "public_manifest",
+          "ref",
+          "digest",
+          "platform",
+          "contract_major",
+          "parent_digest",
+          "smoke",
+          "evidence",
+        ],
+      },
+      guarantees: [
+        "protected release refs and durable release-state are finalized by Buildchain",
+        "release passport finalization is idempotent after publish side effects",
+        "publish transactions can require a resolved publish-gate source lock to prevent floating-ref drift",
+        "semver GitHub Releases are created or updated only after transaction completion, with prerelease/latest metadata bound to the authoritative publication channel and tag syntax retained as the fallback for ordinary callers",
+      ],
+      compatibleBreakingDigests: [
+        "sha256:a59f0910e6df842e7699139472e5dd69ac2fdd7f7213bf2cb346d1d622556874",
+      ],
+    }),
+    surface(root, {
+      id: "macos-credential-island-action",
+      kind: "action",
+      path: "actions/build/macos-credential-island/action.yml",
+      publicRef: `kungfu-systems/buildchain/actions/build/macos-credential-island@${majorLine}`,
+      requiredInputs: [
+        "input-root",
+        "output-root",
+        "source-repository",
+        "source-sha",
+        "source-tree-sha",
+        "buildchain-runtime-sha",
+        "artifact-name",
+        "expected-bundle-id",
+        "expected-team-id",
+        "certificate-sha1",
+        "certificate-p12-base64",
+        "certificate-password",
+        "notary-api-key-p8-base64",
+        "notary-api-key-id",
+        "notary-api-issuer",
+      ],
+      requiredOutputs: [
+        "evidence-path",
+        "manifest-path",
+        "artifact-root",
+        "dmg-path",
+        "zip-path",
+        "dmg-sha256",
+        "zip-sha256",
+      ],
+      breakingDefaults: {
+        entitlementsProfile: "electron-desktop-v1",
+        credentialBoundary: "protected-caller-job",
+        consumerCodeExecution: "forbidden",
+      },
+      optionalInputs: [
+        "source-ref",
+        "platform-id",
+        "entitlements-profile",
+        "artifact-stem",
+        "artifact-relative-output",
+      ],
+      guarantees: [
+        "the action validates a source-bound sealed app before credentials are imported",
+        "the action accepts one exact Developer ID Application fingerprint and a Buildchain-owned entitlements profile",
+        "consumer source and artifact-contained executables are never invoked",
+        "the app and DMG are notarized, stapled, Gatekeeper assessed, and bound to retained evidence",
+        "temporary keychain and API key material are cleaned in both main and post phases",
+      ],
+    }),
+    surface(root, {
+      id: "report-buildchain-issue-action",
+      kind: "action",
+      path: "actions/governance/report-issue/action.yml",
+      publicRef: `kungfu-systems/buildchain/actions/governance/report-issue@${majorLine}`,
+      requiredInputs: ["token"],
+      requiredOutputs: ["ok", "action", "issue-url", "fingerprint"],
+      breakingDefaults: {
+        failOnError: false,
+        mode: "create-or-comment",
+      },
+      optionalInputs: ["report-kind", "target-repository", "body-file", "comment-cooldown-hours"],
+      guarantees: [
+        "issue reporting is fail-soft by default",
+        "GitHub API 429 and 5xx failures are retried",
+        "missing issue permissions produce a copyable summary fallback",
+      ],
+    }),
+    surface(root, {
+      id: "release-passport-schema",
+      kind: "schema",
+      path: "packages/core/release/release-passport.js",
+      requiredInputs: ["buildchain.release.json"],
+      requiredOutputs: ["check-report.json"],
+      breakingDefaults: {
+        schemaVersion: 1,
+        contract: "kungfu-buildchain-release-passport",
+      },
+      guarantees: [
+        "release passport verification fails closed for malformed required evidence",
+        "release-state SHA is recorded as a durable audit entrance",
+      ],
+    }),
+    surface(root, {
+      id: "kfd-1-release-gate",
+      kind: "schema",
+      path: "packages/core/adoption/kfd-gate.js",
+      requiredInputs: ["KFD-1 witness JSON"],
+      requiredOutputs: ["kfd-1 release gate evidence"],
+      breakingDefaults: {
+        witnessContract: "kungfu-buildchain-kfd-1-witness-set",
+        releaseGateContract: "kungfu-buildchain-kfd-1-release-gate",
+      },
+      guarantees: [
+        "KFD-1 witnesses must include at least one artifact byte surface",
+        "artifact bytes are sha256 checked before passport finalization succeeds",
+        "KFD self contract witnesses record source/artifact hashes, self-hosting boundary, and responsibility state",
+      ],
+    }),
+    surface(root, {
+      id: "kfd-2-release-trust-passport-audit",
+      kind: "schema",
+      path: "packages/core/release/release-passport.js",
+      requiredInputs: ["public release claim evidence"],
+      requiredOutputs: ["kfd-2 release trust passport audit"],
+      breakingDefaults: {
+        releaseTrustPassportContract: "kungfu-buildchain-kfd-2-release-trust-passport-audit",
+      },
+      guarantees: [
+        "public release claims must bind declared sources, machine evidence, hashes, artifacts, verification, audit boundary, responsibility, and residual risk",
+        "unbound public claims fail release passport verification",
+        "prose-only public claims downgrade the release trust passport audit",
+      ],
+    }),
+    surface(root, {
+      id: "kfd-3-collaboration-interface-release-gate",
+      kind: "schema",
+      path: "packages/core/adoption/kfd-gate.js",
+      requiredInputs: [
+        "KFD-3 prebuild witness JSON",
+        "KFD-3 artifact witness JSON or verify command",
+      ],
+      requiredOutputs: ["kfd-3 collaboration-interface release gate evidence"],
+      breakingDefaults: {
+        prebuildWitnessContract: "kungfu-buildchain-kfd-3-collaboration-interface-prebuild-witness",
+        artifactWitnessContract: "kungfu-buildchain-kfd-3-collaboration-interface-artifact-witness",
+        releaseGateContract: "kungfu-buildchain-kfd-3-collaboration-interface-release-gate",
+      },
+      guarantees: [
+        "KFD-3 pre-build witnesses must declare participant-facing public surfaces",
+        "artifact witnesses must not expose undeclared public participant-facing surfaces",
+        "collaborationInterface.digest mismatches fail passport verification",
+        "KFD repository self-verification can declare docs, schemas, standards metadata, package exports, and site-consumption contracts",
+        "KFD-3 passports expose releaseStatus, witness hashes, declared capability verification, reverse audit boundary, residual risk, and responsibility state",
+      ],
+    }),
+    surface(root, {
+      id: "buildchain-cli",
+      kind: "cli",
+      path: "bin/buildchain.mjs",
+      requiredInputs: [],
+      requiredOutputs: [],
+      breakingDefaults: {
+        binary: "buildchain",
+        moduleSystem: "esm",
+      },
+      optionalInputs: [
+        "validate",
+        "lifecycle",
+        "badges readme",
+        "homebrew update-formula",
+        "homebrew check",
+        "collect github-release",
+        "verify release-passport",
+        "release-propagation",
+        "infra-contract",
+      ],
+      guarantees: [
+        "CLI commands are stable within the major line unless the contract major changes",
+        "README badge block checks and writes are generated from machine-readable repository facts",
+      ],
+    }),
+    surface(root, {
+      id: "homebrew-distribution-index",
+      kind: "node-api",
+      path: "packages/core/build/homebrew.js",
+      requiredInputs: ["upstream release passport"],
+      requiredOutputs: [
+        "kungfu-buildchain-homebrew-tap-facts",
+        "kungfu-buildchain-homebrew-tap-manifest",
+        "Formula/*.rb",
+      ],
+      breakingDefaults: {
+        projectType: "distribution-index",
+        tapManifest: "tap-manifest.json",
+        kfdPassedSource: "verified upstream release passport",
+      },
+      optionalInputs: [
+        "buildchain.toml [project] type=distribution-index",
+        "Formula path",
+        "manifest path",
+        "release passport URL or local path",
+      ],
+      guarantees: [
+        "Formula metadata is a deterministic projection of upstream release passport evidence",
+        "tap-manifest.json is checked against upstream version, URLs, SHA-256 digests, and KFD status",
+        "KFD passed claims fail closed unless the upstream release passport verifies the corresponding section",
+        "CLI and JavaScript callers use the same Node API implementation",
+      ],
+    }),
+    surface(root, {
+      id: "readme-badge-facts",
+      kind: "node-api",
+      path: "packages/core/web/readme-badges.js",
+      requiredInputs: ["repository checkout"],
+      requiredOutputs: ["kungfu-buildchain-readme-badge-facts"],
+      breakingDefaults: {
+        markerStart: "<!-- buildchain:badges:start -->",
+        markerEnd: "<!-- buildchain:badges:end -->",
+        kfdPassedSource: "verified repository-owned release passport",
+      },
+      optionalInputs: [
+        "buildchain.toml [badges]",
+        "release passport URL or local path",
+        "workflow file list",
+        "platform declarations",
+      ],
+      guarantees: [
+        "README badge Markdown is a deterministic projection of badge facts",
+        "KFD passed badges require the repository's own verified release passport section",
+        "unreleased repositories downgrade KFD status to explicit non-passed declarations",
+        "CLI and JavaScript callers use the same Node API implementation",
+      ],
+    }),
+    surface(root, {
+      id: "agent-manual-registry",
+      kind: "site-contract",
+      path: "dist/site/manual-registry.json",
+      requiredInputs: [],
+      requiredOutputs: ["manuals", "requiredAgentManuals"],
+      breakingDefaults: {
+        contract: "kungfu-buildchain-agent-manual-registry",
+      },
+      guarantees: [
+        "agent-facing packaged docs are enumerable from the npm package site bundle",
+        "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation",
+      ],
+    }),
+    surface(root, {
+      id: "node-api-registry",
+      kind: "site-contract",
+      path: "dist/site/node-api-registry.json",
+      requiredInputs: [],
+      requiredOutputs: ["exports"],
+      breakingDefaults: {
+        contract: "kungfu-buildchain-node-api-registry",
+        moduleSystem: "module",
+      },
+      guarantees: [
+        "public Node import surfaces are derived from package.json exports",
+        "agents can discover supported Node APIs without importing internal file paths",
+      ],
+    }),
+  ];
+  for (const descriptor of resolvedControllerRegistry.controllers) {
+    surfaces.push(surface(root, {
+      id: `controller:${descriptor.id}`,
+      kind: "controller",
+      path: descriptor.workflow.path,
+      requiredInputs: [],
+      requiredOutputs: [
+        "controller-plan-json",
+        "controller-plan-digest",
+        "controller-receipt-json",
+        "controller-receipt-digest",
+        "controller-receipt-status",
+      ],
+      breakingDefaults: {
+        evidenceContract: "buildchain.controller-evidence/v1",
+        descriptorVersion: descriptor.version,
+        workflowPath: descriptor.workflow.contractPath || descriptor.workflow.path,
+        requiredStages: descriptor.expected.stages.filter((stage) => stage.required).map((stage) => stage.id),
+        capabilities: descriptor.expected.capabilities,
+        evidenceRequirements: descriptor.expected.evidence,
+        inputClassificationPolicy: descriptor.id === "build-lifecycle" ? "buildchain-configured-controller-input-policy/v1" : "buildchain-controller-input-policy/v1",
+      },
+      optionalInputs: Object.keys(descriptor.inputs),
+      controllerDescriptor: {
+        contract: descriptor.contract,
+        digest: descriptor.digest,
+        registryDigest: resolvedControllerRegistry.digest,
+        inputClassifications: descriptor.inputs,
+      },
+      guarantees: [
+        "plans bind exact consumer source SHA, exact Buildchain runtime SHA, and the runtime contract digest",
+        "receipts bind the plan digest and preserve pass, fail, skip, and partial stage outcomes",
+        "redacted input values are never serialized and digest-only input values are never emitted in plaintext",
+        "missing receipts are non-qualifying and must not be represented as a successful controller run",
+      ],
+    }));
+  }
+  const base = {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_RUNTIME_CONTRACT_WORLD,
+    product: {
+      name: "Buildchain",
+      package: pkg.name || "@kungfu-tech/buildchain",
+      version: pkg.version || "",
+      repository: pkg.repository?.url || pkg.repository || "https://github.com/kungfu-systems/buildchain",
+    },
+    majorLine, compatibilityPolicy: DEFAULT_POLICY,
+    ...compatibilityAuthority(),
+    surfaces,
+  };
+  return finalizeBuildchainContractWorld(base);
+}
+
+export function finalizeBuildchainContractWorld(contractWorld) {
+  if (!Array.isArray(contractWorld?.compatibilityFacts) || !Array.isArray(contractWorld?.compatibilityProofs)) {
+    throw new Error("contract world requires compatibility Facts and their proof projection");
+  }
+  const sourceSurfaces = (contractWorld.surfaces || []).map((entry) => ({ ...entry }));
+  const proofRegistry = createBuildchainCompatibilityProofRegistry({
+    proofs: contractWorld.compatibilityProofs,
+    surfaces: sourceSurfaces,
+    majorLine: contractWorld.majorLine,
+  });
+  if (JSON.stringify(contractWorld.compatibilityFacts) !== JSON.stringify(proofRegistry.facts)) {
+    throw new Error("contract world compatibility Facts drift from the verified registry");
+  }
+  const world = {
+    ...contractWorld,
+    compatibilityFacts: proofRegistry.facts,
+    compatibilityFactRegistryRoot: proofRegistry.factRegistryRoot,
+    compatibilityFactCutRoot: proofRegistry.factCutRoot,
+    compatibilityProofs: proofRegistry.proofs,
+    compatibilityProofRegistryRoot: proofRegistry.registryRoot,
+    surfaces: sourceSurfaces.map((entry) => {
+      const surfaceEntry = { ...entry };
+      delete surfaceEntry.compatibleBreakingDigests;
+      delete surfaceEntry.compatibilityProofRoots;
+      delete surfaceEntry.compatibilityFactRoots;
+      const projection = proofRegistry.projections[entry.id] || [];
+      if (projection.length > 0) {
+        surfaceEntry.compatibleBreakingDigests = projection.map((item) => item.breakingDigest);
+        surfaceEntry.compatibilityProofRoots = projection.map((item) => item.proofRoot);
+        surfaceEntry.compatibilityFactRoots = projection.map((item) => item.factRoot);
+      }
+      return surfaceEntry;
+    }),
+  };
+  const compatibilityModel = {
+    schemaVersion: world.schemaVersion,
+    contract: world.contract,
+    majorLine: world.majorLine,
+    compatibilityFactRegistryRoot: world.compatibilityFactRegistryRoot,
+    compatibilityFactCutRoot: world.compatibilityFactCutRoot,
+    compatibilityProofRegistryRoot: world.compatibilityProofRegistryRoot,
+    surfaces: world.surfaces.map((entry) => ({
+      id: entry.id,
+      kind: entry.kind,
+      breakingDigest: entry.breakingDigest,
+      compatibilityProofRoots: entry.compatibilityProofRoots || [],
+      compatibilityFactRoots: entry.compatibilityFactRoots || [],
+    })),
+  };
+  const digestModel = {
+    ...world,
+    contractDigest: undefined,
+    compatibilityDigest: undefined,
+  };
+  world.compatibilityDigest = `sha256:${sha256Json(compatibilityModel)}`;
+  world.contractDigest = `sha256:${sha256Json(digestModel)}`;
+  return world;
+}
+
+export function createBuildchainContractLock({
+  buildchainRef = "v4",
+  resolvedSha = "",
+  contractWorld,
+  compatibilityPolicy = DEFAULT_POLICY,
+  acceptedAt = new Date().toISOString(),
+} = {}) {
+  if (!contractWorld || contractWorld.contract !== BUILDCHAIN_RUNTIME_CONTRACT_WORLD) {
+    throw new Error("contractWorld must be a Buildchain runtime contract world");
+  }
+  return {
+    schemaVersion: 1,
+    contract: BUILDCHAIN_CONTRACT_LOCK,
+    buildchain: {
+      ref: buildchainRef,
+      resolvedSha,
+      contract: contractWorld.contract,
+      contractDigest: contractWorld.contractDigest,
+      compatibilityDigest: contractWorld.compatibilityDigest,
+      compatibilityFactRegistryRoot: contractWorld.compatibilityFactRegistryRoot,
+      compatibilityFactCutRoot: contractWorld.compatibilityFactCutRoot,
+      compatibilityProofRegistryRoot: contractWorld.compatibilityProofRegistryRoot,
+      majorLine: contractWorld.majorLine,
+      compatibilityPolicy,
+      acceptedAt,
+      surfaces: contractWorld.surfaces.map((entry) => ({
+        id: entry.id,
+        kind: entry.kind,
+        breakingDigest: entry.breakingDigest,
+        compatibilityProofRoots: entry.compatibilityProofRoots || [],
+        compatibilityFactRoots: entry.compatibilityFactRoots || [],
+      })),
+    },
+  };
+}
+
+export function readBuildchainContractWorld(filePath) {
+  const value = readJson(filePath);
+  if (!value || value.contract !== BUILDCHAIN_RUNTIME_CONTRACT_WORLD) {
+    throw new Error(`Buildchain contract world is missing or invalid: ${filePath}`);
+  }
+  const computed = finalizeBuildchainContractWorld(value);
+  for (const digestName of ["compatibilityDigest", "contractDigest"]) {
+    const published = String(value[digestName] || "").trim();
+    if (published && published !== computed[digestName]) {
+      throw new Error(
+        `published ${digestName} mismatch in ${filePath}: expected ${published}, recomputed ${computed[digestName]}`,
+      );
+    }
+    if (published) {
+      computed[digestName] = published;
+    }
+  }
+  return computed;
+}
+
+export function readBuildchainContractLock(filePath) {
+  if (!filePath || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    return undefined;
+  }
+  const value = readJson(filePath);
+  if (!value || value.contract !== BUILDCHAIN_CONTRACT_LOCK) {
+    throw new Error(`Buildchain contract lock is missing or invalid: ${filePath}`);
+  }
+  return value;
+}
+
+export function evaluateBuildchainContractLock(options = {}) {
+  return evaluateFactBackedBuildchainContractLock(options);
+}
+
+export function contractSummary(contractWorld, runtimeRef = "", runtimeSha = "") {
+  return {
+    ref: runtimeRef,
+    resolvedSha: runtimeSha,
+    contract: contractWorld.contract,
+    contractDigest: contractWorld.contractDigest,
+    compatibilityDigest: contractWorld.compatibilityDigest,
+    compatibilityFactRegistryRoot: contractWorld.compatibilityFactRegistryRoot,
+    compatibilityFactCutRoot: contractWorld.compatibilityFactCutRoot,
+    compatibilityProofRegistryRoot: contractWorld.compatibilityProofRegistryRoot,
+    majorLine: contractWorld.majorLine,
+    surfaceCount: Array.isArray(contractWorld.surfaces) ? contractWorld.surfaces.length : 0,
+  };
+}
+
+export function renderBuildchainContractDriftIssueBody({
+  repository = "",
+  workflow = "",
+  runUrl = "",
+  lockPath = "",
+  evaluation,
+} = {}) {
+  const accepted = evaluation.accepted || {};
+  const current = evaluation.current || {};
+  const severity = evaluation.compatible ? "compatible" : "breaking";
+  return [
+    "# Buildchain contract drift",
+    "",
+    "## Summary",
+    "",
+    `Buildchain detected ${severity} contract drift for a floating runtime ref before expensive Buildchain work continued.`,
+    "",
+    "## Consumer",
+    "",
+    `- Repository: ${repository || "(unknown)"}`,
+    `- Workflow: ${workflow || "(unknown)"}`,
+    `- Run: ${runUrl || "(unknown)"}`,
+    `- Lock path: ${lockPath || "(unknown)"}`,
+    "",
+    "## Accepted Buildchain contract",
+    "",
+    `- Ref: ${accepted.ref || "(unknown)"}`,
+    `- SHA: ${accepted.resolvedSha || "(unknown)"}`,
+    `- Contract digest: ${accepted.contractDigest || "(unknown)"}`,
+    `- Compatibility digest: ${accepted.compatibilityDigest || "(unknown)"}`,
+    `- Policy: ${evaluation.policy || accepted.compatibilityPolicy || "(unknown)"}`,
+    "",
+    "## Current Buildchain contract",
+    "",
+    `- Ref: ${current.ref || "(unknown)"}`,
+    `- SHA: ${current.resolvedSha || "(unknown)"}`,
+    `- Contract digest: ${current.contractDigest || "(unknown)"}`,
+    `- Compatibility digest: ${current.compatibilityDigest || "(unknown)"}`,
+    `- Major line: ${current.majorLine || "(unknown)"}`,
+    "",
+    "## Compatibility",
+    "",
+    `- Status: ${evaluation.status || "(unknown)"}`,
+    `- Compatible: ${evaluation.compatible ? "yes" : "no"}`,
+    evaluation.reasons?.length ? evaluation.reasons.map((reason) => `- ${reason}`).join("\n") : "- No breaking drift detected.",
+    "",
+    "## Suggested next action",
+    "",
+    evaluation.compatible
+      ? "Review the Buildchain release notes, then update the consumer contract lock to the current SHA and contract digest."
+      : "Failing before heavy build is intentional. Review the Buildchain contract change, update the consumer workflow/configuration, or pin the previous Buildchain SHA.",
+  ].join("\n");
+}

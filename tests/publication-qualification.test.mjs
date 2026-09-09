@@ -1,19 +1,21 @@
+import { fakeGitHub } from "./helpers/github-publication-provider.mjs";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import YAML from "yaml";
 
 import {
   assertNoExecutionFields,
   assertDeclarativePromotionInputs,
   createDomainPublicationQualificationReceipt,
   validatePublicationQualificationReceipt,
-} from "../packages/core/publication-qualification.js";
-import { admitDeclarativePromotion } from "../scripts/declarative-promotion-admission.mjs";
-import { createDeclarativeGitHubReleasePlan } from "../actions/promote-buildchain-ref/github-release.js";
-import { publishDeclarativeGitHubReleaseEvidence } from "../actions/promote-buildchain-ref/github-release.js";
+} from "../packages/core/publication/publication-qualification.js";
+import { admitDeclarativePromotion } from "../packages/core/release/commands/declarative-promotion-admission.mjs";
+import { createDeclarativeGitHubReleasePlan } from "../packages/core/release/github-release.js";
+import { publishGitHubReleaseEvidence } from "../packages/core/release/github-release.js";
 
 const root = (character) => `sha256:${character.repeat(64)}`;
 const base = () => ({
@@ -108,61 +110,72 @@ test("execution-shaped fields and legacy command inputs are rejected at admissio
   );
 });
 
-test("v4 admission requires declarative mode while v3 remains compatible", () => {
-  assert.deepEqual(
-    admitDeclarativePromotion({
-      runtimeRef: "v3",
-      inputs: { "publish-command": "npm publish" },
-      declarative: false,
-    }),
-    { mode: "legacy", admitted: true },
-  );
-  code("v4-declarative-release-tail-required", () =>
-    admitDeclarativePromotion({
-      runtimeRef: "v4",
-      inputs: {},
-      declarative: false,
-    }),
-  );
-  code("legacy-command-input-forbidden", () =>
-    admitDeclarativePromotion({
-      runtimeRef: "v4",
-      inputs: { "publish-command": "npm publish" },
-      declarative: true,
-    }),
-  );
+test("promotion admission always enforces the current declarative contract", () => {
+  for (const runtimeRef of ["v3", "v4", "", "a".repeat(40)]) {
+    code("legacy-command-input-forbidden", () =>
+      admitDeclarativePromotion({
+        runtimeRef,
+        inputs: { "publish-command": "npm publish" },
+        declarative: false,
+      }),
+    );
+  }
+  assert.deepEqual(admitDeclarativePromotion({ inputs: { "dry-run": true } }), {
+    mode: "declarative",
+    admitted: true,
+  });
 });
 
-test("v4 Provider Plane publishes rooted invocation transaction and receipt evidence", () => {
-  const workflow = fs.readFileSync(
-    new URL("../.github/workflows/.release-candidate-promote.yml", import.meta.url),
-    "utf8",
+test("Provider Plane and terminal receipt remain in separate permission boundaries", () => {
+  const workflow = YAML.parse(
+    fs.readFileSync(
+      new URL("../.github/workflows/.release-promote.yml", import.meta.url),
+      "utf8",
+    ),
   );
-  const apply = workflow.slice(
-    workflow.indexOf("\n  apply:"),
-    workflow.indexOf("\n  settle:"),
+  const action = (name) =>
+    YAML.parse(
+      fs.readFileSync(
+        new URL(`../actions/release/${name}/action.yml`, import.meta.url),
+        "utf8",
+      ),
+    );
+  const apply = action("promote-apply");
+  const settle = action("promote-settle");
+  assert.equal(workflow.jobs.apply.needs, "qualify");
+  assert.deepEqual(workflow.jobs.settle.needs, ["qualify", "apply"]);
+  assert.deepEqual(workflow.jobs.settle.permissions, {
+    actions: "read",
+    contents: "read",
+  });
+  assert.equal(
+    apply.runs.steps.filter(
+      (step) =>
+        step.uses === "./.buildchain/runtime/actions/release/promote-candidate",
+    ).length,
+    3,
   );
-  const settle = workflow.slice(workflow.indexOf("\n  settle:"));
-
+  for (const name of [
+    "release-invocation-root",
+    "release-transaction-root",
+    "release-receipt-root",
+  ])
+    assert.ok(apply.outputs[name]);
+  assert.ok(
+    apply.runs.steps.find((step) =>
+      step.uses?.startsWith("actions/upload-artifact@"),
+    ),
+  );
   assert.match(
-    apply,
-    /uses: \.\/\.buildchain\/runtime\/actions\/release-candidate-promote/,
+    settle.runs.steps.find((step) =>
+      step.uses?.startsWith("actions/upload-artifact@"),
+    ).with.path,
+    /release-receipt\.json/,
   );
-  assert.match(apply, /release-invocation-root:/);
-  assert.match(apply, /release-transaction-root:/);
-  assert.match(apply, /release-receipt-root:/);
-  assert.match(
-    apply,
-    /name: buildchain-v4-release-apply-\$\{\{ needs\.qualify\.outputs\.requested-sha \}\}/,
-  );
-  assert.match(settle, /release-receipt\.json/);
-  assert.doesNotMatch(apply, /declarative-controller-evidence/u);
 });
 
 test("qualified v4 release materializes the four built-in provider capabilities", () => {
-  const directory = fs.mkdtempSync(
-    path.join(os.tmpdir(), "buildchain-tail-"),
-  );
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-tail-"));
   try {
     const asset = path.join(directory, "buildchain.release.json");
     fs.writeFileSync(asset, "{}\n");
@@ -206,103 +219,6 @@ test("qualified v4 release materializes the four built-in provider capabilities"
   }
 });
 
-function fakeGitHub() {
-  const state = {
-    release: null,
-    assets: [],
-    refs: new Map(),
-    blobs: new Map(),
-    trees: new Map(),
-    commits: new Map(),
-    documents: new Map(),
-    mutations: 0,
-  };
-  const missing = () =>
-    Promise.reject(Object.assign(new Error("missing"), { status: 404 }));
-  const materialize = (ref, sha) => {
-    const tree = state.trees.get(state.commits.get(sha));
-    for (const entry of tree || []) {
-      state.documents.set(`${ref}:${entry.path}`, state.blobs.get(entry.sha));
-    }
-  };
-  return {
-    state,
-    octokit: {
-      rest: {
-        repos: {
-          getReleaseByTag: () =>
-            state.release
-              ? Promise.resolve({ data: state.release })
-              : missing(),
-          listReleaseAssets: () => Promise.resolve({ data: state.assets }),
-          createRelease: () => {
-            state.release = { id: 1, html_url: "https://example.test/release" };
-            state.mutations += 1;
-            return Promise.resolve({ data: state.release });
-          },
-          uploadReleaseAsset: ({ name, data }) => {
-            state.assets.push({
-              name,
-              digest: `sha256:${crypto.createHash("sha256").update(data).digest("hex")}`,
-            });
-            return Promise.resolve({ data: state.assets.at(-1) });
-          },
-          getContent: ({ ref, path: file }) =>
-            state.documents.has(`${ref}:${file}`)
-              ? Promise.resolve({
-                  data: {
-                    type: "file",
-                    content: Buffer.from(
-                      JSON.stringify(state.documents.get(`${ref}:${file}`)),
-                    ).toString("base64"),
-                  },
-                })
-              : missing(),
-        },
-        git: {
-          getRef: ({ ref }) =>
-            state.refs.has(ref)
-              ? Promise.resolve({
-                  data: { object: { sha: state.refs.get(ref) } },
-                })
-              : missing(),
-          getCommit: ({ commit_sha: sha }) =>
-            Promise.resolve({
-              data: { tree: { sha: state.commits.get(sha) } },
-            }),
-          createBlob: ({ content }) => {
-            const sha = `blob-${state.blobs.size}`;
-            state.blobs.set(sha, JSON.parse(content));
-            return Promise.resolve({ data: { sha } });
-          },
-          createTree: ({ tree }) => {
-            const sha = `tree-${state.trees.size}`;
-            state.trees.set(sha, tree);
-            return Promise.resolve({ data: { sha } });
-          },
-          createCommit: ({ tree }) => {
-            const sha = `commit-${state.commits.size}`;
-            state.commits.set(sha, tree);
-            return Promise.resolve({ data: { sha } });
-          },
-          createRef: ({ ref, sha }) => {
-            const key = ref.replace(/^refs\//u, "");
-            state.refs.set(key, sha);
-            materialize(key.replace(/^heads\//u, ""), sha);
-            state.mutations += 1;
-            return Promise.resolve({});
-          },
-          updateRef: ({ ref, sha }) => {
-            state.refs.set(ref, sha);
-            materialize(ref.replace(/^heads\//u, ""), sha);
-            state.mutations += 1;
-            return Promise.resolve({});
-          },
-        },
-      },
-    },
-  };
-}
 
 test("v4 provider checkpoint resumes only the incomplete tail after injected failure", async (t) => {
   const directory = fs.mkdtempSync(
@@ -330,7 +246,7 @@ test("v4 provider checkpoint resumes only the incomplete tail after injected fai
     qualificationRoot: root("b"),
   };
   await assert.rejects(
-    publishDeclarativeGitHubReleaseEvidence({
+    publishGitHubReleaseEvidence({
       ...options,
       failureAfterCapability: "artifact.publish",
     }),
@@ -341,7 +257,7 @@ test("v4 provider checkpoint resumes only the incomplete tail after injected fai
     interrupted.receipts.map(({ capabilityId }) => capabilityId),
     ["artifact.publish"],
   );
-  const resumed = await publishDeclarativeGitHubReleaseEvidence(options);
+  const resumed = await publishGitHubReleaseEvidence(options);
   assert.equal(resumed.transaction.state, "complete");
   assert.deepEqual(
     resumed.transaction.receipts.map(({ capabilityId }) => capabilityId),

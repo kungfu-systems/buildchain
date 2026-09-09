@@ -1,3 +1,7 @@
+import {
+  inspectWorkflowJob,
+  readWorkflow,
+} from "../scripts/workflow-action-graph.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -5,13 +9,13 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-import { StageCapsuleLocalStore } from "../packages/core/stage-capsule-local-store.js";
-import { stageCapsuleBlobRoot } from "../packages/core/stage-capsule-store.js";
+import { StageCapsuleLocalStore } from "../packages/core/build/stage-capsule-local-store.js";
+import { stageCapsuleBlobRoot } from "../packages/core/build/stage-capsule-store.js";
 import {
   emitPlatformStageCheckpoint,
   restorePlatformStageCheckpoint,
   validatePlatformStageCheckpointDeclaration,
-} from "../packages/core/platform-stage-checkpoints.js";
+} from "../packages/core/build/platform-stage-checkpoints.js";
 
 const root = path.resolve(import.meta.dirname, "..");
 const declaration = validatePlatformStageCheckpointDeclaration(
@@ -215,8 +219,18 @@ test("clean-process rehearsal runs for each declared platform", () => {
 });
 
 test("workflow, generated template, and Agent guidance project the declaration", () => {
+  const workflow = readWorkflow(declaration.projections.protectedWorkflow);
+  const graphs = Object.keys(workflow.jobs).map((id) =>
+    inspectWorkflowJob(declaration.projections.protectedWorkflow, id),
+  );
+  assert.ok(
+    graphs.some((graph) =>
+      [...graph.modules.values()].some((source) =>
+        source.includes("architecture/platform-stage-checkpoints.json"),
+      ),
+    ),
+  );
   for (const file of [
-    declaration.projections.protectedWorkflow,
     declaration.projections.generatedTemplate,
     declaration.projections.agentGuidance,
     declaration.projections.manual,

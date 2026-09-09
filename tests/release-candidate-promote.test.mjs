@@ -10,9 +10,9 @@ import {
   resolveCandidateProviderInputs,
   resolvePublicationTarget,
   resolvePromotionTarget,
-} from "../actions/release-candidate-promote/index.js";
+} from "../packages/core/release/promote-candidate/action.js";
 
-import { sha256Json } from "../packages/core/release-candidate.js";
+import { sha256Json } from "../packages/core/release/release-candidate.js";
 
 test("legacy promotion shells recover the standard sealed build summary", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-promote-"));

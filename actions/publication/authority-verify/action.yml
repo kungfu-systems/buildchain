@@ -1,0 +1,130 @@
+name: authority-verify
+description: "Publication authority: verify."
+inputs:
+  request-json:
+    description: Typed public workflow request.
+    required: true
+  auto-evidence-admission-json:
+    description: Exact preceding authority node result.
+    required: true
+  paper-auto-evidence-admission-json:
+    description: Exact preceding authority node result.
+    required: true
+  binary-auto-evidence-admission-json:
+    description: Exact preceding authority node result.
+    required: true
+  auto-evidence-runner-provenance-json:
+    description: Exact preceding authority node result.
+    required: true
+  paper-auto-evidence-runner-provenance-json:
+    description: Exact preceding authority node result.
+    required: true
+  binary-auto-evidence-runner-provenance-json:
+    description: Exact preceding authority node result.
+    required: true
+  auto-evidence-control-plane-audit-json:
+    description: Exact preceding authority node result.
+    required: true
+  paper-auto-evidence-control-plane-audit-json:
+    description: Exact preceding authority node result.
+    required: true
+  binary-auto-evidence-control-plane-audit-json:
+    description: Exact preceding authority node result.
+    required: true
+  consumer-gate-gate-aggregate-json:
+    description: Exact preceding authority node result.
+    required: true
+  auto-evidence-gate-aggregate-json:
+    description: Exact preceding authority node result.
+    required: true
+  paper-auto-evidence-gate-aggregate-json:
+    description: Exact preceding authority node result.
+    required: true
+  binary-auto-evidence-gate-aggregate-json:
+    description: Exact preceding authority node result.
+    required: true
+  auto-evidence-expected-json:
+    description: Exact preceding authority node result.
+    required: true
+  paper-auto-evidence-expected-json:
+    description: Exact preceding authority node result.
+    required: true
+  binary-auto-evidence-expected-json:
+    description: Exact preceding authority node result.
+    required: true
+  node-path:
+    description: Exact Buildchain Node executable.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Verify sealed publication admission
+      if: ${{ !fromJSON(inputs.request-json).dry-run }}
+      env:
+        BUILDCHAIN_PUBLICATION_ADMISSION_JSON: ${{ fromJSON(inputs.request-json).admission-json || inputs.auto-evidence-admission-json || inputs.paper-auto-evidence-admission-json || inputs.binary-auto-evidence-admission-json }}
+        BUILDCHAIN_RUNNER_PROVENANCE_JSON: ${{ fromJSON(inputs.request-json).runner-provenance-json || inputs.auto-evidence-runner-provenance-json || inputs.paper-auto-evidence-runner-provenance-json || inputs.binary-auto-evidence-runner-provenance-json }}
+        BUILDCHAIN_CONTROL_PLANE_AUDIT_JSON: ${{ fromJSON(inputs.request-json).control-plane-audit-json || inputs.auto-evidence-control-plane-audit-json || inputs.paper-auto-evidence-control-plane-audit-json || inputs.binary-auto-evidence-control-plane-audit-json }}
+        BUILDCHAIN_GATE_AGGREGATE_JSON: ${{ inputs.consumer-gate-gate-aggregate-json || fromJSON(inputs.request-json).gate-aggregate-json || inputs.auto-evidence-gate-aggregate-json || inputs.paper-auto-evidence-gate-aggregate-json || inputs.binary-auto-evidence-gate-aggregate-json }}
+        BUILDCHAIN_PUBLICATION_EXPECTED_JSON: ${{ fromJSON(inputs.request-json).expected-json || inputs.auto-evidence-expected-json || inputs.paper-auto-evidence-expected-json || inputs.binary-auto-evidence-expected-json }}
+        BUILDCHAIN_USED_NONCES_JSON: ${{ fromJSON(inputs.request-json).used-nonces-json }}
+        BUILDCHAIN_PLANNED_PUBLICATION_VERSION: ${{ fromJSON(inputs.request-json).publication-version }}
+        BUILDCHAIN_AUTHORITY_REF: ${{ fromJSON(inputs.request-json).buildchain-ref }}
+        BUILDCHAIN_AUTO_ADMISSION_KIND: ${{ fromJSON(inputs.request-json).auto-admission-kind }}
+        BUILDCHAIN_CONSUMER_QUALIFICATION_REQUIRED: ${{ fromJSON(inputs.request-json).consumer-qualification-required }}
+        BUILDCHAIN_CONSUMER_PREDICATE_ID: ${{ fromJSON(inputs.request-json).consumer-predicate-id }}
+        BUILDCHAIN_CONSUMER_PREDICATE_DIGEST: ${{ fromJSON(inputs.request-json).consumer-predicate-digest }}
+        GITHUB_TOKEN: ${{ github.token }}
+        BUILDCHAIN_AUTHORITY_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.node-path }}
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/authority-runtime/packages/core/publication/nodes/authority.mjs" verify
+    - name: Record non-authorizing dry-run result
+      if: ${{ fromJSON(inputs.request-json).dry-run }}
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/authority-runtime/packages/core/publication/nodes/authority.mjs" dry-run
+      shell: bash -e {0}
+      env:
+        BUILDCHAIN_AUTHORITY_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.node-path }}
+    - name: Export capability result
+      id: result
+      shell: bash
+      run: |
+        "$BUILDCHAIN_NODE_PATH" "$GITHUB_WORKSPACE/.buildchain/authority-runtime/packages/core/publication/nodes/authority.mjs" outputs
+      env:
+        BUILDCHAIN_AUTHORITY_REQUEST_JSON: ${{ inputs.request-json }}
+        BUILDCHAIN_NODE_PATH: ${{ inputs.node-path }}
+    - name: Upload publication capability receipt
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
+        path: |
+          .buildchain/publication-authority/capability.json
+          .buildchain/publication-authority/gate-aggregate.json
+          .buildchain/publication-authority/github-governance-audit.json
+          .buildchain/publication-authority/github-governance-receipt.json
+        if-no-files-found: error
+    - name: Upload assembled self-publication evidence
+      if: ${{ !fromJSON(inputs.request-json).dry-run && fromJSON(inputs.request-json).auto-admission }}
+      uses: actions/upload-artifact@v7.0.1
+      with:
+        name: buildchain-self-publication-admission-${{ github.run_id }}-${{ github.run_attempt }}
+        path: .buildchain/publication-authority/auto/*.json
+        if-no-files-found: error
+outputs:
+  capability-json:
+    description: capability-json node result.
+    value: ${{ steps.result.outputs.capability-json }}
+  capability-digest:
+    description: capability-digest node result.
+    value: ${{ steps.result.outputs.capability-digest }}
+  capability-artifact:
+    description: capability-artifact node result.
+    value: buildchain-publication-capability-${{ github.run_id }}-${{ github.run_attempt }}
+  gate-aggregate-json:
+    description: gate-aggregate-json node result.
+    value: ${{ steps.result.outputs.gate-aggregate-json }}
+  gate-aggregate-digest:
+    description: gate-aggregate-digest node result.
+    value: ${{ steps.result.outputs.gate-aggregate-digest }}

@@ -7,12 +7,12 @@ import path from "node:path";
 import test from "node:test";
 import Ajv2020 from "ajv/dist/2020.js";
 
-import { loadBuildchainConfig } from "../packages/core/buildchain-config.js";
+import { loadBuildchainConfig } from "../packages/core/consumer/buildchain-config.js";
 import {
   NEXT_DEVELOPMENT_AGENT_SECTION_START,
   assertNextDevelopmentConfig,
   nextDevelopmentManual,
-} from "../packages/core/next-development-projection.js";
+} from "../packages/core/release/next-development-projection.js";
 import {
   NEXT_DEVELOPMENT_REQUEST_CONTRACT,
   NEXT_DEVELOPMENT_STATES,
@@ -22,9 +22,9 @@ import {
   createNextDevelopmentTransition,
   materializeNextDevelopmentTransition,
   validateNextDevelopmentTransition,
-} from "../packages/core/next-development-transition.js";
-import { paperAgentEntryFiles } from "../packages/core/paper-agent-entry.js";
-import { initBuildchainRepo } from "../scripts/init-repo.mjs";
+} from "../packages/core/release/next-development-transition.js";
+import { paperAgentEntryFiles } from "../packages/core/paper/paper-agent-entry.js";
+import { initBuildchainRepo } from "../packages/core/adoption/commands/init-repo.mjs";
 import { generateNextDevelopmentGuidance } from "../scripts/generate-next-development-guidance.mjs";
 
 const ROOT = (digit) => `sha256:${digit.repeat(64)}`;

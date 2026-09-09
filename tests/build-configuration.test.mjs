@@ -3,12 +3,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { discoverBuildConfiguration, normalizeBuildConfiguration } from "../packages/core/build-configuration.js";
-import { resolveBuildConfiguration } from "../scripts/resolve-build-configuration.mjs";
-import { selectReleaseCandidateArtifacts } from "../scripts/release-candidate-resolver.mjs";
-import { loadBuildchainConfig } from "../packages/core/buildchain-config.js";
-import { resolveRunnerMatrix } from "../scripts/build-contract-core.mjs";
-import { resolveArtifactTransferMode } from "../scripts/resolve-artifact-transfer-mode.mjs";
+import { discoverBuildConfiguration, normalizeBuildConfiguration } from "../packages/core/build/build-configuration.js";
+import { resolveBuildConfiguration } from "../packages/core/build/commands/resolve-build-configuration.mjs";
+import { selectReleaseCandidateArtifacts } from "../packages/core/release/commands/release-candidate-resolver.mjs";
+import { loadBuildchainConfig } from "../packages/core/consumer/buildchain-config.js";
+import { resolveRunnerMatrix } from "../packages/core/build/commands/build-contract-core.mjs";
+import { resolveArtifactTransferMode } from "../packages/core/build/commands/resolve-artifact-transfer-mode.mjs";
 
 function fixture(t, relative = "buildchain.toml", extra = "") {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-config-plan-"));
@@ -57,7 +57,7 @@ test("optional Go setup derives from TOML and changes the toolchain root", (t) =
   fs.appendFileSync(path.join(root, "go.sum"), "example.com/library v1.1.0 h1:second\n");
   assert.notEqual(resolve(root).plan.cache.dependency_root, dependencyRoot);
   assert.throws(() => normalizeBuildConfiguration({ tools: { go: true } }));
-  const action = fs.readFileSync("actions/prepare-build-environment/action.yml", "utf8");
+  const action = fs.readFileSync("actions/build/prepare-environment/action.yml", "utf8");
   assert.match(action, /inputs.tools == 'true' && fromJSON\(inputs.plan\).tools.setup_go/u);
   assert.match(action, /uses: actions\/setup-go@/u);
   assert.match(action, /go-version: \$\{\{ fromJSON\(inputs.plan\).tools.go \}\}/u);

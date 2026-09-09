@@ -3,7 +3,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
-import { KFD_PRODUCT_GATE_INPUT_CONTRACT, evaluateKfdProductGate } from "../../packages/core/kfd-product-gates.js";
+import { KFD_PRODUCT_GATE_INPUT_CONTRACT, evaluateKfdProductGate } from "../../packages/core/adoption/kfd-product-gates.js";
 import { addAdopterWitness, initAdopterManifest } from "@kungfu-tech/kfd/adopter-conformance/toolchain";
 
 const require = createRequire(import.meta.url);

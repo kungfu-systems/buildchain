@@ -9,11 +9,21 @@ import {
   buildBridge,
   createHostRequest,
   runBridge,
-} from "../scripts/bridge-bootstrap.mjs";
+} from "../packages/core/runtime/commands/bridge-bootstrap.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
-const architectureScript = path.join(root, "scripts", "architecture.mjs");
-const hostScript = path.join(root, "scripts", "host-adapter.mjs");
+const architectureScript = path.join(
+  root,
+  "packages/core/governance/commands/architecture.mjs",
+);
+const hostScript = path.join(
+  root,
+  "packages",
+  "core",
+  "runtime",
+  "commands",
+  "host-adapter.mjs",
+);
 
 function ensureBridge() {
   if (fs.existsSync(bridgeBinary())) return;

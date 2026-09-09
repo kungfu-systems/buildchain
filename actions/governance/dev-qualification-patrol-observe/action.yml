@@ -1,0 +1,73 @@
+name: dev-qualification-patrol-observe
+description: Execute the dev-qualification-patrol observe capability within its caller job boundary.
+inputs:
+  runtime-ref:
+    description: Exact runtime ref; defaults to this workflow SHA.
+    required: true
+  runtime-repository:
+    description: Runtime repository.
+    required: true
+  request-json:
+    description: Typed public workflow request.
+    required: true
+outputs:
+  result-path:
+    description: result-path node result.
+    value: ${{ steps.observe.outputs.result-path }}
+  state:
+    description: state node result.
+    value: ${{ steps.observe.outputs.state }}
+  action:
+    description: action node result.
+    value: ${{ steps.observe.outputs.action }}
+  reason:
+    description: reason node result.
+    value: ${{ steps.observe.outputs.reason }}
+  source-sha:
+    description: source-sha node result.
+    value: ${{ steps.observe.outputs.source-sha }}
+  pending-sha:
+    description: pending-sha node result.
+    value: ${{ steps.observe.outputs.pending-sha }}
+  active-run-id:
+    description: active-run-id node result.
+    value: ${{ steps.observe.outputs.active-run-id }}
+  decision-root:
+    description: decision-root node result.
+    value: ${{ steps.observe.outputs.decision-root }}
+runs:
+  using: composite
+  steps:
+  - name: Checkout Buildchain runtime
+    uses: actions/checkout@v7.0.0
+    with:
+      repository: ${{ inputs.runtime-repository }}
+      ref: ${{ inputs.runtime-ref }}
+      path: .buildchain/runtime
+      persist-credentials: false
+  - uses: ./.buildchain/workflow-shell/actions/runtime/prepare
+    with:
+      directory: .buildchain/runtime
+  - name: Observe latest Dev qualification
+    id: observe
+    run: node .buildchain/runtime/packages/core/dev-delivery/commands/dev-qualification-patrol.mjs
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      BUILDCHAIN_DEV_QUALIFICATION_REPOSITORY: ${{ github.repository }}
+      BUILDCHAIN_DEV_QUALIFICATION_SOURCE_BRANCH: ${{ fromJSON(inputs.request-json).source-branch }}
+      BUILDCHAIN_DEV_QUALIFICATION_WORKFLOW: ${{ fromJSON(inputs.request-json).dev-workflow-path }}
+      BUILDCHAIN_DEV_QUALIFICATION_PREFLIGHT_WORKFLOW: ${{ fromJSON(inputs.request-json).preflight-workflow-path }}
+      BUILDCHAIN_DEV_QUALIFICATION_PRIORITY_WORKFLOWS: ${{ fromJSON(inputs.request-json).priority-workflows-json }}
+      BUILDCHAIN_DEV_QUALIFICATION_DISPATCH_INPUTS: ${{ fromJSON(inputs.request-json).dispatch-inputs-json }}
+      BUILDCHAIN_DEV_QUALIFICATION_MAX_ATTEMPTS: ${{ fromJSON(inputs.request-json).max-attempts }}
+      BUILDCHAIN_DEV_QUALIFICATION_MUTATION_AUTHORIZED: 'false'
+      BUILDCHAIN_DEV_QUALIFICATION_OUTPUT_PATH: .buildchain/patrol/dev-qualification.json
+    shell: bash -e {0}
+  - name: Upload exact-source observation
+    uses: actions/upload-artifact@v7.0.1
+    with:
+      name: buildchain-dev-qualification-observation-${{ steps.observe.outputs.source-sha }}
+      path: ${{ steps.observe.outputs.result-path }}
+      if-no-files-found: error
+      retention-days: 30
+      overwrite: true

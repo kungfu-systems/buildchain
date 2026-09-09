@@ -18,11 +18,11 @@ const REQUIRED = [
   "invalidation",
   "providerReadback",
   "publicSurfaces",
-  "compatibilityCallers",
+  "callers",
   "sourcePaths",
   "testPaths",
-  "migrationDisposition",
-  "unresolved",
+  "implementationDisposition",
+  "closedRequirements",
 ];
 
 function loadJson(root, file) {
@@ -66,7 +66,7 @@ function listFiles(root, relativeRoot) {
 function validateRequiredDimensions(mechanism, issues) {
   for (const field of REQUIRED) {
     const value = mechanism[field];
-    const empty = ["owner", "migrationDisposition"].includes(field)
+    const empty = ["owner", "implementationDisposition"].includes(field)
       ? !String(value || "").trim()
       : !Array.isArray(value) || value.length === 0;
     if (empty) issues.push(`${mechanism.id}: ${field} is empty`);
@@ -109,6 +109,7 @@ function validateSurfaces(mechanism, surfaces, issues) {
 
 function validateGitRefStore(root, mechanism, issues) {
   const source = (mechanism.sourcePaths || [])
+    .filter((file) => fs.existsSync(path.join(root, file)))
     .map((file) => fs.readFileSync(path.join(root, file), "utf8"))
     .join("\n");
   const writesReleaseState = /refs\/heads\/buildchain\/release-state/u.test(
@@ -275,24 +276,22 @@ function validateReverseScan(root, inventory, ids, ownedSources, issues) {
 
 function checkCoreMechanismInventory({
   root = process.cwd(),
-  inventory = loadJson(
-    root,
-    "architecture/baseline-core-mechanism-inventory.json",
-  ),
+  inventory = loadJson(root, "architecture/core-mechanisms.json"),
 } = {}) {
   const issues = [];
   if (
     inventory.schemaVersion !== 1 ||
-    inventory.contract !== "kungfu-buildchain-v3-core-mechanism-inventory"
+    inventory.contract !== "buildchain.core-mechanisms/v1"
   )
     issues.push("inventory contract or schemaVersion is invalid");
   if (
-    !/^[0-9a-f]{40}$/u.test(inventory.baseline?.commit || "") ||
-    !/^[0-9a-f]{40}$/u.test(inventory.baseline?.tree || "")
+    !/^[0-9a-f]{40}$/u.test(inventory.sourceCut?.protectedDevelopmentSeed || "")
   )
-    issues.push("baseline must bind an exact commit and tree");
+    issues.push(
+      "core mechanism inventory must bind its protected development seed",
+    );
   if (inventory.maintainability?.dependencyCycles !== 0)
-    issues.push("baseline must report the exact zero-cycle result");
+    issues.push("core mechanism inventory must require zero dependency cycles");
   const surfaces = registrySurfaceIds(root);
   const ids = new Set();
   const ownedSources = new Map();
@@ -316,10 +315,12 @@ function checkCoreMechanismInventory({
     issues,
   );
   if ((inventory.mechanisms || []).length < 10)
-    issues.push("inventory must retain all ten v3 core mechanism families");
+    issues.push(
+      "inventory must retain all ten current core mechanism families",
+    );
   if (issues.length)
     throw new Error(
-      `v3 core mechanism inventory check failed:\n- ${issues.join("\n- ")}`,
+      `current core mechanism inventory check failed:\n- ${issues.join("\n- ")}`,
     );
   return {
     mechanisms: inventory.mechanisms.length,
@@ -340,7 +341,7 @@ if (
   try {
     const report = checkCoreMechanismInventory();
     console.log(
-      `v3 core mechanism inventory check passed: ${report.mechanisms} mechanisms, ${report.sourceCoordinates} owned source coordinates, ${report.authorityCoordinates} reverse-discovered authority coordinates, ${report.publicSurfaces} public surfaces across ${report.surfaceKinds.length} registry kinds, ${report.gitRefStores} Git-ref stores, ${report.dependencyCycles} dependency cycles`,
+      `current core mechanism inventory check passed: ${report.mechanisms} mechanisms, ${report.sourceCoordinates} owned source coordinates, ${report.authorityCoordinates} reverse-discovered authority coordinates, ${report.publicSurfaces} public surfaces across ${report.surfaceKinds.length} registry kinds, ${report.gitRefStores} Git-ref stores, ${report.dependencyCycles} dependency cycles`,
     );
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
