@@ -65,8 +65,7 @@ hatch.
 The current v3 managed-caller snapshot covers Buildchain self-bootstrap, both
 Buildchain paper release paths, Kungfu, Libnode, KFD, and the Kungfu product
 white paper. The inventory binds every snapshot to an exact commit, tree,
-workflow path, runtime ref, and the executable surface groups it uses. The
-legacy `agent-hub-demo@v2` caller is recorded but excluded from the v3 contract.
+workflow path, runtime ref, and the executable surface groups it uses. The inventory covers the declared release-tail contract.
 
 ## Capability declaration
 

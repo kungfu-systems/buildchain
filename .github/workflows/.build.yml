@@ -1,19 +1,14 @@
 name: Buildchain Build
-
 on:
   workflow_call:
     inputs:
       config-path:
-        description: "Project buildchain.toml location; omit for a single project at repository root"
+        description: Locate buildchain.toml when the project cannot be discovered.
         type: string
         required: false
-        default: ""
+        default: ''
     secrets:
-      BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN:
-        required: false
-      BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN:
-        required: false
-      BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN:
+      BUILDCHAIN_PROMOTION_TOKEN:
         required: false
       BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64:
         required: false
@@ -25,2220 +20,242 @@ on:
         required: false
       BUILDCHAIN_MACOS_NOTARY_API_ISSUER:
         required: false
-      BUILDCHAIN_PROMOTION_TOKEN:
-        description: "Standard Buildchain control-plane token used only for protected runner inventory, dispatch, and central authority retrieval"
-        required: false
     outputs:
-      runner-preset:
-        description: "Resolved runner preset name"
-        value: ${{ jobs.resolve-contract.outputs.runner-preset }}
-      platforms-json:
-        description: "Resolved platform matrix JSON"
-        value: ${{ jobs.resolve-contract.outputs.platforms-json }}
-      runner-routing-json:
-        description: "De-identified self-hosted availability and offline fallback decision"
-        value: ${{ jobs.resolve-contract.outputs.runner-routing-json }}
-      platform-count:
-        description: "Resolved platform count"
-        value: ${{ jobs.resolve-contract.outputs.platform-count }}
-      linux-container-enabled:
-        description: "Whether Linux build platforms are routed through a job container"
-        value: ${{ jobs.resolve-contract.outputs.linux-container-enabled }}
-      linux-container-image:
-        description: "Resolved Linux job container image"
-        value: ${{ jobs.resolve-contract.outputs.linux-container-image }}
-      build-summary-artifact:
-        description: "Uploaded aggregate build summary artifact name"
-        value: ${{ jobs.summarize.outputs.summary-artifact-name }}
-      credential-island-macos-artifact:
-        description: "Uploaded signed macOS payload artifact name when the credential island is enabled"
-        value: ${{ jobs.credential-island-macos.outputs.artifact-name }}
-      credential-island-macos-manifest-artifact:
-        description: "Uploaded signed macOS manifest artifact name when the credential island is enabled"
-        value: ${{ jobs.credential-island-macos.outputs.manifest-artifact-name }}
-      build-diagnostics-summary-artifact:
-        description: "Uploaded aggregate diagnostics summary artifact name"
-        value: ${{ jobs.summarize.outputs.diagnostics-summary-artifact-name }}
-      release-candidate-passport-artifact:
-        description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
-        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
-      release-candidate-artifact:
-        description: "Uploaded release-candidate passport artifact name when release-candidate is enabled"
-        value: ${{ jobs.summarize.outputs.release-candidate-passport-artifact-name }}
-      release-candidate-passport-json:
-        description: "Compact release-candidate passport JSON when release-candidate is enabled"
-        value: ${{ jobs.summarize.outputs.release-candidate-passport-json }}
-      build-summary-json:
-        description: "Compact aggregate build summary JSON"
-        value: ${{ jobs.summarize.outputs.artifact-summary-json }}
-      artifact-coordinates-json:
-        description: "Producer-owned exact GitHub Artifact coordinates for every resolved build platform"
-        value: ${{ jobs.summarize.outputs.artifact-coordinates-json }}
-      build-diagnostics-summary-json:
-        description: "Compact aggregate diagnostics summary JSON with lifecycle, diagnostics contract warning, and sidecar manifest warning totals"
-        value: ${{ jobs.summarize.outputs.diagnostics-summary-json }}
-      trusted-event:
-        description: "Whether the event is trusted enough to run build jobs"
-        value: ${{ jobs.trust-gate.outputs.trusted-event }}
-      buildchain-runtime-ref:
-        description: "Resolved Buildchain runtime ref"
-        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-ref }}
-      buildchain-runtime-sha:
-        description: "Resolved immutable Buildchain runtime SHA"
-        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-sha }}
-      buildchain-runtime-class:
-        description: "Runtime stability class: stable, alpha, authority, train, exact-sha, or development"
-        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-class }}
-      buildchain-runtime-override:
-        description: "Whether an authority, train, or exact-SHA buildchain-ref override was used"
-        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-override }}
-      buildchain-runtime-trust-decision:
-        description: "Runtime override trust decision"
-        value: ${{ jobs.trust-gate.outputs.buildchain-runtime-trust-decision }}
-      buildchain-contract-lock-status:
-        description: "Floating Buildchain runtime contract lock status"
-        value: ${{ jobs.trust-gate.outputs.buildchain-contract-lock-status }}
-      buildchain-contract-lock-drift:
-        description: "Whether the floating Buildchain runtime SHA or contract digest drifted from the consumer lock"
-        value: ${{ jobs.trust-gate.outputs.buildchain-contract-lock-drift }}
-      buildchain-contract-digest:
-        description: "Current Buildchain runtime contract digest"
-        value: ${{ jobs.trust-gate.outputs.buildchain-contract-digest }}
-      v4-consumer-policy-receipt-root:
-        description: "Root of the v4 floating consumer policy receipt"
-        value: ${{ jobs.trust-gate.outputs.v4-consumer-policy-receipt-root }}
-      v4-consumer-policy-receipt-json:
-        description: "Source/runtime/dual-lock-bound v4 floating consumer policy receipt"
-        value: ${{ jobs.trust-gate.outputs.v4-consumer-policy-receipt-json }}
-      publish-channel:
-        description: "Resolved publish channel"
-        value: ${{ jobs.trust-gate.outputs.publish-channel }}
-      publish-allowed:
-        description: "Whether this event/ref may publish after successful verification"
-        value: ${{ jobs.trust-gate.outputs.publish-allowed }}
-      publish-reason:
-        description: "Human-readable publish gate reason"
-        value: ${{ jobs.trust-gate.outputs.publish-reason }}
-      publish-source-ref:
-        description: "Resolved publish source ref"
-        value: ${{ jobs.trust-gate.outputs.publish-source-ref }}
-      publish-source-sha:
-        description: "Locked source SHA used for checkout/build/summary"
-        value: ${{ jobs.trust-gate.outputs.publish-source-sha }}
-      publish-source-tree-sha:
-        description: "Git tree SHA for the locked source commit used by release-candidate promotion equivalence checks"
-        value: ${{ jobs.resolve-source.outputs.publish-source-tree-sha }}
-      publish-source-locked:
-        description: "Whether a publish-gate source ref was explicitly locked"
-        value: ${{ jobs.trust-gate.outputs.publish-source-locked }}
-      publish-source-channel:
-        description: "Channel parsed from the publish-gate source ref"
-        value: ${{ jobs.trust-gate.outputs.publish-source-channel }}
-      publish-source-line:
-        description: "Line parsed from the publish-gate source ref"
-        value: ${{ jobs.trust-gate.outputs.publish-source-line }}
-      publish-source-consumer-version:
-        description: "Consumer version parsed from the publish-gate source ref"
-        value: ${{ jobs.trust-gate.outputs.publish-source-consumer-version }}
-      release-manifest-json:
-        description: "Resolved release manifest JSON"
-        value: ${{ jobs.resolve-source.outputs.release-manifest-json }}
-      controller-plan-artifact:
-        description: "Uploaded build-lifecycle controller plan artifact name"
-        value: ${{ jobs.controller-plan.outputs.controller-plan-artifact }}
-      controller-plan-json:
-        description: "Compact source/runtime-bound build-lifecycle controller plan"
-        value: ${{ jobs.controller-plan.outputs.controller-plan-json }}
-      controller-plan-digest:
-        description: "Digest of the build-lifecycle controller plan"
-        value: ${{ jobs.controller-plan.outputs.controller-plan-digest }}
-      controller-receipt-artifact:
-        description: "Uploaded build-lifecycle controller receipt artifact name"
-        value: ${{ jobs.controller-receipt.outputs.controller-receipt-artifact }}
-      controller-receipt-json:
-        description: "Compact build-lifecycle controller receipt"
-        value: ${{ jobs.controller-receipt.outputs.controller-receipt-json }}
-      controller-receipt-digest:
-        description: "Digest of the build-lifecycle controller receipt"
-        value: ${{ jobs.controller-receipt.outputs.controller-receipt-digest }}
-      controller-receipt-status:
-        description: "Final build-lifecycle controller status"
-        value: ${{ jobs.controller-receipt.outputs.controller-receipt-status }}
-
+      result:
+        description: Rooted build result and exact artifact references.
+        value: ${{ jobs.deliver.outputs.result }}
 permissions:
-  actions: read
   contents: read
-  issues: write
-  id-token: write
-
 jobs:
-  configure:
-    name: Resolve project build configuration
+  plan:
     runs-on: ubuntu-24.04
     permissions:
+      issues: write
       contents: read
+      actions: read
     outputs:
-      plan-json: ${{ steps.plan.outputs.plan-json }}
-      plan-root: ${{ steps.plan.outputs.plan-root }}
+      plan: ${{ steps.plan.outputs.plan }}
     steps:
-      - name: Checkout exact consumer source
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ github.sha }}
-          path: .buildchain/consumer
-          persist-credentials: false
-
-      - name: Checkout exact workflow runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: kungfu-systems/buildchain
-          ref: ${{ job.workflow_sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Setup configuration runtime
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: "24"
-
-      - name: Install configuration runtime dependencies
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-
-      - name: Resolve rooted build plan from TOML
-        id: plan
-        run: node .buildchain/runtime/scripts/resolve-build-configuration.mjs
-        env:
-          BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
-          BUILDCHAIN_CONFIG_PATH: ${{ inputs.config-path }}
-          BUILDCHAIN_WORKFLOW_REF: ${{ job.workflow_ref }}
-          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
-          BUILDCHAIN_WORKFLOW_REPOSITORY: kungfu-systems/buildchain
-
-  trust-gate:
-    needs: configure
-    name: Trust gate
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
-    outputs:
-      trusted: ${{ steps.trust.outputs.trusted }}
-      trusted-event: ${{ steps.publish.outputs.trusted-event }}
-      publish-channel: ${{ steps.publish.outputs.publish-channel }}
-      publish-allowed: ${{ steps.publish.outputs.publish-allowed }}
-      publish-reason: ${{ steps.publish.outputs.publish-reason }}
-      publish-source-ref: ${{ steps.source.outputs.publish-source-ref }}
-      publish-source-full-ref: ${{ steps.source.outputs.publish-source-full-ref }}
-      publish-source-sha: ${{ steps.source.outputs.publish-source-sha }}
-      publish-source-locked: ${{ steps.source.outputs.publish-source-locked }}
-      publish-source-channel: ${{ steps.source.outputs.publish-source-channel }}
-      publish-source-line: ${{ steps.source.outputs.publish-source-line }}
-      publish-source-consumer-version: ${{ steps.source.outputs.publish-source-consumer-version }}
-      buildchain-runtime-ref: ${{ fromJSON(needs.configure.outputs.plan-json).identity.ref }}
-      buildchain-runtime-full-ref: ${{ fromJSON(needs.configure.outputs.plan-json).identity.full_ref }}
-      buildchain-runtime-sha: ${{ fromJSON(needs.configure.outputs.plan-json).identity.sha }}
-      buildchain-runtime-class: ${{ fromJSON(needs.configure.outputs.plan-json).identity.channel }}
-      buildchain-runtime-override: false
-      buildchain-runtime-trust-decision: workflow-identity
-      buildchain-workflow-shell-ref: ${{ fromJSON(needs.configure.outputs.plan-json).identity.ref }}
-      buildchain-workflow-shell-sha: ${{ fromJSON(needs.configure.outputs.plan-json).identity.sha }}
-      buildchain-rollback-ref: ${{ fromJSON(needs.configure.outputs.plan-json).identity.ref }}
-      buildchain-contract-lock-status: ${{ steps.contract-lock.outputs.contract-lock-status }}
-      buildchain-contract-lock-drift: ${{ steps.contract-lock.outputs.contract-lock-drift }}
-      buildchain-contract-digest: ${{ steps.contract-lock.outputs.contract-digest }}
-      v4-consumer-policy-receipt-root: ${{ steps.v4-policy.outputs.v4-consumer-policy-receipt-root }}
-      v4-consumer-policy-receipt-json: ${{ steps.v4-policy.outputs.v4-consumer-policy-receipt-json }}
-      v4-consumer-policy-scanner-root: ${{ steps.v4-policy.outputs.v4-consumer-policy-scanner-root }}
-    steps:
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ fromJSON(needs.configure.outputs.plan-json).identity.sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Upload Buildchain runtime checkout bootstrap
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-runtime-checkout-bootstrap-${{ fromJSON(needs.configure.outputs.plan-json).identity.sha }}
-          path: |
-            .buildchain/runtime/scripts/locked-source-checkout.mjs
-            .buildchain/runtime/scripts/git-fetch-process-tree.mjs
-            .buildchain/runtime/scripts/artifact-signing-delegation.mjs
-            .buildchain/runtime/scripts/artifact-signing-controller-core.mjs
-            .buildchain/runtime/scripts/artifact-signing-controller.mjs
-            .buildchain/runtime/scripts/build-contract-core.mjs
-            .buildchain/runtime/scripts/github-output.mjs
-            .buildchain/runtime/scripts/aws-runner-burst-core.mjs
-            .buildchain/runtime/scripts/aws-windows-jit-core.mjs
-            .buildchain/runtime/scripts/aws-macos-jit-core.mjs
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Upload macOS credential-island runtime
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path != '' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-credential-island-runtime-${{ fromJSON(needs.configure.outputs.plan-json).identity.sha }}
-          path: .buildchain/runtime/actions/macos-credential-island
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Validate macOS credential-island request
-        shell: bash
-        env:
-          BUILDCHAIN_CREDENTIAL_APP_PATH: ${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path }}
-          BUILDCHAIN_CREDENTIAL_ENVIRONMENT: ${{ fromJSON(needs.configure.outputs.plan-json).environment.signing.environment }}
-          BUILDCHAIN_CREDENTIAL_CALLER_OWNED: false
-          BUILDCHAIN_CREDENTIAL_PLATFORM_ID: ${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform }}
-        run: |
-          set -euo pipefail
-          if [ -z "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] &&
-             { [ -n "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ] || [ "${BUILDCHAIN_CREDENTIAL_CALLER_OWNED}" = "true" ]; }; then
-            echo "::error::credential-island environment or caller-owned mode requires credential-island-macos-app-path"
-            exit 1
-          fi
-          if [ -n "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] &&
-             [ "${BUILDCHAIN_CREDENTIAL_CALLER_OWNED}" != "true" ] &&
-             [ -z "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ]; then
-            echo "::error::built-in credential-island signing requires credential-island-environment"
-            exit 1
-          fi
-          if [ "${BUILDCHAIN_CREDENTIAL_CALLER_OWNED}" = "true" ] &&
-             [ -n "${BUILDCHAIN_CREDENTIAL_ENVIRONMENT}" ]; then
-            echo "::error::caller-owned credential-island signing must bind its environment in the caller workflow"
-            exit 1
-          fi
-          if [ -n "${BUILDCHAIN_CREDENTIAL_APP_PATH}" ] &&
-             ! [[ "${BUILDCHAIN_CREDENTIAL_PLATFORM_ID}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$ ]]; then
-            echo "::error::credential-island-macos-platform-id is invalid"
-            exit 1
-          fi
-
-      - name: Checkout consumer contract lock
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ github.sha }}
-          clean: true
-          persist-credentials: false
-          path: .buildchain/consumer
-
-      - name: Enforce v4 floating consumer policy
-        id: v4-policy
-        shell: bash
-        env:
-          BUILDCHAIN_CONSUMER_ROOT: .buildchain/consumer
-          BUILDCHAIN_INVOKED_WORKFLOW: ${{ fromJSON(needs.configure.outputs.plan-json).identity.visible_workflow }}
-          BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: ${{ fromJSON(needs.configure.outputs.plan-json).identity.channel }}
-          BUILDCHAIN_WORKFLOW_SHA: ${{ job.workflow_sha }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(needs.configure.outputs.plan-json).identity.sha }}
-          BUILDCHAIN_STABLE_CONTRACT_LOCK_PATH: .buildchain/contract-lock.json
-          BUILDCHAIN_ALPHA_CONTRACT_LOCK_PATH: .buildchain/alpha-contract-lock.json
-          BUILDCHAIN_V4_POLICY_RECEIPT_PATH: .buildchain/evidence/consumer-policy-receipt.json
-        run: node .buildchain/runtime/scripts/consumer-policy.mjs scan
-
-      - name: Upload rooted v4 consumer policy receipt
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-v4-consumer-policy-${{ github.sha }}
-          path: .buildchain/consumer/.buildchain/evidence/consumer-policy-receipt.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Validate consumer package manager contract
-        id: package-manager
-        shell: bash
-        run: |
-          validator=.buildchain/runtime/scripts/validate-package-manager-contract.mjs
-          node "${validator}"
-        env:
-          BUILDCHAIN_PACKAGE_MANAGER_CWD: .buildchain/consumer
-
-      - name: Check Buildchain contract lock
-        id: contract-lock
-        shell: bash
-        run: |
-          if [ -f .buildchain/runtime/scripts/buildchain-contract-lock.mjs ]; then
-            node .buildchain/runtime/scripts/buildchain-contract-lock.mjs check
-          else
-            {
-              echo "contract-lock-status=runtime-contract-unavailable"
-              echo "contract-lock-compatible=false"
-              echo "contract-lock-drift=false"
-              echo "contract-lock-issue-needed=false"
-              echo "contract-lock-issue-body-file="
-              echo "contract-digest="
-              echo "contract-compatibility-digest="
-              echo "accepted-contract-digest="
-              echo "accepted-buildchain-sha="
-              echo "current-buildchain-sha=${BUILDCHAIN_RUNTIME_SHA}"
-            } >> "${GITHUB_OUTPUT}"
-            if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
-              {
-                echo "## Buildchain contract lock"
-                echo
-                echo "- Status: \`runtime-contract-unavailable\`"
-                echo "- Runtime ref: \`${BUILDCHAIN_RUNTIME_REF}\`"
-                echo "- Runtime SHA: \`${BUILDCHAIN_RUNTIME_SHA}\`"
-                echo "- Note: the checked-out Buildchain runtime does not yet ship contract lock support."
-              } >> "${GITHUB_STEP_SUMMARY}"
-            fi
-            echo "::error::Buildchain runtime cannot prove channel-bound contract-lock semantics"
-            exit 1
-          fi
-        env:
-          BUILDCHAIN_CONTRACT_LOCK_PATH: .buildchain/consumer/${{ fromJSON(needs.configure.outputs.plan-json).contract.lock_path }}
-          BUILDCHAIN_CONTRACT_COMPATIBILITY_POLICY: ${{ fromJSON(needs.configure.outputs.plan-json).build.contract.compatibility_policy }}
-          BUILDCHAIN_CONTRACT_DRIFT_ISSUE_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).build.contract.drift_issue_mode }}
-          BUILDCHAIN_RUNTIME_ROOT: .buildchain/runtime
-          BUILDCHAIN_RUNTIME_REF: ${{ fromJSON(needs.configure.outputs.plan-json).identity.ref }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ fromJSON(needs.configure.outputs.plan-json).identity.sha }}
-          BUILDCHAIN_RUNTIME_CLASS: ${{ fromJSON(needs.configure.outputs.plan-json).identity.channel }}
-          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ fromJSON(needs.configure.outputs.plan-json).identity.ref }}
-          BUILDCHAIN_EXPECTED_CHANNEL: ${{ fromJSON(needs.configure.outputs.plan-json).identity.channel }}
-          BUILDCHAIN_EXPECTED_MAJOR: ${{ fromJSON(needs.configure.outputs.plan-json).identity.major }}
-          BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: false
-          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-      - name: Report consumer Buildchain contract drift
-        if: ${{ always() && steps.contract-lock.outputs.contract-lock-issue-needed == 'true' }}
-        uses: ./.buildchain/runtime/actions/report-buildchain-issue
-        with:
-          token: ${{ github.token }}
-          target-repository: ${{ github.repository }}
-          title: "[Buildchain contract] ${{ github.repository }} drift on ${{ fromJSON(needs.configure.outputs.plan-json).identity.ref }}"
-          failure-code: buildchain-contract-${{ steps.contract-lock.outputs.contract-lock-status }}
-          buildchain-ref: ${{ fromJSON(needs.configure.outputs.plan-json).identity.ref }}
-          buildchain-version: ${{ steps.contract-lock.outputs.contract-digest }}
-          consumer-repository: ${{ github.repository }}
-          consumer-ref: ${{ github.ref }}
-          consumer-sha: ${{ github.sha }}
-          workflow: ${{ github.workflow }}
-          run-id: ${{ github.run_id }}
-          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          summary: "Buildchain floating runtime contract drift: ${{ steps.contract-lock.outputs.contract-lock-status }}"
-          body-file: ${{ steps.contract-lock.outputs.contract-lock-issue-body-file }}
-          labels: "buildchain-contract-drift"
-          comment-cooldown-hours: "24"
-          fail-on-error: "false"
-
-      - name: Evaluate event trust
-        id: trust
-        shell: bash
-        run: |
-          trusted=true
-          if [ "true" = "true" ] && [ "${{ github.event_name }}" = "pull_request" ]; then
-            if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
-              trusted=false
-            fi
-          fi
-          echo "trusted=${trusted}" >> "$GITHUB_OUTPUT"
-          if [ "${trusted}" != "true" ]; then
-            echo "::warning::Untrusted event is not allowed to reach Buildchain build runners."
-          fi
-
-      - name: Resolve publish gate
-        id: publish
-        run: node .buildchain/runtime/scripts/resolve-publish-gate.mjs
-        env:
-          BUILDCHAIN_TRUSTED_EVENT: ${{ steps.trust.outputs.trusted }}
-          BUILDCHAIN_PUBLISH_CHANNEL: none
-          BUILDCHAIN_PUBLISH_REFS_JSON: ""
-          GITHUB_REF: ${{ github.ref }}
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-
-      - name: Resolve publish source lock
-        id: source
-        run: node .buildchain/runtime/scripts/resolve-publish-source.mjs --mode lock
-        env:
-          BUILDCHAIN_PUBLISH_SOURCE_REF: ""
-          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ fromJSON(needs.configure.outputs.plan-json).source.sha }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF: ${{ github.ref }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Verify publish target channel ref and PR lineage
-        run: node .buildchain/runtime/scripts/verify-publish-channel-ref.mjs
-        env:
-          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ steps.source.outputs.publish-source-ref }}
-          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ steps.source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Reject untrusted event
-        if: ${{ steps.trust.outputs.trusted != 'true' && 'fail' == 'fail' }}
-        run: exit 1
-
-  resolve-source:
-    name: Resolve publish source
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
-    needs:
-      - configure
-      - trust-gate
-    if: ${{ (needs.trust-gate.outputs.trusted == 'true') }}
-    outputs:
-      publish-source-ref: ${{ steps.manifest.outputs.publish-source-ref }}
-      publish-source-sha: ${{ steps.manifest.outputs.publish-source-sha }}
-      publish-source-tree-sha: ${{ steps.source-tree.outputs.publish-source-tree-sha }}
-      publish-source-locked: ${{ steps.manifest.outputs.publish-source-locked }}
-      publish-source-channel: ${{ steps.manifest.outputs.publish-source-channel }}
-      publish-source-line: ${{ steps.manifest.outputs.publish-source-line }}
-      publish-source-consumer-version: ${{ steps.manifest.outputs.publish-source-consumer-version }}
-      release-manifest-path: ${{ steps.manifest.outputs.release-manifest-path }}
-      release-manifest-json: ${{ steps.manifest.outputs.release-manifest-json }}
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ needs.trust-gate.outputs.publish-source-sha }}
-          clean: true
-          persist-credentials: false
-          path: source
-
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Install Buildchain runtime dependencies
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-
-      - name: Resolve release manifest
-        id: manifest
-        run: node .buildchain/runtime/scripts/resolve-publish-source.mjs --mode manifest
-        env:
-          BUILDCHAIN_SOURCE_CWD: source/${{ fromJSON(needs.configure.outputs.plan-json).project.cwd }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.trust-gate.outputs.publish-source-ref }}
-          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.trust-gate.outputs.publish-source-sha }}
-          BUILDCHAIN_PUBLISH_ANCHOR_REQUEST_JSON: ""
-          BUILDCHAIN_PUBLISH_REGISTRY: https://registry.npmjs.org/
-          BUILDCHAIN_RELEASE_MANIFEST: .buildchain/artifacts/publish-source-manifest.json
-
-      - name: Resolve source tree SHA
-        id: source-tree
-        shell: bash
-        run: |
-          tree_sha="$(git -C source rev-parse "HEAD^{tree}")"
-          echo "publish-source-tree-sha=${tree_sha}" >> "$GITHUB_OUTPUT"
-
-      - name: Upload resolved release manifest
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-publish-source-${{ needs.trust-gate.outputs.publish-source-sha }}
-          path: .buildchain/artifacts/publish-source-manifest.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-  anchored-release-preflight:
-    name: Verify anchored release material
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
-    needs:
-      - configure
-      - trust-gate
-      - resolve-source
-    if: ${{ (needs.trust-gate.outputs.trusted == 'true') }}
-    outputs:
-      evidence-artifact: ${{ steps.names.outputs.evidence-artifact }}
-      applicable: ${{ steps.material.outputs.anchored-version-material-applicable }}
-      digest: ${{ steps.material.outputs.anchored-version-material-digest }}
-    steps:
-      - name: Checkout exact release source with tags
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          fetch-depth: 0
-          clean: true
-          persist-credentials: false
-          path: source
-
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Install Buildchain runtime dependencies
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-
-      - name: Resolve anchored material verifier
-        id: anchored-verifier
-        shell: bash
-        run: |
-          set -euo pipefail
-          verifier=.buildchain/runtime/scripts/anchored-version-material.mjs
-          echo "path=${verifier}" >> "$GITHUB_OUTPUT"
-
-      - name: Verify declared anchored version material
-        id: material
-        shell: bash
-        run: |
-          set -euo pipefail
-          target_ref="${BUILDCHAIN_TARGET_REF}"
-          if [[ -z "${target_ref}" && "${BUILDCHAIN_TARGET_LINE}" =~ ^v[0-9]+/v[0-9]+\.[0-9]+$ ]]; then
-            target_ref="release/${BUILDCHAIN_TARGET_LINE}"
-          elif [[ -z "${target_ref}" && "${BUILDCHAIN_TARGET_LINE}" =~ ^v([0-9]+)\.([0-9]+)$ ]]; then
-            target_ref="release/v${BASH_REMATCH[1]}/${BUILDCHAIN_TARGET_LINE}"
-          fi
-          BUILDCHAIN_ANCHORED_TARGET_REF="${target_ref}" \
-            node "${{ steps.anchored-verifier.outputs.path }}"
-        env:
-          BUILDCHAIN_ANCHORED_SOURCE_CWD: source/${{ fromJSON(needs.configure.outputs.plan-json).project.cwd }}
-          BUILDCHAIN_ANCHORED_MATERIAL_OUTPUT: .buildchain/artifacts/anchored-version-material.json
-          BUILDCHAIN_ANCHORED_TARGET_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel || needs.trust-gate.outputs.publish-channel }}
-          BUILDCHAIN_ANCHORED_RELEASE_REF: HEAD
-          BUILDCHAIN_TARGET_REF: ${{ github.base_ref || github.event.pull_request.base.ref }}
-          BUILDCHAIN_TARGET_LINE: ${{ needs.resolve-source.outputs.publish-source-line }}
-
-      - name: Resolve anchored material artifact name
-        id: names
-        run: echo "evidence-artifact=${ARTIFACT_NAME}-anchored-version-material-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
-        env:
-          ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Upload anchored version material evidence
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.names.outputs.evidence-artifact }}
-          path: .buildchain/artifacts/anchored-version-material.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-  resolve-contract:
-    name: Resolve reusable contract
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
-    needs:
-      - configure
-      - trust-gate
-    outputs:
-      runner-preset: ${{ steps.routed-runners.outputs.runner-preset || steps.runners.outputs.runner-preset }}
-      platforms-json: ${{ steps.routed-runners.outputs.platforms-json || steps.runners.outputs.platforms-json }}
-      platform-count: ${{ steps.routed-runners.outputs.platform-count || steps.runners.outputs.platform-count }}
-      platform-source: ${{ steps.routed-runners.outputs.platform-source || steps.runners.outputs.platform-source }}
-      native-platforms-json: ${{ steps.routed-runners.outputs.native-platforms-json || steps.runners.outputs.native-platforms-json }}
-      native-platform-count: ${{ steps.routed-runners.outputs.native-platform-count || steps.runners.outputs.native-platform-count }}
-      container-platforms-json: ${{ steps.routed-runners.outputs.container-platforms-json || steps.runners.outputs.container-platforms-json }}
-      container-platform-count: ${{ steps.routed-runners.outputs.container-platform-count || steps.runners.outputs.container-platform-count }}
-      github-hosted-platforms-json: ${{ steps.routed-runners.outputs.github-hosted-platforms-json || steps.runners.outputs.github-hosted-platforms-json }}
-      github-hosted-platform-ids-json: ${{ steps.routed-runners.outputs.github-hosted-platform-ids-json || steps.runners.outputs.github-hosted-platform-ids-json }}
-      github-hosted-platform-count: ${{ steps.routed-runners.outputs.github-hosted-platform-count || steps.runners.outputs.github-hosted-platform-count }}
-      relay-platforms-json: ${{ steps.routed-runners.outputs.relay-platforms-json || steps.runners.outputs.relay-platforms-json }}
-      relay-platform-count: ${{ steps.routed-runners.outputs.relay-platform-count || steps.runners.outputs.relay-platform-count }}
-      linux-container-enabled: ${{ steps.routed-runners.outputs.linux-container-enabled || steps.runners.outputs.linux-container-enabled }}
-      linux-container-preset: ${{ steps.routed-runners.outputs.linux-container-preset || steps.runners.outputs.linux-container-preset }}
-      linux-container-image: ${{ steps.routed-runners.outputs.linux-container-image || steps.runners.outputs.linux-container-image }}
-      linux-container-source: ${{ steps.routed-runners.outputs.linux-container-source || steps.runners.outputs.linux-container-source }}
-      runner-routing-json: ${{ steps.offline-fallback.outputs.routing-json || '{"schema":"buildchain.runner-offline-routing/v1","status":"disabled","routes":[]}' }}
-    steps:
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Resolve runner matrix
-        id: runners
-        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode runners
-        env:
-          BUILDCHAIN_RUNNER_PRESET: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.preset }}
-          BUILDCHAIN_PLATFORMS_JSON: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.platforms_json }}
-          BUILDCHAIN_AWS_CODEBUILD_PROJECT: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.codebuild_project }}
-          BUILDCHAIN_AWS_EC2_WINDOWS_RUNNER_LABEL: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.windows_label }}
-          BUILDCHAIN_AWS_EC2_MACOS_RUNNER_LABEL: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.macos_label }}
-          BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.container_preset }}
-          BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.container_image }}
-
-      - name: Checkout trusted runner-routing shell
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.offline_fallback }}
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
-          path: .buildchain/runner-routing-shell
-          persist-credentials: false
-
-      - name: Route offline self-hosted lanes
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.offline_fallback }}
-        id: offline-fallback
-        run: node .buildchain/runner-routing-shell/scripts/route-offline-runners.mjs
-        env:
-          BUILDCHAIN_RUNNER_PRESET: custom
-          BUILDCHAIN_PLATFORMS_JSON: ${{ steps.runners.outputs.platforms-json }}
-          BUILDCHAIN_RUNNER_INVENTORY_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-
-      - name: Resolve routed runner matrix
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.offline_fallback }}
-        id: routed-runners
-        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode runners
-        env:
-          BUILDCHAIN_RUNNER_PRESET: custom
-          BUILDCHAIN_PLATFORMS_JSON: ${{ steps.offline-fallback.outputs.platforms-json }}
-          BUILDCHAIN_LINUX_CONTAINER_PRESET: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.container_preset }}
-          BUILDCHAIN_LINUX_CONTAINER_IMAGE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.runners.container_image }}
-
-  controller-plan:
-    name: Plan build controller evidence
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
-    needs:
-      - configure
-      - trust-gate
-      - resolve-source
-    if: ${{ (needs.trust-gate.result == 'success' && needs.resolve-source.result == 'success') }}
-    outputs:
-      controller-plan-artifact: ${{ steps.names.outputs.controller-plan-artifact }}
-      controller-plan-json: ${{ steps.plan.outputs.controller-plan-json }}
-      controller-plan-digest: ${{ steps.plan.outputs.controller-plan-digest }}
-    steps:
-      - name: Checkout build controller workflow shell
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
-          path: .buildchain/controller-runtime
-          persist-credentials: false
-
-      - name: Create build controller plan
-        id: plan
-        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode plan
-        env:
-          BUILDCHAIN_CONTROLLER_ID: build-lifecycle
-          BUILDCHAIN_CONTROLLER_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_CONTROLLER_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_CONTROLLER_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
-          BUILDCHAIN_CONTROLLER_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_CONTROLLER_CONTRACT_DIGEST: ${{ needs.trust-gate.outputs.buildchain-contract-digest }}
-          BUILDCHAIN_CONTROLLER_REGISTRY: .buildchain/controller-runtime/dist/site/controller-registry.json
-          BUILDCHAIN_CONTROLLER_INPUTS_JSON: ${{ format('{{"configuration-root":"{0}"}}', needs.configure.outputs.plan-root) }}
-          BUILDCHAIN_CONTROLLER_INPUT_BOUNDARY: strict
-          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
-
-      - name: Resolve build controller plan artifact
-        id: names
-        run: echo "controller-plan-artifact=${ARTIFACT_NAME}-controller-plan-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
-        env:
-          ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Upload build controller plan
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.names.outputs.controller-plan-artifact }}
-          path: .buildchain/controller/plan.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-  artifact-transfer:
-    name: Resolve artifact transfer
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
-    needs:
-      - configure
-      - trust-gate
-      - resolve-contract
-    if: ${{ (needs.trust-gate.outputs.trusted == 'true') }}
-    outputs:
-      mode: ${{ steps.transfer.outputs.mode }}
-      s3-bucket: ${{ steps.transfer.outputs.s3-bucket }}
-      s3-region: ${{ steps.transfer.outputs.s3-region }}
-      s3-prefix: ${{ steps.transfer.outputs.s3-prefix }}
-      oidc-audience: ${{ steps.transfer.outputs.oidc-audience }}
-    steps:
-      - name: Checkout artifact transfer workflow shell
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
-          path: .buildchain/artifact-transfer-runtime
-          persist-credentials: false
-
-      - name: Resolve artifact transfer mode
-        id: transfer
-        run: node .buildchain/artifact-transfer-runtime/scripts/resolve-artifact-transfer-mode.mjs
-        env:
-          INPUT_TRANSFER_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.transfer.mode }}
-          INPUT_RELAY_REQUIRED: ${{ needs.resolve-contract.outputs.relay-platform-count != '0' }}
-          INPUT_S3_BUCKET: ${{ fromJSON(needs.configure.outputs.plan-json).environment.transfer.bucket }}
-          INPUT_S3_REGION: ${{ fromJSON(needs.configure.outputs.plan-json).environment.transfer.region }}
-          INPUT_S3_PREFIX: ${{ fromJSON(needs.configure.outputs.plan-json).environment.transfer.prefix }}
-          INPUT_S3_ROLE_ARN: ""
-          INPUT_S3_UPLOAD_ROLE_ARN: ${{ fromJSON(needs.configure.outputs.plan-json).environment.transfer.upload_role_arn }}
-          INPUT_S3_DOWNLOAD_ROLE_ARN: ${{ fromJSON(needs.configure.outputs.plan-json).environment.transfer.download_role_arn }}
-          INPUT_OIDC_AUDIENCE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.transfer.oidc_audience }}
-          SECRET_S3_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
-          SECRET_S3_UPLOAD_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN }}
-          SECRET_S3_DOWNLOAD_ROLE_ARN: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN }}
-
+    - name: Checkout exact workflow implementation
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ job.workflow_sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - name: Checkout exact consumer source
+      uses: actions/checkout@v7.0.0
+      with:
+        ref: ${{ github.sha }}
+        path: source
+        fetch-depth: 0
+        persist-credentials: false
+    - uses: ./.buildchain/runtime/actions/resolve-build-plan
+      with:
+        config-path: ${{ inputs.config-path }}
+        workflow-ref: ${{ job.workflow_ref }}
+        workflow-sha: ${{ job.workflow_sha }}
+        control-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
+      id: plan
   build-native:
-    name: ${{ matrix.platform.name }}
     needs:
-      - configure
-      - trust-gate
-      - resolve-contract
-      - resolve-source
-      - controller-plan
-      - anchored-release-preflight
-      - artifact-transfer
-    if: ${{ (needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.native-platform-count != '0') }}
+    - plan
+    if: ${{ fromJSON(needs.plan.outputs.plan).matrix.native[0] != null }}
     strategy:
-      fail-fast: ${{ fromJSON(needs.configure.outputs.plan-json).build.fail_fast }}
+      fail-fast: ${{ fromJSON(needs.plan.outputs.plan).build.fail_fast }}
       matrix:
-        platform: ${{ fromJSON(needs.resolve-contract.outputs.native-platforms-json) }}
-    runs-on: ${{ matrix.platform.provider == 'aws-codebuild' && format('codebuild-{0}-{1}-{2}', matrix.platform.project, github.run_id, github.run_attempt) || fromJSON(matrix.platform.runner) }}
-    timeout-minutes: ${{ fromJSON(needs.configure.outputs.plan-json).build.timeout_minutes }}
-    env:
-      CARGO_REGISTRIES_CRATES_IO_INDEX: ${{ fromJSON(needs.configure.outputs.plan-json).environment.tools.cargo_registry_index }}
-      CCACHE_STATSLOG: ${{ github.workspace }}/.buildchain/diagnostics/ccache-stats-${{ matrix.platform.id }}.log
+        platform: ${{ fromJSON(needs.plan.outputs.plan).matrix.native }}
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: ${{ fromJSON(needs.plan.outputs.plan).build.timeout_minutes }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
     steps:
-      - name: Setup Node.js
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).tools.setup_node }}
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: ${{ fromJSON(needs.configure.outputs.plan-json).tools.node }}
-
-      - name: Expose Windows runner user toolchain
-        if: ${{ runner.os == 'Windows' }}
-        shell: pwsh
-        run: |
-          Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".local\bin")
-          Add-Content -LiteralPath $env:GITHUB_PATH -Value (Join-Path $HOME ".cargo\bin")
-
-      - name: Expose POSIX runner user toolchain
-        if: ${{ runner.os != 'Windows' }}
-        shell: bash
-        run: |
-          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
-          echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
-
-      - name: Setup Rust toolchain on Windows
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).tools.setup_rust && runner.os == 'Windows' }}
-        shell: cmd
-        env:
-          BUILDCHAIN_RUST_TOOLCHAIN: ${{ fromJSON(needs.configure.outputs.plan-json).tools.rust }}
-          RUSTUP_DIST_SERVER: ${{ fromJSON(needs.configure.outputs.plan-json).environment.tools.rustup_dist_server || 'https://static.rust-lang.org' }}
-          RUSTUP_UPDATE_ROOT: ${{ fromJSON(needs.configure.outputs.plan-json).environment.tools.rustup_update_root || 'https://static.rust-lang.org/rustup' }}
-        run: |
-          @echo off
-          set "CARGO_HOME=%RUNNER_TEMP%\buildchain-cargo-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
-          set "RUSTUP_HOME=%RUNNER_TEMP%\buildchain-rustup-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
-          set "RUSTUP_INIT_ROOT=%RUNNER_TEMP%\buildchain-rustup-init-%GITHUB_RUN_ID%-%GITHUB_RUN_ATTEMPT%"
-          set "RUSTUP_INIT=%RUSTUP_INIT_ROOT%\rustup-init.exe"
-          if not exist "%RUSTUP_INIT_ROOT%" mkdir "%RUSTUP_INIT_ROOT%"
-          if errorlevel 1 exit /b %errorlevel%
-          curl.exe --proto "=https" --tlsv1.2 --retry 10 --retry-connrefused --fail --silent --show-error --location "https://win.rustup.rs/x86_64" --output "%RUSTUP_INIT%"
-          if errorlevel 1 exit /b %errorlevel%
-          "%RUSTUP_INIT%" --default-toolchain "%BUILDCHAIN_RUST_TOOLCHAIN%" --profile minimal -y --no-modify-path
-          if errorlevel 1 exit /b %errorlevel%
-          echo %CARGO_HOME%\bin>>"%GITHUB_PATH%"
-          echo CARGO_HOME=%CARGO_HOME%>>"%GITHUB_ENV%"
-          echo RUSTUP_HOME=%RUSTUP_HOME%>>"%GITHUB_ENV%"
-
-      - name: Setup Rust toolchain
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).tools.setup_rust && runner.os != 'Windows' }}
-        uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
-        env:
-          RUSTUP_DIST_SERVER: ${{ fromJSON(needs.configure.outputs.plan-json).environment.tools.rustup_dist_server || 'https://static.rust-lang.org' }}
-          RUSTUP_UPDATE_ROOT: ${{ fromJSON(needs.configure.outputs.plan-json).environment.tools.rustup_update_root || 'https://static.rust-lang.org/rustup' }}
-        with:
-          toolchain: ${{ fromJSON(needs.configure.outputs.plan-json).tools.rust }}
-
-      - name: Download Buildchain runtime checkout bootstrap
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime-bootstrap
-
-      - name: Checkout Buildchain runtime
-        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
-        env:
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_SOURCE_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-full-ref }}
-          BUILDCHAIN_SOURCE_CHECKOUT_PATH: .buildchain/runtime
-          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mode }}
-          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mirror_url_template }}
-          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.reference_repository_template }}
-          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.fallback }}
-          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.timeout_seconds }}
-          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.github_timeout_seconds }}
-          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.fetch_attempts }}
-          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/runtime-checkout.json
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Upload Buildchain runtime checkout diagnostics
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-runtime-checkout-${{ matrix.platform.id }}-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/diagnostics/runtime-checkout.json
-          if-no-files-found: warn
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Checkout locked source
-        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
-        env:
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_CHECKOUT_HISTORY_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.history_mode }}
-          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mode }}
-          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mirror_url_template }}
-          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.reference_repository_template }}
-          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.fallback }}
-          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.timeout_seconds }}
-          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.github_timeout_seconds }}
-          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.fetch_attempts }}
-          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Install Buildchain runtime dependencies
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-
-      - name: Record AWS burst runner provenance
-        if: ${{ matrix.platform.provider == 'aws-codebuild' }}
-        run: node .buildchain/runtime/scripts/aws-runner-burst.mjs evidence
-        env:
-          BUILDCHAIN_BURST_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
-          BUILDCHAIN_BURST_PROVIDER: ${{ matrix.platform.provider }}
-          BUILDCHAIN_BURST_PROJECT: ${{ matrix.platform.project }}
-          BUILDCHAIN_BURST_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_BURST_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_BURST_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-          BUILDCHAIN_BURST_RUN_ID: ${{ github.run_id }}
-          BUILDCHAIN_BURST_RUN_ATTEMPT: ${{ github.run_attempt }}
-          BUILDCHAIN_BURST_JOB: ${{ github.job }}
-
-      - name: Record AWS Windows JIT runner provenance
-        if: ${{ matrix.platform.provider == 'aws-ec2-windows-jit' }}
-        shell: pwsh
-        run: node .buildchain/runtime/scripts/aws-windows-jit.mjs evidence
-        env:
-          BUILDCHAIN_WINDOWS_JIT_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-windows-jit.json
-          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mode }}
-          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_EXPECTED_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-
-      - name: Record AWS macOS JIT runner provenance
-        if: ${{ matrix.platform.provider == 'aws-ec2-macos-jit' }}
-        run: node .buildchain/runtime/scripts/aws-macos-jit.mjs evidence
-        env:
-          BUILDCHAIN_MACOS_JIT_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-macos-jit.json
-          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mode }}
-          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_EXPECTED_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-
-      - name: Prepare AWS CodeBuild native toolchain
-        if: ${{ matrix.platform.provider == 'aws-codebuild' }}
-        run: node .buildchain/runtime/scripts/aws-codebuild-toolchain.mjs prepare
-        env:
-          BUILDCHAIN_BURST_TOOLCHAIN_EVIDENCE_PATH: .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
-
-      - name: Resolve artifact contract
-        id: artifact-contract
-        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
-        env:
-          BUILDCHAIN_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: "{artifact}-{platform}-{sha}"
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-          BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Run install lifecycle
-        uses: ./.buildchain/runtime/actions/build-lifecycle-stage
-        with:
-          stage: install
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: Prepare auditable compiler cache
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.provider != 'none' && contains(fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.cache.platforms_json), matrix.platform.id) }}
-        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs prepare
-        env:
-          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.provider }}
-          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.required }}
-          BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH: .buildchain/diagnostics/compiler-cache-preparation.json
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-          BUILDCHAIN_DEPENDENCY_LOCK_ROOT: ${{ fromJSON(needs.configure.outputs.plan-json).cache.dependency_root }}
-          BUILDCHAIN_TOOLCHAIN_ROOT: ${{ fromJSON(needs.configure.outputs.plan-json).cache.toolchain_root }}
-          BUILDCHAIN_CACHE_POLICY_ROOT: ${{ fromJSON(needs.configure.outputs.plan-json).cache.policy_root }}
-          SHIFU_CACHE_PROFILE_DIGEST: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.profile_digest }}
-
-      - name: Run build lifecycle
-        uses: ./.buildchain/runtime/actions/build-lifecycle-stage
-        with:
-          stage: build
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: Verify auditable compiler cache activity
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.provider != 'none' && contains(fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.cache.platforms_json), matrix.platform.id) }}
-        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs verify
-        env:
-          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.provider }}
-          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.required }}
-
-      - name: build-signing-request
-        uses: ./.buildchain/runtime/actions/build-signing-request
-        with:
-          platform-json: ${{ toJSON(matrix.platform) }}
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: Run verify lifecycle
-        id: verify-lifecycle
-        uses: ./.buildchain/runtime/actions/build-lifecycle-stage
-        with:
-          stage: verify
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: build-verification-evidence
-        if: ${{ always() }}
-        uses: ./.buildchain/runtime/actions/build-verification-evidence
-        with:
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          verify-outcome: ${{ steps.verify-lifecycle.outcome }}
-
-      - name: Simulate artifact transport before upload
-        if: ${{ matrix.platform.id == 'linux-x64' && fromJSON(needs.configure.outputs.plan-json).build.transport_smoke.scenario_path != '' }}
-        working-directory: ${{ fromJSON(needs.configure.outputs.plan-json).project.cwd }}
-        env:
-          BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT: ${{ fromJSON(needs.configure.outputs.plan-json).build.transport_smoke.artifact_root }}
-          BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO: ${{ fromJSON(needs.configure.outputs.plan-json).build.transport_smoke.scenario_path }}
-        run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/auditable-demo-transport-smoke.mjs"
-          --artifact-root "${BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT}"
-          --scenario "${BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO}"
-
-      - name: Seal macOS credential-island input
-        if: ${{ runner.os == 'macOS' && fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path != '' && matrix.platform.id == fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform }}
-        run: node .buildchain/runtime/scripts/seal-macos-credential-input.mjs
-        env:
-          BUILDCHAIN_CREDENTIAL_ISLAND_APP_PATH: ${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path }}
-          BUILDCHAIN_CREDENTIAL_ISLAND_OUTPUT: .buildchain/credential-island/${{ matrix.platform.id }}
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-
-      - name: Upload macOS credential-island app archive
-        if: ${{ runner.os == 'macOS' && fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path != '' && matrix.platform.id == fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true) }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          path: .buildchain/credential-island/${{ matrix.platform.id }}/unsigned-app.zip
-          archive: false
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Upload macOS credential-island input manifest
-        if: ${{ runner.os == 'macOS' && fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path != '' && matrix.platform.id == fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || matrix.platform.githubHosted == true) }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-credential-island-input-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/credential-island/${{ matrix.platform.id }}/credential-input.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-          compression-level: 0
-
-      - name: build-attestation-policy
-        uses: ./.buildchain/runtime/actions/build-attestation-policy
-        with:
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-
-      - name: build-agent-hub-evidence
-        uses: ./.buildchain/runtime/actions/build-agent-hub-evidence
-        with:
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-
-      - name: build-artifact-transfer
-        uses: ./.buildchain/runtime/actions/build-artifact-transfer
-        with:
-          transfer-json: ${{ toJSON(needs.artifact-transfer.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          relay-upload-role: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN }}
-          relay-role: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: Upload AWS burst runner provenance
-        if: ${{ always() && matrix.platform.provider == 'aws-codebuild' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-aws-runner-burst-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: |
-            .buildchain/artifacts/${{ matrix.platform.id }}/aws-runner-burst.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/aws-native-toolchain.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Upload AWS Windows JIT runner provenance
-        if: ${{ always() && matrix.platform.provider == 'aws-ec2-windows-jit' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-aws-windows-jit-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-windows-jit.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Upload AWS macOS JIT runner provenance
-        if: ${{ always() && matrix.platform.provider == 'aws-ec2-macos-jit' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-aws-macos-jit-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/artifacts/${{ matrix.platform.id }}/aws-macos-jit.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-  build-linux-container:
-    name: ${{ matrix.platform.name }} container
+    - name: Checkout exact workflow implementation
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ job.workflow_sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        checkout-source: 'true'
+        tools: 'true'
+    - uses: ./.buildchain/runtime/actions/run-build-stage
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        stage: install
+    - uses: ./.buildchain/runtime/actions/run-build-stage
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        stage: build
+    - uses: ./.buildchain/runtime/actions/run-build-stage
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        stage: verify
+    - uses: ./.buildchain/runtime/actions/transfer-build-artifact
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+      if: ${{ always() }}
+  build-container:
     needs:
-      - configure
-      - trust-gate
-      - resolve-contract
-      - resolve-source
-      - controller-plan
-      - anchored-release-preflight
-      - artifact-transfer
-    if: ${{ (needs.trust-gate.outputs.trusted == 'true' && needs.anchored-release-preflight.result == 'success' && needs.resolve-contract.outputs.container-platform-count != '0') }}
+    - plan
+    if: ${{ fromJSON(needs.plan.outputs.plan).matrix.container[0] != null }}
     strategy:
-      fail-fast: ${{ fromJSON(needs.configure.outputs.plan-json).build.fail_fast }}
+      fail-fast: ${{ fromJSON(needs.plan.outputs.plan).build.fail_fast }}
       matrix:
-        platform: ${{ fromJSON(needs.resolve-contract.outputs.container-platforms-json) }}
-    runs-on: ${{ fromJSON(matrix.platform.runner) }}
-    timeout-minutes: ${{ fromJSON(needs.configure.outputs.plan-json).build.timeout_minutes }}
+        platform: ${{ fromJSON(needs.plan.outputs.plan).matrix.container }}
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: ${{ fromJSON(needs.plan.outputs.plan).build.timeout_minutes }}
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+    - name: Checkout exact workflow implementation
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ job.workflow_sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        checkout-source: 'true'
+        tools: 'true'
+    - uses: ./.buildchain/runtime/actions/run-build-stage
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        stage: install
+    - uses: ./.buildchain/runtime/actions/run-build-stage
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        stage: build
+    - uses: ./.buildchain/runtime/actions/run-build-stage
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        stage: verify
+    - uses: ./.buildchain/runtime/actions/transfer-build-artifact
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+      if: ${{ always() }}
     container:
-      image: ${{ needs.resolve-contract.outputs.linux-container-image }}
+      image: ${{ fromJSON(needs.plan.outputs.plan).container.image }}
       options: --user root
-    steps:
-      - name: Setup Buildchain Node.js with fnm
-        shell: bash
-        run: |
-          eval "$(fnm env --shell bash)"
-          fnm install "${BUILDCHAIN_NODE_VERSION}"
-          fnm use "${BUILDCHAIN_NODE_VERSION}"
-          dirname "$(command -v node)" >> "${GITHUB_PATH}"
-          node --version
-          corepack enable
-        env:
-          BUILDCHAIN_NODE_VERSION: ${{ fromJSON(needs.configure.outputs.plan-json).tools.node }}
-
-      - name: Download Buildchain runtime checkout bootstrap
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-runtime-checkout-bootstrap-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime-bootstrap
-
-      - name: Checkout Buildchain runtime
-        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
-        env:
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_SOURCE_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-full-ref }}
-          BUILDCHAIN_SOURCE_CHECKOUT_PATH: .buildchain/runtime
-          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mode }}
-          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mirror_url_template }}
-          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.reference_repository_template }}
-          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.fallback }}
-          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.timeout_seconds }}
-          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.github_timeout_seconds }}
-          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.fetch_attempts }}
-          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/runtime-checkout.json
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Upload Buildchain runtime checkout diagnostics
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-runtime-checkout-${{ matrix.platform.id }}-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/diagnostics/runtime-checkout.json
-          if-no-files-found: warn
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Checkout locked source
-        run: node .buildchain/runtime-bootstrap/locked-source-checkout.mjs
-        env:
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_CHECKOUT_HISTORY_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.history_mode }}
-          BUILDCHAIN_CHECKOUT_CACHE_MODE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mode }}
-          BUILDCHAIN_CHECKOUT_CACHE_MIRROR_URL_TEMPLATE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.mirror_url_template }}
-          BUILDCHAIN_CHECKOUT_CACHE_REFERENCE_REPOSITORY_TEMPLATE: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.reference_repository_template }}
-          BUILDCHAIN_CHECKOUT_CACHE_FALLBACK: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.fallback }}
-          BUILDCHAIN_CHECKOUT_CACHE_TIMEOUT_SECONDS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.timeout_seconds }}
-          BUILDCHAIN_CHECKOUT_CACHE_GITHUB_TIMEOUT_SECONDS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.github_timeout_seconds }}
-          BUILDCHAIN_CHECKOUT_CACHE_FETCH_ATTEMPTS: ${{ fromJSON(needs.configure.outputs.plan-json).environment.checkout.fetch_attempts }}
-          BUILDCHAIN_SOURCE_CHECKOUT_DIAGNOSTICS_PATH: .buildchain/diagnostics/source-checkout.json
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Install Buildchain runtime dependencies
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-
-      - name: Resolve artifact contract
-        id: artifact-contract
-        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
-        env:
-          BUILDCHAIN_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: "{artifact}-{platform}-{sha}"
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-          BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Run install lifecycle
-        uses: ./.buildchain/runtime/actions/build-lifecycle-stage
-        with:
-          stage: install
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: Prepare auditable compiler cache
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.provider != 'none' && contains(fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.cache.platforms_json), matrix.platform.id) }}
-        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs prepare
-        env:
-          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.provider }}
-          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.required }}
-          BUILDCHAIN_COMPILER_CACHE_PREPARATION_PATH: .buildchain/diagnostics/compiler-cache-preparation.json
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-          SHIFU_CACHE_PROFILE_DIGEST: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.profile_digest }}
-
-      - name: Run build lifecycle
-        uses: ./.buildchain/runtime/actions/build-lifecycle-stage
-        with:
-          stage: build
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: Verify auditable compiler cache activity
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.provider != 'none' && contains(fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.cache.platforms_json), matrix.platform.id) }}
-        run: node .buildchain/runtime/scripts/compiler-cache-evidence.mjs verify
-        env:
-          BUILDCHAIN_COMPILER_CACHE_PROVIDER: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.provider }}
-          BUILDCHAIN_COMPILER_CACHE_REQUIRED: ${{ fromJSON(needs.configure.outputs.plan-json).environment.cache.required }}
-
-      - name: build-signing-request
-        uses: ./.buildchain/runtime/actions/build-signing-request
-        with:
-          platform-json: ${{ toJSON(matrix.platform) }}
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: Run verify lifecycle
-        id: verify-lifecycle
-        uses: ./.buildchain/runtime/actions/build-lifecycle-stage
-        with:
-          stage: verify
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-      - name: build-verification-evidence
-        if: ${{ always() }}
-        uses: ./.buildchain/runtime/actions/build-verification-evidence
-        with:
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          verify-outcome: ${{ steps.verify-lifecycle.outcome }}
-
-      - name: Simulate artifact transport before upload
-        if: ${{ matrix.platform.id == 'linux-x64' && fromJSON(needs.configure.outputs.plan-json).build.transport_smoke.scenario_path != '' }}
-        working-directory: ${{ fromJSON(needs.configure.outputs.plan-json).project.cwd }}
-        env:
-          BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT: ${{ fromJSON(needs.configure.outputs.plan-json).build.transport_smoke.artifact_root }}
-          BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO: ${{ fromJSON(needs.configure.outputs.plan-json).build.transport_smoke.scenario_path }}
-        run: >-
-          node "${GITHUB_WORKSPACE}/.buildchain/runtime/scripts/auditable-demo-transport-smoke.mjs"
-          --artifact-root "${BUILDCHAIN_TRANSPORT_SMOKE_ARTIFACT_ROOT}"
-          --scenario "${BUILDCHAIN_TRANSPORT_SMOKE_SCENARIO}"
-
-      - name: build-attestation-policy
-        uses: ./.buildchain/runtime/actions/build-attestation-policy
-        with:
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-
-      - name: build-agent-hub-evidence
-        uses: ./.buildchain/runtime/actions/build-agent-hub-evidence
-        with:
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-
-      - name: build-artifact-transfer
-        uses: ./.buildchain/runtime/actions/build-artifact-transfer
-        with:
-          transfer-json: ${{ toJSON(needs.artifact-transfer.outputs) }}
-          platform-json: ${{ toJSON(matrix.platform) }}
-          plan-json: ${{ needs.configure.outputs.plan-json }}
-          relay-upload-role: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN }}
-          relay-role: ${{ secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
-          source-json: ${{ toJSON(needs.resolve-source.outputs) }}
-          artifact-name: ${{ steps.artifact-contract.outputs.artifact-name }}
-
-  relay-artifacts:
-    name: Relay ${{ matrix.platform.name }} artifacts
+  sign:
     needs:
-      - configure
-      - trust-gate
-      - resolve-contract
-      - resolve-source
-      - controller-plan
-      - artifact-transfer
-      - build-native
-      - build-linux-container
-    if: ${{ (always() && needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success')) }}
-    strategy:
-      fail-fast: ${{ fromJSON(needs.configure.outputs.plan-json).build.fail_fast }}
-      matrix:
-        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
-    steps:
-      - name: Checkout Buildchain runtime
-        if: ${{ matrix.platform.githubHosted != true }}
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Install Buildchain runtime dependencies
-        if: ${{ matrix.platform.githubHosted != true }}
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-
-      - name: Resolve artifact contract
-        id: artifact-contract
-        if: ${{ matrix.platform.githubHosted != true }}
-        run: node .buildchain/runtime/scripts/resolve-build-contract.mjs --mode artifact
-        env:
-          BUILDCHAIN_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: "{artifact}-{platform}-{sha}"
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-          BUILDCHAIN_PLATFORM_NAME: ${{ matrix.platform.name }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Download artifact relay manifest
-        if: ${{ matrix.platform.githubHosted != true }}
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-relay-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
-
-      - name: Configure AWS credentials for artifact relay download
-        if: ${{ matrix.platform.githubHosted != true }}
-        uses: aws-actions/configure-aws-credentials@v6.1.0
-        with:
-          role-to-assume: ${{ fromJSON(needs.configure.outputs.plan-json).environment.transfer.download_role_arn || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN || secrets.BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN }}
-          aws-region: ${{ needs.artifact-transfer.outputs.s3-region }}
-          audience: ${{ needs.artifact-transfer.outputs.oidc-audience }}
-
-      - name: Download and verify S3 relay payload
-        id: relay-download
-        if: ${{ matrix.platform.githubHosted != true }}
-        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs download
-        env:
-          BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
-          BUILDCHAIN_ARTIFACT_RELAY_OUTPUT_ROOT: .buildchain/relayed-artifacts/${{ matrix.platform.id }}
-          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
-          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
-
-      - name: Upload deterministic artifact
-        if: ${{ matrix.platform.githubHosted != true }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.artifact-contract.outputs.artifact-name }}
-          path: ${{ steps.relay-download.outputs.payload-path }}
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-          compression-level: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.compression_level }}
-
-      - name: Upload artifact manifest
-        if: ${{ matrix.platform.githubHosted != true }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-manifest-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: ${{ steps.relay-download.outputs.manifest-path }}
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Upload diagnostics artifact
-        if: ${{ matrix.platform.githubHosted != true }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-diagnostics-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: ${{ steps.relay-download.outputs.diagnostics-path }}
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Upload relayed macOS credential-island input
-        if: ${{ matrix.platform.githubHosted != true && matrix.platform.id == fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform && fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path != '' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-credential-island-input-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: ${{ steps.relay-download.outputs.credential-input-path }}
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Cleanup S3 artifact relay payload
-        if: ${{ success() && matrix.platform.githubHosted != true }}
-        run: node .buildchain/runtime/scripts/artifact-relay-s3.mjs cleanup
-        env:
-          BUILDCHAIN_ARTIFACT_RELAY_INPUT_ROOT: .buildchain/downloaded-relay-manifests/${{ matrix.platform.id }}
-          BUILDCHAIN_ARTIFACT_RELAY_REGION: ${{ needs.artifact-transfer.outputs.s3-region }}
-          BUILDCHAIN_ARTIFACT_RELAY_PLATFORM_ID: ${{ matrix.platform.id }}
-  artifact-signing-control:
-    name: Control detached signing ${{ matrix.platform.name }}
-    runs-on: ubuntu-24.04
-    outputs:
-      source-run-attempt: ${{ steps.control-request.outputs.source-run-attempt }}
-    needs:
-      - configure
-      - trust-gate
-      - resolve-contract
-      - resolve-source
-      - build-native
-      - build-linux-container
-    if: ${{ (always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success')) }}
+    - plan
+    - build-native
+    - build-container
+    if: ${{ always() && needs.plan.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     strategy:
       fail-fast: false
       matrix:
-        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
-    steps:
-      - name: Checkout trusted Buildchain signing controller
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
-          path: .buildchain/controller-runtime
-          persist-credentials: false
-
-      - name: Download immutable signing control request
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-signing-control-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .buildchain/signing/control-requests/${{ matrix.platform.id }}
-
-      - name: Validate immutable signing control request
-        id: control-request
-        run: node .buildchain/controller-runtime/scripts/artifact-signing-controller.mjs outputs
-        env:
-          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
-          BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_EXPECTED_SOURCE_RUN_ID: ${{ github.run_id }}
-          BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
-          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_EXPECTED_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_EXPECTED_RUNTIME_REPOSITORY: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_EXPECTED_PLATFORM_ID: ${{ matrix.platform.id }}
-
-      - name: Dispatch and await exact Buildchain signing authority
-        id: signing-authority
-        if: ${{ steps.control-request.outputs.request-count != '0' }}
-        continue-on-error: true
-        run: node .buildchain/controller-runtime/scripts/dispatch-artifact-signing-authority.mjs
-        env:
-          BUILDCHAIN_AUTHORITY_DISPATCH_TOKEN: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-          BUILDCHAIN_AUTHORITY_REPOSITORY: ${{ steps.control-request.outputs.authority-repository }}
-          BUILDCHAIN_AUTHORITY_REF: ${{ steps.control-request.outputs.authority-ref }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ steps.control-request.outputs.runtime-sha }}
-          BUILDCHAIN_SIGNING_REQUEST_ARTIFACT: ${{ steps.control-request.outputs.request-artifact }}
-          BUILDCHAIN_SIGNING_REQUEST_ROOT_DIGEST: ${{ steps.control-request.outputs.request-root }}
-          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ steps.control-request.outputs.result-artifact }}
-          BUILDCHAIN_AUTHORITY_CORRELATION_ID: ${{ steps.control-request.outputs.correlation-id }}
-          BUILDCHAIN_SIGNING_TIMEOUT_SECONDS: 7200
-
-      - name: Seal detached signing controller receipt and delegation
-        id: settlement
-        if: ${{ always() && steps.control-request.outcome == 'success' }}
-        run: node .buildchain/controller-runtime/scripts/artifact-signing-controller.mjs settle
-        env:
-          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
-          BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}/receipt.json
-          BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
-          BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_EXPECTED_SOURCE_RUN_ID: ${{ github.run_id }}
-          BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
-          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_EXPECTED_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_EXPECTED_RUNTIME_REPOSITORY: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_EXPECTED_PLATFORM_ID: ${{ matrix.platform.id }}
-          BUILDCHAIN_AUTHORITY_STATUS: ${{ steps.control-request.outputs.request-count == '0' && 'skipped' || steps.signing-authority.outputs.authority-status || 'failed' }}
-          BUILDCHAIN_AUTHORITY_RUN_ID: ${{ steps.signing-authority.outputs.authority-run-id }}
-          BUILDCHAIN_AUTHORITY_RUNTIME_SHA: ${{ steps.signing-authority.outputs.authority-runtime-sha }}
-          BUILDCHAIN_AUTHORITY_RUN_URL: ${{ steps.signing-authority.outputs.authority-run-url }}
-          BUILDCHAIN_SIGNING_RESULT_ARTIFACT: ${{ steps.signing-authority.outputs.result-artifact }}
-          BUILDCHAIN_AUTHORITY_CORRELATION_ID: ${{ steps.signing-authority.outputs.correlation-id }}
-          BUILDCHAIN_AUTHORITY_CONCLUSION: ${{ steps.control-request.outputs.request-count == '0' && 'not-required' || steps.signing-authority.outputs.authority-conclusion || 'controller-error' }}
-          BUILDCHAIN_CONTROLLER_STARTED_AT: ${{ steps.signing-authority.outputs.controller-started-at }}
-          BUILDCHAIN_CONTROLLER_COMPLETED_AT: ${{ steps.signing-authority.outputs.controller-completed-at }}
-
-      - name: Publish detached signing controller receipt
-        if: ${{ always() && steps.settlement.outcome == 'success' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-signing-controller-receipt-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}/receipt.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Publish signing finalization delegation
-        if: ${{ steps.settlement.outputs.controller-qualifying == 'true' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Enforce qualifying detached signing settlement
-        if: ${{ steps.settlement.outputs.controller-qualifying != 'true' }}
-        run: |
-          echo "::error::detached signing controller did not qualify: ${{ steps.settlement.outputs.controller-status || 'missing-receipt' }}"
-          exit 1
-
-  finalize-artifact-signing:
-    name: Finalize artifact ${{ matrix.platform.name }}
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).build.finalization.on_platform && matrix.platform.runner || fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
-    needs:
-      - configure
-      - trust-gate
-      - resolve-contract
-      - resolve-source
-      - artifact-transfer
-      - build-native
-      - build-linux-container
-      - relay-artifacts
-      - artifact-signing-control
-    if: ${{ (always() && needs.trust-gate.outputs.trusted == 'true' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && needs.artifact-signing-control.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success')) }}
-    strategy:
-      fail-fast: ${{ fromJSON(needs.configure.outputs.plan-json).build.fail_fast }}
-      matrix:
-        platform: ${{ fromJSON(needs.resolve-contract.outputs.platforms-json) }}
-    steps:
-      - name: Enforce trusted platform-native finalization
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).build.finalization.on_platform }}
-        shell: bash
-        run: |
-          if [[ "${{ matrix.platform.githubHosted }}" != "true" ]]; then
-            echo "::error::artifact-finalization-on-platform requires a GitHub-hosted platform runner"
-            exit 1
-          fi
-
-      - name: Checkout exact consumer source
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          persist-credentials: false
-
-      - name: Checkout exact Buildchain runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Checkout trusted Buildchain workflow shell
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
-          path: .buildchain/workflow-shell
-          persist-credentials: false
-
-      - name: Install Buildchain runtime dependencies
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-
-      - name: Download signing finalization delegation
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-signing-delegation-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ needs.artifact-signing-control.outputs.source-run-attempt }}
-          path: .buildchain/signing/delegations/${{ matrix.platform.id }}
-      - name: Download immutable signing control request
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-signing-control-request-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ needs.artifact-signing-control.outputs.source-run-attempt }}
-          path: .buildchain/signing/control-requests/${{ matrix.platform.id }}
-
-      - name: Download signing controller receipt
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-signing-controller-receipt-${{ matrix.platform.id }}-${{ needs.resolve-source.outputs.publish-source-sha }}-${{ github.run_id }}-${{ needs.artifact-signing-control.outputs.source-run-attempt }}
-          path: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}
-
-      - name: Validate signing control request, receipt, and finalization delegation
-        id: delegation
-        run: node .buildchain/runtime/scripts/artifact-signing-controller.mjs verify
-        env:
-          BUILDCHAIN_SIGNING_CONTROL_REQUEST_PATH: .buildchain/signing/control-requests/${{ matrix.platform.id }}/request.json
-          BUILDCHAIN_SIGNING_CONTROLLER_RECEIPT_PATH: .buildchain/signing/controller-receipts/${{ matrix.platform.id }}/receipt.json
-          BUILDCHAIN_SIGNING_DELEGATION_PATH: .buildchain/signing/delegations/${{ matrix.platform.id }}/delegation.json
-          BUILDCHAIN_EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_EXPECTED_SOURCE_RUN_ID: ${{ github.run_id }}
-          BUILDCHAIN_EXPECTED_SOURCE_RUN_ATTEMPT: ${{ needs.artifact-signing-control.outputs.source-run-attempt }}
-          BUILDCHAIN_EXPECTED_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_EXPECTED_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_EXPECTED_RUNTIME_REPOSITORY: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          BUILDCHAIN_EXPECTED_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_EXPECTED_PLATFORM_ID: ${{ matrix.platform.id }}
-
-      - name: Download pre-signing deterministic artifact
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ steps.delegation.outputs.artifact-name }}
-          path: .
-
-      - name: Download immutable signing request
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ steps.delegation.outputs.request-artifact }}
-          path: .buildchain/signing/requests/${{ matrix.platform.id }}
-
-      - name: Download immutable signed result on GitHub-hosted infrastructure
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ secrets.BUILDCHAIN_PROMOTION_TOKEN }}
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          run-id: ${{ steps.delegation.outputs.authority-run-id }}
-          name: ${{ steps.delegation.outputs.result-artifact }}
-          path: .buildchain/signing/results/${{ matrix.platform.id }}
-
-      - name: Preserve pre-signing verification manifest
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
-        run: >-
-          node -e
-          "const fs=require('node:fs');fs.copyFileSync(process.argv[1],process.argv[2])"
-          ".buildchain/artifacts/${{ matrix.platform.id }}/manifest.json"
-          ".buildchain/artifacts/${{ matrix.platform.id }}/manifest-pre-signing.json"
-
-      - name: Verify and import final signed bytes on GitHub-hosted infrastructure
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
-        id: import-signing-results
-        run: node .buildchain/runtime/scripts/import-artifact-signing-results.mjs
-        env:
-          BUILDCHAIN_SIGNING_CWD: ${{ steps.delegation.outputs.working-directory }}
-          BUILDCHAIN_SIGNING_REQUEST_ROOT: .buildchain/signing/requests/${{ matrix.platform.id }}
-          BUILDCHAIN_SIGNING_RESULT_ROOT: .buildchain/signing/results/${{ matrix.platform.id }}
-          BUILDCHAIN_SIGNING_IMPORTED_EVIDENCE_ROOT: .buildchain/artifacts/signing/${{ matrix.platform.id }}
-
-      - name: Verify final artifact bytes with consumer policy
-        if: ${{ fromJSON(needs.configure.outputs.plan-json).build.finalization.command != '' }}
-        working-directory: ${{ steps.delegation.outputs.working-directory }}
-        run: ${{ fromJSON(needs.configure.outputs.plan-json).build.finalization.command }}
-        env:
-          BUILDCHAIN_PLATFORM_ID: ${{ matrix.platform.id }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_SIGNING_REQUEST_COUNT: ${{ steps.delegation.outputs.request-count }}
-          BUILDCHAIN_ARTIFACT_SIGNING_STATE: ${{ steps.delegation.outputs.request-count == '0' && 'unsigned' || 'signed' }}
-
-      - name: Recompute manifest over final signed bytes
-        if: ${{ steps.delegation.outputs.request-count != '0' || fromJSON(needs.configure.outputs.plan-json).build.finalization.command != '' }}
-        run: >-
-          node .buildchain/runtime/scripts/run-lifecycle.mjs
-          --cwd "${{ steps.delegation.outputs.working-directory }}"
-          --stage signing-finalization
-          --required false
-          --manifest-path ".buildchain/artifacts/${{ matrix.platform.id }}/manifest.json"
-          --summary-path ".buildchain/artifacts/${{ matrix.platform.id }}/summary.json"
-          --artifact-name "${{ steps.delegation.outputs.artifact-name }}"
-          --manifest-artifact-name "${{ steps.delegation.outputs.manifest-artifact-name }}"
-          --diagnostics-artifact-name "${{ steps.delegation.outputs.diagnostics-artifact-name }}"
-          --platform-id "${{ matrix.platform.id }}"
-          --platform-name "${{ matrix.platform.name }}"
-          --process-summary-required false
-        env:
-          BUILDCHAIN_COMMAND: ""
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_ARTIFACT_PATHS: |
-            ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.paths }}
-            .buildchain/artifacts/signing
-          BUILDCHAIN_EXPECTED_ARTIFACTS_JSON: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.expected_json }}
-
-      - name: Publish final deterministic artifact
-        if: ${{ steps.delegation.outputs.request-count != '0' || fromJSON(needs.configure.outputs.plan-json).build.finalization.command != '' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.delegation.outputs.artifact-name }}
-          path: |
-            ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.paths }}
-            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/manifest-pre-signing.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
-            .buildchain/artifacts/signing
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-          overwrite: true
-      - name: Publish native signed macOS application payload
-        if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-macos-credential-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: ${{ steps.import-signing-results.outputs.credential-artifact-root }}
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-          compression-level: 0
-
-      - name: Publish native signed macOS application manifest
-        if: ${{ steps.import-signing-results.outputs.credential-artifact-count == '1' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-credential-manifest-macos-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: ${{ steps.import-signing-results.outputs.credential-manifest-path }}
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Publish final signed artifact manifest
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.delegation.outputs.manifest-artifact-name }}
-          path: |
-            .buildchain/artifacts/${{ matrix.platform.id }}/manifest.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/manifest-pre-signing.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/summary.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-          overwrite: true
-
-      - name: Publish final signed diagnostics
-        if: ${{ steps.delegation.outputs.request-count != '0' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.delegation.outputs.diagnostics-artifact-name }}
-          path: |
-            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/diagnostics-manifest.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/source-checkout.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/compiler-cache-preparation.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/events.jsonl
-            .buildchain/artifacts/${{ matrix.platform.id }}/process-summary.json
-            .buildchain/artifacts/${{ matrix.platform.id }}/process-samples.jsonl
-            .buildchain/artifacts/${{ matrix.platform.id }}/verify-substages.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-          overwrite: true
-
-  credential-island-macos:
-    name: Sign and notarize sealed macOS application
-    needs:
-      - configure
-      - trust-gate
-      - resolve-contract
-      - resolve-source
-      - artifact-transfer
-      - build-native
-      - relay-artifacts
-    if: ${{ (always() && fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path != '' && fromJSON(needs.configure.outputs.plan-json).environment.signing.environment != '' && needs.trust-gate.outputs.trusted == 'true' && needs.build-native.result == 'success' && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success')) }}
-    runs-on: macos-15
-    timeout-minutes: 90
+        platform: ${{ fromJSON(needs.plan.outputs.plan).matrix.sign }}
+    runs-on: ${{ matrix.platform.runner }}
     environment:
-      name: ${{ fromJSON(needs.configure.outputs.plan-json).environment.signing.environment }}
+      name: ${{ matrix.platform.environment }}
+    timeout-minutes: 180
     permissions:
-      actions: read
       contents: read
-    outputs:
-      artifact-name: ${{ steps.names.outputs.artifact-name }}
-      manifest-artifact-name: ${{ steps.names.outputs.manifest-artifact-name }}
-      evidence-path: ${{ steps.credential-island.outputs.evidence-path }}
+      actions: read
+      id-token: write
     steps:
-      - name: Resolve signed artifact names
-        id: names
-        shell: bash
-        env:
-          BUILDCHAIN_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-        run: |
-          {
-            echo "artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-macos-credential-${BUILDCHAIN_SOURCE_SHA}"
-            echo "manifest-artifact-name=${BUILDCHAIN_ARTIFACT_NAME}-credential-manifest-macos-${BUILDCHAIN_SOURCE_SHA}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Download immutable credential-island runtime
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-credential-island-runtime-${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime/actions/macos-credential-island
-
-      - name: Download generic Buildchain artifact signing request
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-signing-request-${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/credential-island-input
-
-      - name: Download source-bound sealed application archive
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || contains(fromJSON(needs.resolve-contract.outputs.github-hosted-platform-ids-json), fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform) }}
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: unsigned-app.zip
-          path: .buildchain/credential-island-input
-
-      - name: Download source-bound sealed application manifest
-        if: ${{ needs.artifact-transfer.outputs.mode == 'github-artifacts' || contains(fromJSON(needs.resolve-contract.outputs.github-hosted-platform-ids-json), fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform) }}
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-credential-island-input-manifest-${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/credential-island-input
-
-      - name: Download relayed source-bound credential-island input
-        if: ${{ needs.artifact-transfer.outputs.mode == 's3-to-github-artifacts' && !contains(fromJSON(needs.resolve-contract.outputs.github-hosted-platform-ids-json), fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform) }}
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-credential-island-input-${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform }}-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/credential-island-input
-
-      - name: Resolve source-bound application identity
-        id: credential-identity
-        shell: bash
-        env:
-          BUILDCHAIN_CREDENTIAL_INPUT_ROOT: .buildchain/credential-island-input
-          BUILDCHAIN_SOURCE_REPOSITORY: ${{ github.repository }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from "node:fs";
-          import { loadCredentialInput } from "./.buildchain/runtime/actions/macos-credential-island/lib.js";
-
-          const sealed = loadCredentialInput(
-            process.env.BUILDCHAIN_CREDENTIAL_INPUT_ROOT,
-            {
-              repository: process.env.BUILDCHAIN_SOURCE_REPOSITORY,
-              sourceSha: process.env.BUILDCHAIN_SOURCE_SHA,
-              sourceTreeSha: process.env.BUILDCHAIN_SOURCE_TREE_SHA,
-            },
-          );
-          const bundleId = String(sealed.manifest.app.bundleId || "").trim();
-          if (!/^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/u.test(bundleId)) {
-            throw new Error("sealed application bundle identifier is invalid");
-          }
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `bundle-id=${bundleId}\n`);
-          NODE
-
-      - name: Sign, notarize, staple, and verify
-        id: credential-island
-        uses: ./.buildchain/runtime/actions/macos-credential-island
-        with:
-          input-root: .buildchain/credential-island-input
-          output-root: .buildchain/credential-island-output
-          source-repository: ${{ github.repository }}
-          source-sha: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          source-tree-sha: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          source-ref: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-          buildchain-runtime-sha: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          artifact-name: ${{ steps.names.outputs.artifact-name }}
-          platform-id: ${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform }}-credential
-          artifact-relative-output: product/release
-          expected-bundle-id: ${{ steps.credential-identity.outputs.bundle-id }}
-          expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
-          certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
-          certificate-p12-base64: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 }}
-          certificate-password: ${{ secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD }}
-          notary-api-key-p8-base64: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 }}
-          notary-api-key-id: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID }}
-          notary-api-issuer: ${{ secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER }}
-
-      - name: Upload authoritative signed macOS payload
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.names.outputs.artifact-name }}
-          path: ${{ steps.credential-island.outputs.artifact-root }}
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-          compression-level: 0
-
-      - name: Upload authoritative signed macOS manifest
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.names.outputs.manifest-artifact-name }}
-          path: ${{ steps.credential-island.outputs.manifest-path }}
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-  summarize:
-    name: Summarize build contract
+    - name: Checkout exact workflow implementation
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ job.workflow_sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        checkout-source: ${{ matrix.platform.kind == 'artifact' }}
+        tools: 'false'
+    - uses: ./.buildchain/runtime/actions/sign-build-artifact
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        platform: ${{ toJSON(matrix.platform) }}
+        kind: ${{ matrix.platform.kind }}
+        control-token: ${{ matrix.platform.kind == 'artifact' && secrets.BUILDCHAIN_PROMOTION_TOKEN || '' }}
+        expected-team-id: ${{ vars.BUILDCHAIN_MACOS_EXPECTED_TEAM_ID }}
+        certificate-sha1: ${{ vars.BUILDCHAIN_MACOS_CERTIFICATE_SHA1 }}
+        certificate-p12-base64: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64 || '' }}
+        certificate-password: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD || '' }}
+        notary-api-key-p8-base64: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64 || '' }}
+        notary-api-key-id: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_KEY_ID || '' }}
+        notary-api-issuer: ${{ matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_NOTARY_API_ISSUER || '' }}
+  attest:
     needs:
-      - configure
-      - trust-gate
-      - resolve-contract
-      - resolve-source
-      - controller-plan
-      - anchored-release-preflight
-      - artifact-transfer
-      - build-native
-      - build-linux-container
-      - relay-artifacts
-      - artifact-signing-control
-      - finalize-artifact-signing
-      - credential-island-macos
-    if: ${{ (always() && needs.anchored-release-preflight.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.build-linux-container.result == 'success' || needs.build-linux-container.result == 'skipped') && (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && (needs.artifact-transfer.outputs.mode == 'github-artifacts' || needs.relay-artifacts.result == 'success') && needs.artifact-signing-control.result == 'success' && needs.finalize-artifact-signing.result == 'success' && ((fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path == '' && needs.credential-island-macos.result == 'skipped') || (false && needs.credential-island-macos.result == 'skipped') || needs.credential-island-macos.result == 'success')) }}
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
+    - plan
+    - sign
+    if: ${{ always() && needs.sign.result == 'success' && fromJSON(needs.plan.outputs.plan).build.attestation.subject_path != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
     outputs:
-      summary-artifact-name: ${{ steps.names.outputs.summary-artifact-name }}
-      diagnostics-summary-artifact-name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
-      summary-path: ${{ steps.summary.outputs.summary-path }}
-      artifact-summary-json: ${{ steps.summary.outputs.artifact-summary-json }}
-      diagnostics-summary-path: ${{ steps.diagnostics.outputs.diagnostics-summary-path }}
-      diagnostics-summary-json: ${{ steps.diagnostics.outputs.diagnostics-summary-json }}
-      release-candidate-passport-artifact-name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
-      release-candidate-passport-json: ${{ steps.release-candidate.outputs.release-candidate-passport-json }}
-      artifact-coordinates-json: ${{ steps.artifact-coordinates.outputs.artifact-coordinates-json }}
+      artifact: ${{ steps.attest.outputs.artifact }}
     steps:
-      - name: Checkout Buildchain runtime
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          path: .buildchain/runtime
-          persist-credentials: false
-
-      - name: Install Buildchain runtime dependencies
-        run: corepack pnpm@11.7.0 install --dir .buildchain/runtime --prod --frozen-lockfile --ignore-scripts
-
-      - name: Resolve summary artifact name
-        id: names
-        run: bash .buildchain/runtime/scripts/resolve-build-summary-names.sh
-        env:
-          BUILDCHAIN_SUMMARY_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_DIAGNOSTICS_SUMMARY_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-diagnostics-summary-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_RC_PASSPORT_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-release-candidate-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_RC_REQUESTED: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.release_candidate }}
-          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ fromJSON(needs.configure.outputs.plan-json).source.candidate_channel }}
-          BUILDCHAIN_RC_PR_BASE_REF: ${{ github.base_ref || github.event.pull_request.base.ref }}
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-
-      - name: Download platform manifests
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          pattern: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-manifest-*-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/downloaded-manifests
-          merge-multiple: false
-
-      - name: Download platform diagnostics
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          pattern: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-diagnostics-*-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/downloaded-diagnostics
-          merge-multiple: false
-
-      - name: Download build controller plan for release-candidate passport
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
-          path: .buildchain/controller
-
-      - name: Download anchored version material evidence
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
-          path: .buildchain/anchored-version-material
-
-      - name: Aggregate artifact summary
-        id: summary
-        run: node .buildchain/runtime/scripts/aggregate-build-summary.mjs
-        env:
-          BUILDCHAIN_SUMMARY_INPUT: .buildchain/downloaded-manifests
-          BUILDCHAIN_SUMMARY_OUTPUT: .buildchain/artifacts/build-summary.json
-          BUILDCHAIN_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
-          BUILDCHAIN_EXPECTED_PLATFORMS_JSON: ${{ needs.resolve-contract.outputs.platforms-json }}
-          BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: ${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path != '' && '1' || '0' }}
-          BUILDCHAIN_ADDITIONAL_PLATFORM_IDS_JSON: ${{ fromJSON(needs.configure.outputs.plan-json).build.macos_signing.app_path != '' && format('["{0}-credential"]', fromJSON(needs.configure.outputs.plan-json).build.macos_signing.platform) || '[]' }}
-          BUILDCHAIN_TRUSTED_EVENT: ${{ needs.trust-gate.outputs.trusted-event }}
-          BUILDCHAIN_PUBLISH_CHANNEL: ${{ needs.trust-gate.outputs.publish-channel }}
-          BUILDCHAIN_PUBLISH_ALLOWED: ${{ needs.trust-gate.outputs.publish-allowed }}
-          BUILDCHAIN_PUBLISH_REASON: ${{ needs.trust-gate.outputs.publish-reason }}
-          BUILDCHAIN_PUBLISH_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref }}
-          BUILDCHAIN_PUBLISH_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_PUBLISH_SOURCE_LOCKED: ${{ needs.resolve-source.outputs.publish-source-locked }}
-          BUILDCHAIN_PUBLISH_SOURCE_CHANNEL: ${{ needs.resolve-source.outputs.publish-source-channel }}
-          BUILDCHAIN_PUBLISH_SOURCE_LINE: ${{ needs.resolve-source.outputs.publish-source-line }}
-          BUILDCHAIN_PUBLISH_SOURCE_CONSUMER_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
-          BUILDCHAIN_RELEASE_MANIFEST_JSON: ${{ needs.resolve-source.outputs.release-manifest-json }}
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_SOURCE_TREE_SHA: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_SOURCE_REF: ${{ needs.resolve-source.outputs.publish-source-ref || github.ref }}
-          BUILDCHAIN_RUNTIME_REQUESTED_REF: ${{ fromJSON(needs.configure.outputs.plan-json).identity.ref }}
-          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_RUNTIME_CLASS: ${{ needs.trust-gate.outputs.buildchain-runtime-class }}
-          BUILDCHAIN_RUNTIME_OVERRIDE: ${{ needs.trust-gate.outputs.buildchain-runtime-override }}
-          BUILDCHAIN_RUNTIME_TRUST_DECISION: ${{ needs.trust-gate.outputs.buildchain-runtime-trust-decision }}
-          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
-          BUILDCHAIN_ROLLBACK_REF: ${{ needs.trust-gate.outputs.buildchain-rollback-ref }}
-
-      - name: Aggregate diagnostics summary
-        id: diagnostics
-        run: node .buildchain/runtime/scripts/aggregate-diagnostics-summary.mjs
-        env:
-          BUILDCHAIN_DIAGNOSTICS_INPUT: .buildchain/downloaded-diagnostics
-          BUILDCHAIN_DIAGNOSTICS_OUTPUT: .buildchain/artifacts/diagnostics-summary.json
-          BUILDCHAIN_PLATFORM_COUNT: ${{ needs.resolve-contract.outputs.platform-count }}
-
-      - name: Discover same-run build artifacts for producer-owned coordinates
-        uses: actions/github-script@v8.0.0
-        with:
-          script: |
-            const fs = require("fs");
-            const artifacts = await github.paginate(
-              github.rest.actions.listWorkflowRunArtifacts,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: context.runId,
-                per_page: 100,
-              },
-            );
-            fs.writeFileSync(
-              ".buildchain/artifacts/github-artifacts.json",
-              JSON.stringify(artifacts, null, 2) + "\n",
-            );
-
-      - name: Resolve artifact coordinate binder
-        id: artifact-coordinate-binder
-        shell: bash
-        run: |
-          set -euo pipefail
-          binder=.buildchain/runtime/scripts/resolve-artifact-coordinates.mjs
-          echo "path=${binder}" >> "$GITHUB_OUTPUT"
-
-      - name: Bind producer-owned exact artifact coordinates
-        id: artifact-coordinates
-        run: node "${{ steps.artifact-coordinate-binder.outputs.path }}"
-        env:
-          BUILDCHAIN_ARTIFACT_LIST_PATH: .buildchain/artifacts/github-artifacts.json
-          BUILDCHAIN_ARTIFACT_COORDINATES_PATH: .buildchain/artifacts/artifact-coordinates.json
-          BUILDCHAIN_PLATFORMS_JSON: ${{ needs.resolve-contract.outputs.platforms-json }}
-          BUILDCHAIN_ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          BUILDCHAIN_ARTIFACT_NAME_TEMPLATE: "{artifact}-{platform}-{sha}"
-          BUILDCHAIN_SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Create build controller receipt for release-candidate passport
-        id: release-candidate-controller-receipt
-        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
-        run: node .buildchain/runtime/scripts/controller-evidence.mjs --mode receipt
-        env:
-          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
-          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"signing-finalization","status":"${{ needs.finalize-artifact-signing.result }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"success"},{"id":"aggregate","status":"success"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: '[{"kind":"anchored-version-material","path":".buildchain/anchored-version-material/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/artifacts/build-summary.json"},{"kind":"build-summary","path":".buildchain/artifacts/build-summary.json"}]'
-          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/release-candidate-receipt.json
-
-      - name: Upload build controller receipt for release-candidate passport
-        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-release-candidate-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
-          path: .buildchain/controller/release-candidate-receipt.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Generate release candidate passport
-        id: release-candidate
-        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
-        run: node .buildchain/runtime/scripts/generate-release-candidate-passport.mjs
-        env:
-          BUILDCHAIN_BUILD_SUMMARY_PATH: .buildchain/artifacts/build-summary.json
-          BUILDCHAIN_RC_PASSPORT_PATH: .buildchain/artifacts/release-candidate-passport.json
-          BUILDCHAIN_RC_TARGET_CHANNEL: ${{ steps.names.outputs.release-candidate-target-channel }}
-          BUILDCHAIN_RC_VERSION: ${{ needs.resolve-source.outputs.publish-source-consumer-version }}
-          BUILDCHAIN_RC_SOURCE_HEAD_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_RC_MERGE_REF_SHA: ${{ github.sha }}
-          BUILDCHAIN_RC_SOURCE_TREE_HASH: ${{ needs.resolve-source.outputs.publish-source-tree-sha }}
-          BUILDCHAIN_RUNTIME_REF: ${{ needs.trust-gate.outputs.buildchain-runtime-ref }}
-          BUILDCHAIN_RUNTIME_SHA: ${{ needs.trust-gate.outputs.buildchain-runtime-sha }}
-          BUILDCHAIN_WORKFLOW_SHELL_REF: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-ref }}
-          BUILDCHAIN_WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          BUILDCHAIN_GATE_PROFILE_AGGREGATE_JSON: ${{ fromJSON(needs.configure.outputs.plan-json).evidence.gate_profile_json }}
-          BUILDCHAIN_RC_FAMILY_EVIDENCE_JSON: ${{ fromJSON(needs.configure.outputs.plan-json).evidence.candidate_family_json }}
-          BUILDCHAIN_V4_POLICY_RECEIPT_JSON: ${{ needs.trust-gate.outputs.v4-consumer-policy-receipt-json }}
-          BUILDCHAIN_V4_POLICY_RECEIPT_ROOT: ${{ needs.trust-gate.outputs.v4-consumer-policy-receipt-root }}
-          BUILDCHAIN_CONTROLLER_RECEIPT_JSON: ${{ steps.release-candidate-controller-receipt.outputs.controller-receipt-json }}
-          BUILDCHAIN_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
-          BUILDCHAIN_PULL_REQUEST_URL: ${{ github.event.pull_request.html_url }}
-          BUILDCHAIN_PULL_REQUEST_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          BUILDCHAIN_PULL_REQUEST_BASE_REF: ${{ github.event.pull_request.base.ref }}
-
-      - name: Upload aggregate build summary
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.names.outputs.summary-artifact-name }}
-          path: .buildchain/artifacts/build-summary.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Upload aggregate diagnostics summary
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.names.outputs.diagnostics-summary-artifact-name }}
-          path: .buildchain/artifacts/diagnostics-summary.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Upload release candidate passport
-        if: ${{ steps.names.outputs.release-candidate-enabled == 'true' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.names.outputs.release-candidate-passport-artifact-name }}
-          path: .buildchain/artifacts/release-candidate-*.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-  controller-receipt:
-    name: Finalize build controller evidence
-    runs-on: ${{ fromJSON(fromJSON(needs.configure.outputs.plan-json).environment.runners.control_json) }}
+    - name: Checkout exact workflow implementation
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ job.workflow_sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+    - uses: ./.buildchain/runtime/actions/attest-build-artifact
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+      id: attest
+  deliver:
     needs:
-      - configure
-      - trust-gate
-      - resolve-source
-      - controller-plan
-      - anchored-release-preflight
-      - build-native
-      - build-linux-container
-      - relay-artifacts
-      - artifact-signing-control
-      - finalize-artifact-signing
-      - credential-island-macos
-      - summarize
-    if: ${{ (always() && needs.controller-plan.result == 'success') }}
+    - plan
+    - build-native
+    - build-container
+    - sign
+    - attest
+    if: ${{ always() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
     outputs:
-      controller-receipt-artifact: ${{ steps.names.outputs.controller-receipt-artifact }}
-      controller-receipt-json: ${{ steps.receipt.outputs.controller-receipt-json }}
-      controller-receipt-digest: ${{ steps.receipt.outputs.controller-receipt-digest }}
-      controller-receipt-status: ${{ steps.receipt.outputs.controller-receipt-status }}
+      result: ${{ steps.final.outputs.result }}
     steps:
-      - name: Checkout build controller workflow shell
-        uses: actions/checkout@v7.0.0
-        with:
-          repository: ${{ fromJSON(needs.configure.outputs.plan-json).identity.repository }}
-          ref: ${{ needs.trust-gate.outputs.buildchain-workflow-shell-sha }}
-          path: .buildchain/controller-runtime
-          persist-credentials: false
-
-      - name: Download build controller plan
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ needs.controller-plan.outputs.controller-plan-artifact }}
-          path: .buildchain/controller
-
-      - name: Download aggregate build summary
-        if: ${{ needs.summarize.result == 'success' }}
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ needs.summarize.outputs.summary-artifact-name }}
-          path: .buildchain/controller/evidence
-
-      - name: Download anchored version material evidence
-        if: ${{ needs.anchored-release-preflight.result == 'success' }}
-        uses: actions/download-artifact@v7.0.0
-        with:
-          github-token: ${{ github.token }}
-          name: ${{ needs.anchored-release-preflight.outputs.evidence-artifact }}
-          path: .buildchain/controller/evidence
-
-      - name: Create build controller receipt
-        id: receipt
-        run: node .buildchain/controller-runtime/scripts/controller-evidence.mjs --mode receipt
-        env:
-          BUILDCHAIN_CONTROLLER_PLAN_PATH: .buildchain/controller/plan.json
-          BUILDCHAIN_CONTROLLER_STAGES_JSON: >-
-            [{"id":"resolve-runtime","status":"${{ needs.trust-gate.result }}"},{"id":"resolve-source","status":"${{ needs.resolve-source.result }}"},{"id":"anchored-release-preflight","status":"${{ needs.anchored-release-preflight.result }}"},{"id":"build","status":"${{ (needs.build-native.result == 'failure' || needs.build-linux-container.result == 'failure' || needs.relay-artifacts.result == 'failure') && 'failure' || (needs.build-native.result == 'cancelled' || needs.build-linux-container.result == 'cancelled' || needs.relay-artifacts.result == 'cancelled') && 'cancelled' || (needs.build-native.result == 'success' || needs.build-linux-container.result == 'success') && 'success' || 'skipped' }}"},{"id":"signing-finalization","status":"${{ needs.finalize-artifact-signing.result }}"},{"id":"credential-island","status":"${{ needs.credential-island-macos.result }}"},{"id":"verify","status":"${{ needs.summarize.result }}"},{"id":"aggregate","status":"${{ needs.summarize.result }}"}]
-          BUILDCHAIN_CONTROLLER_EVIDENCE_FILES_JSON: ${{ needs.summarize.result == 'success' && '[{"kind":"anchored-version-material","path":".buildchain/controller/evidence/anchored-version-material.json"},{"kind":"platform-manifests","path":".buildchain/controller/evidence/build-summary.json"},{"kind":"build-summary","path":".buildchain/controller/evidence/build-summary.json"}]' || '[]' }}
-          BUILDCHAIN_CONTROLLER_REASON_CODE: ${{ needs.summarize.result == 'success' && '' || 'controller-incomplete' }}
-          BUILDCHAIN_CONTROLLER_REASON_SUMMARY: Build or verification did not complete successfully
-          BUILDCHAIN_CONTROLLER_RECEIPT_ARTIFACT: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}-controller-receipt-${{ needs.resolve-source.outputs.publish-source-sha }}
-          BUILDCHAIN_CONTROLLER_RECEIPT_PATH: .buildchain/controller/receipt.json
-
-      - name: Resolve build controller receipt artifact
-        id: names
-        run: echo "controller-receipt-artifact=${ARTIFACT_NAME}-controller-receipt-${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
-        env:
-          ARTIFACT_NAME: ${{ fromJSON(needs.configure.outputs.plan-json).artifacts.name }}
-          SOURCE_SHA: ${{ needs.resolve-source.outputs.publish-source-sha }}
-
-      - name: Upload build controller receipt
-        if: ${{ always() && steps.receipt.outcome == 'success' }}
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: ${{ steps.names.outputs.controller-receipt-artifact }}
-          path: .buildchain/controller/receipt.json
-          if-no-files-found: error
-          retention-days: ${{ fromJSON(needs.configure.outputs.plan-json).build.artifacts.retention_days }}
-
-      - name: Enforce qualifying build controller receipt
-        if: ${{ steps.receipt.outputs.controller-receipt-qualifying != 'true' }}
-        run: |
-          echo "::error::build controller receipt is not qualifying: ${{ steps.receipt.outputs.controller-receipt-status }}"
-          exit 1
+    - name: Checkout exact workflow implementation
+      uses: actions/checkout@v7.0.0
+      with:
+        repository: kungfu-systems/buildchain
+        ref: ${{ job.workflow_sha }}
+        path: .buildchain/runtime
+        persist-credentials: false
+    - uses: ./.buildchain/runtime/actions/prepare-build-environment
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+    - uses: ./.buildchain/runtime/actions/finalize-build-result
+      with:
+        plan: ${{ needs.plan.outputs.plan }}
+        jobs: ${{ toJSON(needs) }}
+      id: final

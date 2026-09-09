@@ -4,8 +4,8 @@
   "status": "passed",
   "summary": {
     "cliCommandCount": 117,
-    "workflowCount": 116,
-    "actionCount": 14,
+    "workflowCount": 114,
+    "actionCount": 15,
     "sitePageCount": 89,
     "docCommandRefCount": 1048,
     "failureCount": 0
@@ -704,75 +704,6 @@
         "outputCount": 13
       },
       {
-        "id": ".build-engine",
-        "path": ".github/workflows/.build-engine.yml",
-        "reusable": true,
-        "inputs": [
-          "config-path"
-        ],
-        "inputCount": 1,
-        "secrets": [
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
-          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
-          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
-          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
-          "BUILDCHAIN_PROMOTION_TOKEN"
-        ],
-        "secretCount": 9,
-        "outputs": [
-          "artifact-coordinates-json",
-          "build-diagnostics-summary-artifact",
-          "build-diagnostics-summary-json",
-          "build-summary-artifact",
-          "build-summary-json",
-          "buildchain-contract-digest",
-          "buildchain-contract-lock-drift",
-          "buildchain-contract-lock-status",
-          "buildchain-runtime-class",
-          "buildchain-runtime-override",
-          "buildchain-runtime-ref",
-          "buildchain-runtime-sha",
-          "buildchain-runtime-trust-decision",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "credential-island-macos-artifact",
-          "credential-island-macos-manifest-artifact",
-          "linux-container-enabled",
-          "linux-container-image",
-          "platform-count",
-          "platforms-json",
-          "publish-allowed",
-          "publish-channel",
-          "publish-reason",
-          "publish-source-channel",
-          "publish-source-consumer-version",
-          "publish-source-line",
-          "publish-source-locked",
-          "publish-source-ref",
-          "publish-source-sha",
-          "publish-source-tree-sha",
-          "release-candidate-artifact",
-          "release-candidate-passport-artifact",
-          "release-candidate-passport-json",
-          "release-manifest-json",
-          "runner-preset",
-          "runner-routing-json",
-          "trusted-event",
-          "v4-consumer-policy-receipt-json",
-          "v4-consumer-policy-receipt-root"
-        ],
-        "outputCount": 45
-      },
-      {
         "id": ".build-gate-profile",
         "path": ".github/workflows/.build-gate-profile.yml",
         "reusable": true,
@@ -947,9 +878,6 @@
         ],
         "inputCount": 1,
         "secrets": [
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
           "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
           "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
@@ -957,55 +885,11 @@
           "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
           "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 9,
+        "secretCount": 6,
         "outputs": [
-          "artifact-coordinates-json",
-          "build-diagnostics-summary-artifact",
-          "build-diagnostics-summary-json",
-          "build-summary-artifact",
-          "build-summary-json",
-          "buildchain-contract-digest",
-          "buildchain-contract-lock-drift",
-          "buildchain-contract-lock-status",
-          "buildchain-runtime-class",
-          "buildchain-runtime-override",
-          "buildchain-runtime-ref",
-          "buildchain-runtime-sha",
-          "buildchain-runtime-trust-decision",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "credential-island-macos-artifact",
-          "credential-island-macos-manifest-artifact",
-          "linux-container-enabled",
-          "linux-container-image",
-          "platform-count",
-          "platforms-json",
-          "publish-allowed",
-          "publish-channel",
-          "publish-reason",
-          "publish-source-channel",
-          "publish-source-consumer-version",
-          "publish-source-line",
-          "publish-source-locked",
-          "publish-source-ref",
-          "publish-source-sha",
-          "publish-source-tree-sha",
-          "release-candidate-artifact",
-          "release-candidate-passport-artifact",
-          "release-candidate-passport-json",
-          "release-manifest-json",
-          "runner-preset",
-          "runner-routing-json",
-          "trusted-event",
-          "v4-consumer-policy-receipt-json",
-          "v4-consumer-policy-receipt-root"
+          "result"
         ],
-        "outputCount": 45
+        "outputCount": 1
       },
       {
         "id": ".bump-minor-version",
@@ -1960,9 +1844,6 @@
         ],
         "inputCount": 1,
         "secrets": [
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
           "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
           "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
           "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
@@ -1970,58 +1851,13 @@
           "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
           "BUILDCHAIN_PROMOTION_TOKEN"
         ],
-        "secretCount": 9,
+        "secretCount": 6,
         "outputs": [
-          "artifact-coordinates-json",
-          "build-diagnostics-summary-artifact",
-          "build-diagnostics-summary-json",
-          "build-summary-artifact",
-          "build-summary-json",
-          "buildchain-channel",
-          "buildchain-channel-reason",
-          "buildchain-channel-selection-source",
-          "buildchain-contract-digest",
-          "buildchain-contract-lock-drift",
-          "buildchain-contract-lock-status",
-          "buildchain-runtime-class",
-          "buildchain-runtime-override",
-          "buildchain-runtime-ref",
-          "buildchain-runtime-sha",
-          "buildchain-runtime-trust-decision",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
           "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "credential-island-macos-artifact",
-          "credential-island-macos-manifest-artifact",
-          "linux-container-enabled",
-          "linux-container-image",
-          "platform-count",
-          "platforms-json",
-          "publish-allowed",
-          "publish-channel",
-          "publish-reason",
-          "publish-source-channel",
-          "publish-source-consumer-version",
-          "publish-source-line",
-          "publish-source-locked",
-          "publish-source-ref",
-          "publish-source-sha",
-          "publish-source-tree-sha",
           "release-candidate-artifact",
-          "release-candidate-passport-artifact",
-          "release-candidate-passport-json",
-          "release-manifest-json",
-          "runner-preset",
-          "runner-routing-json",
-          "trusted-event",
-          "v4-consumer-policy-receipt-json",
-          "v4-consumer-policy-receipt-root"
+          "result"
         ],
-        "outputCount": 48
+        "outputCount": 3
       },
       {
         "id": "buildchain-patrol",
@@ -2643,78 +2479,6 @@
         "secretCount": 0,
         "outputs": [],
         "outputCount": 0
-      },
-      {
-        "id": "public-build-candidate",
-        "path": ".github/workflows/public-build-candidate.yml",
-        "reusable": true,
-        "inputs": [
-          "config-path"
-        ],
-        "inputCount": 1,
-        "secrets": [
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_DOWNLOAD_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN",
-          "BUILDCHAIN_ARTIFACT_RELAY_S3_UPLOAD_ROLE_ARN",
-          "BUILDCHAIN_MACOS_CERTIFICATE_P12_BASE64",
-          "BUILDCHAIN_MACOS_CERTIFICATE_PASSWORD",
-          "BUILDCHAIN_MACOS_NOTARY_API_ISSUER",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_ID",
-          "BUILDCHAIN_MACOS_NOTARY_API_KEY_P8_BASE64",
-          "BUILDCHAIN_PROMOTION_TOKEN"
-        ],
-        "secretCount": 9,
-        "outputs": [
-          "artifact-coordinates-json",
-          "build-diagnostics-summary-artifact",
-          "build-diagnostics-summary-json",
-          "build-summary-artifact",
-          "build-summary-json",
-          "buildchain-channel",
-          "buildchain-channel-reason",
-          "buildchain-channel-selection-source",
-          "buildchain-contract-digest",
-          "buildchain-contract-lock-drift",
-          "buildchain-contract-lock-status",
-          "buildchain-runtime-class",
-          "buildchain-runtime-override",
-          "buildchain-runtime-ref",
-          "buildchain-runtime-sha",
-          "buildchain-runtime-trust-decision",
-          "controller-plan-artifact",
-          "controller-plan-digest",
-          "controller-plan-json",
-          "controller-receipt-artifact",
-          "controller-receipt-digest",
-          "controller-receipt-json",
-          "controller-receipt-status",
-          "credential-island-macos-artifact",
-          "credential-island-macos-manifest-artifact",
-          "linux-container-enabled",
-          "linux-container-image",
-          "platform-count",
-          "platforms-json",
-          "publish-allowed",
-          "publish-channel",
-          "publish-reason",
-          "publish-source-channel",
-          "publish-source-consumer-version",
-          "publish-source-line",
-          "publish-source-locked",
-          "publish-source-ref",
-          "publish-source-sha",
-          "publish-source-tree-sha",
-          "release-candidate-artifact",
-          "release-candidate-passport-artifact",
-          "release-candidate-passport-json",
-          "release-manifest-json",
-          "runner-preset",
-          "runner-routing-json",
-          "trusted-event",
-          "v4-consumer-policy-receipt-json",
-          "v4-consumer-policy-receipt-root"
-        ],
-        "outputCount": 48
       },
       {
         "id": "public-build-check",
@@ -4678,72 +4442,21 @@
     ],
     "actionInputs": [
       {
-        "id": "build-agent-hub-evidence",
-        "path": "actions/build-agent-hub-evidence/action.yml",
+        "id": "attest-build-artifact",
+        "path": "actions/attest-build-artifact/action.yml",
         "inputs": [
-          "plan-json",
-          "platform-json",
-          "source-json"
+          "plan"
         ],
-        "inputCount": 3
+        "inputCount": 1
       },
       {
-        "id": "build-artifact-transfer",
-        "path": "actions/build-artifact-transfer/action.yml",
+        "id": "finalize-build-result",
+        "path": "actions/finalize-build-result/action.yml",
         "inputs": [
-          "artifact-name",
-          "plan-json",
-          "platform-json",
-          "relay-role",
-          "relay-upload-role",
-          "source-json",
-          "transfer-json"
+          "jobs",
+          "plan"
         ],
-        "inputCount": 7
-      },
-      {
-        "id": "build-attestation-policy",
-        "path": "actions/build-attestation-policy/action.yml",
-        "inputs": [
-          "plan-json",
-          "platform-json",
-          "source-json"
-        ],
-        "inputCount": 3
-      },
-      {
-        "id": "build-lifecycle-stage",
-        "path": "actions/build-lifecycle-stage/action.yml",
-        "inputs": [
-          "artifact-name",
-          "plan-json",
-          "platform-json",
-          "source-json",
-          "stage"
-        ],
-        "inputCount": 5
-      },
-      {
-        "id": "build-signing-request",
-        "path": "actions/build-signing-request/action.yml",
-        "inputs": [
-          "artifact-name",
-          "plan-json",
-          "platform-json",
-          "source-json"
-        ],
-        "inputCount": 4
-      },
-      {
-        "id": "build-verification-evidence",
-        "path": "actions/build-verification-evidence/action.yml",
-        "inputs": [
-          "plan-json",
-          "platform-json",
-          "source-json",
-          "verify-outcome"
-        ],
-        "inputCount": 4
+        "inputCount": 2
       },
       {
         "id": "github-artifact-attestation",
@@ -4792,6 +4505,17 @@
           "source-tree-sha"
         ],
         "inputCount": 21
+      },
+      {
+        "id": "prepare-build-environment",
+        "path": "actions/prepare-build-environment/action.yml",
+        "inputs": [
+          "checkout-source",
+          "plan",
+          "platform",
+          "tools"
+        ],
+        "inputCount": 4
       },
       {
         "id": "promote-buildchain-ref",
@@ -4998,6 +4722,27 @@
         "inputCount": 43
       },
       {
+        "id": "resolve-build-plan",
+        "path": "actions/resolve-build-plan/action.yml",
+        "inputs": [
+          "config-path",
+          "control-token",
+          "workflow-ref",
+          "workflow-sha"
+        ],
+        "inputCount": 4
+      },
+      {
+        "id": "run-build-stage",
+        "path": "actions/run-build-stage/action.yml",
+        "inputs": [
+          "plan",
+          "platform",
+          "stage"
+        ],
+        "inputCount": 3
+      },
+      {
         "id": "run-lifecycle",
         "path": "actions/run-lifecycle/action.yml",
         "inputs": [
@@ -5025,6 +4770,33 @@
           "timeout-minutes"
         ],
         "inputCount": 22
+      },
+      {
+        "id": "sign-build-artifact",
+        "path": "actions/sign-build-artifact/action.yml",
+        "inputs": [
+          "certificate-p12-base64",
+          "certificate-password",
+          "certificate-sha1",
+          "control-token",
+          "expected-team-id",
+          "kind",
+          "notary-api-issuer",
+          "notary-api-key-id",
+          "notary-api-key-p8-base64",
+          "plan",
+          "platform"
+        ],
+        "inputCount": 11
+      },
+      {
+        "id": "transfer-build-artifact",
+        "path": "actions/transfer-build-artifact/action.yml",
+        "inputs": [
+          "plan",
+          "platform"
+        ],
+        "inputCount": 2
       },
       {
         "id": "validate-config",
@@ -10643,8 +10415,8 @@
     "workflowRegistryPath": "dist/site/workflow-registry.json",
     "pageRegistryPath": "dist/site/page-registry.json",
     "cliRegistryDigest": "547dde42a349a047f2aadcfc3ee9e3e31b6a7f6bfc75b7d37e5dcff7abd15308",
-    "workflowRegistryDigest": "308368b26e7ea0ea77bdcd0e4f5099123a67b3215e82585d9201c2f5d3028284",
-    "pageRegistryDigest": "a9f106b8e58f4ceaaca17a1e3a0c39c7bc1653c503bd386d86bbbf019a83ddf5"
+    "workflowRegistryDigest": "321950348e5ec9759d5b6cbea758b778ec681a266edc8321209bd159ba54bac4",
+    "pageRegistryDigest": "d098a2cbb1538f10a9e2f889acf1cf84ea00669ee88e4652984cbf2aa924775e"
   },
   "comparison": {
     "missingCliRegistry": [],

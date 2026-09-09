@@ -256,12 +256,12 @@ test("v4 floating policy contract rejects an unbound certification root", () => 
   );
 });
 
-test("v4 floating policy contract check rejects a heavy job without trust-gate", () => {
-  const source = `jobs:\n  resolve-source:\n    needs:\n      - trust-gate\n  build-native:\n    needs:\n      - resolve-source\n`;
+test("v4 floating policy contract check rejects a heavy job without plan", () => {
+  const source = `jobs:\n  resolve-source:\n    needs:\n      - plan\n  build-native:\n    needs:\n      - resolve-source\n`;
   assert.match(workflowJobBlock(source, "build-native"), /resolve-source/u);
   assert.throws(
     () => assertTrustGatedJobs(source, ["resolve-source", "build-native"]),
-    /build-native is not directly gated by trust-gate/u,
+    /build-native is not directly gated by plan/u,
   );
 });
 

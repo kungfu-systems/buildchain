@@ -17,6 +17,35 @@ permissions:
   contents: read
 
 jobs:
+  build-backbone:
+    name: Build backbone (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runner: ubuntu-24.04
+          - platform: macos-arm64
+            runner: macos-15
+          - platform: windows-x64
+            runner: windows-2025
+          - platform: linux-container
+            runner: ubuntu-24.04
+            container: ghcr.io/kungfu-systems/build-images/kungfu-verify@sha256:11f0ba64267ce88174a4f73a9bf833ff4e9c59cd16ec3d08a6432a06c2be6fb1
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container || '' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24"
+      - name: Install exact test runtime dependencies
+        run: corepack pnpm@11.7.0 install --prod --frozen-lockfile --ignore-scripts
+      - name: Exercise candidate lifecycle and artifact boundaries
+        run: node --test tests/build-orchestration.test.mjs tests/build-artifact-pipeline.test.mjs
   # Projection authority: architecture/platform-stage-checkpoints.json
   stage-capsule-checkpoints:
     name: Stage Capsule checkpoint (${{ matrix.platform }})

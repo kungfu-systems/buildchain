@@ -1,6 +1,7 @@
 {
   "schemaVersion": 2,
   "coverageRoots": [
+    "scripts/build",
     "actions/promote-buildchain-ref/internal",
     "bin/buildchain.mjs",
     "bin/internal",
@@ -39,12 +40,10 @@
     "scripts/build-contract-core.mjs",
     "scripts/github-output.mjs",
     "scripts/buildchain-cli-help.mjs",
-    "scripts/generate-channel-build-workflow.mjs",
     "scripts/promotion-routing-evidence.mjs",
     "scripts/paper-work-fleet-cli.mjs",
     "scripts/run-lifecycle-core.mjs",
     "scripts/resolve-artifact-transfer-mode.mjs",
-    "scripts/resolve-build-summary-names.sh",
     "scripts/release-propagation.mjs",
     "scripts/engineering-housekeeper-workflow.mjs",
     "scripts/release-tail.mjs",
@@ -382,16 +381,23 @@
       "id": "reusable-build-orchestration",
       "owner": "Buildchain workflow maintainers",
       "implementation": [
-        "scripts/generate-channel-build-workflow.mjs",
         "scripts/resolve-artifact-transfer-mode.mjs",
-        "scripts/resolve-build-summary-names.sh",
         "scripts/run-lifecycle-core.mjs",
         "packages/core/build-configuration.js",
-        "scripts/resolve-build-configuration.mjs"
+        "scripts/resolve-build-configuration.mjs",
+        "scripts/build/artifact-contract.mjs",
+        "scripts/build/artifact-store.mjs",
+        "scripts/build/attest.mjs",
+        "scripts/build/context.mjs",
+        "scripts/build/finalize.mjs",
+        "scripts/build/plan.mjs",
+        "scripts/build/prepare.mjs",
+        "scripts/build/sign.mjs",
+        "scripts/build/stage.mjs",
+        "scripts/build/transfer.mjs"
       ],
       "tests": [
         "tests/artifact-transfer-mode.test.mjs",
-        "tests/resolve-build-summary-names.test.mjs",
         "tests/build-surface-reusable-build-artifacts.test.mjs",
         "tests/build-surface.test.mjs",
         "tests/build-surface-promotion.test.mjs",
@@ -402,12 +408,13 @@
         ".github/workflows/.build.yml",
         ".github/workflows/build.yml",
         "architecture/build-environments.json",
-        "actions/build-lifecycle-stage/action.yml",
-        "actions/build-signing-request/action.yml",
-        "actions/build-verification-evidence/action.yml",
-        "actions/build-attestation-policy/action.yml",
-        "actions/build-agent-hub-evidence/action.yml",
-        "actions/build-artifact-transfer/action.yml",
+        "actions/resolve-build-plan/action.yml",
+        "actions/prepare-build-environment/action.yml",
+        "actions/run-build-stage/action.yml",
+        "actions/transfer-build-artifact/action.yml",
+        "actions/sign-build-artifact/action.yml",
+        "actions/attest-build-artifact/action.yml",
+        "actions/finalize-build-result/action.yml",
         "architecture/build-orchestration.json"
       ],
       "generatedOutputs": [
@@ -415,7 +422,7 @@
         "actions/run-lifecycle/dist/index.js"
       ],
       "validationCommands": [
-        "node --test tests/artifact-transfer-mode.test.mjs tests/resolve-build-summary-names.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs"
+        "node --test tests/artifact-transfer-mode.test.mjs tests/build-surface-reusable-build-artifacts.test.mjs tests/build-surface.test.mjs tests/build-surface-promotion.test.mjs tests/controller-evidence.test.mjs"
       ]
     },
     {

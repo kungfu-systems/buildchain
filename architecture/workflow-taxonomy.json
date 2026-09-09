@@ -54,16 +54,8 @@
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "migration": {
-        "previousPath": ".github/workflows/.build.yml",
-        "originalSha256": "20549663f5459414dcfb00aa9a3a549003bbc09159eeab6cea211db96ed0eab2"
-      },
-      "compatibility": {
-        "path": ".github/workflows/.build.yml",
-        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
-        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
-      },
-      "rationale": "Classify the existing .github/workflows/.build.yml capability without adding execution behavior."
+      "rationale": "Single build facade and orchestration backbone; project configuration is owned by TOML.",
+      "path": ".github/workflows/.build.yml"
     },
     {
       "id": ".bump-minor-version",
@@ -398,16 +390,8 @@
       "owner": "kungfu-origin",
       "status": "active",
       "invocation": "reusable",
-      "migration": {
-        "previousPath": ".github/workflows/build.yml",
-        "originalSha256": "ae39d775f50ed5d0a20084067e36ae7337c6e1cf730e5311c54bba0420f4c8bf"
-      },
-      "compatibility": {
-        "path": ".github/workflows/build.yml",
-        "reason": "Retain the published workflow path and exact job/workflow identity while floating channels adopt canonical names.",
-        "removalCondition": "Reviewed breaking-major migration after consumer readback; never remove during the v4 line."
-      },
-      "rationale": "Classify the existing .github/workflows/build.yml capability without adding execution behavior."
+      "rationale": "Single build facade and orchestration backbone; project configuration is owned by TOML.",
+      "path": ".github/workflows/build.yml"
     },
     {
       "id": "build-surface-fixture",

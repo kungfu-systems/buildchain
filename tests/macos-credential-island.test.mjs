@@ -777,10 +777,10 @@ test("public action and workflow keep credentials outside the build matrix", () 
     "utf8",
   );
   const nativeBuildJob = workflow.match(
-    /\n  build-native:[\s\S]+?(?=\n  build-linux-container:)/u,
+    /\n  build-native:[\s\S]+?(?=\n  build-container:)/u,
   )?.[0];
   const containerBuildJob = workflow.match(
-    /\n  build-linux-container:[\s\S]+?(?=\n  relay-artifacts:)/u,
+    /\n  build-container:[\s\S]+?(?=\n  sign:)/u,
   )?.[0];
   assert.ok(nativeBuildJob);
   assert.ok(containerBuildJob);
@@ -811,85 +811,17 @@ test("public action and workflow keep credentials outside the build matrix", () 
     /assembleDmgWithRetry\([\s\S]*?signAndVerifyDmg\(assembly\.imagePath,[\s\S]*?const notarization = submitNotary\([\s\S]*?staple\(assembly\.imagePath\)[\s\S]*?COPYFILE_EXCL/,
   );
   assert.match(implementation, /dmgCodesign: true/);
-  for (const caller of [workflow, publicWorkflow]) {
-    assert.match(caller, /permissions:\n  actions: read\n  contents: read/);
-  }
-  assert.match(
-    fixtureWorkflow,
-    /permissions: \{ actions: read, contents: read, issues: write, id-token: write \}/,
-  );
-  assert.match(
-    publicWorkflow,
-    /credential-island-macos-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-artifact \}\}/,
-  );
-  assert.match(
-    publicWorkflow,
-    /credential-island-macos-manifest-artifact:\n\s+description:[^\n]+\n\s+value: \$\{\{ jobs\.build\.outputs\.credential-island-macos-manifest-artifact \}\}/,
-  );
-  assert.match(publicWorkflow, /uses: \.\/\.github\/workflows\/\.build\.yml/u);
-  for (const buildJob of [nativeBuildJob, containerBuildJob]) {
-    assert.doesNotMatch(
-      buildJob,
-      /certificate-p12-base64|notary-api-key-p8-base64|BUILDCHAIN_MACOS_CERTIFICATE|BUILDCHAIN_MACOS_NOTARY/,
-    );
-  }
-  assert.match(workflow, /Seal macOS credential-island input/);
-  const stage = fs.readFileSync(path.join(root, "actions/build-lifecycle-stage/action.yml"), "utf8");
-  assert.match(stage, /CSC_IDENTITY_AUTO_DISCOVERY:.*build\.macos_signing\.app_path.*'false'/u);
-  assert.match(workflow, /Upload macOS credential-island runtime[\s\S]*?build\.macos_signing\.app_path/u);
-  assert.doesNotMatch(workflow, /inputs\.credential-island-caller-owned/u);
-  assert.match(
-    workflow,
-    /credential-island-input-manifest-\$\{\{ matrix\.platform\.id \}\}/,
-  );
-  assert.match(
-    workflow,
-    /Upload macOS credential-island app archive[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'[\s\S]*?path: \.buildchain\/credential-island\/\$\{\{ matrix\.platform\.id \}\}\/unsigned-app\.zip[\s\S]*?archive: false/,
-  );
-  assert.match(
-    workflow,
-    /Upload macOS credential-island input manifest[\s\S]*?credential-island-input-manifest-\$\{\{ matrix\.platform\.id \}\}/,
-  );
-  assert.match(
-    workflow,
-    /Download source-bound sealed application archive[\s\S]*?name: unsigned-app\.zip[\s\S]*?Download source-bound sealed application manifest/,
-  );
-  assert.match(
-    fs.readFileSync(path.join(root, "actions/build-artifact-transfer/action.yml"), "utf8"),
-    /BUILDCHAIN_ARTIFACT_RELAY_CREDENTIAL_INPUT_PATHS:[\s\S]*?\.buildchain\/credential-island\/\{0\}/,
-  );
-  assert.match(
-    workflow,
-    /Upload relayed macOS credential-island input[\s\S]*?steps\.relay-download\.outputs\.credential-input-path/,
-  );
-  const credentialJob = workflow.match(
-    /\n  credential-island-macos:[\s\S]+?(?=\n  summarize:)/u,
-  )?.[0];
-  assert.ok(credentialJob);
-  assert.match(
-    credentialJob,
-    /always\(\)[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 'github-artifacts'[\s\S]*?needs\.relay-artifacts\.result == 'success'/,
-  );
-  assert.match(
-    credentialJob,
-    /Download relayed source-bound credential-island input[\s\S]*?needs\.artifact-transfer\.outputs\.mode == 's3-to-github-artifacts'/,
-  );
-  assert.match(
-    credentialJob,
-    /environment:\s*\n\s+name: \$\{\{ fromJSON\(needs\.configure\.outputs\.plan-json\)\.environment\.signing\.environment \}\}/,
-  );
-  assert.match(
-    credentialJob,
-    /uses: \.\/\.buildchain\/runtime\/actions\/macos-credential-island/,
-  );
-  assert.doesNotMatch(
-    credentialJob,
-    /actions\/checkout|pnpm|npm|yarn|consumer-script|install-command|build-command|verify-command/,
-  );
-  assert.match(
-    workflow,
-    /BUILDCHAIN_ADDITIONAL_PLATFORM_COUNT: \$\{\{ fromJSON\(needs\.configure\.outputs\.plan-json\)\.build\.macos_signing\.app_path != '' && '1' \|\| '0' \}\}/,
-  );
+  const sign = fs.readFileSync(path.join(root, "actions/sign-build-artifact/action.yml"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "scripts/build/stage.mjs"), "utf8");
+  const plan = fs.readFileSync(path.join(root, "scripts/build/plan.mjs"), "utf8");
+  assert.match(stage, /CSC_IDENTITY_AUTO_DISCOVERY: plan.build.macos_signing.app_path \? "false"/u);
+  assert.match(stage, /seal-macos-credential-input.mjs/u);
+  assert.match(plan, /macOS signing requires a governed credential environment/u);
+  assert.match(workflow, /checkout-source:.*matrix.platform.kind == 'artifact'/u);
+  assert.match(workflow, /matrix.platform.kind == 'credential' && secrets.BUILDCHAIN_MACOS_CERTIFICATE/u);
+  assert.match(sign, /inputs.kind == 'credential'/u);
+  assert.match(sign, /uses: .\/.buildchain\/runtime\/actions\/macos-credential-island/u);
+  assert.match(sign, /expected-bundle-id:.*steps.identity.outputs.bundle-id/u);
   assert.doesNotMatch(implementation, /execSync|shell:\s*true/);
   assert.match(implementation, /schema:\s*EVIDENCE_CONTRACT/);
   assert.equal(

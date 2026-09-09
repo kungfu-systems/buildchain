@@ -493,15 +493,7 @@
       "executableSurfaceIds": []
     }
   ],
-  "excludedCallers": [
-    {
-      "repository": "kungfu-systems/agent-hub-demo",
-      "sourceCommit": "633111450867919d5063298308cdbfcbd77a8d2e",
-      "workflow": ".github/workflows/self-release-promote.yml",
-      "runtimeRef": "v2",
-      "reason": "outside the Buildchain v3 contract inventory"
-    }
-  ],
+  "excludedCallers": [],
   "migration": {
     "compatibilityWindow": {
       "startsAt": "train/v3/v3.0/release-tail-contract",

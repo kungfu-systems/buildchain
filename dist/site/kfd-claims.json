@@ -14,18 +14,18 @@
   },
   "runtimeContract": {
     "contract": "kungfu-buildchain-runtime-contract-world",
-    "compatibilityDigest": "sha256:e398528e54509c05569630ffcc98a04d41e831479ab921df65943b49bf077719",
+    "compatibilityDigest": "sha256:60eefd1c05bc2cddeab8065c5b96ea2ea083d4f87f7de39843a0fffdd1deb98e",
     "majorLine": "v4"
   },
   "publicSurfaceReverseAudit": {
     "contract": "kungfu-buildchain-public-surface-reverse-audit",
     "path": "dist/site/public-surface-audit.json",
     "status": "passed",
-    "sha256": "7a4afbd9b521c42b93526bd552fb91d39fa7abddd8c446e0e99ac8e628af1a52",
+    "sha256": "4853af317b1cca5436a27f693b7a2d3459c59e51ae39a24a0fefd88ac779ca30",
     "summary": {
       "cliCommandCount": 117,
-      "workflowCount": 116,
-      "actionCount": 14,
+      "workflowCount": 114,
+      "actionCount": 15,
       "sitePageCount": 89,
       "docCommandRefCount": 1048,
       "failureCount": 0
@@ -246,11 +246,11 @@
       "contract": "kungfu-buildchain-public-surface-reverse-audit",
       "path": "dist/site/public-surface-audit.json",
       "status": "passed",
-      "sha256": "7a4afbd9b521c42b93526bd552fb91d39fa7abddd8c446e0e99ac8e628af1a52",
+      "sha256": "4853af317b1cca5436a27f693b7a2d3459c59e51ae39a24a0fefd88ac779ca30",
       "summary": {
         "cliCommandCount": 117,
-        "workflowCount": 116,
-        "actionCount": 14,
+        "workflowCount": 114,
+        "actionCount": 15,
         "sitePageCount": 89,
         "docCommandRefCount": 1048,
         "failureCount": 0
@@ -4038,22 +4038,6 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
-          "id": "workflow:.build-engine",
-          "name": "workflow:.build-engine",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/.build-engine.yml",
-          "evidencePath": ".github/workflows/.build-engine.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 1,
-          "inputs": [
-            "config-path"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
           "id": "workflow:.build-gate-profile",
           "name": "workflow:.build-gate-profile",
           "kind": "workflow",
@@ -5538,22 +5522,6 @@
             "invocation-source-path",
             "node-version",
             "universal-request-json"
-          ],
-          "reverseAuditSource": ".github/workflows"
-        },
-        {
-          "id": "workflow:public-build-candidate",
-          "name": "workflow:public-build-candidate",
-          "kind": "workflow",
-          "sourcePath": ".github/workflows/public-build-candidate.yml",
-          "evidencePath": ".github/workflows/public-build-candidate.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 1,
-          "inputs": [
-            "config-path"
           ],
           "reverseAuditSource": ".github/workflows"
         },
@@ -7283,118 +7251,35 @@
           "reverseAuditSource": ".github/workflows"
         },
         {
-          "id": "action:build-agent-hub-evidence",
-          "name": "action:build-agent-hub-evidence",
+          "id": "action:attest-build-artifact",
+          "name": "action:attest-build-artifact",
           "kind": "action",
-          "sourcePath": "actions/build-agent-hub-evidence/action.yml",
-          "evidencePath": "actions/build-agent-hub-evidence/action.yml",
+          "sourcePath": "actions/attest-build-artifact/action.yml",
+          "evidencePath": "actions/attest-build-artifact/action.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 3,
+          "inputCount": 1,
           "inputs": [
-            "plan-json",
-            "platform-json",
-            "source-json"
+            "plan"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
-          "id": "action:build-artifact-transfer",
-          "name": "action:build-artifact-transfer",
+          "id": "action:finalize-build-result",
+          "name": "action:finalize-build-result",
           "kind": "action",
-          "sourcePath": "actions/build-artifact-transfer/action.yml",
-          "evidencePath": "actions/build-artifact-transfer/action.yml",
+          "sourcePath": "actions/finalize-build-result/action.yml",
+          "evidencePath": "actions/finalize-build-result/action.yml",
           "availability": "shipped",
           "visibility": "public",
           "participantFacing": true,
           "public": true,
-          "inputCount": 7,
+          "inputCount": 2,
           "inputs": [
-            "artifact-name",
-            "plan-json",
-            "platform-json",
-            "relay-role",
-            "relay-upload-role",
-            "source-json",
-            "transfer-json"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:build-attestation-policy",
-          "name": "action:build-attestation-policy",
-          "kind": "action",
-          "sourcePath": "actions/build-attestation-policy/action.yml",
-          "evidencePath": "actions/build-attestation-policy/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 3,
-          "inputs": [
-            "plan-json",
-            "platform-json",
-            "source-json"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:build-lifecycle-stage",
-          "name": "action:build-lifecycle-stage",
-          "kind": "action",
-          "sourcePath": "actions/build-lifecycle-stage/action.yml",
-          "evidencePath": "actions/build-lifecycle-stage/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 5,
-          "inputs": [
-            "artifact-name",
-            "plan-json",
-            "platform-json",
-            "source-json",
-            "stage"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:build-signing-request",
-          "name": "action:build-signing-request",
-          "kind": "action",
-          "sourcePath": "actions/build-signing-request/action.yml",
-          "evidencePath": "actions/build-signing-request/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 4,
-          "inputs": [
-            "artifact-name",
-            "plan-json",
-            "platform-json",
-            "source-json"
-          ],
-          "reverseAuditSource": "actions/*/action.yml"
-        },
-        {
-          "id": "action:build-verification-evidence",
-          "name": "action:build-verification-evidence",
-          "kind": "action",
-          "sourcePath": "actions/build-verification-evidence/action.yml",
-          "evidencePath": "actions/build-verification-evidence/action.yml",
-          "availability": "shipped",
-          "visibility": "public",
-          "participantFacing": true,
-          "public": true,
-          "inputCount": 4,
-          "inputs": [
-            "plan-json",
-            "platform-json",
-            "source-json",
-            "verify-outcome"
+            "jobs",
+            "plan"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -7459,6 +7344,25 @@
             "source-repository",
             "source-sha",
             "source-tree-sha"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:prepare-build-environment",
+          "name": "action:prepare-build-environment",
+          "kind": "action",
+          "sourcePath": "actions/prepare-build-environment/action.yml",
+          "evidencePath": "actions/prepare-build-environment/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 4,
+          "inputs": [
+            "checkout-source",
+            "plan",
+            "platform",
+            "tools"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -7699,6 +7603,43 @@
           "reverseAuditSource": "actions/*/action.yml"
         },
         {
+          "id": "action:resolve-build-plan",
+          "name": "action:resolve-build-plan",
+          "kind": "action",
+          "sourcePath": "actions/resolve-build-plan/action.yml",
+          "evidencePath": "actions/resolve-build-plan/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 4,
+          "inputs": [
+            "config-path",
+            "control-token",
+            "workflow-ref",
+            "workflow-sha"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:run-build-stage",
+          "name": "action:run-build-stage",
+          "kind": "action",
+          "sourcePath": "actions/run-build-stage/action.yml",
+          "evidencePath": "actions/run-build-stage/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 3,
+          "inputs": [
+            "plan",
+            "platform",
+            "stage"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
           "id": "action:run-lifecycle",
           "name": "action:run-lifecycle",
           "kind": "action",
@@ -7732,6 +7673,49 @@
             "substage-evidence-path",
             "summary-path",
             "timeout-minutes"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:sign-build-artifact",
+          "name": "action:sign-build-artifact",
+          "kind": "action",
+          "sourcePath": "actions/sign-build-artifact/action.yml",
+          "evidencePath": "actions/sign-build-artifact/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 11,
+          "inputs": [
+            "certificate-p12-base64",
+            "certificate-password",
+            "certificate-sha1",
+            "control-token",
+            "expected-team-id",
+            "kind",
+            "notary-api-issuer",
+            "notary-api-key-id",
+            "notary-api-key-p8-base64",
+            "plan",
+            "platform"
+          ],
+          "reverseAuditSource": "actions/*/action.yml"
+        },
+        {
+          "id": "action:transfer-build-artifact",
+          "name": "action:transfer-build-artifact",
+          "kind": "action",
+          "sourcePath": "actions/transfer-build-artifact/action.yml",
+          "evidencePath": "actions/transfer-build-artifact/action.yml",
+          "availability": "shipped",
+          "visibility": "public",
+          "participantFacing": true,
+          "public": true,
+          "inputCount": 2,
+          "inputs": [
+            "plan",
+            "platform"
           ],
           "reverseAuditSource": "actions/*/action.yml"
         },
@@ -8992,6 +8976,6 @@
         }
       }
     ],
-    "publicSurfaceCount": 540
+    "publicSurfaceCount": 539
   }
 }

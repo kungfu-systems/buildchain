@@ -5,7 +5,6 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { resolveBuildchainChannel } from "../scripts/buildchain-channel-router.mjs";
-import { generateChannelBuildWorkflow } from "../scripts/generate-channel-build-workflow.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const base = { routerRef: "v2-alpha", packageVersion: "2.12.0-alpha.0" };
@@ -103,10 +102,9 @@ test("router remains generic across Buildchain majors", () => {
   assert.equal(result.buildchainRef, "v7-alpha");
 });
 
-test("generated build facade invokes the exact backbone once with only the locator", () => {
+test("build facade invokes the exact backbone once with only the locator", () => {
   const source = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
   const current = fs.readFileSync(path.join(root, ".github/workflows/build.yml"), "utf8");
-  assert.equal(current, generateChannelBuildWorkflow(source));
   assert.equal((current.match(/uses: \.\/\.github\/workflows\/\.build\.yml/g) || []).length, 1);
   assert.match(current, /config-path: \$\{\{ inputs\.config-path \}\}/u);
   assert.doesNotMatch(current, /inputs\.buildchain-ref|resolve-channel|uses: .*\$\{\{/u);

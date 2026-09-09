@@ -170,13 +170,14 @@ test("every workflow v2 token is explicitly governed and no ungoverned runtime d
 test("public reusable controllers expose source-bound plan and always-aggregated receipt outputs", () => {
   const workflows = [
     ".github/workflows/check.yml",
-    ".github/workflows/.build.yml",
     ".github/workflows/.gate-profile.yml",
     ".github/workflows/.web-surface.yml",
     ".github/workflows/publication-artifact.yml",
     ".github/workflows/paper-release.yml",
     ".github/workflows/release-propagation.yml",
   ];
+  assert.match(readRepoText(".github/workflows/.build.yml"), /result:/u);
+  assert.match(readRepoText("scripts/build/finalize.mjs"), /controllerReceipt/u);
   for (const workflow of workflows) {
     const source = readRepoText(workflow);
     assert.match(
@@ -250,8 +251,8 @@ test("public reusable controllers expose source-bound plan and always-aggregated
   );
 
   const router = readRepoText(".github/workflows/build.yml");
-  assert.match(router, /value: \$\{\{ jobs\.build\.outputs\.controller-plan-json \}\}/u);
-  assert.match(router, /value: \$\{\{ jobs\.build\.outputs\.controller-receipt-json \}\}/u);
+  assert.match(router, /value: \$\{\{ jobs\.build\.outputs\.result \}\}/u);
+  assert.match(router, /fromJSON\(jobs\.build\.outputs\.result\)\.artifacts\.controller_receipt\.name/u);
   assert.doesNotMatch(router, /BUILDCHAIN_CONTROLLER_SOURCE_SHA:/u);
 });
 
@@ -2795,7 +2796,7 @@ test("runtime-aware workflows distinguish official channels from overrides", () 
 
 test("ordinary builds cannot authorize opaque runtimes", () => {
   const workflow = readRepoText(".github/workflows/.build.yml");
-  assert.match(workflow, /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: false/u);
+  assert.match(readRepoText("scripts/build/plan.mjs"), /BUILDCHAIN_ALLOW_OPAQUE_RUNTIME: false/u);
   assert.doesNotMatch(workflow, /pinned-self|runtime-override == 'true'/u);
 });
 

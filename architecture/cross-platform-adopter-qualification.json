@@ -19,7 +19,7 @@
     "providerEffects": false
   },
   "platforms": ["linux-x64", "macos-arm64", "windows-x64"],
-  "requiredConsumers": ["buildchain", "agent-hub-demo"],
+  "requiredConsumers": ["buildchain"],
   "protocolNeutralDriver": {
     "id": "ledger-specification-driver",
     "fixture": "fixtures/ledger-specification-driver",

@@ -48,13 +48,13 @@ function fixture({ platform = "windows", kind = "pe", signature = {} } = {}) {
   fs.writeFileSync(path.join(item, "agent.exe"), payload);
   const request = createArtifactSigningRequest({
     source: {
-      repository: "kungfu-systems/agent-hub-demo",
+      repository: "kungfu-systems/sample-consumer",
       sha: "1".repeat(40),
       treeSha: "2".repeat(40),
     },
     runtime: { sha: "3".repeat(40) },
     artifact: {
-      id: "agent-hub-demo",
+      id: "sample-consumer",
       path: "dist/agent.exe",
       platform,
       kind,
@@ -181,7 +181,7 @@ test("authority intake routes native profiles without accepting source substitut
   try {
     const matrices = inspectArtifactSigningRequests({
       inputRoot: value.input,
-      expectedRepository: "kungfu-systems/agent-hub-demo",
+      expectedRepository: "kungfu-systems/sample-consumer",
       expectedRuntimeSha: "3".repeat(40),
     });
     assert.equal(matrices.windows.length, 1);
@@ -216,7 +216,7 @@ test("authority intake carries sealed JIT profile intent into the macOS matrix",
   try {
     const matrices = inspectArtifactSigningRequests({
       inputRoot: value.input,
-      expectedRepository: "kungfu-systems/agent-hub-demo",
+      expectedRepository: "kungfu-systems/sample-consumer",
       expectedRuntimeSha: "3".repeat(40),
     });
     assert.equal(matrices.macos.length, 1);
