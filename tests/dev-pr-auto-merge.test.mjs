@@ -1,3 +1,4 @@
+import { expandDevDeliveryWorkflow } from "../scripts/dev-delivery-workflow-view.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -21,7 +22,6 @@ import {
   runDevPrAutoMerge,
 } from "../scripts/dev-pr-auto-merge.mjs";
 import { readCurrentDeliveryQueueState } from "../scripts/dev-pr-delivery-warrant.mjs";
-
 test("targeted CLI defaults to an explicit readiness label", () => {
   const options = cliOptions([
     "--repository", "kungfu-systems/buildchain",
@@ -376,7 +376,7 @@ test("queue admission accepts blocked state but requires exact Project Cut proof
 });
 
 test("reusable admission retains immutable Warrant and Project Cut readback coordinates", () => {
-  const workflow = fs.readFileSync(path.resolve(import.meta.dirname, "../.github/workflows/dev-pr-auto-merge.yml"), "utf8");
+  const workflow = expandDevDeliveryWorkflow(".github/workflows/dev-pr-auto-merge.yml");
   assert.match(workflow, /project-cut-proof-json:/u);
   assert.match(workflow, /dev-delivery-proof\.mjs verify-replay/u);
   assert.match(workflow, /\.after\.commitSha \| test\("\^\[0-9a-f\]\{40\}\$"\)/u);

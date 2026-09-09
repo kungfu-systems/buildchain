@@ -153,3 +153,27 @@ paths:
     # GitHub exposes the exact called-workflow SHA; actionlint 1.7.12 predates it.
     ignore:
       - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-ops-dev-auto-merge.yml:
+    # GitHub.com provides these exact workflow identity fields; actionlint 1.7.12 predates them.
+    ignore:
+      - 'property "workflow_repository" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/dev-pr-auto-merge.yml:
+    # GitHub.com provides these exact workflow identity fields; actionlint 1.7.12 predates them.
+    ignore:
+      - 'property "workflow_repository" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/public-ops-warrant-close.yml:
+    # GitHub.com provides these exact workflow identity fields; actionlint 1.7.12 predates them.
+    ignore:
+      - 'property "workflow_repository" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
+
+  .github/workflows/dev-delivery-warrant-close.yml:
+    # GitHub.com provides these exact workflow identity fields; actionlint 1.7.12 predates them.
+    ignore:
+      - 'property "workflow_repository" is not defined in object type'
+      - 'property "workflow_sha" is not defined in object type'
