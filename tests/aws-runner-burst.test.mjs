@@ -88,26 +88,16 @@ test("phase verification fails closed on stale telemetry or cloud residue", () =
   assert.ok(result.issues.includes("idle-builds-remain"));
 });
 
-test("workflow keeps trust ahead of dynamic CodeBuild runner selection", () => {
-  const workflow = fs.readFileSync(
-    path.join(root, ".github/workflows/.build.yml"),
-    "utf8",
-  );
-  const trust = workflow.indexOf("  trust-gate:");
-  const native = workflow.indexOf("  build-native:");
-  assert.ok(trust >= 0 && native > trust);
-  const nativeBlock = workflow.slice(
-    native,
-    workflow.indexOf("\n  build-linux-container:", native),
-  );
-  assert.match(
-    nativeBlock,
-    /if: \$\{\{ \(needs\.trust-gate\.outputs\.trusted == 'true'/,
-  );
-  assert.match(nativeBlock, /codebuild-\{0\}-\{1\}-\{2\}/);
-  assert.match(nativeBlock, /aws-runner-burst\.mjs evidence/);
-  assert.match(nativeBlock, /aws-codebuild-toolchain\.mjs prepare/);
-  assert.match(nativeBlock, /aws-native-toolchain\.json/);
+test("admitted planning precedes dynamic CodeBuild runner selection", () => {
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
+  const planner = fs.readFileSync(path.join(root, "scripts/build/plan.mjs"), "utf8");
+  const prepare = fs.readFileSync(path.join(root, "scripts/build/prepare.mjs"), "utf8");
+  assert.match(workflow, /build-native:\n\s+needs:\n\s+- plan/u);
+  assert.match(planner, /codebuild-\$\{p.project\}-\$\{plan.run.id\}-\$\{plan.run.attempt\}/u);
+  assert.ok(planner.indexOf('"consumer-policy.mjs"') < planner.indexOf('Object.assign(plan, buildMatrices'));
+  assert.match(prepare, /aws-runner-burst.mjs/u);
+  assert.match(prepare, /aws-codebuild-toolchain.mjs/u);
+  assert.match(prepare, /aws-native-toolchain.json/u);
 });
 
 test("CodeBuild native toolchain uses reviewed compiler and CMake pins", () => {
@@ -147,12 +137,11 @@ test("CodeBuild native toolchain rejects unsupported Linux images", () => {
   );
 });
 
-test("workflow bounds CodeBuild jobs and shared lifecycle stages with the TOML timeout", () => {
+test("TOML timeout bounds both build jobs and the lifecycle implementation", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/.build.yml"), "utf8");
-  const stage = fs.readFileSync(path.join(root, "actions/build-lifecycle-stage/action.yml"), "utf8");
+  const stage = fs.readFileSync(path.join(root, "scripts/build/stage.mjs"), "utf8");
   assert.equal((workflow.match(/timeout-minutes: .*build\.timeout_minutes/g) || []).length, 2);
-  assert.match(stage, /timeout-minutes: .*build\.timeout_minutes/u);
-  assert.doesNotMatch(workflow, /inputs\.lifecycle-timeout-minutes/u);
+  assert.match(stage, /timeoutMinutes: plan.build.timeout_minutes/u);
 });
 
 test("CodeBuild stack is credential-free, bounded, and fail closed", () => {

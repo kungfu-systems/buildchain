@@ -24,7 +24,7 @@ export function resolveBuildConfiguration({ root, locator = "", workflowRef, wor
   const callerPath = callerWorkflowRef.split("@")[0].split("/.github/workflows/")[1];
   if (callerPath) {
     const caller = fs.readFileSync(containedBuildPath(root, `.github/workflows/${callerPath}`), "utf8");
-    const calls = [...caller.matchAll(/uses:\s+kungfu-systems\/buildchain\/(\.github\/workflows\/(?:build|\.build|public-build-candidate|\.build-engine)\.yml)@(v\d+(?:-alpha)?)\s*$/gmu)]
+    const calls = [...caller.matchAll(/uses:\s+kungfu-systems\/buildchain\/(\.github\/workflows\/(?:build|\.build)\.yml)@(v\d+(?:-alpha)?)\s*$/gmu)]
       .filter((call) => call[2] === identity.ref);
     const paths = [...new Set(calls.map((call) => call[1]))];
     if (paths.length !== 1) throw new Error("Unable to derive one visible build workflow from the exact caller");

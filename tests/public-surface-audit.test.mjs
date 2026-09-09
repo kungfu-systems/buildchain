@@ -43,7 +43,7 @@ test("public surface reverse audit passes for the generated Buildchain site bund
   assert.ok(buildWorkflow.inputCount > 0);
   assert.ok(buildWorkflow.outputCount > 0);
   assert.ok(
-    buildWorkflow.secrets.includes("BUILDCHAIN_ARTIFACT_RELAY_S3_ROLE_ARN"),
+    buildWorkflow.secrets.includes("BUILDCHAIN_PROMOTION_TOKEN"),
   );
   assert.ok(
     enumerateActionInputs({ root }).some(

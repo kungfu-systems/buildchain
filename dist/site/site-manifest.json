@@ -1,10 +1,9 @@
 {
   "schemaVersion": 1,
   "contract": "kungfu-buildchain-site-manifest",
-  "generatedAt": "2026-09-09T05:22:53.000Z",
-  "publishedAt": "2026-09-09T05:22:53.000Z",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
   "reproducible": true,
-  "timestampPolicy": "ci-injected",
+  "timestampPolicy": "source-date-epoch",
   "deterministicInputs": [
     "README.md",
     "docs/*.md",
@@ -13,13 +12,11 @@
     "packages/core/README.md",
     "package.json#exports",
     "tests/buildchain-inventory.json",
-    "sourceRevision",
     "sourceDateEpoch",
     "package content",
     "declared Buildchain surface manifest contract"
   ],
   "sourceDateEpoch": "0",
-  "sourceRevision": "0c1e79e58a84fdb961f6538e83f85f5e5582887a",
   "timestampPolicyDetails": {
     "contract": "kungfu-buildchain-surface-timestamp-policy",
     "timestampFields": [
@@ -53,7 +50,7 @@
       "path": "docs/MAP.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:1de05d2ed89f816e23c8cab285c2bdc9a427d07ea1446e2bb56565a21b6ff113"
+      "digest": "sha256:b47f6a77d495c01fe2dfa35d3b0f60a36aed428b0e470c9ad41c4ea1384963ff"
     },
     {
       "id": "getting-started",
@@ -253,7 +250,7 @@
       "path": "docs/node-api-reference.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:0b971a24b4fb850cf941d05f0ee8b3493f0dfe3ddbea5479bf2e344ea8a1553e"
+      "digest": "sha256:db6c29f2af429020990db6b517063ef841c16f97b937e9d7720fdbde561e88e5"
     },
     {
       "id": "build-facts",
@@ -293,7 +290,7 @@
       "path": "docs/reusable-build-surface.md",
       "plane": "use",
       "exists": true,
-      "digest": "sha256:58b91e75fc345ecd24377cf99a26ba344bc107016ef426ac5d99bb1c71d713b0"
+      "digest": "sha256:204d96d3a3979726557509695d5e326288dd622c3e901d89c76ad6b3cb30ac62"
     },
     {
       "id": "v4-adopter-delivery",
@@ -301,7 +298,7 @@
       "path": "docs/v4-adopter-delivery.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:6679e6761bcc17d47efebee22f00db207645f134d8d61955f7b89264192ee409"
+      "digest": "sha256:4036bd6c0d744e4a166e463f9b869bcf7db0ce31159fefa15c0d1f8ee36fda4c"
     },
     {
       "id": "publish-transaction",
@@ -317,7 +314,7 @@
       "path": "docs/release-tail-contract.md",
       "plane": "verify",
       "exists": true,
-      "digest": "sha256:db5d38df0af0f7ce76ff93cc78a0d96a0738a40f6f40f7c1a0cfd78ca9f4f22a"
+      "digest": "sha256:30eeb54eb9fdadc6ff7e26c84572afa84b9778831ebfe581b7969751cd0ca3db"
     },
     {
       "id": "release-tail-provider-plane",

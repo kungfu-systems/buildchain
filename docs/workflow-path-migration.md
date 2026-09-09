@@ -66,8 +66,6 @@ unknown or non-default-branch consumers do not exist.
 | --- | --- | --- |
 | Buildchain `d434a73d2d4fb010ee80fede2bf3ce872b1d04c8` | `self-build-adopter-dogfood.yml` | `v4-alpha` |
 | Buildchain `d434a73d2d4fb010ee80fede2bf3ce872b1d04c8` | `self-build-public-consumer-dogfood.yml` | `v4-alpha` |
-| agent-hub-demo `3f5de882b63464d70c50df0fd7ca418f487b794b` | `v4-adopter-delivery-qualification.yml` | `v4-alpha` |
-| agent-hub-demo `3f5de882b63464d70c50df0fd7ca418f487b794b` | `v4-stage-capsule-canary.yml` | `v4` |
 | taolu `6dcccdc3bd2c8b1801c7f6decea08ae7877aac2b` | `verify.yml` | `v4-alpha` |
 
 The initial published channel readback was `v4` at
@@ -94,9 +92,7 @@ on all declared platforms and
 The protected dev landing is `7e15123733110ad8ce484241934bbf0ef99fbb45`.
 
 The stable `v4` readback remains
-`da5e2db8384313e899eace87aea0a1a8e28c0aa8`, which does not contain the canonical
-paths. Stable publication and the agent-hub-demo migration remain **pending**
-outside this development change's completion boundary. The alpha.35
+`da5e2db8384313e899eace87aea0a1a8e28c0aa8` in that observation. The alpha.35
 [Build Surface Fixture](https://github.com/kungfu-systems/buildchain/actions/runs/34005360217)
 passed, but this individual result does not establish complete stable
 qualification or authorize moving the stable channel.

@@ -16,8 +16,7 @@
     "tools": {
       "rustup_dist_server": "",
       "rustup_update_root": "",
-      "cargo_registry_index": "",
-      "kfd_agent_hub": "off"
+      "cargo_registry_index": ""
     },
     "signing": {
       "upload_no_proxy": "",

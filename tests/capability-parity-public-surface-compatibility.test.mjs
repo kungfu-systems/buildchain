@@ -163,7 +163,7 @@ test("historical CLI, Action, and workflow inputs have bounded v4 routes", () =>
       "actions/release-tail/index.js",
       "actions/promote-buildchain-ref/action.yml",
       "actions/promote-buildchain-ref/index.js",
-      ".github/workflows/.build.yml",
+      "scripts/build/plan.mjs",
       ".github/workflows/.web-surface.yml",
       ".github/workflows/.release-candidate-promote.yml",
       ".github/workflows/release-candidate-promote.yml",
@@ -186,8 +186,8 @@ test("historical CLI, Action, and workflow inputs have bounded v4 routes", () =>
     /v4 derives the adopter manifest gate/u,
   );
   assert.match(
-    sources.get(".github/workflows/.build.yml"),
-    /fromJSON\(needs\.configure\.outputs\.plan-json\)\.identity\.channel/u,
+    sources.get("scripts/build/plan.mjs"),
+    /BUILDCHAIN_EXPECTED_INVOCATION_CHANNEL: plan.identity.channel/u,
   );
   assert.match(
     sources.get(".github/workflows/dev-pr-auto-merge.yml"),

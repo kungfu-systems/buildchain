@@ -690,17 +690,13 @@ test("declarative publication stages an optional consumer-owned technical specif
   assert.match(workflow, /git add -- "\$\{technical_spec_path\}"/u);
 });
 
-test("reusable builds run the transport simulation before the shared upload action", () => {
+test("reusable builds run transport simulation within verify before shared upload", () => {
   const workflow = fs.readFileSync(path.join(ROOT, ".github/workflows/.build.yml"), "utf8");
-  const transport = fs.readFileSync(path.join(ROOT, "actions/build-artifact-transfer/action.yml"), "utf8");
-  const lanes = workflow.match(/  build-(?:native|linux-container):[\s\S]+?(?=\n  [a-z-]+:)/gu);
+  const stage = fs.readFileSync(path.join(ROOT, "scripts/build/stage.mjs"), "utf8");
+  const lanes = workflow.match(/  build-(?:native|container):[\s\S]+?(?=\n  [a-z-]+:)/gu);
   assert.equal(lanes.length, 2);
-  for (const lane of lanes) {
-    const smoke = lane.indexOf("name: Simulate artifact transport before upload");
-    const upload = lane.indexOf("uses: ./.buildchain/runtime/actions/build-artifact-transfer");
-    assert.ok(smoke >= 0 && upload > smoke);
-  }
-  for (const name of ["Upload payload to S3 artifact relay", "Upload deterministic artifact"]) assert.ok(transport.includes(name));
+  for (const lane of lanes) assert.ok(lane.indexOf("stage: verify") < lane.indexOf("actions/transfer-build-artifact"));
+  assert.match(stage, /stage === "verify"[\s\S]*auditable-demo-transport-smoke.mjs/u);
 });
 
 test("recursive dogfood resolves the reviewed setup-node action commit", () => {

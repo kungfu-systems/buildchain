@@ -95,7 +95,7 @@ command = "npm publish"
 }
 
 function externalCampaign(platform, consumerRoot = externalConsumer()) {
-  const workRoot = temp(`qualification-agent-hub-demo-${platform}`);
+  const workRoot = temp(`qualification-sample-consumer-${platform}`);
   const evidenceRoot = lifecycleEvidence(platform, runtimeRef, [
     "install",
     "build",
@@ -109,7 +109,7 @@ function externalCampaign(platform, consumerRoot = externalConsumer()) {
     "--platform",
     platform,
     "--consumer",
-    "agent-hub-demo",
+    "sample-consumer",
     "--runtime-ref",
     runtimeRef,
     "--consumer-source-revision",
@@ -270,10 +270,10 @@ test("a generic external consumer qualifies its real three-stage lifecycle", () 
     assert.equal(report.metrics.rebuiltStageCount, 1);
   }
   const qualification = qualifyStageCapsuleCampaign(reports, [
-    "agent-hub-demo",
+    "sample-consumer",
   ]);
   assert.equal(qualification.qualified, true);
-  assert.deepEqual(qualification.consumers, ["agent-hub-demo"]);
+  assert.deepEqual(qualification.consumers, ["sample-consumer"]);
   assert.equal(qualification.productionAuthority, "v3");
   assert.equal(qualification.productionWrites, false);
 });
@@ -317,7 +317,7 @@ test("external lifecycle and clean-process binding drift fail closed with typed 
         "--platform",
         "linux-x64",
         "--consumer",
-        "agent-hub-demo",
+        "sample-consumer",
         "--runtime-ref",
         runtimeRef,
         "--consumer-source-revision",

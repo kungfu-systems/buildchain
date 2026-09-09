@@ -55,7 +55,7 @@ test("zero-delta version state reuses the source tree without creating an empty 
     adapter: "github-version-state",
     operationRoot: ROOT,
     target: {
-      repository: "kungfu-systems/agent-hub-demo",
+      repository: "kungfu-systems/sample-consumer",
       sourceSha: SOURCE,
       sourceTimestamp: "2026-09-03T09:37:51.000Z",
       stateRef: STATE_REF,

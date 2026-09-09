@@ -4,15 +4,31 @@
   "ordinaryInputs": ["config-path"],
   "backbone": ".github/workflows/.build.yml",
   "facade": ".github/workflows/build.yml",
-  "maximumBackboneLines": 2300,
-  "maximumFacadeLines": 200,
+  "jobs": [
+    "plan",
+    "build-native",
+    "build-container",
+    "sign",
+    "attest",
+    "deliver"
+  ],
+  "maximumBackboneLines": 280,
+  "maximumFacadeLines": 80,
+  "maximumCompositeLines": 130,
+  "maximumModuleLines": 220,
   "lifecycleOrder": ["install", "build", "verify"],
+  "contracts": [
+    "buildchain.build-plan/v1",
+    "buildchain.build-artifact/v1",
+    "buildchain.build-result/v1"
+  ],
   "owners": {
-    "actions/build-lifecycle-stage/action.yml": "Buildchain workflow maintainers",
-    "actions/build-signing-request/action.yml": "Buildchain signing maintainers",
-    "actions/build-verification-evidence/action.yml": "Buildchain verification maintainers",
-    "actions/build-attestation-policy/action.yml": "Buildchain signing maintainers",
-    "actions/build-agent-hub-evidence/action.yml": "Buildchain verification maintainers",
-    "actions/build-artifact-transfer/action.yml": "Buildchain artifact transport maintainers"
+    "actions/resolve-build-plan/action.yml": "Buildchain configuration maintainers",
+    "actions/prepare-build-environment/action.yml": "Buildchain infrastructure maintainers",
+    "actions/run-build-stage/action.yml": "Buildchain lifecycle maintainers",
+    "actions/transfer-build-artifact/action.yml": "Buildchain artifact transport maintainers",
+    "actions/sign-build-artifact/action.yml": "Buildchain signing maintainers",
+    "actions/attest-build-artifact/action.yml": "Buildchain attestation maintainers",
+    "actions/finalize-build-result/action.yml": "Buildchain evidence maintainers"
   }
 }
