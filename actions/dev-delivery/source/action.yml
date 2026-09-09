@@ -123,6 +123,9 @@ runs:
     shell: bash
     run: node "$GITHUB_ACTION_PATH/../../../packages/core/dev-delivery/nodes/source.mjs" proof
     env:
+      GH_TOKEN: ${{ inputs.github-token || github.token }}
+      EXPECTED_PR: ${{ fromJSON(inputs.request-json).expected-pr-number }}
+      SOURCE_WORKFLOW_RUN_ID: ${{ fromJSON(inputs.request-json).source-workflow-run-id }}
       TARGET_BRANCH: ${{ steps.target.outputs.branch }}
       EXPECTED_HEAD: ${{ fromJSON(inputs.request-json).expected-head-sha }}
       SOURCE_IDENTITY_ROOT: ${{ fromJSON(inputs.request-json).source-identity-root }}

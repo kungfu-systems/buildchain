@@ -85,6 +85,7 @@ runs:
       TOOLCHAIN_ROOT: ${{ fromJSON(inputs.request-json).toolchain-root }}
       ENVIRONMENT_ROOT: ${{ fromJSON(inputs.request-json).environment-root }}
       AFFECTED_PATHS: ${{ fromJSON(inputs.request-json).affected-paths-json }}
+      SOURCE_PROOF_ROOT: ${{ fromJSON(inputs.needs-json).admission.outputs.source-proof-root }}
       SHARD_ROOTS: ${{ fromJSON(inputs.request-json).shard-evidence-roots-json }}
       NATIVE_COMMAND: ${{ fromJSON(inputs.request-json).native-command }}
       NATIVE_PROOF_PATH: ${{ steps.native-input.outputs.path }}

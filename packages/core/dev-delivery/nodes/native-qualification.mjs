@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { outputs, runtimeCommand } from "./io.mjs";
+import { sourceProofPaths } from "./source-paths.mjs";
 import {
   environmentArguments,
   requireValue,
@@ -81,6 +82,7 @@ export function verifyTwoPhaseReadback(result, env, phase) {
   };
 }
 export function qualifyNative(env, phase) {
+  env = { ...env, AFFECTED_PATHS: sourceProofPaths(env) };
   runtimeCommand("dev-delivery-two-phase", twoPhaseArguments(env, phase));
   const file =
     phase === "execute"

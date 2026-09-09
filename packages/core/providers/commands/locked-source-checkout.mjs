@@ -131,7 +131,7 @@ function git(args, { cwd, env = {}, timeoutMs = 60000, stdio = ["ignore", "pipe"
   }
 }
 
-function githubAuthEnv(token = "") {
+export function githubAuthEnv(token = "") {
   if (!token) {
     return {};
   }

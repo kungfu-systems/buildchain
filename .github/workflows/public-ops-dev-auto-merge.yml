@@ -88,7 +88,7 @@ on:
         type: string
         required: false
       affected-paths-json:
-        description: JSON array of paths covered by source qualification
+        description: JSON array of covered paths; an empty array reconstructs paths from the exact successful source workflow run
         default: "[]"
         type: string
         required: false

@@ -61,9 +61,10 @@ on:
         required: false
         default: ""
       affected-paths-json:
-        description: JSON paths covered by source qualification
+        description: Optional covered paths; an empty array reconstructs the exact source run paths
         type: string
-        required: true
+        required: false
+        default: "[]"
       shard-evidence-roots-json:
         description: Exact rooted native shard evidence JSON
         type: string

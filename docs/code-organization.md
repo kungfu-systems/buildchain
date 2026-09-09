@@ -66,7 +66,11 @@ The development delivery API has six semantic nodes: `source`, `reserve`,
 Buildchain invokes this public delivery workflow from the same source commit, so
 its workflow, action paths and runtime modules share one implementation identity.
 The native node runs in separate hosted jobs where the trust boundary requires
-process and credential isolation. A semantic node need not mean one runner.
+process and credential isolation.
+Dispatch carries exact source-run coordinates and content roots. When the path
+array is omitted, source admission reconstructs the complete Git diff from the
+successful PR run and verifies its source identity root. Later nodes read the
+verified source proof, so large changes do not exceed provider dispatch limits. A semantic node need not mean one runner.
 
 Promotion enters the public workflow through one closed `request-json` contract,
 then QUALIFY, APPLY and SETTLE. Paper owns its publication plan and final receipt;

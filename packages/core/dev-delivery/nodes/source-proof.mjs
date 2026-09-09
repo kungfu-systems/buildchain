@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { outputs, readEvidence, runtimeCommand, writeEvidence } from "./io.mjs";
+import { deriveSourcePaths } from "./source-paths.mjs";
 import {
   command,
   environmentArguments,
@@ -84,6 +85,10 @@ export function qualifySource(env) {
   runtimeCommand("dev-pr-auto-merge", args);
 }
 export function sealSourceProof(env) {
+  const supplied = JSON.parse(env.AFFECTED_PATHS || "[]");
+  requireValue(Array.isArray(supplied), "Affected paths must be an array");
+  if (!supplied.length)
+    env = { ...env, AFFECTED_PATHS: deriveSourcePaths(env) };
   const receiptRoot = readEvidence("source-admission.json").receiptRoot;
   requireValue(
     /^sha256:[0-9a-f]{64}$/u.test(receiptRoot || ""),

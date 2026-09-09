@@ -659,6 +659,7 @@ Owner: Buildchain protected delivery maintainers
 - `packages/core/dev-delivery/nodes/reserve.mjs`
 - `packages/core/dev-delivery/nodes/settle.mjs`
 - `packages/core/dev-delivery/nodes/source-coordinates.mjs`
+- `packages/core/dev-delivery/nodes/source-paths.mjs`
 - `packages/core/dev-delivery/nodes/source-proof.mjs`
 - `packages/core/dev-delivery/nodes/source.mjs`
 - `packages/core/dev-delivery/nodes/submission.mjs`
@@ -671,6 +672,7 @@ Owner: Buildchain protected delivery maintainers
 ### Tests
 
 - `tests/dev-delivery-node-boundaries.test.mjs`
+- `tests/dev-delivery-source-paths.test.mjs`
 
 ### Generated outputs
 
@@ -678,7 +680,7 @@ Owner: Buildchain protected delivery maintainers
 
 ### Minimal validation
 
-- `node --test tests/dev-delivery-node-boundaries.test.mjs`
+- `node --test tests/dev-delivery-node-boundaries.test.mjs tests/dev-delivery-source-paths.test.mjs`
 
 ## engineering-housekeeper
 

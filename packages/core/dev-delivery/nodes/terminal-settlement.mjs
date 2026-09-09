@@ -122,11 +122,28 @@ export function settleTerminal(env) {
     "successor-wake-json": JSON.stringify(result.receipt.successorWake ?? null),
   });
 }
-export function wakeSuccessor(env) {
-  writeEvidence("successor-dispatch.json", {
+export function successorDispatchPayload(wake) {
+  const candidate = { ...wake };
+  if (
+    Number.isSafeInteger(candidate.sourceWorkflowRunId) &&
+    candidate.sourceWorkflowRunId > 0
+  )
+    candidate.affectedPaths = [];
+  const payload = {
     event_type: "buildchain-dev-delivery-wake",
-    client_payload: { candidate: JSON.parse(env.SUCCESSOR_WAKE) },
-  });
+    client_payload: { candidate },
+  };
+  requireValue(
+    JSON.stringify(payload.client_payload).length <= 65535,
+    "Successor dispatch exceeds the provider payload limit",
+  );
+  return payload;
+}
+export function wakeSuccessor(env) {
+  writeEvidence(
+    "successor-dispatch.json",
+    successorDispatchPayload(JSON.parse(env.SUCCESSOR_WAKE)),
+  );
   command("gh", [
     "api",
     "--method",

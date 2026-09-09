@@ -71,7 +71,8 @@ for (const [largeProof, mismatchedRuntime] of [[false, false], [true, false], [f
   assert.equal(payload.inputs["target-branch"], "dev/v4/v4.0");
   assert.equal(payload.inputs["buildchain-ref"], head);
   if (largeProof) {
-    assert.deepEqual(JSON.parse(payload.inputs["affected-paths-json"]), affectedPaths);
+    assert.deepEqual(JSON.parse(payload.inputs["affected-paths-json"]), []);
+    assert.ok(JSON.stringify(payload.inputs).length < 65535);
     assert.equal(payload.inputs["source-identity-root"], sourceIdentityRoot);
   }
   fs.rmSync(directory, { recursive: true, force: true });

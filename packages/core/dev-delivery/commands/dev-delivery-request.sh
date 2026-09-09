@@ -141,7 +141,7 @@ payload="$(jq --arg ref "$workflow_ref" --arg base "$base" --arg runtime "$runti
     "source-patch-root":$proof.sourcePatchRoot,"plan-root":$proof.planRoot,
     "closure-root":$proof.closureRoot,"dependency-root":$proof.dependencyRoot,
     "toolchain-root":$proof.toolchainRoot,"environment-root":"",
-    "affected-paths-json":($proof.affectedPaths|tojson),"shard-evidence-roots-json":"[]",
+    "affected-paths-json":"[]","shard-evidence-roots-json":"[]",
     "release-blocker-priority-json":"","native-proof-json":"","native-command":"",
     "native-command-root":"","native-heartbeat-seconds":"30","delivery-class":"non-native-fast",
     "delivery-priority":"ordinary"}}' <<<"$predicates")"

@@ -24,7 +24,7 @@ export function handoffInputs(warrant, env) {
     "closure-root": warrant.closureRoot,
     "dependency-root": warrant.dependencyRoot,
     "toolchain-root": warrant.toolchainRoot,
-    "affected-paths-json": JSON.stringify(warrant.affectedPaths || []),
+    "affected-paths-json": "[]",
     "shard-evidence-roots-json": JSON.stringify(
       warrant.shardEvidenceRoots || [],
     ),

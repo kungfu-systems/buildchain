@@ -1,4 +1,5 @@
 import { runtimeCommand } from "./io.mjs";
+import { sourceProofPaths } from "./source-paths.mjs";
 import {
   environmentArguments,
   requireValue,
@@ -57,6 +58,7 @@ export function submissionArguments(env) {
   return args;
 }
 export function submitCandidate(env) {
+  env = { ...env, AFFECTED_PATHS: sourceProofPaths(env) };
   return runtimeCommand("dev-delivery-warrant", submissionArguments(env));
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
