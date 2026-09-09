@@ -65,6 +65,23 @@
       "runners": {
         "preset": "kungfu-v4-self-hosted"
       }
+    },
+    "kungfu-hosted": {
+      "runners": {
+        "preset": "custom",
+        "platforms_json": "[{\"id\":\"linux-x64\",\"name\":\"Linux x64\",\"platform\":\"linux\",\"runner\":\"[\\\"ubuntu-24.04\\\"]\",\"capabilities\":[\"node\",\"native-toolchain\",\"product-artifacts\",\"rust\"],\"environment\":{\"CC\":\"gcc-14\",\"CXX\":\"g++-14\"}},{\"id\":\"linux-arm64\",\"name\":\"Linux ARM64\",\"platform\":\"linux\",\"runner\":\"[\\\"ubuntu-24.04-arm\\\"]\",\"capabilities\":[\"node\",\"native-toolchain\",\"product-artifacts\",\"rust\"]},{\"id\":\"macos-arm64\",\"name\":\"macOS ARM64\",\"platform\":\"macos\",\"runner\":\"[\\\"macos-15\\\"]\",\"capabilities\":[\"node\",\"native-toolchain\",\"product-artifacts\",\"rust\"]},{\"id\":\"windows-x64\",\"name\":\"Windows x64\",\"platform\":\"windows\",\"runner\":\"[\\\"windows-2022\\\"]\",\"capabilities\":[\"node\",\"native-toolchain\",\"product-artifacts\",\"rust\"]}]"
+      },
+      "checkout": {
+        "history_mode": "full",
+        "github_timeout_seconds": 1200
+      },
+      "cache": {
+        "profile_ref": "docs/shifu/windows-alpha-sccache.cache-profile.json",
+        "profile_digest": "sha256:581c430b959c0b45272031cad85a3fae740a6398abf7c1051d1d43b098ee0adb",
+        "provider": "sccache",
+        "platforms_json": "[\"windows-x64\"]",
+        "required": true
+      }
     }
   }
 }

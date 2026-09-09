@@ -7,6 +7,8 @@ import { discoverBuildConfiguration, normalizeBuildConfiguration } from "../pack
 import { resolveBuildConfiguration } from "../scripts/resolve-build-configuration.mjs";
 import { selectReleaseCandidateArtifacts } from "../scripts/release-candidate-resolver.mjs";
 import { loadBuildchainConfig } from "../packages/core/buildchain-config.js";
+import { resolveRunnerMatrix } from "../scripts/build-contract-core.mjs";
+import { resolveArtifactTransferMode } from "../scripts/resolve-artifact-transfer-mode.mjs";
 
 function fixture(t, relative = "buildchain.toml", extra = "") {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "buildchain-config-plan-"));
@@ -135,4 +137,55 @@ test("stable identity derives its matching lock and opaque selectors fail closed
   assert.equal(resolve(root).plan.lifecycle.build.required, true);
   fs.writeFileSync(path.join(root, "buildchain.toml"), 'schema = 1\n');
   assert.throws(() => resolve(root), /lifecycle.build/);
+});
+
+test("Kungfu hosted environment preserves the four qualified runner lanes and required cache", (t) => {
+  const root = fixture(t, "buildchain.toml", '[build]\nenvironment = "kungfu-hosted"\n');
+  const { plan } = resolve(root);
+  const { runners, checkout, cache, transfer, signing } = plan.environment;
+  const matrix = resolveRunnerMatrix({ runnerPreset: runners.preset, platformsJson: runners.platforms_json });
+  assert.deepEqual(matrix.platforms.map(({ id, runner }) => [id, JSON.parse(runner)]), [
+    ["linux-x64", ["ubuntu-24.04"]],
+    ["linux-arm64", ["ubuntu-24.04-arm"]],
+    ["macos-arm64", ["macos-15"]],
+    ["windows-x64", ["windows-2022"]],
+  ]);
+  assert.deepEqual(matrix.platforms[0].environment, { CC: "gcc-14", CXX: "g++-14" });
+  assert.ok(matrix.platforms.every(({ capabilities }) => ["node", "native-toolchain", "product-artifacts", "rust"].every((capability) => capabilities.includes(capability))));
+  assert.equal(matrix.githubHostedPlatformCount, 4);
+  assert.equal(matrix.relayPlatformCount, 0);
+  assert.equal(runners.offline_fallback, false);
+  assert.equal(checkout.history_mode, "full");
+  assert.equal(checkout.github_timeout_seconds, 1200);
+  assert.equal(checkout.mode, "off");
+  assert.equal(checkout.fallback, "github");
+  assert.deepEqual(cache, {
+    profile_ref: "docs/shifu/windows-alpha-sccache.cache-profile.json",
+    profile_digest: "sha256:581c430b959c0b45272031cad85a3fae740a6398abf7c1051d1d43b098ee0adb",
+    provider: "sccache", platforms_json: '["windows-x64"]', required: true,
+  });
+  // The former relay request already resolved to direct GitHub transport for
+  // this all-hosted matrix; adopting the profile must not introduce S3 roles.
+  assert.deepEqual(resolveArtifactTransferMode({ INPUT_TRANSFER_MODE: transfer.mode }),
+    resolveArtifactTransferMode({ INPUT_TRANSFER_MODE: "s3-to-github-artifacts", INPUT_RELAY_REQUIRED: "false" }));
+  assert.equal(transfer.upload_role_arn, "");
+  assert.equal(transfer.download_role_arn, "");
+  const defaults = resolve(fixture(t)).plan;
+  assert.deepEqual(signing, defaults.environment.signing);
+  assert.equal(defaults.environment.cache.provider, "none");
+  assert.equal(defaults.environment.checkout.history_mode, "shallow");
+  assert.notEqual(plan.environment_root, defaults.environment_root);
+  assert.notEqual(plan.cache.policy_root, defaults.cache.policy_root);
+});
+
+test("Kungfu hosted selection cannot grant project runner, cache or credential overrides", (t) => {
+  for (const [section, value] of [
+    ["runners", 'platforms_json = "[]"'],
+    ["cache", 'required = false'],
+    ["transfer", 'upload_role_arn = "consumer-role"'],
+    ["signing", 'environment = "consumer-environment"'],
+  ]) {
+    const root = fixture(t, "buildchain.toml", `[build]\nenvironment = "kungfu-hosted"\n[build.${section}]\n${value}\n`);
+    assert.throws(() => resolve(root), new RegExp(`Unknown build\\.${section}`, "u"));
+  }
 });

@@ -68,6 +68,10 @@ test("placement and finalization reject incomplete or failed jobs", (t) => {
 
 for (const nested of [false, true]) test(`real ordered lifecycle and digest validation for ${nested ? "nested" : "root"} project`, (t) => {
   const { workspace, source, directory, plan, platform } = fixture(t, nested);
+  platform.environment = { BUILDCHAIN_FIXTURE_ENV: "governed-value" };
+  fs.appendFileSync(path.join(directory, "scripts/install.mjs"), '\nif (process.env.BUILDCHAIN_FIXTURE_ENV !== "governed-value") throw new Error("Governed runner environment was lost");\n');
+  delete plan.root;
+  plan.root = rootOf(plan);
   const run = (stage) => spawnSync(process.execPath, [path.join(repo, "scripts/build/stage.mjs")], { cwd: workspace, encoding: "utf8",
     env: { ...process.env, GITHUB_WORKSPACE: workspace, GITHUB_REPOSITORY: plan.run.repository, GITHUB_RUN_ID: plan.run.id, GITHUB_RUN_ATTEMPT: plan.run.attempt,
       GITHUB_OUTPUT: path.join(workspace, "outputs"), BUILDCHAIN_PLAN: JSON.stringify(plan), BUILDCHAIN_PLATFORM: JSON.stringify(platform), BUILDCHAIN_STAGE: stage } });

@@ -4,7 +4,7 @@
   "product": {
     "name": "Buildchain",
     "package": "@kungfu-tech/buildchain",
-    "version": "4.0.10-alpha.0",
+    "version": "4.0.10-alpha.1",
     "repository": "https://github.com/kungfu-systems/buildchain"
   },
   "majorLine": "v4",
@@ -2230,7 +2230,7 @@
         "manual entries carry source file digests so downstream sites and agents can detect stale hand-written documentation"
       ],
       "breakingDigest": "sha256:7d0d2819e3a3e72989d9c57b5efe9d0bc0a79bc0f2c82a0c7b9d6c5a211a91f2",
-      "auditDigest": "sha256:9a0ece0c1cba03107339de8d2050331408103b6aa721a4466f737c0488351e2f"
+      "auditDigest": "sha256:338b63c8e6590630235521cd0537c5f76a0e68888772c3163d178a55902175d0"
     },
     {
       "contractVersion": 1,
@@ -4337,5 +4337,5 @@
   "compatibilityFactCutRoot": "sha256:f61b975d4a96c921cc4bd37fb3ed9a0596b47004fe34dc7219979d697e3707f9",
   "compatibilityProofRegistryRoot": "sha256:b7194b811e4d3af2df4390bc4d1731e16a86215bd64ee18cb630dd5492f4fb63",
   "compatibilityDigest": "sha256:60eefd1c05bc2cddeab8065c5b96ea2ea083d4f87f7de39843a0fffdd1deb98e",
-  "contractDigest": "sha256:7aebbb7f6575ba6035792a554949ac84895992e582ab0095d3d554ce32268d60"
+  "contractDigest": "sha256:531b3cb95d8535bffc1b640d4194605ff1a23a9bac5dc4351045508ca866cc9b"
 }

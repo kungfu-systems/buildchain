@@ -39,6 +39,7 @@ export function context() {
 }
 export function commonEnv(plan, platform) {
   return {
+    ...platform?.environment,
     BUILDCHAIN_SOURCE_REPOSITORY: plan.run.repository,
     BUILDCHAIN_SOURCE_SHA: plan.source.sha,
     BUILDCHAIN_SOURCE_TREE_SHA: plan.source.tree_sha,

@@ -27,7 +27,7 @@
   "repositoryBudgets": {
     "baselineRevision": "9569f69c2cb609372b8a3d65ce5dec8fb7b34a84",
     "maxHandMaintainedSourceFiles": 521,
-    "maxHandMaintainedSourceLines": 176153,
+    "maxHandMaintainedSourceLines": 176154,
     "maxWorkflowFiles": 80,
     "maxWorkflowLines": 26791,
     "latestTransition": "Six-job build backbone and seven focused orchestration actions.",
